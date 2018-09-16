@@ -10,7 +10,7 @@ project
     : requirements
         <toolset>gcc:<cxxflags>"-std=c++11"
         <toolset>darwin:<cxxflags>"-std=c++11 -Wno-unused-variable -Wno-non-virtual-dtor"
-		<toolset>msvc <cxxflags>"-wd 4267"
+		<toolset>msvc:<cxxflags>"-wd 4267"
 		<include>../../..
     ;
 
