@@ -213,7 +213,7 @@ install:
 script:
   - |-
     echo "using $TOOLSET : : $COMPILER ;" > ~/user-config.jam
-  - ./b2 variant=release libs/leaf/build/test toolset=$TOOLSET cxxstd=$CXXSTD cxxflags=-w ${CXXFLAGS:+cxxflags="$CXXFLAGS"}
+  - ./b2 variant=release libs/leaf/test toolset=$TOOLSET cxxstd=$CXXSTD cxxflags=-w ${CXXFLAGS:+cxxflags="$CXXFLAGS"}
 
 notifications:
   email:
