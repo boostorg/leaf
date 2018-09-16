@@ -1,0 +1,10 @@
+.DS_Store
+.Trashes
+*.suo
+*.user
+*.log
+*.sdf
+*.opensdf
+*.db
+*.opendb
+bld/*

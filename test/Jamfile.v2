@@ -1,0 +1,21 @@
+# Copyright (c) 2018 Emil Dotchevski
+# Copyright (c) 2018 Second Spectrum, Inc.
+
+# Distributed under the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+import testing ;
+
+project
+    : requirements
+        <toolset>gcc:<cxxflags>"-std=c++11"
+        <toolset>darwin:<cxxflags>"-std=c++11 -Wno-unused-variable -Wno-non-virtual-dtor"
+		<toolset>msvc <cxxflags>"-wd 4267"
+		<include>../../..
+    ;
+
+run tl_slot_test.cpp ;
+run diagnostic_print_test.cpp ;
+run diagnostic_information_test.cpp ;
+run expected_test.cpp ;
+run transport_test.cpp ;
