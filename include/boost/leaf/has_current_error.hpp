@@ -27,7 +27,7 @@ boost
 			bool (* &
 			has_current_error() noexcept)()
 				{
-				static thread_local bool (*f)() noexcept = &uncaught_exception_fwd;
+				static thread_local bool (*f)() = &uncaught_exception_fwd;
 				return f;
 				}
 			}
