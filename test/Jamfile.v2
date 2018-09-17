@@ -8,9 +8,9 @@ import testing ;
 
 project
     : requirements
-        <toolset>gcc:<cxxflags>"-std=c++11"
+        <toolset>gcc:<cxxflags>"-std=c++11" <linkflags>"-pthread"
         <toolset>darwin:<cxxflags>"-std=c++11 -Wno-unused-variable -Wno-non-virtual-dtor"
-		<toolset>msvc <cxxflags>"-wd 4267"
+		<toolset>msvc:<cxxflags>"-wd 4267"
 		<include>../../..
     ;
 
@@ -18,4 +18,4 @@ run tl_slot_test.cpp ;
 run diagnostic_print_test.cpp ;
 run diagnostic_information_test.cpp ;
 run expected_test.cpp ;
-run transport_test.cpp ;
+run transport_test.cpp : : : <threading>multi ;

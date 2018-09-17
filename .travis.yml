@@ -1,4 +1,4 @@
-# Copyright 2017 Emil Dotchevski
+# Copyright 2018 Emil Dotchevski
 # Copyright 2016 Peter Dimov
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at http://boost.org/LICENSE_1_0.txt)
@@ -34,7 +34,7 @@ matrix:
 
     - os: linux
       compiler: g++-4.8
-      env: TOOLSET=gcc COMPILER=g++-4.8 CXXSTD=11
+      env: TOOLSET=gcc COMPILER=g++-4.8 CXXSTD=11 LINKFLAGS=--no-as-needed
       addons:
         apt:
           packages:
@@ -115,6 +115,7 @@ matrix:
         apt:
           packages:
             - clang-3.5
+            - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.5
@@ -148,6 +149,7 @@ matrix:
         apt:
           packages:
             - clang-3.8
+            - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.8
@@ -159,6 +161,7 @@ matrix:
         apt:
           packages:
             - clang-3.9
+            - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.9
@@ -213,7 +216,7 @@ install:
 script:
   - |-
     echo "using $TOOLSET : : $COMPILER ;" > ~/user-config.jam
-  - ./b2 variant=release libs/leaf/test toolset=$TOOLSET cxxstd=$CXXSTD cxxflags=-w ${CXXFLAGS:+cxxflags="$CXXFLAGS"}
+  - ./b2 variant=release libs/leaf/test toolset=$TOOLSET cxxstd=$CXXSTD cxxflags=-w ${CXXFLAGS:+cxxflags="$CXXFLAGS"} ${LINKFLAGS:+linkflags="$LINKFLAGS"}
 
 notifications:
   email:
