@@ -169,10 +169,7 @@ boost
 					{
 					if( has_value() )
 						{
-						if( is_printable<T>::value )
-							diagnostic<T>::template print<false>(os,value());
-						else
-							diagnostic<decltype(value().value)>::template print<true>(os,value().value);
+						diagnostic<T>::print(os,value());
 						return true;
 						}
 					else

@@ -33,7 +33,8 @@ foreach t : tests
 endforeach
 
 examples = [
-	'print_file',
+	'print_file_eh',
+	'print_file_ec',
 	'transport_between_threads'
 ]
 foreach e : examples

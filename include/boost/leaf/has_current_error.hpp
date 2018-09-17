@@ -25,22 +25,26 @@ boost
 				return std::uncaught_exception();
 				}
 			bool (* &
-			has_current_error() noexcept)()
+			has_current_error_() noexcept)()
 				{
 				static thread_local bool (*f)() = &uncaught_exception_fwd;
 				return f;
+				}
+			bool
+			return_true() noexcept
+				{
+				return true;
 				}
 			}
 		bool
 		has_current_error() noexcept
 			{
-			return leaf_detail::has_current_error()();
+			return leaf_detail::has_current_error_()();
 			}
 		void
 		set_has_current_error( bool (*f)() ) noexcept
 			{
-			assert(f!=0);
-			leaf_detail::has_current_error() = f;
+			leaf_detail::has_current_error_() = f ? f : &leaf_detail::return_true;
 			}
 		}
 	}

@@ -30,32 +30,39 @@ boost
 			{
 			template<class F, class E = void> struct is_printable { static constexpr bool value=false; };
 			template<class F> struct is_printable<F, decltype(std::declval<std::ostream&>()<<std::declval<F const &>(), void())> { static constexpr bool value=true; };
-			template <class T,bool Printable=is_printable<T>::value>
+			template <class Wrapper,bool WrapperPrintable=is_printable<Wrapper>::value,bool ValuePrintable=is_printable<decltype(Wrapper::value)>::value>
+			struct diagnostic;
+			template <class Wrapper,bool ValuePrintable>
 			struct
-			diagnostic
+			diagnostic<Wrapper,true,ValuePrintable>
 				{
-				template <bool PrintType>
 				static
 				void
-				print( std::ostream & os, T const & x )
+				print( std::ostream & os, Wrapper const & x )
 					{
-					if( PrintType )
-						os << type<T>() << " = ";
 					os << x;
 					}
 				};
-			template <class T>
+			template <class Wrapper>
 			struct
-			diagnostic<T,false>
+			diagnostic<Wrapper,false,true>
 				{
-				template <bool PrintType>
 				static
 				void
-				print( std::ostream & os, T const & )
+				print( std::ostream & os, Wrapper const & x )
 					{
-					if( PrintType )
-						os << type<T>() << " = ";
-					os << "N/A";
+					os << type<Wrapper>() << " = " << x.value;
+					}
+				};
+			template <class Wrapper>
+			struct
+			diagnostic<Wrapper,false,false>
+				{
+				static
+				void
+				print( std::ostream & os, Wrapper const & )
+					{
+					os << type<Wrapper>() << " = N/A";
 					}
 				};
 			}

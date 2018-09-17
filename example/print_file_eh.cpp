@@ -24,10 +24,9 @@ struct command_line_error : virtual print_file_error { };
 struct bad_command_line : virtual command_line_error { };
 struct io_error : virtual print_file_error { };
 struct file_error : virtual io_error { };
-struct fopen_error : virtual file_error { };
-struct fread_error : virtual file_error { };
-struct ftell_error : virtual file_error { };
-struct fseek_error : virtual file_error { };
+struct file_open_error : virtual file_error { };
+struct file_size_error : virtual file_error { };
+struct file_read_error : virtual file_error { };
 
 std::shared_ptr<FILE>
 file_open( char const * file_name )
@@ -35,7 +34,7 @@ file_open( char const * file_name )
 	if( FILE * f = fopen(file_name,"rb") )
 		return std::shared_ptr<FILE>(f,&fclose);
 	else
-		leaf::throw_with_info( fopen_error(), xi_file_name{file_name}, xi_errno{errno} );
+		leaf::throw_with_info( file_open_error(), xi_file_name{file_name}, xi_errno{errno} );
 	}
 
 int
@@ -44,24 +43,23 @@ file_size( FILE & f )
 	auto put = leaf::preload(&leaf::get_errno);
 
 	if( fseek(&f,0,SEEK_END) )
-		throw fseek_error();
+		throw file_size_error();
 	int s = ftell(&f);
 	if( s==-1L )
-		throw ftell_error();
+		throw file_size_error();
 	if( fseek(&f,0,SEEK_SET) )
-		throw fseek_error();
+		throw file_size_error();
 	return s;
 	}
 
-int
+void
 file_read( FILE & f, void * buf, int size )
 	{
 	int n = fread(buf,1,size,&f);
 	if( ferror(&f) )
-		leaf::throw_with_info( fread_error(), xi_errno{errno} );
+		leaf::throw_with_info( file_read_error(), xi_errno{errno} );
 	if( n!=size )
-		throw fread_error();
-	return n;
+		throw file_read_error();
 	}
 
 void
@@ -73,6 +71,7 @@ print_file( char const * file_name )
 	std::string buffer( 1+file_size(*f), '\0' );
 	file_read(*f,&buffer[0],buffer.size()-1);
 	std::cout << buffer;
+	std::cout.flush();
 	}
 
 char const *
@@ -86,7 +85,9 @@ parse_command_line( int argc, char const * argv[ ] )
 int
 main( int argc, char const * argv[ ] )
 	{
-	//We expect xi_file_name and xi_errno info to arrive with exceptions handled in this function.
+ 	std::cout.exceptions ( std::ostream::failbit | std::ostream::badbit );
+ 
+ 	//We expect xi_file_name and xi_errno info to arrive with exceptions handled in this function.
 	leaf::expected<xi_file_name,xi_errno> info;
 
 	try
@@ -94,13 +95,13 @@ main( int argc, char const * argv[ ] )
 		print_file(parse_command_line(argc,argv));
 		}
 	catch(
-	bad_command_line & )
+	bad_command_line const & )
 		{
 		std::cout << "Bad command line argument" << std::endl;
 		return 1;
 		}
 	catch(
-	fopen_error const & )
+	file_open_error const & )
 		{
 		//unwrap is given a list of match objects (in this case only one), which it attempts to match (in order) to
 		//available exception info (if none can be matched, it throws leaf::mismatch_error).
@@ -140,7 +141,7 @@ main( int argc, char const * argv[ ] )
 		std::cerr <<
 			"Unknown error, cryptic information follows." << std::endl <<
 			leaf::current_exception_diagnostic_information();
-		return 6;
+		return 4;
 		}
 	return 0;
 	}
