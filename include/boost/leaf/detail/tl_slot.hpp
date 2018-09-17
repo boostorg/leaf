@@ -17,7 +17,6 @@ boost
 	namespace
 	leaf
 		{
-		class dynamic_storage;
 		namespace
 		leaf_detail
 			{
