@@ -1,0 +1,39 @@
+:sourcedir: .
+:last-update-label!:
+:icons: font
+= Low-latency Error Augmentation Framework
+For C++11
+:toclevels: 3
+:toc: left
+:toc-title:
+
+[abstract]
+== Abstract
+(Note: LEAF is not part of Boost. Please post questions and suggestions on the Boost Developers Mailing List).
+
+Robust error handling requires that error handling contexts can access various information they need to deal with each failure. This is a difficult problem to solve, because failures are often detected in low-level libraries which can not provide all of the necessary information. For example, handling a file I/O error typically requires the name of the file for display, yet the reporting context doesn't have a file name: it only has a file handle.
+
+Even if the error-detection context has all the needed information, transporting it many levels up the call chain to reach a context capable to deal with the failure is tricky, especially in low-latency environments where dynamic memory allocations must be avoided.
+
+LEAF provides a generic memory-allocation-free solution to this problem. It is compatible with any error-handling API, and can work with or without exception handling.
+
+== Distribution
+
+LEAF is distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
+
+The source code is available in https://github.com/zajo/leaf[this GitHub repository].
+
+
+== Building
+
+LEAF is a header-only library and it requires no building. The unit tests use Boost Build, but the library itself has no dependency on Boost or any other library.
+
+== Portability
+
+LEAF requires a {CPP}-11 compiler. See unit test matrix at https://travis-ci.org/zajo/leaf[Travis-CI].
+
+== Tutorial
+
+[source,c++]
+----
+----
