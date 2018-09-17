@@ -33,16 +33,6 @@ matrix:
       env: TOOLSET=clang COMPILER=clang++ CXXSTD=11,14,1z
 
     - os: linux
-      compiler: g++-4.8
-      env: TOOLSET=gcc COMPILER=g++-4.8 CXXSTD=11 LINKFLAGS=--no-as-needed
-      addons:
-        apt:
-          packages:
-            - g++-4.8
-          sources:
-            - ubuntu-toolchain-r-test
-
-    - os: linux
       compiler: g++-4.9
       env: TOOLSET=gcc COMPILER=g++-4.9 CXXSTD=11
       addons:
