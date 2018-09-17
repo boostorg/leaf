@@ -22,7 +22,7 @@ boost
 			capture( capture const & ) = delete;
 			capture & operator=( capture const & ) = delete;
 			typedef std::vector<std::shared_ptr<void const> > container_t;
-			container_t const info_;
+			container_t info_;
 			public:
 			capture() noexcept:
 				info_( [ ]
@@ -37,6 +37,11 @@ boost
 					return v;
 					} () )
 				{
+				}
+			void
+			release() noexcept
+				{
+				container_t().swap(info_);
 				}
 			};
 		}
