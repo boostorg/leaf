@@ -38,7 +38,7 @@ boost
 					if( x.has_value() )
 						put(std::move(x.value()));
 					}
-				optional( T && v ):
+				optional( T && v ) noexcept:
 					has_value_(false)
 					{
 					put(std::move(v));

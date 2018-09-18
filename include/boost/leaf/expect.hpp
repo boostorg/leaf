@@ -138,26 +138,26 @@ boost
 				};
 			template <class... T>
 			void
-			open_slots()
+			open_slots() noexcept
 				{
 				msvc_workaround_open<sizeof...(T),std::tuple<T...>>::open();
 				}
 			template <class... T>
 			void
-			close_slots()
+			close_slots() noexcept
 				{
 				msvc_workaround_close<sizeof...(T),std::tuple<T...>>::close();
 				}
 #else
 			template <class... T>
 			void
-			open_slots()
+			open_slots() noexcept
 				{
 				{ using _ = int[ ]; (void) _ { 42, tl_slot<T>::tl_instance().open()... }; }
 				}
 			template <class... T>
 			void
-			close_slots()
+			close_slots() noexcept
 				{
 				{ using _ = int[ ]; (void) _ { 42, tl_slot<T>::tl_instance().close()... }; }
 				}

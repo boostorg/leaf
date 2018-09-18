@@ -17,7 +17,7 @@ boost
 		{
 		template <class Name>
 		char const *
-		type()
+		type() noexcept
 			{
 #ifdef __FUNCSIG__
 			return __FUNCSIG__;

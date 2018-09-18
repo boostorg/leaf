@@ -36,7 +36,7 @@ boost
 			};
 		inline
 		xi_errno
-		get_errno()
+		get_errno() noexcept
 			{
 			using namespace std;
 			return xi_errno{errno};

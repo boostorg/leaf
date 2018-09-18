@@ -24,7 +24,7 @@ boost
 			current_exception_diagnostic_information( current_exception_diagnostic_information const & );
 			current_exception_diagnostic_information & operator=( current_exception_diagnostic_information const & );
 			public:
-			current_exception_diagnostic_information()
+			current_exception_diagnostic_information() noexcept
 				{
 				}
 			friend
@@ -36,7 +36,7 @@ boost
 					{
 					throw;
 					}
-				catch( std::exception & ex )
+				catch( std::exception const & ex )
 					{
 					os <<
 						"std::exception::what(): " << ex.what() << std::endl <<

@@ -21,7 +21,7 @@ boost
 			diagnostic_information( diagnostic_information const & );
 			diagnostic_information & operator=( diagnostic_information const & );
 			public:
-			diagnostic_information()
+			diagnostic_information() noexcept
 				{
 				}
 			friend

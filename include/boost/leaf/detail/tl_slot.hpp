@@ -35,12 +35,12 @@ boost
 			tl_slot_state
 				{
 				tl_slot_base * put_list;
-				tl_slot_state();
+				tl_slot_state() noexcept;
 				static
 				tl_slot_state &
 				tl_instance() noexcept
 					{
-					static thread_local tl_slot_state state = { };
+					static thread_local tl_slot_state state;
 					return state;
 					}
 				};
@@ -225,8 +225,15 @@ boost
 				};
 			inline
 			tl_slot_state::
-			tl_slot_state()
+			tl_slot_state() noexcept:
+				put_list(0)
 				{
+				int c1=tl_slot<xi_source_location<in_file>>::tl_instance().open();
+				int c2=tl_slot<xi_source_location<at_line>>::tl_instance().open();
+				int c3=tl_slot<xi_source_location<in_function>>::tl_instance().open();
+				assert(c1==1);
+				assert(c2==1);
+				assert(c3==1);
 				}
 			template <class T>
 			struct
