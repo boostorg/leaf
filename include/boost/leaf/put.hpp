@@ -118,6 +118,6 @@ boost
 		}
 	}
 
-#define EXCEPTION_INFO_THROW(e) ::boost::leaf::throw_with_info(e,xi_THROW_LOCATION)
+#define EXCEPTION_INFO_THROW(e) ::boost::leaf::throw_with_info(e,xi_SOURCE_LOCATION)
 
 #endif

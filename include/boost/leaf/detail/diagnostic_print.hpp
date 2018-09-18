@@ -37,10 +37,11 @@ boost
 			diagnostic<Wrapper,true,ValuePrintable>
 				{
 				static
-				void
+				bool
 				print( std::ostream & os, Wrapper const & x )
 					{
 					os << x;
+					return true;
 					}
 				};
 			template <class Wrapper>
@@ -48,10 +49,11 @@ boost
 			diagnostic<Wrapper,false,true>
 				{
 				static
-				void
+				bool
 				print( std::ostream & os, Wrapper const & x )
 					{
 					os << type<Wrapper>() << " = " << x.value;
+					return true;
 					}
 				};
 			template <class Wrapper>
@@ -59,10 +61,11 @@ boost
 			diagnostic<Wrapper,false,false>
 				{
 				static
-				void
+				bool
 				print( std::ostream & os, Wrapper const & )
 					{
 					os << type<Wrapper>() << " = N/A";
+					return true;
 					}
 				};
 			}

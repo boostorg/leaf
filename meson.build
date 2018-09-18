@@ -13,6 +13,7 @@ if not meson.is_subproject()
 		add_global_arguments(
 			'-Wno-unused-variable',
 			'-Wno-non-virtual-dtor',
+			'-Wno-dangling-else',
 			language:'cpp' )
 	endif
 endif

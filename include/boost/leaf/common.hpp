@@ -41,18 +41,7 @@ boost
 			using namespace std;
 			return xi_errno{errno};
 			}
-
-		struct throw_function;
-		struct throw_file;
-		struct throw_line;
-		template <class Tag> struct xi_source_location { char const * value; };
-		template <> struct xi_source_location<throw_line> { int value; };
 		}
 	}
-
-#define xi_THROW_LOCATION\
-	::boost::leaf::xi_source_location<::boost::leaf::throw_function> {__FUNCTION__},\
-	::boost::leaf::xi_source_location<::boost::leaf::throw_file> {__FILE__},\
-	::boost::leaf::xi_source_location<::boost::leaf::throw_line> {__LINE__}
 
 #endif

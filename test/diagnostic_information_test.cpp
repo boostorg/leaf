@@ -85,6 +85,7 @@ main()
 		{
 		leaf::throw_with_info(
 			my_error(),
+			xi_SOURCE_LOCATION,
 			printable_info_printable_payload(),
 			printable_info_non_printable_payload(),
 			non_printable_info_printable_payload(),
