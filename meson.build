@@ -25,7 +25,7 @@ tests = [
 	'tl_slot_test',
 	'diagnostic_print_test',
 	'diagnostic_information_test',
-	'expected_test',
+	'expect_test',
 	'transport_test'
 ]
 foreach t : tests

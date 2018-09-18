@@ -4,7 +4,7 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/expected.hpp>
+#include <boost/leaf/expect.hpp>
 #include <boost/leaf/common.hpp>
 #include <boost/leaf/put.hpp>
 #include <boost/leaf/diagnostic_information.hpp>
@@ -113,7 +113,7 @@ main( int argc, char const * argv[ ] )
 	leaf::set_has_current_error(0);
 
 	//We expect xi_file_name and xi_errno info to arrive with exceptions handled in this function.
-	leaf::expected<xi_file_name,xi_errno> info;
+	leaf::expect<xi_file_name,xi_errno> info;
 
 	char const * fn;
 	if( error err=parse_command_line(argc,argv,fn) )
@@ -158,8 +158,8 @@ main( int argc, char const * argv[ ] )
 			return 3;
 		default:
 			std::cerr <<
-					"Unknown error code " << err << ", cryptic information follows." << std::endl <<
-					leaf::diagnostic_information();
+				"Unknown error code " << err << ", cryptic information follows." << std::endl <<
+				leaf::diagnostic_information();
 			return 4;
 		}
 	}

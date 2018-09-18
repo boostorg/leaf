@@ -8,6 +8,7 @@
 #define UUID_AFBBD676B2FF11E8984C7976AE35F1A2
 
 #include <boost/leaf/detail/tl_slot.hpp>
+#include <boost/leaf/has_current_error.hpp>
 
 namespace
 boost
@@ -71,7 +72,7 @@ boost
 				}
 			~available() noexcept
 				{
-				if( reset_all_ )
+				if( reset_all_ && !has_current_error() )
 					leaf_detail::tl_slot_base::reset_all();
 				}
 			void
@@ -164,18 +165,18 @@ boost
 			}
 		template <class... A>
 		class
-		expected:
+		expect:
 			public available
 			{
-			expected( expected const & ) = delete;
-			expected & operator=( expected const & ) = delete;
+			expect( expect const & ) = delete;
+			expect & operator=( expect const & ) = delete;
 			public:
-			expected() noexcept
+			expect() noexcept
 				{
 				leaf_detail::tl_slot_base::reset_all();
 				leaf_detail::open_slots<A...>();
 				}
-			~expected() noexcept
+			~expect() noexcept
 				{
 				leaf_detail::close_slots<A...>();
 				}

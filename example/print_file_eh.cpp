@@ -4,7 +4,7 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/expected.hpp>
+#include <boost/leaf/expect.hpp>
 #include <boost/leaf/common.hpp>
 #include <boost/leaf/put.hpp>
 #include <boost/leaf/current_exception_diagnostic_information.hpp>
@@ -88,7 +88,7 @@ main( int argc, char const * argv[ ] )
  	std::cout.exceptions ( std::ostream::failbit | std::ostream::badbit );
  
  	//We expect xi_file_name and xi_errno info to arrive with exceptions handled in this function.
-	leaf::expected<xi_file_name,xi_errno> info;
+	leaf::expect<xi_file_name,xi_errno> info;
 
 	try
 		{

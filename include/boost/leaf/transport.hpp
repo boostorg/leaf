@@ -7,7 +7,7 @@
 #ifndef UUID_BC24FB98B2DE11E884419CF5AD35F1A2
 #define UUID_BC24FB98B2DE11E884419CF5AD35F1A2
 
-#include <boost/leaf/expected.hpp>
+#include <boost/leaf/expect.hpp>
 #include <boost/leaf/capture.hpp>
 #include <utility>
 #include <exception>

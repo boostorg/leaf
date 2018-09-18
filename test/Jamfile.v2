@@ -17,5 +17,5 @@ project
 run tl_slot_test.cpp ;
 run diagnostic_print_test.cpp ;
 run diagnostic_information_test.cpp ;
-run expected_test.cpp ;
+run expect_test.cpp ;
 run transport_test.cpp : : : <threading>multi ;

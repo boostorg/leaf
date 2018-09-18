@@ -4,7 +4,7 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/expected.hpp>
+#include <boost/leaf/expect.hpp>
 #include <boost/leaf/put.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
@@ -60,7 +60,7 @@ main()
 		{
 		BOOST_TEST(tl_slot<my_info<2>>::tl_instance().is_open()==0);
 		BOOST_TEST(tl_slot<my_info<3>>::tl_instance().is_open()==0);
-		leaf::expected<my_info<2>,my_info<3>> info;
+		leaf::expect<my_info<2>,my_info<3>> info;
 		BOOST_TEST(tl_slot<my_info<2>>::tl_instance().is_open()==1);
 		BOOST_TEST(tl_slot<my_info<3>>::tl_instance().is_open()==1);
 		try
@@ -91,13 +91,13 @@ main()
 	BOOST_TEST(total_count()==0);
 	///////////////////////////////////////////////
 		{
-		leaf::expected<my_info<2>,my_info<3>> info;
+		leaf::expect<my_info<2>,my_info<3>> info;
 		BOOST_TEST(!tl_slot<my_info<1>>::tl_instance().is_open());
 		BOOST_TEST(tl_slot<my_info<2>>::tl_instance().is_open()==1);
 		BOOST_TEST(tl_slot<my_info<3>>::tl_instance().is_open()==1);
 		try
 			{
-			leaf::expected<my_info<1>,my_info<2>> info;
+			leaf::expect<my_info<1>,my_info<2>> info;
 			BOOST_TEST(tl_slot<my_info<1>>::tl_instance().is_open()==1);
 			BOOST_TEST(tl_slot<my_info<2>>::tl_instance().is_open()==2);
 			BOOST_TEST(tl_slot<my_info<3>>::tl_instance().is_open()==1);

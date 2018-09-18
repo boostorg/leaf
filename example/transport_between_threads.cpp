@@ -5,7 +5,7 @@
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/transport.hpp>
-#include <boost/leaf/expected.hpp>
+#include <boost/leaf/expect.hpp>
 #include <boost/leaf/put.hpp>
 #include <string>
 #include <future>
@@ -27,12 +27,12 @@ struct task_result { };
 task_result
 task( bool succeed )
 	{
-	auto put = leaf::preload( failed_thread_id{std::this_thread::get_id()} ); //Report this thread's id (if expected).
+	auto put = leaf::preload( failed_thread_id{std::this_thread::get_id()} ); //Report this thread's id (if expect).
 
 	if( succeed )
 		return task_result { };
 	else
-		leaf::throw_with_info( failure(), failure_info1{"info"}, failure_info2{42} ); //Also report both failure_info1 and failure_info2 (if expected).
+		leaf::throw_with_info( failure(), failure_info1{"info"}, failure_info2{42} ); //Also report both failure_info1 and failure_info2 (if expect).
 	}
 
 std::vector<std::future<task_result>>

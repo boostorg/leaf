@@ -5,7 +5,7 @@
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/current_exception_diagnostic_information.hpp>
-#include <boost/leaf/expected.hpp>
+#include <boost/leaf/expect.hpp>
 #include <boost/leaf/put.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <sstream>
@@ -72,7 +72,7 @@ non_printable_info_non_printable_payload
 int
 main()
 	{
-	leaf::expected
+	leaf::expect
 		<
 		printable_info_printable_payload,
 		printable_info_non_printable_payload,
