@@ -28,23 +28,6 @@ matrix:
     - env: BOGUS_JOB=true
 
   include:
-
-    - os: linux
-      compiler: /usr/bin/clang++
-      env: TOOLSET=clang COMPILER=/usr/bin/clang++ CXXSTD=11
-      addons:
-        apt:
-          packages:
-            - clang-3.3
-
-    - os: linux
-      compiler: /usr/bin/clang++
-      env: TOOLSET=clang COMPILER=/usr/bin/clang++ CXXSTD=11
-      addons:
-        apt:
-          packages:
-            - clang-3.4
-
     - os: osx
       compiler: clang++
       env: TOOLSET=clang COMPILER=clang++ CXXSTD=11,14,1z
@@ -98,6 +81,22 @@ matrix:
             - g++-8
           sources:
             - ubuntu-toolchain-r-test
+
+    - os: linux
+      compiler: /usr/bin/clang++
+      env: TOOLSET=clang COMPILER=/usr/bin/clang++ CXXSTD=11
+      addons:
+        apt:
+          packages:
+            - clang-3.3
+
+    - os: linux
+      compiler: /usr/bin/clang++
+      env: TOOLSET=clang COMPILER=/usr/bin/clang++ CXXSTD=11
+      addons:
+        apt:
+          packages:
+            - clang-3.4
 
     - os: linux
       compiler: clang++-3.5

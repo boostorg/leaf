@@ -9,7 +9,6 @@
 
 #include <boost/leaf/detail/tl_slot.hpp>
 #include <boost/leaf/has_current_error.hpp>
-#include <iostream>
 
 namespace
 boost
@@ -73,8 +72,7 @@ boost
 				}
 			~available() noexcept
 				{
-				std::cout << this << ": " << reset_all_ << ", " << has_current_error() << std::endl;
-				if( reset_all_ && !has_current_error() )
+				if( reset_all_ )
 					leaf_detail::tl_slot_base::reset_all();
 				}
 			void
@@ -84,7 +82,7 @@ boost
 				}
 			[[noreturn]]
 			void
-			rethrow_with_info()
+			rethrow_with_current_info()
 				{
 				set_to_propagate();
 				throw;
@@ -181,6 +179,8 @@ boost
 			~expect() noexcept
 				{
 				leaf_detail::close_slots<A...>();
+				if( has_current_error() )
+					set_to_propagate();
 				}
 			};
 		}

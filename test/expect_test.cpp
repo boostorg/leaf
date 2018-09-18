@@ -136,7 +136,8 @@ main()
 						} ) );
 					BOOST_TEST(called);
 					}
-				info.rethrow_with_info();
+				info.rethrow_with_current_info();
+				BOOST_TEST(false);
 				}
 			}
 		catch( error const & )
@@ -163,5 +164,130 @@ main()
 	BOOST_TEST(!tl_slot<my_info<3>>::tl_instance().has_value());
 	BOOST_TEST(total_count()==0);
 	///////////////////////////////////////////////
+		{
+		leaf::expect<my_info<1>> info1;
+		try
+			{
+			leaf::expect<my_info<1>> info2;
+			leaf::throw_with_info(error(),my_info<1>(42));
+			BOOST_TEST(false);
+			}
+		catch( error const & )
+			{
+			BOOST_TEST(tl_slot<my_info<1>>::tl_instance().has_value());
+			unwrap(info1.match<my_info<1>>([ ] ( int x )
+				{
+				BOOST_TEST(x==42);
+				} ) );
+			}
+		}
+	BOOST_TEST(!tl_slot<my_info<1>>::tl_instance().has_value());
+	///////////////////////////////////////////////
+		{
+		leaf::expect<my_info<1>> info1;
+			{
+			leaf::expect<my_info<1>> info2;
+			try
+				{
+				leaf::throw_with_info(error(),my_info<1>(42));
+				BOOST_TEST(false);
+				}
+			catch( error const & )
+				{
+				BOOST_TEST(tl_slot<my_info<1>>::tl_instance().has_value());
+				unwrap(info1.match<my_info<1>>([ ] ( int x )
+					{
+					BOOST_TEST(x==42);
+					} ) );
+				}
+			}
+		BOOST_TEST(!tl_slot<my_info<1>>::tl_instance().has_value());
+		}
+	///////////////////////////////////////////////
+		{
+		leaf::expect<my_info<1>> info1;
+		try
+			{
+			leaf::expect<my_info<1>> info2;
+			try
+				{
+				leaf::throw_with_info(error(),my_info<1>(42));
+				BOOST_TEST(false);
+				}
+			catch( error const & )
+				{
+				BOOST_TEST(tl_slot<my_info<1>>::tl_instance().has_value());
+				unwrap(info1.match<my_info<1>>([ ] ( int x )
+					{
+					BOOST_TEST(x==42);
+					} ) );
+				throw error();
+				}
+			}
+		catch( error const & )
+			{
+			BOOST_TEST(tl_slot<my_info<1>>::tl_instance().has_value());
+			unwrap(info1.match<my_info<1>>([ ] ( int x )
+				{
+				BOOST_TEST(x==42);
+				} ) );
+			}
+		BOOST_TEST(tl_slot<my_info<1>>::tl_instance().has_value());
+		}
+	BOOST_TEST(!tl_slot<my_info<1>>::tl_instance().has_value());
+	///////////////////////////////////////////////
+		{
+		leaf::expect<my_info<1>> info1;
+		try
+			{
+			try
+				{
+				leaf::throw_with_info(error(),my_info<1>(42));
+				BOOST_TEST(false);
+				}
+			catch( error const & )
+				{
+				BOOST_TEST(tl_slot<my_info<1>>::tl_instance().has_value());
+				leaf::available info;
+				unwrap(info.match<my_info<1>>([ ] ( int x )
+					{
+					BOOST_TEST(x==42);
+					} ) );
+				throw error();
+				}
+			}
+		catch( error const & )
+			{
+			}
+		BOOST_TEST(!tl_slot<my_info<1>>::tl_instance().has_value());
+		}
+	///////////////////////////////////////////////
+		{
+		leaf::expect<my_info<1>> info1;
+		try
+			{
+			try
+				{
+				leaf::throw_with_info(error(),my_info<1>(42));
+				BOOST_TEST(false);
+				}
+			catch( error const & )
+				{
+				BOOST_TEST(tl_slot<my_info<1>>::tl_instance().has_value());
+				leaf::available info;
+				unwrap(info.match<my_info<1>>([ ] ( int x )
+					{
+					BOOST_TEST(x==42);
+					} ) );
+				info.rethrow_with_current_info();
+				BOOST_TEST(false);
+				}
+			}
+		catch( error const & )
+			{
+			}
+		BOOST_TEST(tl_slot<my_info<1>>::tl_instance().has_value());
+		}
+	BOOST_TEST(!tl_slot<my_info<1>>::tl_instance().has_value());
 	return boost::report_errors();
 	}
