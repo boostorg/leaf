@@ -6,6 +6,7 @@
 
 #include <boost/leaf/current_exception_diagnostic_information.hpp>
 #include <boost/leaf/expect.hpp>
+#include <boost/leaf/common.hpp>
 #include <boost/leaf/put.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <sstream>
@@ -77,7 +78,8 @@ main()
 		printable_info_printable_payload,
 		printable_info_non_printable_payload,
 		non_printable_info_printable_payload,
-		non_printable_info_non_printable_payload
+		non_printable_info_non_printable_payload,
+		leaf::xi_errno
 		> info;
 	try
 		{
@@ -86,7 +88,8 @@ main()
 			printable_info_printable_payload(),
 			printable_info_non_printable_payload(),
 			non_printable_info_printable_payload(),
-			non_printable_info_non_printable_payload() );
+			non_printable_info_non_printable_payload(),
+			leaf::xi_errno{ENOENT} );
 		}
 	catch( my_error const & )
 		{

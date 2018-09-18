@@ -30,7 +30,7 @@ boost
 			operator<<( std::ostream & os, xi_errno const & err )
 				{
 				using namespace std;
-				os << strerror(err.value);
+				os << type<xi_errno>() << " = " << err.value << ", \"" << strerror(err.value) << '"';
 				return os;
 				}
 			};
