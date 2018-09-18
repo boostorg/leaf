@@ -9,6 +9,7 @@
 
 #include <boost/leaf/detail/tl_slot.hpp>
 #include <boost/leaf/has_current_error.hpp>
+#include <iostream>
 
 namespace
 boost
@@ -72,6 +73,7 @@ boost
 				}
 			~available() noexcept
 				{
+				std::cout << this << ": " << reset_all_ << ", " << has_current_error() << std::endl;
 				if( reset_all_ && !has_current_error() )
 					leaf_detail::tl_slot_base::reset_all();
 				}
