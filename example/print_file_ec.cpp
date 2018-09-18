@@ -104,13 +104,19 @@ parse_command_line( int argc, char const * argv[ ], char const * & result )
 	return ok;
 	}
 
+bool
+return_true() noexcept
+	{
+	return true;
+	}
+
 int
 main( int argc, char const * argv[ ] )
 	{
 	//Instruct leaf::preload to always put() its payload during stack unwinding, not only if there
-	//is an uncaught_exception(). Alternatively, we can supply a function that evaluates to true
-	//if there is a pending error, false otherwise.
-	leaf::set_has_current_error(0);
+	//is an uncaught_exception(). If possible, we should supply a function that evaluates to true
+	//if there is a pending error in this thread, false otherwise. Our function always returns true.
+	leaf::set_has_current_error(&return_true);
 
 	//We expect xi_file_name and xi_errno info to arrive with exceptions handled in this function.
 	leaf::expect<xi_file_name,xi_errno> info;

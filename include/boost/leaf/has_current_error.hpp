@@ -30,11 +30,6 @@ boost
 				static thread_local bool (*f)() = &uncaught_exception_fwd;
 				return f;
 				}
-			bool
-			return_true() noexcept
-				{
-				return true;
-				}
 			}
 		bool
 		has_current_error() noexcept
@@ -44,7 +39,8 @@ boost
 		void
 		set_has_current_error( bool (*f)() ) noexcept
 			{
-			leaf_detail::has_current_error_() = f ? f : &leaf_detail::return_true;
+			assert(f!=0);
+			leaf_detail::has_current_error_() = f;
 			}
 		}
 	}
