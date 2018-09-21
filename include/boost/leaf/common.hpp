@@ -17,29 +17,29 @@ boost
 	namespace
 	leaf
 		{
-		struct xi_api_function { char const * value; };
-		struct xi_file_name { std::string value; };
+		struct ei_api_function { char const * value; };
+		struct ei_file_name { std::string value; };
 
 		struct
-		xi_errno
+		ei_errno
 			{
 			int value;
 			friend
 			inline
 			std::ostream &
-			operator<<( std::ostream & os, xi_errno const & err )
+			operator<<( std::ostream & os, ei_errno const & err )
 				{
 				using namespace std;
-				os << type<xi_errno>() << " = " << err.value << ", \"" << strerror(err.value) << '"';
+				os << type<ei_errno>() << " = " << err.value << ", \"" << strerror(err.value) << '"';
 				return os;
 				}
 			};
 		inline
-		xi_errno
+		ei_errno
 		get_errno() noexcept
 			{
 			using namespace std;
-			return xi_errno{errno};
+			return ei_errno{errno};
 			}
 		}
 	}

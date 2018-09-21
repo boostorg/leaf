@@ -18,8 +18,8 @@ boost
 		class
 		diagnostic_information
 			{
-			diagnostic_information( diagnostic_information const & );
-			diagnostic_information & operator=( diagnostic_information const & );
+			diagnostic_information( diagnostic_information const & ) = delete;
+			diagnostic_information & operator=( diagnostic_information const & ) = delete;
 			public:
 			diagnostic_information() noexcept
 				{
@@ -34,12 +34,12 @@ boost
 				int line=-1;
 				tl_slot_base::enumerate_put( [&os,&function,&file,&line]( tl_slot_base const & info )
 					{
-					if( &info==&tl_slot<xi_source_location<in_function>>::tl_instance() )
-						function = static_cast<tl_slot<xi_source_location<in_function>> const &>(info).value().value;
-					if( &info==&tl_slot<xi_source_location<in_file>>::tl_instance() )
-						file = static_cast<tl_slot<xi_source_location<in_file>> const &>(info).value().value;
-					if( &info==&tl_slot<xi_source_location<at_line>>::tl_instance() )
-						line = static_cast<tl_slot<xi_source_location<at_line>> const &>(info).value().value;
+					if( &info==&tl_slot<ei_source_location<in_function>>::tl_instance() )
+						function = static_cast<tl_slot<ei_source_location<in_function>> const &>(info).value().value;
+					if( &info==&tl_slot<ei_source_location<in_file>>::tl_instance() )
+						file = static_cast<tl_slot<ei_source_location<in_file>> const &>(info).value().value;
+					if( &info==&tl_slot<ei_source_location<at_line>>::tl_instance() )
+						line = static_cast<tl_slot<ei_source_location<at_line>> const &>(info).value().value;
 					if( info.diagnostic_print(os) )
 						os << std::endl;
 					} );

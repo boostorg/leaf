@@ -80,13 +80,13 @@ boost
 			using namespace leaf_detail;
 			return transport_impl<F>(&open_slots<T...>,f);
 			}
-		template <class F>
-		decltype(std::declval<F>()())
-		get( F f )
+		template <class Future>
+		decltype(std::declval<Future>().get())
+		get( Future & f )
 			{
 			try
 				{
-				return f();
+				return f.get();
 				}
 			catch( exception_wrapper & ex )
 				{

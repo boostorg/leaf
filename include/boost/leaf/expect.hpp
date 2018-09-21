@@ -19,7 +19,7 @@ boost
 		struct mismatch_error: virtual std::exception { };
 		template <class... Match>
 		void
-		unwrap( Match  && ... m )
+		unwrap( Match && ... m )
 			{
 			using namespace leaf_detail;
 			bool matched = false;

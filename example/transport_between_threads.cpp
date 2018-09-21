@@ -60,7 +60,7 @@ main()
 		try
 			{
 			//Get the result, or setup any exception info from the task thread into this thread.
-			task_result r = leaf::get( [&f] { return f.get(); } );
+			task_result r = leaf::get(f);
 
 			//No exception, consume the result.
 			std::cout << "Success!" << std::endl;

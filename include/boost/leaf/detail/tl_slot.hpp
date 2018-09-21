@@ -11,10 +11,10 @@
 #include <boost/leaf/detail/optional.hpp>
 #include <memory>
 
-#define xi_SOURCE_LOCATION\
-	::boost::leaf::xi_source_location<::boost::leaf::in_function> {__FUNCTION__},\
-	::boost::leaf::xi_source_location<::boost::leaf::at_line> {__LINE__},\
-	::boost::leaf::xi_source_location<::boost::leaf::in_file> {__FILE__}
+#define ei_SOURCE_LOCATION\
+	::boost::leaf::ei_source_location<::boost::leaf::in_function> {__FUNCTION__},\
+	::boost::leaf::ei_source_location<::boost::leaf::at_line> {__LINE__},\
+	::boost::leaf::ei_source_location<::boost::leaf::in_file> {__FILE__}
 
 namespace
 boost
@@ -25,8 +25,8 @@ boost
 		struct in_function;
 		struct in_file;
 		struct at_line;
-		template <class Tag> struct xi_source_location { char const * value; };
-		template <> struct xi_source_location<at_line> { int value; };
+		template <class Tag> struct ei_source_location { char const * value; };
+		template <> struct ei_source_location<at_line> { int value; };
 		namespace
 		leaf_detail
 			{
@@ -228,20 +228,20 @@ boost
 			tl_slot_state() noexcept:
 				put_list(0)
 				{
-				int c1=tl_slot<xi_source_location<in_file>>::tl_instance().open();
-				int c2=tl_slot<xi_source_location<at_line>>::tl_instance().open();
-				int c3=tl_slot<xi_source_location<in_function>>::tl_instance().open();
+				int c1=tl_slot<ei_source_location<in_file>>::tl_instance().open();
+				int c2=tl_slot<ei_source_location<at_line>>::tl_instance().open();
+				int c3=tl_slot<ei_source_location<in_function>>::tl_instance().open();
 				assert(c1==1);
 				assert(c2==1);
 				assert(c3==1);
 				}
 			template <class T>
 			struct
-			diagnostic<xi_source_location<T>,false,true>
+			diagnostic<ei_source_location<T>,false,true>
 				{
 				static
 				bool
-				print( std::ostream &, xi_source_location<T> const & )
+				print( std::ostream &, ei_source_location<T> const & )
 					{
 					return false;
 					}

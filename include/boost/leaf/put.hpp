@@ -106,7 +106,12 @@ boost
 					{
 					if( to_put_.has_value() && has_current_error() )
 						put_meta<sizeof...(T),tuple_type>::put(to_put_.extract_value());
-					}				
+					}
+				void
+				cancel() noexcept
+					{
+					to_put_.reset();
+					}
 				};
 			}
 		template <class... T>
@@ -118,6 +123,6 @@ boost
 		}
 	}
 
-#define EXCEPTION_INFO_THROW(e) ::boost::leaf::throw_with_info(e,xi_SOURCE_LOCATION)
+#define EXCEPTION_INFO_THROW(e) ::boost::leaf::throw_with_info(e,ei_SOURCE_LOCATION)
 
 #endif

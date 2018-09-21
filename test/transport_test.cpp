@@ -55,7 +55,7 @@ main()
 		f.fut.wait();
 		try
 			{
-			leaf::get([&f]{f.fut.get();});
+			leaf::get(f.fut);
 			BOOST_TEST(false);
 			}
 		catch( error const & )

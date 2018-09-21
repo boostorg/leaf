@@ -15,8 +15,8 @@ namespace leaf = boost::leaf;
 
 //We could define our own exception info types, but for this example the ones
 //defined in <boost/leaf/common.hpp> are a perfect match.
-using leaf::xi_file_name;
-using leaf::xi_errno;
+using leaf::ei_file_name;
+using leaf::ei_errno;
 
 //Exception type hierarchy.
 struct print_file_error : virtual std::exception { };
@@ -34,7 +34,7 @@ file_open( char const * file_name )
 	if( FILE * f = fopen(file_name,"rb") )
 		return std::shared_ptr<FILE>(f,&fclose);
 	else
-		leaf::throw_with_info( file_open_error(), xi_file_name{file_name}, xi_errno{errno} );
+		leaf::throw_with_info( file_open_error(), ei_file_name{file_name}, ei_errno{errno} );
 	}
 
 int
@@ -57,7 +57,7 @@ file_read( FILE & f, void * buf, int size )
 	{
 	int n = fread(buf,1,size,&f);
 	if( ferror(&f) )
-		leaf::throw_with_info( file_read_error(), xi_errno{errno} );
+		leaf::throw_with_info( file_read_error(), ei_errno{errno} );
 	if( n!=size )
 		throw file_read_error();
 	}
@@ -65,7 +65,7 @@ file_read( FILE & f, void * buf, int size )
 void
 print_file( char const * file_name )
 	{
-	auto put = leaf::preload( xi_file_name{file_name} );
+	auto put = leaf::preload( ei_file_name{file_name} );
 
 	std::shared_ptr<FILE> f = file_open( file_name );
 	std::string buffer( 1+file_size(*f), '\0' );
@@ -87,8 +87,8 @@ main( int argc, char const * argv[ ] )
 	{
  	std::cout.exceptions ( std::ostream::failbit | std::ostream::badbit );
  
- 	//We expect xi_file_name and xi_errno info to arrive with exceptions handled in this function.
-	leaf::expect<xi_file_name,xi_errno> info;
+ 	//We expect ei_file_name and ei_errno info to arrive with exceptions handled in this function.
+	leaf::expect<ei_file_name,ei_errno> info;
 
 	try
 		{
@@ -105,7 +105,7 @@ main( int argc, char const * argv[ ] )
 		{
 		//unwrap is given a list of match objects (in this case only one), which it attempts to match (in order) to
 		//available exception info (if none can be matched, it throws leaf::mismatch_error).
-		unwrap( info.match<xi_file_name,xi_errno>( [ ] ( std::string const & fn, int errn )
+		unwrap( info.match<ei_file_name,ei_errno>( [ ] ( std::string const & fn, int errn )
 			{
 			if( errn==ENOENT )
 				std::cerr << "File not found: " << fn << std::endl;
@@ -118,15 +118,15 @@ main( int argc, char const * argv[ ] )
 	io_error const & )
 		{
 		//unwrap is given a list of match objects, which it attempts to match (in order) to available exception info.
-		//In this case it will first check if both xi_file_name and xi_errno are avialable; if not, it will next check
-		//if just xi_errno is available; and if not, the last match will match even if no exception info is available,
+		//In this case it will first check if both ei_file_name and ei_errno are avialable; if not, it will next check
+		//if just ei_errno is available; and if not, the last match will match even if no exception info is available,
 		//to print a generic error message.
 		unwrap(
-			info.match<xi_file_name,xi_errno>( [ ] ( std::string const & fn, int errn )
+			info.match<ei_file_name,ei_errno>( [ ] ( std::string const & fn, int errn )
 				{
 				std::cerr << "Failed to access " << fn << ", errno=" << errn << std::endl;
 				} ),
-			info.match<xi_errno>( [ ] ( int errn )
+			info.match<ei_errno>( [ ] ( int errn )
 				{
 				std::cerr << "I/O error, errno=" << errn << std::endl;
 				} ),

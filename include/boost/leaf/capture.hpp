@@ -24,7 +24,8 @@ boost
 			typedef std::vector<std::shared_ptr<void const> > container_t;
 			container_t info_;
 			public:
-			capture() noexcept:
+			capture( capture && ) = default;
+			capture():
 				info_( [ ]
 					{
 					using namespace leaf_detail;

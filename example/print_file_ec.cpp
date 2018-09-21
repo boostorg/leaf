@@ -15,8 +15,8 @@ namespace leaf = boost::leaf;
 
 //We could define our own exception info types, but for this example the ones
 //defined in <boost/leaf/common.hpp> are a perfect match.
-using leaf::xi_file_name;
-using leaf::xi_errno;
+using leaf::ei_file_name;
+using leaf::ei_errno;
 
 //Errors
 enum
@@ -40,7 +40,7 @@ file_open( char const * file_name, std::shared_ptr<FILE> & result )
 		}
 	else
 		{
-		leaf::put(xi_file_name{file_name},xi_errno{errno});
+		leaf::put(ei_file_name{file_name},ei_errno{errno});
 		return file_open_error;
 		}
 	}
@@ -66,7 +66,7 @@ file_read( FILE & f, void * buf, int size )
 	int n = fread(buf,1,size,&f);
 	if( ferror(&f) )
 		{
-		leaf::put(xi_errno{errno});
+		leaf::put(ei_errno{errno});
 		return file_read_error;
 		}
 	if( n!=size )
@@ -77,11 +77,12 @@ file_read( FILE & f, void * buf, int size )
 error
 print_file( char const * file_name )
 	{
-	auto put = leaf::preload( xi_file_name{file_name} );
-
 	std::shared_ptr<FILE> f;
 	if( error err = file_open(file_name,f) )
 		return err;
+
+	auto put = leaf::preload( ei_file_name{file_name} );
+
 	int s;
 	if( error err = file_size(*f,s) )
 		return err;
@@ -92,6 +93,8 @@ print_file( char const * file_name )
 	std::cout.flush();
 	if( std::cout.fail() )
 		return cout_error;
+
+	put.cancel();
 	return ok;
 	}
 
@@ -118,15 +121,15 @@ main( int argc, char const * argv[ ] )
 	//if there is a pending error in this thread, false otherwise. Our function always returns true.
 	leaf::set_has_current_error(&return_true);
 
-	//We expect xi_file_name and xi_errno info to arrive with exceptions handled in this function.
-	leaf::expect<xi_file_name,xi_errno> info;
-
 	char const * fn;
 	if( error err=parse_command_line(argc,argv,fn) )
 		{
 		std::cout << "Bad command line argument" << std::endl;
 		return 1;
 		}
+
+	//We expect ei_file_name and ei_errno info to arrive with exceptions handled in this function.
+	leaf::expect<ei_file_name,ei_errno> info;
 	switch( error err=print_file(fn) )
 		{
 		case ok:
@@ -134,7 +137,7 @@ main( int argc, char const * argv[ ] )
 		case file_open_error:
 			//unwrap is given a list of match objects (in this case only one), which it attempts to match (in order) to
 			//available exception info (if none can be matched, it throws leaf::mismatch_error).
-			unwrap( info.match<xi_file_name,xi_errno>( [ ] ( std::string const & fn, int errn )
+			unwrap( info.match<ei_file_name,ei_errno>( [ ] ( std::string const & fn, int errn )
 				{
 				if( errn==ENOENT )
 					std::cerr << "File not found: " << fn << std::endl;
@@ -145,15 +148,15 @@ main( int argc, char const * argv[ ] )
 		case file_size_error:
 		case file_read_error:
 			//unwrap is given a list of match objects, which it attempts to match (in order) to available exception info.
-			//In this case it will first check if both xi_file_name and xi_errno are avialable; if not, it will next check
-			//if just xi_errno is available; and if not, the last match will match even if no exception info is available,
+			//In this case it will first check if both ei_file_name and ei_errno are avialable; if not, it will next check
+			//if just ei_errno is available; and if not, the last match will match even if no exception info is available,
 			//to print a generic error message.
 			unwrap(
-				info.match<xi_file_name,xi_errno>( [ ] ( std::string const & fn, int errn )
+				info.match<ei_file_name,ei_errno>( [ ] ( std::string const & fn, int errn )
 					{
 					std::cerr << "Failed to access " << fn << ", errno=" << errn << std::endl;
 					} ),
-				info.match<xi_errno>( [ ] ( int errn )
+				info.match<ei_errno>( [ ] ( int errn )
 					{
 					std::cerr << "I/O error, errno=" << errn << std::endl;
 					} ),

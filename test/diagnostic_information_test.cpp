@@ -79,18 +79,18 @@ main()
 		printable_info_non_printable_payload,
 		non_printable_info_printable_payload,
 		non_printable_info_non_printable_payload,
-		leaf::xi_errno
+		leaf::ei_errno
 		> info;
 	try
 		{
 		leaf::throw_with_info(
 			my_error(),
-			xi_SOURCE_LOCATION,
+			ei_SOURCE_LOCATION,
 			printable_info_printable_payload(),
 			printable_info_non_printable_payload(),
 			non_printable_info_printable_payload(),
 			non_printable_info_non_printable_payload(),
-			leaf::xi_errno{ENOENT} );
+			leaf::ei_errno{ENOENT} );
 		}
 	catch( my_error const & )
 		{
