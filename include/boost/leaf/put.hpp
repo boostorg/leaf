@@ -18,18 +18,18 @@ boost
 	namespace
 	leaf
 		{
-		template <class... T>
+		template <class... ErrorInfo>
 		void
-		put( T && ... a ) noexcept
+		put( ErrorInfo && ... a ) noexcept
 			{
-			{ using _ = bool[ ]; (void) _ { leaf_detail::tl_slot<T>::tl_instance().put(std::forward<T>(a))... }; }
+			{ using _ = bool[ ]; (void) _ { leaf_detail::tl_slot<ErrorInfo>::tl_instance().put(std::forward<ErrorInfo>(a))... }; }
 			}
-		template <class... T,class Exception>
+		template <class... ErrorInfo,class Exception>
 		[[noreturn]]
 		void
-		throw_with_info( Exception const & e, T && ... a )
+		throw_with_info( Exception const & e, ErrorInfo && ... a )
 			{
-			put(std::forward<T>(a)...);
+			put(std::forward<ErrorInfo>(a)...);
 			throw e;
 			}
 		namespace

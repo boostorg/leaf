@@ -32,7 +32,7 @@ boost
 			{
 			available( available const & ) = delete;
 			available & operator=( available const & ) = delete;
-			template <class F,class... T>
+			template <class F,class... ErrorInfo>
 			class
 			match_
 				{
@@ -53,11 +53,11 @@ boost
 					using namespace leaf_detail;
 					if( !matched )
 						{
-						bool const available[ ] = { tl_slot<T>::tl_instance().has_value()... };
+						bool const available[ ] = { tl_slot<ErrorInfo>::tl_instance().has_value()... };
 						for( auto i : available )
 							if( !i )
 								return 42;
-						(void) f_(tl_slot<T>::tl_instance().value().value...);
+						(void) f_(tl_slot<ErrorInfo>::tl_instance().value().value...);
 						matched=true;
 						}
 					return 42;
@@ -87,11 +87,11 @@ boost
 				set_to_propagate();
 				throw;
 				}
-			template <class... T,class F>
-			match_<F,T...>
+			template <class... ErrorInfo,class F>
+			match_<F,ErrorInfo...>
 			match( F && f ) noexcept
 				{
-				return match_<F,T...>(std::move(f));
+				return match_<F,ErrorInfo...>(std::move(f));
 				}
 			};
 		namespace

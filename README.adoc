@@ -12,8 +12,9 @@ Low-latency Error Augmentation Framework for C++11
 
 LEAF is a non-intrusive C++11 library for transporting arbitrary error information from contexts that detect and report failures, as well as from intermediate error-neutral contexts, to scopes where the error is ultimately handled.
 
-LEAF does not allocate dynamic memory, which makes it suitable for low-latency and other performance-critical environments. It is compatible with all error handling APIs, and can be used with or without exception handling.
+LEAF does not allocate dynamic memoryfootnote:[Except when transporting error info between threads, see <<capture,`capture`>>.], which makes it suitable for low-latency and other performance-critical environments. It is compatible with all error handling APIs, and can be used with or without exception handling.
 
+[[distribution]]
 == Distribution
 
 LEAF is distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
@@ -22,14 +23,17 @@ The source code is available in https://github.com/zajo/leaf[this GitHub reposit
 
 NOTE: LEAF is not part of Boost. Please post questions and feedback on the Boost Developers Mailing List.
 
+[[building]]
 == Building
 
 LEAF is a header-only library and it requires no building. The unit tests use Boost Build, but the library itself has no dependency on Boost or any other library.
 
+[[portability]]
 == Portability
 
 LEAF requires a {CPP}11 compiler. See unit test matrix at https://travis-ci.org/zajo/leaf[Travis-CI].
 
+[[tutorial]]
 == Tutorial
 
 Let's consider a function that reads data from a file into a buffer and returns an `error` enum to report errors:
@@ -247,7 +251,6 @@ Effects: :: Unless the user has called `<<set_to_propagate,set_to_propagate>>`, 
 [[available::set_to_propagate]]
 ==== `set_to_propagate`
 
-
 [source,c++]
 ----
 namespace boost { namespace leaf {
@@ -302,7 +305,7 @@ namespace boost { namespace leaf {
 
 Returns: :: An object of unspecified type designed to be passed directly to `<<unwrap,unwrap>>`, which takes any number of such objects, and proceeds to inspect them in order, until it finds a match where error info objects are currently available in the calling thread (see `<<put,put>>`) for all specified `ErrorInfo...` types. If found, `unwrap` invokes `f`, passing the `.value` of each available error info object.
 
-Throws: :: If `unwrap` is unable to find a suitable match, it throws `<<mismatch_error,mismatch_error>>`.
+Throws: :: If `unwrap` is unable to find a suitable match, it throwsfootnoteref:[onlythrow,This is the only LEAF function that throws.] `<<mismatch_error,mismatch_error>>`.
 
 '''
 
@@ -374,7 +377,7 @@ Effects: ::
 
 . The storage provided by the `expect` constructor for error info objects is removed, except for error info types specified in other active `expect` instances up the call stack.
 
-. If `std::unhandled_exception()` returns `true`, calls `<<set_to_propagate,set_to_propagate`>>.
+. If `<<has_current_error,has_current_error>>` is `true`, calls `<<set_to_propagate,set_to_propagate`>>.
 
 '''
 
@@ -396,9 +399,9 @@ namespace boost { namespace leaf {
 ----
 ====
 
-Effects: :: `unwrap` takes any number of objects returned by `<<match,match>>`, and proceeds to inspect them in order, until it finds a match where error info objects are currently available in the calling thread (see `<<put,put>>`) for all `ErrorInfo...` types used to instantiate the `<<match,match>>` function template. If found, `unwrap` invokes `f`, passing the `.value` of each available error info object.
+Effects: :: `unwrap` takes any number of objects returned by `<<match,match>>`, and proceeds to inspect them in order, until it finds a match where error info objects are currently available in the calling thread (see `<<put,put>>`) for all `ErrorInfo...` types used to instantiate the `<<match,match>>` function template. If found, `unwrap` invokes the function `f` (passed to `match`), passing the `.value` of each available error info object.
 
-Throws: :: If no match is found, `unwrap` throws `<<mismatch_error>>`.
+Throws: :: If no match is found, `unwrap` throwsfootnoteref:[onlythrow] `<<mismatch_error,mismatch_error>>`.
 
 '''
 
@@ -444,7 +447,7 @@ Effects: :: As if:
 +
 [source,c++]
 ----
-put(std::forward<T>(info)...);
+put(std::forward<ErrorInfo>(info)...);
 throw e;
 ----
 
@@ -468,11 +471,12 @@ namespace boost { namespace leaf {
 
 Returns: :: An object of unspecified moveable type which holds copies of all the passed `info` objects. Upon its destruction the stored copies are all forwarded by rvalue reference to `<<put,put>>`, except that:
 
-- If `std::unhandled_exception()` is true, or the user calls  `cancel` (a member function of the returned object), all preloaded error info objects are discarded.
+- If `<<has_current_error,has_current_error>>` is `false`, or the user calls  `cancel` (a member function of the returned object), all preloaded error info objects are discarded.
 - If any of the `info` objects passed to `preload` is a function, it is expected to return the actual error info object to be passed to `put`, and the function call to obtain it is deferred until the object returned by `preload` is destroyed (think `errno`, which obviously should not be captured at the time `preload` is called).
 
 '''
 
+[[has_current_error]]
 === `has_current_error`
 
 ====
@@ -488,12 +492,13 @@ namespace boost { namespace leaf {
 ----
 ====
 
-LEAF uses `has_current_error` to determine if an error is currently being propagated up the call stack. By default, `has_current_error` returns `std::unhandled_exception()`. Use `set_has_current_error` to hook up a different function, if needed
+LEAF uses `has_current_error` to determine if an error is currently being propagated up the call stack. By default, `has_current_error` returns `std::unhandled_exception()`. Use `set_has_current_error` to hook up a different implementation, if needed
 
 NOTE: `has_current_error` is an optimization, for example when using `<<preload,preload>>`, the call to `<<put,put>>` will be skipped unless `has_current_error` returns `true`. It is valid to pass to `set_has_current_error` a function which always returns `true`.
 
 '''
 
+[[common]]
 === Common error info types
 
 ====
@@ -532,6 +537,7 @@ NOTE: `ei_errno` objects can be stremed to a `std::ostream`, which uses `strerro
 
 '''
 
+[[diagnostic_information]]
 === `diagnostic_information`
 
 ====
@@ -566,6 +572,7 @@ Each error info object is output based on the following rules:
 
 '''
 
+[[current_exception_diagnostic_information]]
 === `current_exception_diagnostic_information`
 
 ====
@@ -604,6 +611,7 @@ catch(...) {
 
 '''
 
+[[capture]]
 === `capture`
 
 ====
@@ -635,6 +643,7 @@ NOTE: To transport error info objects between threads, it is usually preferable 
 
 '''
 
+[[capture_ctors]]
 ==== Constructors
 
 [source,c++]
@@ -653,6 +662,7 @@ Effects: ::
 
 '''
 
+[[capture::release]]
 ==== `release`
 
 [source,c++]
@@ -668,6 +678,7 @@ Moves all exception info objects captured from the thread in which `this` was in
 
 '''
 
+[[transport]]
 === `transport`
 
 ====
@@ -695,6 +706,7 @@ NOTE: Click https://github.com/zajo/leaf/blob/master/example/transport_between_t
 
 '''
 
+[[get]]
 === `get`
 
 ====
@@ -716,6 +728,7 @@ TIP: There is no need to use `<<expect,expect>>` when calling `<<get,get>>`; in 
 
 NOTE: Click https://github.com/zajo/leaf/blob/master/example/transport_between_threads.cpp[here] to see a complete example on transporting error info objects between threads.
 
+[[techniques]]
 == Programming techniques
 
 === Capturing `errno` with `preload`

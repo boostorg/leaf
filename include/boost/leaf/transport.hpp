@@ -73,12 +73,12 @@ boost
 					}
 				};
 			}
-		template <class... T,class F>
+		template <class... ErrorInfo,class F>
 		leaf_detail::transport_impl<F>
 		transport( F f )
 			{
 			using namespace leaf_detail;
-			return transport_impl<F>(&open_slots<T...>,f);
+			return transport_impl<F>(&open_slots<ErrorInfo...>,f);
 			}
 		template <class Future>
 		decltype(std::declval<Future>().get())
