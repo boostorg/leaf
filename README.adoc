@@ -175,9 +175,9 @@ NOTE: The complete program from this tutorial is available https://github.com/za
 [[available]]
 === `available`
 
-[source,c++]
 ====
 .#include <boost/leaf/expect.hpp>
+[source,c++]
 ----
 namespace boost { namespace leaf {
 
@@ -309,9 +309,9 @@ Throws: :: If `unwrap` is unable to find a suitable match, it throws `<<mismatch
 [[expect]]
 === `expect<>`
 
-[source,c++]
 ====
 .#include <boost/leaf/expect.hpp>
+[source,c++]
 ----
 namespace boost { namespace leaf {
 
@@ -381,9 +381,9 @@ Effects: ::
 [[unwrap]]
 === `unwrap`
 
-[source,c++]
 ====
 .#include <boost/leaf/expect.hpp>
+[source,c++]
 ----
 namespace boost { namespace leaf {
 
@@ -405,9 +405,9 @@ Throws: :: If no match is found, `unwrap` throws `<<mismatch_error>>`.
 [[put]]
 === `put`
 
-[source,c++]
 ====
 .#include <boost/leaf/put.hpp>
+[source,c++]
 ----
 namespace boost { namespace leaf {
 
@@ -427,9 +427,9 @@ All other `info` objects are discarded.
 [[throw_with_info]]
 === `throw_with_info`
 
-[source,c++]
 ====
 .#include <boost/leaf/put.hpp>
+[source,c++]
 ----
 namespace boost { namespace leaf {
 
@@ -453,9 +453,9 @@ throw e;
 [[preload]]
 === `preload`
 
-[source,c++]
 ====
 .#include <boost/leaf/put.hpp>
+[source,c++]
 ----
 namespace boost { namespace leaf {
 
@@ -534,9 +534,9 @@ NOTE: `ei_errno` objects can be stremed to a `std::ostream`, which uses `strerro
 
 === `diagnostic_information`
 
-[source,c++]
 ====
 .#include <boost/leaf/diagnostic_information.hpp>
+[source,c++]
 ----
 namespace boost { namespace leaf {
 
@@ -568,9 +568,9 @@ Each error info object is output based on the following rules:
 
 === `current_exception_diagnostic_information`
 
-[source,c++]
 ====
 .#include <boost/leaf/current_exception_diagnostic_information.hpp>
+[source,c++]
 ----
 namespace boost { namespace leaf {
 
@@ -606,9 +606,9 @@ catch(...) {
 
 === `capture`
 
-[source,c++]
 ====
 .#include <boost/leaf/capture.hpp>
+[source,c++]
 ----
 namespace boost { namespace leaf {
 
@@ -670,9 +670,9 @@ Moves all exception info objects captured from the thread in which `this` was in
 
 === `transport`
 
-[source,c++]
 ====
 .#include <boost/leaf/transport.hpp>
+[source,c++]
 ----
 namespace boost { namespace leaf {
 
@@ -697,9 +697,9 @@ NOTE: Click https://github.com/zajo/leaf/blob/master/example/transport_between_t
 
 === `get`
 
-[source,c++]
 ====
 .#include <boost/leaf/transport.hpp>
+[source,c++]
 ----
 namespace boost { namespace leaf {
 
