@@ -277,7 +277,7 @@ namespace boost { namespace leaf {
 
 Effects: :: Equivalent to:
 +
-[code,c++]
+[source,c++]
 ----
 set_to_propagate();
 throw;
