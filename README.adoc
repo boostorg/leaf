@@ -36,23 +36,23 @@ LEAF requires a {CPP}11 compiler. See unit test matrix at https://travis-ci.org/
 [[tutorial]]
 == Tutorial
 
-Let's consider a function that reads data from a file into a buffer and returns an `error` enum to report errors:
+As an example, here is a function that reads data from a file into a buffer, returns an `error` enum to report errors, and uses LEAF to provide additional error info:
 
 ====
 [source,c++]
 ----
 error file_read( FILE & f, void * buf, int size ) {
-	int n = fread(buf,1,size,&f);
+  int n = fread(buf,1,size,&f);
 
-	if( ferror(&f) ) { <1>
-		leaf::put( ei_errno { errno } );
-		return file_read_error;
-	}
+  if( ferror(&f) ) { <1>
+    leaf::put( ei_errno { errno } );
+    return file_read_error;
+  }
 
-	if( n!=size ) <2>
-		return file_read_error;
+  if( n!=size ) <2>
+    return file_read_error;
 
-	return ok;
+  return ok;
 }
 ----
 <1> The function fails if `ferror` indicates an error.
@@ -80,40 +80,41 @@ Now, let's consider a possible caller of `file_read`:
 [source,c++]
 ----
 error print_file( char const * file_name ) {
-	std::shared_ptr<FILE> f;
-	if( error err = file_open(file_name,f) ) <1>
-		return err;
+  std::shared_ptr<FILE> f;
+  if( error err = file_open(file_name,f) ) <1>
+    return err;
 
-	auto put = leaf::preload( ei_file_name {file_name } ); <2>
+  auto put = leaf::preload( ei_file_name {file_name } ); <2>
 
-	int s;
-	if( error err = file_size(*f,s) )
-		return err;
+  int s;
+  if( error err = file_size(*f,s) )
+    return err;
 
-	std::string buffer( 1+s, '\0' );
-	if( error err = file_read(*f,&buffer[0],buffer.size()-1) )
-		return err;
+  std::string buffer( 1+s, '\0' );
+  if( error err = file_read(*f,&buffer[0],buffer.size()-1) )
+    return err;
 
-	std::cout << buffer;
-	std::cout.flush();
-	if( std::cout.fail() )
-		return cout_error;
+  std::cout << buffer;
+  std::cout.flush();
+  if( std::cout.fail() )
+    return cout_error;
 
-	put.cancel();
-	return ok;
+  put.cancel();
+  return ok;
 }
 ----
 <1> This function takes a `file_name` argument and calls another function, `file_open` (not shown), that opens the file for reading. If that function reports a failure, we simply forward it to the caller.
-<2> Next, we call the convenience function `<<preload,preload>>`, moving an `ei_file_name` error info object into the temporary object `put`. Unless canceled, when this object is destroyed, all error info objects passed to `preload` will be forwarded by rvalue reference to `<<put,put>>` automatically. This way we can rest assured that the file name will be available with any failure reported by the several `return` statements in `print_file`.
+<2> Next, we call the convenience function `<<preload,preload>>`, moving an `ei_file_name` error info object into the temporary object `put`. Unless canceled, when this object is destroyed, all error info objects passed to `preload` will be forwarded by rvalue reference to `<<put,put>>` automatically. This way we can rest assured that the file name will be available with any failure reported by a `return` statement in `print_file`.
 ====
 
 TIP: `print_file` uses preload only after `file_open` (not shown) has successfully opened the file. That's because, presumably, `file_open` itself has the file name and will have already passed it to `<<put,put>>`.
 
-NOTE: The `ei_file_name` type, similarly to `ei_errno`, is a simple struct containing a string `value`, e.g. `struct ei_file_name { std::string value; };`
+NOTE: The `ei_file_name` type, similarly to `ei_errno`, is a simple struct containing a string `value`, e.g.: +
+`struct ei_file_name { std::string value; };`
 
 If all functions called by `print_file` succeed, we call `put.<<cancel,cancel>>()`, to instruct its destructor to not forward the preloaded `ei_file_name` object to `<<put,put>>`, and return `ok`.
 
-TIP: If failures are reported by throwing exceptions, it is not necessary to call `<<cancel,cancel>>`; LEAF will use `std::unhandled_exception` to determine if a failure is being reported.
+TIP: If failures are reported by throwing exceptions, it is not necessary to call `<<cancel,cancel>>`; to determine if a failure is being reported, LEAF calls `<<has_current_error,has_current_error>>`, which by default uses `std::unhandled_exception`.
 
 Finally, let's consider the `main` function, which is able to handle errors reported by `print_file`:
 
@@ -121,47 +122,47 @@ Finally, let's consider the `main` function, which is able to handle errors repo
 [source,c++]
 ----
 int main( int argc, char const * argv[ ] ) {
-	char const * fn;
-	if( error err=parse_command_line(argc,argv,fn) ) { <1>
-		std::cout << "Bad command line argument" << std::endl;
-		return 1;
-	}
+  char const * fn;
+  if( error err=parse_command_line(argc,argv,fn) ) { <1>
+    std::cout << "Bad command line argument" << std::endl;
+    return 1;
+  }
 
-	leaf::expect<ei_file_name,ei_errno> info; <2>
+  leaf::expect<ei_file_name,ei_errno> info; <2>
 
-	switch( error err=print_file(fn) ) {
-		case ok:
-			return 0;
+  switch( error err=print_file(fn) ) {
+    case ok:
+      return 0;
 
-		case file_open_error: <3>
-			unwrap( info.match<ei_file_name,ei_errno>( [ ] ( std::string const & fn, int errn ) {
-				if( errn==ENOENT )
-					std::cerr << "File not found: " << fn << std::endl;
-				else
-					std::cerr << "Failed to open " << fn << ", errno=" << errn << std::endl;
-			} ) );
-			return 2;
+    case file_open_error: <3>
+      unwrap( info.match<ei_file_name,ei_errno>( [ ] ( std::string const & fn, int errn ) {
+        if( errn==ENOENT )
+          std::cerr << "File not found: " << fn << std::endl;
+        else
+          std::cerr << "Failed to open " << fn << ", errno=" << errn << std::endl;
+      } ) );
+      return 2;
 
-		case file_size_error:
-		case file_read_error: <4>
-			unwrap(
-				info.match<ei_file_name,ei_errno>( [ ] ( std::string const & fn, int errn ) {
-					std::cerr << "Failed to access " << fn << ", errno=" << errn << std::endl;
-				} ),
-				info.match<ei_errno>( [ ] ( int errn ) {
-					std::cerr << "I/O error, errno=" << errn << std::endl;
-				} ),
-				info.match<>( [ ] {
-					std::cerr << "I/O error" << std::endl;
-				} ) );
-			return 3;
+    case file_size_error:
+    case file_read_error: <4>
+      unwrap(
+        info.match<ei_file_name,ei_errno>( [ ] ( std::string const & fn, int errn ) {
+          std::cerr << "Failed to access " << fn << ", errno=" << errn << std::endl;
+        } ),
+        info.match<ei_errno>( [ ] ( int errn ) {
+          std::cerr << "I/O error, errno=" << errn << std::endl;
+        } ),
+        info.match<>( [ ] {
+          std::cerr << "I/O error" << std::endl;
+        } ) );
+      return 3;
 
-		default: <5>
-			std::cerr <<
-				"Unknown error code " << err << ", cryptic information follows." << std::endl <<
-				leaf::diagnostic_information();
-			return 4;
-	}
+    default: <5>
+      std::cerr <<
+        "Unknown error code " << err << ", cryptic information follows." << std::endl <<
+        leaf::diagnostic_information();
+      return 4;
+  }
 }
 ----
 <1> Parse the command line to obtain a file name.
@@ -185,24 +186,24 @@ NOTE: The complete program from this tutorial is available https://github.com/za
 ----
 namespace boost { namespace leaf {
 
-	class available {
+  class available {
 
-		available( available const & ) = delete;
-		available & operatar=( available const & ) = delete;
+    available( available const & ) = delete;
+    available & operatar=( available const & ) = delete;
 
-public:
+  public:
 
-		available() noexcept;
-		~available() noexcept
+    available() noexcept;
+    ~available() noexcept
 
-		void set_to_propagate() noexcept;
+    void set_to_propagate() noexcept;
 
-		[[noreturn]] void rethrow_with_current_info();
+    [[noreturn]] void rethrow_with_current_info();
 
-		template <class... ErrorInfo,class F>
-		<<unspecified_type>> match( F && f ) noexcept;
+    template <class... ErrorInfo,class F>
+    <<unspecified_type>> match( F && f ) noexcept;
 
-	};
+  };
 
 } }
 ----
@@ -221,7 +222,7 @@ NOTE: Typically the functionality provided by class `available` is accessed thro
 ----
 namespace boost { namespace leaf {
 
-	available::available() noexcept;
+  available::available() noexcept;
 
 } }
 
@@ -238,7 +239,7 @@ Effects: :: Initializes an `available` instance so that when it is destroyed it 
 ----
 namespace boost { namespace leaf {
 
-	available::~available() noexcept;
+  available::~available() noexcept;
 
 } }
 
@@ -255,7 +256,7 @@ Effects: :: Unless the user has called `<<set_to_propagate,set_to_propagate>>`, 
 ----
 namespace boost { namespace leaf {
 
-	void available::set_to_propagate() noexcept;
+  void available::set_to_propagate() noexcept;
 
 } }
 
@@ -272,7 +273,7 @@ Effects: :: By default, `<<available_dtor,~available>>` will reset (clear) all e
 ----
 namespace boost { namespace leaf {
 
-	void available::rethrow_with_current_info();
+  void available::rethrow_with_current_info();
 
 } }
 
@@ -296,8 +297,8 @@ throw;
 ----
 namespace boost { namespace leaf {
 
-	template <class... ErrorInfo,class F>
-	<<unspecified_type>> available::match( F && f ) noexcept;
+  template <class... ErrorInfo,class F>
+  <<unspecified_type>> available::match( F && f ) noexcept;
 
 } }
 
@@ -318,18 +319,18 @@ Throws: :: If `unwrap` is unable to find a suitable match, it throwsfootnoteref:
 ----
 namespace boost { namespace leaf {
 
-	template <class... ErrorInfo>
-	class expect: public availablej {
+  template <class... ErrorInfo>
+  class expect: public availablej {
 
-		expect( expect const & ) = delete;
-		expect & operator=( expect const & ) = delete;
+    expect( expect const & ) = delete;
+    expect & operator=( expect const & ) = delete;
 
-	public:
+  public:
 
-		expect() noexcept;
-		~expect() noexcept;
+    expect() noexcept;
+    ~expect() noexcept;
 
-	};
+  };
 
 } }
 ----
@@ -348,7 +349,7 @@ The `expect` class template is used to communicate to LEAF that error info objec
 ----
 namespace boost { namespace leaf {
 
-	expect<class ErrorInfo...>::expect() noexcept;
+  expect<class ErrorInfo...>::expect() noexcept;
 
 } }
 ----
@@ -368,7 +369,7 @@ Effects: ::
 ----
 namespace boost { namespace leaf {
 
-	expect<class ErrorInfo...>::~expect*( noexcept;
+  expect<class ErrorInfo...>::~expect*( noexcept;
 
 } }
 ----
@@ -390,10 +391,10 @@ Effects: ::
 ----
 namespace boost { namespace leaf {
 
-	struct mismatch_error: std::exception { };
+  struct mismatch_error: std::exception { };
 
-	template <class... Match>
-	void unwrap( Match && ... m );
+  template <class... Match>
+  void unwrap( Match && ... m );
 
 } }
 ----
@@ -414,14 +415,14 @@ Throws: :: If no match is found, `unwrap` throwsfootnoteref:[onlythrow] `<<misma
 ----
 namespace boost { namespace leaf {
 
-	template <class... ErrorInfo>
-	void put( ErrorInfo && ... info ) noexcept;
+  template <class... ErrorInfo>
+  void put( ErrorInfo && ... info ) noexcept;
 
 } }
 ----
 ====
 
-Effects: :: Moves each specified `info` object of type that is expected in the calling thread, into the storage provided by `<<expect,expect>>`. All such `info` objects can be accessed by objects of class `<<available,available>>` or of an instance of the `expect` template.
+Effects: :: Moves each specified `info` object of type that is expected in the calling thread, into the storage provided by `<<expect,expect>>`. All such `info` objects can be accessed by objects of;`<<available,available>>` or of an instance of the `expect` template.
 +
 All other `info` objects are discarded.
 
@@ -436,8 +437,8 @@ All other `info` objects are discarded.
 ----
 namespace boost { namespace leaf {
 
-	template <class... ErrorInfo,class Exception>
-	[[noreturn]] void throw_with_info( Exception const & e, ErrorInfo && ... info );
+  template <class... ErrorInfo,class Exception>
+  [[noreturn]] void throw_with_info( Exception const & e, ErrorInfo && ... info );
 
 } }
 ----
@@ -462,8 +463,8 @@ throw e;
 ----
 namespace boost { namespace leaf {
 
-	template <class... ErrorInfo>
-	<<unspecified_type>> preload( ErrorInfo && ... info );
+  template <class... ErrorInfo>
+  <<unspecified_type>> preload( ErrorInfo && ... info );
 
 } }
 ----
@@ -485,8 +486,8 @@ Returns: :: An object of unspecified moveable type which holds copies of all the
 ----
 namespace boost { namespace leaf {
 
-	bool has_current_error() noexcept;
-	void set_has_current_error( bool (*f)() ) noexcept;
+  bool has_current_error() noexcept;
+  void set_has_current_error( bool (*f)() ) noexcept;
 
 } }
 ----
@@ -507,17 +508,17 @@ NOTE: `has_current_error` is an optimization, for example when using `<<preload,
 ----
 namespace boost { namespace leaf {
 
-	struct ei_api_function { char const * value; };
-	struct ei_file_name { std::string value; };
+  struct ei_api_function { char const * value; };
+  struct ei_file_name { std::string value; };
 
-	struct ei_errno {
-		int value;
-		friend std::ostream & operator<<( std::ostream & os, ei_errno const & err );
-	};
+  struct ei_errno {
+    int value;
+    friend std::ostream & operator<<( std::ostream & os, ei_errno const & err );
+  };
 
-	ei_errno get_errno() noexcept {
-		return ei_errno { return errno };
-	}
+  ei_errno get_errno() noexcept {
+    return ei_errno { return errno };
+  }
 
 } }
 ----
@@ -546,17 +547,17 @@ NOTE: `ei_errno` objects can be stremed to a `std::ostream`, which uses `strerro
 ----
 namespace boost { namespace leaf {
 
-	class diagnostic_information {
+  class diagnostic_information {
 
-		diagnostic_information( diagnostic_information const & ) = delete;
-		diagnostic_information & operator=( diagnostic_information const & ) = delete;
+    diagnostic_information( diagnostic_information const & ) = delete;
+    diagnostic_information & operator=( diagnostic_information const & ) = delete;
 
-	public:
+  public:
 
-		diagnostic_information() noexcept();
+    diagnostic_information() noexcept();
 
-		friend std::ostream & operator<<( std::ostream &, diagnostic_information const );
-	};
+    friend std::ostream & operator<<( std::ostream &, diagnostic_information const );
+  };
 
 } }
 ----
@@ -581,17 +582,17 @@ Each error info object is output based on the following rules:
 ----
 namespace boost { namespace leaf {
 
-	class current_exception_diagnostic_information {
+  class current_exception_diagnostic_information {
 
-		current_exception_diagnostic_information( current_exception_diagnostic_information const & ) = delete;
-		current_exception_diagnostic_information & operator=( current_exception_diagnostic_information const & ) = delete;
+    current_exception_diagnostic_information( current_exception_diagnostic_information const & ) = delete;
+    current_exception_diagnostic_information & operator=( current_exception_diagnostic_information const & ) = delete;
 
-	public:
+  public:
 
-		current_exception_diagnostic_information() noexcept();
+    current_exception_diagnostic_information() noexcept();
 
-		friend std::ostream & operator<<( std::ostream &, current_exception_diagnostic_information const );
-	};
+    friend std::ostream & operator<<( std::ostream &, current_exception_diagnostic_information const );
+  };
 
 } }
 ----
@@ -604,8 +605,8 @@ Typical use for `current_exception_diagnostic_information` is:
 [source,c++]
 ----
 catch(...) {
-	std::cerr << Unhandled exception! << std::endl <<
-		leaf::current_exception_diagnostic_information();
+  std::cerr << Unhandled exception! << std::endl <<
+    leaf::current_exception_diagnostic_information();
 }
 ----
 
@@ -620,18 +621,18 @@ catch(...) {
 ----
 namespace boost { namespace leaf {
 
-	class capture {
+  class capture {
 
-		capture( capture const & ) = delete;
-		capture & operator=( capture const & ) = delete;
-	
-	public:
+    capture( capture const & ) = delete;
+    capture & operator=( capture const & ) = delete;
+  
+  public:
 
-		capture() noexcept;
-		capture( capture && ) noexcept;
-		release() noexcept;
+    capture() noexcept;
+    capture( capture && ) noexcept;
+    release() noexcept;
 
-	};
+  };
 
 } }
 ----
@@ -650,8 +651,8 @@ NOTE: To transport error info objects between threads, it is usually preferable 
 ----
 namespace boost { namespace leaf {
 
-	capture::capture() noexcept;
-	capture::capture( capture && ) noexcept;
+  capture::capture() noexcept;
+  capture::capture( capture && ) noexcept;
 
 } }
 ----
@@ -669,7 +670,7 @@ Effects: ::
 ----
 namespace boost { namespace leaf {
 
-	void capture::release() noexcept;
+  void capture::release() noexcept;
 
 } }
 ----
@@ -687,8 +688,8 @@ Moves all exception info objects captured from the thread in which `this` was in
 ----
 namespace boost { namespace leaf {
 
-	template <class... ErrorInfo,class F>
-	<<unspecified>> transport( F f )
+  template <class... ErrorInfo,class F>
+  <<unspecified>> transport( F f )
 
 } }
 ----
@@ -715,8 +716,8 @@ NOTE: Click https://github.com/zajo/leaf/blob/master/example/transport_between_t
 ----
 namespace boost { namespace leaf {
 
-	template <class Future>
-	decltype(std::declval<Future>().get()) get( Future & f );
+  template <class Future>
+  decltype(std::declval<Future>().get()) get( Future & f );
 
 } }
 ----
@@ -740,10 +741,10 @@ But this behavior is incorrect for capturing `errno`. Consider:
 [source,c++]
 ----
 error read_file( FILE & f ) {
-	auto put = leaf::preload( ei_errno { errno } ); //incorrect
-	....
-	if( ferror(&f) )
-		return my_error;
+  auto put = leaf::preload( ei_errno { errno } ); //incorrect
+  ....
+  if( ferror(&f) )
+    return my_error;
 }
 ----
 
@@ -752,13 +753,53 @@ The problem is that `errno` must not be captured before it is set by a failed op
 [source,c++]
 ----
 error read_file( FILE & f ) {
-	auto put = leaf::preload( [ ] { return ei_errno { errno }; );
-	....
-	if( ferror(&f) )
-		return my_error;
+  auto put = leaf::preload( [ ] { return ei_errno { errno }; );
+  ....
+  if( ferror(&f) )
+    return my_error;
 }
 ----
 
 When `preload` is passed a function, obtaining the error info object is deferred until the temporary object is being destroyed.
 
 TIP: The header `boost/leaf/common.hpp` defines a function called `get_errno` which can be used for capturing `errno`, rather than using a lambda each time.
+
+== Design rationale
+
+The first observation driving the LEAF design is that unless a specific type of info (e.g. a file name) is used at the time an error is being handled, there is no need for it to be reported. On the other hand, if the error handling context can use or requires some info, it would not be burdened by having to explicitly declare that need. The result is `<<expect,expect>>`/`<<put,put>>`.
+
+The second observation is that ideally, like any other communication mechanism, it makes sense to formally define an interface for the error info that can be used by the error handling code. In terms of C++ exception handling, it would be nice to be able to say something like:
+
+[source,c++]
+----
+try {
+
+  process_file();
+
+} catch( file_read_error<ei_file_name,ei_errno> & e ) {
+
+  std::cerr <<
+    "Could not read " << e.get<ei_file_name>() <<
+    ", errno=" << e.get<ei_errno>() << std::endl;
+
+} catch( file_read_error<ei_errno> & e ) {
+
+  std::cerr <<
+    "File read error, errno=" << e.get<ei_errno>() << std::endl;
+
+} catch( file_read_error<> & e ) {
+
+  std::cerr << "File read error!" << std::endl;
+
+}
+----
+
+That is to say, it is desirable to be able to dispatch error handling based not only on the kind of failure being handled, but also based on the kind of error info available. Unfortunately this syntax is not possible and, even if it were, not all programs use exceptions to handle errors. The result is `<<match,match>>`/`<<unwrap,unwrap>>`.
+
+Last but not least, there is certain redundancy and repetition in error-neutral contexts that simply forward errors to their caller. What is the point in receiving some error info from a lower level function (e.g. a file name), when at this point we can't do anything with it, except to forward it to our caller, until we reach a scope that can actually make use of the data? Even with move semantics, why bother move such data one level at a time, from one stack location to another immediately above, only to move it again when we `return` again?
+
+It would be more optimal for such information to be passed from a context where it is available, _directly to the exact stack location where it would be accessed by the error handling code_. The result is that `<<expect,expect>>`/`<<put,put>>`/`<<match,match>>` use `thread_local` storage. +
+ +
+ +
+
+[small overline right]#Copyright (c) Emil Dotchevski, 2018#
