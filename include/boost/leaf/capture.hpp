@@ -25,7 +25,8 @@ boost
 			container_t info_;
 			public:
 			capture( capture && ) = default;
-			capture():
+			explicit
+			capture( bool do_capture=true ):
 				info_( [ ]
 					{
 					using namespace leaf_detail;
@@ -42,6 +43,7 @@ boost
 			void
 			release() noexcept
 				{
+				int size = info_.size();
 				container_t().swap(info_);
 				}
 			};
