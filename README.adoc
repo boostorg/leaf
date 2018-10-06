@@ -36,7 +36,7 @@ LEAF requires a {CPP}11 compiler. See unit test matrix at https://travis-ci.org/
 [[tutorial]]
 == Tutorial
 
-As an example, here is a function that reads data from a file into a buffer, returns an `error` enum to report errors, and uses LEAF to provide additional error info:
+As an example, here is a function that reads data from a file into a buffer, returns an `error` enum to indicate success or to report errors, and uses LEAF to provide additional error info:
 
 ====
 [source,c++]
@@ -70,7 +70,7 @@ The `ei_errno` struct is a simple error info type, defined as follows:
 struct ei_errno { int value; };
 ----
 
-The user can define any number of such types and, when an error is detected, pass them to `<<put,put>>` to make relevant information available to error handling contexts, if needed.
+The user can define any number of similar types and, when an error is detected, pass them to `<<put,put>>` to make relevant information available to error handling contexts, if needed.
 
 NOTE: Error info types must define a public data member called `value` and must provide a `noexcept` move constructor and `noexcept` destructor. Any number of valid error info objects may be passed in a single call to `<<put,put>>`.
 
@@ -304,14 +304,14 @@ namespace boost { namespace leaf {
 
 ----
 
-Returns: :: An object of unspecified type designed to be passed directly to `<<unwrap,unwrap>>`, which takes any number of such objects, and proceeds to inspect them in order, until it finds a match where error info objects are currently available in the calling thread (see `<<put,put>>`) for all specified `ErrorInfo...` types. If found, `unwrap` invokes `f`, passing the `.value` of each available error info object.
+Returns: :: An object of unspecified type designed to be passed directly to `<<unwrap,unwrap>>`, which takes any number of such objects, and proceeds to inspect them in order, until it finds a match where error info objects are currently available in the calling thread (see `<<put,put>>`) for all specified `ErrorInfo...` types. If matched, `unwrap` invokes `f`, passing the `.value` of each available error info object.
 
 Throws: :: If `unwrap` is unable to find a suitable match, it throwsfootnoteref:[onlythrow,This is the only LEAF function that throws.] `<<mismatch_error,mismatch_error>>`.
 
 '''
 
 [[expect]]
-=== `expect<>`
+=== `expect`
 
 ====
 .#include <boost/leaf/expect.hpp>
@@ -338,7 +338,7 @@ namespace boost { namespace leaf {
 
 The `expect` class template is used to communicate to LEAF that error info objects of the specified `ErrorInfo...` types are expected in the current scope, to help handle failures.
 
-`expect` objects are not copyable or movable. They form a hierarchy, such that error info types requested higher up the call chain remain open in lower scopes, regardless of whether or not they're specified in lower level `expect` instances.
+`expect` objects are not copyable or movable. They form a hierarchy, such that error info types requested higher up the call chain remain "expected" in lower scopes, regardless of whether or not they're specified in lower level `expect` instances.
 
 '''
 
@@ -422,9 +422,9 @@ namespace boost { namespace leaf {
 ----
 ====
 
-Effects: :: Moves each specified `info` object of type that is expected in the calling thread, into the storage provided by `<<expect,expect>>`. All such `info` objects can be accessed by objects of;`<<available,available>>` or of an instance of the `expect` template.
+Effects: :: Moves each specified `info` object of type that is expected in the calling thread, into the storage provided by `<<expect,expect>>`. Use  `<<available,available>>` or `<<expect,expect>>` to access them.
 +
-All other `info` objects are discarded.
+All other `info` objects passed to `put` are discarded.
 
 '''
 
@@ -493,7 +493,7 @@ namespace boost { namespace leaf {
 ----
 ====
 
-LEAF uses `has_current_error` to determine if an error is currently being propagated up the call stack. By default, `has_current_error` returns `std::unhandled_exception()`. Use `set_has_current_error` to hook up a different implementation, if needed
+LEAF uses `has_current_error` to determine if an error is currently being propagated up the call stack. By default, `has_current_error` returns `std::unhandled_exception()`. Use `set_has_current_error` to hook up a different implementation, if needed.
 
 NOTE: `has_current_error` is an optimization, for example when using `<<preload,preload>>`, the call to `<<put,put>>` will be skipped unless `has_current_error` returns `true`. It is valid to pass to `set_has_current_error` a function which always returns `true`.
 
@@ -532,7 +532,7 @@ WARNING: The passed value is stored as a C string, so you should only pass strin
 - When a file operation fails, you could use `ei_file_name` to capture the name of the file.
 - `ei_errno` is suitable to capture `errno`.
 +
-TIP: If using `<<preload,preload>>`, please pass `&get_errno` instead of an instance of `ei_errno`; this way `errno` will be captured after the error is detected, rather than at the time `preload` is called.
+TIP: If using `<<preload,preload>>`, pass `&get_errno` instead of an instance of `ei_errno`; this way `errno` will be captured after the error is detected, rather than at the time `preload` is called.
 +
 NOTE: `ei_errno` objects can be stremed to a `std::ostream`, which uses `strerror` to convert the `errno` code to a friendlier error message. This is designed for use with `<<diagnostic_information,diagnostic_information>>`.
 
@@ -563,13 +563,13 @@ namespace boost { namespace leaf {
 ----
 ====
 
-The only operation supported by class `diagnostic_information` is `operator<<` which, when used with a `std::ostream` outputs a developer-friendly string representation of all of the currently available error info objects.
+The only operation supported by class `diagnostic_information` is `operator<<` which, when used with a `std::ostream`, outputs a developer-friendly (but not user-friendly) string representation of all of the currently available error info objects.
 
 Each error info object is output based on the following rules:
 
 - If its type defines a suitable `operator<<` overload, it is used by the `operator<<` overload for `diagnostic_information` directly; otherwise
-- If the type of its `value` data member defines a suitable `operator<<` overload, it will be used instead.
-- Otherwise the error info type can not be output by `diagnostic_information`. This is valid, using such error info types will not result in a compile error.
+- If the type of its `value` data member defines a suitable `operator<<` overload, it will be used instead;
+- Otherwise the error info type can not be output by `diagnostic_information`. This is not illegal, using such error info types will not result in a compile error.
 
 '''
 
@@ -628,7 +628,7 @@ namespace boost { namespace leaf {
   
   public:
 
-    capture() noexcept;
+    explicit capture( bool do_capture=true ) noexcept;
     capture( capture && ) noexcept;
     release() noexcept;
 
@@ -640,7 +640,7 @@ namespace boost { namespace leaf {
 
 Objects of class `capture` can be used to transport the currently available error info objects from one thread to another.
 
-NOTE: To transport error info objects between threads, it is usually preferable to use the higher level functions `<<transport,transport>>` and `<<get,get>>`, though they require exception handling.
+NOTE: If a thread communicates failures by throwing exceptions, do not use `capture` directly. Instead, use `leaf::<<get,get>>` to get the result of a `std::future`. In case that throws, all error info will be transported to the calling thread automatically.
 
 '''
 
@@ -651,14 +651,14 @@ NOTE: To transport error info objects between threads, it is usually preferable 
 ----
 namespace boost { namespace leaf {
 
-  capture::capture() noexcept;
+  explicit capture::capture( bool do_capture=true ) noexcept;
   capture::capture( capture && ) noexcept;
 
 } }
 ----
 
 Effects: ::
-- The default constructor moves all of the currently available (in the calling thread) exception info objects into a dynamically-allocated buffer stored in the `capture` object.
+- The first constructor moves all of the currently available (in the calling thread) exception info objects into a dynamically-allocated buffer stored in the `capture` object, but only if `do_capture` is `true`.
 - The move constructor does not throw.
 
 '''
@@ -701,9 +701,10 @@ Returns: :: A function object which, when called:
 
 The returned function is designed to be used as a wrapper for `f` when it's passed to `std::async` or `std::packaged_task` and launched in a worker thread. 
 
-Later the user is expected to call `<<get,get>>` instead of `std::future::get` directly; this way, in case `f` throws, all of the error info objects are effectivey transported (together with the exception object) from the worker thread into the waiting thread.
+Later the user is expected to call `<<get,get>>` instead of `std::future::get` directly; this way, in case `f` throws, all of the error info objects are automatically transported (together with the exception object) from the worker thread into the waiting thread.
 
-NOTE: Click https://github.com/zajo/leaf/blob/master/example/transport_between_threads.cpp[here] to see a complete example on transporting error info objects between threads.
+[NOTE]
+ There are two examples on transporting error info objects between threads: https://github.com/zajo/leaf/blob/master/example/transport_eh.cpp[transport_eh.cpp], which uses exception handling to communicate errors, and  https://github.com/zajo/leaf/blob/master/example/transport_ec.cpp[transport_ec.cpp], which does not.
 
 '''
 
@@ -727,14 +728,14 @@ Effects: :: This function simply returns `f.get()`, expecting that `f` is of typ
 
 TIP: There is no need to use `<<expect,expect>>` when calling `<<get,get>>`; in case a worker thread throws an exception, _all_ available error info objects are trasported and made available in the calling thread.
 
-NOTE: Click https://github.com/zajo/leaf/blob/master/example/transport_between_threads.cpp[here] to see a complete example on transporting error info objects between threads.
+NOTE: Click https://github.com/zajo/leaf/blob/master/example/transport_eh.cpp[here] to see a complete example on transporting error info objects between threads.
 
 [[techniques]]
 == Programming techniques
 
 === Capturing `errno` with `preload`
 
-Typically, when calling `<<preload,preload>>` we pass in the actual error info object(s) that we want forwarded to `<<put,put>>`. This copies them into the returned temporary object. Later, if we report an error from the same function, the destructor of the temporary object will forward all of its contents to `<<put,put>>` by rvalue reference.
+Typically, when calling `<<preload,preload>>` we pass the actual error info object(s) that we want forwarded to `<<put,put>>`. This copies them into the returned temporary object. Later, if we report an error from the same function, the destructor of the temporary object will forward all of its contents to `<<put,put>>` by rvalue reference.
 
 But this behavior is incorrect for capturing `errno`. Consider:
 
@@ -764,9 +765,21 @@ When `preload` is passed a function, obtaining the error info object is deferred
 
 TIP: The header `boost/leaf/common.hpp` defines a function called `get_errno` which can be used for capturing `errno`, rather than using a lambda each time.
 
+=== Transporting error info between threads
+
+The memory provided by `<<expect,expect>>` for `<<put,put>>` to store error info objects uses thread-local storage. This is ideal when errors are handled before the reporting thread ends, but sometimes error handling must happen in another thread, at the time a worker thread is joined.
+
+The first problem is that in the spirit of LEAF, the context that handles errors is the one specifying what info it needs, by calling `<<expect,expect>>`, which in this case should be controlled by the main thread. This is achieved by instantiating the function template `<<transport,transport>>` instead of `expect`: it takes a function object (the worker thread function), and returns a function object that calls it after calling `expect` internally.
+
+Secondly, to capture the current error info detached from the calling thread, create an object of class `<<capture,capture>>`. This moves all error info from thread-local to dynamically-allocated memory controlled by that object. The `noexcept` move constructor can now be used to move the error info to the main thread. Next, call `<<release,release>>` to once more move the captured error info to thread-local storage in the new thread.
+
+This approach requires that a worker thread returns a variant type which can either hold the result in case of success, or an error code + a `capture` instance in case of error. This is illustrated with the https://github.com/zajo/leaf/blob/master/example/print_file_ec.cpp[print_file_ec.cpp] example.
+
+A cleaner solution is possible if worker threads communicate errors by throwing exceptions. In this case you don't have to deal with the `capture` class directly: simply wrap the thread function in a call to `transport`, and later pass the `std::future` object to `leaf::<<get,get>>` to retrieve the result. This is illustrated with the https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp[print_file_eh.cpp] example.
+
 == Design rationale
 
-The first observation driving the LEAF design is that unless a specific type of info (e.g. a file name) is used at the time an error is being handled, there is no need for it to be reported. On the other hand, if the error handling context can use or requires some info, it would not be burdened by having to explicitly declare that need. The result is `<<expect,expect>>`/`<<put,put>>`.
+The first observation driving the LEAF design is that unless a specific type of info (e.g. a file name) is used at the time an error is being handled, there is no need for it to be reported. On the other hand, if the error handling context can use or requires some info, it would not be burdened by having to explicitly declare that need. The end result of this reasoning is `<<expect,expect>>`/`<<put,put>>`.
 
 The second observation is that ideally, like any other communication mechanism, it makes sense to formally define an interface for the error info that can be used by the error handling code. In terms of C++ exception handling, it would be nice to be able to say something like:
 
@@ -794,11 +807,11 @@ try {
 }
 ----
 
-That is to say, it is desirable to be able to dispatch error handling based not only on the kind of failure being handled, but also based on the kind of error info available. Unfortunately this syntax is not possible and, even if it were, not all programs use exceptions to handle errors. The result is `<<match,match>>`/`<<unwrap,unwrap>>`.
+That is to say, it is desirable to be able to dispatch error handling based not only on the kind of failure being handled, but also based on the kind of error info available. Unfortunately this syntax is not possible and, even if it were, not all programs use exceptions to handle errors. The result of this train of thought is `<<match,match>>`/`<<unwrap,unwrap>>`.
 
 Last but not least, there is certain redundancy and repetition in error-neutral contexts that simply forward errors to their caller. What is the point in receiving some error info from a lower level function (e.g. a file name), when at this point we can't do anything with it, except to forward it to our caller, until we reach a scope that can actually make use of the data? Even with move semantics, why bother move such data one level at a time, from one stack location to another immediately above, only to move it again when we `return` again?
 
-It would be more optimal for such information to be passed from a context where it is available, _directly to the exact stack location where it would be accessed by the error handling code_. The result is that `<<expect,expect>>`/`<<put,put>>`/`<<match,match>>` use `thread_local` storage. +
+It is more correct for such information to be passed from a context where it is available, _directly to the exact stack location where it would be accessed by the error handling code_. The result is that `<<expect,expect>>`/`<<put,put>>`/`<<match,match>>` use `thread_local` storage. +
  +
  +
 
