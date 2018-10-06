@@ -518,7 +518,7 @@ namespace boost { namespace leaf {
   };
 
   ei_errno get_errno() noexcept {
-    return ei_errno { return errno };
+    return ei_errno { errno };
   }
 
 } }
@@ -535,7 +535,7 @@ WARNING: The passed value is stored as a C string, so you should only pass strin
 +
 TIP: If using `<<preload,preload>>`, pass `&get_errno` instead of an instance of `ei_errno`; this way `errno` will be captured after the error is detected, rather than at the time `preload` is called.
 +
-NOTE: `ei_errno` objects can be stremed to a `std::ostream`, which uses `strerror` to convert the `errno` code to a friendlier error message. This is designed for use with `<<diagnostic_information,diagnostic_information>>`.
+NOTE: `ei_errno` objects can be streamed to a `std::ostream`, which uses `strerror` to convert the `errno` code to a friendlier error message. This is designed for use with `<<diagnostic_information,diagnostic_information>>`.
 
 '''
 
@@ -719,13 +719,13 @@ Later the user is expected to call `<<get,get>>` instead of `std::future::get` d
 namespace boost { namespace leaf {
 
   template <class Future>
-  decltype(std::declval<Future>().get()) get( Future & f );
+  decltype(std::declval<Future>().get()) get( Future && f );
 
 } }
 ----
 ====
 
-Effects: :: This function simply returns `f.get()`, expecting that `f` is of type `std::future<>` or another similar type that defines a `get` member function, to obtain the result from a worker thread started using `<<transport,transport>>`. In case the worker thread throws, all error info objects from the worker thread are automatically made available in the calling thread.
+Effects: :: This function simply returns `std::forward<Future>(f).get()`, expecting that `f` is of type `std::future<>` or another similar type that defines a `get` member function, to obtain the result from a worker thread started using `<<transport,transport>>`. In case the worker thread throws, all error info objects from the worker thread are automatically made available in the calling thread.
 
 TIP: There is no need to use `<<expect,expect>>` when calling `<<get,get>>`; in case a worker thread throws an exception, _all_ available error info objects are trasported and made available in the calling thread.
 

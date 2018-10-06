@@ -81,11 +81,11 @@ boost
 			}
 		template <class Future>
 		decltype(std::declval<Future>().get())
-		get( Future & f )
+		get( Future && f )
 			{
 			try
 				{
-				return f.get();
+				return std::forward<Future>(f).get();
 				}
 			catch( exception_wrapper & ex )
 				{
