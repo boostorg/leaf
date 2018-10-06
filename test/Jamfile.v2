@@ -22,4 +22,5 @@ run transport_test.cpp : : : <threading>multi ;
 
 compile ../example/print_file_ec.cpp ;
 compile ../example/print_file_eh.cpp ;
-compile ../example/transport_between_threads.cpp ;
+compile ../example/transport_ec.cpp ;
+compile ../example/transport_eh.cpp ;
