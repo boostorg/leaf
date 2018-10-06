@@ -501,7 +501,7 @@ NOTE: `has_current_error` is an optimization, for example when using `<<preload,
 '''
 
 [[common]]
-=== Common error info types
+=== Common Error Info Types
 
 ====
 .#include <boost/leaf/common.hpp>
@@ -732,7 +732,7 @@ TIP: There is no need to use `<<expect,expect>>` when calling `<<get,get>>`; in 
 NOTE: Click https://github.com/zajo/leaf/blob/master/example/transport_eh.cpp[here] to see a complete example on transporting error info objects between threads.
 
 [[techniques]]
-== Programming techniques
+== Programming Techniques
 
 === Capturing `errno` with `preload`
 
@@ -766,7 +766,7 @@ When `preload` is passed a function, obtaining the error info object is deferred
 
 TIP: The header `boost/leaf/common.hpp` defines a function called `get_errno` which can be used for capturing `errno`, rather than using a lambda each time.
 
-=== Transporting error info between threads
+=== Transporting Error Info between Threads
 
 The memory provided by `<<expect,expect>>` for `<<put,put>>` to store error info objects uses thread-local storage. This is ideal when errors are handled before the reporting thread ends, but sometimes error handling must happen in another thread, at the time a worker thread is joined.
 
@@ -778,7 +778,7 @@ This approach requires that a worker thread returns a variant type which can eit
 
 A cleaner solution is possible if worker threads communicate errors by throwing exceptions. In this case you don't have to deal with the `capture` class directly: simply wrap the thread function in a call to `transport`, and later pass the `std::future` object to `leaf::<<get,get>>` to retrieve the result. This is illustrated with the https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp[print_file_eh.cpp] example.
 
-== Design rationale
+== Design Rationale
 
 The first observation driving the LEAF design is that unless a specific type of info (e.g. a file name) is used at the time an error is being handled, there is no need for it to be reported. On the other hand, if the error handling context can use or requires some info, it would not be burdened by having to explicitly declare that need. The end result of this reasoning is `<<expect,expect>>`/`<<put,put>>`.
 
