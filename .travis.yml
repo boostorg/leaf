@@ -199,7 +199,7 @@ install:
   - git submodule update --init tools/boostdep
   - mkdir libs/leaf
   - cp -r $TRAVIS_BUILD_DIR/* libs/leaf
-  - python tools/boostdep/depinst/depinst.py leaf
+  - python tools/boostdep/depinst/depinst.py leaf -I example
   - ./bootstrap.sh
   - ./b2 headers
 
