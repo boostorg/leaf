@@ -370,7 +370,7 @@ Effects: ::
 ----
 namespace boost { namespace leaf {
 
-  expect<class ErrorInfo...>::~expect*( noexcept;
+  expect<class ErrorInfo...>::~expect( noexcept;
 
 } }
 ----
