@@ -190,7 +190,7 @@ namespace boost { namespace leaf {
   class available {
 
     available( available const & ) = delete;
-    available & operatar=( available const & ) = delete;
+    available & operator=( available const & ) = delete;
 
   public:
 
@@ -321,7 +321,7 @@ Throws: :: If `unwrap` is unable to find a suitable match, it throwsfootnoteref:
 namespace boost { namespace leaf {
 
   template <class... ErrorInfo>
-  class expect: public availablej {
+  class expect: public available {
 
     expect( expect const & ) = delete;
     expect & operator=( expect const & ) = delete;
