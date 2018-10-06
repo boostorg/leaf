@@ -501,7 +501,7 @@ NOTE: `has_current_error` is an optimization, for example when using `<<preload,
 '''
 
 [[common]]
-=== Common Error Info Types
+=== Common Error Information Types
 
 ====
 .#include <boost/leaf/common.hpp>
@@ -766,7 +766,7 @@ When `preload` is passed a function, obtaining the error info object is deferred
 
 TIP: The header `boost/leaf/common.hpp` defines a function called `get_errno` which can be used for capturing `errno`, rather than using a lambda each time.
 
-=== Transporting Error Info between Threads
+=== Transporting Error Information between Threads
 
 The memory provided by `<<expect,expect>>` for `<<put,put>>` to store error info objects uses thread-local storage. This is ideal when errors are handled before the reporting thread ends, but sometimes error handling must happen in another thread, at the time a worker thread is joined.
 
