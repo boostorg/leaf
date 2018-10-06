@@ -27,6 +27,7 @@ error
 	file_open_error,
 	file_size_error,
 	file_read_error,
+	file_eof_error,
 	cout_error
 	};
 
@@ -70,7 +71,7 @@ file_read( FILE & f, void * buf, int size )
 		return file_read_error;
 		}
 	if( n!=size )
-		return file_read_error;
+		return file_eof_error;
 	return ok;
 	}
 
@@ -147,6 +148,7 @@ main( int argc, char const * argv[ ] )
 			return 2;
 		case file_size_error:
 		case file_read_error:
+		case file_eof_error:
 			//unwrap is given a list of match objects, which it attempts to match (in order) to available exception info.
 			//In this case it will first check if both ei_file_name and ei_errno are avialable; if not, it will next check
 			//if just ei_errno is available; and if not, the last match will match even if no exception info is available,

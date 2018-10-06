@@ -27,6 +27,7 @@ struct file_error : virtual io_error { };
 struct file_open_error : virtual file_error { };
 struct file_size_error : virtual file_error { };
 struct file_read_error : virtual file_error { };
+struct file_eof_error : virtual file_error { };
 
 std::shared_ptr<FILE>
 file_open( char const * file_name )
@@ -59,7 +60,7 @@ file_read( FILE & f, void * buf, int size )
 	if( ferror(&f) )
 		leaf::throw_with_info( file_read_error(), ei_errno{errno} );
 	if( n!=size )
-		throw file_read_error();
+		throw file_eof_error();
 	}
 
 void
