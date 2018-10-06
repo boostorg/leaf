@@ -21,12 +21,11 @@ boost
 		class
 		exception_wrapper
 			{
-			std::shared_ptr<capture> cap_;
+			capture cap_;
 			std::exception_ptr original_exception_;
 			public:
 			explicit
 			exception_wrapper( std::exception_ptr && original_exception ):
-				cap_(std::make_shared<capture>()),
 				original_exception_(std::move(original_exception))
 				{
 				}
@@ -34,7 +33,7 @@ boost
 			void
 			rethrow_original_exception()
 				{
-				cap_->release();
+				cap_.release();
 				std::rethrow_exception(original_exception_);
 				}
 			};
