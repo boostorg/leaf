@@ -36,7 +36,7 @@ LEAF requires a {CPP}11 compiler. See unit test matrix at https://travis-ci.org/
 [[tutorial]]
 == Tutorial
 
-As an example, here is a function that reads data from a file into a buffer, returns an `error` enum to indicate success or to report errors, and uses LEAF to provide additional error info:
+As an example, here is a function that reads data from a file into a buffer, returns a user-defined `error` enum to indicate success or to report errors, and uses LEAF to provide additional error info:
 
 ====
 [source,c++]
