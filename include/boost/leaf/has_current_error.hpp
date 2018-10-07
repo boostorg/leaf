@@ -8,6 +8,7 @@
 #define UUID_E20D9594B97411E89C6313280D39171A
 
 #include <exception>
+#include <assert.h>
 
 namespace
 boost

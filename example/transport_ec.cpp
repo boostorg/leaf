@@ -7,9 +7,7 @@
 //This is a simple program that demonstrates the use of LEAF to transport error info between threads,
 //without using exception handling. See transport_eh.cpp for the (simpler) exception-handling variant.
 
-#include <boost/leaf/transport.hpp>
-#include <boost/leaf/expect.hpp>
-#include <boost/leaf/put.hpp>
+#include <boost/leaf/all.hpp>
 #include <string>
 #include <future>
 #include <vector>

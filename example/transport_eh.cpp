@@ -5,11 +5,10 @@
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //This is a simple program that demonstrates the use of LEAF to transport error info between threads,
-//without using exception handling. See transport_eh.cpp for the (simpler) exception-handling variant.
+//when using exception handling to report failures. See transport_ec.cpp for the variant that uses
+//error codes.
 
-#include <boost/leaf/transport.hpp>
-#include <boost/leaf/expect.hpp>
-#include <boost/leaf/put.hpp>
+#include <boost/leaf/all.hpp>
 #include <string>
 #include <future>
 #include <vector>

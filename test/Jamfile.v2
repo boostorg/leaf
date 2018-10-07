@@ -20,6 +20,15 @@ run diagnostic_information_test.cpp ;
 run expect_test.cpp ;
 run transport_test.cpp : : : <threading>multi ;
 
+compile hpp_capture_test.cpp ;
+compile hpp_common_test.cpp ;
+compile hpp_current_exception_diagnostic_information_test.cpp ;
+compile hpp_diagnostic_information_test.cpp ;
+compile hpp_expect_test.cpp ;
+compile hpp_has_current_error_test.cpp ;
+compile hpp_put_test.cpp ;
+compile hpp_transport_test.cpp ;
+
 compile ../example/print_file_ec.cpp ;
 compile ../example/print_file_eh.cpp ;
 compile ../example/transport_ec.cpp ;

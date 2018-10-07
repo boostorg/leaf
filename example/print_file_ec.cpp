@@ -4,10 +4,11 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/expect.hpp>
-#include <boost/leaf/common.hpp>
-#include <boost/leaf/put.hpp>
-#include <boost/leaf/diagnostic_information.hpp>
+//This example demonstrates the basic use of LEAF to augment error conditions with
+//additional information when using error codes to report failures. See print_file_eh.cpp
+//for the variant that uses exception handling.
+
+#include <boost/leaf/all.hpp>
 #include <iostream>
 #include <stdio.h>
 

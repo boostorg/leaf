@@ -27,7 +27,15 @@ tests = [
 	'diagnostic_print_test',
 	'diagnostic_information_test',
 	'expect_test',
-	'transport_test'
+	'transport_test',
+	'hpp_capture_test',
+	'hpp_common_test',
+	'hpp_current_exception_diagnostic_information_test',
+	'hpp_diagnostic_information_test',
+	'hpp_expect_test',
+	'hpp_has_current_error_test',
+	'hpp_put_test',
+	'hpp_transport_test'
 ]
 foreach t : tests
 	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [ leaf ] ) )

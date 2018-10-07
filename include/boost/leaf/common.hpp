@@ -7,8 +7,8 @@
 #ifndef EBA7EF10B6F311E8AAD493990D39171A
 #define EBA7EF10B6F311E8AAD493990D39171A
 
+#include <boost/leaf/detail/diagnostic_print.hpp>
 #include <string>
-#include <cstring>
 #include <cerrno>
 
 namespace
