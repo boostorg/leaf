@@ -500,45 +500,6 @@ NOTE: `has_current_error` is an optimization, for example when using `<<preload,
 
 '''
 
-[[common]]
-=== Common Error Information Types
-
-====
-.#include <boost/leaf/common.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  struct ei_api_function { char const * value; };
-  struct ei_file_name { std::string value; };
-
-  struct ei_errno {
-    int value;
-    friend std::ostream & operator<<( std::ostream & os, ei_errno const & err );
-  };
-
-  ei_errno get_errno() noexcept {
-    return ei_errno { errno };
-  }
-
-} }
-----
-====
-
-This header defines some common error info objects which can be used directly:
-
-- The `ei_api_function` type is designed to capture the name of the function for which a failure is reported. For example, if you're reporting an error detected by `fread`, you could use `leaf::ei_api_function { "fread" }`.
-+
-WARNING: The passed value is stored as a C string, so you should only pass string literals for `value`.
-- When a file operation fails, you could use `ei_file_name` to capture the name of the file.
-- `ei_errno` is suitable to capture `errno`.
-+
-TIP: If using `<<preload,preload>>`, pass `&get_errno` instead of an instance of `ei_errno`; this way `errno` will be captured after the error is detected, rather than at the time `preload` is called.
-+
-NOTE: `ei_errno` objects can be streamed to a `std::ostream`, which uses `strerror` to convert the `errno` code to a friendlier error message. This is designed for use with `<<diagnostic_information,diagnostic_information>>`.
-
-'''
-
 [[diagnostic_information]]
 === `diagnostic_information`
 
@@ -712,6 +673,45 @@ Effects: :: This function simply returns `std::forward<Future>(f).get()`, expect
 TIP: There is no need to use `<<expect,expect>>` when calling `<<get,get>>`; in case a worker thread throws an exception, _all_ available error info objects are trasported and made available in the calling thread.
 
 NOTE: Click https://github.com/zajo/leaf/blob/master/example/transport_eh.cpp[here] to see a complete example on transporting error info objects between threads.
+
+'''
+
+[[common]]
+=== Common Error Information Types
+
+====
+.#include <boost/leaf/common.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  struct ei_api_function { char const * value; };
+  struct ei_file_name { std::string value; };
+
+  struct ei_errno {
+    int value;
+    friend std::ostream & operator<<( std::ostream & os, ei_errno const & err );
+  };
+
+  ei_errno get_errno() noexcept {
+    return ei_errno { errno };
+  }
+
+} }
+----
+====
+
+This header defines some common error info objects which can be used directly:
+
+- The `ei_api_function` type is designed to capture the name of the function for which a failure is reported. For example, if you're reporting an error detected by `fread`, you could use `leaf::ei_api_function { "fread" }`.
++
+WARNING: The passed value is stored as a C string, so you should only pass string literals for `value`.
+- When a file operation fails, you could use `ei_file_name` to capture the name of the file.
+- `ei_errno` is suitable to capture `errno`.
++
+TIP: If using `<<preload,preload>>`, pass `&get_errno` instead of an instance of `ei_errno`; this way `errno` will be captured after the error is detected, rather than at the time `preload` is called.
++
+NOTE: `ei_errno` objects can be streamed to a `std::ostream`, which uses `strerror` to convert the `errno` code to a friendlier error message. This is designed for use with `<<diagnostic_information,diagnostic_information>>`.
 
 [[techniques]]
 == Programming Techniques
