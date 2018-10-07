@@ -17,38 +17,29 @@ boost
 	namespace
 	leaf
 		{
-		class
-		current_exception_diagnostic_information:
-			diagnostic_information
+		class current_exception_diagnostic_information_;
+		static constexpr current_exception_diagnostic_information_ const * current_exception_diagnostic_information=0;
+		inline
+		std::ostream &
+		operator<<( std::ostream & os, current_exception_diagnostic_information_ const * const & )
 			{
-			current_exception_diagnostic_information( current_exception_diagnostic_information const & );
-			current_exception_diagnostic_information & operator=( current_exception_diagnostic_information const & );
-			public:
-			current_exception_diagnostic_information() noexcept
+			os << "Current exception diagnostic Information:" << std::endl;
+			try
 				{
+				throw;
 				}
-			friend
-			std::ostream &
-			operator<<( std::ostream & os, current_exception_diagnostic_information const & di )
+			catch( std::exception const & ex )
 				{
-				os << "Current exception diagnostic Information:" << std::endl;
-				try
-					{
-					throw;
-					}
-				catch( std::exception const & ex )
-					{
-					os <<
-						"std::exception::what(): " << ex.what() << std::endl <<
-						"Dynamic typeid: " << typeid(ex).name() << std::endl;
-					}
-				catch( ... )
-					{
-					os << "Not a std::exception" << std::endl;
-					}
-				return os << static_cast<diagnostic_information const &>(di);
+				os <<
+					"std::exception::what(): " << ex.what() << std::endl <<
+					"Dynamic typeid: " << typeid(ex).name() << std::endl;
 				}
-			};
+			catch( ... )
+				{
+				os << "Not a std::exception" << std::endl;
+				}
+			return os << diagnostic_information;
+			}
 		}
 	}
 

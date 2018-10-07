@@ -15,44 +15,36 @@ boost
 	namespace
 	leaf
 		{
-		class
-		diagnostic_information
+		class diagnostic_information_;
+		static constexpr diagnostic_information_ const * diagnostic_information = 0;
+		inline
+		std::ostream &
+		operator<<( std::ostream & os, diagnostic_information_ const * const & )
 			{
-			diagnostic_information( diagnostic_information const & ) = delete;
-			diagnostic_information & operator=( diagnostic_information const & ) = delete;
-			public:
-			diagnostic_information() noexcept
+			using namespace leaf_detail;
+			char const * function=0;
+			char const * file=0;
+			int line=-1;
+			tl_slot_base::enumerate_put( [&os,&function,&file,&line]( tl_slot_base const & info )
 				{
-				}
-			friend
-			std::ostream &
-			operator<<( std::ostream & os, diagnostic_information const & )
-				{
-				using namespace leaf_detail;
-				char const * function=0;
-				char const * file=0;
-				int line=-1;
-				tl_slot_base::enumerate_put( [&os,&function,&file,&line]( tl_slot_base const & info )
-					{
-					if( &info==&tl_slot<ei_source_location<in_function>>::tl_instance() )
-						function = static_cast<tl_slot<ei_source_location<in_function>> const &>(info).value().value;
-					if( &info==&tl_slot<ei_source_location<in_file>>::tl_instance() )
-						file = static_cast<tl_slot<ei_source_location<in_file>> const &>(info).value().value;
-					if( &info==&tl_slot<ei_source_location<at_line>>::tl_instance() )
-						line = static_cast<tl_slot<ei_source_location<at_line>> const &>(info).value().value;
-					if( info.diagnostic_print(os) )
-						os << std::endl;
-					} );
-				if( file )
-					if( line==-1 )
-						os << "In " << file << std::endl;
-					else
-						os << "At " << file << '(' << line << ')' << std::endl;
-				if( function )
-					os << "In function " << function << std::endl;
-				return os;
-				}
-			};
+				if( &info==&tl_slot<ei_source_location<in_function>>::tl_instance() )
+					function = static_cast<tl_slot<ei_source_location<in_function>> const &>(info).value().value;
+				if( &info==&tl_slot<ei_source_location<in_file>>::tl_instance() )
+					file = static_cast<tl_slot<ei_source_location<in_file>> const &>(info).value().value;
+				if( &info==&tl_slot<ei_source_location<at_line>>::tl_instance() )
+					line = static_cast<tl_slot<ei_source_location<at_line>> const &>(info).value().value;
+				if( info.diagnostic_print(os) )
+					os << std::endl;
+				} );
+			if( file )
+				if( line==-1 )
+					os << "In " << file << std::endl;
+				else
+					os << "At " << file << '(' << line << ')' << std::endl;
+			if( function )
+				os << "In function " << function << std::endl;
+			return os;
+			}
 		}
 	}
 

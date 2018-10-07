@@ -95,7 +95,7 @@ main()
 	catch( my_error const & )
 		{
 		std::ostringstream st;
-		st << leaf::current_exception_diagnostic_information();
+		st << leaf::current_exception_diagnostic_information;
 		std::string s = st.str();
 		BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
 		BOOST_TEST(s.find(" = N/A")!=s.npos);

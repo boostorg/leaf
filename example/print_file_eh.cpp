@@ -141,7 +141,7 @@ main( int argc, char const * argv[ ] )
 		{
 		std::cerr <<
 			"Unknown error, cryptic information follows." << std::endl <<
-			leaf::current_exception_diagnostic_information();
+			leaf::current_exception_diagnostic_information;
 		return 4;
 		}
 	return 0;

@@ -112,7 +112,7 @@ TIP: `print_file` uses preload only after `file_open` (not shown) has successful
 NOTE: The `ei_file_name` type, similarly to `ei_errno`, is a simple struct containing a string `value`, e.g.: +
 `struct ei_file_name { std::string value; };`
 
-If all functions called by `print_file` succeed, we call `put.<<cancel,cancel>>()`, to instruct its destructor to not forward the preloaded `ei_file_name` object to `<<put,put>>`, and return `ok`.
+If all functions called by `print_file` succeed, we call `put.<<cancel,cancel>>()` (to instruct its destructor to not forward the preloaded `ei_file_name` object to `<<put,put>>`), and return `ok`.
 
 TIP: If failures are reported by throwing exceptions, it is not necessary to call `<<cancel,cancel>>`; to determine if a failure is being reported, LEAF calls `<<has_current_error,has_current_error>>`, which by default uses `std::uncaught_exception`.
 
@@ -161,7 +161,7 @@ int main( int argc, char const * argv[ ] ) {
     default: <5>
       std::cerr <<
         "Unknown error code " << err << ", cryptic information follows." << std::endl <<
-        leaf::diagnostic_information();
+        leaf::diagnostic_information;
       return 4;
   }
 }
@@ -548,29 +548,20 @@ NOTE: `ei_errno` objects can be streamed to a `std::ostream`, which uses `strerr
 ----
 namespace boost { namespace leaf {
 
-  class diagnostic_information {
-
-    diagnostic_information( diagnostic_information const & ) = delete;
-    diagnostic_information & operator=( diagnostic_information const & ) = delete;
-
-  public:
-
-    diagnostic_information() noexcept();
-
-    friend std::ostream & operator<<( std::ostream &, diagnostic_information const );
-  };
+  <<unspecified_type>> diagnostic_information;
+  std::ostream & operator<<( std::ostream &, <<unspecified_type>> const & );
 
 } }
 ----
 ====
 
-The only operation supported by class `diagnostic_information` is `operator<<` which, when used with a `std::ostream`, outputs a developer-friendly (but not user-friendly) string representation of all of the currently available error info objects.
+`diagnostic_information` is a dummy object, or token, which can be passed to `operator<<` (like `std::endl`) to output a developer-friendly (but not user-friendly) representation of all of the currently available error info objects.
 
 Each error info object is output based on the following rules:
 
 - If its type defines a suitable `operator<<` overload, it is used by the `operator<<` overload for `diagnostic_information` directly; otherwise
 - If the type of its `value` data member defines a suitable `operator<<` overload, it will be used instead;
-- Otherwise the error info type can not be output by `diagnostic_information`. This is not illegal, using such error info types will not result in a compile error.
+- Otherwise the error info type can not be output by the diagnostic information system. This is not illegal, using such error info types will not result in a compile error.
 
 '''
 
@@ -583,23 +574,14 @@ Each error info object is output based on the following rules:
 ----
 namespace boost { namespace leaf {
 
-  class current_exception_diagnostic_information {
-
-    current_exception_diagnostic_information( current_exception_diagnostic_information const & ) = delete;
-    current_exception_diagnostic_information & operator=( current_exception_diagnostic_information const & ) = delete;
-
-  public:
-
-    current_exception_diagnostic_information() noexcept();
-
-    friend std::ostream & operator<<( std::ostream &, current_exception_diagnostic_information const );
-  };
+  <<unspecified_type>> current_exception_diagnostic_information;
+  std::ostream & operator<<( std::ostream &, <<unspecified_type>> const & );
 
 } }
 ----
 ====
 
-The only operation supported by class `current_exception_diagnostic_information` is `operator<<` which, when used with a `std::ostream` outputs a developer-friendly information about the current uncaught exception, followed by the output of `<<diagnostic_information,diagnostic_information>>`.
+`current_exception_diagnostic_information` is a dummy object, or token, which can be passed to `operator<<` (like `std::endl`) to output into a `std::ostream` developer-friendly (but not user-friendly) information about the current uncaught exception, followed by outputing `<<diagnostic_information,diagnostic_information>>`.
 
 Typical use for `current_exception_diagnostic_information` is:
 
@@ -607,7 +589,7 @@ Typical use for `current_exception_diagnostic_information` is:
 ----
 catch(...) {
   std::cerr << Unhandled exception! << std::endl <<
-    leaf::current_exception_diagnostic_information();
+    leaf::current_exception_diagnostic_information;
 }
 ----
 
