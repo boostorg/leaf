@@ -8,9 +8,9 @@
 			"name": "(lldb) Launch",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/bld/debug/basic_info",
-			"args": [ ],
-			"cwd": "${workspaceFolder}/bld/debug",
+			"program": "${workspaceFolder}/bld/debug/expect_ec_test",
+			"args": [ "test/Jafile.v2" ],
+			"cwd": "${workspaceFolder}",
 			"stopAtEntry": false,
 			"externalConsole": false,
 			"MIMode": "lldb"

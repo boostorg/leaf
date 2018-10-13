@@ -17,11 +17,10 @@ boost
 	namespace
 	leaf
 		{
-		class current_exception_diagnostic_information_;
-		static constexpr current_exception_diagnostic_information_ const * current_exception_diagnostic_information=0;
-		inline
-		std::ostream &
-		operator<<( std::ostream & os, current_exception_diagnostic_information_ const * const & )
+		template <class... A>
+		void
+		expect<A...>::
+		print_current_exception_diagnostic_information( std::ostream & os ) const
 			{
 			os << "Current exception diagnostic Information:" << std::endl;
 			try
@@ -31,14 +30,14 @@ boost
 			catch( std::exception const & ex )
 				{
 				os <<
-					"std::exception::what(): " << ex.what() << std::endl <<
-					"Dynamic typeid: " << typeid(ex).name() << std::endl;
+					"Exception dynamic type: " << typeid(ex).name() <<
+					"std::exception::what(): " << ex.what() << std::endl << std::endl;
 				}
 			catch( ... )
 				{
-				os << "Not a std::exception" << std::endl;
+				os << "Unknown exception type (not a std::exception)" << std::endl;
 				}
-			return os << diagnostic_information;
+			print_diagnostic_information(os);
 			}
 		}
 	}

@@ -7,7 +7,8 @@
 #ifndef UUID_E4B56A60B87011E890CB55B30D39171A
 #define UUID_E4B56A60B87011E890CB55B30D39171A
 
-#include <boost/leaf/detail/tl_slot.hpp>
+#include <boost/leaf/expect.hpp>
+#include <boost/leaf/detail/diagnostic_print.hpp>
 
 namespace
 boost
@@ -15,35 +16,97 @@ boost
 	namespace
 	leaf
 		{
-		class diagnostic_information_;
-		static constexpr diagnostic_information_ const * diagnostic_information = 0;
-		inline
-		std::ostream &
-		operator<<( std::ostream & os, diagnostic_information_ const * const & )
+		namespace
+		leaf_detail
+			{
+			template <class T>
+			int
+			slot_print( std::ostream & os )
+				{
+				if( tl_slot<T>::tl_instance().diagnostic_print(os) )
+					os << std::endl;
+				return 42;
+				}
+			inline
+			char const *
+			get_info_function()
+				{
+				auto & info = tl_slot<ei_source_location<in_function>>::tl_instance();
+				if( info.has_value() )
+					return info.value().value;
+				else
+					return 0;
+				}
+			inline
+			char const *
+			get_info_file()
+				{
+				auto & info = tl_slot<ei_source_location<in_file>>::tl_instance();
+				if( info.has_value() )
+					return info.value().value;
+				else
+					return 0;
+				}
+			inline
+			int
+			get_info_line()
+				{
+				auto & info = tl_slot<ei_source_location<at_line>>::tl_instance();
+				if( info.has_value() )
+					return info.value().value;
+				else
+					return -1;
+				}
+#ifdef _MSC_VER
+			template <int I,class Tuple>
+			struct
+			msvc_workaround_print
+				{
+				static
+				void
+				print( std::ostream & os )
+					{
+					typedef typename std::tuple_element<I-1,Tuple>::type ith_type;
+					(void) slot_print<ith_type>(os);
+					msvc_workaround<I-1,Tuple>::print(os);
+					}
+				};
+			template <class Tuple>
+			struct
+			msvc_workaround_print<0,Tuple>
+				{
+				static void print( std::ostream & ) { }
+				};
+			template <class... T>
+			void
+			slots_print( std::ostream & os ) noexcept
+				{
+				msvc_workaround_print<sizeof...(T),std::tuple<T...>>::print(os);
+				}
+#else
+			template <class... T>
+			void
+			slots_print( std::ostream & os )
+				{
+				{ using _ = int[ ]; (void) _ { 42, slot_print<T>(os)... }; };
+				}
+#endif
+			}
+		template <class... A>
+		void
+		expect<A...>::
+		print_diagnostic_information( std::ostream & os ) const
 			{
 			using namespace leaf_detail;
-			char const * function=0;
-			char const * file=0;
-			int line=-1;
-			tl_slot_base::enumerate_put( [&os,&function,&file,&line]( tl_slot_base const & info )
-				{
-				if( &info==&tl_slot<ei_source_location<in_function>>::tl_instance() )
-					function = static_cast<tl_slot<ei_source_location<in_function>> const &>(info).value().value;
-				if( &info==&tl_slot<ei_source_location<in_file>>::tl_instance() )
-					file = static_cast<tl_slot<ei_source_location<in_file>> const &>(info).value().value;
-				if( &info==&tl_slot<ei_source_location<at_line>>::tl_instance() )
-					line = static_cast<tl_slot<ei_source_location<at_line>> const &>(info).value().value;
-				if( info.diagnostic_print(os) )
-					os << std::endl;
-				} );
-			if( file )
+			slots_print<A...>(os);
+			int line = get_info_line();
+			if( char const * file = get_info_file() )
 				if( line==-1 )
 					os << "In " << file << std::endl;
 				else
 					os << "At " << file << '(' << line << ')' << std::endl;
-			if( function )
+			if( char const * function = get_info_function() )
 				os << "In function " << function << std::endl;
-			return os;
 			}
 		}
 	}

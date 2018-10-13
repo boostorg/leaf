@@ -26,26 +26,28 @@ tests = [
 	'tl_slot_test',
 	'diagnostic_print_test',
 	'diagnostic_information_test',
-	'expect_test',
-	'transport_test',
-	'hpp_capture_test',
+	'expect_result_test',
+	'expect_eh_test',
+	'capture_result_test',
+	'capture_result_void_test',
+	'capture_eh_test',
+	'hpp_capture_exception_test',
+	'hpp_capture_result_test',
 	'hpp_common_test',
 	'hpp_current_exception_diagnostic_information_test',
 	'hpp_diagnostic_information_test',
 	'hpp_expect_test',
-	'hpp_has_current_error_test',
-	'hpp_put_test',
-	'hpp_transport_test'
+	'hpp_put_test'
 ]
 foreach t : tests
 	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [ leaf ] ) )
 endforeach
 
 examples = [
-	'print_file_ec',
-	'print_file_eh',
-	'transport_ec',
-	'transport_eh'
+	'capture_result',
+	'capture_eh',
+	'print_file_result',
+	'print_file_eh'
 ]
 foreach e : examples
 	executable(e, 'example/'+e+'.cpp', dependencies: [ leaf ] )

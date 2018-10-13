@@ -84,7 +84,6 @@ void
 run_tests()
 	{
 	using leaf::leaf_detail::tl_slot;
-	auto & tls = leaf::leaf_detail::tl_slot_state::tl_instance();
 		{
 			{
 			throws_on_copy a;

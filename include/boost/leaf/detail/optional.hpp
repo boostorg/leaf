@@ -24,7 +24,6 @@ boost
 			class
 			optional
 				{
-				optional & operator=( optional const & ) = delete;
 				union { T value_; };
 				bool has_value_;
 				public:
@@ -32,22 +31,46 @@ boost
 					has_value_(false)
 					{
 					}
+				optional( optional const & x ):
+					has_value_(false)
+					{
+					(void) (*this = x);
+					}
 				optional( optional && x ) noexcept:
 					has_value_(false)
 					{
-					if( x.has_value() )
-						put(std::move(x.value()));
+					(void) (*this = std::move(x));
+					}
+				optional( T const & v ):
+					has_value_(false)
+					{
+					put(v);
 					}
 				optional( T && v ) noexcept:
 					has_value_(false)
 					{
 					put(std::move(v));
 					}
+				optional &
+				operator=( optional const & x )
+					{
+					reset();
+					if( x.has_value() )
+						put(x.value());
+					return *this;
+					}
+				optional &
+				operator=( optional && x ) noexcept
+					{
+					reset();
+					if( x.has_value() )
+						put(x.extract_value());
+					return *this;
+					}
 				~optional() noexcept
 					{
 					reset();
 					}
-				virtual
 				void
 				reset() noexcept
 					{

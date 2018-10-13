@@ -8,9 +8,14 @@
 #define UUID_8F1C53BEB39F11E8A1C5B6F3E99C4353
 
 #include <boost/leaf/detail/tl_slot.hpp>
-#include <boost/leaf/has_current_error.hpp>
 #include <tuple>
 #include <type_traits>
+#include <exception>
+
+#define ei_SOURCE_LOCATION\
+	::boost::leaf::ei_source_location<::boost::leaf::in_function> {__FUNCTION__},\
+	::boost::leaf::ei_source_location<::boost::leaf::at_line> {__LINE__},\
+	::boost::leaf::ei_source_location<::boost::leaf::in_file> {__FILE__}
 
 namespace
 boost
@@ -27,8 +32,9 @@ boost
 		template <class... ErrorInfo,class Exception>
 		[[noreturn]]
 		void
-		throw_with_info( Exception const & e, ErrorInfo && ... a )
+		throw_exception( Exception const & e, ErrorInfo && ... a )
 			{
+			leaf_detail::tl_slot_base::bump_current_seq_id();
 			put(std::forward<ErrorInfo>(a)...);
 			throw e;
 			}
@@ -45,7 +51,7 @@ boost
 				void
 				put_( T && x ) noexcept
 					{
-					tl_slot<T>::tl_instance().put(std::move(x));
+					put(std::move(x));
 					}
 				};
 			template <class F>
@@ -76,11 +82,7 @@ boost
 			struct
 			put_meta<0,Tuple>
 				{
-				static
-				void
-				put( Tuple && ) noexcept
-					{
-					}
+				static void put( Tuple && ) noexcept { }
 				};
 			template <class... T>
 			class

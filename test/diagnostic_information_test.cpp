@@ -80,10 +80,10 @@ main()
 		non_printable_info_printable_payload,
 		non_printable_info_non_printable_payload,
 		leaf::ei_errno
-		> info;
+		> exp;
 	try
 		{
-		leaf::throw_with_info(
+		leaf::throw_exception(
 			my_error(),
 			ei_SOURCE_LOCATION,
 			printable_info_printable_payload(),
@@ -92,10 +92,12 @@ main()
 			non_printable_info_non_printable_payload(),
 			leaf::ei_errno{ENOENT} );
 		}
-	catch( my_error const & )
+	catch(
+	my_error const & e )
 		{
+		handle_error( exp, e, leaf::match<>([ ]{ }) );
 		std::ostringstream st;
-		st << leaf::current_exception_diagnostic_information;
+		exp.print_current_exception_diagnostic_information(st);
 		std::string s = st.str();
 		BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
 		BOOST_TEST(s.find(" = N/A")!=s.npos);
