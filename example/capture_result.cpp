@@ -76,8 +76,8 @@ main()
 		leaf::expect<failed_thread_id, failure_info1, failure_info2, failure_info3> exp;
 
 		//Unpack the leaf::captured_result<task_result> to get a leaf::result<task_result> and,
-		//in case of error, populate exp with the captured error info.
-		if( leaf::result<task_result> r = unpack(f.get(),exp) )
+		//in case of error, set its captured error info.
+		if( leaf::result<task_result> r = unpack(f.get()) )
 			{
 			//Success! Use *r to access task_result.
 			std::cout << "Success!" << std::endl;

@@ -23,6 +23,7 @@ includes = [ include_directories('include') ]
 leaf = declare_dependency( include_directories: includes )
 
 tests = [
+	'optional_test',
 	'tl_slot_test',
 	'diagnostic_print_test',
 	'diagnostic_information_test',

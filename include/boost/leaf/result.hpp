@@ -10,6 +10,7 @@
 #include <boost/leaf/expect.hpp>
 #include <boost/leaf/put.hpp>
 
+#define LEAF_ERROR ::boost::leaf::error(ei_SOURCE_LOCATION)
 #define LEAF_CHECK(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
 #define LEAF_CHECK_(r) {auto _r_##v = r; if( !_r_##v ) return _r_##v.error();}
 

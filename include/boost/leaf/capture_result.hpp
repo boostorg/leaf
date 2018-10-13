@@ -42,10 +42,10 @@ boost
 				cap_(std::move(cap))
 				{
 				}
-			template <class R,class... ExpectErrorInfo>
+			template <class R>
 			friend
 			result<T>
-			unpack( captured_result<R> && pr, expect<ExpectErrorInfo...> & )
+			unpack( captured_result<R> && pr )
 				{
 				if( pr )
 					return pr;

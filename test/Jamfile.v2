@@ -14,22 +14,25 @@ project
 		<include>../../..
     ;
 
+run optional_test.cpp ;
 run tl_slot_test.cpp ;
 run diagnostic_print_test.cpp ;
 run diagnostic_information_test.cpp ;
-run expect_test.cpp ;
-run transport_test.cpp : : : <threading>multi ;
+run expect_result_test.cpp ;
+run expect_eh_test.cpp ;
+run capture_result_test.cpp : : : <threading>multi ;
+run capture_result_void_test.cpp : : : <threading>multi ;
+run capture_eh_test.cpp : : : <threading>multi ;
 
-compile hpp_capture_test.cpp ;
+compile hpp_capture_exception_test.cpp ;
+compile hpp_capture_result_test.cpp ;
 compile hpp_common_test.cpp ;
 compile hpp_current_exception_diagnostic_information_test.cpp ;
 compile hpp_diagnostic_information_test.cpp ;
 compile hpp_expect_test.cpp ;
-compile hpp_has_current_error_test.cpp ;
 compile hpp_put_test.cpp ;
-compile hpp_transport_test.cpp ;
 
-compile ../example/print_file_ec.cpp ;
+compile ../example/print_file_result.cpp ;
 compile ../example/print_file_eh.cpp ;
-compile ../example/transport_ec.cpp ;
-compile ../example/transport_eh.cpp ;
+compile ../example/capture_result.cpp ;
+compile ../example/capture_eh.cpp ;

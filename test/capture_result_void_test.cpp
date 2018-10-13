@@ -49,7 +49,7 @@ main()
 		using namespace leaf::leaf_detail;
 		f.fut.wait();
 		leaf::expect<my_info<1>,my_info<2>,my_info<4>> exp;
-		if( leaf::result<void> r = unpack(f.fut.get(),exp) )
+		if( leaf::result<void> r = unpack(f.fut.get()) )
 			{
 			}
 		else

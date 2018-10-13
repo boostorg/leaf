@@ -125,6 +125,6 @@ boost
 		}
 	}
 
-#define EXCEPTION_INFO_THROW(e) ::boost::leaf::throw_with_info(e,ei_SOURCE_LOCATION)
+#define LEAF_THROW(e) ::boost::leaf::throw_exception(e,ei_SOURCE_LOCATION)
 
 #endif

@@ -169,7 +169,7 @@ boost
 				tl_slot<T> &
 				tl_instance() noexcept
 					{
-					static_assert(sizeof(T::value));
+					static_assert(sizeof(T::value),"Error info types must define a data member value");
 					static thread_local tl_slot<T> x;
 					return x;
 					}

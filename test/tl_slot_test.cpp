@@ -8,6 +8,7 @@
 #include <boost/detail/lightweight_test.hpp>
 #include <future>
 #include <vector>
+#include <iterator>
 #include <algorithm>
 
 namespace leaf = boost::leaf;
@@ -227,7 +228,7 @@ int
 main()
 	{
 	std::vector<std::future<void>> fut;
-	std::generate_n( std::inserter(fut,fut.end()), 1, [ ]
+	std::generate_n( std::inserter(fut,fut.end()), 100, [ ]
 		{
 		return std::async( std::launch::async, &run_tests );
 		} );

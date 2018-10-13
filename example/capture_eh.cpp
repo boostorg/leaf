@@ -83,8 +83,8 @@ main()
 		try
 			{
 			//Instead of calling future::get we pass the future object to leaf::get. In case the future finished with an exception,
-			//this will rethrow that exception, after populating exp with the captured error info.
-			task_result r = leaf::get(f,exp);
+			//this will rethrow that exception, after setting its captured error info.
+			task_result r = leaf::get(f);
 
 			//Success!
 			std::cout << "Success!" << std::endl;

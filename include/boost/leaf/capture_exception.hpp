@@ -75,9 +75,9 @@ boost
 			{
 			return leaf_detail::wrapper_exception<F,ErrorInfo...>(std::move(f));
 			}
-		template <class...ErrorInfo,class Future>
+		template <class Future>
 		decltype(std::declval<Future>().get())
-		get( Future && f, expect<ErrorInfo...> & )
+		get( Future && f )
 			{
 			try
 				{

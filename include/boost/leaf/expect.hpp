@@ -34,11 +34,11 @@ boost
 			class
 			match_impl
 				{
-				match_impl( match_impl && ) = default;
 				match_impl( match_impl const & ) = delete;
 				match_impl & operator=( match_impl const & ) = delete;
 				F f_;
 				public:
+				match_impl( match_impl && ) = default;
 				explicit
 				match_impl( F && f ) noexcept:
 					f_(std::move(f))

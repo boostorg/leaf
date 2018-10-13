@@ -54,7 +54,7 @@ main()
 		leaf::expect<my_info<1>,my_info<2>,my_info<4>> exp;
 		try
 			{
-			int r = get(f.fut,exp);
+			int r = leaf::get(f.fut);
 			BOOST_TEST(r>=0);
 			BOOST_TEST(r==f.result);
 			}
