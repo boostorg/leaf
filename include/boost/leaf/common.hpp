@@ -9,6 +9,7 @@
 
 #include <boost/leaf/detail/diagnostic_print.hpp>
 #include <string>
+#include <cstring>
 #include <cerrno>
 
 namespace
@@ -30,7 +31,7 @@ boost
 			operator<<( std::ostream & os, ei_errno const & err )
 				{
 				using namespace std;
-				os << type<ei_errno>() << " = " << err.value << ", \"" << strerror(err.value) << '"';
+				os << type<ei_errno>() << " = " << err.value << ", \"" << std::strerror(err.value) << '"';
 				return os;
 				}
 			};
