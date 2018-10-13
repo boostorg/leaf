@@ -36,7 +36,7 @@ boost
 				rethrow_original_exception()
 					{
 					cap_->unpack();
-					rethrow_exception(ex_);
+					std::rethrow_exception(ex_);
 					}
 				};
 			template <class F,class... ErrorInfo>

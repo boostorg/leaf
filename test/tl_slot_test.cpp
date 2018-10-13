@@ -219,6 +219,25 @@ run_tests()
 			BOOST_TEST(x.close()==0);
 			}
 		}
+		{
+		auto & x = tl_slot<my_info<A>>::tl_instance();
+		auto & y = tl_slot<my_info<B>>::tl_instance();
+		BOOST_TEST(x.open()==1);
+		BOOST_TEST(y.open()==1);
+		x.put(my_info<A>(42));
+		y.put(my_info<B>(42));
+		BOOST_TEST(x.has_value());
+		BOOST_TEST(y.has_value());
+		BOOST_TEST(count<my_info<A>>()==1);
+		BOOST_TEST(count<my_info<B>>()==1);
+		leaf::leaf_detail::tl_slot_base::bump_current_seq_id();
+		BOOST_TEST(!x.has_value());
+		BOOST_TEST(!y.has_value());
+		BOOST_TEST(count<my_info<A>>()==1);
+		BOOST_TEST(count<my_info<B>>()==1);
+		BOOST_TEST(x.close()==0);
+		BOOST_TEST(y.close()==0);
+		}
 	BOOST_TEST(count<my_info<A>>()==0);
 	BOOST_TEST(count<my_info<B>>()==0);
 	BOOST_TEST(count<my_info<C>>()==0);
