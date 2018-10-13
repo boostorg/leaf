@@ -29,43 +29,6 @@ boost
 		namespace
 		leaf_detail
 			{
-			template <class F,class R,class... ExpectErrorInfo> class capture_wrapper;
-			template <class F,class... MatchErrorInfo>
-			class
-			match_impl
-				{
-				match_impl( match_impl const & ) = delete;
-				match_impl & operator=( match_impl const & ) = delete;
-				F f_;
-				public:
-				match_impl( match_impl && ) = default;
-				explicit
-				match_impl( F && f ) noexcept:
-					f_(std::move(f))
-					{
-					}
-				template <class... ExpectErrorInfo>
-				int
-				unwrap( bool & still_has_error, int & count ) const noexcept
-					{
-					using namespace leaf_detail;
-					bool const last = (--count==0);
-					assert(count>=0);
-					if( still_has_error )
-						{
-						bool const available[ ] = { tl_slot<MatchErrorInfo>::tl_instance().has_value()... };
-						for( auto i : available )
-							if( !i )
-								if( last )
-									throw mismatch_error();
-								else
-									return 42;
-						(void) f_(tl_slot<MatchErrorInfo>::tl_instance().value().value...);
-						still_has_error = false;
-						}
-					return 42;
-					}
-				};
 			template <class T>
 			int
 			slot_open_reset()
@@ -92,8 +55,8 @@ boost
 				open_reset() noexcept
 					{
 					typedef typename std::tuple_element<I-1,Tuple>::type ith_type;
-					(void) open_reset<ith_type>();
-					msvc_workaround_open<I-1,Tuple>::open_reset();
+					(void) slot_open_reset<ith_type>();
+					msvc_workaround_open_reset<I-1,Tuple>::open_reset();
 					}
 				};
 			template <class Tuple>
@@ -121,6 +84,24 @@ boost
 				{
 				static void close() noexcept { }
 				};
+			template <int I,class Tuple>
+			struct
+			msvc_workaround_slots_available
+				{
+				static
+				bool
+				slots_available() noexcept
+					{
+					typedef typename std::tuple_element<I-1,Tuple>::type ith_type;
+					return tl_info<ith_type>::tl_instance().has_value() && msvc_workaround_slots_available<I-1,Tuple>::slots_available();
+					}
+				};
+			template <class Tuple>
+			struct
+			msvc_workaround_slots_available<0,Tuple>
+				{
+				static bool slots_available() noexcept { return true; }
+				};
 			template <class... T>
 			void
 			slots_open_reset() noexcept
@@ -131,7 +112,13 @@ boost
 			void
 			slots_close() noexcept
 				{
-				msvc_workaround_close<sizeof...(T),std::tuple<T...>>::check_close();
+				msvc_workaround_close<sizeof...(T),std::tuple<T...>>::close();
+				}
+			template <class... T>
+			bool
+			slots_available() noexcept
+				{
+				return msvc_workaround_slots_available<sizeof...(T),std::tuple<T...>>::slots_available();
 				}
 #else
 			template <class... T>
@@ -146,7 +133,53 @@ boost
 				{
 				{ using _ = int[ ]; (void) _ { 42, slot_close<T>()... }; }
 				}
+			template <class... T>
+			bool
+			slots_available() noexcept
+				{
+				bool const available[ ] = { tl_slot<MatchErrorInfo>::tl_instance().has_value()... };
+				for( auto i : available )
+					if( !i )
+						return false;
+				return true;
+				}
 #endif
+
+			template <class F,class R,class... ExpectErrorInfo> class capture_wrapper;
+			template <class F,class... MatchErrorInfo>
+			class
+			match_impl
+				{
+				match_impl( match_impl const & ) = delete;
+				match_impl & operator=( match_impl const & ) = delete;
+				F f_;
+				public:
+				match_impl( match_impl && ) = default;
+				explicit
+				match_impl( F && f ) noexcept:
+					f_(std::move(f))
+					{
+					}
+				template <class... ExpectErrorInfo>
+				int
+				unwrap( bool & still_has_error, int & count ) const
+					{
+					using namespace leaf_detail;
+					bool const last = (--count==0);
+					assert(count>=0);
+					if( still_has_error )
+						{
+						if( !slots_available<ExpectErrorInfo...>() )
+							if( last )
+								throw mismatch_error();
+							else
+								return 42;
+						(void) f_(tl_slot<MatchErrorInfo>::tl_instance().value().value...);
+						still_has_error = false;
+						}
+					return 42;
+					}
+				};
 			}
 		template <class... ExpectErrorInfo>
 		class

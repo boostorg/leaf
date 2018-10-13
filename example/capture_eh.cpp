@@ -10,6 +10,7 @@
 
 #include <boost/leaf/capture_exception.hpp>
 #include <vector>
+#include <string>
 #include <future>
 #include <iterator>
 #include <iostream>

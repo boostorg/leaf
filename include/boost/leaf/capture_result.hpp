@@ -21,11 +21,17 @@ boost
 		captured_result:
 			result<T>
 			{
+			std::shared_ptr<leaf_detail::captured_info> cap_;
+			public:
+#ifdef _MSC_VER
+			captured_result() noexcept
+				{
+				}
+#else
 			captured_result( captured_result const & ) = delete;
 			captured_result & operator=( captured_result const & ) = delete;
-			std::unique_ptr<leaf_detail::captured_info> cap_;
-			public:
 			captured_result( captured_result && ) noexcept = default;
+#endif
 			explicit
 			captured_result( result<T> const & r ) noexcept:
 				result<T>(r)
@@ -37,7 +43,7 @@ boost
 				{
 				}
 			explicit
-			captured_result( std::unique_ptr<leaf_detail::captured_info> && cap ) noexcept:
+			captured_result( std::shared_ptr<leaf_detail::captured_info> && cap ) noexcept:
 				result<T>(leaf_detail::error_tag()),
 				cap_(std::move(cap))
 				{
@@ -84,7 +90,7 @@ boost
 					if( result<T> r = f_(std::forward<A>(a)...) )
 						return captured_result<T>(r);
 					else
-						return captured_result<T>(std::unique_ptr<captured_info>(new captured_info_impl<ErrorInfo...>(extract(exp))));
+						return captured_result<T>(std::shared_ptr<captured_info>(new captured_info_impl<ErrorInfo...>(extract(exp))));
 					}
 				};
 			}

@@ -22,10 +22,10 @@ boost
 			class
 			captured_exception
 				{
-				std::unique_ptr<captured_info> cap_;
+				std::shared_ptr<captured_info> cap_;
 				std::exception_ptr ex_;
 				public:
-				captured_exception( std::unique_ptr<captured_info> && cap, std::exception_ptr && ex ):
+				captured_exception( std::shared_ptr<captured_info> && cap, std::exception_ptr && ex ):
 					cap_(std::move(cap)),
 					ex_(std::move(ex))
 					{
@@ -64,7 +64,7 @@ boost
 						}
 					catch(...)
 						{
-						throw captured_exception(std::unique_ptr<captured_info>(new captured_info_impl<ErrorInfo...>(extract(exp))),std::current_exception());
+						throw captured_exception(std::shared_ptr<captured_info>(new captured_info_impl<ErrorInfo...>(extract(exp))),std::current_exception());
 						}
 					}
 				};

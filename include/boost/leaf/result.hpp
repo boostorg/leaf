@@ -54,7 +54,7 @@ boost
 				return has_value();
 				}
 			T const &
-			value() const noexcept
+			value() const
 				{
 				if( has_value() )
 					return base::value();
@@ -62,7 +62,7 @@ boost
 					throw bad_result();
 				}
 			T &
-			value() noexcept
+			value()
 				{
 				if( has_value() )
 					return base::value();
@@ -70,12 +70,12 @@ boost
 					throw bad_result();
 				}
 			T const &
-			operator*() const noexcept
+			operator*() const
 				{
 				return value();
 				}
 			T &
-			operator*() noexcept
+			operator*()
 				{
 				return value();
 				}
@@ -85,6 +85,12 @@ boost
 				{
 				assert(has_current_error());
 				put(std::forward<ErrorInfo>(a)...);
+				return leaf_detail::error_tag();
+				}				
+			leaf_detail::error_tag
+			error() noexcept
+				{
+				assert(has_current_error());
 				return leaf_detail::error_tag();
 				}				
 			};
@@ -112,10 +118,16 @@ boost
 				}
 			template <class... ErrorInfo>
 			leaf_detail::error_tag
-			error( ErrorInfo && ... a ) noexcept
+			error( ErrorInfo && ... a ) const noexcept
 				{
 				assert(leaf_detail::current_error_flag());
 				put(std::forward<ErrorInfo>(a)...);
+				return leaf_detail::error_tag();
+				}				
+			leaf_detail::error_tag
+			error() const noexcept
+				{
+				assert(leaf_detail::current_error_flag());
 				return leaf_detail::error_tag();
 				}				
 			};
@@ -147,6 +159,14 @@ boost
 			leaf_detail::current_error_flag() = true;
 			leaf_detail::tl_slot_base::bump_current_seq_id();
 			put(std::forward<ErrorInfo>(a)...);
+			return leaf_detail::error_tag();
+			}
+		inline
+		leaf_detail::error_tag
+		error() noexcept
+			{
+			leaf_detail::current_error_flag() = true;
+			leaf_detail::tl_slot_base::bump_current_seq_id();
 			return leaf_detail::error_tag();
 			}
 		}

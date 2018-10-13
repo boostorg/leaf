@@ -68,7 +68,7 @@ boost
 					{
 					typedef typename std::tuple_element<I-1,Tuple>::type ith_type;
 					(void) slot_print<ith_type>(os);
-					msvc_workaround<I-1,Tuple>::print(os);
+					msvc_workaround_print<I-1,Tuple>::print(os);
 					}
 				};
 			template <class Tuple>

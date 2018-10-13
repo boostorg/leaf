@@ -38,6 +38,14 @@ boost
 			put(std::forward<ErrorInfo>(a)...);
 			throw e;
 			}
+		template <class Exception>
+		[[noreturn]]
+		void
+		throw_exception( Exception const & e )
+			{
+			leaf_detail::tl_slot_base::bump_current_seq_id();
+			throw e;
+			}
 		namespace
 		leaf_detail
 			{
