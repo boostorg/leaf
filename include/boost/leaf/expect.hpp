@@ -137,7 +137,7 @@ boost
 			bool
 			slots_available() noexcept
 				{
-				bool const available[ ] = { tl_slot<MatchErrorInfo>::tl_instance().has_value()... };
+				bool const available[ ] = { tl_slot<T>::tl_instance().has_value()... };
 				for( auto i : available )
 					if( !i )
 						return false;
