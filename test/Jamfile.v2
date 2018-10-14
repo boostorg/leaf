@@ -20,12 +20,12 @@ run diagnostic_print_test.cpp ;
 run diagnostic_information_test.cpp ;
 run expect_result_test.cpp ;
 run expect_eh_test.cpp ;
-run capture_result_test.cpp : : : <threading>multi ;
-run capture_result_void_test.cpp : : : <threading>multi ;
-run capture_eh_test.cpp : : : <threading>multi ;
+run captured_result_test.cpp : : : <threading>multi ;
+run captured_result_void_test.cpp : : : <threading>multi ;
+run capture_exception_test.cpp : : : <threading>multi ;
 
 compile hpp_capture_exception_test.cpp ;
-compile hpp_capture_result_test.cpp ;
+compile hpp_captured_result_test.cpp ;
 compile hpp_common_test.cpp ;
 compile hpp_current_exception_diagnostic_information_test.cpp ;
 compile hpp_diagnostic_information_test.cpp ;

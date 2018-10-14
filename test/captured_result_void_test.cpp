@@ -4,7 +4,7 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/capture_result.hpp>
+#include <boost/leaf/captured_result.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <vector>
 #include <future>
@@ -33,15 +33,14 @@ main()
 			{
 			int const a = rand();
 			int const b = rand();
-			return fut_info { a, b, std::async( std::launch::async,
-				leaf::capture_result<my_info<1>,my_info<2>,my_info<3>>( [a,b]
-					{
-					auto put = leaf::preload( my_info<1>{a}, my_info<2>{b} );
-					if( rand()%2 )
-						return leaf::result<void>();
-					else
-						return leaf::result<void>(leaf::error(my_info<3>{}));
-					} ) ) };
+			return fut_info { a, b, std::async( std::launch::async, [a,b]
+				{
+				leaf::expect<my_info<1>,my_info<2>,my_info<3>> exp;
+				if( rand()%2 )
+					return leaf::result<void>().capture(exp);
+				else
+					return leaf::result<void>(leaf::error(my_info<1>{a},my_info<2>{b},my_info<3>{})).capture(exp);
+				} ) };
 			} );
 		}
 	for( auto & f : fut )
@@ -49,7 +48,7 @@ main()
 		using namespace leaf::leaf_detail;
 		f.fut.wait();
 		leaf::expect<my_info<1>,my_info<2>,my_info<4>> exp;
-		if( leaf::result<void> r = unpack(f.fut.get()) )
+		if( leaf::result<void> r = f.fut.get().get() )
 			{
 			}
 		else

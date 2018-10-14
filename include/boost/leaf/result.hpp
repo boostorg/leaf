@@ -20,6 +20,8 @@ boost
 	namespace
 	leaf
 		{
+		template <class T>
+		class captured_result;
 		namespace
 		leaf_detail
 			{
@@ -84,6 +86,7 @@ boost
 			error( ErrorInfo && ... a ) noexcept
 				{
 				assert(has_current_error());
+				assert(!*this);
 				put(std::forward<ErrorInfo>(a)...);
 				return leaf_detail::error_tag();
 				}				
@@ -91,8 +94,11 @@ boost
 			error() noexcept
 				{
 				assert(has_current_error());
+				assert(!*this);
 				return leaf_detail::error_tag();
 				}				
+			template <class... ExpectErrorInfo>
+			captured_result<T> capture( expect<ExpectErrorInfo...> & );
 			};
 		template <>
 		class
@@ -121,6 +127,7 @@ boost
 			error( ErrorInfo && ... a ) const noexcept
 				{
 				assert(leaf_detail::current_error_flag());
+				assert(!*this);
 				put(std::forward<ErrorInfo>(a)...);
 				return leaf_detail::error_tag();
 				}				
@@ -128,8 +135,11 @@ boost
 			error() const noexcept
 				{
 				assert(leaf_detail::current_error_flag());
+				assert(!*this);
 				return leaf_detail::error_tag();
 				}				
+			template <class... ExpectErrorInfo>
+			captured_result<void> capture( expect<ExpectErrorInfo...> & );
 			};
 		template <class ErrorInfo,class... ExpectErrorInfo,class T>
 		decltype(std::declval<ErrorInfo>().value) const *
