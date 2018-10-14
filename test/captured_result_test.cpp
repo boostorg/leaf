@@ -27,7 +27,7 @@ fut_info
 int
 main()
 	{
-	int const thread_count = 1;
+	int const thread_count = 42;
 	std::vector<fut_info> fut;
 		{
 		std::generate_n( std::inserter(fut,fut.end()), thread_count, [ ]
