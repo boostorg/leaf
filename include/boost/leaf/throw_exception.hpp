@@ -45,8 +45,8 @@ boost
 					enforce_std_exception(*this);
 					}
 				exception( exception && x ) noexcept:
-					Ex(std::move(x)),
-					error(std::move(x)),
+					Ex(std::move(static_cast<Ex &&>(x))),
+					error(std::move(static_cast<error &&>(x))),
 					moved_(false)
 					{
 					x.moved_ = true;

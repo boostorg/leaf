@@ -14,23 +14,30 @@ project
 		<include>../../..
     ;
 
-run optional_test.cpp ;
-run tl_slot_test.cpp ;
+run _hpp_all_test.cpp ;
+run _hpp_common_test.cpp ;
+run _hpp_error_capture_test.cpp ;
+run _hpp_error_test.cpp ;
+run _hpp_exception_capture_test.cpp ;
+run _hpp_exception_test.cpp ;
+run _hpp_expect_test.cpp ;
+run _hpp_preload_test.cpp ;
+run _hpp_result_test.cpp ;
+run _hpp_throw_exception_test.cpp ;
+run basic_test.cpp ;
 run diagnostic_print_test.cpp ;
-run diagnostic_information_test.cpp ;
-run expect_result_test.cpp ;
-run expect_eh_test.cpp ;
-run captured_result_test.cpp : : : <threading>multi ;
-run captured_result_void_test.cpp : : : <threading>multi ;
-run capture_exception_test.cpp : : : <threading>multi ;
-
-compile hpp_capture_exception_test.cpp ;
-compile hpp_captured_result_test.cpp ;
-compile hpp_common_test.cpp ;
-compile hpp_current_exception_diagnostic_information_test.cpp ;
-compile hpp_diagnostic_information_test.cpp ;
-compile hpp_expect_test.cpp ;
-compile hpp_put_test.cpp ;
+run error_capture_test.cpp ;
+run error_test.cpp ;
+run exception_capture_test.cpp : : : <threading>multi ;
+run exception_test.cpp ;
+run foreign_exception_test.cpp ;
+run multiple_errors_test.cpp ;
+run optional_test.cpp ;
+run preload_test.cpp ;
+run print_test.cpp ;
+run result_capture_test.cpp : : : <threading>multi ;
+run result_test.cpp ;
+run result_void_capture_test.cpp : : : <threading>multi ;
 
 compile ../example/print_file_result.cpp ;
 compile ../example/print_file_eh.cpp ;

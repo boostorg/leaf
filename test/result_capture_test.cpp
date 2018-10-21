@@ -24,28 +24,35 @@ fut_info
 	int result;
 	std::future<leaf::result<int>> fut;
 	};
-
+template <class F>
+std::vector<fut_info>
+launch_tasks( int task_count, F f )
+	{
+	assert(task_count>0);
+	std::vector<fut_info> fut;
+	std::generate_n( std::inserter(fut,fut.end()), task_count, [f]
+		{
+		int const a = rand();
+		int const b = rand();
+		int const res = (rand()%10) - 5;
+		return fut_info { a, b, res, std::async( std::launch::async, [f,a,b,res]
+			{
+			leaf::expect<my_info<1>,my_info<2>,my_info<3>> exp;
+			return capture(exp,f(a,b,res));
+			} ) };
+		} );
+	return fut;
+	}
 int
 main()
 	{
-	int const thread_count = 42;
-	std::vector<fut_info> fut;
+	std::vector<fut_info> fut = launch_tasks( 42, [ ]( int a, int b, int res ) noexcept -> leaf::result<int>
 		{
-		std::generate_n( std::inserter(fut,fut.end()), thread_count, [ ]
-			{
-			int const a = rand();
-			int const b = rand();
-			int const res = (rand()%10) - 5;
-			return fut_info { a, b, res, std::async( std::launch::async, [a,b,res]
-				{
-				leaf::expect<my_info<1>,my_info<2>,my_info<3>> exp;
-				if( res>=0 )
-					return capture(exp,leaf::result<int>(res));
-				else
-					return capture(exp,leaf::result<int>(leaf::error(my_info<1>{a},my_info<2>{b},my_info<3>{})));
-				} ) };
-			} );
-		}
+		if( res>=0 )
+			return res;
+		else
+			return leaf::error(my_info<1>{a},my_info<2>{b},my_info<3>{});
+		} );
 	for( auto & f : fut )
 		{
 		using namespace leaf::leaf_detail;

@@ -23,11 +23,17 @@ boost
 			captured_exception:
 				public std::exception
 				{
-				error_capture cap_;
 				std::exception_ptr ex_;
+				error_capture cap_;
 				public:
-				captured_exception( error_capture && cap, std::exception_ptr && ex ) noexcept:
-					cap_(std::move(cap)),
+				captured_exception( std::exception_ptr && ex, error_capture && cap ) noexcept:
+					ex_(std::move(ex)),
+					cap_(std::move(cap))
+					{
+					assert(ex_);
+					}
+				explicit
+				captured_exception( std::exception_ptr && ex ) noexcept:
 					ex_(std::move(ex))
 					{
 					assert(ex_);
@@ -36,7 +42,8 @@ boost
 				void
 				rethrow_original_exception()
 					{
-					set_current_error(cap_.propagate());
+					if( cap_ )
+						set_current_error(cap_.propagate());
 					std::rethrow_exception(ex_);
 					}
 				friend
@@ -58,7 +65,7 @@ boost
 					{
 					}
 				template <class... A>
-				decltype(std::declval<F>()())
+				decltype(std::declval<F>()(std::declval<A>()...))
 				operator()( A && ... a )
 					{
 					expect<E...> exp;
@@ -68,11 +75,14 @@ boost
 						}
 					catch( error const & e )
 						{
-						throw captured_exception(capture(exp,e),std::current_exception());
+						throw captured_exception(std::current_exception(),capture(exp,e));
 						}
 					catch(...)
 						{
-						throw captured_exception(capture(exp,*current_error()),std::current_exception());
+						if( error const * e = current_error() )
+							throw captured_exception(std::current_exception(),capture(exp,*e));
+						else
+							throw captured_exception(std::current_exception());
 						}
 					}
 				};
