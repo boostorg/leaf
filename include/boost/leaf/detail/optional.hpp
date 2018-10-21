@@ -7,6 +7,7 @@
 #ifndef UUID_47258FCCB6B411E8A1F35AA00C39171A
 #define UUID_47258FCCB6B411E8A1F35AA00C39171A
 
+#include <utility>
 #include <new>
 #include <assert.h>
 
