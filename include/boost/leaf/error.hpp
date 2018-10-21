@@ -10,6 +10,7 @@
 #include <boost/leaf/detail/optional.hpp>
 #include <atomic>
 #include <cstdio>
+#include <climits>
 #include <exception>
 #include <ostream>
 
