@@ -132,12 +132,18 @@ boost
 				}
 			inline
 			void
-			clear_current_error( error const & e )
+			clear_current_error_( error const & e )
 				{
-				assert(!std::uncaught_exception());
 				auto & x = current_error_state::tl_instance();
 				if( x.ep && *x.ep==e )
 					x.ep = 0;
+				}
+			inline
+			void
+			clear_current_error( error const & e )
+				{
+				assert(!std::uncaught_exception());
+				clear_current_error_(e);
 				}
 			}
 		inline
