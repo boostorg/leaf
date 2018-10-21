@@ -10,6 +10,7 @@
 
 #include <boost/leaf/all.hpp>
 #include <iostream>
+#include <memory>
 #include <stdio.h>
 
 namespace leaf = boost::leaf;
