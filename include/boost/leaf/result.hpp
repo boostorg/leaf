@@ -237,8 +237,18 @@ boost
 			leaf::error
 			error( E && ... e ) noexcept
 				{
-				assert(which_==variant::err);
-				return err_.propagate(std::forward<E>(e)...);
+				switch( which_ )
+					{
+					case variant::
+					value:
+						return leaf::error(std::forward<E>(e)...);
+					case variant::
+					cap:
+						reset(cap_.propagate());
+					default:
+						assert(which_==variant::err);
+						return err_.propagate(std::forward<E>(e)...);
+					}
 				}
 			template <class... E>
 			friend

@@ -169,7 +169,7 @@ boost
 					std::make_tuple(
 						convert_optional(
 							std::move(std::get<tuple_type_index<slot<E>,decltype(exp.s_)>::value>(exp.s_)),e)...));
-				clear_current_error(e);
+				clear_current_error_(e);
 				return cap;
 				}
 			};

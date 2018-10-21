@@ -43,8 +43,7 @@ boost
 				void
 				rethrow_original_exception()
 					{
-					if( cap_ )
-						set_current_error(cap_.propagate());
+					set_current_error(cap_.propagate());
 					std::rethrow_exception(ex_);
 					}
 				friend

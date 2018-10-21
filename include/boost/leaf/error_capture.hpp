@@ -258,9 +258,11 @@ boost
 			error
 			propagate() noexcept
 				{
-				assert(s_);
-				s_->propagate(e_);
-				free();
+				if( s_ )
+					{
+					s_->propagate(e_);
+					free();
+					}
 				return e_;
 				}
 			template <class... M>
