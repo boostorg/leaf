@@ -9,7 +9,7 @@
 
 #include <utility>
 #include <new>
-#include <assert.h>
+#include <cassert>
 
 namespace
 boost

@@ -148,7 +148,11 @@ boost
 			if( error const * e = x.ep )
 				return e;
 			else if( std::uncaught_exception() )
-				return &leaf_detail::set_current_error(error());
+				{
+				error new_error;
+				assert(*x.ep==new_error);
+				return x.ep;
+				}
 			else
 				return 0;
 			}

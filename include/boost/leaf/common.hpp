@@ -11,6 +11,7 @@
 #include <string>
 #include <cstring>
 #include <cerrno>
+#include <cassert>
 
 #define LEAF_SOURCE_LOCATION ::boost::leaf::ei_source_location{::boost::leaf::ei_source_location::loc(__FILE__,__LINE__,__FUNCTION__)}
 
