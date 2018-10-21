@@ -28,8 +28,19 @@ boost
 		namespace
 		leaf_detail
 			{
-			template<class F, class E = void> struct is_printable { static constexpr bool value=false; };
-			template<class F> struct is_printable<F, decltype(std::declval<std::ostream&>()<<std::declval<F const &>(), void())> { static constexpr bool value=true; };
+			template<class F, class E = void>
+			struct
+			is_printable
+				{
+				static constexpr bool value=false;
+				};
+			template<class F>
+			struct
+			is_printable<F, decltype(std::declval<std::ostream&>()<<std::declval<F const &>(), void())>
+				{
+				static constexpr bool value=true;
+				};
+			////////////////////////////////////////
 			template <class Wrapper,bool WrapperPrintable=is_printable<Wrapper>::value,bool ValuePrintable=is_printable<decltype(Wrapper::value)>::value>
 			struct diagnostic;
 			template <class Wrapper,bool ValuePrintable>

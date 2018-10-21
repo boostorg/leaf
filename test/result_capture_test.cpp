@@ -4,7 +4,8 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/capture_exception.hpp>
+#include <boost/leaf/result.hpp>
+#include <boost/leaf/expect.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <vector>
 #include <future>
@@ -13,7 +14,6 @@
 
 namespace leaf = boost::leaf;
 
-struct error: std::exception { };
 template <int> struct my_info { int value; };
 
 struct
@@ -22,7 +22,7 @@ fut_info
 	int a;
 	int b;
 	int result;
-	std::future<int> fut;
+	std::future<leaf::result<int>> fut;
 	};
 
 int
@@ -35,16 +35,15 @@ main()
 			{
 			int const a = rand();
 			int const b = rand();
-			int const result = (rand()%10) - 5;
-			return fut_info { a, b, result, std::async( std::launch::async,
-				leaf::capture_exception<my_info<1>,my_info<2>,my_info<3>>( [a,b,result]
-					{
-					auto put = leaf::preload( my_info<1>{a}, my_info<2>{b} );
-					if( result>=0 )
-						return result;
-					else
-						leaf::throw_exception(error(),my_info<3>{});
-					} ) ) };
+			int const res = (rand()%10) - 5;
+			return fut_info { a, b, res, std::async( std::launch::async, [a,b,res]
+				{
+				leaf::expect<my_info<1>,my_info<2>,my_info<3>> exp;
+				if( res>=0 )
+					return capture(exp,leaf::result<int>(res));
+				else
+					return capture(exp,leaf::result<int>(leaf::error(my_info<1>{a},my_info<2>{b},my_info<3>{})));
+				} ) };
 			} );
 		}
 	for( auto & f : fut )
@@ -52,16 +51,14 @@ main()
 		using namespace leaf::leaf_detail;
 		f.fut.wait();
 		leaf::expect<my_info<1>,my_info<2>,my_info<4>> exp;
-		try
+		if( leaf::result<int> r = f.fut.get() )
 			{
-			int r = leaf::get(f.fut);
-			BOOST_TEST(r>=0);
-			BOOST_TEST(r==f.result);
+			BOOST_TEST(*r>=0);
+			BOOST_TEST(*r==f.result);
 			}
-		catch(
-		error const & e )
+		else
 			{
-			handle_error( exp, e, leaf::match<my_info<1>,my_info<2>>( [&f]( int x1, int x2 )
+			handle_error( exp, r, leaf::match<my_info<1>,my_info<2>>( [&f]( int x1, int x2 )
 				{
 				BOOST_TEST(x1==f.a);
 				BOOST_TEST(x2==f.b);

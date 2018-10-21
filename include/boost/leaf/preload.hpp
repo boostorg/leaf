@@ -7,15 +7,9 @@
 #ifndef UUID_8F1C53BEB39F11E8A1C5B6F3E99C4353
 #define UUID_8F1C53BEB39F11E8A1C5B6F3E99C4353
 
-#include <boost/leaf/detail/tl_slot.hpp>
-#include <tuple>
+#include <boost/leaf/error.hpp>
 #include <type_traits>
-#include <exception>
-
-#define ei_SOURCE_LOCATION\
-	::boost::leaf::ei_source_location<::boost::leaf::in_function> {__FUNCTION__},\
-	::boost::leaf::ei_source_location<::boost::leaf::at_line> {__LINE__},\
-	::boost::leaf::ei_source_location<::boost::leaf::in_file> {__FILE__}
+#include <tuple>
 
 namespace
 boost
@@ -23,29 +17,6 @@ boost
 	namespace
 	leaf
 		{
-		template <class... ErrorInfo>
-		void
-		put( ErrorInfo && ... a ) noexcept
-			{
-			{ using _ = bool[ ]; (void) _ { leaf_detail::tl_slot<ErrorInfo>::tl_instance().put(std::forward<ErrorInfo>(a))... }; }
-			}
-		template <class... ErrorInfo,class Exception>
-		[[noreturn]]
-		void
-		throw_exception( Exception const & e, ErrorInfo && ... a )
-			{
-			leaf_detail::tl_slot_base::bump_current_seq_id();
-			put(std::forward<ErrorInfo>(a)...);
-			throw e;
-			}
-		template <class Exception>
-		[[noreturn]]
-		void
-		throw_exception( Exception const & e )
-			{
-			leaf_detail::tl_slot_base::bump_current_seq_id();
-			throw e;
-			}
 		namespace
 		leaf_detail
 			{
@@ -57,9 +28,9 @@ boost
 				{
 				static
 				void
-				put_( T && x ) noexcept
+				propagate_( error const & e, T && x ) noexcept
 					{
-					put(std::move(x));
+					e.propagate(std::move(x));
 					}
 				};
 			template <class F>
@@ -68,29 +39,29 @@ boost
 				{
 				static
 				void
-				put_( F && x ) noexcept
+				propagate_( error const & e, F && x ) noexcept
 					{
-					put(x());
+					e.propagate(std::forward<F>(x)());
 					}
 				};
 			template <int I,class Tuple>
 			struct
-			put_meta
+			propagate_meta
 				{
 				static
 				void
-				put( Tuple && t ) noexcept
+				propagate( error const & e, Tuple && t ) noexcept
 					{
 					typedef typename std::tuple_element<I-1,Tuple>::type ith_type;
-					defer_dispatch<ith_type>::put_(std::move(std::get<I-1>(std::move(t))));
-					put_meta<I-1,Tuple>::put(std::move(t));
+					defer_dispatch<ith_type>::propagate_(e,std::move(std::get<I-1>(std::move(t))));
+					propagate_meta<I-1,Tuple>::propagate(e,std::move(t));
 					}
 				};
 			template <class Tuple>
 			struct
-			put_meta<0,Tuple>
+			propagate_meta<0,Tuple>
 				{
-				static void put( Tuple && ) noexcept { }
+				static void propagate( error const &, Tuple && ) noexcept { }
 				};
 			template <class... T>
 			class
@@ -99,28 +70,29 @@ boost
 				preloaded( preloaded const & ) = delete;
 				preloaded & operator=( preloaded const & ) = delete;
 				typedef std::tuple<typename std::remove_const<typename std::remove_reference<T>::type>::type...> tuple_type;
-				optional<tuple_type> to_put_;
+				optional<tuple_type> to_propagate_;
 				public:
 				template <class... U>
 				explicit
 				preloaded( U && ... a ):
-					to_put_(tuple_type(std::forward<U>(a)...))
+					to_propagate_(tuple_type(std::forward<U>(a)...))
 					{
 					}
 				preloaded( preloaded && x ) noexcept:
-					to_put_(std::move(x.to_put_))
+					to_propagate_(std::move(x.to_propagate_))
 					{
-					assert(!x.to_put_.has_value());
+					assert(!x.to_propagate_.has_value());
 					}
 				~preloaded() noexcept
 					{
-					if( to_put_.has_value() && has_current_error() )
-						put_meta<sizeof...(T),tuple_type>::put(to_put_.extract_value());
+					if( to_propagate_.has_value() )
+						if( error const * e = current_error() )
+							propagate_meta<sizeof...(T),tuple_type>::propagate(*e,to_propagate_.extract_value());
 					}
 				void
 				cancel() noexcept
 					{
-					to_put_.reset();
+					to_propagate_.reset();
 					}
 				};
 			}
@@ -132,7 +104,5 @@ boost
 			}
 		}
 	}
-
-#define LEAF_THROW(e) ::boost::leaf::throw_exception(e,ei_SOURCE_LOCATION)
 
 #endif

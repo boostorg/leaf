@@ -7,8 +7,9 @@
 #ifndef UUID_AFBBD676B2FF11E8984C7976AE35F1A2
 #define UUID_AFBBD676B2FF11E8984C7976AE35F1A2
 
-#include <boost/leaf/detail/tl_slot.hpp>
-#include <exception>
+#include <boost/leaf/throw_exception.hpp>
+#include <boost/leaf/detail/tuple.hpp>
+#include <boost/leaf/detail/print.hpp>
 
 namespace
 boost
@@ -16,223 +17,174 @@ boost
 	namespace
 	leaf
 	 	{
-		struct mismatch_error: virtual std::exception { };
-
-		template <class... ExpectErrorInfo>
-		class expect;
-
-		template <class T>
-		class result;
-
-		class bad_result: public std::exception { };
-
 		namespace
 		leaf_detail
 			{
-			template <class T>
-			int
-			slot_open_reset()
-				{
-				auto & info = tl_slot<T>::tl_instance();
-				(void) info.open();
-				info.reset();
-				return 42;
-				}
-			template <class T>
-			int
-			slot_close()
-				{
-				tl_slot<T>::tl_instance().close();
-				return 42;
-				}
-#ifdef _MSC_VER
-			template <int I,class Tuple>
+			template <class Tuple,class... List>
+			struct all_available_slot;
+			template <class Tuple,class Car,class... Cdr>
 			struct
-			msvc_workaround_open_reset
-				{
-				static
-				void
-				open_reset() noexcept
-					{
-					typedef typename std::tuple_element<I-1,Tuple>::type ith_type;
-					(void) slot_open_reset<ith_type>();
-					msvc_workaround_open_reset<I-1,Tuple>::open_reset();
-					}
-				};
-			template <class Tuple>
-			struct
-			msvc_workaround_open_reset<0,Tuple>
-				{
-				static void open_reset() noexcept { }
-				};
-			template <int I,class Tuple>
-			struct
-			msvc_workaround_close
-				{
-				static
-				void
-				close() noexcept
-					{
-					typedef typename std::tuple_element<I-1,Tuple>::type ith_type;
-					(void) slot_close<ith_type>();
-					msvc_workaround_close<I-1,Tuple>::close();
-					}
-				};
-			template <class Tuple>
-			struct
-			msvc_workaround_close<0,Tuple>
-				{
-				static void close() noexcept { }
-				};
-			template <int I,class Tuple>
-			struct
-			msvc_workaround_slots_available
+			all_available_slot<Tuple,Car,Cdr...>
 				{
 				static
 				bool
-				slots_available() noexcept
+				check( Tuple const & tup, error const & e ) noexcept
 					{
-					typedef typename std::tuple_element<I-1,Tuple>::type ith_type;
-					return tl_info<ith_type>::tl_instance().has_value() && msvc_workaround_slots_available<I-1,Tuple>::slots_available();
+					auto & sl = std::get<tuple_type_index<Car,Tuple>::value>(tup);
+					return sl.has_value() && sl.value().e==e && all_available_slot<Tuple,Cdr...>::check(tup,e);
 					}
 				};
 			template <class Tuple>
 			struct
-			msvc_workaround_slots_available<0,Tuple>
+			all_available_slot<Tuple>
 				{
-				static bool slots_available() noexcept { return true; }
+				static bool check( Tuple const &, error const & ) noexcept { return true; }
 				};
-			template <class... T>
-			void
-			slots_open_reset() noexcept
+			////////////////////////////////////////
+			template <int I,class Tuple>
+			struct
+			tuple_print_slot
 				{
-				msvc_workaround_open_reset<sizeof...(T),std::tuple<T...>>::open_reset();
-				}
-			template <class... T>
-			void
-			slots_close() noexcept
-				{
-				msvc_workaround_close<sizeof...(T),std::tuple<T...>>::close();
-				}
-			template <class... T>
-			bool
-			slots_available() noexcept
-				{
-				return msvc_workaround_slots_available<sizeof...(T),std::tuple<T...>>::slots_available();
-				}
-#else
-			template <class... T>
-			void
-			slots_open_reset() noexcept
-				{
-				{ using _ = int[ ]; (void) _ { 42, slot_open_reset<T>()... }; }
-				}
-			template <class... T>
-			void
-			slots_close() noexcept
-				{
-				{ using _ = int[ ]; (void) _ { 42, slot_close<T>()... }; }
-				}
-			template <class... T>
-			bool
-			slots_available() noexcept
-				{
-				bool const available[ ] = { tl_slot<T>::tl_instance().has_value()... };
-				for( auto i : available )
-					if( !i )
-						return false;
-				return true;
-				}
-#endif
-
-			template <class F,class R,class... ExpectErrorInfo> class capture_wrapper;
-			template <class F,class... MatchErrorInfo>
-			class
-			match_impl
-				{
-				match_impl( match_impl const & ) = delete;
-				match_impl & operator=( match_impl const & ) = delete;
-				F f_;
-				public:
-				match_impl( match_impl && ) = default;
-				explicit
-				match_impl( F && f ) noexcept:
-					f_(std::move(f))
+				static
+				void
+				print( std::ostream & os, Tuple const & tup )
 					{
-					}
-				template <class... ExpectErrorInfo>
-				int
-				unwrap( bool & still_has_error, int & count ) const
-					{
-					using namespace leaf_detail;
-					bool const last = (--count==0);
-					assert(count>=0);
-					if( still_has_error )
+					tuple_print_slot<I-1,Tuple>::print(os,tup);
+					auto & opt = std::get<I-1>(tup);
+					if( opt.has_value() )
 						{
-						if( !slots_available<ExpectErrorInfo...>() )
-							if( last )
-								throw mismatch_error();
-							else
-								return 42;
-						(void) f_(tl_slot<MatchErrorInfo>::tl_instance().value().value...);
-						still_has_error = false;
+						auto & x = opt.value();
+						if( diagnostic<decltype(x.v)>::print(os,x.v) )
+							os << "(0x" << x.e << ')' << std::endl;
 						}
-					return 42;
+					}
+				static
+				void
+				print( std::ostream & os, Tuple const & tup, error const & e )
+					{
+					tuple_print_slot<I-1,Tuple>::print(os,tup,e);
+					auto & opt = std::get<I-1>(tup);
+					if( opt.has_value() )
+						{
+						auto & x = opt.value();
+						if( x.e==e && diagnostic<decltype(x.v)>::print(os,x.v) )
+							os << std::endl;
+						}
 					}
 				};
+			template <class Tuple>
+			struct
+			tuple_print_slot<0,Tuple>
+				{
+				static void print( std::ostream &, Tuple const & ) { }
+				static void print( std::ostream &, Tuple const &, error const & ) { }
+				};
+			////////////////////////////////////////
+			template <class T>
+			optional<T>
+			convert_optional( slot<T> && x, error const & e ) noexcept
+				{
+				if( x.has_value() && x.value().e==e )
+					return optional<T>(std::move(x.extract_value().v));
+				else
+					return optional<T>();
+				}
 			}
-		template <class... ExpectErrorInfo>
+		template <class... E>
+		class expect;
+
+		template <class P,class... E>
+		decltype(P::value) const * peek( expect<E...> const &, error const & ) noexcept;
+
+		class error_capture;
+
+		template <class... E>
 		class
 		expect
 			{
+			friend class error;
+
+			template <class P,class... E_>
+			friend decltype(P::value) const * leaf::peek( expect<E_...> const &, error const & ) noexcept;
+
+			template <class>
+			struct
+			dependent_type
+				{
+				typedef leaf::error_capture error_capture;
+				};
+
 			expect( expect const & ) = delete;
 			expect & operator=( expect const & ) = delete;
 
-			template <class F,class... MatchErrorInfo>
-			friend class leaf_detail::match_impl;
+			std::tuple<leaf_detail::slot<E>...>  s_;
 
+			template <class F,class... MatchTypes>
+			int
+			unwrap( leaf_detail::match_impl<F,MatchTypes...> const & m, error const & e, bool & matched ) const noexcept
+				{
+				using namespace leaf_detail;
+				if( !matched && (matched=all_available_slot<decltype(s_),slot<MatchTypes>...>::check(s_,e)) )
+					(void) m.f( *leaf::peek<MatchTypes>(*this,e)... );
+				return 42;
+				}
 			public:
 			expect() noexcept
 				{
-				using namespace leaf_detail;
-				tl_slot_base::bump_current_seq_id();
-				current_error_flag() = false;
-				slots_open_reset<ei_source_location<in_file>,ei_source_location<at_line>,ei_source_location<in_function>,ExpectErrorInfo...>();
+				leaf_detail::clear_current_error();
 				}
 			~expect() noexcept
 				{
-				using namespace leaf_detail;
-				if( !has_current_error() )
-					tl_slot_base::bump_current_seq_id();
-				slots_close<ei_source_location<in_file>,ei_source_location<at_line>,ei_source_location<in_function>,ExpectErrorInfo...>();
 				}
-			void print_diagnostic_information( std::ostream & ) const;
-			void print_current_exception_diagnostic_information( std::ostream & ) const;
+			template <class... M>
+			friend
+			void
+			handle_error( expect const & exp, error const & e, M && ... m )
+				{
+				bool matched = false;
+				{ using _ = int[ ]; (void) _ { 42, exp.unwrap(m,e,matched)... }; }
+				if( !matched )
+					throw_exception(mismatch_error());
+				leaf_detail::clear_current_error(e);
+				}
+			friend
+			void
+			diagnostic_print( std::ostream & os, expect const & exp )
+				{
+				leaf_detail::tuple_print_slot<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_);
+				}
+			friend
+			void
+			diagnostic_print( std::ostream & os, expect const & exp, error const & e )
+				{
+				leaf_detail::tuple_print_slot<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_,e);
+				}
+			friend
+			typename dependent_type<expect>::error_capture
+			capture( expect & exp, error const & e )
+				{
+				using namespace leaf_detail;
+				typename dependent_type<expect>::error_capture cap(
+					e,
+					std::make_tuple(
+						convert_optional(
+							std::move(std::get<tuple_type_index<slot<E>,decltype(exp.s_)>::value>(exp.s_)),e)...));
+				clear_current_error(e);
+				return cap;
+				}
 			};
-		template <class ErrorInfo,class... ExpectErrorInfo>
-		decltype(std::declval<ErrorInfo>().value) const *
-		peek( expect<ExpectErrorInfo...> const &, std::exception const & )
+		template <class P,class... E>
+		decltype(P::value) const *
+		peek( expect<E...> const & exp, error const & e ) noexcept
 			{
-			auto & x = leaf_detail::tl_slot<ErrorInfo>::tl_instance();
-			if( x.has_value() )
-				return &x.value().value;
-			else
-				return 0;
-			}
-		template <class... Match,class... ExpectErrorInfo>
-		void
-		handle_error( expect<ExpectErrorInfo...> & e, std::exception const &, Match && ... m )
-			{
-			int count = sizeof...(Match);
-			bool & still_has_error = leaf_detail::current_error_flag();
-			still_has_error = true;
-			{ using _ = int[ ]; (void) _ { 42, m.unwrap(still_has_error,count)... }; }
-			}
-		template <class... MatchErrorInfo,class F>
-		leaf_detail::match_impl<F,MatchErrorInfo...>
-		match( F && f ) noexcept
-			{
-			return leaf_detail::match_impl<F,MatchErrorInfo...>(std::move(f));
+			auto & opt = std::get<leaf_detail::type_index<P,E...>::value>(exp.s_);
+			if( opt.has_value() )
+				{
+				auto & x = opt.value();
+				if( x.e==e )
+					return &x.v.value;
+				}
+			return 0;
 			}
 		}
 	}

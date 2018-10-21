@@ -4,90 +4,110 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/detail/diagnostic_print.hpp>
+#include <boost/leaf/exception_capture.hpp>
+#include <boost/leaf/exception.hpp>
+#include <boost/leaf/common.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <sstream>
 
 namespace leaf = boost::leaf;
 
 struct
-c1
+my_error:
+	virtual std::exception
 	{
-	int value;
+	char const *
+	what() const noexcept
+		{
+		return "my_error";
+		}
+	};
+
+struct
+printable_payload
+	{
 	friend
 	std::ostream &
-	operator<<( std::ostream & os, c1 const & )
+	operator<<( std::ostream & os, printable_payload const & x )
 		{
-		return os << "c1";
-		}           
+		return os << "printed printable_payload";
+		}
 	};
 struct
-c2
+non_printable_payload
 	{
-	int value;
-	};
-std::ostream &
-operator<<( std::ostream & os, c2 const & )
-	{
-	return os << "c2";
-	}           
-struct
-c3
-	{
-	int value;
 	};
 struct
-c4
+printable_info_printable_payload
 	{
-	struct unprintable { };
-	unprintable value;;
+	printable_payload value;
+	friend
+	std::ostream &
+	operator<<( std::ostream & os, printable_info_printable_payload const & x )
+		{
+		return os << "*** printable_info_printable_payload " << x.value << " ***";
+		}
 	};
-template <class T>
-bool
-check( T const & x, char const * sub )
+struct
+printable_info_non_printable_payload
 	{
-	using namespace leaf::leaf_detail;
-	std::ostringstream s;
-	diagnostic<T>::print(s,x);
-	std::string q = s.str();
-	return q.find(sub)!=q.npos;
-	}
+	non_printable_payload value;
+	friend
+	std::ostream &
+	operator<<( std::ostream & os, printable_info_non_printable_payload const & x )
+		{
+		return os << "*** printable_info_non_printable_payload ***";
+		}
+	};
+struct
+non_printable_info_printable_payload
+	{
+	printable_payload value;
+	};
+struct
+non_printable_info_non_printable_payload
+	{
+	non_printable_payload value;
+	};
 int
 main()
 	{
-	BOOST_TEST(check(c1{42},"c1"));
 		{
-		c1 x;
-		c1 & y = x;
-		BOOST_TEST(check(x,"c1"));
-		BOOST_TEST(check(y,"c1"));
-		}
-	BOOST_TEST(check(c2{42},"c2"));
-		{
-		c2 x = {42};
-		c2 & y = x;
-		BOOST_TEST(check(x,"c2"));
-		BOOST_TEST(check(y,"c2"));
-		}
-	BOOST_TEST(check(c3{42},"c3"));
-	BOOST_TEST(check(c3{42},"42"));
-		{
-		c3 x = {42};
-		c3 & y = x;
-		BOOST_TEST(check(x,"c3"));
-		BOOST_TEST(check(x,"42"));
-		BOOST_TEST(check(y,"c3"));
-		BOOST_TEST(check(y,"42"));
-		}
-	BOOST_TEST(check(c4(),"c4"));
-	BOOST_TEST(check(c4(),"N/A"));
-		{
-		c4 x;
-		c4 & y = x;
-		BOOST_TEST(check(x,"c4"));
-		BOOST_TEST(check(x,"N/A"));
-		BOOST_TEST(check(y,"c4"));
-		BOOST_TEST(check(y,"N/A"));
+		leaf::expect
+			<
+			printable_info_printable_payload,
+			printable_info_non_printable_payload,
+			non_printable_info_printable_payload,
+			non_printable_info_non_printable_payload,
+			leaf::ei_errno,
+			leaf::ei_source_location
+			> exp;
+		try
+			{
+			leaf::throw_exception(
+				my_error(),
+				LEAF_SOURCE_LOCATION,
+				printable_info_printable_payload(),
+				printable_info_non_printable_payload(),
+				non_printable_info_printable_payload(),
+				non_printable_info_non_printable_payload(),
+				leaf::ei_errno{ENOENT} );
+			}
+		catch(
+		my_error & e )
+			{
+			handle_error( exp, e, leaf::match<>([ ]{ }) );
+			std::ostringstream st;
+			current_exception_diagnostic_print(st,exp);
+			std::string s = st.str();
+			BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
+			BOOST_TEST(s.find(" = N/A")!=s.npos);
+			BOOST_TEST(s.find(" = printed printable_payload")!=s.npos);
+			BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
+			BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
+			BOOST_TEST(s.find(") in function")!=s.npos);
+			std::cout << s;
+			}
 		}
 	return boost::report_errors();
 	}

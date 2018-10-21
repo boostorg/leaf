@@ -8,7 +8,7 @@
 //when using exception handling to report failures. See transport_ec.cpp for the variant that doesn't
 //use exception handling.
 
-#include <boost/leaf/capture_exception.hpp>
+#include <boost/leaf/all.hpp>
 #include <vector>
 #include <string>
 #include <future>
@@ -45,19 +45,19 @@ task_result task( bool succeed )
 			failure_info4{42} );
 }
 
-//Launch the specified number of asynchronous tasks. In case an asynchronous task fails, its error info
-//(of the type list used to instantiate leaf::capture) is captured in a leaf::captured_result<task_result>, which
-//transports it to the main thread.
-template <class... ErrorInfo>
+//Launch the specified number of asynchronous tasks. In case an asynchronous task throws, its error info
+//(of the type list used to instantiate leaf::capture_exception) is captured and wrapped in a different exception,
+//which transports it to the main thread. The original exception is then recovered by leaf::get.
+template <class... E>
 std::vector<std::future<task_result>> launch_async_tasks( int thread_count )
 {
 	std::vector<std::future<task_result>> fut;
 	std::generate_n( std::inserter(fut,fut.end()), thread_count, [ ]
 	{
 		return std::async( std::launch::async,
-			leaf::capture_exception<ErrorInfo...>( [ ] //leaf::capture<T...> returns leaf::captured_result<T...>...
+			leaf::capture_exception<E...>( [ ] //returns a wrapper function for the lambda...
 				{
-					return task(rand()%4); //...from the T returned by the task.
+					return task(rand()%4); //...which transports the E... objects.
 				} ) );
 	} );
 	return fut;
@@ -81,7 +81,7 @@ int main()
 		try
 		{
 			//Instead of calling future::get we pass the future object to leaf::get. In case the future finished with an exception,
-			//this will rethrow that exception, after setting its captured error info.
+			//this will rethrow that exception, after dropping captured error info into exp.
 			task_result r = leaf::get(f);
 
 			//Success!

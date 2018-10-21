@@ -23,22 +23,30 @@ includes = [ include_directories('include') ]
 leaf = declare_dependency( include_directories: includes )
 
 tests = [
-	'optional_test',
-	'tl_slot_test',
+	'_hpp_all_test',
+	'_hpp_common_test',
+	'_hpp_error_capture_test',
+	'_hpp_error_test',
+	'_hpp_exception_capture_test',
+	'_hpp_exception_test',
+	'_hpp_expect_test',
+	'_hpp_preload_test',
+	'_hpp_result_test',
+	'_hpp_throw_exception_test',
+	'basic_test',
 	'diagnostic_print_test',
-	'diagnostic_information_test',
-	'expect_result_test',
-	'expect_eh_test',
-	'captured_result_test',
-	'captured_result_void_test',
-	'capture_exception_test',
-	'hpp_capture_exception_test',
-	'hpp_captured_result_test',
-	'hpp_common_test',
-	'hpp_current_exception_diagnostic_information_test',
-	'hpp_diagnostic_information_test',
-	'hpp_expect_test',
-	'hpp_put_test'
+	'error_capture_test',
+	'error_test',
+	'exception_capture_test',
+	'exception_test',
+	'foreign_exception_test',
+	'multiple_errors_test',
+	'optional_test',
+	'preload_test',
+	'print_test',
+	'result_capture_test',
+	'result_test',
+	'result_void_capture_test'
 ]
 foreach t : tests
 	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [ leaf ] ) )

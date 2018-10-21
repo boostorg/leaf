@@ -7,7 +7,7 @@
 //This is a simple program that demonstrates the use of LEAF to transport error info between threads,
 //without using exception handling. See transport_eh.cpp for the exception-handling variant.
 
-#include <boost/leaf/captured_result.hpp>
+#include <boost/leaf/all.hpp>
 #include <vector>
 #include <string>
 #include <future>
@@ -41,18 +41,17 @@ leaf::result<task_result> task( bool succeed )
 }
 
 //Launch the specified number of asynchronous tasks. In case an asynchronous task fails, its error info
-//(of the type list used to instantiate leaf::capture) is captured in a leaf::captured_result<task_result>, which
-//transports it to the main thread.
-template <class... ErrorInfo>
-std::vector<std::future<leaf::captured_result<task_result>>> launch_async_tasks( int thread_count )
+//(initially stored in exp) is captured in a leaf::result<task_result>, which transports it to the main thread.
+template <class... E>
+std::vector<std::future<leaf::result<task_result>>> launch_async_tasks( int thread_count )
 {
-	std::vector<std::future<leaf::captured_result<task_result>>> fut;
+	std::vector<std::future<leaf::result<task_result>>> fut;
 	std::generate_n( std::inserter(fut,fut.end()), thread_count, [ ]
 		{
 		return std::async( std::launch::async, [ ]
 			{
-				leaf::expect<ErrorInfo...> exp;
-				return task(rand()%4).capture(exp);
+				leaf::expect<E...> exp;
+				return capture(exp,task(rand()%4));
 			} );
 		} );
 	return fut;
@@ -73,9 +72,8 @@ int main()
 		//Storage for error info.
 		leaf::expect<failed_thread_id, failure_info1, failure_info2, failure_info3> exp;
 
-		//Unpack the leaf::captured_result<task_result> to get a leaf::result<task_result> and,
-		//in case of error, set its captured error info.
-		if( leaf::result<task_result> r = f.get().get() )
+		//Get the task result, check for success.
+		if( leaf::result<task_result> r = f.get() )
 		{
 			//Success! Use *r to access task_result.
 			std::cout << "Success!" << std::endl;

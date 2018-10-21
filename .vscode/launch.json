@@ -8,7 +8,7 @@
 			"name": "(lldb) Launch",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/bld/debug/expect_ec_test",
+			"program": "${workspaceFolder}/bld/debug/capture_eh",
 			"args": [ "test/Jafile.v2" ],
 			"cwd": "${workspaceFolder}",
 			"stopAtEntry": false,

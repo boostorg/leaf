@@ -4,7 +4,9 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/captured_result.hpp>
+#include <boost/leaf/exception_capture.hpp>
+#include <boost/leaf/exception.hpp>
+#include <boost/leaf/preload.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <vector>
 #include <future>
@@ -12,6 +14,8 @@
 #include <algorithm>
 
 namespace leaf = boost::leaf;
+
+struct my_error: std::exception { };
 
 template <int> struct my_info { int value; };
 
@@ -21,7 +25,7 @@ fut_info
 	int a;
 	int b;
 	int result;
-	std::future<leaf::captured_result<int>> fut;
+	std::future<int> fut;
 	};
 
 int
@@ -34,15 +38,18 @@ main()
 			{
 			int const a = rand();
 			int const b = rand();
-			int const result = (rand()%10) - 5;
-			return fut_info { a, b, result, std::async( std::launch::async, [a,b,result]
-				{
-				leaf::expect<my_info<1>,my_info<2>,my_info<3>> exp;
-				if( result>=0 )
-					return leaf::result<int>(result).capture(exp);
-				else
-					return leaf::result<int>(leaf::error(my_info<1>{a},my_info<2>{b},my_info<3>{})).capture(exp);
-				} ) };
+			int const res = (rand()%10) - 5;
+			return fut_info { a, b, res, std::async( std::launch::async,
+				leaf::capture_exception<my_info<1>,my_info<2>,my_info<3>>( [a,b,res]
+					{
+					if( res>=0 )
+						return res;
+					else
+						{
+						auto propagate = leaf::preload( my_info<1>{a},my_info<2>{b},my_info<3>{} );
+						throw my_error();
+						}
+					} ) ) };
 			} );
 		}
 	for( auto & f : fut )
@@ -50,14 +57,16 @@ main()
 		using namespace leaf::leaf_detail;
 		f.fut.wait();
 		leaf::expect<my_info<1>,my_info<2>,my_info<4>> exp;
-		if( leaf::result<int> r = f.fut.get().get() )
+		try
 			{
-			BOOST_TEST(*r>=0);
-			BOOST_TEST(*r==f.result);
+			int r = leaf::get(f.fut);
+			BOOST_TEST(r>=0);
+			BOOST_TEST(r==f.result);
 			}
-		else
+		catch(
+		my_error const & e )
 			{
-			handle_error( exp, r, leaf::match<my_info<1>,my_info<2>>( [&f]( int x1, int x2 )
+			handle_error( exp, e, leaf::match<my_info<1>,my_info<2>>( [&f]( int x1, int x2 )
 				{
 				BOOST_TEST(x1==f.a);
 				BOOST_TEST(x2==f.b);

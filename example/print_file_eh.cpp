@@ -5,8 +5,8 @@
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //This example demonstrates the basic use of LEAF to augment error conditions with
-//additional information when using exceptions to report failures. See print_file_ec.cpp
-//for the variant that uses error codes.
+//additional information when using exceptions to report failures. See print_file_result.cpp
+//for the variant that doesn't use exceptions.
 
 #include <boost/leaf/all.hpp>
 #include <iostream>
@@ -14,7 +14,7 @@
 
 namespace leaf = boost::leaf;
 
-//We could define our own exception info types, but for this example the ones
+//We could define our own error info types, but for this example the ones
 //defined in <boost/leaf/common.hpp> are a perfect match.
 using leaf::ei_file_name;
 using leaf::ei_errno;
@@ -137,8 +137,9 @@ int main( int argc, char const * argv[ ] )
 	}
 	catch(...)
 	{
+		//This catch-all is designed to help diagnose logic errors (main should be able to deal with any failures).
 		std::cerr << "Unknown error, cryptic information follows." << std::endl;
-		exp.print_current_exception_diagnostic_information(std::cerr);
+		current_exception_diagnostic_print(std::cerr,exp);
 		return 4;
 	}
 	return 0;

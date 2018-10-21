@@ -5,7 +5,7 @@
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //This example demonstrates the basic use of LEAF to augment error conditions with
-//additional information when using error codes to report failures. See print_file_eh.cpp
+//additional information when using result<T> to report failures. See print_file_eh.cpp
 //for the variant that uses exception handling.
 
 #include <boost/leaf/all.hpp>
@@ -14,7 +14,7 @@
 
 namespace leaf = boost::leaf;
 
-//We could define our own exception info types, but for this example the ones
+//We could define our own error info types, but for this example the ones
 //defined in <boost/leaf/common.hpp> are a perfect match.
 using leaf::ei_file_name;
 using leaf::ei_errno;
@@ -113,7 +113,8 @@ int main( int argc, char const * argv[ ] )
 		{
 		case file_open_error:
 			//handle_error is given a list of match objects (in this case only one), which it attempts to match (in order) to
-			//available error info (if none can be matched, it throws leaf::mismatch_error).
+			//available error info (if none can be matched, it throws leaf::mismatch_error, which in this program would
+			//be a logic error, since it's not supposed to throw exceptions).
 			handle_error( exp, r, leaf::match<ei_file_name,ei_errno>( [ ] ( std::string const & fn, int errn )
 				{
 					if( errn==ENOENT )
@@ -144,9 +145,9 @@ int main( int argc, char const * argv[ ] )
 				} ) );
 			return 3;
 		default:
+			//This catch-all is designed to help diagnose logic errors (missing case labels in the switch statement).
 			std::cerr << "Unknown error code " << ec << ", cryptic information follows." << std::endl;
-			exp.print_diagnostic_information(std::cerr);
+			diagnostic_print(std::cerr,exp,r);
 			return 4;
 		}
 }
-	

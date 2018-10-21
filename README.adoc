@@ -10,7 +10,7 @@ Low-latency Error Augmentation Framework for C++11
 [abstract]
 == Abstract
 
-LEAF is a non-intrusive C++11 library for transporting arbitrary error information from contexts that detect and report failures, as well as from intermediate error-neutral contexts, to scopes where the error is ultimately handled.
+LEAF is a non-intrusive C++11 error handling library capable of transporting arbitrary error information from contexts that detect and report failures, as well as from intermediate error-neutral contexts, to scopes where the error is ultimately handled.
 
 LEAF does not allocate dynamic memoryfootnote:[Except when transporting error info between threads, see <<capture,`capture`>>.], which makes it suitable for low-latency and other performance-critical environments. It is compatible with all error handling APIs, and can be used with or without exception handling.
 
@@ -36,30 +36,48 @@ LEAF requires a {CPP}11 compiler. See unit test matrix at https://travis-ci.org/
 [[tutorial]]
 == Tutorial
 
-As an example, here is a function that reads data from a file into a buffer, returns a user-defined `error` enum to indicate success or to report errors, and uses LEAF to provide additional error info:
+While LEAF can be used with exception handling, let's begin with an example that works without exceptions. We'll write a program that reads a text file in a buffer and prints it to `std::cout`. First, we need an `enum` to indicate various error conditions:
 
 ====
 [source,c++]
 ----
-error file_read( FILE & f, void * buf, int size ) {
-  int n = fread(buf,1,size,&f);
+enum print_file_error
+{
+  file_open_error,
+  file_size_error,
+  file_read_error,
+  file_eof_error,
+  cout_error
+};
+----
+====
 
-  if( ferror(&f) ) { <1>
-    leaf::put( ei_errno { errno } );
-    return file_read_error;
-  }
+Note that we don't need a value that indicates success. That's because we will use the provided class template `<<result,result>><T>` as a return type in functions which may fail. It can be initialized with a `T` to indicate success, or with the return value of `leaf::<<error,error>>()` to report a failure.
+
+NOTE: `result<void>` is a specialization of the `result` template suitable for functions which do not return a value in case of success. It can be initialized with `{ }` to indicate success, or, like any other `result` instantiation, with the return value of `<<error,error>>` to indicate a failure.
+
+Here is a function that reads data from a file into a buffer and reports various errors which may occur:
+
+====
+[source,c++]
+----
+leaf::result<void> file_read( FILE & f, void * buf, int size )
+{
+  int n = fread(buf,1,size,&f);
+  if( ferror(&f) ) <1>
+    return leaf::error( ei_error_code{file_read_error}, ei_errno{errno} );
 
   if( n!=size ) <2>
-    return file_eof_error;
+    return leaf::error( ei_error_code{file_eof_error} );
 
-  return ok;
+  return { };
 }
 ----
 <1> The function fails if `ferror` indicates an error.
 <2> It also fails if `fread` reports that it didn't read all of the data requested.
 ====
 
-In the first case, there is a relevant `errno` code, so the function uses `<<put,put>>` to make it available later when the error is handled.
+In the first case, we indicate `file_read_error` (on of our enumerated errors) there is a relevant `errno` code, so the function uses `<<put,put>>` to make it available later when the error is handled.
 
 The second condition, while treated as a failure by our `file_read` function, is not a failure as far as `fread` is concerned, and therefore `errno` is not available. So in this case we simply return `file_eof_error`.
 

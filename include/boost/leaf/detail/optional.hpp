@@ -7,7 +7,6 @@
 #ifndef UUID_47258FCCB6B411E8A1F35AA00C39171A
 #define UUID_47258FCCB6B411E8A1F35AA00C39171A
 
-#include <utility>
 #include <new>
 #include <assert.h>
 
@@ -27,6 +26,7 @@ boost
 				union { T value_; };
 				bool has_value_;
 				public:
+				typedef T value_type;
 				optional() noexcept:
 					has_value_(false)
 					{
@@ -80,19 +80,21 @@ boost
 						has_value_=false;
 						}
 					}
-				void
+				T &
 				put( T const & v )
 					{
 					reset();
 					(void) new(&value_) T(v);
 					has_value_=true;
+					return value_;
 					}
-				void
+				T &
 				put( T && v ) noexcept
 					{
 					reset();
 					(void) new(&value_) T(std::move(v));
 					has_value_=true;
+					return value_;
 					}
 				bool
 				has_value() const noexcept

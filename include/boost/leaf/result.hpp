@@ -7,8 +7,7 @@
 #ifndef UUID_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
 #define UUID_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
 
-#include <boost/leaf/expect.hpp>
-#include <boost/leaf/put.hpp>
+#include <boost/leaf/error_capture.hpp>
 
 #define LEAF_ERROR ::boost::leaf::error(ei_SOURCE_LOCATION)
 #define LEAF_CHECK(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
@@ -20,54 +19,208 @@ boost
 	namespace
 	leaf
 		{
+		class bad_result: public std::exception { };
+
 		template <class T>
-		class captured_result;
-		namespace
-		leaf_detail
-			{
-			struct error_tag { };
-			}
+		class result;
+
+		template <class... E>
+		class expect;
+
+		template <class P,class... E,class T>
+		decltype(P::value) const * peek( expect<E...> const &, result<T> const & );
+		////////////////////////////////////////
 		template <class T>
 		class
-		result:
-			leaf_detail::optional<T>
+		result
 			{
-			typedef leaf_detail::optional<T> base;
+			template <class P,class... E,class U>
+			friend decltype(P::value) const * leaf::peek( expect<E...> const &, result<U> const & );
+
+			union
+				{
+				T value_;
+				error err_;
+				error_capture cap_;
+				};
+			enum class
+			variant
+				{
+				value,
+				err,
+				cap
+				};
+			variant which_;
+			void
+			destroy() noexcept
+				{
+				switch( which_ )
+					{
+					case variant::
+					value:
+						value_.~T();
+						break;
+					case variant::
+					err:
+						err_.~error();
+						break;
+					default:
+						assert(which_==variant::cap);
+						cap_.~error_capture();
+					}
+				which_= (variant)-1;
+				}
+			void
+			copy_from( result const & x )
+				{
+				switch( x.which_ )
+					{
+					case variant::
+					value:
+						(void) new(&value_) T(x.value_);
+						break;
+					case variant::
+					err:
+						(void) new(&err_) leaf::error(x.err_);
+						break;
+					default:
+						assert(x.which_==variant::cap);
+						(void) new(&cap_) error_capture(x.cap_);
+					};
+				which_ = x.which_;
+				}
+			void
+			move_from( result && x ) noexcept
+				{
+				switch( x.which_ )
+					{
+					case variant::
+					value:
+						(void) new(&value_) T(std::move(x.value_));
+						break;
+					case variant::
+					err:
+						(void) new(&err_) leaf::error(std::move(x.err_));
+						break;
+					default:
+						assert(x.which_==variant::cap);
+						(void) new(&cap_) error_capture(std::move(x.cap_));
+					};
+				which_ = x.which_;
+				}
+
 			public:
-			using base::has_value;
-			result():
-				base(T())
+
+			~result()
+				{
+				destroy();
+				}
+			result( result const & x )
+				{
+				copy_from(x);
+				}
+			result( result && x ) noexcept
+				{
+				move_from(std::move(x));
+				}
+			result() noexcept:
+				value_(T()),
+				which_(variant::value)
 				{
 				}
 			result( T const & v ):
-				base(v)
+				value_(v),
+				which_(variant::value)
 				{
 				}
 			result( T && v ) noexcept:
-				base(std::move(v))
+				value_(std::move(v)),
+				which_(variant::value)
 				{
 				}
-			result( leaf_detail::error_tag ) noexcept
+			result( leaf::error const & e ) noexcept:
+				err_(e),
+				which_(variant::err)
 				{
+				}
+			result( leaf::error_capture const & cap ) noexcept:
+				cap_(cap),
+				which_(variant::cap)
+				{
+				}
+			result( leaf::error_capture && cap ) noexcept:
+				cap_(std::move(cap)),
+				which_(variant::cap)
+				{
+				}
+			result &
+			operator=( result const & x )
+				{
+				destroy();
+				copy_from(x);
+				return *this;
+				}
+			result &
+			operator=( result && x ) noexcept
+				{
+				destroy();
+				move_from(std::move(x));
+				return *this;
+				}
+			void
+			reset( T const & v )
+				{
+				destroy();
+				(void) new(&value_) T(v);
+				which_ = variant::value;
+				}
+			void
+			reset( T && v ) noexcept
+				{
+				destroy();
+				(void) new(&value_) T(std::move(v));
+				which_ = variant::value;
+				}
+			void
+			reset( leaf::error const & e ) noexcept
+				{
+				destroy();
+				(void) new(&err_) leaf::error(e);
+				which_ = variant::err;
+				return *this;
+				}
+			void
+			reset( leaf::error_capture const & cap ) noexcept
+				{
+				destroy();
+				(void) new(&cap_) leaf::error_capture(cap);
+				which_ = variant::cap;
+				}
+			void
+			reset( leaf::error_capture && cap ) noexcept
+				{
+				destroy();
+				(void) new(&cap_) leaf::error_capture(std::move(cap));
+				which_ = variant::cap;
 				}
 			explicit
 			operator bool() const noexcept
 				{
-				return has_value();
+				return which_==variant::value;
 				}
 			T const &
 			value() const
 				{
-				if( has_value() )
-					return base::value();
+				if( which_==variant::value )
+					return value_;
 				else
 					throw bad_result();
 				}
 			T &
 			value()
 				{
-				if( has_value() )
-					return base::value();
+				if( which_==variant::value )
+					return value_;
 				else
 					throw bad_result();
 				}
@@ -81,103 +234,131 @@ boost
 				{
 				return value();
 				}
-			template <class... ErrorInfo>
-			leaf_detail::error_tag
-			error( ErrorInfo && ... a ) noexcept
+			template <class... E>
+			leaf::error
+			error( E && ... e ) noexcept
 				{
-				assert(has_current_error());
-				assert(!*this);
-				put(std::forward<ErrorInfo>(a)...);
-				return leaf_detail::error_tag();
-				}				
-			leaf_detail::error_tag
-			error() noexcept
+				assert(which_==variant::err);
+				return err_.propagate(std::forward<E>(e)...);
+				}
+			template <class... E>
+			friend
+			result &&
+			capture( expect<E...> & exp, result && r )
 				{
-				assert(has_current_error());
-				assert(!*this);
-				return leaf_detail::error_tag();
-				}				
-			template <class... ExpectErrorInfo>
-			captured_result<T> capture( expect<ExpectErrorInfo...> & );
+				if( r.which_==variant::err )
+					{
+					auto cap = capture(exp,r.err_);
+					r.err_.~error();
+					(void) new (&r.cap_) error_capture(std::move(cap));
+					r.which_ = variant::cap;					
+					}
+				return std::move(r);
+				}
+			template <class... M,class... E>
+			friend
+			void
+			handle_error( expect<E...> const & exp, result & r, M && ... m )
+				{
+				assert(!r);
+				if( r.which_==result::variant::err )
+					handle_error(exp,r.err_,m...);
+				else
+					{
+					assert(r.which_==result::variant::cap);
+					handle_error(r.cap_,m...);
+					}
+				}
+			template <class... E>
+			friend
+			void
+			diagnostic_print( std::ostream & os, expect<E...> const & exp, result const & r )
+				{
+				assert(!r);
+				if( r.which_==result::variant::err )
+					return diagnostic_print(os,exp,r.err_);
+				else
+					{
+					assert(r.which_==result::variant::cap);
+					return diagnostic_print(os,r.cap_);
+					}
+				}
 			};
+		////////////////////////////////////////
 		template <>
 		class
-		result<void>
+		result<void>:
+			result<bool>
 			{
-			bool success_;
+			template <class P,class... E,class T>
+			friend decltype(P::value) const * leaf::peek( expect<E...> const &, result<T> const & );
+
+			typedef result<bool> base;
+
 			public:
-			result( result && ) = default;
-			result( result const & ) = default;
-			result & operator=( result const & ) = default;
-			result():
-				success_(true)
+
+			~result()
 				{
 				}
-			result( leaf_detail::error_tag ) noexcept:
-				success_(false)
+			result() noexcept
 				{
 				}
-			explicit
-			operator bool() const noexcept
+			result( leaf::error const & e ) noexcept:
+				base(e)
 				{
-				return success_;
 				}
-			template <class... ErrorInfo>
-			leaf_detail::error_tag
-			error( ErrorInfo && ... a ) const noexcept
+			result( leaf::error_capture const & cap ) noexcept:
+				base(cap)
 				{
-				assert(leaf_detail::current_error_flag());
-				assert(!*this);
-				put(std::forward<ErrorInfo>(a)...);
-				return leaf_detail::error_tag();
-				}				
-			leaf_detail::error_tag
-			error() const noexcept
+				}
+			result( leaf::error_capture && cap ) noexcept:
+				base(std::move(cap))
 				{
-				assert(leaf_detail::current_error_flag());
-				assert(!*this);
-				return leaf_detail::error_tag();
-				}				
-			template <class... ExpectErrorInfo>
-			captured_result<void> capture( expect<ExpectErrorInfo...> & );
+				}
+			using base::operator bool;
+			using base::error;
+			using base::reset;
+			void reset( bool const & ) = delete;
+			void reset( bool && ) = delete;
+			template <class... E>
+			friend
+			result &&
+			capture( expect<E...> & exp, result && r )
+				{
+				result<bool> && rb = std::move(r);
+				(void) capture(exp,std::move(rb));
+				return std::move(r);
+				}
+			template <class... M,class... E>
+			friend
+			void
+			handle_error( expect<E...> const & exp, result & r, M && ... m )
+				{
+				result<bool> & rb = r;
+				handle_error(exp,rb,m...);
+				}
+			template <class... E>
+			friend
+			void
+			diagnostic_print( std::ostream & os, expect<E...> const & exp, result const & r )
+				{
+				result<bool> const & rb = r;
+				diagnostic_print(os,exp,rb);
+				}
 			};
-		template <class ErrorInfo,class... ExpectErrorInfo,class T>
-		decltype(std::declval<ErrorInfo>().value) const *
-		peek( expect<ExpectErrorInfo...> const &, result<T> const & r )
+		////////////////////////////////////////
+		template <class P,class... E,class T>
+		decltype(P::value) const *
+		peek( expect<E...> const & exp, result<T> const & r )
 			{
 			assert(!r);
-			auto & x = leaf_detail::tl_slot<ErrorInfo>::tl_instance();
-			if( x.has_value() )
-				return &x.value().value;
+			if( r.which_==result<T>::variant::err )
+				return peek<P>(exp,r.err_);
 			else
-				return 0;
-			}
-		template <class... Match,class... ExpectErrorInfo,class T>
-		void
-		handle_error( expect<ExpectErrorInfo...> & e, result<T> const & r, Match && ... m )
-			{
-			assert(!r);
-			int count = sizeof...(Match);
-			bool & still_has_error = leaf_detail::current_error_flag();
-			still_has_error = true;
-			{ using _ = int[ ]; (void) _ { 42, m.unwrap(still_has_error,count)... }; }
-			}
-		template <class... ErrorInfo>
-		leaf_detail::error_tag
-		error( ErrorInfo && ... a ) noexcept
-			{
-			leaf_detail::current_error_flag() = true;
-			leaf_detail::tl_slot_base::bump_current_seq_id();
-			put(std::forward<ErrorInfo>(a)...);
-			return leaf_detail::error_tag();
-			}
-		inline
-		leaf_detail::error_tag
-		error() noexcept
-			{
-			leaf_detail::current_error_flag() = true;
-			leaf_detail::tl_slot_base::bump_current_seq_id();
-			return leaf_detail::error_tag();
+				{
+				assert(r.which_==result<T>::variant::cap);
+				return peek<P>(r.cap_);
+				}
 			}
 		}
 	}
