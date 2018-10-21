@@ -187,7 +187,6 @@ boost
 				destroy();
 				(void) new(&err_) leaf::error(e);
 				which_ = variant::err;
-				return *this;
 				}
 			void
 			reset( leaf::error_capture const & cap ) noexcept
