@@ -9,6 +9,7 @@
 
 #include <boost/leaf/error_capture.hpp>
 #include <boost/leaf/expect.hpp>
+#include <typeinfo>
 
 namespace
 boost
