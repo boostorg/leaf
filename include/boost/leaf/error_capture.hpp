@@ -10,6 +10,7 @@
 #include <boost/leaf/error.hpp>
 #include <boost/leaf/throw_exception.hpp>
 #include <boost/leaf/detail/print.hpp>
+#include <tuple>
 
 namespace
 boost
