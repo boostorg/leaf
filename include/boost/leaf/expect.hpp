@@ -8,7 +8,6 @@
 #define UUID_AFBBD676B2FF11E8984C7976AE35F1A2
 
 #include <boost/leaf/throw_exception.hpp>
-#include <boost/leaf/detail/tuple.hpp>
 #include <boost/leaf/detail/print.hpp>
 
 namespace
@@ -20,6 +19,29 @@ boost
 		namespace
 		leaf_detail
 			{
+			template <class T,class... List>
+			struct type_index;
+			template <class T,class... Cdr>
+			struct
+			type_index<T,T,Cdr...>
+				{
+				static const int value = 0;
+				};
+			template <class T,class Car,class... Cdr>
+			struct
+			type_index<T,Car,Cdr...>
+				{
+				static const int value = 1 + type_index<T,Cdr...>::value;
+				};
+			template <class T,class Tuple>
+			struct tuple_type_index;
+			template <class T,class... TupleTypes>
+			struct
+			tuple_type_index<T,std::tuple<TupleTypes...>>
+				{
+				static const int value = type_index<T,TupleTypes...>::value;
+				};
+			////////////////////////////////////////
 			template <class Tuple,class... List>
 			struct all_available_slot;
 			template <class Tuple,class Car,class... Cdr>

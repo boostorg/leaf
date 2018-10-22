@@ -127,7 +127,6 @@ boost
 			void
 			clear_current_error()
 				{
-				assert(!std::uncaught_exception());
 				current_error_state::tl_instance().ep = 0;
 				}
 			inline
