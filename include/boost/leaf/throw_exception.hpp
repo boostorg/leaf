@@ -54,7 +54,7 @@ boost
 				~exception()
 					{
 					if( !moved_ )
-						clear_current_error_(*this);
+						clear_current_error1(*this);
 					}
 				};
 			}

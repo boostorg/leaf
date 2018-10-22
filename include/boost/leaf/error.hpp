@@ -140,7 +140,28 @@ boost
 				}
 			inline
 			void
-			clear_current_error( error const & e )
+			clear_current_error1( error const & e )
+				{
+				assert(!std::uncaught_exception());
+				clear_current_error_(e);
+				}
+			inline
+			void
+			clear_current_error2( error const & e )
+				{
+				assert(!std::uncaught_exception());
+				clear_current_error_(e);
+				}
+			inline
+			void
+			clear_current_error3( error const & e )
+				{
+				assert(!std::uncaught_exception());
+				clear_current_error_(e);
+				}
+			inline
+			void
+			clear_current_error4( error const & e )
 				{
 				assert(!std::uncaught_exception());
 				clear_current_error_(e);
