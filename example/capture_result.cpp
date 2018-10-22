@@ -51,7 +51,7 @@ std::vector<std::future<leaf::result<task_result>>> launch_async_tasks( int thre
 		return std::async( std::launch::async, [ ]
 			{
 				leaf::expect<E...> exp;
-				return capture(exp,task(rand()%4));
+				return capture(exp,task((rand()%4)!=0));
 			} );
 		} );
 	return fut;

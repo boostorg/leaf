@@ -57,7 +57,7 @@ std::vector<std::future<task_result>> launch_async_tasks( int thread_count )
 		return std::async( std::launch::async,
 			leaf::capture_exception<E...>( [ ] //returns a wrapper function for the lambda...
 				{
-					return task(rand()%4); //...which transports the E... objects.
+					return task((rand()%4)!=0); //...which transports the E... objects.
 				} ) );
 	} );
 	return fut;

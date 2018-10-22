@@ -70,6 +70,11 @@ boost
 				{ using _ = void const * [ ]; (void) _ { leaf_detail::put1(std::forward<T>(v),*this)... }; }
 				return *this;
 				}
+			error
+			propagate() const noexcept
+				{
+				return *this;
+				}
 			friend
 			bool
 			operator==( error const & e1, error const & e2 ) noexcept
