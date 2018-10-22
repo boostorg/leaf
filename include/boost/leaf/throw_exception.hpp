@@ -65,6 +65,13 @@ boost
 			{
 			throw leaf_detail::exception<Ex>(std::move(ex),error(std::move(e)...));
 			}
+		template <class... E,class Ex>
+		[[noreturn]]
+		void
+		throw_exception( Ex && ex, error const & err, E && ... e )
+			{
+			throw leaf_detail::exception<Ex>(std::move(ex),err.propagate(std::move(e)...));
+			}
 		}
 	}
 

@@ -144,11 +144,20 @@ boost
 
 			template <class F,class... MatchTypes>
 			int
-			unwrap( leaf_detail::match_impl<F,MatchTypes...> const & m, error const & e, bool & matched ) const noexcept
+			unwrap( leaf_detail::match_fn<F,MatchTypes...> const & m, error const & e, bool & matched ) const noexcept
 				{
 				using namespace leaf_detail;
 				if( !matched && (matched=all_available_slot<decltype(s_),slot<MatchTypes>...>::check(s_,e)) )
 					(void) m.f( *leaf::peek<MatchTypes>(*this,e)... );
+				return 42;
+				}
+			template <class... MatchTypes>
+			int
+			unwrap( leaf_detail::match_no_fn<MatchTypes...> const & m, error const & e, bool & matched ) const noexcept
+				{
+				using namespace leaf_detail;
+				if( !matched )
+					matched = all_available_slot<decltype(s_),slot<MatchTypes>...>::check(s_,e);
 				return 42;
 				}
 			public:
@@ -167,7 +176,7 @@ boost
 				bool matched = false;
 				{ using _ = int[ ]; (void) _ { 42, exp.unwrap(m,e,matched)... }; }
 				if( !matched )
-					throw_exception(mismatch_error());
+					throw_exception(mismatch_error(),e);
 				leaf_detail::clear_current_error(e);
 				}
 			friend

@@ -30,6 +30,7 @@ main()
 	{
 	leaf::expect<info<1>,info<2>,info<3>,info<4>> exp;
 	leaf::error e1=f12();
+	handle_error( exp, e1, leaf::match<>() );
 	leaf::error e2=f34();
 	int e1c1=0, e1c2=0;
 	handle_error( exp, e1,

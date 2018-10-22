@@ -18,7 +18,6 @@ info
 leaf::error
 f1()
 	{
-	(void) leaf::propagate(info<4>{4});
 	return leaf::error( info<1>{1} );
 	}
 leaf::error

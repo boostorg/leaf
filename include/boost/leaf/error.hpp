@@ -121,6 +121,7 @@ boost
 			set_current_error( error const & e ) noexcept
 				{
 				auto & x = current_error_state::tl_instance();
+				assert(!x.ep);
 				return *(x.ep = &(x.e = e));
 				}
 			inline
@@ -230,16 +231,27 @@ boost
 			{
 			template <class F,class... T>
 			struct
-			match_impl
+			match_fn
 				{
 				F f;
 				};
+			template <class... T>
+			struct
+			match_no_fn
+				{
+				};
 			}
 		template <class... T,class F>
-		leaf_detail::match_impl<F,T...>
+		leaf_detail::match_fn<F,T...>
 		match( F && f ) noexcept
 			{
-			return leaf_detail::match_impl<F,T...> { std::move(f) };
+			return leaf_detail::match_fn<F,T...> { std::move(f) };
+			}
+		template <class... T>
+		leaf_detail::match_no_fn<T...>
+		match() noexcept
+			{
+			return leaf_detail::match_no_fn<T...> { };
 			}
 		}
 	}
