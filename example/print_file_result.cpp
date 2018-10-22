@@ -21,7 +21,7 @@ using leaf::ei_file_name;
 using leaf::ei_errno;
 
 //Errors
-enum print_file_error
+enum print_file_error_enum
 {
 	file_open_error,
 	file_size_error,
@@ -30,7 +30,7 @@ enum print_file_error
 	cout_error
 };
 
-struct ei_error_code { print_file_error value; };
+struct ei_error_code { print_file_error_enum value; };
 
 leaf::result<std::shared_ptr<FILE>> file_open( char const * file_name )
 {

@@ -65,6 +65,7 @@ test( int task_count, F && f ) noexcept
 		catch(
 		my_error const & e )
 			{
+			std::cout << "***** " << std::uncaught_exception() << std::endl;
 			handle_error( exp, e, leaf::match<my_info<1>,my_info<2>>( [&f]( int x1, int x2 )
 				{
 				BOOST_TEST(x1==f.a);
