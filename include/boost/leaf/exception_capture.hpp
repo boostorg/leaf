@@ -10,6 +10,7 @@
 #include <boost/leaf/error_capture.hpp>
 #include <boost/leaf/expect.hpp>
 #include <typeinfo>
+#include <tuple>
 
 namespace
 boost
