@@ -10,7 +10,6 @@
 #include <boost/leaf/throw_exception.hpp>
 #include <boost/leaf/detail/tuple.hpp>
 #include <boost/leaf/detail/print.hpp>
-#include <iostream>
 
 namespace
 boost
@@ -146,8 +145,7 @@ boost
 				{ using _ = int[ ]; (void) _ { 42, exp.unwrap(m,e,matched)... }; }
 				if( !matched )
 					throw_exception(mismatch_error());
-				std::cout << "++++++ " << std::uncaught_exception() << std::endl;
-				leaf_detail::clear_current_error3(e);
+				leaf_detail::clear_current_error(e);
 				}
 			friend
 			void
@@ -171,7 +169,7 @@ boost
 					std::make_tuple(
 						convert_optional(
 							std::move(std::get<tuple_type_index<slot<E>,decltype(exp.s_)>::value>(exp.s_)),e)...));
-				clear_current_error4(e);
+				clear_current_error(e);
 				return cap;
 				}
 			};
