@@ -18,7 +18,7 @@ boost
 		{
 		template <class P,class... E>
 		decltype(P::value) const *
-		peek( expect<E...> const & exp, std::exception const & e )
+		peek( expect<E...> const & exp, std::exception const & e ) noexcept
 			{
 			if( auto err = dynamic_cast<error const *>(&e) )
 				return peek<P>(exp,*err);

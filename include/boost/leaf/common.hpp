@@ -30,7 +30,7 @@ boost
 				char const * const file;
 				int const line;
 				char const * const function;
-				loc( char const * file, int line, char const * function ):
+				loc( char const * file, int line, char const * function ) noexcept:
 					file(file),
 					line(line),
 					function(function)

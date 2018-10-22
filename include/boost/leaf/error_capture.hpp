@@ -21,7 +21,7 @@ boost
 		class error_capture;
 
 		template <class P>
-		decltype(P::value) const * peek( error_capture const & );
+		decltype(P::value) const * peek( error_capture const & ) noexcept;
 		////////////////////////////////////////
 		namespace
 		leaf_detail
@@ -116,7 +116,7 @@ boost
 		error_capture
 			{
 			template <class P>
-			friend decltype(P::value) const * leaf::peek( error_capture const & );
+			friend decltype(P::value) const * leaf::peek( error_capture const & ) noexcept;
 
 			class
 			dynamic_store
@@ -290,7 +290,7 @@ boost
 		////////////////////////////////////////
 		template <class P>
 		decltype(P::value) const *
-		peek( error_capture const & e )
+		peek( error_capture const & e ) noexcept
 			{
 			if( e )
 				if( auto * opt = e.s_->bind<P>() )

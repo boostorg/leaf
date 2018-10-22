@@ -37,7 +37,7 @@ boost
 				exception & operator=( exception const & )=delete;
 				bool moved_;
 				public:
-				exception( Ex && ex, error && e ):
+				exception( Ex && ex, error && e ) noexcept:
 					Ex(std::move(ex)),
 					error(std::move(e)),
 					moved_(false)

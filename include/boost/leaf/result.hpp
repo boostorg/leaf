@@ -28,14 +28,14 @@ boost
 		class expect;
 
 		template <class P,class... E,class T>
-		decltype(P::value) const * peek( expect<E...> const &, result<T> const & );
+		decltype(P::value) const * peek( expect<E...> const &, result<T> const & ) noexcept;
 		////////////////////////////////////////
 		template <class T>
 		class
 		result
 			{
 			template <class P,class... E,class U>
-			friend decltype(P::value) const * leaf::peek( expect<E...> const &, result<U> const & );
+			friend decltype(P::value) const * leaf::peek( expect<E...> const &, result<U> const & ) noexcept;
 
 			union
 				{
@@ -111,7 +111,7 @@ boost
 
 			public:
 
-			~result()
+			~result() noexcept
 				{
 				destroy();
 				}
@@ -300,13 +300,13 @@ boost
 			result<bool>
 			{
 			template <class P,class... E,class T>
-			friend decltype(P::value) const * leaf::peek( expect<E...> const &, result<T> const & );
+			friend decltype(P::value) const * leaf::peek( expect<E...> const &, result<T> const & ) noexcept;
 
 			typedef result<bool> base;
 
 			public:
 
-			~result()
+			~result() noexcept
 				{
 				}
 			result() noexcept
@@ -358,7 +358,7 @@ boost
 		////////////////////////////////////////
 		template <class P,class... E,class T>
 		decltype(P::value) const *
-		peek( expect<E...> const & exp, result<T> const & r )
+		peek( expect<E...> const & exp, result<T> const & r ) noexcept
 			{
 			assert(!r);
 			if( r.which_==result<T>::variant::err )

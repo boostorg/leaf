@@ -26,7 +26,7 @@ boost
 			{
 			template <class T>
 			T * put1( T && v, error const & e ) noexcept;
-			error const & set_current_error( error const & );
+			error const & set_current_error( error const & ) noexcept;
 			struct current_error_state;
 			}
 		////////////////////////////////////////
@@ -67,12 +67,7 @@ boost
 			error
 			propagate( T && ... v ) const noexcept
 				{
-				{ using _ = void const * [ ]; (void) _ { leaf_detail::put1(std::forward<T>(v),*this)... }; }
-				return *this;
-				}
-			error
-			propagate() const noexcept
-				{
+				{ using _ = void const * [ ]; (void) _ { 0, leaf_detail::put1(std::forward<T>(v),*this)... }; }
 				return *this;
 				}
 			friend
@@ -123,20 +118,20 @@ boost
 				};
 			inline
 			error const &
-			set_current_error( error const & e )
+			set_current_error( error const & e ) noexcept
 				{
 				auto & x = current_error_state::tl_instance();
 				return *(x.ep = &(x.e = e));
 				}
 			inline
 			void
-			clear_current_error()
+			clear_current_error() noexcept
 				{
 				current_error_state::tl_instance().ep = 0;
 				}
 			inline
 			void
-			clear_current_error( error const & e )
+			clear_current_error( error const & e ) noexcept
 				{
 				auto & x = current_error_state::tl_instance();
 				if( x.ep && *x.ep==e )
@@ -145,7 +140,7 @@ boost
 			}
 		inline
 		error const *
-		current_error()
+		current_error() noexcept
 			{
 			auto & x = leaf_detail::current_error_state::tl_instance();
 			if( error const * e = x.ep )
@@ -186,7 +181,7 @@ boost
 				};
 			template <class T>
 			slot<T> * &
-			tl_slot_ptr()
+			tl_slot_ptr() noexcept
 				{
 				static thread_local slot<T> * s;
 				return s;
@@ -242,7 +237,7 @@ boost
 			}
 		template <class... T,class F>
 		leaf_detail::match_impl<F,T...>
-		match( F && f )
+		match( F && f ) noexcept
 			{
 			return leaf_detail::match_impl<F,T...> { std::move(f) };
 			}
