@@ -96,19 +96,19 @@ boost
 				{
 				static
 				void
-				propagate( error const & e, Tuple & tup ) noexcept
+				propagate( error const & e, Tuple && tup ) noexcept
 					{
-					tuple_propagate<I-1,Tuple>::propagate(e,tup);
-					auto & opt = std::get<I-1>(tup);
+					tuple_propagate<I-1,Tuple>::propagate(e,std::move(tup));
+					auto && opt = std::get<I-1>(std::move(tup));
 					if( opt.has_value() )
-						e.propagate(opt.extract_value());
+						e.propagate(std::move(opt).value());
 					}
 				};
 			template <class Tuple>
 			struct
 			tuple_propagate<0,Tuple>
 				{
-				static void propagate( error const &, Tuple & ) noexcept { }
+				static void propagate( error const &, Tuple && ) noexcept { }
 				};
 			}
 		////////////////////////////////////////
@@ -183,7 +183,7 @@ boost
 				void
 				propagate( error const & e ) noexcept
 					{
-					leaf_detail::tuple_propagate<sizeof...(T),decltype(s_)>::propagate(e,s_);
+					leaf_detail::tuple_propagate<sizeof...(T),decltype(s_)>::propagate(e,std::move(s_));
 					}
 				};
 			void
@@ -197,7 +197,7 @@ boost
 				}
 			template <class F,class... MatchTypes>
 			int
-			unwrap( leaf_detail::match_fn<F,MatchTypes...> const & m, bool & matched ) const noexcept
+			unwrap( leaf_detail::match_fn<F,MatchTypes...> const & m, bool & matched ) const
 				{
 				if( !matched && (matched=leaf_detail::all_available<MatchTypes...>::check(*this)) )
 					(void) m.f( *peek<MatchTypes>(*this)... );
@@ -211,8 +211,14 @@ boost
 					matched = leaf_detail::all_available<MatchTypes...>::check(*this);
 				return 42;
 				}
-			error e_;
 			dynamic_store * s_;
+			error e_;
+			protected:
+			void
+			set_error( error const & e )
+				{
+				e_ = e;
+				}
 			public:			
 			error_capture() noexcept:
 				s_(0)
@@ -220,8 +226,8 @@ boost
 				}
 			template <class... E>
 			error_capture( error const & e, std::tuple<leaf_detail::optional<E>...> && s ) noexcept:
-				e_(e),
-				s_(new dynamic_store_impl<E...>(std::move(s)))
+				s_(new dynamic_store_impl<E...>(std::move(s))),
+				e_(e)
 				{
 				s_->addref();
 				}
@@ -230,32 +236,32 @@ boost
 				free();
 				}
 			error_capture( error_capture const & x ) noexcept:
-				e_(x.e_),
-				s_(x.s_)
+				s_(x.s_),
+				e_(x.e_)
 				{
 				if( s_ )
 					s_->addref();
 				}
 			error_capture( error_capture && x ) noexcept:
-				e_(std::move(x.e_)),
-				s_(x.s_)
+				s_(x.s_),
+				e_(std::move(x.e_))
 				{
 				x.s_ = 0;
 				}
 			error_capture &
 			operator=( error_capture const & x ) noexcept
 				{
-				e_ = x.e_;
 				s_ = x.s_;
 				s_->addref();
+				e_ = x.e_;
 				return *this;
 				}
 			error_capture &
 			operator=( error_capture && x ) noexcept
 				{
-				e_ = x.e_;
 				s_ = x.s_;
 				x.s_ = 0;
+				e_ = x.e_;
 				return *this;
 				}
 			explicit
@@ -275,17 +281,17 @@ boost
 				}
 			template <class... M>
 			friend
-			void
-			handle_error( error_capture & e, M && ... m )
+			bool
+			handle_error( error_capture const & e, M && ... m ) noexcept
 				{
 				if( e )
 					{
 					bool matched = false;
 					{ using _ = int[ ]; (void) _ { 42, e.unwrap(m,matched)... }; }
-					if( !matched )
-						throw_exception(mismatch_error(),e.e_);
-					e.free();
+					if( matched )
+						return true;
 					}
+				return false;
 				}
 			friend
 			void

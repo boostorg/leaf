@@ -47,7 +47,6 @@ main()
 	{
 	leaf::error_capture e1 = make_capture();
 	BOOST_TEST(e1);
-	BOOST_TEST(!leaf::current_error());
 		{
 		int const * p = leaf::peek<info<1>>(e1);
 		BOOST_TEST(p && *p==1);
@@ -77,10 +76,9 @@ main()
 		BOOST_TEST(p && *p==2);
 		}
 	BOOST_TEST(!leaf::peek<info<4>>(exp,e2));
-	BOOST_TEST(*leaf::current_error()==e2);
 		{
 		int c1=0, c2=0;
-		handle_error( exp, e2,
+		BOOST_TEST( handle_error( exp, e2,
 			leaf::match<info<1>,info<2>,info<4>>( [&c1]( int, int, int )
 				{
 				++c1;
@@ -90,14 +88,13 @@ main()
 				BOOST_TEST(i1==1);
 				BOOST_TEST(i2==2);
 				++c2;
-				} ) );
+				} ) ) );
 		BOOST_TEST(c1==0);
 		BOOST_TEST(c2==1);
 		}
-	BOOST_TEST(!leaf::current_error());
 		{
 		int c1=0, c2=0, c3=0;
-		handle_error( e1,
+		BOOST_TEST( handle_error( e1,
 			leaf::match<info<1>,info<2>,info<3>>( [&c1]( int, int, int )
 				{
 				++c1;
@@ -111,11 +108,14 @@ main()
 				BOOST_TEST(i1==1);
 				BOOST_TEST(i2==2);
 				++c3;
-				} ) );
+				} ) ) );
 		BOOST_TEST(c1==0);
 		BOOST_TEST(c2==0);
 		BOOST_TEST(c3==1);
 		}
-	BOOST_TEST(!e1);
+	BOOST_TEST( handle_error( e1,
+		leaf::match<info<1>,info<2>,info<3>>(),
+		leaf::match<info<1>,info<2>,info<4>>(),
+		leaf::match<info<2>,info<1>>() ) );
 	return boost::report_errors();
 	}

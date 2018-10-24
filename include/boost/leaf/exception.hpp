@@ -23,22 +23,23 @@ boost
 			if( auto err = dynamic_cast<error const *>(&e) )
 				return peek<P>(exp,*err);
 			else
-				{
-				assert(current_error()!=0);
-				return peek<P>(exp,*current_error());
-				}
+				return peek<P>(exp,error::peek_next_error());
 			}
 		template <class... M,class... E>
 		void
-		handle_error( expect<E...> const & exp, std::exception const & e, M && ... m )
+		handle_exception( expect<E...> & exp, std::exception const & e, M && ... m )
 			{
 			if( auto err = dynamic_cast<error const *>(&e) )
-				handle_error(exp,*err,m...);
+				{
+				if( handle_error(exp,*err,m...) )
+					return;
+				}
 			else
 				{
-				assert(current_error()!=0);
-				handle_error(exp,*current_error(),m...);
+				if( handle_error(exp,error(),m...) )
+					return;
 				}
+			throw;
 			}
 		template <class... E>
 		void
@@ -47,10 +48,7 @@ boost
 			if( auto err = dynamic_cast<error const *>(&e) )
 				diagnostic_print(os,exp,*err);
 			else
-				{
-				assert(current_error()!=0);
-				diagnostic_print(os,exp);
-				}
+				diagnostic_print(os,exp,error::peek_next_error());
 			}
 		}
 	}

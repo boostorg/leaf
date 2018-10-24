@@ -10,6 +10,5 @@
 #include <boost/leaf/exception_capture.hpp>
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/expect.hpp>
-#include <boost/leaf/preload.hpp>
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/throw_exception.hpp>

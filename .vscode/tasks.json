@@ -16,6 +16,97 @@
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test",
             		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "basic_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test basic_test",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "diagnostic_print_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test diagnostic_print_test",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "error_capture_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test error_capture_test",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "error_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test error_test",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "exception_capture_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test exception_capture_test",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "exception_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test exception_test",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "multiple_errors_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test multiple_errors_test",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "optional_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test optional_test",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "preload_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "print_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test print_test",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "result_capture_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test result_capture_test",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "result_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test result_test",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "result_void_capture_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test result_void_capture_test",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
 		}
 	]
 }

@@ -6,7 +6,6 @@
 
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/expect.hpp>
-#include <boost/leaf/preload.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
 namespace leaf = boost::leaf;
@@ -36,16 +35,13 @@ f2( bool success )
 	if( leaf::result<my_value> r=f1(success) )
 		return r;
 	else
-		{
-		BOOST_TEST(*leaf::current_error()==r.error());
 		return r.error( info<2>{2} );
-		}
 	}
 leaf::result<my_value>
 f3( bool success )
 	{
 	leaf::expect<info<2>,info<3>> exp;
-	auto propagate = leaf::preload( info<4>{4} );
+	leaf::preload( info<4>{4} );
 	return f2(success);
 	}
 leaf::result<my_value>
@@ -56,9 +52,8 @@ f4( bool success )
 		return r;
 	else
 		{
-		BOOST_TEST(*leaf::current_error()==r.error());
 		int c1=0, c2=0;
-		handle_error( exp, r,
+		BOOST_TEST( handle_error( exp, r,
 			leaf::match<info<1>,info<2>,info<3>,info<4>>( [&c1]( int, int, int, int )
 				{
 				++c1;
@@ -69,10 +64,9 @@ f4( bool success )
 				BOOST_TEST(i2==2);
 				BOOST_TEST(i4==4);
 				++c2;
-				} ) );
+				} ) ) );
 		BOOST_TEST(c1==0);
 		BOOST_TEST(c2==1);
-		BOOST_TEST(!leaf::current_error());
 		return leaf::error();
 		}
 	}
@@ -84,7 +78,6 @@ main()
 	leaf::result<my_value> r=f4(false);
 	BOOST_TEST(!r);
 	leaf::error e = r.error();
-	BOOST_TEST(*leaf::current_error()==e);
 	BOOST_TEST(!leaf::peek<info<2>>(exp,e));
 	BOOST_TEST(!leaf::peek<info<3>>(exp,e));
 	BOOST_TEST(!leaf::peek<info<4>>(exp,e));

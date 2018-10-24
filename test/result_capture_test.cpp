@@ -14,7 +14,7 @@
 
 namespace leaf = boost::leaf;
 
-template <int> struct my_info { int value; };
+template <int> struct info { int value; };
 
 struct
 fut_info
@@ -37,7 +37,7 @@ launch_tasks( int task_count, F f )
 		int const res = (rand()%10) - 5;
 		return fut_info { a, b, res, std::async( std::launch::async, [f,a,b,res]
 			{
-			leaf::expect<my_info<1>,my_info<2>,my_info<3>> exp;
+			leaf::expect<info<1>,info<2>,info<3>> exp;
 			return capture(exp,f(a,b,res));
 			} ) };
 		} );
@@ -51,13 +51,13 @@ main()
 		if( res>=0 )
 			return res;
 		else
-			return leaf::error(my_info<1>{a},my_info<2>{b},my_info<3>{});
+			return leaf::error(info<1>{a},info<2>{b},info<3>{});
 		} );
 	for( auto & f : fut )
 		{
 		using namespace leaf::leaf_detail;
 		f.fut.wait();
-		leaf::expect<my_info<1>,my_info<2>,my_info<4>> exp;
+		leaf::expect<info<1>,info<2>,info<4>> exp;
 		if( leaf::result<int> r = f.fut.get() )
 			{
 			BOOST_TEST(*r>=0);
@@ -65,11 +65,14 @@ main()
 			}
 		else
 			{
-			handle_error( exp, r, leaf::match<my_info<1>,my_info<2>>( [&f]( int x1, int x2 )
+			int c=0;
+			BOOST_TEST( handle_error( exp, r, leaf::match<info<1>,info<2>>( [&f,&c]( int x1, int x2 )
 				{
 				BOOST_TEST(x1==f.a);
 				BOOST_TEST(x2==f.b);
-				} ) );
+				++c;
+				} ) ) );
+			BOOST_TEST(c==1);
 			}
 		}
 	return boost::report_errors();

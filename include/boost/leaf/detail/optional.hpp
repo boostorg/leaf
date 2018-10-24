@@ -65,7 +65,7 @@ boost
 					{
 					reset();
 					if( x.has_value() )
-						put(x.extract_value());
+						put(std::move(x).value());
 					return *this;
 					}
 				~optional() noexcept
@@ -103,19 +103,25 @@ boost
 					return has_value_;
 					}
 				T const &
-				value() const noexcept
+				value() const & noexcept
 					{
 					assert(has_value());
 					return value_;
 					}
 				T &
-				value() noexcept
+				value() & noexcept
+					{
+					assert(has_value());
+					return value_;
+					}
+				T const &&
+				value() const && noexcept
 					{
 					assert(has_value());
 					return value_;
 					}
 				T
-				extract_value() noexcept
+				value() && noexcept
 					{
 					assert(has_value());
 					T tmp(std::move(value_));

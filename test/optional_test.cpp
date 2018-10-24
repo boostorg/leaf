@@ -287,7 +287,7 @@ run_tests()
 		optional<my_info> x(my_info(42));
 		BOOST_TEST(object_count==1);
 		BOOST_TEST(value_count==1);
-		my_info a = x.extract_value();
+		my_info a = std::move(x).value();
 		BOOST_TEST(object_count==1);
 		BOOST_TEST(value_count==1);
 		BOOST_TEST(!x.has_value());

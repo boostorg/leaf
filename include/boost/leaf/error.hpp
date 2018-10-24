@@ -11,7 +11,6 @@
 #include <atomic>
 #include <cstdio>
 #include <climits>
-#include <exception>
 #include <ostream>
 
 namespace
@@ -20,55 +19,79 @@ boost
 	namespace
 	leaf
 		{
-		class error;
-		namespace
-		leaf_detail
-			{
-			template <class T>
-			T * put1( T && v, error const & e ) noexcept;
-			error const & set_current_error( error const & ) noexcept;
-			struct current_error_state;
-			}
-		////////////////////////////////////////
 		class
 		error
 			{
-			friend struct leaf_detail::current_error_state;
-
 			unsigned id_;
-
-			struct default_ { };
 			explicit
-			error( default_ ) noexcept:
-				id_(-1)
+			error( unsigned id ) noexcept:
+				id_(id)
 				{
 				}
-			static
-			unsigned
-			new_id() noexcept
+			class
+			id_factory
 				{
-				static std::atomic<int> x;
-				return ++x;
-				}
+				id_factory( id_factory const & ) = delete;
+				id_factory & operator=( id_factory const & ) = delete;
+				static
+				unsigned
+				new_error_id() noexcept
+					{
+					static std::atomic<int> c;
+					return ++c;
+					}
+				bool next_id_valid_;
+				unsigned next_id_;
+				id_factory() noexcept:
+					next_id_valid_(false)
+					{
+					}
+				public:
+				static
+				id_factory &
+				tl_instance() noexcept
+					{
+					static thread_local id_factory s;
+					return s;
+					}
+				unsigned
+				peek() noexcept
+					{
+					if( !next_id_valid_ )
+						{
+						next_id_ = new_error_id();
+						next_id_valid_ = true;
+						}
+					return next_id_;
+					}
+				unsigned
+				get() noexcept
+					{
+					if( next_id_valid_ )
+						{
+						next_id_valid_ = false;
+						return next_id_;
+						}
+					else
+						return new_error_id();
+					}
+				void
+				reset_peek() noexcept
+					{
+					next_id_valid_ = false;
+					}
+				};
 			public:
 			error() noexcept:
-				id_(new_id())
+				id_(id_factory::tl_instance().get())
 				{
-				(void) leaf_detail::set_current_error(*this);
 				}
 			template <class... T>
 			explicit
 			error( T && ... v ) noexcept:
-				id_(new_id())
+				id_(id_factory::tl_instance().get())
 				{
-				(void) leaf_detail::set_current_error(propagate(std::forward<T>(v)...));
-				}
-			template <class... T>
-			error
-			propagate( T && ... v ) const noexcept
-				{
-				{ using _ = void const * [ ]; (void) _ { 0, leaf_detail::put1(std::forward<T>(v),*this)... }; }
-				return *this;
+				propagate(std::forward<T>(v)...);
 				}
 			friend
 			bool
@@ -93,68 +116,21 @@ boost
 				os << buf;
 				return os;
 				}
+			static
+			error
+			peek_next_error() noexcept
+				{
+				return error(id_factory::tl_instance().peek());
+				}
+			static
+			void
+			clear_next_error() noexcept
+				{
+				id_factory::tl_instance().reset_peek();
+				}
+			template <class... T>
+			error propagate( T && ... ) const noexcept;
 			};
-		////////////////////////////////////////
-		namespace
-		leaf_detail
-			{
-			struct
-			current_error_state
-				{
-				error e;
-				error const * ep;
-				current_error_state() noexcept:
-					e(error::default_()),
-					ep(0)
-					{
-					}
-				static
-				current_error_state &
-				tl_instance() noexcept
-					{
-					static thread_local current_error_state s;
-					return s;
-					}
-				};
-			inline
-			error const &
-			set_current_error( error const & e ) noexcept
-				{
-				auto & x = current_error_state::tl_instance();
-				assert(!x.ep);
-				return *(x.ep = &(x.e = e));
-				}
-			inline
-			void
-			clear_current_error() noexcept
-				{
-				current_error_state::tl_instance().ep = 0;
-				}
-			inline
-			void
-			clear_current_error( error const & e ) noexcept
-				{
-				auto & x = current_error_state::tl_instance();
-				if( x.ep && *x.ep==e )
-					x.ep = 0;
-				}
-			}
-		inline
-		error const *
-		current_error() noexcept
-			{
-			auto & x = leaf_detail::current_error_state::tl_instance();
-			if( error const * e = x.ep )
-				return e;
-			else if( std::uncaught_exception() )
-				{
-				error new_error;
-				assert(*x.ep==new_error);
-				return x.ep;
-				}
-			else
-				return 0;
-			}
 		////////////////////////////////////////
 		namespace
 		leaf_detail
@@ -200,14 +176,12 @@ boost
 			~slot() noexcept
 				{
 				if( prev_ && this->has_value() )
-					if( auto ce = current_error() )
-						if( *ce==this->value().e )
-							(void) prev_->put(this->extract_value());
+					(void) prev_->put(std::move(*this).value());
 				tl_slot_ptr<T>() = prev_;
 				}
 			template <class T>
 			T *
-			put1( T && v, error const & e ) noexcept
+			put_slot( T && v, error const & e ) noexcept
 				{
 				if( leaf_detail::slot<T> * p = leaf_detail::tl_slot_ptr<T>() )
 					return &p->put(leaf_detail::error_info<T>{std::forward<T>(v),e}).v;
@@ -215,15 +189,47 @@ boost
 					return 0;
 				}
 			}
-		////////////////////////////////////////
-		template <class... E>
+		template <class... T>
 		error
-		propagate( E && ... e ) noexcept
+		error::
+		propagate( T && ... v ) const noexcept
 			{
-			if( error const * ce = current_error() )
-				return ce->propagate(std::forward<E>(e)...);
-			else
-				return error(std::forward<E>(e)...);
+			{ using _ = void const * [ ]; (void) _ { 0, leaf_detail::put_slot(std::forward<T>(v),*this)... }; }
+			return *this;
+			}
+		////////////////////////////////////////
+		namespace
+		leaf_detail
+			{
+			template <class F>
+			class
+			deferred
+				{
+				error const e_;
+				F f_;
+				public:
+				deferred( error const & e, F && f ) noexcept:
+					e_(e),
+					f_(std::forward<F>(f))
+					{
+					}
+				~deferred() noexcept
+					{
+					(void) e_.propagate(f_());
+					}
+				};
+			}
+		template <class F>
+		leaf_detail::deferred<F>
+		defer( F && f ) noexcept
+			{
+			return leaf_detail::deferred<F>(error::peek_next_error(),std::forward<F>(f));
+			}
+		template <class... T>
+		void
+		preload( T && ... a )
+			{
+			error::peek_next_error().propagate(std::forward<T>(a)...);
 			}
 		////////////////////////////////////////
 		namespace

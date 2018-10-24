@@ -90,7 +90,7 @@ int main()
 		catch( failure const & e )
 		{
 			//Failure! Handle error, print failure info.
-			handle_error( exp, e,
+			handle_exception( exp, e,
 				leaf::match<failure_info1, failure_info2, failed_thread_id>( [ ] ( std::string const & v1, int v2, std::thread::id tid )
 					{
 					std::cerr << "Error in thread " << tid << "! failure_info1: " << v1 << ", failure_info2: " << v2 << std::endl;

@@ -17,8 +17,8 @@ namespace leaf = boost::leaf;
 
 //We could define our own error info types, but for this example the ones
 //defined in <boost/leaf/common.hpp> are a perfect match.
-using leaf::ei_file_name;
-using leaf::ei_errno;
+using leaf::e_file_name;
+using leaf::e_errno;
 
 //Exception type hierarchy.
 struct print_file_error : virtual std::exception { };
@@ -29,19 +29,19 @@ struct file_error : virtual io_error { };
 struct file_open_error : virtual file_error { };
 struct file_size_error : virtual file_error { };
 struct file_read_error : virtual file_error { };
-struct file_eof_error : virtual file_error { };
+struct eof_error : virtual file_error { };
 
 std::shared_ptr<FILE> file_open( char const * file_name )
 {
 	if( FILE * f = fopen(file_name,"rb") )
 		return std::shared_ptr<FILE>(f,&fclose);
 	else
-		leaf::throw_exception( file_open_error(), ei_file_name{file_name}, ei_errno{errno} );
+		leaf::throw_exception( file_open_error(), e_file_name{file_name}, e_errno{errno} );
 }
 
 int file_size( FILE & f )
 {
-	auto put = leaf::preload(&leaf::get_errno);
+	auto propagate = leaf::defer(&leaf::get_errno);
 
 	if( fseek(&f,0,SEEK_END) )
 		throw file_size_error();
@@ -61,17 +61,18 @@ void file_read( FILE & f, void * buf, int size )
 	int n = fread(buf,1,size,&f);
 
 	if( ferror(&f) )
-		leaf::throw_exception( file_read_error(), ei_errno{errno} );
+		leaf::throw_exception( file_read_error(), e_errno{errno} );
 
 	if( n!=size )
-		throw file_eof_error();
+		throw eof_error();
 }
 
 void print_file( char const * file_name )
 {
-	auto put = leaf::preload( ei_file_name{file_name} );
-
 	std::shared_ptr<FILE> f = file_open( file_name );
+
+	leaf::preload( e_file_name{file_name} );
+
 	std::string buffer( 1+file_size(*f), '\0' );
 	file_read(*f,&buffer[0],buffer.size()-1);
 
@@ -90,8 +91,8 @@ int main( int argc, char const * argv[ ] )
 {
  	std::cout.exceptions ( std::ostream::failbit | std::ostream::badbit );
  
- 	//We expect ei_file_name and ei_errno info to arrive with exceptions handled in this function.
-	leaf::expect<ei_file_name,ei_errno> exp;
+ 	//We expect e_file_name and e_errno info to arrive with exceptions handled in this function.
+	leaf::expect<e_file_name, e_errno> exp;
 
 	try
 	{
@@ -105,8 +106,11 @@ int main( int argc, char const * argv[ ] )
 	catch( file_open_error const & e )
 	{
 		//handle_error is given a list of match objects (in this case only one), which it attempts to match (in order) to
-		//available exception info (if none can be matched, it throws leaf::mismatch_error).
-		handle_error( exp, e, leaf::match<ei_file_name,ei_errno>( [ ] ( std::string const & fn, int errn )
+		//available error info (if none can be matched, it rethrows the current exception, which in this program would
+		//be a logic error, since it doesn't catch that exception. When a match is found, the corresponding lambda
+		//is invoked.
+		handle_exception( exp, e,
+			leaf::match<e_file_name, e_errno>( [ ] ( std::string const & fn, int errn )
 			{
 				if( errn==ENOENT )
 					std::cerr << "File not found: " << fn << std::endl;
@@ -117,23 +121,23 @@ int main( int argc, char const * argv[ ] )
 	}
 	catch( io_error const & e )
 	{
-		//handle_error is given a list of match objects, which it attempts to match (in order) to available exception info.
-		//In this case it will first check if both ei_file_name and ei_errno are avialable; if not, it will next check
-		//if just ei_errno is available; and if not, the last match will match even if no exception info is available,
-		//to print a generic error message.
-		handle_error( exp, e,
-			leaf::match<ei_file_name,ei_errno>( [ ] ( std::string const & fn, int errn )
-				{
-					std::cerr << "Failed to access " << fn << ", errno=" << errn << std::endl;
-				} ),
-			leaf::match<ei_errno>( [ ] ( int errn )
-				{
-					std::cerr << "I/O error, errno=" << errn << std::endl;
-				} ),
+		//handle_error is given a list of match objects, which it attempts to match (in order) to available error info.
+		//In this case it will first check if both e_file_name and e_errno are avialable; if not, it will next check
+		//if just e_errno is available; and if not, the last match will match even if no error info is available, to
+		//print a generic error message.
+		handle_exception( exp, e,
+			leaf::match<e_file_name, e_errno>( [ ] ( std::string const & fn, int errn )
+			{
+				std::cerr << "Failed to access " << fn << ", errno=" << errn << std::endl;
+			} ),
+			leaf::match<e_errno>( [ ] ( int errn )
+			{
+				std::cerr << "I/O error, errno=" << errn << std::endl;
+			} ),
 			leaf::match<>( [ ]
-				{
-					std::cerr << "I/O error" << std::endl;
-				} ) );
+			{
+				std::cerr << "I/O error" << std::endl;
+			} ) );
 		return 3;
 	}
 	catch(...)
@@ -144,4 +148,4 @@ int main( int argc, char const * argv[ ] )
 		return 4;
 	}
 	return 0;
-	}
+}

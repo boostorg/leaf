@@ -30,10 +30,9 @@ main()
 	{
 	leaf::expect<info<1>,info<2>,info<3>,info<4>> exp;
 	leaf::error e1=f12();
-	handle_error( exp, e1, leaf::match<>() );
 	leaf::error e2=f34();
 	int e1c1=0, e1c2=0;
-	handle_error( exp, e1,
+	BOOST_TEST( handle_error( exp, e1,
 		leaf::match<info<3>,info<4>>( [&e1c1]( int, int )
 			{
 			++e1c1;
@@ -43,11 +42,11 @@ main()
 			BOOST_TEST(i1==1);
 			BOOST_TEST(i2==2);
 			++e1c2;
-			} ) );
+			} ) ) );
 	BOOST_TEST(e1c1==0);
 	BOOST_TEST(e1c2==1);
 	int e2c1=0, e2c2=0;
-	handle_error( exp, e2,
+	BOOST_TEST( handle_error( exp, e2,
 		leaf::match<info<1>,info<2>>( [&e2c1]( int, int )
 			{
 			++e2c1;
@@ -57,7 +56,7 @@ main()
 			BOOST_TEST(i3==3);
 			BOOST_TEST(i4==4);
 			++e2c2;
-			} ) );
+			} ) ) );
 	BOOST_TEST(e2c1==0);
 	BOOST_TEST(e2c2==1);
 	return boost::report_errors();

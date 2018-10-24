@@ -79,8 +79,8 @@ main()
 			printable_info_non_printable_payload,
 			non_printable_info_printable_payload,
 			non_printable_info_non_printable_payload,
-			leaf::ei_errno,
-			leaf::ei_source_location
+			leaf::e_errno,
+			leaf::e_source_location
 			> exp;
 		try
 			{
@@ -91,12 +91,11 @@ main()
 				printable_info_non_printable_payload(),
 				non_printable_info_printable_payload(),
 				non_printable_info_non_printable_payload(),
-				leaf::ei_errno{ENOENT} );
+				leaf::e_errno{ENOENT} );
 			}
 		catch(
 		my_error & e )
 			{
-			handle_error( exp, e, leaf::match<>([ ]{ }) );
 			std::ostringstream st;
 			current_exception_diagnostic_print(st,exp);
 			std::string s = st.str();
@@ -107,6 +106,7 @@ main()
 			BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
 			BOOST_TEST(s.find(") in function")!=s.npos);
 			std::cout << s;
+			handle_exception( exp, e, leaf::match<>() );
 			}
 		}
 	return boost::report_errors();

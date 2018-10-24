@@ -18,11 +18,6 @@ boost
 	namespace
 	leaf
 		{
-		class
-		mismatch_error:
-			public std::exception
-			{
-			};
 		namespace
 		leaf_detail
 			{
@@ -33,28 +28,12 @@ boost
 				public Ex,
 				public error
 				{
-				exception( exception const & )=delete;
-				exception & operator=( exception const & )=delete;
-				bool moved_;
 				public:
 				exception( Ex && ex, error && e ) noexcept:
 					Ex(std::move(ex)),
-					error(std::move(e)),
-					moved_(false)
+					error(std::move(e))
 					{
 					enforce_std_exception(*this);
-					}
-				exception( exception && x ) noexcept:
-					Ex(std::move(static_cast<Ex &&>(x))),
-					error(std::move(static_cast<error &&>(x))),
-					moved_(false)
-					{
-					x.moved_ = true;
-					}
-				~exception()
-					{
-					if( !moved_ )
-						clear_current_error(*this);
 					}
 				};
 			}

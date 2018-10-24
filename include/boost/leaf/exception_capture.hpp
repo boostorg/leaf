@@ -22,20 +22,16 @@ boost
 			{
 			class
 			captured_exception:
-				public std::exception
+				public std::exception,
+				error_capture
 				{
 				std::exception_ptr ex_;
-				error_capture cap_;
+				bool has_error_;
 				public:
-				captured_exception( std::exception_ptr && ex, error_capture && cap ) noexcept:
+				captured_exception( std::exception_ptr && ex, error_capture && cap, bool has_error ) noexcept:
+					error_capture(std::move(cap)),
 					ex_(std::move(ex)),
-					cap_(std::move(cap))
-					{
-					assert(ex_);
-					}
-				explicit
-				captured_exception( std::exception_ptr && ex ) noexcept:
-					ex_(std::move(ex))
+					has_error_(has_error)
 					{
 					assert(ex_);
 					}
@@ -43,14 +39,19 @@ boost
 				void
 				rethrow_original_exception()
 					{
-					set_current_error(cap_.propagate());
+					if( !has_error_ )
+						{
+						set_error(error::peek_next_error());
+						has_error_ = true;
+						}
+					propagate();
 					std::rethrow_exception(ex_);
 					}
 				friend
 				void
 				diagnostic_print( std::ostream & os, captured_exception const & ce )
 					{
-					diagnostic_print(os,ce.cap_);
+					diagnostic_print(os,static_cast<error_capture const &>(ce));
 					}
 				};
 			template <class F,class... E>
@@ -75,14 +76,11 @@ boost
 						}
 					catch( error const & e )
 						{
-						throw captured_exception(std::current_exception(),capture(exp,e));
+						throw captured_exception(std::current_exception(),capture(exp,e),true);
 						}
 					catch(...)
 						{
-						if( error const * e = current_error() )
-							throw captured_exception(std::current_exception(),capture(exp,*e));
-						else
-							throw captured_exception(std::current_exception());
+						throw captured_exception(std::current_exception(),capture(exp,error()),false);
 						}
 					}
 				};

@@ -9,9 +9,8 @@
 
 #include <boost/leaf/error_capture.hpp>
 
-#define LEAF_ERROR ::boost::leaf::error(ei_SOURCE_LOCATION)
-#define LEAF_CHECK(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
-#define LEAF_CHECK_(r) {auto _r_##v = r; if( !_r_##v ) return _r_##v.error();}
+#define LEAF_AUTO(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
+#define LEAF_CHECK(r) {auto _r_##v = r; if( !_r_##v ) return _r_##v.error();}
 
 namespace
 boost
@@ -266,16 +265,16 @@ boost
 				}
 			template <class... M,class... E>
 			friend
-			void
-			handle_error( expect<E...> const & exp, result & r, M && ... m )
+			bool
+			handle_error( expect<E...> & exp, result & r, M && ... m ) noexcept
 				{
 				assert(!r);
 				if( r.which_==result::variant::err )
-					handle_error(exp,r.err_,m...);
+					return handle_error(exp,r.err_,m...);
 				else
 					{
 					assert(r.which_==result::variant::cap);
-					handle_error(r.cap_,m...);
+					return handle_error(r.cap_,m...);
 					}
 				}
 			template <class... E>
@@ -340,11 +339,11 @@ boost
 				}
 			template <class... M,class... E>
 			friend
-			void
-			handle_error( expect<E...> const & exp, result & r, M && ... m )
+			bool
+			handle_error( expect<E...> & exp, result & r, M && ... m ) noexcept
 				{
 				result<bool> & rb = r;
-				handle_error(exp,rb,m...);
+				return handle_error(exp,rb,m...);
 				}
 			template <class... E>
 			friend

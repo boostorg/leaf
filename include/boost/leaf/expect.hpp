@@ -43,36 +43,36 @@ boost
 				static const int value = type_index<T,TupleTypes...>::value;
 				};
 			////////////////////////////////////////
-			template <class Tuple,class... List>
-			struct all_available_slot;
-			template <class Tuple,class Car,class... Cdr>
+			template <class SlotsTuple,class... List>
+			struct slots_subset;
+			template <class SlotsTuple,class Car,class... Cdr>
 			struct
-			all_available_slot<Tuple,Car,Cdr...>
+			slots_subset<SlotsTuple,Car,Cdr...>
 				{
 				static
 				bool
-				check( Tuple const & tup, error const & e ) noexcept
+				have_values( SlotsTuple const & tup, error const & e ) noexcept
 					{
-					auto & sl = std::get<tuple_type_index<Car,Tuple>::value>(tup);
-					return sl.has_value() && sl.value().e==e && all_available_slot<Tuple,Cdr...>::check(tup,e);
+					auto & sl = std::get<tuple_type_index<Car,SlotsTuple>::value>(tup);
+					return sl.has_value() && sl.value().e==e && slots_subset<SlotsTuple,Cdr...>::have_values(tup,e);
 					}
 				};
-			template <class Tuple>
+			template <class SlotsTuple>
 			struct
-			all_available_slot<Tuple>
+			slots_subset<SlotsTuple>
 				{
-				static bool check( Tuple const &, error const & ) noexcept { return true; }
+				static bool have_values( SlotsTuple const &, error const & ) noexcept { return true; }
 				};
 			////////////////////////////////////////
 			template <int I,class Tuple>
 			struct
-			tuple_print_slot
+			tuple_for_each
 				{
 				static
 				void
 				print( std::ostream & os, Tuple const & tup )
 					{
-					tuple_print_slot<I-1,Tuple>::print(os,tup);
+					tuple_for_each<I-1,Tuple>::print(os,tup);
 					auto & opt = std::get<I-1>(tup);
 					if( opt.has_value() )
 						{
@@ -85,7 +85,7 @@ boost
 				void
 				print( std::ostream & os, Tuple const & tup, error const & e )
 					{
-					tuple_print_slot<I-1,Tuple>::print(os,tup,e);
+					tuple_for_each<I-1,Tuple>::print(os,tup,e);
 					auto & opt = std::get<I-1>(tup);
 					if( opt.has_value() )
 						{
@@ -94,13 +94,23 @@ boost
 							os << std::endl;
 						}
 					}
+				static
+				void
+				clear_error( Tuple & tup, error const & e ) noexcept
+					{
+					tuple_for_each<I-1,Tuple>::clear_error(tup,e);
+					auto & opt = std::get<I-1>(tup);
+					if( opt.has_value() && opt.value().e==e )
+						opt.reset();
+					}
 				};
 			template <class Tuple>
 			struct
-			tuple_print_slot<0,Tuple>
+			tuple_for_each<0,Tuple>
 				{
-				static void print( std::ostream &, Tuple const & ) { }
-				static void print( std::ostream &, Tuple const &, error const & ) { }
+				static void print( std::ostream &, Tuple const & ) noexcept { }
+				static void print( std::ostream &, Tuple const &, error const & ) noexcept { }
+				static void clear_error( Tuple &, error const & ) noexcept { }
 				};
 			////////////////////////////////////////
 			template <class T>
@@ -108,18 +118,25 @@ boost
 			convert_optional( slot<T> && x, error const & e ) noexcept
 				{
 				if( x.has_value() && x.value().e==e )
-					return optional<T>(std::move(x.extract_value().v));
+					return optional<T>(std::move(x).value().v);
 				else
 					return optional<T>();
 				}
 			}
+		class error_capture;
+
+		template <class>
+		struct
+		dependent_type
+			{
+			typedef leaf::error_capture error_capture;
+			};
+
 		template <class... E>
 		class expect;
 
 		template <class P,class... E>
 		decltype(P::value) const * peek( expect<E...> const &, error const & ) noexcept;
-
-		class error_capture;
 
 		template <class... E>
 		class
@@ -130,13 +147,6 @@ boost
 			template <class P,class... E_>
 			friend decltype(P::value) const * leaf::peek( expect<E_...> const &, error const & ) noexcept;
 
-			template <class>
-			struct
-			dependent_type
-				{
-				typedef leaf::error_capture error_capture;
-				};
-
 			expect( expect const & ) = delete;
 			expect & operator=( expect const & ) = delete;
 
@@ -144,10 +154,10 @@ boost
 
 			template <class F,class... MatchTypes>
 			int
-			unwrap( leaf_detail::match_fn<F,MatchTypes...> const & m, error const & e, bool & matched ) const noexcept
+			unwrap( leaf_detail::match_fn<F,MatchTypes...> const & m, error const & e, bool & matched ) const
 				{
 				using namespace leaf_detail;
-				if( !matched && (matched=all_available_slot<decltype(s_),slot<MatchTypes>...>::check(s_,e)) )
+				if( !matched && (matched=slots_subset<decltype(s_),slot<MatchTypes>...>::have_values(s_,e)) )
 					(void) m.f( *leaf::peek<MatchTypes>(*this,e)... );
 				return 42;
 				}
@@ -157,39 +167,41 @@ boost
 				{
 				using namespace leaf_detail;
 				if( !matched )
-					matched = all_available_slot<decltype(s_),slot<MatchTypes>...>::check(s_,e);
+					matched = slots_subset<decltype(s_),slot<MatchTypes>...>::have_values(s_,e);
 				return 42;
 				}
 			public:
 			expect() noexcept
 				{
-				leaf_detail::clear_current_error();
 				}
 			~expect() noexcept
 				{
 				}
 			template <class... M>
 			friend
-			void
-			handle_error( expect const & exp, error const & e, M && ... m )
+			bool
+			handle_error( expect & exp, error const & e, M && ... m ) noexcept
 				{
 				bool matched = false;
 				{ using _ = int[ ]; (void) _ { 42, exp.unwrap(m,e,matched)... }; }
-				if( !matched )
-					throw_exception(mismatch_error(),e);
-				leaf_detail::clear_current_error(e);
+				if( matched )
+					{
+					leaf_detail::tuple_for_each<sizeof...(E),decltype(exp.s_)>::clear_error(exp.s_,e);
+					error::clear_next_error();
+					}
+				return matched;
 				}
 			friend
 			void
 			diagnostic_print( std::ostream & os, expect const & exp )
 				{
-				leaf_detail::tuple_print_slot<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_);
+				leaf_detail::tuple_for_each<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_);
 				}
 			friend
 			void
 			diagnostic_print( std::ostream & os, expect const & exp, error const & e )
 				{
-				leaf_detail::tuple_print_slot<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_,e);
+				leaf_detail::tuple_for_each<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_,e);
 				}
 			friend
 			typename dependent_type<expect>::error_capture
@@ -201,7 +213,6 @@ boost
 					std::make_tuple(
 						convert_optional(
 							std::move(std::get<tuple_type_index<slot<E>,decltype(exp.s_)>::value>(exp.s_)),e)...));
-				clear_current_error(e);
 				return cap;
 				}
 			};
