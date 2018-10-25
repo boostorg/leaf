@@ -80,7 +80,7 @@ f4()
 		BOOST_TEST(c1==0);
 		BOOST_TEST(c2==1);
 		}
-	leaf::throw_exception( my_error() );
+	throw my_error();
 	}
 void
 test( std::function<void()> const & f )
@@ -107,7 +107,14 @@ test( std::function<void()> const & f )
 int
 main()
 	{
-	test( [ ] { leaf::throw_exception( my_error(), info<1>{1} ); } );
-	test( [ ] { leaf::preload(info<1>{1}); throw my_error(); } );
+	test( [ ]
+		{
+		leaf::throw_exception( my_error(), info<1>{1} );
+		} );
+	test( [ ]
+		{
+		leaf::preload(info<1>{1});
+		throw my_error();
+		} );
 	return boost::report_errors();
 	}

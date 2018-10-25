@@ -72,7 +72,7 @@ main()
 		BOOST_TEST(p && *p==2);
 		}
 	BOOST_TEST(!leaf::peek<info<4>>(exp,e1));
-	BOOST_TEST( !handle_error(exp,e1,leaf::match<info<1>,info<2>,info<4>>( [ ](int,int,int) { } )) );
+	BOOST_TEST( !handle_error(exp,e1,leaf::match<info<1>,info<2>,info<4>>()) );
 	leaf::error e2 = f4();
 		{
 		int const * p = leaf::peek<info<1>>(exp,e2);
