@@ -36,7 +36,7 @@ boost
 				}
 			else
 				{
-				if( handle_error(exp,error(),m...) )
+				if( handle_error(exp,error::peek_next_error(),m...) )
 					return;
 				}
 			throw;

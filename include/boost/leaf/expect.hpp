@@ -96,12 +96,10 @@ boost
 					}
 				static
 				void
-				clear_error( Tuple & tup, error const & e ) noexcept
+				clear( Tuple & tup ) noexcept
 					{
-					tuple_for_each<I-1,Tuple>::clear_error(tup,e);
-					auto & opt = std::get<I-1>(tup);
-					if( opt.has_value() && opt.value().e==e )
-						opt.reset();
+					tuple_for_each<I-1,Tuple>::clear(tup);
+					std::get<I-1>(tup).reset();
 					}
 				};
 			template <class Tuple>
@@ -110,7 +108,7 @@ boost
 				{
 				static void print( std::ostream &, Tuple const & ) noexcept { }
 				static void print( std::ostream &, Tuple const &, error const & ) noexcept { }
-				static void clear_error( Tuple &, error const & ) noexcept { }
+				static void clear( Tuple & ) noexcept { }
 				};
 			////////////////////////////////////////
 			template <class T>
@@ -170,12 +168,19 @@ boost
 					matched = slots_subset<decltype(s_),slot<MatchTypes>...>::have_values(s_,e);
 				return 42;
 				}
+			bool propagate_;
 			public:
-			expect() noexcept
+			expect() noexcept:
+				propagate_(true)
 				{
 				}
 			~expect() noexcept
 				{
+				if( !propagate_ )
+					{
+					leaf_detail::tuple_for_each<sizeof...(E),decltype(s_)>::clear(s_);
+					error::clear_next_error();
+					}
 				}
 			template <class... M>
 			friend
@@ -185,10 +190,7 @@ boost
 				bool matched = false;
 				{ using _ = int[ ]; (void) _ { 42, exp.unwrap(m,e,matched)... }; }
 				if( matched )
-					{
-					leaf_detail::tuple_for_each<sizeof...(E),decltype(exp.s_)>::clear_error(exp.s_,e);
-					error::clear_next_error();
-					}
+					exp.propagate_ = false;
 				return matched;
 				}
 			friend
@@ -214,6 +216,11 @@ boost
 						convert_optional(
 							std::move(std::get<tuple_type_index<slot<E>,decltype(exp.s_)>::value>(exp.s_)),e)...));
 				return cap;
+				}
+			void
+			propagate()
+				{
+				propagate_ = true;
 				}
 			};
 		template <class P,class... E>
