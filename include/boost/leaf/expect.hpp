@@ -7,7 +7,7 @@
 #ifndef UUID_AFBBD676B2FF11E8984C7976AE35F1A2
 #define UUID_AFBBD676B2FF11E8984C7976AE35F1A2
 
-#include <boost/leaf/throw_exception.hpp>
+#include <boost/leaf/error.hpp>
 #include <boost/leaf/detail/print.hpp>
 #include <tuple>
 

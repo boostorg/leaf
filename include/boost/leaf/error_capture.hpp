@@ -8,7 +8,6 @@
 #define UUID_C86E4C4ED0F011E8BB777EB8A659E189
 
 #include <boost/leaf/error.hpp>
-#include <boost/leaf/throw_exception.hpp>
 #include <boost/leaf/detail/print.hpp>
 #include <tuple>
 

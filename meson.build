@@ -31,7 +31,6 @@ tests = [
 	'_hpp_exception_test',
 	'_hpp_expect_test',
 	'_hpp_result_test',
-	'_hpp_throw_exception_test',
 	'basic_test',
 	'diagnostic_print_test',
 	'error_capture_test',

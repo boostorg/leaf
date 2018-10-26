@@ -807,6 +807,24 @@ namespace boost [ namespace leaf {
 ----
 ====
 
+Objects of class `error_capture` are similar to `<<expect,expect>>` instances in that they contain `e_` objects and can be examined by (their own overloads of) `peek` and `handle_error`. However, unlike `expect` objects, `error_capture` objects:
+
+* are immutable;
+* are allocated on the heap;
+* associate all of their `e_` objects with exactly one `error` value;
+* when probed with `peek`/`handle_error`, the lookup is dynamic;
+* define `noexcept` copy/move/assignment operations.
+
+The default constructor can be used to initialize an empty `error_capture`. Use `<<capture,capture>>` to capture all `e_` objects associated with a given `error` value from a given `expect` object.
+
+[NOTE]
+--
+Typical use of `error_capture` objects is to transport `e_` objects across threads, however they are rarely used directly. Instead:
+
+* With exception handling, use `<<capture_exception,capture_exception>>` / `<<get,get>>`;
+* Without exception handling, simply return a <<result::capture,captured>> `result<T>` from a worker thread.
+--
+
 '''
 
 ==== `error_capture()`

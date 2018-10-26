@@ -11,4 +11,3 @@
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/expect.hpp>
 #include <boost/leaf/result.hpp>
-#include <boost/leaf/throw_exception.hpp>

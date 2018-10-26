@@ -22,7 +22,6 @@ run _hpp_exception_capture_test.cpp ;
 run _hpp_exception_test.cpp ;
 run _hpp_expect_test.cpp ;
 run _hpp_result_test.cpp ;
-run _hpp_throw_exception_test.cpp ;
 run basic_test.cpp ;
 run diagnostic_print_test.cpp ;
 run error_capture_test.cpp ;
