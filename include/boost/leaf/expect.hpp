@@ -218,7 +218,7 @@ boost
 				return cap;
 				}
 			void
-			propagate()
+			propagate() noexcept
 				{
 				propagate_ = true;
 				}

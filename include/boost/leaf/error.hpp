@@ -86,12 +86,12 @@ boost
 				id_(id_factory::tl_instance().get())
 				{
 				}
-			template <class... T>
+			template <class... E>
 			explicit
-			error( T && ... v ) noexcept:
+			error( E && ... e ) noexcept:
 				id_(id_factory::tl_instance().get())
 				{
-				propagate(std::forward<T>(v)...);
+				propagate(std::forward<E>(e)...);
 				}
 			friend
 			bool
@@ -128,8 +128,8 @@ boost
 				{
 				id_factory::tl_instance().reset_peek();
 				}
-			template <class... T>
-			error propagate( T && ... ) const noexcept;
+			template <class... E>
+			error propagate( E && ... ) const noexcept;
 			};
 		////////////////////////////////////////
 		namespace
@@ -189,12 +189,12 @@ boost
 					return 0;
 				}
 			}
-		template <class... T>
+		template <class... E>
 		error
 		error::
-		propagate( T && ... v ) const noexcept
+		propagate( E && ... e ) const noexcept
 			{
-			{ using _ = void const * [ ]; (void) _ { 0, leaf_detail::put_slot(std::forward<T>(v),*this)... }; }
+			{ using _ = void const * [ ]; (void) _ { 0, leaf_detail::put_slot(std::forward<E>(e),*this)... }; }
 			return *this;
 			}
 		////////////////////////////////////////
@@ -225,11 +225,11 @@ boost
 			{
 			return leaf_detail::deferred<F>(error::peek_next_error(),std::forward<F>(f));
 			}
-		template <class... T>
+		template <class... E>
 		void
-		preload( T && ... a )
+		preload( E && ... e )
 			{
-			error::peek_next_error().propagate(std::forward<T>(a)...);
+			error::peek_next_error().propagate(std::forward<E>(e)...);
 			}
 		////////////////////////////////////////
 		namespace
