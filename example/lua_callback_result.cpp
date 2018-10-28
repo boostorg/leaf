@@ -103,7 +103,9 @@ leaf::result<int> call_lua( lua_State * L )
 int main() noexcept
 {
 	std::shared_ptr<lua_State> L=init_lua_state();
+
 	leaf::expect<e_do_work_error,e_lua_pcall_error,e_lua_error_message> exp;
+
 	for( int i=0; i!=10; ++i )
 		if( leaf::result<int> r = call_lua(&*L) )
 			std::cout << "do_work succeeded, answer=" << *r << '\n';
