@@ -44,7 +44,7 @@ boost
 						set_error(error::peek_next_error());
 						has_error_ = true;
 						}
-					propagate();
+					unload();
 					std::rethrow_exception(ex_);
 					}
 				friend

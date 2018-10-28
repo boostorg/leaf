@@ -18,6 +18,8 @@ if not meson.is_subproject()
 	endif
 endif
 
+lua=subproject('lua').get_variable('all')
+
 includes = [ include_directories('include') ]
 
 leaf = declare_dependency( include_directories: includes )
@@ -58,3 +60,6 @@ examples = [
 foreach e : examples
 	executable(e, 'example/'+e+'.cpp', dependencies: [ leaf ] )
 endforeach
+
+executable('lua_callback_result', 'example/lua_callback_result.cpp', dependencies: [ leaf, lua ] )
+executable('lua_callback_eh', 'example/lua_callback_eh.cpp', dependencies: [ leaf, lua ] )

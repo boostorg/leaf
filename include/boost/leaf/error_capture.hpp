@@ -91,23 +91,23 @@ boost
 			////////////////////////////////////////
 			template <int I,class Tuple>
 			struct
-			tuple_propagate
+			tuple_unload
 				{
 				static
 				void
-				propagate( error const & e, Tuple && tup ) noexcept
+				unload( error const & e, Tuple && tup ) noexcept
 					{
-					tuple_propagate<I-1,Tuple>::propagate(e,std::move(tup));
+					tuple_unload<I-1,Tuple>::unload(e,std::move(tup));
 					auto && opt = std::get<I-1>(std::move(tup));
 					if( opt.has_value() )
-						e.propagate(std::move(opt).value());
+						(void) e.propagate(std::move(opt).value());
 					}
 				};
 			template <class Tuple>
 			struct
-			tuple_propagate<0,Tuple>
+			tuple_unload<0,Tuple>
 				{
-				static void propagate( error const &, Tuple && ) noexcept { }
+				static void unload( error const &, Tuple && ) noexcept { }
 				};
 			}
 		////////////////////////////////////////
@@ -153,7 +153,7 @@ boost
 						return 0;
 					}
 				virtual void diagnostic_print( std::ostream & ) const = 0;
-				virtual void propagate( error const & ) noexcept = 0;
+				virtual void unload( error const & ) noexcept = 0;
 				};
 			template <class... T>
 			class
@@ -180,9 +180,9 @@ boost
 					leaf_detail::tuple_print<sizeof...(T),decltype(s_)>::print(os,s_);
 					}
 				void
-				propagate( error const & e ) noexcept
+				unload( error const & e ) noexcept
 					{
-					leaf_detail::tuple_propagate<sizeof...(T),decltype(s_)>::propagate(e,std::move(s_));
+					leaf_detail::tuple_unload<sizeof...(T),decltype(s_)>::unload(e,std::move(s_));
 					}
 				};
 			void
@@ -269,11 +269,11 @@ boost
 				return s_!=0;
 				}
 			error
-			propagate() noexcept
+			unload() noexcept
 				{
 				if( s_ )
 					{
-					s_->propagate(e_);
+					s_->unload(e_);
 					free();
 					}
 				return e_;

@@ -46,7 +46,7 @@ std::shared_ptr<FILE> file_open( char const * file_name )
 int file_size( FILE & f )
 {
 	//All exceptions escaping this function will automatically propagate errno.
-	auto propagate = leaf::defer(&leaf::get_errno);
+	auto propagate = leaf::defer([ ] { return e_errno{errno}; } );
 
 	if( fseek(&f,0,SEEK_END) )
 		throw input_file_size_error();

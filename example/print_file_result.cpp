@@ -45,7 +45,7 @@ leaf::result<std::shared_ptr<FILE>> file_open( char const * file_name )
 
 leaf::result<int> file_size( FILE & f )
 {
-	auto propagate = leaf::defer(&leaf::get_errno);
+	auto propagate = leaf::defer([ ] { return e_errno{errno}; } );
 
 	if( fseek(&f,0,SEEK_END) )
 		return leaf::error( e_error_code{input_file_size_error} );

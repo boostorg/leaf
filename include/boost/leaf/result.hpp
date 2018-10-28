@@ -8,6 +8,7 @@
 #define UUID_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
 
 #include <boost/leaf/error_capture.hpp>
+#include <boost/leaf/detail/throw_exception.hpp>
 
 #define LEAF_AUTO(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
 #define LEAF_CHECK(r) {auto _r_##v = r; if( !_r_##v ) return _r_##v.error();}
@@ -166,41 +167,6 @@ boost
 				move_from(std::move(x));
 				return *this;
 				}
-			void
-			reset( T const & v )
-				{
-				destroy();
-				(void) new(&value_) T(v);
-				which_ = variant::value;
-				}
-			void
-			reset( T && v ) noexcept
-				{
-				destroy();
-				(void) new(&value_) T(std::move(v));
-				which_ = variant::value;
-				}
-			void
-			reset( leaf::error const & e ) noexcept
-				{
-				destroy();
-				(void) new(&err_) leaf::error(e);
-				which_ = variant::err;
-				}
-			void
-			reset( leaf::error_capture const & cap ) noexcept
-				{
-				destroy();
-				(void) new(&cap_) leaf::error_capture(cap);
-				which_ = variant::cap;
-				}
-			void
-			reset( leaf::error_capture && cap ) noexcept
-				{
-				destroy();
-				(void) new(&cap_) leaf::error_capture(std::move(cap));
-				which_ = variant::cap;
-				}
 			explicit
 			operator bool() const noexcept
 				{
@@ -212,7 +178,7 @@ boost
 				if( which_==variant::value )
 					return value_;
 				else
-					throw bad_result();
+					LEAF_THROW(bad_result());
 				}
 			T &
 			value()
@@ -220,7 +186,7 @@ boost
 				if( which_==variant::value )
 					return value_;
 				else
-					throw bad_result();
+					LEAF_THROW(bad_result());
 				}
 			T const &
 			operator*() const
@@ -243,7 +209,9 @@ boost
 						return leaf::error(std::forward<E>(e)...);
 					case variant::
 					cap:
-						reset(cap_.propagate());
+						destroy();
+						(void) new(&err_) leaf::error(cap_.unload());
+						which_ = variant::err;
 					default:
 						assert(which_==variant::err);
 						return err_.propagate(std::forward<E>(e)...);
@@ -251,17 +219,13 @@ boost
 				}
 			template <class... E>
 			friend
-			result &&
-			capture( expect<E...> & exp, result && r )
+			result
+			capture( expect<E...> & exp, result const & r )
 				{
 				if( r.which_==variant::err )
-					{
-					auto cap = capture(exp,r.err_);
-					r.err_.~error();
-					(void) new (&r.cap_) error_capture(std::move(cap));
-					r.which_ = variant::cap;					
-					}
-				return std::move(r);
+					return capture(exp,r.err_);
+				else
+					return r;
 				}
 			template <class... M,class... E>
 			friend
@@ -303,6 +267,11 @@ boost
 
 			typedef result<bool> base;
 
+			result( result<bool> && rb ):
+				base(std::move(rb))
+				{
+				}
+
 			public:
 
 			~result() noexcept
@@ -325,17 +294,12 @@ boost
 				}
 			using base::operator bool;
 			using base::error;
-			using base::reset;
-			void reset( bool const & ) = delete;
-			void reset( bool && ) = delete;
 			template <class... E>
 			friend
-			result &&
-			capture( expect<E...> & exp, result && r )
+			result
+			capture( expect<E...> & exp, result const & r )
 				{
-				result<bool> && rb = std::move(r);
-				(void) capture(exp,std::move(rb));
-				return std::move(r);
+				return capture(exp,static_cast<result<bool> const &>(r));
 				}
 			template <class... M,class... E>
 			friend

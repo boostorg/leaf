@@ -227,7 +227,7 @@ boost
 			}
 		template <class... E>
 		void
-		preload( E && ... e )
+		preload( E && ... e ) noexcept
 			{
 			error::peek_next_error().propagate(std::forward<E>(e)...);
 			}

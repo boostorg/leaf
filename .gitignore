@@ -8,3 +8,4 @@
 *.db
 *.opendb
 bld/*
+subprojects/*/

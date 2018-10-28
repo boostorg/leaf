@@ -57,22 +57,13 @@ boost
 			{
 			int value;
 			friend
-			inline
 			std::ostream &
 			operator<<( std::ostream & os, e_errno const & err )
 				{
 				using namespace std;
-				os << type<e_errno>() << " = " << err.value << ", \"" << std::strerror(err.value) << '"';
-				return os;
+				return os << type<e_errno>() << " = " << err.value << ", \"" << std::strerror(err.value) << '"';
 				}
 			};
-		inline
-		e_errno
-		get_errno() noexcept
-			{
-			using namespace std;
-			return e_errno{errno};
-			}
 		}
 	}
 

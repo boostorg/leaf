@@ -8,9 +8,7 @@
 #define UUID_87F274C4D4BA11E89928D55AC82C3C47
 
 #include <boost/leaf/expect.hpp>
-#include <exception>
-
-#define LEAF_THROW(e) ::boost::leaf::throw_exception(e,LEAF_SOURCE_LOCATION)
+#include <boost/leaf/detail/throw_exception.hpp>
 
 namespace
 boost
@@ -18,40 +16,6 @@ boost
 	namespace
 	leaf
 		{
-		namespace
-		leaf_detail
-			{
-			inline void enforce_std_exception( std::exception const & ) { }
-			template <class Ex>
-			class
-			exception:
-				public Ex,
-				public error
-				{
-				public:
-				exception( Ex && ex, error && e ) noexcept:
-					Ex(std::move(ex)),
-					error(std::move(e))
-					{
-					enforce_std_exception(*this);
-					}
-				};
-			}
-		template <class... E,class Ex>
-		[[noreturn]]
-		void
-		throw_exception( Ex && ex, E && ... e )
-			{
-			throw leaf_detail::exception<Ex>(std::move(ex),error(std::move(e)...));
-			}
-		template <class... E,class Ex>
-		[[noreturn]]
-		void
-		throw_exception( Ex && ex, error const & err, E && ... e )
-			{
-			throw leaf_detail::exception<Ex>(std::move(ex),err.propagate(std::move(e)...));
-			}
-		////////////////////////////////////////
 		template <class P,class... E>
 		decltype(P::value) const *
 		peek( expect<E...> const & exp, std::exception const & e ) noexcept
