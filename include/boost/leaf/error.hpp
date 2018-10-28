@@ -175,8 +175,12 @@ boost
 			slot<T>::
 			~slot() noexcept
 				{
-				if( prev_ && this->has_value() )
-					(void) prev_->put(std::move(*this).value());
+				if( prev_ )
+					{
+					optional<error_info<T>> & p = *prev_;
+					optional<error_info<T>> & t = *this;
+					p=t;					
+					}
 				tl_slot_ptr<T>() = prev_;
 				}
 			template <class T>
