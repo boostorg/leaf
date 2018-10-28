@@ -178,8 +178,7 @@ boost
 				if( prev_ )
 					{
 					optional<error_info<T>> & p = *prev_;
-					optional<error_info<T>> & t = *this;
-					p=t;					
+					p = std::move(*this);
 					}
 				tl_slot_ptr<T>() = prev_;
 				}
