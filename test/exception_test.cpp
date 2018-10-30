@@ -6,6 +6,7 @@
 
 #include <boost/leaf/expect.hpp>
 #include <boost/leaf/exception.hpp>
+#include <boost/leaf/preload.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <functional>
 
@@ -40,17 +41,12 @@ f2()
 		e.propagate( info<2>{2} );
 		throw;
 		}
-	catch( ... )
-		{
-		leaf::preload( info<2>{2} );
-		throw;
-		}
 	}
 void
 f3()
 	{
 	leaf::expect<info<2>,info<3>> exp;
-	leaf::preload( info<4>{4} );
+	auto propagate = leaf::preload( info<4>{4} );
 	f2();
 	}
 void
@@ -65,7 +61,7 @@ f4()
 	catch(
 	my_error const & e )
 		{
-		int c1=0, c2=0;
+		int c1=0, c2=0, c3=0;
 		handle_exception( exp, e,
 			leaf::match<info<1>,info<2>,info<3>,info<4>>( [&c1]( int, int, int, int )
 				{
@@ -77,9 +73,17 @@ f4()
 				BOOST_TEST(i2==2);
 				BOOST_TEST(i4==4);
 				++c2;
-				} ) );
+				} ),
+			leaf::match<info<1>,info<4>>( [&c3]( int i1, int i4 )
+				{
+				BOOST_TEST(i1==1);
+				BOOST_TEST(i4==4);
+				++c3;
+				} )
+		);
 		BOOST_TEST(c1==0);
-		BOOST_TEST(c2==1);
+		BOOST_TEST(c2==1 || dynamic_cast<leaf::error const *>(&e)==0);
+		BOOST_TEST(c3==1 || dynamic_cast<leaf::error const *>(&e)!=0);
 		}
 	throw my_error();
 	}
@@ -114,7 +118,7 @@ main()
 		} );
 	test( [ ]
 		{
-		leaf::preload(info<1>{1});
+		auto propagate = leaf::preload(info<1>{1});
 		throw my_error();
 		} );
 	return boost::report_errors();

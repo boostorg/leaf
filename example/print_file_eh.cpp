@@ -78,12 +78,12 @@ void print_file( char const * file_name )
 {
 	std::shared_ptr<FILE> f = file_open( file_name );
 
-	leaf::preload( e_file_name{file_name} );
+	auto propagate1 = leaf::preload( e_file_name{file_name} );
 
 	std::string buffer( 1+file_size(*f), '\0' );
 	file_read(*f,&buffer[0],buffer.size()-1);
 
-	auto propagate = leaf::defer([ ] { return e_errno{errno}; } );
+	auto propagate2 = leaf::defer([ ] { return e_errno{errno}; } );
 	std::cout << buffer;
 	std::cout.flush();
 }

@@ -8,7 +8,7 @@
 			"name": "(lldb) Launch",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/bld/debug/exception_capture_test",
+			"program": "${workspaceFolder}/bld/debug/preload_test.2",
 			"args": [ "test/Jafile.v2" ],
 			"cwd": "${workspaceFolder}",
 			"stopAtEntry": false,

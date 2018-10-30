@@ -6,6 +6,7 @@
 
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/expect.hpp>
+#include <boost/leaf/preload.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
 namespace leaf = boost::leaf;
@@ -41,7 +42,7 @@ leaf::result<my_value>
 f3( bool success )
 	{
 	leaf::expect<info<2>,info<3>> exp;
-	leaf::preload( info<4>{4} );
+	auto propagate = leaf::preload( info<4>{4} );
 	return f2(success);
 	}
 leaf::result<my_value>

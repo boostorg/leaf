@@ -177,10 +177,7 @@ boost
 			~expect() noexcept
 				{
 				if( !propagate_ )
-					{
 					leaf_detail::tuple_for_each<sizeof...(E),decltype(s_)>::clear(s_);
-					error::clear_next_error();
-					}
 				}
 			template <class... M>
 			friend

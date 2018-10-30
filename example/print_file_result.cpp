@@ -78,7 +78,7 @@ leaf::result<void> print_file( char const * file_name )
 {
 	LEAF_AUTO(f,file_open(file_name));
 
-	leaf::preload( e_file_name{file_name} );
+	auto propagate = leaf::preload( e_file_name{file_name} );
 
 	LEAF_AUTO(s,file_size(*f));
 

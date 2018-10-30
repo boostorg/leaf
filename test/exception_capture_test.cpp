@@ -5,6 +5,7 @@
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/exception_capture.hpp>
+#include <boost/leaf/preload.hpp>
 #include <boost/leaf/exception.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <vector>
@@ -91,7 +92,7 @@ main()
 			return res;
 		else
 			{
-			leaf::preload( info<1>{a}, info<2>{b}, info<3>{} );
+			auto propagate = leaf::preload( info<1>{a}, info<2>{b}, info<3>{} );
 			throw my_error();
 			}
 		} );

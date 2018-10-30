@@ -26,6 +26,41 @@
 		},
 		{
 			"group": { "kind": "test", "isDefault": false },
+			"label": "defer_test.0",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.0",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "defer_test.1",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.1",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "defer_test.2",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.2",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "defer_test.3",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.3",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "defer_test.4",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.4",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
 			"label": "diagnostic_print_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test diagnostic_print_test",
@@ -75,9 +110,30 @@
 		},
 		{
 			"group": { "kind": "test", "isDefault": false },
-			"label": "preload_test",
+			"label": "preload_test.1",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.1",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "preload_test.2",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.2",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "preload_test.3",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.3",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "preload_test.4",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.4",
             		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
 		},
 		{

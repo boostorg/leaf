@@ -5,17 +5,11 @@
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/expect.hpp>
+#include <boost/leaf/preload.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
 namespace leaf = boost::leaf;
 
-int global;
-
-int
-get_global() noexcept
-	{
-	return global;
-	}
 template <int A>
 struct
 info
@@ -25,16 +19,13 @@ info
 leaf::error
 f0()
 	{
-	leaf::preload( info<0>{0} );
+	auto propagate = leaf::defer( [ ] { return info<0>{0}; } );
 	return leaf::error( info<2>{2} );
 	}
 leaf::error
 f1()
 	{
-	global = 0;
-	leaf::preload( info<1>{1} );
-	auto propagate = leaf::defer( [ ] { return info<42>{get_global()}; } );
-	global = 42;
+	auto propagate = leaf::defer( [ ] { return info<0>{-1}; }, [ ] { return info<1>{1}; }, [ ] { return info<2>{-1}; } );
 	return f0();
 	}
 leaf::error
@@ -45,14 +36,13 @@ f2()
 int
 main()
 	{
-	leaf::expect<info<0>,info<1>,info<2>,info<3>,info<4>,info<42>> exp;
+	leaf::expect<info<0>,info<1>,info<2>,info<3>,info<4>> exp;
 	leaf::error e = f2();
 	BOOST_TEST(!leaf::peek<info<3>>(exp,e));
 	int c=0;
 	BOOST_TEST( handle_error( exp, e,
-		leaf::match<info<42>,info<1>,info<2>,info<4>>( [&c]( int i42, int i1, int i2, int i4 )
+		leaf::match<info<1>,info<2>,info<4>>( [&c]( int i1, int i2, int i4 )
 			{
-			BOOST_TEST(i42==42);
 			BOOST_TEST(i1==1);
 			BOOST_TEST(i2==2);
 			BOOST_TEST(i4==4);

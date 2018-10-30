@@ -135,59 +135,63 @@ boost
 		namespace
 		leaf_detail
 			{
-			template <class T>
+			template <class E>
 			struct
 			error_info
 				{
-				T v;
+				E v;
 				error e;
 				};
-			template <class T>
+			template <class E>
 			class
 			slot:
-				public optional<error_info<T>>
+				optional<error_info<E>>
 				{
 				slot( slot const & ) = delete;
 				slot & operator=( slot const & ) = delete;
-				typedef optional<error_info<T>> base;
-				slot<T> * prev_;
+				typedef optional<error_info<E>> base;
+				slot<E> * prev_;
 				public:
-				typedef decltype(T::value) value_type;
+				typedef decltype(E::value) value_type;
 				slot() noexcept;
 				~slot() noexcept;
+				using base::put;
+				using base::has_value;
+				using base::value;
+				using base::reset;
 				};
-			template <class T>
-			slot<T> * &
+			template <class E>
+			slot<E> * &
 			tl_slot_ptr() noexcept
 				{
-				static thread_local slot<T> * s;
+				static thread_local slot<E> * s;
 				return s;
 				}
-			template <class T>
-			slot<T>::
+			template <class E>
+			slot<E>::
 			slot() noexcept
 				{
-				slot * & p = tl_slot_ptr<T>();
+				slot * & p = tl_slot_ptr<E>();
 				prev_ = p;
 				p = this;
 				}
-			template <class T>
-			slot<T>::
+			template <class E>
+			slot<E>::
 			~slot() noexcept
 				{
 				if( prev_ )
 					{
-					optional<error_info<T>> & p = *prev_;
+					optional<error_info<E>> & p = *prev_;
 					p = std::move(*this);
 					}
-				tl_slot_ptr<T>() = prev_;
+				tl_slot_ptr<E>() = prev_;
 				}
-			template <class T>
-			T *
-			put_slot( T && v, error const & e ) noexcept
+			template <class E>
+			E *
+			put_slot( E && v, error const & e ) noexcept
 				{
-				if( leaf_detail::slot<T> * p = leaf_detail::tl_slot_ptr<T>() )
-					return &p->put(leaf_detail::error_info<T>{std::forward<T>(v),e}).v;
+				if( leaf_detail::slot<E> * p = leaf_detail::tl_slot_ptr<E>() )
+					return &p->put(leaf_detail::error_info<E>{std::forward<E>(v),e}).v;
 				else
 					return 0;
 				}
@@ -199,40 +203,6 @@ boost
 			{
 			{ using _ = void const * [ ]; (void) _ { 0, leaf_detail::put_slot(std::forward<E>(e),*this)... }; }
 			return *this;
-			}
-		////////////////////////////////////////
-		namespace
-		leaf_detail
-			{
-			template <class F>
-			class
-			deferred
-				{
-				error const e_;
-				F f_;
-				public:
-				deferred( error const & e, F && f ) noexcept:
-					e_(e),
-					f_(std::forward<F>(f))
-					{
-					}
-				~deferred() noexcept
-					{
-					(void) e_.propagate(f_());
-					}
-				};
-			}
-		template <class F>
-		leaf_detail::deferred<F>
-		defer( F && f ) noexcept
-			{
-			return leaf_detail::deferred<F>(error::peek_next_error(),std::forward<F>(f));
-			}
-		template <class... E>
-		void
-		preload( E && ... e ) noexcept
-			{
-			error::peek_next_error().propagate(std::forward<E>(e)...);
 			}
 		////////////////////////////////////////
 		namespace
