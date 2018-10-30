@@ -40,10 +40,9 @@ boost
 					static std::atomic<int> c;
 					return ++c;
 					}
-				bool next_id_valid_;
 				unsigned next_id_;
 				id_factory() noexcept:
-					next_id_valid_(false)
+					next_id_(new_error_id())
 					{
 					}
 				public:
@@ -57,28 +56,14 @@ boost
 				unsigned
 				peek() noexcept
 					{
-					if( !next_id_valid_ )
-						{
-						next_id_ = new_error_id();
-						next_id_valid_ = true;
-						}
 					return next_id_;
 					}
 				unsigned
 				get() noexcept
 					{
-					if( next_id_valid_ )
-						{
-						next_id_valid_ = false;
-						return next_id_;
-						}
-					else
-						return new_error_id();
-					}
-				void
-				reset_peek() noexcept
-					{
-					next_id_valid_ = false;
+					unsigned id = next_id_;
+					next_id_ = new_error_id();
+					return id;
 					}
 				};
 			public:
@@ -121,12 +106,6 @@ boost
 			peek_next_error() noexcept
 				{
 				return error(id_factory::tl_instance().peek());
-				}
-			static
-			void
-			clear_next_error() noexcept
-				{
-				id_factory::tl_instance().reset_peek();
 				}
 			template <class... E>
 			error propagate( E && ... ) const noexcept;

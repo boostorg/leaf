@@ -24,7 +24,7 @@ boost
 				{
 				static
 				void
-				trigger( Tuple & tup, error e )
+				trigger( Tuple & tup, error e ) noexcept
 					{
 					tuple_for_each_preload<I-1,Tuple>::trigger(tup,e);
 					std::get<I-1>(tup).trigger(e);
@@ -34,7 +34,7 @@ boost
 			struct
 			tuple_for_each_preload<0,Tuple>
 				{
-				static void trigger( Tuple const &, error ) { }
+				static void trigger( Tuple const &, error ) noexcept { }
 				};
 			}
 		////////////////////////////////////////

@@ -16,39 +16,35 @@ boost
 	namespace
 	leaf
 		{
+		inline
+		error
+		get_error( std::exception const & ex ) noexcept
+			{
+			if( auto e = dynamic_cast<error const *>(&ex) )
+				return *e;
+			else
+				return error::peek_next_error();
+			}
 		template <class P,class... E>
 		decltype(P::value) const *
-		peek( expect<E...> const & exp, std::exception const & e ) noexcept
+		peek( expect<E...> const & exp, std::exception const & ex ) noexcept
 			{
-			if( auto err = dynamic_cast<error const *>(&e) )
-				return peek<P>(exp,*err);
-			else
-				return peek<P>(exp,error::peek_next_error());
+			return peek<P>(exp,get_error(ex));
 			}
 		template <class... M,class... E>
 		void
-		handle_exception( expect<E...> & exp, std::exception const & e, M && ... m )
+		handle_exception( expect<E...> & exp, std::exception const & ex, M && ... m )
 			{
-			if( auto err = dynamic_cast<error const *>(&e) )
-				{
-				if( handle_error(exp,*err,m...) )
-					return;
-				}
+			if( handle_error(exp,get_error(ex),m...) )
+				(void) error();
 			else
-				{
-				if( handle_error(exp,error::peek_next_error(),m...) )
-					return;
-				}
-			throw;
+				throw;
 			}
 		template <class... E>
 		void
-		diagnostic_print( std::ostream & os, expect<E...> const & exp, std::exception const & e )
+		diagnostic_print( std::ostream & os, expect<E...> const & exp, std::exception const & ex )
 			{
-			if( auto err = dynamic_cast<error const *>(&e) )
-				diagnostic_print(os,exp,*err);
-			else
-				diagnostic_print(os,exp,error::peek_next_error());
+			diagnostic_print(os,exp,get_error(ex));
 			}
 		}
 	}

@@ -19,8 +19,8 @@ LEAF does not allocate dynamic memoryfootnote:[Except when transporting error in
 
 We'll write a program that reads a text file in a buffer and prints it to `std::cout`, using LEAF to handle errors. We'll implement two versions, one that uses exception handling, and one that does not. To see the source code of the complete programs from this tutorial follow these links:
 
-* https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp[print_file_eh.cpp] (with exception handling)
 * https://github.com/zajo/leaf/blob/master/example/print_file_result.cpp[print_file_result.cpp] (without exception handling)
+* https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp[print_file_eh.cpp] (with exception handling)
 
 First, let's see how to use LEAF without exception handling.
 
@@ -86,7 +86,7 @@ leaf::result<void> print_file( char const * file_name )
   if( !f ) <1>
     return f.error(); <2>
 
-  leaf::preload( e_file_name{file_name} ); <3>
+  auto propagate = leaf::preload( e_file_name{file_name} ); <3>
 
   leaf::result<int> s = file_size(*f.value());
   if( !s ) <4>
@@ -106,8 +106,8 @@ leaf::result<void> print_file( char const * file_name )
 }
 ----
 <1> If `file_open` returns an error...
-<2> ...we forward it to the caller.
-<3> `<<preload,preload>>` takes any number of <<e-types>> and prepares them to become associated with the first `leaf::<<error,error>>` value created thereafter. The effect is that from this point on, all errors returned or forwarded by `print_file` will report the file name, in addition to everything else passed to `leaf::<<error,error>>` explicitly (`e_file_name` is defined as `struct e_file_name { std::string value; }`).
+<2> ...we forward it to the caller. Notice that we don't return `leaf::error()`, which would indicate a newly detected error; we return `f.error()`, which propagates the error already stored in `f`.
+<3> `<<preload,preload>>` takes any number of <<e-types>> and prepares them to become associated (automatically, at the time the returned object expires) with the first `leaf::<<error,error>>` value created thereafter. The effect is that from this point on, any error returned or forwarded by `print_file` will have an associated file name, in addition to everything else passed to `leaf::<<error,error>>` explicitly (`e_file_name` is defined as `struct e_file_name { std::string value; }`).
 <4> If `file_size` returns an error...
 <5> ...we forward it to the caller.
 <6> If `std::cout` fails to write the buffer, we return `cout_error`.
@@ -129,7 +129,7 @@ leaf::result<void> print_file( char const * file_name )
 {
   LEAF_AUTO(f,file_open(file_name)); <1>
 
-  leaf::preload( e_file_name{file_name} );
+  auto propagate = leaf::preload( e_file_name{file_name} );
 
   LEAF_AUTO(s,file_size(*f)); <2>
 
@@ -238,10 +238,10 @@ int main( int argc, char const * argv[ ] )
   }
 }
 ----
-<1> We expect `e_error_code`, `e_file_name` and `e_errno` objects to arrive with errors handled in this function. They will be stored inside `exp`.
+<1> We expect `e_error_code`, `e_file_name` and `e_errno` objects to be associated with errors handled in this function. They will be stored inside `exp`.
 <2> Success, we're done!
 <3> Probe `exp` for objects associated with the error stored in `r`.
-<4> `<<handle_error-expect,handle_error>>` takes a list of match objects (in this case only one), each given a set of <<e-types>>. It attempts to match each set (in order) to objects of e-types available in `exp`, which are associated with the `<<error,error>>` value stored in `r`. If no set can be matched, `handle_error` returns false. When a match is found, `handle_error` calls the corresponding lambda, passing the `.value` of each of the e-types from the matched set.
+<4> `<<handle_error-expect,handle_error>>` takes a list of match objects (in this case only one), each given a set of <<e-types>>. It attempts to match each set (in order) to objects of e-types available in `exp`, which are associated with the `<<error,error>>` value stored in `r`. If no set can be matched, `handle_error` returns false. When a match is found, `handle_error` calls the corresponding lambda function, passing the `.value` of each of the e-types from the matched set.
 <5> In this case `handle_error` is given 3 match sets. It will first check if both `e_file_name` and `e_errno`, associated with `r`, are avialable in `exp`; if not, it will next check if just `e_errno` is available; and if not, the last (empty) set will always match to print a generic error message.
 <6> Report failure to write to `std::cout`, print the relevant `errno`.
 <7> This catch-all case helps diagnose logic errors (presumably, missing case labels in the `switch` statement).
@@ -263,7 +263,7 @@ NOTE: The complete program from this tutorial is available https://github.com/za
 [[tutorial-eh]]
 === Using LEAF with Exception Handling
 
-And now, we'll write the same program that reads a text file in a buffer and prints it to `std::cout`, this time using exception handling. First, we need to define our exception class hierarchy:
+And now, we'll write the same program that reads a text file in a buffer and prints it to `std::cout`, this time using exceptions to report errors. First, we need to define our exception class hierarchy:
 
 ====
 [source,c++]
@@ -315,20 +315,20 @@ void print_file( char const * file_name )
 {
   std::shared_ptr<FILE> f = file_open( file_name ); <1>
 
-  leaf::preload( e_file_name{file_name} ); <2>
+  auto propagate1 = leaf::preload( e_file_name{file_name} ); <2>
 
   std::string buffer( 1+file_size(*f), '\0' ); <3>
   file_read(*f,&buffer[0],buffer.size()-1);
 
-  auto propagate = leaf::defer([ ] { return e_errno{errno}; } ); <4>
+  auto propagate2 = leaf::defer( [ ] { return e_errno{errno}; } ); <4>
   std::cout << buffer;
   std::cout.flush();
 }
 ----
 <1> `std::shared_ptr<FILE> file_open( char const * file_name)` throws on error.
-<2> `<<preload,preload>>` takes any number of <<e-types,e-type>> objects and prepares them to become associated with the first exception thrown thereafter. The effect is that from this point on, any exception escaping `print_file` will report the file name, in addition to everything else passed to `<<throw_exception,throw_exception>>` explicitly (`e_file_name` is defined as `struct e_file_name { std::string value; }`).
+<2> `<<preload,preload>>` takes any number of <<e-types,e-type>> objects and prepares them to become associated (automatically, at the time the returned object expires) with the first exception thrown thereafter. The effect is that from this point on, any exception escaping `print_file` will report the file name, in addition to everything else passed to `<<throw_exception,throw_exception>>` explicitly (`e_file_name` is defined as `struct e_file_name { std::string value; }`).
 <3> `int file_size( FILE & f )` throws on error.
-<4> `<<defer,defer>>` is similar to `preload`: it prepares an e-type object to become associated with the first exception thrown thereafter, but instead of taking the e-type object itself, `defer` takes a function that returns it. The function is invoked in the returned object`s destructor, at which point it becomes associated with the exception being propagated. Assuming `std::cout` is configured to throw on error, the effect is that those exceptions will have the relevant `errno` associated with them.
+<4> `<<defer,defer>>` is similar to `preload`: it prepares an e-type object to become associated with the first exception thrown thereafter, but instead of taking the e-type object itself, `defer` takes a function that returns it. The function is invoked in the returned object`s destructor, at which point it becomes associated with the exception being propagated. Assuming `std::cout` is configured to throw on error, the effect of this line is that those exceptions will have the relevant `errno` associated with them.
 ====
 
 Finally, let's consider the `main` function, which is able to handle exceptions thrown by `print_file`:
@@ -452,7 +452,7 @@ The formal requirements for e-types are:
 * They must define an accessible data member `value`, and
 * They must be movable, and the move constructor may not throw.
 
-LEAF itself never creates e-objects and only moves—never copies —the e-objects it is given. Therefore, users are free to define any constructors as needed to enforce invariants for their e-types, but the typical case is to simply enclose a `value` in a C-`struct`.
+LEAF itself never creates e-objects and generally only moves the e-objects it is given. Therefore, users are free to define any constructors as needed to enforce invariants for their e-types, but the typical case is to simply enclose a `value` in a C-`struct`.
 
 Various functions in LEAF take a list of e-objects to associate with an `<<error,error>>` value. For example, to indicate an error, a function that returns a `<<result,result>><T>` may use something like:
 
@@ -675,7 +675,7 @@ namespace boost { namespace leaf {
 
 Effects: :: Prints diagnostic information about the <<e-types,e-type>> objects stored in `exp`. The second overload will only print diagnostic information about e-objects stored in `exp` which are associated with the `leaf::<<error,error>>` value `e`.
 
-NOTE: The printing of each individual e-object is done by the rules desgribed <<e-types,here>>.
+NOTE: The printing of each individual e-object is done by the rules described <<e-types,here>>.
 
 '''
 
@@ -749,7 +749,7 @@ namespace boost { namespace leaf {
 
 Objects of class `error` are values that identify a errors across the entire program. They can be copied, moved, assigned to, and compared to other error objects. They occupy as much memory as `unsigned int`, and are as fast.
 
-Whenever an `e...` sequence is passedo `error` functions, these objects are moved into matching storage provided by `<<expect,expect>>` instances and associated with the `error` object, which can later be passed to `<<peek-expect,peek>>` or `<<handle_error-expect,handle_error>>` to retrieve them.
+Whenever an `e...` sequence is passed `error` functions, these objects are moved into matching storage provided by `<<expect,expect>>` instances and associated with the `error` object, which can later be passed to `<<peek-expect,peek>>` or `<<handle_error-expect,handle_error>>` to retrieve them.
 
 '''
 
@@ -759,7 +759,7 @@ Whenever an `e...` sequence is passedo `error` functions, these objects are move
 .#include <boost/leaf/error.hpp>
 [source,c++]
 ----
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   template <class... E>
   explicit error::error( E && ... e ) noexcept;
@@ -779,7 +779,7 @@ Postconditions: :: `*this` is a unique value across the entire program. The user
 .#include <boost/leaf/error.hpp>
 [source,c++]
 ----
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   friend bool operator==( error const & e1, error const & e2 ) noexcept;
 
@@ -796,7 +796,7 @@ Returns: :: `true` if the two values `e1` and `e2` are equal, `false` otherwise.
 .#include <boost/leaf/error.hpp>
 [source,c++]
 ----
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   friend bool operator!=( error const & e1, error const & e2 ) noexcept;
 
@@ -813,7 +813,7 @@ Returns: :: `!(e1==e2)`.
 .#include <boost/leaf/error.hpp>
 [source,c++]
 ----
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   friend std::ostream & operator<<( std::ostream & os, error const & e )
 
@@ -832,7 +832,7 @@ Effects: :: Prints an `unsigned int` value that uniquely identifies the value `e
 [source,c++]
 ----
 
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   class error_capture
   {
@@ -886,7 +886,7 @@ Typical use of `error_capture` objects is to transport e-objects across threads,
 [source,c++]
 ----
 
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   error_capture::error_capture() noexcept;
 
@@ -906,7 +906,7 @@ Postcondition: :: `<<peek-error_capture,peek>><P>(*this,e)` returns `0` for any 
 [source,c++]
 ----
 
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   error_capture::operator bool() const noexcept;
 
@@ -924,7 +924,7 @@ Returns: :: `false` if `*this` is empty, `true` otherwise.
 [source,c++]
 ----
 
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   template <class P>
   decltype(P::value) const * peek( error_capture const & ec ) noexcept;
@@ -943,7 +943,7 @@ Returns: :: If `ec` currently stores an object of type `P`, returns a read-only 
 [source,c++]
 ----
 
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   template <class... M>
   friend bool error_capture::handle_error( error_capture const & ec, M && ... m ) noexcept;
@@ -998,7 +998,7 @@ Assuming `struct e_file_name { std::string value; }` and `struct e_errno { int v
 [source,c++]
 ----
 
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   friend void diagnostic_print( std::ostream & os, error_capture const & ec );
 
@@ -1007,7 +1007,7 @@ namespace boost [ namespace leaf {
 
 Effects: :: Prints diagnostic information about the <<e-types,e-type>> objects stored in `ec`.
 
-NOTE: The printing of each individual e-object is done by the rules desgribed <<e-types,here>>.
+NOTE: The printing of each individual e-object is done by the rules described <<e-types,here>>.
 
 '''
 
@@ -1018,7 +1018,7 @@ NOTE: The printing of each individual e-object is done by the rules desgribed <<
 [source,c++]
 ----
 
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   error error_capture::unload() noexcept;
 
@@ -1037,7 +1037,7 @@ Postcondition: :: `!(*this)`.
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   template <class T>
   result
@@ -1087,7 +1087,7 @@ namespace boost [ namespace leaf {
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   result::result() noexcept;
   result::result( T const & v );
@@ -1117,7 +1117,7 @@ NOTE: A `result` that is in value state converts to `true` in boolean contexts. 
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   result::operator bool() const noexcept;
 
@@ -1134,7 +1134,7 @@ Returns: :: If `*this` was initialized in value state, returns `true`, otherwise
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   T const & result::value() const;
   T & result::value();
@@ -1154,7 +1154,7 @@ Effects: :: If `*this` was initialized in value state, returns a reference to th
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   template <class... E>
   leaf::error result::error( E && ... e ) noexcept;
@@ -1178,7 +1178,7 @@ Effects: ::
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   template <class P,class... E,class T>
   decltype(P::value) const * peek( expect<E...> const & exp, result<T> const & r ) noexcept;
@@ -1200,7 +1200,7 @@ Returns: ::
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   template <class... M,class... E>
   friend bool result::handle_error( expect<E...> & exp, result & r, M && ... m ) noexcept;
@@ -1222,7 +1222,7 @@ Returns: ::
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   template <class... E>
   friend void result::diagnostic_print( std::ostream & os, expect<E...> const & exp, result const & r );
@@ -1244,7 +1244,7 @@ Returns: ::
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   template <class... E>
   friend result result::capture( expect<E...> & exp, result const & r );
@@ -1265,7 +1265,7 @@ Returns: ::
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
-namespace boost [ namespace leaf {
+namespace boost { namespace leaf {
 
   struct bad_result: std::exception { };
 
@@ -1284,32 +1284,35 @@ This exception is thrown by `<<result::value,value>>()`/`<<result::value,operato
 namespace boost { namespace leaf {
 
   template <class... E>
-  void preload( E && ... e ) noexcept;
+  <<unspecified-type>> preload( E && ... e ) noexcept;
 
 } }
 ----
 
-Effects: :: As if `err.propagate(std::forward<E>(e...))`, where `err` is a `leaf::<<error,error>>` value that would compare equal to the error value that will be created the *next* time the `<<error::error,error>>` constructor is invoked.
+Effects: :: All `e...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
+* If a new `leaf::<<error,error>>` value was created (in the calling thread) since it was created, the stored `e...` objects are propagated and become associated with  the _first_ `leaf::error` value created after `preload` was called;
+* Otherwise, the stored `e...` objects are discarded.
 
 '''
 
 === `defer`
+
 [source,c++]
 .#include <boost/leaf/error.hpp>
 ----
 namespace boost { namespace leaf {
 
-  template <class F>
-  <<unspecified-type>> defer( F && f ) noexcept;
+  template <class... F>
+  <<unspecified-type>> defer( F && ... f ) noexcept;
 
 } }
 ----
 
-'''
+Requirements: :: All `f...` objects must be functions that do not throw exceptions, take no arguments and return an <<e-types,e-type>> object.
 
-Requirements: :: `f` must be a function that does not throw exceptions, takes no arguments and returns an <<e-types,e-type>> object.
-
-Effects: :: `f` is moved into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed, it will call `f`, and will associate the returned e-object with  the first `leaf::<<error,error>>` value created after `defer` was called.
+Effects: :: All `f...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
+* If a new `leaf::<<error,error>>` value was created (in the calling thread) since it was created, each of the stored `f...` is called, and the returned <<e-types,e-value>> is propagated and becomes associated with  the _first_ `leaf::error` value created after `defer` was called;
+* Otherwise, the stored `f...` objects are discarded.
 
 '''
 
@@ -1407,7 +1410,7 @@ namespace boost { namespace leaf {
 
 Returns: ::
 * If `auto e = dynamic_cast<leaf::<<error,error>> const *>(&ex)` succeeds, returns `<<peek-expect,peek>><P>(exp,*e)`.
-* Othrewise, it peeks into any <<e-types,e-type>> objects passed to `<<preload,preload>>`.
+* Othrewise, it peeks into any <<e-types,e-type>> objects stored by means of `<<preload,preload>>`.
 
 '''
 
@@ -1593,7 +1596,7 @@ void read_file( FILE * f )
 
 void process_file( char const * name )
 {
-  leaf::preload( e_file_name{name} );
+  auto propagate = leaf::preload( e_file_name{name} );
 
   if( FILE * fp=fopen(name,"rt")) {
     std::shared_ptr<FILE> f(fp,fclose);
@@ -1798,7 +1801,7 @@ int do_work( lua_State * L ) noexcept
   }
   else
   {
-    leaf::preload( e_do_work_error{-42} ); <3>
+    auto propagate = leaf::preload( e_do_work_error{-42} ); <3>
     return luaL_error(L,"do_work_error"); <4>
   }
 }
@@ -1817,7 +1820,7 @@ leaf::result<int> call_lua( lua_State * L )
   lua_getfield( L, LUA_GLOBALSINDEX, "call_do_work" );
   if( int err=lua_pcall(L,0,1,0) ) <1>
   {
-    leaf::preload( e_lua_error_message{lua_tostring(L,1)} ); <2>
+    auto propagate = leaf::preload( e_lua_error_message{lua_tostring(L,1)} ); <2>
     lua_pop(L,1);
     return leaf::error( e_lua_pcall_error{err} );
   }

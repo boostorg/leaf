@@ -36,9 +36,9 @@ f2()
 		f1();
 		BOOST_TEST(false);
 		}
-	catch( leaf::error const & e )
+	catch( std::exception const & ex )
 		{
-		e.propagate( info<2>{2} );
+		leaf::get_error(ex).propagate( info<2>{2} );
 		throw;
 		}
 	}
@@ -61,7 +61,7 @@ f4()
 	catch(
 	my_error const & e )
 		{
-		int c1=0, c2=0, c3=0;
+		int c1=0, c2=0;
 		handle_exception( exp, e,
 			leaf::match<info<1>,info<2>,info<3>,info<4>>( [&c1]( int, int, int, int )
 				{
@@ -73,17 +73,10 @@ f4()
 				BOOST_TEST(i2==2);
 				BOOST_TEST(i4==4);
 				++c2;
-				} ),
-			leaf::match<info<1>,info<4>>( [&c3]( int i1, int i4 )
-				{
-				BOOST_TEST(i1==1);
-				BOOST_TEST(i4==4);
-				++c3;
 				} )
 		);
 		BOOST_TEST(c1==0);
-		BOOST_TEST(c2==1 || dynamic_cast<leaf::error const *>(&e)==0);
-		BOOST_TEST(c3==1 || dynamic_cast<leaf::error const *>(&e)!=0);
+		BOOST_TEST(c2==1);
 		}
 	throw my_error();
 	}
