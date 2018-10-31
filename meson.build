@@ -35,12 +35,12 @@ tests = [
 	'_hpp_preload_test',
 	'_hpp_result_test',
 	'basic_test',
-	'defer_test.0',
 	'defer_test.1',
 	'defer_test.2',
 	'defer_test.3',
 	'defer_test.4',
-	'diagnostic_print_test',
+	'defer_test.5',
+	'diagnostic_output_test',
 	'error_capture_test',
 	'error_test',
 	'exception_capture_test',
@@ -56,7 +56,9 @@ tests = [
 	'preload_test.4',
 	'print_test',
 	'result_capture_test',
-	'result_test',
+	'result_test.1',
+	'result_test.2',
+	'result_test.3',
 	'result_void_capture_test'
 ]
 foreach t : tests

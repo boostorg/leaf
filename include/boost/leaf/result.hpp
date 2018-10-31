@@ -221,9 +221,12 @@ boost
 						return leaf::error(std::forward<E>(e)...);
 					case variant::
 					cap:
+						{
+						error_capture cap = cap_;
 						destroy();
-						(void) new(&err_) leaf::error(cap_.unload());
+						(void) new(&err_) leaf::error(cap.unload());
 						which_ = variant::err;
+						}
 					default:
 						assert(which_==variant::err);
 						return err_.propagate(std::forward<E>(e)...);

@@ -4,43 +4,48 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/result.hpp>
 #include <boost/leaf/expect.hpp>
 #include <boost/leaf/preload.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
 namespace leaf = boost::leaf;
 
-struct info { int value; };
-
-leaf::result<void>
-g1()
+template <int A>
+struct
+info
 	{
-	auto propagate = leaf::defer( [ ] { return info{1}; } );
-	return { };
+	int value;
+	};
+leaf::error
+f0()
+	{
+	auto propagate = leaf::defer( [ ] { return info<0>{0}; } );
+	return leaf::error( info<2>{2} );
 	}
-leaf::result<void>
-g2()
+leaf::error
+f1()
 	{
-	return leaf::error();
+	auto propagate = leaf::defer( [ ] { return info<0>{-1}; }, [ ] { return info<1>{1}; }, [ ] { return info<2>{-1}; } );
+	return f0();
 	}
-leaf::result<void>
-f()
+leaf::error
+f2()
 	{
-	auto propagate = leaf::defer( [ ] { return info{2}; } );
-	LEAF_CHECK(g1());
-	return g2();
+	return f1().propagate( info<4>{4} );
 	}
 int
 main()
 	{
-	leaf::expect<info> exp;
-	leaf::result<void> r = f();
+	leaf::expect<info<0>,info<1>,info<2>,info<3>,info<4>> exp;
+	leaf::error e = f2();
+	BOOST_TEST(!leaf::peek<info<3>>(exp,e));
 	int c=0;
-	BOOST_TEST( handle_error( exp, r,
-		leaf::match<info>( [&c]( int x )
+	BOOST_TEST( handle_error( exp, e,
+		leaf::match<info<1>,info<2>,info<4>>( [&c]( int i1, int i2, int i4 )
 			{
-			BOOST_TEST(x==2);
+			BOOST_TEST(i1==1);
+			BOOST_TEST(i2==2);
+			BOOST_TEST(i4==4);
 			++c;
 			} ) ) );
 	BOOST_TEST(c==1);
