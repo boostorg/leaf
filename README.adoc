@@ -503,20 +503,22 @@ namespace boost { namespace leaf {
     expect() noexcept;
     ~expect() noexcept;
 
-    template <class... M>
-    friend bool handle_error( expect & exp, error const & e, M && ... m ) noexcept;
-
-    friend void diagnostic_print( std::ostream & os, expect const & exp );
-    friend void diagnostic_print( std::ostream & os, expect const & exp, error const & e );
-
-    friend error_capture capture( expect & exp, error const & e );
-
     void propagate() noexcept;
 
+    friend error_capture capture( expect & exp, error const & e );
   };
+
+  template <class... E,class... M>
+  bool handle_error( expect<E...> & exp, error const & e, M && ... m ) noexcept;
 
   template <class P,class... E>
   decltype(P::value) const * peek( expect<E...> const & exp, error const & e ) noexcept;
+
+  template <class... E>
+  void diagnostic_print( std::ostream & os, expect<E...> const & exp );
+
+  template <class... E>
+  void diagnostic_print( std::ostream & os, expect<E...> const & exp, error const & e );
 
   template <class... E,class F>
   <<unspecified-type> match( F && f ) noexcept;
@@ -589,21 +591,41 @@ NOTE: A call to `<<expect::propagate,propagate>>` restores the default behavior 
 
 '''
 
-[[peek-expect]]
-==== `peek`
+[[expect::propagate]]
+==== `propagate`
 
 .#include <boost/leaf/expect.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
 
-  template <class P,class... E>
-  decltype(P::value) const * peek( expect<E...> const & exp, error const & e ) noexcept;
+  template <class... E>
+  void expect<E...>::propagate() noexcept;
 
 } }
 ----
 
-Returns: :: If `exp` currently stores an object of type `P` associated with the `<<error,error>>` value `e`, returns a read-only pointer to that object. Otherwise returns `0`.
+Effects: :: This function can be used to restore the default behavior of `<<expect-dtor,~expect>>` after a successful call to `<<handle_error-expect,handle_error>>`.
+
+'''
+
+[[capture-expect]]
+==== `capture`
+
+.#include <boost/leaf/expect.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class... E>
+  error_capture capture( expect<E...> & exp, error const & e );
+
+} }
+----
+
+Effects: :: Moves all <<e-types,e-objects>> currently stored in `exp` and associated with the `leaf::<<error,error>>` value `e`, into the returned `<<error_capture,error_capture>>` object. The contents of the `error_capture` object is immutable and allocated on the heap.
+
+NOTE: `error_capture` objects are useful for transporting e-objects to a different thread.
 
 '''
 
@@ -636,8 +658,8 @@ See `<<handle_error-expect>>` below.
 ----
 namespace boost { namespace leaf {
 
-  template <class... M>
-  friend bool handle_error( expect & exp, error const & e, M && ... m ) noexcept;
+  template <class... E,class... M>
+  bool handle_error( expect<E...> & exp, error const & e, M && ... m ) noexcept;
 
 } }
 ----
@@ -683,6 +705,24 @@ Assuming `struct e_file_name { std::string value; }` and `struct e_errno { int v
 
 '''
 
+[[peek-expect]]
+==== `peek`
+
+.#include <boost/leaf/expect.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class P,class... E>
+  decltype(P::value) const * peek( expect<E...> const & exp, error const & e ) noexcept;
+
+} }
+----
+
+Returns: :: If `exp` currently stores an object of type `P` associated with the `<<error,error>>` value `e`, returns a read-only pointer to that object. Otherwise returns `0`.
+
+'''
+
 [[diagnostic_print-expect]]
 ==== `diagnostic_print`
 
@@ -703,44 +743,6 @@ namespace boost { namespace leaf {
 Effects: :: Prints diagnostic information about the <<e-types,e-type>> objects stored in `exp`. The second overload will only print diagnostic information about e-objects stored in `exp` which are associated with the `leaf::<<error,error>>` value `e`.
 
 NOTE: The printing of each individual e-object is done by the rules described <<e-types,here>>.
-
-'''
-
-[[capture-expect]]
-==== `capture`
-
-.#include <boost/leaf/expect.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  error_capture capture( expect<E...> & exp, error const & e );
-
-} }
-----
-
-Effects: :: Moves all <<e-types,e-objects>> currently stored in `exp` and associated with the `leaf::<<error,error>>` value `e`, into the returned `<<error_capture,error_capture>>` object. The contents of the `error_capture` object is immutable and allocated on the heap.
-
-NOTE: `error_capture` objects are useful for transporting e-objects to a different thread.
-
-'''
-
-[[expect::propagate]]
-==== `propagate`
-
-.#include <boost/leaf/expect.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  void expect<E...>::propagate() noexcept;
-
-} }
-----
-
-Effects: :: This function can be used to restore the default behavior of `<<expect-dtor,~expect>>` after a successful call to `<<handle_error-expect,handle_error>>`.
 
 '''
 
@@ -887,17 +889,16 @@ namespace boost { namespace leaf {
 
     explicit operator bool() const noexcept;
 
-    template <class... M>
-    friend bool handle_error( error_capture const & ec, M && ... m ) noexcept;
-
-    friend void diagnostic_print( std::ostream & os, error_capture const & ec );
-
     error unload() noexcept;
-
   };
+
+  template <class... M>
+  bool handle_error( error_capture const & ec, M && ... m ) noexcept;
 
   template <class P>
   decltype(P::value) const * peek( error_capture const & ec ) noexcept;
+
+  void diagnostic_print( std::ostream & os, error_capture const & ec );
 
 } }
 
@@ -962,8 +963,8 @@ Returns: :: `false` if `*this` is empty, `true` otherwise.
 
 '''
 
-[[peek-error_capture]]
-==== `peek`
+[[error_capture::unload]]
+==== `unload`
 
 .#include <boost/leaf/error_capture.hpp>
 [source,c++]
@@ -971,13 +972,14 @@ Returns: :: `false` if `*this` is empty, `true` otherwise.
 
 namespace boost { namespace leaf {
 
-  template <class P>
-  decltype(P::value) const * peek( error_capture const & ec ) noexcept;
+  error error_capture::unload() noexcept;
 
 } }
 ----
 
-Returns: :: If `ec` currently stores an object of type `P`, returns a read-only pointer to that object. Otherwise returns `0`.
+Effects: :: The <<e-types>> stored in `*this` are moved into storage provided by `<<expect,expect>>` objects in the calling thread, as if each e-object is passed to the constructor of `<<error,error>>`.
+
+Postcondition: :: `!(*this)`.
 
 '''
 
@@ -1036,6 +1038,25 @@ Assuming `struct e_file_name { std::string value; }` and `struct e_errno { int v
 
 '''
 
+[[peek-error_capture]]
+==== `peek`
+
+.#include <boost/leaf/error_capture.hpp>
+[source,c++]
+----
+
+namespace boost { namespace leaf {
+
+  template <class P>
+  decltype(P::value) const * peek( error_capture const & ec ) noexcept;
+
+} }
+----
+
+Returns: :: If `ec` currently stores an object of type `P`, returns a read-only pointer to that object. Otherwise returns `0`.
+
+'''
+
 [[diagnostic_print-error_capture]]
 ==== `diagnostic_print`
 
@@ -1053,26 +1074,6 @@ namespace boost { namespace leaf {
 Effects: :: Prints diagnostic information about the <<e-types,e-type>> objects stored in `ec`.
 
 NOTE: The printing of each individual e-object is done by the rules described <<e-types,here>>.
-
-'''
-
-[[error_capture::unload]]
-==== `unload`
-
-.#include <boost/leaf/error_capture.hpp>
-[source,c++]
-----
-
-namespace boost { namespace leaf {
-
-  error error_capture::unload() noexcept;
-
-} }
-----
-
-Effects: :: The <<e-types>> stored in `*this` are moved into storage provided by `<<expect,expect>>` objects in the calling thread, as if each e-object is passed to the constructor of `<<error,error>>`.
-
-Postcondition: :: `!(*this)`.
 
 '''
 
@@ -1105,19 +1106,19 @@ namespace boost { namespace leaf {
     template <class... E>
     leaf::error error( E && ... e ) noexcept;
 
-    template <class... M,class... E>
-    friend bool handle_error( expect<E...> & exp, result & r, M && ... m ) noexcept;
-
-    template <class... E>
-    friend void diagnostic_print( std::ostream & os, expect<E...> const & exp, result const & r );
-
     template <class... E>
     friend result capture( expect<E...> & exp, result const & r );
 
  };
 
+  template <class... E,class T,class... M>
+  bool handle_error( expect<E...> & exp, result<T> & r, M && ... m ) noexcept;
+
   template <class P,class... E,class T>
   decltype(P::value) const * peek( expect<E...> const &, result<T> const & ) noexcept;
+
+  template <class... E,class T>
+  friend void diagnostic_print( std::ostream & os, expect<E...> const & exp, result<T> const & r );
 
   struct bad_result: std::exception { };
 
@@ -1220,72 +1221,6 @@ Effects: ::
 
 '''
 
-[[peek-result]]
-==== `peek`
-
-.#include <boost/leaf/result.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class P,class... E,class T>
-  decltype(P::value) const * peek( expect<E...> const & exp, result<T> const & r ) noexcept;
-
-} }
-----
-
-Preconditions: :: `!(*this)`.
-
-Returns: ::
-* If `r` stores an `<<error_capture,error_capture>>` object `cap`, returns `<<peek-error_capture,peek>><P>(cap)`.
-* If `r` stores a `leaf::<<error,error>>` value `err`, returns `<<peek-expect,peek>><P>(exp,err)`.
-
-'''
-
-[[handle_error-result]]
-==== `handle_error`
-
-.#include <boost/leaf/result.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... M,class... E>
-  friend bool result::handle_error( expect<E...> & exp, result & r, M && ... m ) noexcept;
-
-} }
-----
-
-Preconditions: :: `!(*this)`.
-
-Returns: ::
-* If `r` stores an `<<error_capture,error_capture>>` object `cap`, returns `<<handle_error-error_capture,handle_error>><E...>(cap,m...)`.
-* If `r` stores a `leaf::<<error,error>>` value `err`, returns `<<handle_error-expect,handle_error>><E...>(exp,err,m...)`.
-
-'''
-
-[[diagnostic_print-result]]
-==== `diagnostic_print`
-
-.#include <boost/leaf/result.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  friend void result::diagnostic_print( std::ostream & os, expect<E...> const & exp, result const & r );
-
-} }
-----
-
-Preconditions: :: `!(*this)`.
-
-Returns: ::
-* If `r` stores an `<<error_capture,error_capture>>` object `cap`, returns `<<diagnostic_print-error_capture,diagnostic_print>>(os,cap)`.
-* If `r` stores a `leaf::<<error,error>>` value `err`, returns `<<diagnostic_print-expect,diagnostic_print>>(os,exp,err)`.
-
-'''
-
 [[capture-result]]
 ==== `capture`
 
@@ -1306,6 +1241,72 @@ Returns: ::
 * If `*this` is in error state and stores a `leaf::<<error,error>>` value `err`, returns `<<capture-expect,capture>>(exp,err)`.
 
 NOTE: For an example, see <<technique_transport-result,Transporting Errors between Threads using `result<T>`>>.
+
+'''
+
+[[handle_error-result]]
+==== `handle_error`
+
+.#include <boost/leaf/result.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class... E,class T,class... M>
+  friend bool result::handle_error( expect<E...> & exp, result<T> & r, M && ... m ) noexcept;
+
+} }
+----
+
+Preconditions: :: `!r`.
+
+Returns: ::
+* If `r` stores an `<<error_capture,error_capture>>` object `cap`, returns `<<handle_error-error_capture,handle_error>><E...>(cap,m...)`.
+* If `r` stores a `leaf::<<error,error>>` value `err`, returns `<<handle_error-expect,handle_error>><E...>(exp,err,m...)`.
+
+'''
+
+[[peek-result]]
+==== `peek`
+
+.#include <boost/leaf/result.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class P,class... E,class T>
+  decltype(P::value) const * peek( expect<E...> const & exp, result<T> const & r ) noexcept;
+
+} }
+----
+
+Preconditions: :: `!r`.
+
+Returns: ::
+* If `r` stores an `<<error_capture,error_capture>>` object `cap`, returns `<<peek-error_capture,peek>><P>(cap)`.
+* If `r` stores a `leaf::<<error,error>>` value `err`, returns `<<peek-expect,peek>><P>(exp,err)`.
+
+'''
+
+[[diagnostic_print-result]]
+==== `diagnostic_print`
+
+.#include <boost/leaf/result.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class... E,class T>
+  friend void result::diagnostic_print( std::ostream & os, expect<E...> const & exp, result<T> const & r );
+
+} }
+----
+
+Preconditions: :: `!r`.
+
+Returns: ::
+* If `r` stores an `<<error_capture,error_capture>>` object `cap`, returns `<<diagnostic_print-error_capture,diagnostic_print>>(os,cap)`.
+* If `r` stores a `leaf::<<error,error>>` value `err`, returns `<<diagnostic_print-expect,diagnostic_print>>(os,exp,err)`.
 
 '''
 
@@ -1470,83 +1471,6 @@ TIP: Use `LEAF_THROW` to automatically pass the current source location in an in
 
 '''
 
-[[get_error]]
-==== `get_error`
-
-[source,c++]
-.#include <boost/leaf/exception.hpp>
-----
-namespace boost { namespace leaf {
-
-  error get_error( std::exception const & ex ) noexcept;
-
-} }
-----
-
-Returns: ::
-* If `auto e = dynamic_cast<leaf::<<error,error>> const *>(&ex)` succeeds, returns `*e`.
-* Othrewise, it returns an unspecified `leaf::error` value, which is "temporarily" associated with any and all currently unhandled exceptions.
-+
-NOTE: A successful call to `<<handle_exception,handle_exception>>` breaks this association.
-
-'''
-
-[[peek-exception]]
-==== `peek`
-
-[source,c++]
-.#include <boost/leaf/exception.hpp>
-----
-namespace boost { namespace leaf {
-
-  template <class P,class... E>
-  decltype(P::value) const * peek( expect<E...> const & exp, std::exception const & ex ) noexcept;
-
-} }
-----
-
-Effects: :: As if `return leaf::<<peek-expect,peek>><P>( exp, <<get_error,get_error>>(ex) );`
-
-'''
-
-[[handle_exception]]
-==== `handle_exception`
-
-[source,c++]
-.#include <boost/leaf/exception.hpp>
-----
-namespace boost { namespace leaf {
-
-  template <class... M,class... E>
-  void handle_exception( expect<E...> & exp, std::exception const & ex, M && ... m );
-
-} }
-----
-
-Effects: :: Equivalent to: `if( !<<handle_error-expect,handle_error>>( exp, <<get_error,get_error>>(ex), std::forward<M>(m)...) ) throw;`
-
-NOTE: In case the dynamic type of `ex` does not derive from `leaf::error` and the call to `handle_error` succeeds, the association between the `leaf::error` value returned by `<<get_error,get_error>>` and the currently unhandled exceptions is broken.
-
-'''
-
-[[diagnostic_print-exception]]
-==== `diagnostic_print`
-
-[source,c++]
-.#include <boost/leaf/exception.hpp>
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  void diagnostic_print( std::ostream & os, expect<E...> const & exp, std::exception const & ex );
-
-} }
-----
-
-Effects: :: Equivalent to: `<<diagnostic_print-expect,diagnostic_print>>( os, exp, <<get_error,get_error>>(ex) );`
-
-'''
-
 [[capture_exception]]
 ==== `capture_exception`
 
@@ -1594,6 +1518,83 @@ Returns: :: `f.get()`.
 Throws: :: Any exception thrown by `f.get()`. If the future function was launched using `<<capture_exception,capture_exception>><E...>`, all `E...` type <<e-types,e-objects>> captured in the worker thread are transported to the calling thread.
 
 NOTE: To store and to access the transported <<e-types,e-objects>>, the calling thread must provide a suitable `<<expect,expect>>` object.
+
+'''
+
+[[get_error]]
+==== `get_error`
+
+[source,c++]
+.#include <boost/leaf/exception.hpp>
+----
+namespace boost { namespace leaf {
+
+  error get_error( std::exception const & ex ) noexcept;
+
+} }
+----
+
+Returns: ::
+* If `auto e = dynamic_cast<leaf::<<error,error>> const *>(&ex)` succeeds, returns `*e`.
+* Othrewise, it returns an unspecified `leaf::error` value, which is "temporarily" associated with any and all currently unhandled exceptions.
++
+NOTE: A successful call to `<<handle_exception,handle_exception>>` breaks this association.
+
+'''
+
+[[handle_exception]]
+==== `handle_exception`
+
+[source,c++]
+.#include <boost/leaf/exception.hpp>
+----
+namespace boost { namespace leaf {
+
+  template <class... M,class... E>
+  void handle_exception( expect<E...> & exp, std::exception const & ex, M && ... m );
+
+} }
+----
+
+Effects: :: Equivalent to: `if( !<<handle_error-expect,handle_error>>( exp, <<get_error,get_error>>(ex), std::forward<M>(m)...) ) throw;`
+
+NOTE: In case the dynamic type of `ex` does not derive from `leaf::error` and the call to `handle_error` succeeds, the association between the `leaf::error` value returned by `<<get_error,get_error>>` and the currently unhandled exceptions is broken.
+
+'''
+
+[[peek-exception]]
+==== `peek`
+
+[source,c++]
+.#include <boost/leaf/exception.hpp>
+----
+namespace boost { namespace leaf {
+
+  template <class P,class... E>
+  decltype(P::value) const * peek( expect<E...> const & exp, std::exception const & ex ) noexcept;
+
+} }
+----
+
+Effects: :: As if `return leaf::<<peek-expect,peek>><P>( exp, <<get_error,get_error>>(ex) );`
+
+'''
+
+[[diagnostic_print-exception]]
+==== `diagnostic_print`
+
+[source,c++]
+.#include <boost/leaf/exception.hpp>
+----
+namespace boost { namespace leaf {
+
+  template <class... E>
+  void diagnostic_print( std::ostream & os, expect<E...> const & exp, std::exception const & ex );
+
+} }
+----
+
+Effects: :: Equivalent to: `<<diagnostic_print-expect,diagnostic_print>>( os, exp, <<get_error,get_error>>(ex) );`
 
 '''
 

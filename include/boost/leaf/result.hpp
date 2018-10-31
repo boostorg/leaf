@@ -27,15 +27,27 @@ boost
 		template <class... E>
 		class expect;
 
+		template <class... E,class T,class... M>
+		bool handle_error( expect<E...> &, result<T> &, M && ... ) noexcept;
+
 		template <class P,class... E,class T>
 		decltype(P::value) const * peek( expect<E...> const &, result<T> const & ) noexcept;
+
+		template <class... E,class T>
+		void diagnostic_print( std::ostream &, expect<E...> const &, result<T> const & );
 		////////////////////////////////////////
 		template <class T>
 		class
 		result
 			{
-			template <class P,class... E,class U>
-			friend decltype(P::value) const * leaf::peek( expect<E...> const &, result<U> const & ) noexcept;
+			template <class... E,class T_,class... M>
+			friend bool leaf::handle_error( expect<E...> &, result<T_> &, M && ... ) noexcept;
+
+			template <class P,class... E,class T_>
+			friend decltype(P::value) const * leaf::peek( expect<E...> const &, result<T_> const & ) noexcept;
+
+			template <class... E,class T_>
+			friend void leaf::diagnostic_print( std::ostream &, expect<E...> const &, result<T_> const & );
 
 			union
 				{
@@ -227,34 +239,6 @@ boost
 				else
 					return r;
 				}
-			template <class... M,class... E>
-			friend
-			bool
-			handle_error( expect<E...> & exp, result & r, M && ... m ) noexcept
-				{
-				assert(!r);
-				if( r.which_==result::variant::err )
-					return handle_error(exp,r.err_,m...);
-				else
-					{
-					assert(r.which_==result::variant::cap);
-					return handle_error(r.cap_,m...);
-					}
-				}
-			template <class... E>
-			friend
-			void
-			diagnostic_print( std::ostream & os, expect<E...> const & exp, result const & r )
-				{
-				assert(!r);
-				if( r.which_==result::variant::err )
-					return diagnostic_print(os,exp,r.err_);
-				else
-					{
-					assert(r.which_==result::variant::cap);
-					return diagnostic_print(os,r.cap_);
-					}
-				}
 			};
 		////////////////////////////////////////
 		template <>
@@ -262,8 +246,14 @@ boost
 		result<void>:
 			result<bool>
 			{
+			template <class... E,class T,class... M>
+			friend bool leaf::handle_error( expect<E...> &, result<T> &, M && ... ) noexcept;
+
 			template <class P,class... E,class T>
 			friend decltype(P::value) const * leaf::peek( expect<E...> const &, result<T> const & ) noexcept;
+
+			template <class... E,class T>
+			friend void leaf::diagnostic_print( std::ostream &, expect<E...> const &, result<T> const & );
 
 			typedef result<bool> base;
 
@@ -319,6 +309,19 @@ boost
 				}
 			};
 		////////////////////////////////////////
+		template <class... E,class T,class... M>
+		bool
+		handle_error( expect<E...> & exp, result<T> & r, M && ... m ) noexcept
+			{
+			assert(!r);
+			if( r.which_==result<T>::variant::err )
+				return handle_error(exp,r.err_,m...);
+			else
+				{
+				assert(r.which_==result<T>::variant::cap);
+				return handle_error(r.cap_,m...);
+				}
+			}
 		template <class P,class... E,class T>
 		decltype(P::value) const *
 		peek( expect<E...> const & exp, result<T> const & r ) noexcept
@@ -330,6 +333,19 @@ boost
 				{
 				assert(r.which_==result<T>::variant::cap);
 				return peek<P>(r.cap_);
+				}
+			}
+		template <class... E,class T>
+		void
+		diagnostic_print( std::ostream & os, expect<E...> const & exp, result<T> const & r )
+			{
+			assert(!r);
+			if( r.which_==result<T>::variant::err )
+				return diagnostic_print(os,exp,r.err_);
+			else
+				{
+				assert(r.which_==result<T>::variant::cap);
+				return diagnostic_print(os,r.cap_);
 				}
 			}
 		}

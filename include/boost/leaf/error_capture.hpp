@@ -19,8 +19,13 @@ boost
 		{
 		class error_capture;
 
+		template <class... M>
+		bool handle_error( error_capture const &, M && ... ) noexcept;
+
 		template <class P>
 		decltype(P::value) const * peek( error_capture const & ) noexcept;
+
+		void diagnostic_print( std::ostream &, error_capture const & );
 		////////////////////////////////////////
 		namespace
 		leaf_detail
@@ -114,8 +119,13 @@ boost
 		class
 		error_capture
 			{
+			template <class... M>
+			friend bool leaf::handle_error( error_capture const &, M && ... ) noexcept;
+
 			template <class P>
 			friend decltype(P::value) const * leaf::peek( error_capture const & ) noexcept;
+
+			friend void leaf::diagnostic_print( std::ostream &, error_capture const & );
 
 			class
 			dynamic_store
@@ -278,29 +288,21 @@ boost
 					}
 				return e_;
 				}
-			template <class... M>
-			friend
-			bool
-			handle_error( error_capture const & e, M && ... m ) noexcept
-				{
-				if( e )
-					{
-					bool matched = false;
-					{ using _ = int[ ]; (void) _ { 42, e.unwrap(m,matched)... }; }
-					if( matched )
-						return true;
-					}
-				return false;
-				}
-			friend
-			void
-			diagnostic_print( std::ostream & os, error_capture const & e )
-				{
-				if( e )
-					e.s_->diagnostic_print(os);
-				}
 			};
 		////////////////////////////////////////
+		template <class... M>
+		bool
+		handle_error( error_capture const & e, M && ... m ) noexcept
+			{
+			if( e )
+				{
+				bool matched = false;
+				{ using _ = int[ ]; (void) _ { 42, e.unwrap(m,matched)... }; }
+				if( matched )
+					return true;
+				}
+			return false;
+			}
 		template <class P>
 		decltype(P::value) const *
 		peek( error_capture const & e ) noexcept
@@ -310,6 +312,13 @@ boost
 					if( opt->has_value() )
 						return &opt->value().value;
 			return 0;
+			}
+		inline
+		void
+		diagnostic_print( std::ostream & os, error_capture const & e )
+			{
+			if( e )
+				e.s_->diagnostic_print(os);
 			}
 		}
 	}

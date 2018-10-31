@@ -133,8 +133,17 @@ boost
 		template <class... E>
 		class expect;
 
+		template <class... E,class... M>
+		bool handle_error( expect<E...> &, error const &, M && ... ) noexcept;
+
 		template <class P,class... E>
 		decltype(P::value) const * peek( expect<E...> const &, error const & ) noexcept;
+
+		template <class... E>
+		void diagnostic_print( std::ostream &, expect<E...> const & );
+
+		template <class... E>
+		void diagnostic_print( std::ostream &, expect<E...> const &, error const & );
 
 		template <class... E>
 		class
@@ -142,8 +151,17 @@ boost
 			{
 			friend class error;
 
+			template <class... E_,class... M>
+			friend bool leaf::handle_error( expect<E_...> &, error const &, M && ... ) noexcept;
+
 			template <class P,class... E_>
 			friend decltype(P::value) const * leaf::peek( expect<E_...> const &, error const & ) noexcept;
+
+			template <class... E_>
+			friend void leaf::diagnostic_print( std::ostream &, expect<E_...> const & );
+
+			template <class... E_>
+			friend void leaf::diagnostic_print( std::ostream &, expect<E_...> const &, error const & );
 
 			expect( expect const & ) = delete;
 			expect & operator=( expect const & ) = delete;
@@ -179,29 +197,6 @@ boost
 				if( !propagate_ )
 					leaf_detail::tuple_for_each<sizeof...(E),decltype(s_)>::clear(s_);
 				}
-			template <class... M>
-			friend
-			bool
-			handle_error( expect & exp, error const & e, M && ... m ) noexcept
-				{
-				bool matched = false;
-				{ using _ = int[ ]; (void) _ { 42, exp.unwrap(m,e,matched)... }; }
-				if( matched )
-					exp.propagate_ = false;
-				return matched;
-				}
-			friend
-			void
-			diagnostic_print( std::ostream & os, expect const & exp )
-				{
-				leaf_detail::tuple_for_each<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_);
-				}
-			friend
-			void
-			diagnostic_print( std::ostream & os, expect const & exp, error const & e )
-				{
-				leaf_detail::tuple_for_each<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_,e);
-				}
 			friend
 			typename dependent_type<expect>::error_capture
 			capture( expect & exp, error const & e )
@@ -220,6 +215,16 @@ boost
 				propagate_ = true;
 				}
 			};
+		template <class... E,class... M>
+		bool
+		handle_error( expect<E...> & exp, error const & e, M && ... m ) noexcept
+			{
+			bool matched = false;
+			{ using _ = int[ ]; (void) _ { 42, exp.unwrap(m,e,matched)... }; }
+			if( matched )
+				exp.propagate_ = false;
+			return matched;
+			}
 		template <class P,class... E>
 		decltype(P::value) const *
 		peek( expect<E...> const & exp, error const & e ) noexcept
@@ -232,6 +237,18 @@ boost
 					return &x.v.value;
 				}
 			return 0;
+			}
+		template <class... E>
+		void
+		diagnostic_print( std::ostream & os, expect<E...> const & exp )
+			{
+			leaf_detail::tuple_for_each<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_);
+			}
+		template <class... E>
+		void
+		diagnostic_print( std::ostream & os, expect<E...> const & exp, error const & e )
+			{
+			leaf_detail::tuple_for_each<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_,e);
 			}
 		}
 	}
