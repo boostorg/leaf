@@ -1333,14 +1333,16 @@ namespace boost { namespace leaf {
   template <class... E,class Ex>
   [[noreturn]] void throw_exception( Ex && ex, error const & err, E && ... e );
 
+  error get_error( std::exception const & ex ) noexcept;
+
   template <class P,class... E>
-  decltype(P::value) const * peek( expect<E...> const & exp, std::exception const & e ) noexcept;
+  decltype(P::value) const * peek( expect<E...> const & exp, std::exception const & ex ) noexcept;
 
   template <class... M,class... E>
-  void handle_exception( expect<E...> & exp, std::exception const & e, M && ... m );
+  void handle_exception( expect<E...> & exp, std::exception const & ex, M && ... m );
 
   template <class... E>
-  void diagnostic_print( std::ostream & os, expect<E...> const & exp, std::exception const & e );
+  void diagnostic_print( std::ostream & os, expect<E...> const & exp, std::exception const & ex );
 
 } }
 ----
@@ -1349,7 +1351,7 @@ namespace boost { namespace leaf {
 namespace boost { namespace leaf {
 
   template <class... E,class F>
-  leaf_detail::exception_trap<F,E...> capture_exception( F && f ) noexcept;
+  <<unspecified-type>> capture_exception( F && f ) noexcept;
 
   template <class Future>
   decltype(std::declval<Future>().get()) get( Future && f );
@@ -1394,6 +1396,27 @@ TIP: Use `LEAF_THROW` to automatically pass the current source location in an in
 
 '''
 
+[[get_error]]
+==== `get_error`
+
+[source,c++]
+.#include <boost/leaf/exception.hpp>
+----
+namespace boost { namespace leaf {
+
+  error get_error( std::exception const & ex ) noexcept;
+
+} }
+----
+
+Returns: ::
+* If `auto e = dynamic_cast<leaf::<<error,error>> const *>(&ex)` succeeds, returns `*e`.
+* Othrewise, it returns an unspecified `leaf::error` value, which is "temporarily" associated with any and all currently unhandled exceptions.
++
+NOTE: A successful call to `<<handle_exception,handle_exception>>` breaks this association.
+
+'''
+
 [[peek-exception]]
 ==== `peek`
 
@@ -1408,9 +1431,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-Returns: ::
-* If `auto e = dynamic_cast<leaf::<<error,error>> const *>(&ex)` succeeds, returns `<<peek-expect,peek>><P>(exp,*e)`.
-* Othrewise, it peeks into any <<e-types,e-type>> objects stored by means of `<<preload,preload>>`.
+Effects: :: As if `return leaf::<<peek-expect,peek>><P>( exp, <<get_error,get_error>>(ex) );`
 
 '''
 
@@ -1423,10 +1444,14 @@ Returns: ::
 namespace boost { namespace leaf {
 
   template <class... M,class... E>
-  void handle_exception( expect<E...> & exp, std::exception const & e, M && ... m );
+  void handle_exception( expect<E...> & exp, std::exception const & ex, M && ... m );
 
 } }
 ----
+
+Effects: :: Equivalent to: `if( !<<handle_error-expect,handle_error>>( exp, <<get_error,get_error>>(ex), std::forward<M>(m)...) ) throw;`
+
+NOTE: In case the dynamic type of `ex` does not derive from `leaf::error` and the call to `handle_error` succeeds, the association between the `leaf::error` value returned by `<<get_error,get_error>>` and the currently unhandled exceptions is broken.
 
 '''
 
@@ -1439,10 +1464,12 @@ namespace boost { namespace leaf {
 namespace boost { namespace leaf {
 
   template <class... E>
-  void diagnostic_print( std::ostream & os, expect<E...> const & exp, std::exception const & e );
+  void diagnostic_print( std::ostream & os, expect<E...> const & exp, std::exception const & ex );
 
 } }
 ----
+
+Effects: :: Equivalent to: `<<diagnostic_print-expect,diagnostic_print>>( os, exp, <<get_error,get_error>>(ex) );`
 
 '''
 
@@ -1455,14 +1482,22 @@ namespace boost { namespace leaf {
 namespace boost { namespace leaf {
 
   template <class... E,class F>
-  leaf_detail::exception_trap<F,E...> capture_exception( F && f ) noexcept;
+  <<unspecified-type>> capture_exception( F && f ) noexcept;
 
 } }
 ----
 
 '''
 
-[[get-capture_exception]]
+Requirements: :: `F` must be a function type.
+
+Returns: :: A function of unspecified type which wraps `f` and, when called, forwards all its arguments to `f`, capturing the specified `E...` <<e-types>> in case it throws.
+
+NOTE: The `capture_exception` function is designed for use with `<<get,get>>`, to effectively transport <<e-types,e-objects>> across thread boundaries.
+
+'''
+
+[[get]]
 ==== `get`
 
 [source,c++]
@@ -1475,6 +1510,14 @@ namespace boost { namespace leaf {
 
 } }
 ----
+
+Requirements: :: `Future` must be a `std::future` or other similar type used to recover future values by a member function `get()`.
+
+Returns: :: `f.get()`.
+
+Throws: :: Any exception thrown by `f.get()`. If the future function was launched using `<<capture_exception,capture_exception>><E...>`, all `E...` type <<e-types,e-objects>> captured in the worker thread are transported to the calling thread.
+
+NOTE: To store and to access the transported <<e-types,e-objects>>, the calling thread must provide a suitable `<<expect,expect>>` object.
 
 '''
 
@@ -1713,7 +1756,7 @@ What makes `<<preload,preload>>` and `<<defer,defer>>` useful (see <<technique_p
 
 But what if we need to include some e-object conditionally? When using excption handling, it would be nice to be able to do this in a `catch` statement which selectively augments passing exceptions.
 
-The correct way to do this with LEAF is to use two `catch` statements:
+LEAF supports the following approach, assuming all exceptions derive from `std::exception`:
 
 [source,c++]
 ----
@@ -1723,23 +1766,17 @@ try
   function_that_throws();
   ....
 }
-catch( leaf::error e )
+catch( std::exception const & e )
 {
   if( condition )
-    e.propagate( e_this{....}, e_that{....} );
-  throw;
-}
-catch(...)
-{
-  if( condition )
-    leaf::preload( e_this{....}, e_that{....} );
+    leaf::get_error(e).propagate( e_this{....}, e_that{....} );
   throw;
 }
 ----
 
-The reason two `catch` statements are necessary is that if the exception we're augmenting was thrown using `<<throw_exception,throw_exception>>`, it includes a `leaf::error` sub-object, so we can safely catch it by that type, which guarantees that the e-objects we're propagating will definitely be associated with that and only with that exception object.
+The reason we need to use `<<get_error,get_error>>` is that not all exceptions have a `leaf::<<error,error>>` value associated with them. If the exception we're augmenting was thrown using `<<throw_exception,throw_exception>>`, it includes a `leaf::error` sub-object, and in this case `get_error` will return that `leaf::error` value. Also, such exceptions can be intercepted by `catch( error e )` if needed.
 
-The `catch(...)` is designed to work with exceptions which were not thrown by `throw_exception` and therefore do not carry a `leaf::error` value. Remember that `preload` associates the e-objects it is given with the first `leaf::error` value that will be created in the future. The result is that in this case the association is not with a specific exception object, but rather with any and all exception objects that pass through, until `<<handle_exception,handle_exception>>` is called. If imperfect, this is the best that can be done in this case.
+But if the caught exception was not thrown by `throw_exception` (and therefore doesn't derive from `leaf::error`), `get_error` returns an unspecified `leaf::error` value, which is temporarily associated with any and all current exceptions, until successfully handled by `<<handle_exception,handle_exception>>`. While this association is imperfect, because it does not pertain to a specific exception object, it is the best that can be done in this case.
 
 '''
 
