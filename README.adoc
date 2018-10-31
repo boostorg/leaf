@@ -518,6 +518,12 @@ namespace boost { namespace leaf {
   template <class P,class... E>
   decltype(P::value) const * peek( expect<E...> const & exp, error const & e ) noexcept;
 
+  template <class... E,class F>
+  <<unspecified-type> match( F && f ) noexcept;
+
+  template <class... E>
+  <<unspecified-type> match() noexcept;
+
 } }
 ----
 ====
@@ -579,7 +585,7 @@ namespace boost { namespace leaf {
 
 Effects: :: By default, each stored <<e-types,e-object>> is moved to a corresponding slot in other existing `expect` instances according to the rules described `<<expect,here>>`, but if a call to `<<handle_error-expect,handle_error>>` for `*this` has succeeded, all objects currently stored in `*this` are discarded.
 
-NOTE: A call to `<<propagate,propagate>>` restores the default behavior of `~expect` after a successful call to `handle_error`.
+NOTE: A call to `<<expect::propagate,propagate>>` restores the default behavior of `~expect` after a successful call to `handle_error`.
 
 '''
 
@@ -598,6 +604,27 @@ namespace boost { namespace leaf {
 ----
 
 Returns: :: If `exp` currently stores an object of type `P` associated with the `<<error,error>>` value `e`, returns a read-only pointer to that object. Otherwise returns `0`.
+
+'''
+
+[[match]]
+==== `match`
+
+.#include <boost/leaf/expect.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class... E,class F>
+  <<unspecified-type> match( F && f ) noexcept;
+
+  template <class... E>
+  <<unspecified-type> match() noexcept;
+
+} }
+----
+
+See `<<handle_error-expect>>` below.
 
 '''
 
@@ -623,7 +650,7 @@ If a complete match is found among `m...`:
 +
 --
 * Its function is called with the `.value` members of the entire set of matching e-objects from `exp` (the function may not modify those values);
-* `exp` is marked so that `<<expect_dtor,~expect>>` will destroy all of the stored e-objects (this can be undone by a later call to `<<propagate,propagate>>`);
+* `exp` is marked so that `<<expect-dtor,~expect>>` will destroy all of the stored e-objects (this can be undone by a later call to `<<expect::propagate,propagate>>`);
 * `handle_error` returns true.
 --
 +
@@ -770,6 +797,24 @@ namespace boost { namespace leaf {
 Effects: :: Each of the `e...` objects is either moved into the corresponding storage provided by `expect` instances or discarded. See `<<expect,expect>>`.
 
 Postconditions: :: `*this` is a unique value across the entire program. The user may create any number of other `error` values that compare equal to `*this`, by copy, move or assignment, just like with any other value type.
+
+'''
+
+[[error::propagate]]
+==== `propagate`
+
+.#include <boost/leaf/error.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+    template <class... E>
+    error error::propagate( E && ... e ) const noexcept;
+
+} }
+----
+
+Effects: :: Each of the `e...` objects is either moved into the corresponding storage provided by `expect` instances and associated with `*this`; or discarded. See `<<expect,expect>>`.
 
 '''
 
@@ -1292,7 +1337,7 @@ This exception is thrown by `<<result::value,value>>()`/`<<result::value,operato
 
 '''
 
-[[LEAF_AUTO]]
+[[LEAF_CHECK]]
 ==== `LEAF_CHECK`
 
 .#include <boost/leaf/result.hpp>
@@ -2043,7 +2088,7 @@ std::future<task_result> launch_task()
 }
 ----
 
-Later, instead of using `std::future::get`, we use `leaf::<<get-capture_exception,get>>`, then catch exceptions as if the function was called locally:
+Later, instead of using `std::future::get`, we use `leaf::<<get,get>>`, then catch exceptions as if the function was called locally:
 
 [source,c++]
 ----
