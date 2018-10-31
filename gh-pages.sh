@@ -1,5 +1,5 @@
 set -e
-asciidoctor README.adoc -o index1.html
+asciidoctor README.adoc -o index1.html -a source-highlighter=coderay
 git checkout gh-pages
 rm -f index.html
 mv index1.html index.html
