@@ -42,9 +42,9 @@ boost
 			}
 		template <class... E>
 		void
-		diagnostic_print( std::ostream & os, expect<E...> const & exp, std::exception const & ex )
+		diagnostic_output( std::ostream & os, expect<E...> const & exp, std::exception const & ex )
 			{
-			diagnostic_print(os,exp,get_error(ex));
+			diagnostic_output(os,exp,get_error(ex));
 			}
 		}
 	}

@@ -232,7 +232,7 @@ int main( int argc, char const * argv[ ] )
 
       default:
         std::cerr << "Unknown error code " << int(ec) << ", cryptic information follows." << std::endl; <7>
-        diagnostic_print(std::cerr,exp,r);
+        diagnostic_output(std::cerr,exp,r);
         return 5;
     }
   }
@@ -405,7 +405,7 @@ int main( int argc, char const * argv[ ] )
   catch(...) <5>
   {
     std::cerr << "Unknown error, cryptic information follows." << std::endl; 
-    current_exception_diagnostic_print(std::cerr,exp);
+    current_exception_diagnostic_output(std::cerr,exp);
     return 5;
   }
 }
@@ -463,9 +463,9 @@ return leaf::error( e_error_code{42}, e_input_name{n1}, e_output_name{n2} );
 
 *Diagnostic Information*
 
-LEAF will attempt to print e-objects in various `diagnostic_print` overloads it defines. It will first attempt to use `operator<<` overload that takes the enclosing `struct`. If such overload does not exist, the fallback is to attempt to use `operator<<` overload that takes the `.value`. If that also doesn't exist, LEAF is unable to print values of that particular e-type (this is permissible, not an error).
+LEAF will attempt to print e-objects in various `diagnostic_output` overloads it defines. It will first attempt to use `operator<<` overload that takes the enclosing `struct`. If such overload does not exist, the fallback is to attempt to use `operator<<` overload that takes the `.value`. If that also doesn't exist, LEAF is unable to print values of that particular e-type (this is permissible, not an error).
 
-The `diagnostic_print` functions in LEAF can use the e-types defined in the snippet above by default, because `int` and `std::string` values are printable. But even with printable values, the user may still want to overload `operator<<` for the enclosing `struct`, e.g.:
+The `diagnostic_output` functions in LEAF can use the e-types defined in the snippet above by default, because `int` and `std::string` values are printable. But even with printable values, the user may still want to overload `operator<<` for the enclosing `struct`, e.g.:
 
 [source,c++]
 ----
@@ -480,9 +480,9 @@ struct e_errno
 };
 ----
 
-The `e_errno` type above is designed to hold `errno` values. The defined `operator<<` overload will automatically include the output from `strerror` when `e_errno` values are printed by `diagnostic_print` overloads (LEAF defines `e_errno` in `<boost/leaf/common.hpp>`, together with other commonly-used e-types).
+The `e_errno` type above is designed to hold `errno` values. The defined `operator<<` overload will automatically include the output from `strerror` when `e_errno` values are printed by `diagnostic_output` overloads (LEAF defines `e_errno` in `<boost/leaf/common.hpp>`, together with other commonly-used e-types).
 
-TIP: The output from `diagnostic_print` overloads is developer-friendly but not user-friendly. Therefore, `operator<<` overloads for e-types should only print technical information in English, and should not attempt to localize strings or to format a message. Formatting a localized user-friendly message should be done at the time individual errors are handled.
+TIP: The output from `diagnostic_output` overloads is developer-friendly but not user-friendly. Therefore, `operator<<` overloads for e-types should only print technical information in English, and should not attempt to localize strings or to format a message. Formatting a localized user-friendly message should be done at the time individual errors are handled.
 
 '''
 
@@ -515,10 +515,10 @@ namespace boost { namespace leaf {
   decltype(P::value) const * peek( expect<E...> const & exp, error const & e ) noexcept;
 
   template <class... E>
-  void diagnostic_print( std::ostream & os, expect<E...> const & exp );
+  void diagnostic_output( std::ostream & os, expect<E...> const & exp );
 
   template <class... E>
-  void diagnostic_print( std::ostream & os, expect<E...> const & exp, error const & e );
+  void diagnostic_output( std::ostream & os, expect<E...> const & exp, error const & e );
 
   template <class... E,class F>
   <<unspecified-type> match( F && f ) noexcept;
@@ -723,8 +723,8 @@ Returns: :: If `exp` currently stores an object of type `P` associated with the 
 
 '''
 
-[[diagnostic_print-expect]]
-==== `diagnostic_print`
+[[diagnostic_output-expect]]
+==== `diagnostic_output`
 
 .#include <boost/leaf/expect.hpp>
 [source,c++]
@@ -732,10 +732,10 @@ Returns: :: If `exp` currently stores an object of type `P` associated with the 
 namespace boost { namespace leaf {
 
   template <class... E>
-  void diagnostic_print( std::ostream & os, expect<E...> const & exp );
+  void diagnostic_output( std::ostream & os, expect<E...> const & exp );
 
   template <class... E>
-  void diagnostic_print( std::ostream & os, expect<E...> const & exp, error const & e );
+  void diagnostic_output( std::ostream & os, expect<E...> const & exp, error const & e );
 
 } }
 ----
@@ -898,7 +898,7 @@ namespace boost { namespace leaf {
   template <class P>
   decltype(P::value) const * peek( error_capture const & ec ) noexcept;
 
-  void diagnostic_print( std::ostream & os, error_capture const & ec );
+  void diagnostic_output( std::ostream & os, error_capture const & ec );
 
 } }
 
@@ -1057,8 +1057,8 @@ Returns: :: If `ec` currently stores an object of type `P`, returns a read-only 
 
 '''
 
-[[diagnostic_print-error_capture]]
-==== `diagnostic_print`
+[[diagnostic_output-error_capture]]
+==== `diagnostic_output`
 
 .#include <boost/leaf/error_capture.hpp>
 [source,c++]
@@ -1066,7 +1066,7 @@ Returns: :: If `ec` currently stores an object of type `P`, returns a read-only 
 
 namespace boost { namespace leaf {
 
-  friend void diagnostic_print( std::ostream & os, error_capture const & ec );
+  friend void diagnostic_output( std::ostream & os, error_capture const & ec );
 
 } }
 ----
@@ -1118,7 +1118,7 @@ namespace boost { namespace leaf {
   decltype(P::value) const * peek( expect<E...> const &, result<T> const & ) noexcept;
 
   template <class... E,class T>
-  friend void diagnostic_print( std::ostream & os, expect<E...> const & exp, result<T> const & r );
+  friend void diagnostic_output( std::ostream & os, expect<E...> const & exp, result<T> const & r );
 
   struct bad_result: std::exception { };
 
@@ -1288,8 +1288,8 @@ Returns: ::
 
 '''
 
-[[diagnostic_print-result]]
-==== `diagnostic_print`
+[[diagnostic_output-result]]
+==== `diagnostic_output`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
@@ -1297,7 +1297,7 @@ Returns: ::
 namespace boost { namespace leaf {
 
   template <class... E,class T>
-  friend void result::diagnostic_print( std::ostream & os, expect<E...> const & exp, result<T> const & r );
+  friend void result::diagnostic_output( std::ostream & os, expect<E...> const & exp, result<T> const & r );
 
 } }
 ----
@@ -1305,8 +1305,8 @@ namespace boost { namespace leaf {
 Preconditions: :: `!r`.
 
 Returns: ::
-* If `r` stores an `<<error_capture,error_capture>>` object `cap`, returns `<<diagnostic_print-error_capture,diagnostic_print>>(os,cap)`.
-* If `r` stores a `leaf::<<error,error>>` value `err`, returns `<<diagnostic_print-expect,diagnostic_print>>(os,exp,err)`.
+* If `r` stores an `<<error_capture,error_capture>>` object `cap`, returns `<<diagnostic_output-error_capture,diagnostic_output>>(os,cap)`.
+* If `r` stores a `leaf::<<error,error>>` value `err`, returns `<<diagnostic_output-expect,diagnostic_output>>(os,exp,err)`.
 
 '''
 
@@ -1417,7 +1417,7 @@ namespace boost { namespace leaf {
   void handle_exception( expect<E...> & exp, std::exception const & ex, M && ... m );
 
   template <class... E>
-  void diagnostic_print( std::ostream & os, expect<E...> const & exp, std::exception const & ex );
+  void diagnostic_output( std::ostream & os, expect<E...> const & exp, std::exception const & ex );
 
 } }
 ----
@@ -1580,8 +1580,8 @@ Effects: :: As if `return leaf::<<peek-expect,peek>><P>( exp, <<get_error,get_er
 
 '''
 
-[[diagnostic_print-exception]]
-==== `diagnostic_print`
+[[diagnostic_output-exception]]
+==== `diagnostic_output`
 
 [source,c++]
 .#include <boost/leaf/exception.hpp>
@@ -1589,12 +1589,12 @@ Effects: :: As if `return leaf::<<peek-expect,peek>><P>( exp, <<get_error,get_er
 namespace boost { namespace leaf {
 
   template <class... E>
-  void diagnostic_print( std::ostream & os, expect<E...> const & exp, std::exception const & ex );
+  void diagnostic_output( std::ostream & os, expect<E...> const & exp, std::exception const & ex );
 
 } }
 ----
 
-Effects: :: Equivalent to: `<<diagnostic_print-expect,diagnostic_print>>( os, exp, <<get_error,get_error>>(ex) );`
+Effects: :: Equivalent to: `<<diagnostic_output-expect,diagnostic_output>>( os, exp, <<get_error,get_error>>(ex) );`
 
 '''
 
@@ -1647,8 +1647,8 @@ This header defines some common <<e-types,e-type>> objects which can be used dir
 +
 WARNING: The passed value is stored as a C string, so you should only pass string literals for `value`.
 - When a file operation fails, you could use `e_file_name` to store the name of the file.
-- `e_errno` is suitable to capture `errno`. `e_errno` objects use `strerror` to convert the `errno` code to a friendlier error message when `<<diagnostic_print-expect,diagnostic_print>>` is invoked.
-- The `LEAF_SOURCE_LOCATION` macro captures `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `e_source_location` object.  When `<<diagnostic_print-expect,diagnostic_print>>` is invoked, all three items are printed.
+- `e_errno` is suitable to capture `errno`. `e_errno` objects use `strerror` to convert the `errno` code to a friendlier error message when `<<diagnostic_output-expect,diagnostic_output>>` is invoked.
+- The `LEAF_SOURCE_LOCATION` macro captures `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `e_source_location` object.  When `<<diagnostic_output-expect,diagnostic_output>>` is invoked, all three items are printed.
 
 [[techniques]]
 == Programming Techniques

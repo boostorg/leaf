@@ -49,9 +49,9 @@ boost
 					}
 				friend
 				void
-				diagnostic_print( std::ostream & os, captured_exception const & ce )
+				diagnostic_output( std::ostream & os, captured_exception const & ce )
 					{
-					diagnostic_print(os,static_cast<error_capture const &>(ce));
+					diagnostic_output(os,static_cast<error_capture const &>(ce));
 					}
 				};
 			template <class F,class... E>
@@ -130,15 +130,15 @@ boost
 				}
 			catch( leaf_detail::captured_exception const & e )
 				{
-				diagnostic_print(os,e);
+				diagnostic_output(os,e);
 				}
 			catch( error const & e )
 				{
-				diagnostic_print(os,exp,e);
+				diagnostic_output(os,exp,e);
 				}
 			catch( ... )
 				{
-				diagnostic_print(os,exp);
+				diagnostic_output(os,exp);
 				}
 			}
 		}

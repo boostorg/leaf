@@ -140,10 +140,10 @@ boost
 		decltype(P::value) const * peek( expect<E...> const &, error const & ) noexcept;
 
 		template <class... E>
-		void diagnostic_print( std::ostream &, expect<E...> const & );
+		void diagnostic_output( std::ostream &, expect<E...> const & );
 
 		template <class... E>
-		void diagnostic_print( std::ostream &, expect<E...> const &, error const & );
+		void diagnostic_output( std::ostream &, expect<E...> const &, error const & );
 
 		template <class... E>
 		class
@@ -158,10 +158,10 @@ boost
 			friend decltype(P::value) const * leaf::peek( expect<E_...> const &, error const & ) noexcept;
 
 			template <class... E_>
-			friend void leaf::diagnostic_print( std::ostream &, expect<E_...> const & );
+			friend void leaf::diagnostic_output( std::ostream &, expect<E_...> const & );
 
 			template <class... E_>
-			friend void leaf::diagnostic_print( std::ostream &, expect<E_...> const &, error const & );
+			friend void leaf::diagnostic_output( std::ostream &, expect<E_...> const &, error const & );
 
 			expect( expect const & ) = delete;
 			expect & operator=( expect const & ) = delete;
@@ -240,13 +240,13 @@ boost
 			}
 		template <class... E>
 		void
-		diagnostic_print( std::ostream & os, expect<E...> const & exp )
+		diagnostic_output( std::ostream & os, expect<E...> const & exp )
 			{
 			leaf_detail::tuple_for_each<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_);
 			}
 		template <class... E>
 		void
-		diagnostic_print( std::ostream & os, expect<E...> const & exp, error const & e )
+		diagnostic_output( std::ostream & os, expect<E...> const & exp, error const & e )
 			{
 			leaf_detail::tuple_for_each<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_,e);
 			}

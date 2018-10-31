@@ -34,7 +34,7 @@ boost
 		decltype(P::value) const * peek( expect<E...> const &, result<T> const & ) noexcept;
 
 		template <class... E,class T>
-		void diagnostic_print( std::ostream &, expect<E...> const &, result<T> const & );
+		void diagnostic_output( std::ostream &, expect<E...> const &, result<T> const & );
 		////////////////////////////////////////
 		template <class T>
 		class
@@ -47,7 +47,7 @@ boost
 			friend decltype(P::value) const * leaf::peek( expect<E...> const &, result<T_> const & ) noexcept;
 
 			template <class... E,class T_>
-			friend void leaf::diagnostic_print( std::ostream &, expect<E...> const &, result<T_> const & );
+			friend void leaf::diagnostic_output( std::ostream &, expect<E...> const &, result<T_> const & );
 
 			union
 				{
@@ -253,7 +253,7 @@ boost
 			friend decltype(P::value) const * leaf::peek( expect<E...> const &, result<T> const & ) noexcept;
 
 			template <class... E,class T>
-			friend void leaf::diagnostic_print( std::ostream &, expect<E...> const &, result<T> const & );
+			friend void leaf::diagnostic_output( std::ostream &, expect<E...> const &, result<T> const & );
 
 			typedef result<bool> base;
 
@@ -302,10 +302,10 @@ boost
 			template <class... E>
 			friend
 			void
-			diagnostic_print( std::ostream & os, expect<E...> const & exp, result const & r )
+			diagnostic_output( std::ostream & os, expect<E...> const & exp, result const & r )
 				{
 				result<bool> const & rb = r;
-				diagnostic_print(os,exp,rb);
+				diagnostic_output(os,exp,rb);
 				}
 			};
 		////////////////////////////////////////
@@ -337,15 +337,15 @@ boost
 			}
 		template <class... E,class T>
 		void
-		diagnostic_print( std::ostream & os, expect<E...> const & exp, result<T> const & r )
+		diagnostic_output( std::ostream & os, expect<E...> const & exp, result<T> const & r )
 			{
 			assert(!r);
 			if( r.which_==result<T>::variant::err )
-				return diagnostic_print(os,exp,r.err_);
+				return diagnostic_output(os,exp,r.err_);
 			else
 				{
 				assert(r.which_==result<T>::variant::cap);
-				return diagnostic_print(os,r.cap_);
+				return diagnostic_output(os,r.cap_);
 				}
 			}
 		}

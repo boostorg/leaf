@@ -193,7 +193,7 @@ int main( int argc, char const * argv[ ] )
 			default:
 				//This catch-all case helps diagnose logic errors (presumably, missing case labels in the switch statement).
 				std::cerr << "Unknown error code " << int(ec) << ", cryptic information follows." << std::endl;
-				diagnostic_print(std::cerr,exp,r);
+				diagnostic_output(std::cerr,exp,r);
 				return 5;
 		}
 	}

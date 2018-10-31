@@ -25,7 +25,7 @@ boost
 		template <class P>
 		decltype(P::value) const * peek( error_capture const & ) noexcept;
 
-		void diagnostic_print( std::ostream &, error_capture const & );
+		void diagnostic_output( std::ostream &, error_capture const & );
 		////////////////////////////////////////
 		namespace
 		leaf_detail
@@ -125,7 +125,7 @@ boost
 			template <class P>
 			friend decltype(P::value) const * leaf::peek( error_capture const & ) noexcept;
 
-			friend void leaf::diagnostic_print( std::ostream &, error_capture const & );
+			friend void leaf::diagnostic_output( std::ostream &, error_capture const & );
 
 			class
 			dynamic_store
@@ -162,7 +162,7 @@ boost
 					else
 						return 0;
 					}
-				virtual void diagnostic_print( std::ostream & ) const = 0;
+				virtual void diagnostic_output( std::ostream & ) const = 0;
 				virtual void unload( error const & ) noexcept = 0;
 				};
 			template <class... T>
@@ -185,7 +185,7 @@ boost
 					return tuple_dynamic_bind<sizeof...(T),std::tuple<optional<T>...>>::bind(s_,type_id);
 					}
 				void
-				diagnostic_print( std::ostream & os ) const
+				diagnostic_output( std::ostream & os ) const
 					{
 					leaf_detail::tuple_print<sizeof...(T),decltype(s_)>::print(os,s_);
 					}
@@ -315,10 +315,10 @@ boost
 			}
 		inline
 		void
-		diagnostic_print( std::ostream & os, error_capture const & e )
+		diagnostic_output( std::ostream & os, error_capture const & e )
 			{
 			if( e )
-				e.s_->diagnostic_print(os);
+				e.s_->diagnostic_output(os);
 			}
 		}
 	}
