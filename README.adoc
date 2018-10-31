@@ -1077,6 +1077,9 @@ namespace boost { namespace leaf {
   struct bad_result: std::exception { };
 
 } }
+
+#define LEAF_AUTO(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
+#define LEAF_CHECK(r) {auto _r_##v = r; if( !_r_##v ) return _r_##v.error();}
 ----
 
 '''
@@ -1275,6 +1278,28 @@ namespace boost { namespace leaf {
 ----
 
 This exception is thrown by `<<result::value,value>>()`/`<<result::value,operator*>>()` if they`re invoked for a `result` object that is in error state.
+
+'''
+
+[[LEAF_AUTO]]
+==== `LEAF_AUTO`
+
+.#include <boost/leaf/result.hpp>
+[source,c++]
+----
+#define LEAF_AUTO(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
+----
+
+'''
+
+[[LEAF_AUTO]]
+==== `LEAF_CHECK`
+
+.#include <boost/leaf/result.hpp>
+[source,c++]
+----
+#define LEAF_CHECK(r) {auto _r_##v = r; if( !_r_##v ) return _r_##v.error();}
+----
 
 '''
 
