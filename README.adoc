@@ -1257,6 +1257,8 @@ Returns: ::
 * If `*this` is in error state and stores an `<<error_capture,erorr_capture>>` object, returns `*this`.
 * If `*this` is in error state and stores a `leaf::<<error,error>>` value `err`, returns `<<capture-expect,capture>>(exp,err)`.
 
+NOTE: For an example, see <<technique_transport-result,Transporting Errors between Threads using `result<T>`>>.
+
 '''
 
 [[bad_result]]
@@ -1276,6 +1278,7 @@ This exception is thrown by `<<result::value,value>>()`/`<<result::value,operato
 
 '''
 
+[[preload]]
 === `preload`
 
 [source,c++]
@@ -1295,6 +1298,7 @@ Effects: :: All `e...` objects are forwarded and stored into the returned object
 
 '''
 
+[[defer]]
 === `defer`
 
 [source,c++]
@@ -1486,6 +1490,8 @@ namespace boost { namespace leaf {
 
 } }
 ----
+
+NOTE: For an, example see <<technique_transport-exceptions,Transporting Errors between Threads using Exception Handling>>.
 
 '''
 
@@ -1680,7 +1686,7 @@ NOTE: This technique works exacly the same way when errors are reported using `l
 
 '''
 
-[technique_defer]
+[[technique_defer]]
 === Capturing `errno` with `defer`
 
 Consider the following function:
@@ -1749,7 +1755,7 @@ This works similarly to `preload`, except that capturing of the `errno` is defer
 
 '''
 
-[technique_augment_in_catch]
+[[technique_augment_in_catch]]
 === Augmenting Exceptions in a `catch`
 
 What makes `<<preload,preload>>` and `<<defer,defer>>` useful (see <<technique_preload,Preloading Errors>> and <<technique_defer,Capturing `errno` with `defer`>>) is that they automatically include <<e-types,e-type>> objects with any exception or error reported by a function.
@@ -1780,6 +1786,7 @@ But if the caught exception was not thrown by `throw_exception` (and therefore d
 
 '''
 
+[[technique_preload_in_c_callbacks]]
 === Using `preload` in C-callbacks
 
 Communicating information pertaining to a failure detected in a C callback is tricky, because C callbacks are limited to a specific static signature, which may not use {CPP} types.
@@ -1919,12 +1926,14 @@ Remarkably, the Lua interpreter is {CPP} exception-safe, even though it is writt
 
 '''
 
+[[technique_transport]]
 === Transporting Errors between Threads
 
 With LEAF, <<e-types,e-objects>> use automatic storage duration, stored inside `<<expect,expect>>` instances. When using concurrency, we need a mechanism to detach e-objects from a worker thread and transport them to another thread where errors are handled.
 
 LEAF offers two interfaces for this purpose, one using `result<T>`, and for programs that use exception handling.
 
+[[technique_transport-result]]
 ==== Using `result<T>`
 
 Without exceptions, transporting <<e-types,e-objects>> between threads is as easy as calling `<<capture-result,capture>>`, passing the `<<expect,expect>>` object whose contents needs to be transported, and a `<<result,result>><T>` which may be in either value state or error state. This gets us a new `<<result,result>><T>` object which can be sent across thread boundaries.
@@ -1983,6 +1992,7 @@ NOTE: Follow this link to see a complete example program: https://github.com/zaj
 
 '''
 
+[[technique_transport-exceptions]]
 ==== Using Exception Handling
 
 When using exception handling, we need to capture the exception using `std::exception_ptr`, then capture the current <<e-types,e-objects>> in an `<<error_capture,error_capture>>` and wrap both into another exception. In the main thread we unwrap and throw the original exception.
