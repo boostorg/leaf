@@ -1,6 +1,7 @@
 :sourcedir: .
 :last-update-label!:
 :icons: font
+:source-highlighter: coderay
 = LEAF
 Low-latency Error Augmentation Framework for C++11
 :toclevels: 3
@@ -871,6 +872,48 @@ Effects: :: Prints an `unsigned int` value that uniquely identifies the value `e
 
 '''
 
+[[preload]]
+=== `preload`
+
+[source,c++]
+.#include <boost/leaf/error.hpp>
+----
+namespace boost { namespace leaf {
+
+  template <class... E>
+  <<unspecified-type>> preload( E && ... e ) noexcept;
+
+} }
+----
+
+Effects: :: All `e...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
+* If a new `leaf::<<error,error>>` value was created (in the calling thread) since it was created, the stored `e...` objects are propagated and become associated with  the _first_ `leaf::error` value created after `preload` was called;
+* Otherwise, the stored `e...` objects are discarded.
+
+'''
+
+[[defer]]
+=== `defer`
+
+[source,c++]
+.#include <boost/leaf/error.hpp>
+----
+namespace boost { namespace leaf {
+
+  template <class... F>
+  <<unspecified-type>> defer( F && ... f ) noexcept;
+
+} }
+----
+
+Requirements: :: All `f...` objects must be functions that do not throw exceptions, take no arguments and return an <<e-types,e-type>> object.
+
+Effects: :: All `f...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
+* If a new `leaf::<<error,error>>` value was created (in the calling thread) since it was created, each of the stored `f...` is called, and the returned <<e-types,e-value>> is propagated and becomes associated with  the _first_ `leaf::error` value created after `defer` was called;
+* Otherwise, the stored `f...` objects are discarded.
+
+'''
+
 [[error_capture]]
 === Class `error_capture`
 
@@ -1080,6 +1123,7 @@ NOTE: The printing of each individual e-object is done by the rules described <<
 [[result]]
 === Class template `result`
 
+====
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
@@ -1127,6 +1171,7 @@ namespace boost { namespace leaf {
 #define LEAF_AUTO(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
 #define LEAF_CHECK(r) {auto _r_##v = r; if( !_r_##v ) return _r_##v.error();}
 ----
+====
 
 '''
 
@@ -1346,48 +1391,6 @@ This exception is thrown by `<<result::value,value>>()`/`<<result::value,operato
 ----
 #define LEAF_CHECK(r) {auto _r_##v = r; if( !_r_##v ) return _r_##v.error();}
 ----
-
-'''
-
-[[preload]]
-=== `preload`
-
-[source,c++]
-.#include <boost/leaf/error.hpp>
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  <<unspecified-type>> preload( E && ... e ) noexcept;
-
-} }
-----
-
-Effects: :: All `e...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
-* If a new `leaf::<<error,error>>` value was created (in the calling thread) since it was created, the stored `e...` objects are propagated and become associated with  the _first_ `leaf::error` value created after `preload` was called;
-* Otherwise, the stored `e...` objects are discarded.
-
-'''
-
-[[defer]]
-=== `defer`
-
-[source,c++]
-.#include <boost/leaf/error.hpp>
-----
-namespace boost { namespace leaf {
-
-  template <class... F>
-  <<unspecified-type>> defer( F && ... f ) noexcept;
-
-} }
-----
-
-Requirements: :: All `f...` objects must be functions that do not throw exceptions, take no arguments and return an <<e-types,e-type>> object.
-
-Effects: :: All `f...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
-* If a new `leaf::<<error,error>>` value was created (in the calling thread) since it was created, each of the stored `f...` is called, and the returned <<e-types,e-value>> is propagated and becomes associated with  the _first_ `leaf::error` value created after `defer` was called;
-* Otherwise, the stored `f...` objects are discarded.
 
 '''
 
@@ -1658,6 +1661,7 @@ WARNING: The passed value is stored as a C string, so you should only pass strin
 
 Consider the following exception type:
 
+====
 [source,c++]
 ----
 class file_read_error: public std::exception
@@ -1671,9 +1675,11 @@ class file_read_error: public std::exception
   std::string const & file_name() const noexcept { return file_name_; }
 };
 ----
+====
 
 A catch statement that handles `file_read_error` exceptions:
 
+====
 [source,c++]
 ----
 catch( file_read_error & e )
@@ -1681,9 +1687,11 @@ catch( file_read_error & e )
   std::cerr << "Error reading \"" << e.file_name() << "\"\n";
 }
 ----
+====
 
 Finally, a function that may throw `file_read_error` exceptions:
 
+====
 [source,c++]
 ----
 void read_file( FILE * f ) {
@@ -1694,11 +1702,13 @@ void read_file( FILE * f ) {
   ....
 }
 ----
+====
 
 This is a problem: the `catch` needs a file name, but at the point of the `throw` a file name is not available (only a `FILE` pointer is). In general the error might be detected in a library which can not assume that a meaningful name is available for any `FILE` it reads, even if a program that uses the library could reasonably make the same assumption.
 
 Using LEAF, a file name may be associated with any exception after it has been thrown, while anything available at the point of the `throw` (e.g. `errno`) may be passed directly to `<<throw_exception,throw_exception>>`:
 
+====
 [source,c++]
 ----
 class file_read_error: public std::exception { };
@@ -1728,11 +1738,13 @@ void process_file( char const * name )
     leaf::throw_exception( file_open_error() );
 }
 ----
+====
 
 The key is the call to `<<preload,preload>>`: it gets the file name ready to be associated with any exception that escapes `process_file`. This is fully automatic, and works regardless of whether the exception is thrown later in the same function, or by `read_file`, or by some third-party function we call.
 
 Now, the `try...catch` that handles exceptions thrown by `process_file` may look like this:
 
+====
 [source,c++]
 ----
 leaf::expect<e_errno,e_file_name> exp;
@@ -1752,6 +1764,7 @@ catch( file_io_error & e )
   );
 }
 ----
+====
 
 NOTE: This technique works exacly the same way when errors are reported using `leaf::<<result,result>>` rather than by throwing exceptions.
 
@@ -1762,6 +1775,7 @@ NOTE: This technique works exacly the same way when errors are reported using `l
 
 Consider the following function:
 
+====
 [source,c++]
 ----
 void read_file(FILE * f) {
@@ -1772,9 +1786,11 @@ void read_file(FILE * f) {
   ....
 }
 ----
+====
 
 It is pretty straight-forward, reporting `e_errno` as it detects a `ferror`. But what if it calls `fread` multiple times?
 
+====
 [source,c++]
 ----
 void read_file(FILE * f) {
@@ -1793,6 +1809,7 @@ void read_file(FILE * f) {
   ....
 }
 ----
+====
 
 Ideally, associating `e_errno` with each exception should be automated. One way to achieve this is to not call `fread` directly, but wrap it in another function which checks for `ferror` and associates the `e_errno` with the exception it throws.
 
@@ -1800,6 +1817,7 @@ Ideally, associating `e_errno` with each exception should be automated. One way 
 
 The solution is to use `<<defer,defer>>`, so we don't have to remember to include `e_errno` with each exception; `errno` will be associated automatically with any exception that escapes `read_file`:
 
+====
 [source,c++]
 ----
 void read_file(FILE * f) {
@@ -1821,6 +1839,7 @@ void read_file(FILE * f) {
   ....
 }
 ----
+====
 
 This works similarly to `preload`, except that capturing of the `errno` is deferred until the destructor of the `propagate` object is called, which calls the passed lambda function to obtain the `errno`.
 
@@ -1835,6 +1854,7 @@ But what if we need to include some e-object conditionally? When using excption 
 
 LEAF supports the following approach, assuming all exceptions derive from `std::exception`:
 
+====
 [source,c++]
 ----
 try
@@ -1850,6 +1870,7 @@ catch( std::exception const & e )
   throw;
 }
 ----
+====
 
 The reason we need to use `<<get_error,get_error>>` is that not all exceptions have a `leaf::<<error,error>>` value associated with them. If the exception we're augmenting was thrown using `<<throw_exception,throw_exception>>`, it includes a `leaf::error` sub-object, and in this case `get_error` will return that `leaf::error` value. Also, such exceptions can be intercepted by `catch( error e )` if needed.
 
@@ -1866,15 +1887,18 @@ LEAF makes this easy. As an example, we'll write a program that uses Lua and rep
 
 C/{CPP} functions designed to be called from a Lua program must use the following signature:
 
+====
 [source,c]
 ----
 int do_work( lua_State * L );
 ----
+====
 
 Arguments are passed on the Lua stack (which is accessible through `L`). Results too are pushed onto the Lua stack.
 
 First, let's initialize the Lua interpreter and register `do_work` as a C callback, available for Lua programs to call:
 
+====
 [source,c++]
 ----
 std::shared_ptr<lua_State> init_lua_state() noexcept
@@ -1894,16 +1918,20 @@ std::shared_ptr<lua_State> init_lua_state() noexcept
 <1> Create a new `lua_State`. We'll use `std::shared_ptr` for automatic cleanup.
 <2> Register the `do_work` {CPP} function as a C callback, under the global name `do_work`. With this, calls from Lua programs to `do_work` will land in the `do_work` {CPP} function.
 <3> Pass some Lua code as a `C` string literal to Lua. This creates a global Lua function called `call_do_work`, which we will later ask Lua to execute.
+====
 
 Next, let's define our <<e-types,e-type>> used to communicate `do_work` failures:
 
+====
 [source,c++]
 ----
 struct e_do_work_error { int value; };
 ----
+====
 
 We're now ready to define the `do_work` function.
 
+====
 [source,c++]
 ----
 int do_work( lua_State * L ) noexcept
@@ -1925,9 +1953,11 @@ int do_work( lua_State * L ) noexcept
 <2> In case of success, push the result on the Lua stack, return back to Lua.
 <3> In case of failure, use `<<preload,preload>>` to get a `e_do_work_error` ready to be associated with the next `leaf::<<error,error>>` value created.
 <4> Tell Lua that `do_work` failed. It will abort the Lua program and pop back into the {CPP} code which called the Lua interpreter.
+====
 
 Now we'll write the function that calls the Lua interpreter to execute the Lua function `call_do_work`, which in turn calls `do_work`. We'll return `<<result,result>><int>`, so that our caller can get the answer in case of success, or an error:
 
+====
 [source,c++]
 ----
 leaf::result<int> call_lua( lua_State * L )
@@ -1950,9 +1980,11 @@ leaf::result<int> call_lua( lua_State * L )
 <1> Ask the Lua interpreter to call the global Lua function `call_do_work`.
 <2> Something went wrong with the call, so we'll return a `leaf::<<error,error>>`. If this is a `do_work` failure, the `e_do_work` object preloaded in `do_work` will become associated with this `leaf::error` value. If not, we will still need to communicate that the `lua_pcall` failed with an error code and an error message.
 <3> Success! Just return the int answer.
+====
 
 Finally, here is the `main` function which handles all failures:
 
+====
 [source,c++]
 ----
 int main() noexcept
@@ -1987,6 +2019,7 @@ int main() noexcept
 <2> If the call to `call_lua` succeeded, just print the answer.
 <3> Handle `e_do_work` failures.
 <4> Handle all other `lua_pcall` failures.
+====
 
 [NOTE]
 --
@@ -2011,13 +2044,16 @@ Without exceptions, transporting <<e-types,e-objects>> between threads is as eas
 
 Let's assume we have a `task` which produces a result but could also fail:
 
+====
 [source,c++]
 ----
 leaf::result<task_result> task();
 ----
+====
 
 To prepare the returned `result` to be sent across the thread boundary, when we launch the asynchronous task, we wrap it in a lambda function that captures its result:
 
+====
 [source,c++]
 ----
 std::future<leaf::result<task_result>> launch_task()
@@ -2029,9 +2065,11 @@ std::future<leaf::result<task_result>> launch_task()
     } );
 }
 ----
+====
 
 That's it! Later when we `get` the `std::future`, we can process the returned `result<task_result>` as if it was generated locally:
 
+====
 [source,c++]
 ----
 ....
@@ -2058,6 +2096,7 @@ else
   );
 }
 ----
+====
 
 NOTE: Follow this link to see a complete example program: https://github.com/zajo/leaf/blob/master/example/capture_result.cpp[capture_result.cpp].
 
@@ -2070,13 +2109,16 @@ When using exception handling, we need to capture the exception using `std::exce
 
 This, of course, is done automatically by LEAF. Let's assume we have a `task` which produces a `task_result` and throws on errors:
 
+====
 [source,c++]
 ----
 task_result task();
 ----
+====
 
 When we launch the asynchronous task, we wrap it in a simple lambda function which calls `<<capture_exception,capture_exception>>`, specifying which <<e-types,e-objects>> we need transported:
 
+====
 [source,c++]
 ----
 std::future<task_result> launch_task()
@@ -2088,9 +2130,11 @@ std::future<task_result> launch_task()
       } ) );
 }
 ----
+====
 
 Later, instead of using `std::future::get`, we use `leaf::<<get,get>>`, then catch exceptions as if the function was called locally:
 
+====
 [source,c++]
 ----
 ....
@@ -2118,6 +2162,7 @@ catch( my_exception & e )
   );
 }
 ----
+====
 
 NOTE: Follow this link to see a complete example program: https://github.com/zajo/leaf/blob/master/example/capture_eh.cpp[capture_eh.cpp].
 
@@ -2130,6 +2175,7 @@ The first observation driving the LEAF design is that unless a specific type of 
 
 The second observation is that ideally, like any other communication mechanism, it makes sense to formally define an interface for the error info that can be used by the error handling code. In terms of {CPP} exception handling, it would be nice to be able to say something like:
 
+====
 [source,c++]
 ----
 try {
@@ -2153,6 +2199,7 @@ try {
 
 }
 ----
+====
 
 That is to say, it is desirable to be able to dispatch error handling based not only on the kind of failure being handled, but also based on the kind of error info available. Unfortunately this syntax is not possible and, even if it were, not all programs use exceptions to handle errors. The result of this train of thought is `<<handle_error-expect,handle_error>>`/`<<handle_exception,handle_exception>>`.
 
