@@ -26,26 +26,26 @@ Error handling with LEAF looks like this:
 [source,c++]
 ----
 {
-  leaf::expect<e_error_code, e_file_name, e_request_id> exp; <1>
+  leaf::expect<e_error_code, e_file_name, e_request_id> exp; //<1>
 
   if( result<T> r = f() )
   {
-    //Success! <2>
+    //Success! //<2>
   }
   else
   {
     //Handle errors
 
-    bool matched = leaf::handle_error( exp, r, <3>
+    bool matched = leaf::handle_error( exp, r, //<3>
 
       leaf::match<e_error_code, e_file_name, e_request_id>( [ ]( int ec, std::string const & fn, uuid const & id )
       {
-        <4>
+        //<4>
       } ),
 
       leaf::match<e_error_code, e_file_name>( [ ]( int ec, std::string const & fn )
       {
-        <5>
+        //<5>
       } )
     );
 
@@ -82,7 +82,7 @@ leaf::result<T> g()
   if( success )
     return T(....);
   else
-    return leaf::error( e_error_code{42}, e_request_id{id} ); <1>
+    return leaf::error( e_error_code{42}, e_request_id{id} ); //<1>
 }
 ----
 <1> Report an error, store the passed `e_error_code` and `e_request_id` in `expect` object(s) from calling scopes.
@@ -98,10 +98,10 @@ leaf::result<T> f()
   if( leaf::error<T> r=g() )
   {
     ....
-    return r; <1>
+    return r; //<1>
   }
   else
-    return r.error( e_file_name{"file.txt"} ); <2>
+    return r.error( e_file_name{"file.txt"} ); //<2>
 }  
 ----
 <1> Success, return `r`.
@@ -118,7 +118,7 @@ Exception handling with LEAF looks like this:
 [source,c++]
 ----
 {
-  leaf::expect<e_error_code, e_file_name, e_request_id> exp; <1>
+  leaf::expect<e_error_code, e_file_name, e_request_id> exp; //<1>
 
   try
   {
@@ -126,16 +126,16 @@ Exception handling with LEAF looks like this:
   }
   catch( my_exception const & e )
   {
-    leaf::handle_exception( exp, e, <2>
+    leaf::handle_exception( exp, e, //<2>
 
       leaf::match<e_error_code, e_file_name, e_request_id>( [ ]( int ec, std::string const & fn, uuid const & id )
       {
-        <3>
+        //<3>
       } ),
 
       leaf::match<e_error_code, e_file_name>( [ ]( int ec, std::string const & fn )
       {
-        <4>
+        //<4>
       } )
     );
 
@@ -157,7 +157,7 @@ void g()
 {
   ....
   if( failure )
-    leaf::throw_exception( my_exception(), e_error_code{42}, e_request_id{id} ); <1>
+    leaf::throw_exception( my_exception(), e_error_code{42}, e_request_id{id} ); //<1>
 }
 ----
 <1> Throws `my_exception`, stores the passed `e_error_code` and `e_request_id` in `expect` object(s) from calling scopes.
@@ -170,7 +170,7 @@ Exceptions can be augmented in exception-neutral contexts:
 ----
 void f()
 {
-  auto propagate = leaf::preload( e_file_name{"file.txt"} ); <1>
+  auto propagate = leaf::preload( e_file_name{"file.txt"} ); //<1>
 
   g();
 }  
@@ -220,12 +220,12 @@ leaf::result<void> file_read( FILE & f, void * buf, int size )
 {
   int n = fread(buf,1,size,&f);
   if( ferror(&f) )
-    return leaf::error( e_error_code{input_file_read_error}, e_errno{errno} ); <1>
+    return leaf::error( e_error_code{input_file_read_error}, e_errno{errno} ); //<1>
 
   if( n!=size )
-    return leaf::error( e_error_code{input_eof_error} ); <2>
+    return leaf::error( e_error_code{input_eof_error} ); //<2>
 
-  return { }; <3>
+  return { }; //<3>
 }
 ----
 <1> If `ferror` indicates an error, we return `input_file_read_error` and, because there is a relevant `errno` code, we _also_ pass that to the `leaf::<<error,error>>` constructor (LEAF defines `struct e_errno { int value; }`).
@@ -247,14 +247,14 @@ Now, let's consider a possible caller of `file_read`, called `print_file`:
 leaf::result<void> print_file( char const * file_name )
 {
   leaf::result<std::shared_ptr<FILE>> f = file_open(file_name);
-  if( !f ) <1>
-    return f.error(); <2>
+  if( !f ) //<1>
+    return f.error(); //<2>
 
-  auto propagate = leaf::preload( e_file_name{file_name} ); <3>
+  auto propagate = leaf::preload( e_file_name{file_name} ); //<3>
 
   leaf::result<int> s = file_size(*f.value());
-  if( !s ) <4>
-    return s.error(); <5>
+  if( !s ) //<4>
+    return s.error(); //<5>
 
   std::string buffer( 1+s.value(), '\0' );
   leaf::result<void> fr = file_read(*f.value,&buffer[0],buffer.size()-1);
@@ -264,9 +264,9 @@ leaf::result<void> print_file( char const * file_name )
   std::cout << buffer;
   std::cout.flush();
   if( std::cout.fail() )
-    return leaf::error( e_error_code{cout_error} ); <6>
+    return leaf::error( e_error_code{cout_error} ); //<6>
 
-  return { }; <7>
+  return { }; //<7>
 }
 ----
 <1> If `file_open` returns an error...
@@ -291,14 +291,14 @@ Below is the same `print_file` function simplified using `LEAF_AUTO` and `LEAF_C
 ----
 leaf::result<void> print_file( char const * file_name )
 {
-  LEAF_AUTO(f,file_open(file_name)); <1>
+  LEAF_AUTO(f,file_open(file_name)); //<1>
 
   auto propagate = leaf::preload( e_file_name{file_name} );
 
-  LEAF_AUTO(s,file_size(*f)); <2>
+  LEAF_AUTO(s,file_size(*f)); //<2>
 
   std::string buffer( 1+s, '\0' );
-  LEAF_CHECK(file_read(*f,&buffer[0],buffer.size()-1)); <3>
+  LEAF_CHECK(file_read(*f,&buffer[0],buffer.size()-1)); //<3>
 
   std::cout << buffer;
   std::cout.flush();
@@ -327,19 +327,19 @@ int main( int argc, char const * argv[ ] )
     return 1;
   }
 
-  leaf::expect<e_error_code, e_file_name, e_errno> exp; <1>
+  leaf::expect<e_error_code, e_file_name, e_errno> exp; //<1>
 
   if( auto r = print_file(fn) )
   {
-    return 0; <2>
+    return 0; //<2>
   }
   else
   {
-    switch( auto ec = *leaf::peek<e_error_code>(exp,r) ) <3>
+    switch( auto ec = *leaf::peek<e_error_code>(exp,r) ) //<3>
     {
       case input_file_open_error:
       {
-        bool matched = handle_error( exp, r, <4>
+        bool matched = handle_error( exp, r, //<4>
 
           leaf::match<e_file_name,e_errno>( [ ] ( std::string const & fn, int errn )
           {
@@ -358,7 +358,7 @@ int main( int argc, char const * argv[ ] )
       case input_file_read_error:
       case input_eof_error:
       {
-        bool matched = handle_error( exp, r, <5>
+        bool matched = handle_error( exp, r, //<5>
 
           leaf::match<e_file_name,e_errno>( [ ] ( std::string const & fn, int errn )
           {
@@ -382,7 +382,7 @@ int main( int argc, char const * argv[ ] )
 
       case cout_error:
       {
-        bool matched = handle_error( exp, r, <6>
+        bool matched = handle_error( exp, r, //<6>
 
           leaf::match<e_errno>( [ ] ( int errn )
           {
@@ -395,7 +395,7 @@ int main( int argc, char const * argv[ ] )
       }
 
       default:
-        std::cerr << "Unknown error code " << int(ec) << ", cryptic information follows." << std::endl; <7>
+        std::cerr << "Unknown error code " << int(ec) << ", cryptic information follows." << std::endl; //<7>
         diagnostic_output(std::cerr,exp,r);
         return 5;
     }
@@ -454,10 +454,10 @@ void file_read( FILE & f, void * buf, int size )
   int n = fread(buf,1,size,&f);
 
   if( ferror(&f) )
-    leaf::throw_exception( input_file_read_error(), e_errno{errno} ); <1>
+    leaf::throw_exception( input_file_read_error(), e_errno{errno} ); //<1>
 
   if( n!=size )
-    throw input_eof_error(); <2>
+    throw input_eof_error(); //<2>
 }
 ----
 <1> If `ferror` indicates an error, we throw `input_file_read_error` and, because there is a relevant `errno` code, we pass that to `<<throw_exception,throw_exception>>` _also_ (LEAF defines `struct e_errno { int value; }`).
@@ -477,14 +477,14 @@ Now, let's consider a possible caller of `file_read`, called `print_file`:
 ----
 void print_file( char const * file_name )
 {
-  std::shared_ptr<FILE> f = file_open( file_name ); <1>
+  std::shared_ptr<FILE> f = file_open( file_name ); //<1>
 
-  auto propagate1 = leaf::preload( e_file_name{file_name} ); <2>
+  auto propagate1 = leaf::preload( e_file_name{file_name} ); //<2>
 
-  std::string buffer( 1+file_size(*f), '\0' ); <3>
+  std::string buffer( 1+file_size(*f), '\0' ); //<3>
   file_read(*f,&buffer[0],buffer.size()-1);
 
-  auto propagate2 = leaf::defer( [ ] { return e_errno{errno}; } ); <4>
+  auto propagate2 = leaf::defer( [ ] { return e_errno{errno}; } ); //<4>
   std::cout << buffer;
   std::cout.flush();
 }
@@ -502,9 +502,9 @@ Finally, let's consider the `main` function, which is able to handle exceptions 
 ----
 int main( int argc, char const * argv[ ] )
 {
-   std::cout.exceptions ( std::ostream::failbit | std::ostream::badbit ); <1>
+   std::cout.exceptions ( std::ostream::failbit | std::ostream::badbit ); //<1>
  
-  leaf::expect<e_file_name, e_errno> exp; <2>
+  leaf::expect<e_file_name, e_errno> exp; //<2>
 
   try
   {
@@ -518,7 +518,7 @@ int main( int argc, char const * argv[ ] )
   }
   catch( input_file_open_error const & ex )
   {
-    handle_exception( exp, ex, <3>
+    handle_exception( exp, ex, //<3>
 
       leaf::match<e_file_name, e_errno>( [ ] ( std::string const & fn, int errn )
       {
@@ -533,7 +533,7 @@ int main( int argc, char const * argv[ ] )
   }
   catch( input_error const & ex )
   {
-    handle_exception( exp, ex, <4>
+    handle_exception( exp, ex, //<4>
 
       leaf::match<e_file_name, e_errno>( [ ] ( std::string const & fn, int errn )
       {
@@ -566,7 +566,7 @@ int main( int argc, char const * argv[ ] )
     );
     return 4;
   }
-  catch(...) <5>
+  catch(...) //<5>
   {
     std::cerr << "Unknown error, cryptic information follows." << std::endl; 
     current_exception_diagnostic_output(std::cerr,exp);
@@ -2088,11 +2088,11 @@ First, let's initialize the Lua interpreter and register `do_work` as a C callba
 ----
 std::shared_ptr<lua_State> init_lua_state() noexcept
 {
-  std::shared_ptr<lua_State> L(lua_open(),&lua_close); <1>
+  std::shared_ptr<lua_State> L(lua_open(),&lua_close); //<1>
 
-  lua_register( &*L, "do_work", &do_work ); <2>
+  lua_register( &*L, "do_work", &do_work ); //<2>
 
-  luaL_dostring( &*L, "\ <3>
+  luaL_dostring( &*L, "\ //<3>
 \n      function call_do_work()\
 \n          return do_work()\
 \n      end" );
@@ -2121,16 +2121,16 @@ We're now ready to define the `do_work` function.
 ----
 int do_work( lua_State * L ) noexcept
 {
-  bool success=rand()%2; <1>
+  bool success=rand()%2; //<1>
   if( success )
   {
-    lua_pushnumber(L,42); <2>
+    lua_pushnumber(L,42); //<2>
     return 1;
   }
   else
   {
-    leaf::error::peek_next_error().propagate( e_do_work_error{-42} ); <3>
-    return luaL_error(L,"do_work_error"); <4>
+    leaf::error::peek_next_error().propagate( e_do_work_error{-42} ); //<3>
+    return luaL_error(L,"do_work_error"); //<4>
   }
 }
 ----
@@ -2148,15 +2148,15 @@ Now we'll write the function that calls the Lua interpreter to execute the Lua f
 leaf::result<int> call_lua( lua_State * L )
 {
   lua_getfield( L, LUA_GLOBALSINDEX, "call_do_work" );
-  if( int err=lua_pcall(L,0,1,0) ) <1>
+  if( int err=lua_pcall(L,0,1,0) ) //<1>
   {
-    auto propagate = leaf::preload( e_lua_error_message{lua_tostring(L,1)} ); <2>
+    auto propagate = leaf::preload( e_lua_error_message{lua_tostring(L,1)} ); //<2>
     lua_pop(L,1);
     return leaf::error( e_lua_pcall_error{err} );
   }
   else
   {
-    int answer=lua_tonumber(L,-1); <3>
+    int answer=lua_tonumber(L,-1); //<3>
     lua_pop(L,1);
     return answer;
   }
@@ -2176,21 +2176,21 @@ int main() noexcept
 {
   std::shared_ptr<lua_State> L=init_lua_state();
 
-  leaf::expect<e_do_work_error,e_lua_pcall_error,e_lua_error_message> exp; <1>
+  leaf::expect<e_do_work_error,e_lua_pcall_error,e_lua_error_message> exp; //<1>
 
   for( int i=0; i!=10; ++i )
     if( leaf::result<int> r = call_lua(&*L) )
-      std::cout << "do_work succeeded, answer=" << *r << '\n'; <2>
+      std::cout << "do_work succeeded, answer=" << *r << '\n'; //<2>
     else
     {
       bool matched = handle_error( exp, r,
 
-        leaf::match<e_do_work_error>( [ ]( int v ) <3>
+        leaf::match<e_do_work_error>( [ ]( int v ) //<3>
         {
           std::cout << "Got e_do_work_error, value = " << v <<  "!\n";
         } ),
 
-        leaf::match<e_lua_pcall_error,e_lua_error_message>( [ ]( int err, std::string const & msg ) <4>
+        leaf::match<e_lua_pcall_error,e_lua_error_message>( [ ]( int err, std::string const & msg ) //<4>
         {
           std::cout << "Got e_lua_pcall_error, Lua error code = " << err << ", " << msg << "\n";
         } )
