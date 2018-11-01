@@ -30,28 +30,6 @@ boost
 		namespace
 		leaf_detail
 			{
-			template <int I,class Tuple>
-			struct
-			tuple_dynamic_bind
-				{
-				static
-				void const *
-				bind( Tuple const & tup, char const * (*type_id)() ) noexcept
-					{
-					assert(type_id!=0);
-					typedef typename std::tuple_element<I-1,Tuple>::type ith_type;
-					if( &type<typename ith_type::value_type> == type_id )
-						return &std::get<I-1>(tup);
-					return tuple_dynamic_bind<I-1,Tuple>::bind(tup,type_id);
-					}
-				};
-			template <class Tuple>
-			struct
-			tuple_dynamic_bind<0,Tuple>
-				{
-				static void const * bind( Tuple const &, char const * (*)() ) noexcept { return 0; }
-				};
-			////////////////////////////////////////
 			template <class... List>
 			struct all_available;
 			template <class Car,class... Cdr>
@@ -74,35 +52,33 @@ boost
 			////////////////////////////////////////
 			template <int I,class Tuple>
 			struct
-			tuple_print
+			tuple_for_each_capture
 				{
+				static
+				void const *
+				dynamic_bind( Tuple const & tup, char const * (*type_id)() ) noexcept
+					{
+					assert(type_id!=0);
+					typedef typename std::tuple_element<I-1,Tuple>::type ith_type;
+					if( &type<typename ith_type::value_type> == type_id )
+						return &std::get<I-1>(tup);
+					return tuple_for_each_capture<I-1,Tuple>::dynamic_bind(tup,type_id);
+					}
 				static
 				void
 				print( std::ostream & os, Tuple const & tup )
 					{
 					typedef typename std::tuple_element<I-1,Tuple>::type ith_type;
-					tuple_print<I-1,Tuple>::print(os,tup);
+					tuple_for_each_capture<I-1,Tuple>::print(os,tup);
 					auto & opt = std::get<I-1>(tup);
 					if( opt.has_value() && diagnostic<typename ith_type::value_type>::print(os,opt.value()) )
 						os << std::endl;
 					}
-				};
-			template <class Tuple>
-			struct
-			tuple_print<0,Tuple>
-				{
-				static void print( std::ostream &, Tuple const & ) { }
-				};
-			////////////////////////////////////////
-			template <int I,class Tuple>
-			struct
-			tuple_unload
-				{
 				static
 				void
 				unload( error const & e, Tuple && tup ) noexcept
 					{
-					tuple_unload<I-1,Tuple>::unload(e,std::move(tup));
+					tuple_for_each_capture<I-1,Tuple>::unload(e,std::move(tup));
 					auto && opt = std::get<I-1>(std::move(tup));
 					if( opt.has_value() )
 						(void) e.propagate(std::move(opt).value());
@@ -110,8 +86,10 @@ boost
 				};
 			template <class Tuple>
 			struct
-			tuple_unload<0,Tuple>
+			tuple_for_each_capture<0,Tuple>
 				{
+				static void const * dynamic_bind( Tuple const &, char const * (*)() ) noexcept { return 0; }
+				static void print( std::ostream &, Tuple const & ) { }
 				static void unload( error const &, Tuple && ) noexcept { }
 				};
 			}
@@ -182,17 +160,17 @@ boost
 					{
 					using namespace leaf_detail;
 					assert(type_id!=0);
-					return tuple_dynamic_bind<sizeof...(T),std::tuple<optional<T>...>>::bind(s_,type_id);
+					return tuple_for_each_capture<sizeof...(T),std::tuple<optional<T>...>>::dynamic_bind(s_,type_id);
 					}
 				void
 				diagnostic_output( std::ostream & os ) const
 					{
-					leaf_detail::tuple_print<sizeof...(T),decltype(s_)>::print(os,s_);
+					leaf_detail::tuple_for_each_capture<sizeof...(T),decltype(s_)>::print(os,s_);
 					}
 				void
 				unload( error const & e ) noexcept
 					{
-					leaf_detail::tuple_unload<sizeof...(T),decltype(s_)>::unload(e,std::move(s_));
+					leaf_detail::tuple_for_each_capture<sizeof...(T),decltype(s_)>::unload(e,std::move(s_));
 					}
 				};
 			void

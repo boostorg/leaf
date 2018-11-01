@@ -66,13 +66,13 @@ boost
 			////////////////////////////////////////
 			template <int I,class Tuple>
 			struct
-			tuple_for_each
+			tuple_for_each_expect
 				{
 				static
 				void
 				print( std::ostream & os, Tuple const & tup )
 					{
-					tuple_for_each<I-1,Tuple>::print(os,tup);
+					tuple_for_each_expect<I-1,Tuple>::print(os,tup);
 					auto & opt = std::get<I-1>(tup);
 					if( opt.has_value() )
 						{
@@ -85,7 +85,7 @@ boost
 				void
 				print( std::ostream & os, Tuple const & tup, error const & e )
 					{
-					tuple_for_each<I-1,Tuple>::print(os,tup,e);
+					tuple_for_each_expect<I-1,Tuple>::print(os,tup,e);
 					auto & opt = std::get<I-1>(tup);
 					if( opt.has_value() )
 						{
@@ -98,13 +98,13 @@ boost
 				void
 				clear( Tuple & tup ) noexcept
 					{
-					tuple_for_each<I-1,Tuple>::clear(tup);
+					tuple_for_each_expect<I-1,Tuple>::clear(tup);
 					std::get<I-1>(tup).reset();
 					}
 				};
 			template <class Tuple>
 			struct
-			tuple_for_each<0,Tuple>
+			tuple_for_each_expect<0,Tuple>
 				{
 				static void print( std::ostream &, Tuple const & ) noexcept { }
 				static void print( std::ostream &, Tuple const &, error const & ) noexcept { }
@@ -195,7 +195,7 @@ boost
 			~expect() noexcept
 				{
 				if( !propagate_ )
-					leaf_detail::tuple_for_each<sizeof...(E),decltype(s_)>::clear(s_);
+					leaf_detail::tuple_for_each_expect<sizeof...(E),decltype(s_)>::clear(s_);
 				}
 			friend
 			typename dependent_type<expect>::error_capture
@@ -242,13 +242,13 @@ boost
 		void
 		diagnostic_output( std::ostream & os, expect<E...> const & exp )
 			{
-			leaf_detail::tuple_for_each<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_);
+			leaf_detail::tuple_for_each_expect<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_);
 			}
 		template <class... E>
 		void
 		diagnostic_output( std::ostream & os, expect<E...> const & exp, error const & e )
 			{
-			leaf_detail::tuple_for_each<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_,e);
+			leaf_detail::tuple_for_each_expect<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_,e);
 			}
 		}
 	}
