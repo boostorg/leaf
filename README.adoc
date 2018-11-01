@@ -111,8 +111,8 @@ leaf::result<T> f()
 
 We'll write a program that reads a text file in a buffer and prints it to `std::cout`, using LEAF to handle errors. We'll implement two versions, one that uses exception handling, and one that does not. To see the source code of the complete programs from this tutorial follow these links:
 
-* https://github.com/zajo/leaf/blob/master/example/print_file_result.cpp[print_file_result.cpp] (without exception handling)
-* https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp[print_file_eh.cpp] (with exception handling)
+* https://github.com/zajo/leaf/blob/master/example/print_file_result.cpp?ts=3[print_file_result.cpp] (without exception handling)
+* https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp?ts=3print_file_eh.cpp] (with exception handling)
 
 First, let's see how to use LEAF without exception handling.
 
@@ -347,7 +347,7 @@ To summarize, when using LEAF without exception handling:
 * In order for any <<e-types,e-type>> object passed to `leaf::<<error,error>>` to be stored rather than discarded, the function that handles the error must contain an instance of the class template `<<expect,expect>>` that provides the necessary storage for that type.
 * Using `<<handle_error-expect,handle_error>>`, available <<e-types,e-type>> objects associated with the `<<error,error>>` value being handled can be matched to what is required in order to deal with that `error`.
 
-NOTE: The complete program from this tutorial is available https://github.com/zajo/leaf/blob/master/example/print_file_result.cpp[here]. There is also https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp[another] version of the same program that uses exception handling to report errors (see <<tutorial-eh,tutorial below>>).
+NOTE: The complete program from this tutorial is available https://github.com/zajo/leaf/blob/master/example/print_file_result.cpp?ts=3here]. There is also https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp?ts=3another] version of the same program that uses exception handling to report errors (see <<tutorial-eh,tutorial below>>).
 
 
 '''
@@ -516,7 +516,7 @@ To summarize, when using LEAF with exception handling:
 * In order for any e-type object passed to `<<throw_exception,throw_exception>>` to be stored rather than discarded, the function that catches the exception must contain an instance of the class template `<<expect,expect>>` that provides the necessary storage for its type.
 * Using `<<handle_exception,handle_exception>>`, available <<e-types,e-type>> objects associated with the exception being handled can be matched to what is required in order to deal with that exception.
 
-NOTE: The complete program from this tutorial is available https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp[here]. There is also https://github.com/zajo/leaf/blob/master/example/print_file_result.cpp[another] version of the same program that does not use exception handling to report errors (see <<tutorial-noexcept,previous tutorial>>).
+NOTE: The complete program from this tutorial is available https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp?ts=3here]. There is also https://github.com/zajo/leaf/blob/master/example/print_file_result.cpp?ts=3another] version of the same program that does not use exception handling to report errors (see <<tutorial-noexcept,previous tutorial>>).
 
 [[reference]]
 == Reference
@@ -2136,9 +2136,9 @@ int main() noexcept
 
 [NOTE]
 --
-Follow this link to see the complete program: https://github.com/zajo/leaf/blob/master/example/lua_callback_result.cpp[lua_callback_result.cpp].
+Follow this link to see the complete program: https://github.com/zajo/leaf/blob/master/example/lua_callback_result.cpp?ts=3lua_callback_result.cpp].
 
-Remarkably, the Lua interpreter is {CPP} exception-safe, even though it is written in C. Here is the same program, this time using a {CPP} exception to report failures from `do_work`: https://github.com/zajo/leaf/blob/master/example/lua_callback_eh.cpp[lua_callback_eh.cpp].
+Remarkably, the Lua interpreter is {CPP} exception-safe, even though it is written in C. Here is the same program, this time using a {CPP} exception to report failures from `do_work`: https://github.com/zajo/leaf/blob/master/example/lua_callback_eh.cpp?ts=3lua_callback_eh.cpp].
 --
 
 '''
@@ -2211,7 +2211,7 @@ else
 ----
 ====
 
-NOTE: Follow this link to see a complete example program: https://github.com/zajo/leaf/blob/master/example/capture_result.cpp[capture_result.cpp].
+NOTE: Follow this link to see a complete example program: https://github.com/zajo/leaf/blob/master/example/capture_result.cpp?ts=3capture_result.cpp].
 
 '''
 
@@ -2277,7 +2277,7 @@ catch( my_exception & e )
 ----
 ====
 
-NOTE: Follow this link to see a complete example program: https://github.com/zajo/leaf/blob/master/example/capture_eh.cpp[capture_eh.cpp].
+NOTE: Follow this link to see a complete example program: https://github.com/zajo/leaf/blob/master/example/capture_eh.cpp?ts=3capture_eh.cpp].
 
 
 '''
