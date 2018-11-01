@@ -40,10 +40,11 @@ int do_work( lua_State * L ) noexcept
 	}
 	else
 	{
-		//Tell the Lua interpreter to abort the Lua program. Control will reach the
-		//call_lua function which called the Lua interpreter. The e_do_work_error
-		//is communicated, through the Lua interpreter, to that function.
-		auto propagate = leaf::preload( e_do_work_error{-42} );
+		//Associate an e_do_work_error object with the *next* leaf::error object we will
+		//definitely return from the call_lua function...
+		leaf::error::peek_next_error().propagate( e_do_work_error{-42} );
+
+		//...once control reaches it, after we tell the Lua interpreter to abort the program.
 		return luaL_error(L,"do_work_error");
 	}
 }
@@ -83,7 +84,7 @@ leaf::result<int> call_lua( lua_State * L )
 	if( int err=lua_pcall(L,0,1,0) )
 	{
 		//Something went wrong with the call, so we'll return a leaf::error.
-		//If this is a do_work failure, the e_do_work object preloaded in
+		//If this is a do_work failure, the e_do_work_error object prepared in
 		//do_work will become associated with this leaf::error value. If not,
 		//we will still need to communicate that the lua_pcall failed with an
 		//error code and an error message.

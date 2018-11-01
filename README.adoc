@@ -862,6 +862,7 @@ namespace boost { namespace leaf {
 
     friend std::ostream & operator<<( std::ostream & os, error const & e )
  
+    static error peek_next_error() noexcept;
   };
 
 } }
@@ -960,6 +961,27 @@ namespace boost { namespace leaf {
 ----
 
 Effects: :: Prints an `unsigned int` value that uniquely identifies the value `e`.
+
+'''
+
+[[error::peek_next_error]]
+==== `peek_next_error`
+
+.#include <boost/leaf/error.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  error error::peek_next_error() noexcept;
+
+} }
+----
+
+Returns: :: The `error` value which will be returned the next time the `<<error::error,error>>` constructor is invoked from the calling thread.
++
+This function can be used to associate <<e-types,e-objects>> with the next `error` value to be reported. Use with caution, only when restricted to reporting errors using specific types, incompatible with LEAF, for example in a C callback. As soon as control exits this critical path, you should create and return a `leaf::error` object.
+
+NOTE: `error` values are unique across the entire program.
 
 '''
 
@@ -1970,7 +1992,7 @@ But if the caught exception was not thrown by `throw_exception` (and therefore d
 '''
 
 [[technique_preload_in_c_callbacks]]
-=== Using `preload` in C-callbacks
+=== Using `peek_next_error` in C-callbacks
 
 Communicating information pertaining to a failure detected in a C callback is tricky, because C callbacks are limited to a specific static signature, which may not use {CPP} types.
 
@@ -2035,15 +2057,15 @@ int do_work( lua_State * L ) noexcept
   }
   else
   {
-    auto propagate = leaf::preload( e_do_work_error{-42} ); <3>
+    leaf::error::peek_next_error().propagate( e_do_work_error{-42} ); <3>
     return luaL_error(L,"do_work_error"); <4>
   }
 }
 ----
 <1> "Sometimes" `do_work` fails.
 <2> In case of success, push the result on the Lua stack, return back to Lua.
-<3> In case of failure, use `<<preload,preload>>` to get a `e_do_work_error` ready to be associated with the next `leaf::<<error,error>>` value created.
-<4> Tell Lua that `do_work` failed. It will abort the Lua program and pop back into the {CPP} code which called the Lua interpreter.
+<3> Associate an `e_do_work_error` object with the *next* `leaf::error` object we will definitely return from the `call_lua` function (below)...
+<4> ...once control reaches it, after we tell the Lua interpreter to abort the program.
 ====
 
 Now we'll write the function that calls the Lua interpreter to execute the Lua function `call_do_work`, which in turn calls `do_work`. We'll return `<<result,result>><int>`, so that our caller can get the answer in case of success, or an error:
@@ -2069,7 +2091,7 @@ leaf::result<int> call_lua( lua_State * L )
 }
 ----
 <1> Ask the Lua interpreter to call the global Lua function `call_do_work`.
-<2> Something went wrong with the call, so we'll return a `leaf::<<error,error>>`. If this is a `do_work` failure, the `e_do_work` object preloaded in `do_work` will become associated with this `leaf::error` value. If not, we will still need to communicate that the `lua_pcall` failed with an error code and an error message.
+<2> Something went wrong with the call, so we'll return a `leaf::<<error,error>>`. If this is a `do_work` failure, the `e_do_work_error` object prepared in `do_work` will become associated with this `leaf::error` value. If not, we will still need to communicate that the `lua_pcall` failed with an error code and an error message.
 <3> Success! Just return the int answer.
 ====
 
