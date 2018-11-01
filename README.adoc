@@ -105,7 +105,7 @@ leaf::result<T> f()
 }  
 ----
 <1> Success, return `r`.
-<2> Forward the error reported in `r`, in addition storing `e_file_name` in `expect` objects from calling scopes.
+<2> Forward the error reported in `r`, in addition storing `e_file_name` in `expect` object(s) from calling scopes.
 ====
 
 == What if I want to use exception handling?
