@@ -32,7 +32,7 @@ struct e_lua_error_message { std::string value; };
 //If it succeeds, it returns an int answer, by pushing it onto the Lua stack. But "sometimes"
 //it fails, in which case it calls luaL_error. This causes the Lua interpreter to abort and pop
 //back into the C++ code which called it (see call_lua below).
-int do_work( lua_State * L ) noexcept
+int do_work( lua_State * L )
 {
 	bool success=rand()%2;
 	if( success )
@@ -42,16 +42,13 @@ int do_work( lua_State * L ) noexcept
 	}
 	else
 	{
-		//Tell the Lua interpreter to abort the Lua program. Control will reach the
-		//call_lua function which called the Lua interpreter. The e_do_work_error
-		//is communicated, through the Lua interpreter, to that function.
-		auto propagate = leaf::preload( e_do_work_error{-42} );
-		return luaL_error(L,"do_work_error");
+		//Remarkably, the Lua interpreter is exception-safe. So, just throw.
+		leaf::throw_exception( lua_failure(), e_do_work_error{-42} );
 	}
 }
 
 
-std::shared_ptr<lua_State> init_lua_state() noexcept
+std::shared_ptr<lua_State> init_lua_state()
 {
 	//Create a new lua_State, we'll use std::shared_ptr for automatic cleanup.
 	std::shared_ptr<lua_State> L(lua_open(),&lua_close);
@@ -85,10 +82,7 @@ int call_lua( lua_State * L )
 	if( int err=lua_pcall(L,0,1,0) )
 	{
 		//Something went wrong with the call, so we'll throw lua_failure.
-		//If this is a do_work failure, the e_do_work object preloaded in
-		//do_work will become associated with this exception. If not,
-		//we will still need to communicate that the lua_pcall failed with an
-		//error code and an error message.
+		//This is definitely not a do_work failure, because it throws on error.
 		auto propagate = leaf::preload( e_lua_error_message{lua_tostring(L,1)} );
 		lua_pop(L,1);
 		leaf::throw_exception( lua_failure(), e_lua_pcall_error{err} );

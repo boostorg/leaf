@@ -15,6 +15,96 @@ LEAF is a non-intrusive {CPP}11 error handling library capable of transporting a
 
 LEAF does not allocate dynamic memoryfootnote:[Except when transporting error info between threads, see <<capture-expect,`capture`>>.], which makes it suitable for low-latency and other performance-critical environments. It is equally applicable to programs that use exception handling and programs that do not.
 
+NOTE: LEAF is compatible with, not a replacement for `std::error_code`.
+
+Basic error handling with LEAF looks like this:
+
+====
+[source,c++]
+----
+{
+  leaf::expect<e_error_code, e_file_name, e_request_id> exp; <1>
+
+  if( result<T> r = f() )
+  {
+    //Success! <2>
+  }
+  else
+  {
+    //Handle errors
+
+    bool matched = leaf::handle_error( exp, r, <3>
+
+      leaf::match<e_error_code, e_file_name, e_request_id>( [ ]( int ec, std::string const & fn, uuid const & id )
+      {
+        <4>
+      } ),
+
+      leaf::match<e_error_code, e_file_name>( [ ]( int ec, std::string const & fn )
+      {
+        <5>
+      } )
+    );
+
+  }
+}
+----
+<1> Error objects returned by `f` (next line) are stored in `exp`, but only if their types are specified in the instantiation of the `expect` template (otherwise they're discarded).
+<2> Successful result values are stored inside `r` of type `result<T>`, which is a value-or-error variant type.
+<3> In case of error, we pass `exp` and the returned `r` to `handle_error`, followed by several (in this case, two) sets of error object types to be matched (`handle_error` returns false if it doesn`t find a match).
+<4> Handle the case where we got `e_error_code`, `e_file_name` and `e_request_id` with the error reported in `r`.
+<4> Handle the case where we only got `e_error_code` and `e_file_name` with the error reported in `r`.
+====
+
+`e_error_code`, `e_file_name`, `e_request_id`, etc. are user-defined, e.g.:
+
+====
+[source,c++]
+----
+struct e_error_code { int value; };
+
+struct e_file_name { std::string value; };
+
+struct e_request_id { uuid value; };
+----
+====
+
+Reporting an error with LEAF looks like this:
+
+====
+[source,c++]
+----
+leaf::result<T> g()
+{
+  if( success )
+    return T(....);
+  else
+    return leaf::error( e_error_code{42}, e_request_id{id} ); <1>
+}
+----
+<1> Report an error, store the passed `e_error_code` and `e_request_id` in `expect` object(s) from calling scopes.
+====
+
+Forwarding an error reported by a lower level function looks like this:
+
+====
+[source,c++]
+----
+leaf::result<T> f()
+{
+  if( leaf::error<T> r=g() )
+  {
+    ....
+    return r; <1>
+  }
+  else
+    return r.error( e_file_name{"file.txt"} ); <2>
+}  
+----
+<1> Success, return `r`.
+<2> Forward the error reported in `r`, in addition storing `e_file_name` in `expect` objects from calling scopes.
+====
+
 [[tutorial]]
 == Tutorial
 
