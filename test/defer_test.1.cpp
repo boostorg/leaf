@@ -12,40 +12,39 @@ namespace leaf = boost::leaf;
 
 int global;
 
-int
-get_global() noexcept
-	{
+int get_global() noexcept
+{
 	return global;
-	}
-struct
-info
-	{
+}
+
+struct info
+{
 	int value;
-	};
-leaf::error
-g()
-	{
+};
+
+leaf::error g()
+{
 	global = 0;
 	auto propagate = leaf::defer( [ ] { return info{get_global()}; } );
 	global = 42;
 	return leaf::error();
-	}
-leaf::error
-f()
-	{
+}
+
+leaf::error f()
+{
 	return g();
-	}
-int
-main()
-	{
+}
+
+int main()
+{
 	leaf::expect<info> exp;
 	int c=0;
 	BOOST_TEST( handle_error( exp, f(),
 		leaf::match<info>( [&c]( int i42 )
-			{
+		{
 			BOOST_TEST(i42==42);
 			++c;
-			} ) ) );
-	BOOST_TEST(c==1);
+		} ) ) );
 	return boost::report_errors();
-	}
+	BOOST_TEST(c==1);
+}

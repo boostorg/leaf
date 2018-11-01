@@ -12,67 +12,60 @@
 
 namespace leaf = boost::leaf;
 
-struct
-my_error:
+struct my_error:
 	virtual std::exception
+{
+	char const * what() const noexcept
 	{
-	char const *
-	what() const noexcept
-		{
 		return "my_error";
-		}
-	};
+	}
+};
 
-struct
-printable_payload
+struct printable_payload
+{
+	friend std::ostream & operator<<( std::ostream & os, printable_payload const & x )
 	{
-	friend
-	std::ostream &
-	operator<<( std::ostream & os, printable_payload const & x )
-		{
 		return os << "printed printable_payload";
-		}
-	};
-struct
-non_printable_payload
-	{
-	};
-struct
-printable_info_printable_payload
-	{
+	}
+};
+
+struct non_printable_payload
+{
+};
+
+struct printable_info_printable_payload
+{
 	printable_payload value;
-	friend
-	std::ostream &
-	operator<<( std::ostream & os, printable_info_printable_payload const & x )
-		{
+
+	friend std::ostream & operator<<( std::ostream & os, printable_info_printable_payload const & x )
+	{
 		return os << "*** printable_info_printable_payload " << x.value << " ***";
-		}
-	};
-struct
-printable_info_non_printable_payload
-	{
+	}
+};
+
+struct printable_info_non_printable_payload
+{
 	non_printable_payload value;
-	friend
-	std::ostream &
-	operator<<( std::ostream & os, printable_info_non_printable_payload const & x )
-		{
+
+	friend std::ostream & operator<<( std::ostream & os, printable_info_non_printable_payload const & x )
+	{
 		return os << "*** printable_info_non_printable_payload ***";
-		}
-	};
-struct
-non_printable_info_printable_payload
-	{
+	}
+};
+
+struct non_printable_info_printable_payload
+{
 	printable_payload value;
-	};
-struct
-non_printable_info_non_printable_payload
-	{
+};
+
+struct non_printable_info_non_printable_payload
+{
 	non_printable_payload value;
-	};
-int
-main()
+};
+
+int main()
+{
 	{
-		{
 		leaf::expect
 			<
 			printable_info_printable_payload,
@@ -83,7 +76,7 @@ main()
 			leaf::e_source_location
 			> exp;
 		try
-			{
+		{
 			leaf::throw_exception(
 				my_error(),
 				LEAF_SOURCE_LOCATION,
@@ -92,10 +85,9 @@ main()
 				non_printable_info_printable_payload(),
 				non_printable_info_non_printable_payload(),
 				leaf::e_errno{ENOENT} );
-			}
-		catch(
-		my_error & e )
-			{
+		}
+		catch( my_error & e )
+		{
 			std::ostringstream st;
 			current_exception_diagnostic_print(st,exp);
 			std::string s = st.str();
@@ -107,7 +99,7 @@ main()
 			BOOST_TEST(s.find(") in function")!=s.npos);
 			std::cout << s;
 			handle_exception( exp, e, leaf::match<>() );
-			}
 		}
-	return boost::report_errors();
 	}
+	return boost::report_errors();
+}

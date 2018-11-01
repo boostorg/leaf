@@ -14,42 +14,42 @@ struct info { int value; };
 
 struct my_error: std::exception { };
 
-void
-g()
-	{
+void g()
+{
 	leaf::expect<info> exp;
 	throw my_error();
-	}
-void
-f()
-	{
+}
+
+void f()
+{
 	return g();
-	}
-int
-main()
-	{
+}
+
+int main()
+{
 	leaf::expect<info> exp;
 	try
-		{
+	{
 		f();
 		BOOST_TEST(false);
-		}
+	}
 	catch( my_error & e )
-		{
+	{
 		int c=0;
 		try
-			{
+		{
 			handle_exception( exp, e,
 				leaf::match<info>( [&c]( int i )
-					{
+				{
 					++c;
-					} ) );
+				} ) );
 			BOOST_TEST(false);
-			}
-		catch( my_error & )
-			{
-			}
-		BOOST_TEST(c==0);
 		}
-	return boost::report_errors();
+		catch( my_error & )
+		{
+		}
+		BOOST_TEST(c==0);
 	}
+
+	return boost::report_errors();
+}

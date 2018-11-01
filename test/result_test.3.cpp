@@ -11,42 +11,44 @@
 
 namespace leaf = boost::leaf;
 
-struct
-err
-	{
+struct err
+{
 	static int count;
+
 	err()
-		{
+	{
 		++count;
-		}
+	}
+
 	err( err const & )
-		{
+	{
 		++count;
-		}
+	}
+
 	err( err && )
-		{
+	{
 		++count;
-		}
+	}
+
 	~err()
-		{
+	{
 		--count;
-		}
-	};
+	}
+};
 int err::count = 0;
 struct e_err1 { err value; };
 struct e_err2 { err value; };
 
-int
-main()
-	{
+int main()
+{
 	leaf::result<int> r0;
-		{
+	{
 		leaf::expect<e_err1> exp;
 		leaf::result<int> r1 = leaf::error( e_err1{ } );
 		BOOST_TEST(!r1);
 		r0 = capture(exp,r1);
 		BOOST_TEST(err::count==1);
-		}
+	}
 	BOOST_TEST(err::count==1);
 	BOOST_TEST(!r0);
 	leaf::expect<e_err1,e_err2> exp;
@@ -54,4 +56,4 @@ main()
 	BOOST_TEST(err::count==2);
 	BOOST_TEST(handle_error(exp,r2,leaf::match<e_err1,e_err2>()));
 	return boost::report_errors();
-	}
+}

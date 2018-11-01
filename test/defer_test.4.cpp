@@ -15,41 +15,40 @@ struct my_error: std::exception { };
 
 struct info { int value; };
 
-void
-g1()
-	{
+void g1()
+{
 	auto propagate = leaf::defer( [ ] { return info{1}; } );
-	}
-void
-g2()
-	{
+}
+
+void g2()
+{
 	throw my_error();
-	}
-void
-f()
-	{
+}
+
+void f()
+{
 	auto propagate = leaf::defer( [ ] { return info{2}; } );
 	g1();
 	g2();
-	}
-int
-main()
-	{
+}
+
+int main()
+{
 	leaf::expect<info> exp;
 	try
-		{
+	{
 		f();
-		}
+	}
 	catch( my_error & e )
-		{
+	{
 		int c=0;
 		handle_exception( exp, e,
 			leaf::match<info>( [&c]( int x )
-				{
+			{
 				BOOST_TEST(x==2);
 				++c;
-				} ) );
+			} ) );
 		BOOST_TEST(c==1);
-		}
-	return boost::report_errors();
 	}
+	return boost::report_errors();
+}

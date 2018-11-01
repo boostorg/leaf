@@ -11,27 +11,26 @@ namespace leaf = boost::leaf;
 
 struct info { int value; };
 
-leaf::error
-g()
-	{
+leaf::error g()
+{
 	leaf::expect<info> exp;
 	return leaf::error();
-	}
-leaf::error
-f()
-	{
+}
+
+leaf::error f()
+{
 	return g();
-	}
-int
-main()
-	{
+}
+
+int main()
+{
 	leaf::expect<info> exp;
 	int c=0;
 	BOOST_TEST( !handle_error( exp, f(),
 		leaf::match<info>( [&c]( int i )
-			{
+		{
 			++c;
-			} ) ) );
+		} ) ) );
 	BOOST_TEST(c==0);
 	return boost::report_errors();
-	}
+}

@@ -11,43 +11,42 @@
 namespace leaf = boost::leaf;
 
 template <int A>
-struct
-info
-	{
+struct info
+{
 	int value;
-	};
-leaf::error
-f0()
-	{
+};
+
+leaf::error f0()
+{
 	auto propagate = leaf::defer( [ ] { return info<0>{0}; } );
 	return leaf::error( info<2>{2} );
-	}
-leaf::error
-f1()
-	{
+}
+
+leaf::error f1()
+{
 	auto propagate = leaf::defer( [ ] { return info<0>{-1}; }, [ ] { return info<1>{1}; }, [ ] { return info<2>{-1}; } );
 	return f0();
-	}
-leaf::error
-f2()
-	{
+}
+
+leaf::error f2()
+{
 	return f1().propagate( info<4>{4} );
-	}
-int
-main()
-	{
+}
+
+int main()
+{
 	leaf::expect<info<0>,info<1>,info<2>,info<3>,info<4>> exp;
 	leaf::error e = f2();
 	BOOST_TEST(!leaf::peek<info<3>>(exp,e));
 	int c=0;
 	BOOST_TEST( handle_error( exp, e,
 		leaf::match<info<1>,info<2>,info<4>>( [&c]( int i1, int i2, int i4 )
-			{
+		{
 			BOOST_TEST(i1==1);
 			BOOST_TEST(i2==2);
 			BOOST_TEST(i4==4);
 			++c;
-			} ) ) );
+		} ) ) );
 	BOOST_TEST(c==1);
 	return boost::report_errors();
-	}
+}

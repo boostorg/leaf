@@ -15,56 +15,49 @@
 
 #define LEAF_SOURCE_LOCATION ::boost::leaf::e_source_location{::boost::leaf::e_source_location::loc(__FILE__,__LINE__,__FUNCTION__)}
 
-namespace
-boost
+namespace boost { namespace leaf {
+
+	struct e_source_location
 	{
-	namespace
-	leaf
+		struct loc
 		{
-		struct
-		e_source_location
+			char const * const file;
+			int const line;
+			char const * const function;
+
+			loc( char const * file, int line, char const * function ) noexcept:
+				file(file),
+				line(line),
+				function(function)
 			{
-			struct
-			loc
-				{
-				char const * const file;
-				int const line;
-				char const * const function;
-				loc( char const * file, int line, char const * function ) noexcept:
-					file(file),
-					line(line),
-					function(function)
-					{
-					assert(file!=0);
-					assert(line>0);
-					assert(function!=0);
-					}
-				};
-			loc value;
-			friend
-			std::ostream &
-			operator<<( std::ostream & os, e_source_location const & x )
-				{
-				return os << "At " << x.value.file << '(' << x.value.line << ") in function " << x.value.function << std::endl;
-				}
-			};
-		////////////////////////////////////////
-		struct e_api_function { char const * value; };
-		struct e_file_name { std::string value; };
-		////////////////////////////////////////
-		struct
-		e_errno
-			{
-			int value;
-			friend
-			std::ostream &
-			operator<<( std::ostream & os, e_errno const & err )
-				{
-				using namespace std;
-				return os << type<e_errno>() << " = " << err.value << ", \"" << std::strerror(err.value) << '"';
-				}
-			};
+				assert(file!=0);
+				assert(line>0);
+				assert(function!=0);
+			}
+		};
+
+		loc value;
+
+		friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
+		{
+			return os << "At " << x.value.file << '(' << x.value.line << ") in function " << x.value.function << std::endl;
 		}
-	}
+	};
+
+	struct e_api_function { char const * value; };
+
+	struct e_file_name { std::string value; };
+
+	struct e_errno
+	{
+		int value;
+
+		friend std::ostream & operator<<( std::ostream & os, e_errno const & err ) {
+			using namespace std;
+			return os << type<e_errno>() << " = " << err.value << ", \"" << std::strerror(err.value) << '"';
+		}
+	};
+
+} }
 
 #endif

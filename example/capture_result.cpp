@@ -47,13 +47,13 @@ std::vector<std::future<leaf::result<task_result>>> launch_async_tasks( int thre
 {
 	std::vector<std::future<leaf::result<task_result>>> fut;
 	std::generate_n( std::inserter(fut,fut.end()), thread_count, [ ]
-		{
+	{
 		return std::async( std::launch::async, [ ]
-			{
-				leaf::expect<E...> exp;
-				return capture(exp,task((rand()%4)!=0));
-			} );
+		{
+			leaf::expect<E...> exp;
+			return capture(exp,task((rand()%4)!=0));
 		} );
+	} );
 	return fut;
 }
 
@@ -83,9 +83,9 @@ int main()
 			//Failure! Handle error, print failure info.
 			bool matched = handle_error( exp, r,
 				leaf::match<failure_info1, failure_info2, failed_thread_id>( [ ] ( std::string const & v1, int v2, std::thread::id tid )
-					{
+				{
 						std::cerr << "Error in thread " << tid << "! failure_info1: " << v1 << ", failure_info2: " << v2 << std::endl;
-					} ) );
+				} ) );
 			assert(matched);
 		}
 	}

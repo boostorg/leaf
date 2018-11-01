@@ -12,46 +12,39 @@
 
 #define LEAF_THROW(e) ::boost::leaf::throw_exception(e,LEAF_SOURCE_LOCATION)
 
-namespace
-boost
+namespace boost { namespace leaf {
+
+	namespace leaf_detail
 	{
-	namespace
-	leaf
+		inline void enforce_std_exception( std::exception const & ) { }
+
+		template <class Ex>
+		class exception:
+			public Ex,
+			public error
 		{
-		namespace
-		leaf_detail
+			public:
+			exception( Ex && ex, error && e ) noexcept:
+				Ex(std::move(ex)),
+				error(std::move(e))
 			{
-			inline void enforce_std_exception( std::exception const & ) { }
-			template <class Ex>
-			class
-			exception:
-				public Ex,
-				public error
-				{
-				public:
-				exception( Ex && ex, error && e ) noexcept:
-					Ex(std::move(ex)),
-					error(std::move(e))
-					{
-					enforce_std_exception(*this);
-					}
-				};
+				enforce_std_exception(*this);
 			}
-		template <class... E,class Ex>
-		[[noreturn]]
-		void
-		throw_exception( Ex && ex, E && ... e )
-			{
-			throw leaf_detail::exception<Ex>(std::move(ex),error(std::move(e)...));
-			}
-		template <class... E,class Ex>
-		[[noreturn]]
-		void
-		throw_exception( Ex && ex, error const & err, E && ... e )
-			{
-			throw leaf_detail::exception<Ex>(std::move(ex),err.propagate(std::move(e)...));
-			}
-		}
+		};
+	} //leaf_detail
+
+	template <class... E,class Ex>
+	[[noreturn]] void throw_exception( Ex && ex, E && ... e )
+	{
+		throw leaf_detail::exception<Ex>(std::move(ex),error(std::move(e)...));
 	}
+
+	template <class... E,class Ex>
+	[[noreturn]] void throw_exception( Ex && ex, error const & err, E && ... e )
+	{
+		throw leaf_detail::exception<Ex>(std::move(ex),err.propagate(std::move(e)...));
+	}
+
+} }
 
 #endif

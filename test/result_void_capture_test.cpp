@@ -16,22 +16,21 @@ namespace leaf = boost::leaf;
 
 template <int> struct info { int value; };
 
-struct
-fut_info
-	{
+struct fut_info
+{
 	int a;
 	int b;
 	int result;
 	std::future<leaf::result<void>> fut;
-	};
+};
+
 template <class F>
-std::vector<fut_info>
-launch_tasks( int task_count, F f )
-	{
+std::vector<fut_info> launch_tasks( int task_count, F f )
+{
 	assert(task_count>0);
 	std::vector<fut_info> fut;
 	std::generate_n( std::inserter(fut,fut.end()), task_count, [f]
-		{
+	{
 		int const a = rand();
 		int const b = rand();
 		int const res = (rand()%10) - 5;
@@ -40,29 +39,30 @@ launch_tasks( int task_count, F f )
 			leaf::expect<info<1>,info<2>,info<3>> exp;
 			return capture(exp,f(a,b,res));
 			} ) };
-		} );
+	} );
 	return fut;
-	}
-int
-main()
-	{
+}
+
+int main()
+{
 	std::vector<fut_info> fut = launch_tasks( 42, [ ]( int a, int b, int res ) noexcept -> leaf::result<void>
-		{
+	{
 		if( res>=0 )
 			return { };
 		else
 			return leaf::error(info<1>{a},info<2>{b},info<3>{});
-		} );
+	} );
+
 	for( auto & f : fut )
-		{
+	{
 		using namespace leaf::leaf_detail;
 		f.fut.wait();
 		leaf::expect<info<1>,info<2>,info<4>> exp;
 		if( leaf::result<void> r = f.fut.get() )
-			{
-			}
+		{
+		}
 		else
-			{
+		{
 			int c=0;
 			BOOST_TEST( handle_error( exp, r, leaf::match<info<1>,info<2>>( [&f,&c]( int x1, int x2 )
 				{
@@ -71,7 +71,7 @@ main()
 				++c;
 				} ) ) );
 			BOOST_TEST(c==1);
-			}
 		}
-	return boost::report_errors();
 	}
+	return boost::report_errors();
+}

@@ -11,69 +11,68 @@
 
 namespace leaf = boost::leaf;
 
-struct
-my_value
-	{
-	};
+struct my_value
+{
+};
+
 template <int A>
-struct
-info
-	{
+struct info
+{
 	int value;
-	};
-leaf::result<my_value>
-f1( bool success )
-	{
+};
+
+leaf::result<my_value> f1( bool success )
+{
 	if( success )
 		return { };
 	else
 		return leaf::error( info<1>{1} );
-	}
-leaf::result<my_value>
-f2( bool success )
-	{
+}
+
+leaf::result<my_value> f2( bool success )
+{
 	leaf::expect<info<1>> exp;
 	if( leaf::result<my_value> r=f1(success) )
 		return r;
 	else
 		return r.error( info<2>{2} );
-	}
-leaf::result<my_value>
-f3( bool success )
-	{
+}
+
+leaf::result<my_value> f3( bool success )
+{
 	leaf::expect<info<2>,info<3>> exp;
 	auto propagate = leaf::preload( info<4>{4} );
 	return f2(success);
-	}
-leaf::result<my_value>
-f4( bool success )
-	{
+}
+
+leaf::result<my_value> f4( bool success )
+{
 	leaf::expect<info<1>,info<2>,info<3>,info<4>> exp;
 	if( leaf::result<my_value> r = f3( success ) )
 		return r;
 	else
-		{
+	{
 		int c1=0, c2=0;
 		BOOST_TEST( handle_error( exp, r,
 			leaf::match<info<1>,info<2>,info<3>,info<4>>( [&c1]( int, int, int, int )
-				{
+			{
 				++c1;
-				} ),
+			} ),
 			leaf::match<info<1>,info<2>,info<4>>( [&c2]( int i1, int i2, int i4 )
-				{
+			{
 				BOOST_TEST(i1==1);
 				BOOST_TEST(i2==2);
 				BOOST_TEST(i4==4);
 				++c2;
-				} ) ) );
+			} ) ) );
 		BOOST_TEST(c1==0);
 		BOOST_TEST(c2==1);
 		return leaf::error();
-		}
 	}
-int
-main()
-	{
+}
+
+int main()
+{
 	leaf::expect<info<2>,info<3>,info<4>> exp;
 	BOOST_TEST(f4(true));
 	leaf::result<my_value> r=f4(false);
@@ -87,4 +86,4 @@ main()
 	BOOST_TEST(leaf::leaf_detail::tl_slot_ptr<info<3>>()!=0);
 	BOOST_TEST(leaf::leaf_detail::tl_slot_ptr<info<4>>()!=0);
 	return boost::report_errors();
-	}
+}

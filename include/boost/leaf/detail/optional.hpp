@@ -11,126 +11,128 @@
 #include <new>
 #include <cassert>
 
-namespace
-boost
+namespace boost { namespace leaf {
+
+	namespace leaf_detail
 	{
-	namespace
-	leaf
+		template <class T>
+		class optional
 		{
-		namespace
-		leaf_detail
+			union { T value_; };
+			bool has_value_;
+
+		public:
+
+			typedef T value_type;
+			optional() noexcept:
+				has_value_(false)
 			{
-			template <class T>
-			class
-			optional
-				{
-				union { T value_; };
-				bool has_value_;
-				public:
-				typedef T value_type;
-				optional() noexcept:
-					has_value_(false)
-					{
-					}
-				optional( optional const & x ):
-					has_value_(false)
-					{
-					(void) (*this = x);
-					}
-				optional( optional && x ) noexcept:
-					has_value_(false)
-					{
-					(void) (*this = std::move(x));
-					}
-				optional( T const & v ):
-					has_value_(false)
-					{
-					put(v);
-					}
-				optional( T && v ) noexcept:
-					has_value_(false)
-					{
-					put(std::move(v));
-					}
-				optional &
-				operator=( optional const & x )
-					{
-					reset();
-					if( x.has_value() )
-						put(x.value());
-					return *this;
-					}
-				optional &
-				operator=( optional && x ) noexcept
-					{
-					reset();
-					if( x.has_value() )
-						put(std::move(x).value());
-					return *this;
-					}
-				~optional() noexcept
-					{
-					reset();
-					}
-				void
-				reset() noexcept
-					{
-					if( has_value() )
-						{
-						value_.~T();
-						has_value_=false;
-						}
-					}
-				T &
-				put( T const & v )
-					{
-					reset();
-					(void) new(&value_) T(v);
-					has_value_=true;
-					return value_;
-					}
-				T &
-				put( T && v ) noexcept
-					{
-					reset();
-					(void) new(&value_) T(std::move(v));
-					has_value_=true;
-					return value_;
-					}
-				bool
-				has_value() const noexcept
-					{
-					return has_value_;
-					}
-				T const &
-				value() const & noexcept
-					{
-					assert(has_value());
-					return value_;
-					}
-				T &
-				value() & noexcept
-					{
-					assert(has_value());
-					return value_;
-					}
-				T const &&
-				value() const && noexcept
-					{
-					assert(has_value());
-					return value_;
-					}
-				T
-				value() && noexcept
-					{
-					assert(has_value());
-					T tmp(std::move(value_));
-					reset();
-					return tmp;
-					}
-				};
 			}
-		}
-	}
+
+			optional( optional const & x ):
+				has_value_(false)
+			{
+				(void) (*this = x);
+			}
+
+			optional( optional && x ) noexcept:
+				has_value_(false)
+			{
+				(void) (*this = std::move(x));
+			}
+
+			optional( T const & v ):
+				has_value_(false)
+			{
+				put(v);
+			}
+
+			optional( T && v ) noexcept:
+				has_value_(false)
+			{
+				put(std::move(v));
+			}
+
+			optional & operator=( optional const & x )
+			{
+				reset();
+				if( x.has_value() )
+					put(x.value());
+				return *this;
+			}
+
+			optional & operator=( optional && x ) noexcept
+			{
+				reset();
+				if( x.has_value() )
+					put(std::move(x).value());
+				return *this;
+			}
+
+			~optional() noexcept
+			{
+				reset();
+			}
+
+			void reset() noexcept
+			{
+				if( has_value() )
+				{
+					value_.~T();
+					has_value_=false;
+				}
+			}
+
+			T & put( T const & v )
+			{
+				reset();
+				(void) new(&value_) T(v);
+				has_value_=true;
+				return value_;
+			}
+
+			T & put( T && v ) noexcept
+			{
+				reset();
+				(void) new(&value_) T(std::move(v));
+				has_value_=true;
+				return value_;
+			}
+
+			bool has_value() const noexcept
+			{
+				return has_value_;
+			}
+
+			T const & value() const & noexcept
+			{
+				assert(has_value());
+				return value_;
+			}
+
+			T & value() & noexcept
+			{
+				assert(has_value());
+				return value_;
+			}
+
+			T const && value() const && noexcept
+			{
+				assert(has_value());
+				return value_;
+			}
+
+			T value() && noexcept
+			{
+				assert(has_value());
+				T tmp(std::move(value_));
+				reset();
+				return tmp;
+			}
+		};
+
+	} //leaf_detail
+
+} }
 
 #endif

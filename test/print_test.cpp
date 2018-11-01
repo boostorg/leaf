@@ -10,84 +10,82 @@
 
 namespace leaf = boost::leaf;
 
-struct
-c1
-	{
+struct c1
+{
 	int value;
-	friend
-	std::ostream &
-	operator<<( std::ostream & os, c1 const & )
-		{
+
+	friend std::ostream & operator<<( std::ostream & os, c1 const & )
+	{
 		return os << "c1";
-		}           
-	};
-struct
-c2
-	{
-	int value;
-	};
-std::ostream &
-operator<<( std::ostream & os, c2 const & )
-	{
-	return os << "c2";
 	}           
-struct
-c3
-	{
+};
+
+struct c2
+{
 	int value;
-	};
-struct
-c4
-	{
+};
+
+std::ostream & operator<<( std::ostream & os, c2 const & )
+{
+	return os << "c2";
+}           
+
+struct c3
+{
+	int value;
+};
+
+struct c4
+{
 	struct unprintable { };
 	unprintable value;;
-	};
+};
+
 template <class T>
-bool
-check( T const & x, char const * sub )
-	{
+bool check( T const & x, char const * sub )
+{
 	using namespace leaf::leaf_detail;
 	std::ostringstream s;
 	diagnostic<T>::print(s,x);
 	std::string q = s.str();
 	return q.find(sub)!=q.npos;
-	}
-int
-main()
-	{
+}
+
+int main()
+{
 	BOOST_TEST(check(c1{42},"c1"));
-		{
+	{
 		c1 x;
 		c1 & y = x;
 		BOOST_TEST(check(x,"c1"));
 		BOOST_TEST(check(y,"c1"));
-		}
+	}
 	BOOST_TEST(check(c2{42},"c2"));
-		{
+	{
 		c2 x = {42};
 		c2 & y = x;
 		BOOST_TEST(check(x,"c2"));
 		BOOST_TEST(check(y,"c2"));
-		}
+	}
 	BOOST_TEST(check(c3{42},"c3"));
 	BOOST_TEST(check(c3{42},"42"));
-		{
+	{
 		c3 x = {42};
 		c3 & y = x;
 		BOOST_TEST(check(x,"c3"));
 		BOOST_TEST(check(x,"42"));
 		BOOST_TEST(check(y,"c3"));
 		BOOST_TEST(check(y,"42"));
-		}
+	}
 	BOOST_TEST(check(c4(),"c4"));
 	BOOST_TEST(check(c4(),"N/A"));
-		{
+	{
 		c4 x;
 		c4 & y = x;
 		BOOST_TEST(check(x,"c4"));
 		BOOST_TEST(check(x,"N/A"));
 		BOOST_TEST(check(y,"c4"));
 		BOOST_TEST(check(y,"N/A"));
-		}
-	return boost::report_errors();
 	}
+	return boost::report_errors();
+}

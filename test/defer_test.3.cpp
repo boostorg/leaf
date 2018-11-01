@@ -13,36 +13,35 @@ namespace leaf = boost::leaf;
 
 struct info { int value; };
 
-leaf::result<void>
-g1()
-	{
+leaf::result<void> g1()
+{
 	auto propagate = leaf::defer( [ ] { return info{1}; } );
 	return { };
-	}
-leaf::result<void>
-g2()
-	{
+}
+
+leaf::result<void> g2()
+{
 	return leaf::error();
-	}
-leaf::result<void>
-f()
-	{
+}
+
+leaf::result<void> f()
+{
 	auto propagate = leaf::defer( [ ] { return info{2}; } );
 	LEAF_CHECK(g1());
 	return g2();
-	}
-int
-main()
-	{
+}
+
+int main()
+{
 	leaf::expect<info> exp;
 	leaf::result<void> r = f();
 	int c=0;
 	BOOST_TEST( handle_error( exp, r,
 		leaf::match<info>( [&c]( int x )
-			{
+		{
 			BOOST_TEST(x==2);
 			++c;
-			} ) ) );
+		} ) ) );
 	BOOST_TEST(c==1);
 	return boost::report_errors();
-	}
+}
