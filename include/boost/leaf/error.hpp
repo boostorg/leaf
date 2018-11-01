@@ -184,28 +184,28 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class F,class... T>
+		template <class F, class... E>
 		struct match_fn
 		{
 			F f;
 		};
 
-		template <class... T>
+		template <class... E>
 		struct match_no_fn
 		{
 		};
 	} //leaf_detail
 
-	template <class... T,class F>
-	leaf_detail::match_fn<F,T...> match( F && f ) noexcept
+	template <class... E, class F>
+	leaf_detail::match_fn<F,E...> match( F && f ) noexcept
 	{
-		return leaf_detail::match_fn<F,T...> { std::move(f) };
+		return leaf_detail::match_fn<F,E...> { std::move(f) };
 	}
 
-	template <class... T>
-	leaf_detail::match_no_fn<T...> match() noexcept
+	template <class... E>
+	leaf_detail::match_no_fn<E...> match() noexcept
 	{
-		return leaf_detail::match_no_fn<T...> { };
+		return leaf_detail::match_no_fn<E...> { };
 	}
 
 } }

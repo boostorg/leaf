@@ -37,11 +37,11 @@ namespace boost { namespace leaf {
 
 		////////////////////////////////////////
 
-		template <class Wrapper,bool WrapperPrintable=is_printable<Wrapper>::value,bool ValuePrintable=is_printable<decltype(Wrapper::value)>::value>
+		template <class Wrapper, bool WrapperPrintable=is_printable<Wrapper>::value, bool ValuePrintable=is_printable<decltype(Wrapper::value)>::value>
 		struct diagnostic;
 
-		template <class Wrapper,bool ValuePrintable>
-		struct diagnostic<Wrapper,true,ValuePrintable>
+		template <class Wrapper, bool ValuePrintable>
+		struct diagnostic<Wrapper, true, ValuePrintable>
 		{
 			static bool print( std::ostream & os, Wrapper const & x )
 			{
@@ -51,7 +51,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class Wrapper>
-		struct diagnostic<Wrapper,false,true>
+		struct diagnostic<Wrapper, false, true>
 		{
 			static bool print( std::ostream & os, Wrapper const & x )
 			{
@@ -61,7 +61,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class Wrapper>
-		struct diagnostic<Wrapper,false,false>
+		struct diagnostic<Wrapper, false, false>
 		{
 			static bool print( std::ostream & os, Wrapper const & )
 			{

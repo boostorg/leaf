@@ -20,13 +20,13 @@ namespace boost { namespace leaf {
 			return error::peek_next_error();
 	}
 
-	template <class P,class... E>
+	template <class P, class... E>
 	decltype(P::value) const * peek( expect<E...> const & exp, std::exception const & ex ) noexcept
 	{
 		return peek<P>(exp,get_error(ex));
 	}
 
-	template <class... M,class... E>
+	template <class... M, class... E>
 	void handle_exception( expect<E...> & exp, std::exception const & ex, M && ... m )
 	{
 		if( handle_error(exp,get_error(ex),m...) )

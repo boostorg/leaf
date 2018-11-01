@@ -110,7 +110,7 @@ leaf::result<T> f()
 
 == What If I Want to Use Exception Handling?
 
-That would be a 1-minute introduction :)
+That would be a 1-minute introduction. :-)
 
 Exception handling with LEAF looks like this:
 

@@ -17,25 +17,25 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class T,class... List>
+		template <class T, class... List>
 		struct type_index;
 	
-		template <class T,class... Cdr>
-		struct type_index<T,T,Cdr...>
+		template <class T, class... Cdr>
+		struct type_index<T, T, Cdr...>
 		{
 			static const int value = 0;
 		};
 
-		template <class T,class Car,class... Cdr>
-		struct type_index<T,Car,Cdr...>
+		template <class T, class Car, class... Cdr>
+		struct type_index<T, Car, Cdr...>
 		{
 			static const int value = 1 + type_index<T,Cdr...>::value;
 		};
 
-		template <class T,class Tuple>
+		template <class T, class Tuple>
 		struct tuple_type_index;
 
-		template <class T,class... TupleTypes>
+		template <class T, class... TupleTypes>
 		struct tuple_type_index<T,std::tuple<TupleTypes...>>
 		{
 			static const int value = type_index<T,TupleTypes...>::value;
@@ -43,11 +43,11 @@ namespace boost { namespace leaf {
 
 		////////////////////////////////////////
 
-		template <class SlotsTuple,class... List>
+		template <class SlotsTuple, class... List>
 		struct slots_subset;
 
-		template <class SlotsTuple,class Car,class... Cdr>
-		struct slots_subset<SlotsTuple,Car,Cdr...>
+		template <class SlotsTuple, class Car, class... Cdr>
+		struct slots_subset<SlotsTuple, Car, Cdr...>
 		{
 			static bool have_values( SlotsTuple const & tup, error const & e ) noexcept
 			{
@@ -64,7 +64,7 @@ namespace boost { namespace leaf {
 
 		////////////////////////////////////////
 
-		template <int I,class Tuple>
+		template <int I, class Tuple>
 		struct tuple_for_each_expect
 		{
 			static void print( std::ostream & os, Tuple const & tup )
@@ -99,7 +99,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class Tuple>
-		struct tuple_for_each_expect<0,Tuple>
+		struct tuple_for_each_expect<0, Tuple>
 		{
 			static void print( std::ostream &, Tuple const & ) noexcept { }
 			static void print( std::ostream &, Tuple const &, error const & ) noexcept { }
@@ -128,10 +128,10 @@ namespace boost { namespace leaf {
 	template <class... E>
 	class expect;
 
-	template <class... E,class... M>
+	template <class... E, class... M>
 	bool handle_error( expect<E...> &, error const &, M && ... ) noexcept;
 
-	template <class P,class... E>
+	template <class P, class... E>
 	decltype(P::value) const * peek( expect<E...> const &, error const & ) noexcept;
 
 	template <class... E>
@@ -141,14 +141,17 @@ namespace boost { namespace leaf {
 	void diagnostic_output( std::ostream &, expect<E...> const &, error const & );
 
 	template <class... E>
+	typename leaf_detail::dependent_type<expect<E...>>::error_capture capture( expect<E...> &, error const & );
+
+	template <class... E>
 	class expect
 	{
 		friend class error;
 
-		template <class... E_,class... M>
+		template <class... E_, class... M>
 		friend bool leaf::handle_error( expect<E_...> &, error const &, M && ... ) noexcept;
 
-		template <class P,class... E_>
+		template <class P, class... E_>
 		friend decltype(P::value) const * leaf::peek( expect<E_...> const &, error const & ) noexcept;
 
 		template <class... E_>
@@ -157,12 +160,15 @@ namespace boost { namespace leaf {
 		template <class... E_>
 		friend void leaf::diagnostic_output( std::ostream &, expect<E_...> const &, error const & );
 
+		template <class... E_>
+		friend typename leaf_detail::dependent_type<expect<E_...>>::error_capture capture( expect<E_...> &, error const & );
+
 		expect( expect const & ) = delete;
 		expect & operator=( expect const & ) = delete;
 
 		std::tuple<leaf_detail::slot<E>...>  s_;
 
-		template <class F,class... MatchTypes>
+		template <class F, class... MatchTypes>
 		int unwrap( leaf_detail::match_fn<F,MatchTypes...> const & m, error const & e, bool & matched ) const
 		{
 			using namespace leaf_detail;
@@ -195,17 +201,6 @@ namespace boost { namespace leaf {
 				leaf_detail::tuple_for_each_expect<sizeof...(E),decltype(s_)>::clear(s_);
 		}
 
-		friend typename leaf_detail::dependent_type<expect>::error_capture capture( expect & exp, error const & e )
-		{
-			using namespace leaf_detail;
-			typename leaf_detail::dependent_type<expect>::error_capture cap(
-				e,
-				std::make_tuple(
-					convert_optional(
-						std::move(std::get<tuple_type_index<slot<E>,decltype(exp.s_)>::value>(exp.s_)),e)...));
-			return cap;
-		}
-
 		void propagate() noexcept
 		{
 			propagate_ = true;
@@ -214,7 +209,7 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	template <class... E,class... M>
+	template <class... E, class... M>
 	bool handle_error( expect<E...> & exp, error const & e, M && ... m ) noexcept
 	{
 		bool matched = false;
@@ -224,7 +219,7 @@ namespace boost { namespace leaf {
 		return matched;
 	}
 
-	template <class P,class... E>
+	template <class P, class... E>
 	decltype(P::value) const * peek( expect<E...> const & exp, error const & e ) noexcept
 	{
 		auto & opt = std::get<leaf_detail::type_index<P,E...>::value>(exp.s_);
@@ -247,6 +242,18 @@ namespace boost { namespace leaf {
 	void diagnostic_output( std::ostream & os, expect<E...> const & exp, error const & e )
 	{
 		leaf_detail::tuple_for_each_expect<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_,e);
+	}
+
+	template <class... E>
+	typename leaf_detail::dependent_type<expect<E...>>::error_capture capture( expect<E...> & exp, error const & e )
+	{
+		using namespace leaf_detail;
+		typename leaf_detail::dependent_type<expect<E...>>::error_capture cap(
+			e,
+			std::make_tuple(
+				convert_optional(
+					std::move(std::get<tuple_type_index<slot<E>,decltype(exp.s_)>::value>(exp.s_)),e)...));
+		return cap;
 	}
 
 } }

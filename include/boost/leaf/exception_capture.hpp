@@ -51,7 +51,7 @@ namespace boost { namespace leaf {
 
 		////////////////////////////////////////
 
-		template <class F,class... E>
+		template <class F, class... E>
 		class exception_trap
 		{
 			F f_;
@@ -83,7 +83,7 @@ namespace boost { namespace leaf {
 		};
 	} //leaf_detail
 
-	template <class... E,class F>
+	template <class... E, class F>
 	leaf_detail::exception_trap<F,E...> capture_exception( F && f ) noexcept
 	{
 		return leaf_detail::exception_trap<F,E...>(std::move(f));

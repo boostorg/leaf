@@ -13,7 +13,7 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <int I,class Tuple>
+		template <int I, class Tuple>
 		struct tuple_for_each_preload
 		{
 			static void trigger( Tuple & tup, error e ) noexcept
@@ -24,7 +24,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class Tuple>
-		struct tuple_for_each_preload<0,Tuple>
+		struct tuple_for_each_preload<0, Tuple>
 		{
 			static void trigger( Tuple const &, error ) noexcept { }
 		};

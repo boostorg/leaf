@@ -28,8 +28,8 @@ namespace boost { namespace leaf {
 		template <class... List>
 		struct all_available;
 
-		template <class Car,class... Cdr>
-		struct all_available<Car,Cdr...>
+		template <class Car, class... Cdr>
+		struct all_available<Car, Cdr...>
 		{
 			static bool check( error_capture const & cap ) noexcept
 			{
@@ -45,7 +45,7 @@ namespace boost { namespace leaf {
 
 		////////////////////////////////////////
 
-		template <int I,class Tuple>
+		template <int I, class Tuple>
 		struct tuple_for_each_capture
 		{
 			static void const * dynamic_bind( Tuple const & tup, char const * (*type_id)() ) noexcept
@@ -76,7 +76,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class Tuple>
-		struct tuple_for_each_capture<0,Tuple>
+		struct tuple_for_each_capture<0, Tuple>
 		{
 			static void const * dynamic_bind( Tuple const &, char const * (*)() ) noexcept { return 0; }
 			static void print( std::ostream &, Tuple const & ) { }
@@ -185,7 +185,7 @@ namespace boost { namespace leaf {
 			}
 		}
 
-		template <class F,class... MatchTypes>
+		template <class F, class... MatchTypes>
 		int unwrap( leaf_detail::match_fn<F,MatchTypes...> const & m, bool & matched ) const
 		{
 			if( !matched && (matched=leaf_detail::all_available<MatchTypes...>::check(*this)) )
