@@ -18,7 +18,7 @@ LEAF does not allocate dynamic memoryfootnote:[Except when transporting error in
 
 NOTE: LEAF is compatible with, not a replacement for `std::error_code`.
 
-== Two minute introduction
+== Two Minute Introduction
 
 Error handling with LEAF looks like this:
 
@@ -108,7 +108,7 @@ leaf::result<T> f()
 <2> Forward the error reported in `r`, in addition storing `e_file_name` in `expect` object(s) from calling scopes.
 ====
 
-== What if I want to use exception handling?
+== What If I Want to Use Exception Handling?
 
 That would be a 1-minute introduction :)
 
