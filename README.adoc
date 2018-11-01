@@ -18,7 +18,9 @@ LEAF does not allocate dynamic memoryfootnote:[Except when transporting error in
 
 NOTE: LEAF is compatible with, not a replacement for `std::error_code`.
 
-Basic error handling with LEAF looks like this:
+== Two minute introduction
+
+Error handling with LEAF looks like this:
 
 ====
 [source,c++]
@@ -50,11 +52,11 @@ Basic error handling with LEAF looks like this:
   }
 }
 ----
-<1> Error objects returned by `f` (next line) are stored in `exp`, but only if their types are specified in the instantiation of the `expect` template (otherwise they're discarded).
+<1> In case `f()` (next line) fails, error objects will be stored in `exp`, but only if their types are specified in the instantiation of the `expect` template (otherwise they're discarded).
 <2> Successful result values are stored inside `r` of type `result<T>`, which is a value-or-error variant type.
-<3> In case of error, we pass `exp` and the returned `r` to `handle_error`, followed by several (in this case, two) sets of error object types to be matched (`handle_error` returns false if it doesn`t find a match).
-<4> Handle the case where we got `e_error_code`, `e_file_name` and `e_request_id` with the error reported in `r`.
-<4> Handle the case where we only got `e_error_code` and `e_file_name` with the error reported in `r`.
+<3> `f()` has failed, so we pass `exp` and the returned `r` to `handle_error`, followed by several (in this case, two) sets of error object types to be matched (`handle_error` returns false if it doesn`t find a match).
+<4> Handle the case where we got `e_error_code`, `e_file_name` and `e_request_id` associated with the failure reported in `r`.
+<4> Handle the case where we only got `e_error_code` and `e_file_name` associated with the failure reported in `r`.
 ====
 
 `e_error_code`, `e_file_name`, `e_request_id`, etc. are user-defined, e.g.:
@@ -104,6 +106,76 @@ leaf::result<T> f()
 ----
 <1> Success, return `r`.
 <2> Forward the error reported in `r`, in addition storing `e_file_name` in `expect` objects from calling scopes.
+====
+
+== What if I want to use exception handling?
+
+That would be a 1-minute introduction :)
+
+Exception handling with LEAF looks like this:
+
+====
+[source,c++]
+----
+{
+  leaf::expect<e_error_code, e_file_name, e_request_id> exp; <1>
+
+  try
+  {
+    f();
+  }
+  catch( my_exception const & e )
+  {
+    leaf::handle_exception( exp, e, <2>
+
+      leaf::match<e_error_code, e_file_name, e_request_id>( [ ]( int ec, std::string const & fn, uuid const & id )
+      {
+        <3>
+      } ),
+
+      leaf::match<e_error_code, e_file_name>( [ ]( int ec, std::string const & fn )
+      {
+        <4>
+      } )
+    );
+
+  }
+}
+----
+<1> In case `f()` throws, error objects associated with the exception are stored in `exp`, but only if their types are specified in the instantiation of the `expect` template (otherwise they're discarded).
+<2> We pass `exp` and the caught exception `e` to `handle_exception`, followed by several (in this case, two) sets of error object types to be matched (`handle_exception` rethrows the original exception if it doesn't find a match).
+<3> Handle the case where we got `e_error_code`, `e_file_name` and `e_request_id`, associated with `e`.
+<4> Handle the case where we only got `e_error_code` and `e_file_name`, associated with `e`.
+====
+
+Error objects can be passed to LEAF at the point of the `throw`:
+
+====
+[source,c++]
+----
+void g()
+{
+  ....
+  if( failure )
+    leaf::throw_exception( my_exception(), e_error_code{42}, e_request_id{id} ); <1>
+}
+----
+<1> Throws `my_exception`, stores the passed `e_error_code` and `e_request_id` in `expect` object(s) from calling scopes.
+====
+
+Exceptions can be augmented in exception-neutral contexts:
+
+====
+[source,c++]
+----
+void f()
+{
+  auto propagate = leaf::preload( e_file_name{"file.txt"} ); <1>
+
+  g();
+}  
+----
+<1> In case `g()` throws (next line), additionally store this `e_file_name` object in `expect` object(s) from calling scopes, and associate it with the passing exception.
 ====
 
 [[tutorial]]
