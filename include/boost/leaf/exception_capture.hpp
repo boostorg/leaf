@@ -36,7 +36,7 @@ namespace boost { namespace leaf {
 			{
 				if( !has_error_ )
 				{
-					set_error(error::peek_next_error());
+					set_error(peek_next_error());
 					has_error_ = true;
 				}
 				unload();

@@ -161,7 +161,7 @@ namespace boost { namespace leaf {
 		friend void leaf::diagnostic_output( std::ostream &, expect<E_...> const &, error const & );
 
 		template <class... E_>
-		friend typename leaf_detail::dependent_type<expect<E_...>>::error_capture capture( expect<E_...> &, error const & );
+		friend typename leaf_detail::dependent_type<expect<E_...>>::error_capture leaf::capture( expect<E_...> &, error const & );
 
 		expect( expect const & ) = delete;
 		expect & operator=( expect const & ) = delete;

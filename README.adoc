@@ -934,8 +934,9 @@ namespace boost { namespace leaf {
 
     friend std::ostream & operator<<( std::ostream & os, error const & e )
  
-    static error peek_next_error() noexcept;
   };
+
+  error peek_next_error() noexcept;
 
 } }
 ----
@@ -1036,7 +1037,7 @@ Effects: :: Prints an `unsigned int` value that uniquely identifies the value `e
 
 '''
 
-[[error::peek_next_error]]
+[[peek_next_error]]
 ==== `peek_next_error`
 
 .#include <boost/leaf/error.hpp>
@@ -1044,7 +1045,7 @@ Effects: :: Prints an `unsigned int` value that uniquely identifies the value `e
 ----
 namespace boost { namespace leaf {
 
-  error error::peek_next_error() noexcept;
+  error peek_next_error() noexcept;
 
 } }
 ----
@@ -2129,7 +2130,7 @@ int do_work( lua_State * L ) noexcept
   }
   else
   {
-    leaf::error::peek_next_error().propagate( e_do_work_error{-42} ); //<3>
+    leaf::peek_next_error().propagate( e_do_work_error{-42} ); //<3>
     return luaL_error(L,"do_work_error"); //<4>
   }
 }

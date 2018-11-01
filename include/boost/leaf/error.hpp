@@ -15,8 +15,14 @@
 
 namespace boost { namespace leaf {
 
+	class error;
+
+	error peek_next_error() noexcept;
+
 	class error
 	{
+		friend error leaf::peek_next_error() noexcept;
+
 		unsigned id_;
 
 		explicit error( unsigned id ) noexcept:
@@ -104,8 +110,12 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		error propagate( E && ... ) const noexcept;
-
 	};
+
+	inline error peek_next_error() noexcept
+	{
+		return error(error::id_factory::tl_instance().peek());
+	}
 
 	////////////////////////////////////////
 

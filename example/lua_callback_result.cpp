@@ -42,7 +42,7 @@ int do_work( lua_State * L ) noexcept
 	{
 		//Associate an e_do_work_error object with the *next* leaf::error object we will
 		//definitely return from the call_lua function...
-		leaf::error::peek_next_error().propagate( e_do_work_error{-42} );
+		leaf::peek_next_error().propagate( e_do_work_error{-42} );
 
 		//...once control reaches it, after we tell the Lua interpreter to abort the program.
 		return luaL_error(L,"do_work_error");
