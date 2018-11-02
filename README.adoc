@@ -56,7 +56,7 @@ Error handling with LEAF looks like this:
 <2> Successful result values are stored inside `r` of type `result<T>`, which is a value-or-error variant type.
 <3> `f()` has failed, so we pass `exp` and the returned `r` to `handle_error`, followed by several (in this case, two) sets of error object types to be matched (`handle_error` returns false if it doesn`t find a match).
 <4> Handle the case where we got `e_error_code`, `e_file_name` and `e_request_id` associated with the failure reported in `r`.
-<4> Handle the case where we only got `e_error_code` and `e_file_name` associated with the failure reported in `r`.
+<5> Handle the case where we only got `e_error_code` and `e_file_name` associated with the failure reported in `r`.
 ====
 
 `e_error_code`, `e_file_name`, `e_request_id`, etc. are user-defined, e.g.:
