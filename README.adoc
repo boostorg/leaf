@@ -1620,6 +1620,9 @@ namespace boost { namespace leaf {
   template <class Future>
   decltype(std::declval<Future>().get()) get( Future && f );
 
+  template <class... E>
+  void current_exception_diagnostic_output( std::ostream & os, expect<E...> const & exp );
+
 } }
 ----
 ====
@@ -1784,6 +1787,24 @@ namespace boost { namespace leaf {
 ----
 
 Effects: :: Equivalent to: `<<diagnostic_output-expect,diagnostic_output>>( os, exp, <<get_error,get_error>>(ex) );`
+
+'''
+
+[[current_exception_diagnostic_output-exception]]
+==== `current_exception_diagnostic_output`
+
+[source,c++]
+.#include <boost/leaf/exception_capture.hpp>
+----
+namespace boost { namespace leaf {
+
+  template <class... E>
+  void current_exception_diagnostic_output( std::ostream & os, expect<E...> const & exp );
+
+} }
+----
+
+Effects: :: This function prints a developer-friendly (but not user-friendly) diagnostic information about the current exception to `os`.
 
 '''
 

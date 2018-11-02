@@ -89,7 +89,7 @@ int main()
 		catch( my_error & e )
 		{
 			std::ostringstream st;
-			current_exception_diagnostic_print(st,exp);
+			current_exception_diagnostic_output(st,exp);
 			std::string s = st.str();
 			BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
 			BOOST_TEST(s.find(" = N/A")!=s.npos);

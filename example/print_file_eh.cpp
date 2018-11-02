@@ -177,7 +177,7 @@ int main( int argc, char const * argv[ ] )
 	{
 		//This catch-all is designed to help diagnose logic errors (main should be able to deal with any failures).
 		std::cerr << "Unknown error, cryptic information follows." << std::endl;
-		current_exception_diagnostic_print(std::cerr,exp);
+		current_exception_diagnostic_output(std::cerr,exp);
 		return 5;
 	}
 }
