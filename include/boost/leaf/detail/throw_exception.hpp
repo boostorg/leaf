@@ -10,9 +10,38 @@
 #include <boost/leaf/common.hpp>
 #include <exception>
 
-#define LEAF_THROW(e) ::boost::leaf::throw_exception(e,LEAF_SOURCE_LOCATION)
+#define LEAF_THROW ::boost::leaf::peek_next_error().propagate(::boost::leaf::e_source_location{::boost::leaf::e_source_location::loc(__FILE__,__LINE__,__FUNCTION__)}),throw::boost::leaf::make_exception
 
 namespace boost { namespace leaf {
+
+	struct e_source_location
+	{
+		struct loc
+		{
+			char const * const file;
+			int const line;
+			char const * const function;
+
+			loc( char const * file, int line, char const * function ) noexcept:
+				file(file),
+				line(line),
+				function(function)
+			{
+				assert(file!=0);
+				assert(line>0);
+				assert(function!=0);
+			}
+		};
+
+		loc value;
+
+		friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
+		{
+			return os << "At " << x.value.file << '(' << x.value.line << ") in function " << x.value.function << std::endl;
+		}
+	};
+
+	////////////////////////////////////////
 
 	namespace leaf_detail
 	{
@@ -23,26 +52,27 @@ namespace boost { namespace leaf {
 			public Ex,
 			public error
 		{
-			public:
-			exception( Ex && ex, error && e ) noexcept:
+		public:
+
+			exception( Ex && ex, error  const & e ) noexcept:
 				Ex(std::move(ex)),
-				error(std::move(e))
+				error(e)
 			{
 				enforce_std_exception(*this);
 			}
 		};
 	} //leaf_detail
 
-	template <class... E,class Ex>
-	[[noreturn]] void throw_exception( Ex && ex, E && ... e )
+	template <class Ex,class... E>
+	leaf_detail::exception<Ex> make_exception( Ex && ex, E && ... e ) noexcept
 	{
-		throw leaf_detail::exception<Ex>(std::move(ex),error(std::move(e)...));
+		return leaf_detail::exception<Ex>( std::forward<Ex>(ex), error(std::forward<E>(e)...) );
 	}
 
-	template <class... E,class Ex>
-	[[noreturn]] void throw_exception( Ex && ex, error const & err, E && ... e )
+	template <class Ex,class... E> [[noreturn]]
+	void throw_exception( Ex && ex, E && ... e )
 	{
-		throw leaf_detail::exception<Ex>(std::move(ex),err.propagate(std::move(e)...));
+		throw make_exception( std::forward<Ex>(ex), std::forward<E>(e)... );
 	}
 
 } }

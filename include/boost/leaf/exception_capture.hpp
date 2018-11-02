@@ -32,7 +32,8 @@ namespace boost { namespace leaf {
 				assert(ex_);
 			}
 
-			[[noreturn]] void rethrow_original_exception()
+			[[noreturn]]
+			void rethrow_original_exception()
 			{
 				if( !has_error_ )
 				{

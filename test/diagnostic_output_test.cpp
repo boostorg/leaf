@@ -77,9 +77,8 @@ int main()
 			> exp;
 		try
 		{
-			leaf::throw_exception(
+			LEAF_THROW(
 				my_error(),
-				LEAF_SOURCE_LOCATION,
 				printable_info_printable_payload(),
 				printable_info_non_printable_payload(),
 				non_printable_info_printable_payload(),

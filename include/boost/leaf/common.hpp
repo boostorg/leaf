@@ -13,36 +13,7 @@
 #include <cerrno>
 #include <cassert>
 
-#define LEAF_SOURCE_LOCATION ::boost::leaf::e_source_location{::boost::leaf::e_source_location::loc(__FILE__,__LINE__,__FUNCTION__)}
-
 namespace boost { namespace leaf {
-
-	struct e_source_location
-	{
-		struct loc
-		{
-			char const * const file;
-			int const line;
-			char const * const function;
-
-			loc( char const * file, int line, char const * function ) noexcept:
-				file(file),
-				line(line),
-				function(function)
-			{
-				assert(file!=0);
-				assert(line>0);
-				assert(function!=0);
-			}
-		};
-
-		loc value;
-
-		friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
-		{
-			return os << "At " << x.value.file << '(' << x.value.line << ") in function " << x.value.function << std::endl;
-		}
-	};
 
 	struct e_api_function { char const * value; };
 
