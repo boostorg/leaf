@@ -189,6 +189,13 @@
 			"group": { "kind": "test", "isDefault": false },
 			"label": "result_test.3",
 			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test result_test.3",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"group": { "kind": "test", "isDefault": false },
+			"label": "result_test.4",
+			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test result_test.4",
             		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
 		},

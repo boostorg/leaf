@@ -59,6 +59,7 @@ tests = [
 	'result_test.1',
 	'result_test.2',
 	'result_test.3',
+	'result_test.4',
 	'result_void_capture_test'
 ]
 foreach t : tests

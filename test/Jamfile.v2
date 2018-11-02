@@ -48,6 +48,7 @@ run result_capture_test.cpp : : : <threading>multi ;
 run result_test.1.cpp ;
 run result_test.2.cpp ;
 run result_test.3.cpp ;
+run result_test.4.cpp ;
 run result_void_capture_test.cpp : : : <threading>multi ;
 
 compile ../example/print_file_result.cpp ;

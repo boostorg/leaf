@@ -109,6 +109,11 @@ int main()
 
 	test( [ ]
 	{
+		LEAF_THROW( my_error(), info<1>{1} );
+	} );
+
+	test( [ ]
+	{
 		auto propagate = leaf::preload(info<1>{1});
 		throw my_error();
 	} );
