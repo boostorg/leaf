@@ -1581,21 +1581,19 @@ This exception is thrown by `<<result::value,value>>()`/`<<result::value,operato
 '''
 
 [[eh]]
-=== Exception Handling Functions
+=== Exception Handling Interface
 
 ====
 [source,c++]
 .#include <boost/leaf/exception.hpp>
 ----
-#define LEAF_THROW(e) ::boost::leaf::throw_exception(e,LEAF_SOURCE_LOCATION)
-
 namespace boost { namespace leaf {
 
-  template <class... E,class Ex>
-  [[noreturn]] void throw_exception( Ex && ex, E && ... e );
+  template <class Ex,class... E>
+  <<unspecified-type>> make_exception( Ex && ex, E && ... e ) noexcept;
 
-  template <class... E,class Ex>
-  [[noreturn]] void throw_exception( Ex && ex, error const & err, E && ... e );
+  template <class Ex,class... E> [[noreturn]]
+  void throw_exception( Ex && ex, E && ... e );
 
   error get_error( std::exception const & ex ) noexcept;
 
@@ -1609,6 +1607,8 @@ namespace boost { namespace leaf {
   void diagnostic_output( std::ostream & os, expect<E...> const & exp, std::exception const & ex );
 
 } }
+
+#define LEAF_THROW <<unspecified>>
 ----
 .#include <boost/leaf/exception_capture.hpp>
 ----
@@ -1628,35 +1628,60 @@ The two headers `<boost/leaf/exception.hpp>` and `<boost/leaf/exception_capture>
 
 '''
 
-[[throw_exception]]
-==== `throw_exception`
+[[make_exception]]
+==== `make_exception`
 
 [source,c++]
 .#include <boost/leaf/exception.hpp>
 ----
-#define LEAF_THROW(e) ::boost::leaf::throw_exception(e,LEAF_SOURCE_LOCATION)
-
 namespace boost { namespace leaf {
 
-  template <class... E,class Ex>
-  [[noreturn]] void throw_exception( Ex && ex, E && ... e );
-
-  template <class... E,class Ex>
-  [[noreturn]] void throw_exception( Ex && ex, error const & err, E && ... e );
+  template <class Ex,class... E>
+  <<unspecified-type>> make_exception( Ex && ex, E && ... e ) noexcept;
 
 } }
 ----
 
 Requirements: :: `Ex` must derive from `std::exception`.
 
-Effects: ::
-* The first overload throws an exception object of unspecified type which derives publicly from both `Ex` and `leaf::<<error,error>>`, its `Ex` sub-object initialized by moing from `ex`, its `error` sub-object initialized by `<<error::error,error>>(std::forward<E>(e...))`;
+Returns: :: An exception object of unspecified type which derives publicly from both `Ex` and `leaf::<<error,error>>`, its `Ex` sub-object initialized by `std::forward<Ex>(ex)`, its `error` sub-object initialized by `<<error::error,error>>(std::forward<E>(e...))`.
 
-* The second overload throws an exception object of unspecified type which derives publicly from both `Ex` and `leaf::<<error,error>>`, its `Ex` sub-object initialized by moing from `ex`, its `error` sub-object initialized by `err.<<error::propagate,propagate>>(std::forward<E>(e...))`.
+NOTE: If thrown, the returned exception object can be caught as `Ex &` or as `leaf::<<error,error>>`.
+
+'''
+
+[[throw_exception]]
+==== `throw_exception`
+
+[source,c++]
+.#include <boost/leaf/exception.hpp>
+----
+namespace boost { namespace leaf {
+
+  template <class Ex,class... E> [[noreturn]]
+  void throw_exception( Ex && ex, E && ... e );
+
+} }
+----
+
+Requirements: :: `Ex` must derive from `std::exception`.
+
+Effects: :: As if: `throw <<make_exception,make_exception>>( std::forward<Ex>(ex), std::forward<E>(e)... )`.
 
 NOTE: The thrown exception object can be caught as `Ex &` or as `leaf::<<error,error>>`.
 
-TIP: Use `LEAF_THROW` to automatically pass the current source location in an instance of `<<common,e_source_location>>` object to `throw_exception`.
+'''
+
+[[LEAF_THROW]]
+==== `LEAF_THROW`
+
+[source,c++]
+.#include <boost/leaf/exception.hpp>
+----
+#define LEAF_THROW <<unspecified>>
+----
+
+Effects: :: `LEAF_THROW(ex,e...)` is equivalent to `<<throw_exception,throw_exception>>(ex,e...)`, except the current source location is also passed to `throw_exception`, in a `<<common,e_source_location>>` object.
 
 '''
 
