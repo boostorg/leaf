@@ -1699,15 +1699,11 @@ namespace boost { namespace leaf {
 } }
 ----
 
-NOTE: For an, example see <<technique_transport-exceptions,Transporting Errors between Threads using Exception Handling>>.
-
-'''
-
 Requirements: :: `F` must be a function type.
 
 Returns: :: A function of unspecified type which wraps `f` and, when called, forwards all its arguments to `f`, capturing the specified `E...` <<e-types>> in case it throws.
 
-NOTE: The `capture_exception` function is designed for use with `<<get,get>>`, to effectively transport <<e-types,e-objects>> across thread boundaries.
+NOTE: The `capture_exception` function is designed for use with `<<get,get>>`, to effectively transport <<e-types,e-objects>> across thread boundaries (for an, example see <<technique_transport-exceptions,Transporting Errors between Threads using Exception Handling>>).
 
 '''
 
