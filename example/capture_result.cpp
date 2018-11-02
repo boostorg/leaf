@@ -4,8 +4,8 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-//This is a simple program that demonstrates the use of LEAF to transport error info between threads,
-//without using exception handling. See transport_eh.cpp for the exception-handling variant.
+//This is a simple program that demonstrates the use of LEAF to transport e-objects between threads,
+//without using exception handling. See capture_eh.cpp for the exception-handling variant.
 
 #include <boost/leaf/all.hpp>
 #include <vector>
@@ -17,12 +17,12 @@
 
 namespace leaf = boost::leaf;
 
-//Define several error info types.
-struct failed_thread_id { std::thread::id value; };
-struct failure_info1 { std::string value; };
-struct failure_info2 { int value; };
-struct failure_info3 { long value; };
-struct failure_info4 { float value; };
+//Define several e-types.
+struct e_failed_thread_id { std::thread::id value; };
+struct e_failure_info1 { std::string value; };
+struct e_failure_info2 { int value; };
+struct e_failure_info3 { long value; };
+struct e_failure_info4 { float value; };
 
 //A type that represents a successfully returned result from a task.
 struct task_result { };
@@ -34,14 +34,14 @@ leaf::result<task_result> task( bool succeed )
 		return task_result(); //Simulate successful result.
 	else
 		return leaf::error(
-			failed_thread_id{std::this_thread::get_id()},
-			failure_info1{"info"},
-			failure_info2{42},
-			failure_info4{42} );
+			e_failed_thread_id{std::this_thread::get_id()},
+			e_failure_info1{"info"},
+			e_failure_info2{42},
+			e_failure_info4{42} );
 }
 
-//Launch the specified number of asynchronous tasks. In case an asynchronous task fails, its error info
-//(initially stored in exp) is captured in a leaf::result<task_result>, which transports it to the main thread.
+//Launch the specified number of asynchronous tasks. In case an asynchronous task fails, its e-objects
+//(initially stored in exp) are captured in a leaf::result<task_result>, which transports them to the main thread.
 template <class... E>
 std::vector<std::future<leaf::result<task_result>>> launch_async_tasks( int thread_count )
 {
@@ -59,18 +59,18 @@ std::vector<std::future<leaf::result<task_result>>> launch_async_tasks( int thre
 
 int main()
 {
-	//Launch tasks, transport the specified types of error info. For demonstration, note that the task provides
-	//failure_info4 which we don't care about, and that we say we could use failure_info3, but which the
-	//task doesn't provide. So, we'll only get failed_thread_id, failure_info1 and failure_info2.
-	auto fut = launch_async_tasks<failed_thread_id, failure_info1, failure_info2, failure_info3>(42);
+	//Launch tasks, transport the specified e-types. For demonstration, note that the task provides
+	//failure_info4 which we don't care about, and that we say we could use failure_info3, but which
+	//the task doesn't provide. So, we'll only get failed_thread_id, failure_info1 and failure_info2.
+	auto fut = launch_async_tasks<e_failed_thread_id, e_failure_info1, e_failure_info2, e_failure_info3>(42);
 
 	//Collect results or deal with failures.
 	for( auto & f : fut )
 	{
 		f.wait();
 
-		//Storage for error info.
-		leaf::expect<failed_thread_id, failure_info1, failure_info2, failure_info3> exp;
+		//Storage for e-objects.
+		leaf::expect<e_failed_thread_id, e_failure_info1, e_failure_info2, e_failure_info3> exp;
 
 		//Get the task result, check for success.
 		if( leaf::result<task_result> r = f.get() )
@@ -82,7 +82,7 @@ int main()
 		{
 			//Failure! Handle error, print failure info.
 			bool matched = handle_error( exp, r,
-				leaf::match<failure_info1, failure_info2, failed_thread_id>( [ ] ( std::string const & v1, int v2, std::thread::id tid )
+				leaf::match<e_failure_info1, e_failure_info2, e_failed_thread_id>( [ ] ( std::string const & v1, int v2, std::thread::id tid )
 				{
 						std::cerr << "Error in thread " << tid << "! failure_info1: " << v1 << ", failure_info2: " << v2 << std::endl;
 				} ) );

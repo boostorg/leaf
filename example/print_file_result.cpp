@@ -16,7 +16,7 @@
 namespace leaf = boost::leaf;
 
 
-//We could define our own error info types, but for this example the ones
+//We could define our own e-types, but for this example the ones
 //defined in <boost/leaf/common.hpp> are a perfect match.
 using leaf::e_file_name;
 using leaf::e_errno;
@@ -112,8 +112,8 @@ int main( int argc, char const * argv[ ] )
 		return 1;
 	}
 
-	//We expect e_error_code, e_file_name and e_errno objects to arrive with errors handled in this function.
-	//They will be stored inside exp.
+	//We expect e_error_code, e_file_name and e_errno objects to be associated
+	//with errors handled in this function. They will be stored inside of exp.
 	leaf::expect<e_error_code, e_file_name, e_errno> exp;
 
 	if( auto r = print_file(fn) )
@@ -122,15 +122,17 @@ int main( int argc, char const * argv[ ] )
 	}
 	else
 	{
-		//Probe exp for objects associated with the error stored in r.
+		//Probe exp for the e_error_code object associated with the error stored in r.
 		switch( auto ec = *leaf::peek<e_error_code>(exp,r) )
 		{
 			case input_file_open_error:
 			{
-				//handle_error takes a list of match objects (in this case only one), each given a set of e_ types. It
-				//attempts to match each set (in order) to objects of e_ types, associated with r, available in exp.
-				//If no set can be matched, handle_error returns false. When a match is found, handle_error calls
-				//the corresponding lambda, passing the .value of each of the e_ types from the matched set.
+				//handle_error takes a list of match objects (in this case only one), each given
+				//a set of e-types. It attempts to match each set (in order) to objects of e-types
+				//available in exp, which are associated with the error value stored in r. If no
+				//set can be matched, handle_error returns false. When a match is found,
+				//handle_error calls the corresponding lambda function, passing the .value of
+				//each of the e-types from the matched set.
 				bool matched = handle_error( exp, r,
 
 					leaf::match<e_file_name,e_errno>( [ ] ( std::string const & fn, int errn )
@@ -150,9 +152,10 @@ int main( int argc, char const * argv[ ] )
 			case input_file_read_error:
 			case input_eof_error:
 			{
-				//In this case handle_error is given 3 match sets. It will first check if both e_file_name and e_errno,
-				//associated with r, are avialable in exp; if not, it will next check if just e_errno is available; and if
-				//not, the last (empty) set will always match to print a generic error message.
+				//In this case handle_error is given 3 match sets. It will first check if both
+				//e_file_name and e_errno, associated with r, are avialable in exp; if not, it will
+				//next check if just e_errno is available; and if not, the last (empty) set will
+				//always match to print a generic error message.
 				bool matched = handle_error( exp, r,
 
 					leaf::match<e_file_name,e_errno>( [ ] ( std::string const & fn, int errn )
@@ -190,11 +193,14 @@ int main( int argc, char const * argv[ ] )
 				return 4;
 			}
 
+			//This catch-all case helps diagnose logic errors (presumably, missing case labels
+			//in the switch statement).
 			default:
-				//This catch-all case helps diagnose logic errors (presumably, missing case labels in the switch statement).
-				std::cerr << "Unknown error code " << int(ec) << ", cryptic information follows." << std::endl;
+			{
+				std::cerr << "Unknown error code " << int(ec) << ", cryptic information follows." << std::endl; //<7>
 				diagnostic_output(std::cerr,exp,r);
 				return 5;
+			}
 		}
 	}
 }

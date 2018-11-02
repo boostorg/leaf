@@ -12,15 +12,15 @@ Low-latency Error Augmentation Framework for C++11
 [abstract]
 == Abstract
 
-LEAF is a non-intrusive {CPP}11 error handling library capable of transporting arbitrary error information from contexts that detect and report failures, as well as from intermediate error-neutral contexts, to scopes where the error is ultimately handled.
+LEAF is a {CPP}11 error handling library capable of transporting arbitrary error information from contexts that detect and report failures, as well as from intermediate error-neutral contexts, to scopes where the error is handled.
 
-LEAF does not allocate dynamic memoryfootnote:[Except when transporting error info between threads, see <<capture-expect,`capture`>>.], which makes it suitable for low-latency and other performance-critical environments. It is equally applicable to programs that use exception handling and programs that do not.
+LEAF does not allocate memory dynamicallyfootnote:[Except when transporting error info between threads, see <<capture-expect,`capture`>>.], which makes it suitable for low-latency and other performance-critical environments. It is equally applicable to programs that use exception handling and programs that do not.
 
 NOTE: LEAF is compatible with, not a replacement for `std::error_code`.
 
 == Two Minute Introduction
 
-Error handling with LEAF looks like this:
+Let's assume that to handle a particular failure, we need an error code, a file name, and, optionally, a request ID. In terms of LEAF, we can write:
 
 ====
 [source,c++]
@@ -34,8 +34,6 @@ Error handling with LEAF looks like this:
   }
   else
   {
-    //Handle errors
-
     bool matched = leaf::handle_error( exp, r, //<3>
 
       leaf::match<e_error_code, e_file_name, e_request_id>( [ ]( int ec, std::string const & fn, uuid const & id )
@@ -47,19 +45,19 @@ Error handling with LEAF looks like this:
       {
         //<5>
       } )
-    );
 
+    );
   }
 }
 ----
-<1> In case `f()` (next line) fails, error objects will be stored in `exp`, but only if their types are specified in the instantiation of the `expect` template (otherwise they're discarded).
-<2> Successful result values are stored inside `r` of type `result<T>`, which is a value-or-error variant type.
-<3> `f()` has failed, so we pass `exp` and the returned `r` to `handle_error`, followed by several (in this case, two) sets of error object types to be matched (`handle_error` returns false if it doesn`t find a match).
-<4> Handle the case where we got `e_error_code`, `e_file_name` and `e_request_id` associated with the failure reported in `r`.
-<5> Handle the case where we only got `e_error_code` and `e_file_name` associated with the failure reported in `r`.
+<1> The `exp` object provides storage for an `e_error_code`, an `e_file_name` and an `e_request_id`, which `f()` (next line) may communicate in case it fails.
+<2> Successful result values are stored inside of `r` of type `result<T>`, which is a value-or-error variant type.
+<3> The call to `f()` has failed, so we pass `exp` and the returned `r` to `handle_error`, followed by several (in this case, two) *sets of error object types* to be matched (`handle_error` returns false if it doesn't find a match).
+<4> Handle the case where we received `e_error_code`, `e_file_name` and `e_request_id`, associated with the failure reported in `r`.
+<5> Handle the case where we only received `e_error_code` and `e_file_name`, associated with the failure reported in `r`.
 ====
 
-`e_error_code`, `e_file_name`, `e_request_id`, etc. are user-defined, e.g.:
+`e_error_code`, `e_file_name` and `e_request_id` are user-defined, e.g.:
 
 ====
 [source,c++]
@@ -77,15 +75,16 @@ Reporting an error with LEAF looks like this:
 ====
 [source,c++]
 ----
-leaf::result<T> g()
+leaf::result<T> g() noexcept
 {
   if( success )
-    return T(....);
+    return T(....); <1>
   else
-    return leaf::error( e_error_code{42}, e_request_id{id} ); //<1>
+    return leaf::error( e_error_code{42}, e_request_id{id} ); //<2>
 }
 ----
-<1> Report an error, store the passed `e_error_code` and `e_request_id` in `expect` object(s) from calling scopes.
+<1> Initializing the returned `result<T>` with a `T` object indicates a success.
+<2> Report an error, store the passed `e_error_code` and `e_request_id` in appropriate `expect` object(s) from calling scopes. Presumably, at this point we don't have access to a relevant file name, but that's fine -- we associate with the reported error what relevant information we do have: the error code and the request ID.
 ====
 
 Forwarding an error reported by a lower level function looks like this:
@@ -93,7 +92,7 @@ Forwarding an error reported by a lower level function looks like this:
 ====
 [source,c++]
 ----
-leaf::result<T> f()
+leaf::result<T> f() noexcept
 {
   if( leaf::error<T> r=g() )
   {
@@ -105,14 +104,16 @@ leaf::result<T> f()
 }  
 ----
 <1> Success, return `r`.
-<2> Forward the error reported in `r`, in addition storing `e_file_name` in `expect` object(s) from calling scopes.
+<2> Forward the error reported in `r`, storing `e_file_name` in appropriate `expect` object(s) from calling scopes. The file name will be associated with the error in addition to the relevant `e_error_code` and `e_request_id` which (presumably) `g()` has already communicated.
 ====
+
+
 
 == What If I Want to Use Exception Handling?
 
 That would be a 1-minute introduction. :-)
 
-Exception handling with LEAF looks like this:
+Let's again assume that to handle a particular exception, we need an error code, a file name, and, optionally, a request ID. In terms of LEAF, we can write:
 
 ====
 [source,c++]
@@ -137,15 +138,15 @@ Exception handling with LEAF looks like this:
       {
         //<4>
       } )
-    );
 
+    );
   }
 }
 ----
-<1> In case `f()` throws, error objects associated with the exception are stored in `exp`, but only if their types are specified in the instantiation of the `expect` template (otherwise they're discarded).
-<2> We pass `exp` and the caught exception `e` to `handle_exception`, followed by several (in this case, two) sets of error object types to be matched (`handle_exception` rethrows the original exception if it doesn't find a match).
-<3> Handle the case where we got `e_error_code`, `e_file_name` and `e_request_id`, associated with `e`.
-<4> Handle the case where we only got `e_error_code` and `e_file_name`, associated with `e`.
+<1> The `exp` object provides storage for an `e_error_code`, an `e_file_name` and an `e_request_id`, which `f()` (next line) may communicate in case it throws.
+<2> We caught a `my_exception` from `f()`, so we pass `exp` and the the exception object `e` to `handle_exception`, followed by several (in this case, two) *sets of error object types* to be matched (`handle_exception` rethrows the original exception if it doesn`t find a match).
+<3> Handle the case where we received `e_error_code`, `e_file_name` and `e_request_id`, associated with `e`.
+<4> Handle the case where we only received `e_error_code` and `e_file_name`, associated with `e`.
 ====
 
 Error objects can be passed to LEAF at the point of the `throw`:
@@ -153,14 +154,16 @@ Error objects can be passed to LEAF at the point of the `throw`:
 ====
 [source,c++]
 ----
-void g()
+T g()
 {
-  ....
-  if( failure )
-    leaf::throw_exception( my_exception(), e_error_code{42}, e_request_id{id} ); //<1>
+  if( success )
+    return T(....); <1>
+  else
+    leaf::throw_exception( my_exception(), e_error_code{42}, e_request_id{id} ); //<2>
 }
 ----
-<1> Throws `my_exception`, stores the passed `e_error_code` and `e_request_id` in `expect` object(s) from calling scopes.
+<1> Success, just return `T`.
+<2> Throw a `my_exception` object, store the passed `e_error_code` and `e_request_id` in appropriate `expect` object(s) from calling scopes. Presumably, at this point we don't have access to a relevant file name, but that's fine -- we associate with exception object what relevant information we do have: the error code and the request ID.
 ====
 
 Exceptions can be augmented in exception-neutral contexts:
@@ -175,13 +178,13 @@ void f()
   g();
 }  
 ----
-<1> In case `g()` throws (next line), additionally store this `e_file_name` object in `expect` object(s) from calling scopes, and associate it with the passing exception.
+<1> In case `g()` throws, the file name will be associated with the exception object, in addition to the relevant `e_error_code` and `e_request_id` which (presumably) `g()` has already communicated.
 ====
 
 [[tutorial]]
 == Tutorial
 
-We'll write a program that reads a text file in a buffer and prints it to `std::cout`, using LEAF to handle errors. We'll implement two versions, one that uses exception handling, and one that does not. To see the source code of the complete programs from this tutorial follow these links:
+We'll write a short but complete program, using LEAF to handle errors. We'll implement two versions, one that uses exception handling, and one that does not. To see the source code of the complete programs from this tutorial follow these links:
 
 * https://github.com/zajo/leaf/blob/master/example/print_file_result.cpp?ts=3[print_file_result.cpp] (without exception handling)
 * https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp?ts=3[print_file_eh.cpp] (with exception handling)
@@ -211,7 +214,7 @@ struct e_error_code { int value; };
 
 We don't need an enumerated value that indicates success. That's because we will use the convenient class template `<<result,result>><T>` as the return type in functions which may fail. It is a value-or-error variant type which holds a `T` except if initialized with a `leaf::<<error,error>>`.
 
-Here is a function that reads data from a file into a buffer and reports the various errors which may occur (it returns `result<void>` because in case of success it doesn't return a value):
+Here is a function that reads data from a `FILE` into a buffer and reports the various errors which may occur (it returns `result<void>` because in case of success it doesn't return a value):
 
 ====
 [source,c++]
@@ -327,19 +330,28 @@ int main( int argc, char const * argv[ ] )
     return 1;
   }
 
-  leaf::expect<e_error_code, e_file_name, e_errno> exp; //<1>
+  //We expect e_error_code, e_file_name and e_errno objects to be associated
+  //with errors handled in this function. They will be stored inside of exp.
+  leaf::expect<e_error_code, e_file_name, e_errno> exp;
 
   if( auto r = print_file(fn) )
   {
-    return 0; //<2>
+    return 0; //Success, we're done!
   }
   else
   {
-    switch( auto ec = *leaf::peek<e_error_code>(exp,r) ) //<3>
+    //Probe exp for the e_error_code object associated with the error stored in r.
+    switch( auto ec = *leaf::peek<e_error_code>(exp,r) )
     {
       case input_file_open_error:
       {
-        bool matched = handle_error( exp, r, //<4>
+        //handle_error takes a list of match objects (in this case only one), each given
+        //a set of e-types. It attempts to match each set (in order) to objects of e-types
+        //available in exp, which are associated with the error value stored in r. If no
+        //set can be matched, handle_error returns false. When a match is found,
+        //handle_error calls the corresponding lambda function, passing the .value of
+        //each of the e-types from the matched set.
+        bool matched = handle_error( exp, r,
 
           leaf::match<e_file_name,e_errno>( [ ] ( std::string const & fn, int errn )
           {
@@ -358,7 +370,11 @@ int main( int argc, char const * argv[ ] )
       case input_file_read_error:
       case input_eof_error:
       {
-        bool matched = handle_error( exp, r, //<5>
+        //In this case handle_error is given 3 match sets. It will first check if both
+        //e_file_name and e_errno, associated with r, are avialable in exp; if not, it will
+        //next check if just e_errno is available; and if not, the last (empty) set will
+        //always match to print a generic error message.
+        bool matched = handle_error( exp, r,
 
           leaf::match<e_file_name,e_errno>( [ ] ( std::string const & fn, int errn )
           {
@@ -382,7 +398,8 @@ int main( int argc, char const * argv[ ] )
 
       case cout_error:
       {
-        bool matched = handle_error( exp, r, //<6>
+        //Report failure to write to std::cout, print the relevant errno.
+        bool matched = handle_error( exp, r,
 
           leaf::match<e_errno>( [ ] ( int errn )
           {
@@ -394,21 +411,18 @@ int main( int argc, char const * argv[ ] )
         return 4;
       }
 
+      //This catch-all case helps diagnose logic errors (presumably, missing case labels
+      //in the switch statement).
       default:
+      {
         std::cerr << "Unknown error code " << int(ec) << ", cryptic information follows." << std::endl; //<7>
         diagnostic_output(std::cerr,exp,r);
         return 5;
+      }
     }
   }
 }
 ----
-<1> We expect `e_error_code`, `e_file_name` and `e_errno` objects to be associated with errors handled in this function. They will be stored inside `exp`.
-<2> Success, we're done!
-<3> Probe `exp` for objects associated with the error stored in `r`.
-<4> `<<handle_error-expect,handle_error>>` takes a list of match objects (in this case only one), each given a set of <<e-types>>. It attempts to match each set (in order) to objects of e-types available in `exp`, which are associated with the `<<error,error>>` value stored in `r`. If no set can be matched, `handle_error` returns false. When a match is found, `handle_error` calls the corresponding lambda function, passing the `.value` of each of the e-types from the matched set.
-<5> In this case `handle_error` is given 3 match sets. It will first check if both `e_file_name` and `e_errno`, associated with `r`, are avialable in `exp`; if not, it will next check if just `e_errno` is available; and if not, the last (empty) set will always match to print a generic error message.
-<6> Report failure to write to `std::cout`, print the relevant `errno`.
-<7> This catch-all case helps diagnose logic errors (presumably, missing case labels in the `switch` statement).
 ====
 
 To summarize, when using LEAF without exception handling:
@@ -490,9 +504,9 @@ void print_file( char const * file_name )
 }
 ----
 <1> `std::shared_ptr<FILE> file_open( char const * file_name)` throws on error.
-<2> `<<preload,preload>>` takes any number of <<e-types,e-type>> objects and prepares them to become associated (automatically, at the time the returned object expires) with the first exception thrown thereafter. The effect is that from this point on, any exception escaping `print_file` will report the file name, in addition to everything else passed to `<<throw_exception,throw_exception>>` explicitly (`e_file_name` is defined as `struct e_file_name { std::string value; }`).
+<2> `<<preload,preload>>` takes any number of <<e-types,e-type>> objects and prepares them to become associated (automatically, at the time the returned object expires) with the first exception thrown thereafter. The effect is that from this point on, a file name will be associated with any exception escaping `print_file`, in addition to everything else passed to `<<throw_exception,throw_exception>>` explicitly (`e_file_name` is defined as `struct e_file_name { std::string value; }`).
 <3> `int file_size( FILE & f )` throws on error.
-<4> `<<defer,defer>>` is similar to `preload`: it prepares an e-type object to become associated with the first exception thrown thereafter, but instead of taking the e-type object itself, `defer` takes a function that returns it. The function is invoked in the returned object`s destructor, at which point it becomes associated with the exception being propagated. Assuming `std::cout` is configured to throw on error, the effect of this line is that those exceptions will have the relevant `errno` associated with them.
+<4> `<<defer,defer>>` is similar to `preload`: it prepares an e-type object to become associated with the first exception thrown thereafter, but instead of taking the e-type object itself, `defer` takes a function that returns it. The function is invoked in the returned object's destructor, at which point it becomes associated with the exception being propagated. Assuming `std::cout` is configured to throw on error, the effect of this line is that those exceptions will have the relevant `errno` associated with them.
 ====
 
 Finally, let's consider the `main` function, which is able to handle exceptions thrown by `print_file`:
@@ -502,9 +516,12 @@ Finally, let's consider the `main` function, which is able to handle exceptions 
 ----
 int main( int argc, char const * argv[ ] )
 {
-   std::cout.exceptions ( std::ostream::failbit | std::ostream::badbit ); //<1>
+  //Configure std::cout to throw on error.
+   std::cout.exceptions ( std::ostream::failbit | std::ostream::badbit );
  
-  leaf::expect<e_file_name, e_errno> exp; //<2>
+  //We expect e_error_code, e_file_name and e_errno objects to be associated
+  //with exceptions handled in this function. They will be stored inside of exp.
+  leaf::expect<e_file_name, e_errno> exp;
 
   try
   {
@@ -518,7 +535,13 @@ int main( int argc, char const * argv[ ] )
   }
   catch( input_file_open_error const & ex )
   {
-    handle_exception( exp, ex, //<3>
+    //handle_exception takes a list of match objects (in this case only one), each
+    //given a set of e-types. It attempts to match each set (in order) to objects of
+    //e-types available in exp, which are associated with the exception ex. If no
+    //set can be matched, handle_exeption rethrows the current exception. When
+    //a match is found, handle_exception calls the corresponding lambda function,
+    //passing the .value of each of the e-types from the matched set.
+    handle_exception( exp, ex,
 
       leaf::match<e_file_name, e_errno>( [ ] ( std::string const & fn, int errn )
       {
@@ -533,7 +556,11 @@ int main( int argc, char const * argv[ ] )
   }
   catch( input_error const & ex )
   {
-    handle_exception( exp, ex, //<4>
+    //In this case handle_exception is given 3 match sets. It will first check if both
+    //e_file_name and e_errno, associated with ex, are avialable in exp; if not, it will
+    //next check if just e_errno is available; and if not, the last (empty) set will
+    //always match to print a generic error message.
+    handle_exception( exp, ex,
 
       leaf::match<e_file_name, e_errno>( [ ] ( std::string const & fn, int errn )
       {
@@ -555,7 +582,7 @@ int main( int argc, char const * argv[ ] )
   }
   catch( std::ostream::failure const & ex )
   {
-    //Report failure to write to std::cout, print the relevant errno, if available.
+    //Report failure to write to std::cout, print the relevant errno.
     handle_exception( exp, ex,
 
       leaf::match<e_errno>( [ ] ( int errn )
@@ -566,20 +593,15 @@ int main( int argc, char const * argv[ ] )
     );
     return 4;
   }
-  catch(...) //<5>
+  catch(...)
   {
+    //This catch-all case helps diagnose logic errors (presumably, missing catch).
     std::cerr << "Unknown error, cryptic information follows." << std::endl; 
     current_exception_diagnostic_output(std::cerr,exp);
     return 5;
   }
 }
 ----
-<1> Configure `std::cout` to throw on error.
-<2> We expect `e_file_name` and `e_errno` objects to arrive with errors handled in this function. They will be stored inside `exp`.
-<3> `<<handle_exception,handle_exception>>` takes a list of match objects (in this case only one), each given a set of <<e-types>>. It attempts to match each set (in order) to objects of e-types, associated with `ex`, available in `exp`. If no set can be matched, `handle_exception` rethrows the current exception. When a match is found,
-`handle_exception` calls the corresponding lambda, passing the `.value` of each of the e-types from the matched set.
-<4> In this case `handle_exception` is given 3 match sets. It will first check if both `e_file_name` and `e_errno`, associated with `ex`, are avialable in `exp`; if not, it will next check if just `e_errno` is available; and if not, the last (empty) set will always match to print a generic error message.
-<5> This catch-all is designed to help diagnose logic errors (main should be able to deal with any failures).
 ====
 
 To summarize, when using LEAF with exception handling:

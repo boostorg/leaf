@@ -16,7 +16,7 @@
 namespace leaf = boost::leaf;
 
 
-//We could define our own error info types, but for this example the ones defined in
+//We could define our own e-types, but for this example the ones defined in
 //<boost/leaf/common.hpp> are a perfect match.
 using leaf::e_file_name;
 using leaf::e_errno;
@@ -46,7 +46,7 @@ std::shared_ptr<FILE> file_open( char const * file_name )
 int file_size( FILE & f )
 {
 	//All exceptions escaping this function will automatically propagate errno.
-	auto propagate = leaf::defer([ ] { return e_errno{errno}; } );
+	auto propagate = leaf::defer( [ ] { return e_errno{errno}; } );
 
 	if( fseek(&f,0,SEEK_END) )
 		throw input_file_size_error();
@@ -99,10 +99,11 @@ char const * parse_command_line( int argc, char const * argv[ ] )
 
 int main( int argc, char const * argv[ ] )
 {
- 	std::cout.exceptions ( std::ostream::failbit | std::ostream::badbit );
- 
-	//We expect e_file_name and e_errno objects to arrive with errors handled in this function.
-	//They will be stored inside exp.
+	//Configure std::cout to throw on error.
+	std::cout.exceptions ( std::ostream::failbit | std::ostream::badbit );
+
+	//We expect e_error_code, e_file_name and e_errno objects to be associated
+	//with exceptions handled in this function. They will be stored inside of exp.
 	leaf::expect<e_file_name, e_errno> exp;
 
 	try
@@ -117,11 +118,12 @@ int main( int argc, char const * argv[ ] )
 	}
 	catch( input_file_open_error const & ex )
 	{
-		//handle_exception takes a list of match objects (in this case only one), each given a set of e_ types. It
-		//attempts to match each set (in order) to objects of e_ types, associated with ex, available in exp.
-		//If no set can be matched, handle_exception rethrows the current exception. When a match is found,
-		//handle_exception calls the corresponding lambda, passing the .value of each of the e_ types from
-		//the matched set.
+		//handle_exception takes a list of match objects (in this case only one), each
+		//given a set of e-types. It attempts to match each set (in order) to objects of
+		//e-types available in exp, which are associated with the exception ex. If no
+		//set can be matched, handle_exeption rethrows the current exception. When
+		//a match is found, handle_exception calls the corresponding lambda function,
+		//passing the .value of each of the e-types from the matched set.
 		handle_exception( exp, ex,
 
 			leaf::match<e_file_name, e_errno>( [ ] ( std::string const & fn, int errn )
@@ -137,9 +139,10 @@ int main( int argc, char const * argv[ ] )
 	}
 	catch( input_error const & ex )
 	{
-		//In this case handle_exception is given 3 match sets. It will first check if both e_file_name and e_errno,
-		//associated with ex, are avialable in exp; if not, it will next check if just e_errno is available; and if
-		//not, the last (empty) set will always match to print a generic error message.
+		//In this case handle_exception is given 3 match sets. It will first check if both
+		//e_file_name and e_errno, associated with ex, are avialable in exp; if not, it will
+		//next check if just e_errno is available; and if not, the last (empty) set will
+		//always match to print a generic error message.
 		handle_exception( exp, ex,
 
 			leaf::match<e_file_name, e_errno>( [ ] ( std::string const & fn, int errn )
@@ -162,7 +165,7 @@ int main( int argc, char const * argv[ ] )
 	}
 	catch( std::ostream::failure const & ex )
 	{
-		//Report failure to write to std::cout, print the relevant errno, if available.
+		//Report failure to write to std::cout, print the relevant errno.
 		handle_exception( exp, ex,
 
 			leaf::match<e_errno>( [ ] ( int errn )
@@ -175,8 +178,8 @@ int main( int argc, char const * argv[ ] )
 	}
 	catch(...)
 	{
-		//This catch-all is designed to help diagnose logic errors (main should be able to deal with any failures).
-		std::cerr << "Unknown error, cryptic information follows." << std::endl;
+		//This catch-all case helps diagnose logic errors (presumably, missing catch).
+		std::cerr << "Unknown error, cryptic information follows." << std::endl; 
 		current_exception_diagnostic_output(std::cerr,exp);
 		return 5;
 	}
