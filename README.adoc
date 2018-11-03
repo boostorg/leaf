@@ -107,8 +107,6 @@ leaf::result<T> f() noexcept
 <2> Forward the error reported in `r`, storing `e_file_name` in appropriate `expect` object(s) from calling scopes. The file name will be associated with the error in addition to the relevant `e_error_code` and `e_request_id` which (presumably) `g()` has already communicated.
 ====
 
-
-
 == What If I Want to Use Exception Handling?
 
 That would be a 1-minute introduction. :-)
@@ -192,7 +190,7 @@ We'll write a short but complete program, using LEAF to handle errors. We'll imp
 First, let's see how to use LEAF without exception handling.
 
 [[tutorial-noexcept]]
-=== Using LEAF without Exception Handling
+=== Using `result<T>`
 
 We'll write a program that reads a text file in a buffer and prints it to `std::cout`, using LEAF to handle errors. First, we need an `enum` to define our different error codes, and a simple type `e_error_code` to help LEAF tell error codes apart from other `int` values:
 
@@ -439,7 +437,7 @@ NOTE: The complete program from this tutorial is available https://github.com/za
 '''
 
 [[tutorial-eh]]
-=== Using LEAF with Exception Handling
+=== Using Exception Handling
 
 And now, we'll write the same program that reads a text file in a buffer and prints it to `std::cout`, this time using exceptions to report errors. First, we need to define our exception class hierarchy:
 
@@ -2285,12 +2283,12 @@ Remarkably, the Lua interpreter is {CPP} exception-safe, even though it is writt
 
 With LEAF, <<e-types,e-objects>> use automatic storage duration, stored inside `<<expect,expect>>` instances. When using concurrency, we need a mechanism to detach e-objects from a worker thread and transport them to another thread where errors are handled.
 
-LEAF offers two interfaces for this purpose, one using `result<T>`, and for programs that use exception handling.
+LEAF offers two interfaces for this purpose, one using `result<T>`, and another designed for programs that use exception handling.
 
 [[technique_transport-result]]
 ==== Using `result<T>`
 
-Without exceptions, transporting <<e-types,e-objects>> between threads is as easy as calling `<<capture-result,capture>>`, passing the `<<expect,expect>>` object whose contents needs to be transported, and a `<<result,result>><T>` which may be in either value state or error state. This gets us a new `<<result,result>><T>` object which can be sent across thread boundaries.
+Without exceptions, transporting <<e-types,e-objects>> between threads is as easy as calling `<<capture-result,capture>>`, passing the `<<expect,expect>>` object whose contents needs to be transported, and a `<<result,result>><T>` which may be in either value state or error state. This gets us a new `<<result,result>><T>` object which can be safely sent across thread boundaries.
 
 Let's assume we have a `task` which produces a result but could also fail:
 
@@ -2416,12 +2414,9 @@ catch( my_exception & e )
 
 NOTE: Follow this link to see a complete example program: https://github.com/zajo/leaf/blob/master/example/capture_eh.cpp?ts=3[capture_eh.cpp].
 
-
-'''
-
 == Design Rationale
 
-The first observation driving the LEAF design is that unless a specific type of info (e.g. a file name) is used at the time an error is being handled, there is no need for it to be reported. On the other hand, if the error handling context can use or requires some info, it would not be burdened by having to explicitly declare that need. The end result of this reasoning is `<<expect,expect>>`.
+The first observation driving the LEAF design is that unless a specific type of info (e.g. a file name) is used at the time an error is being handled, there is no need for it to be reported. On the other hand, if the error handling context can use or requires some info, that context would not be burdened by having to explicitly declare that need. The end result of this reasoning is `<<expect,expect>>`.
 
 The second observation is that ideally, like any other communication mechanism, it makes sense to formally define an interface for the error info that can be used by the error handling code. In terms of {CPP} exception handling, it would be nice to be able to say something like:
 
@@ -2471,11 +2466,31 @@ NOTE: LEAF is not part of Boost. Please post questions and feedback on the Boost
 [[building]]
 == Building
 
-LEAF is a header-only library and it requires no building. The unit tests use Boost Build, but the library itself has no dependency on Boost or any other library.
+LEAF is a header-only library and it requires no building. It does not depend on Boost or on any other library.
+
+The unit tests require Boost and can be run with Boost Build or with https://mesonbuild.com[Meson Build]. To run the unit tests:
+
+. Clone LEAF under your `boost/libs` directory.
+.. If using Boost Build:
++
+[source,sh]
+----
+cd leaf/test
+../../../b2
+----
+.. If using Meson Build:
++
+[source,sh]
+----
+cd leaf
+meson bld/debug
+cd bld/debug
+meson test
+----
 
 [[portability]]
 == Portability
 
 LEAF requires a {CPP}11 compiler.
 
-See unit test matrix at https://travis-ci.org/zajo/leaf[Travis-CI]. It has also been tested with Microsoft Visual Studio 2015 and 2017.
+See unit test matrix at https://travis-ci.org/zajo/leaf[Travis-CI]. It has also been tested with Microsoft Visual Studio 2015 and 2017 (please install the latest patches from Microsoft).
