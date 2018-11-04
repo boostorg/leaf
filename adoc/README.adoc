@@ -184,7 +184,7 @@ void f()
 [[tutorial]]
 == Tutorial
 
-We'll write a short but complete program, using LEAF to handle errors. We'll implement two versions, one that uses exception handling, and one that does not. To see the source code of the complete programs from this tutorial follow these links:
+We'll write a short but complete program, using LEAF to handle errors. We'll implement two versions, one that uses exception handling, and one that does not. To see the source code of the complete programs from this tutorial, follow these links:
 
 * https://github.com/zajo/leaf/blob/master/example/print_file_result.cpp?ts=3[print_file_result.cpp] (without exception handling)
 * https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp?ts=3[print_file_eh.cpp] (with exception handling)
@@ -457,6 +457,8 @@ struct input_file_read_error : virtual input_file_error { };
 struct input_eof_error : virtual input_file_error { };
 ----
 ====
+
+TIP: To avoid ambiguities in the implicit type conversion done when catching a base type, it is generally recommended to use virtual inheritance in exception type hierarchies.
 
 Here is a function that reads data from a file into a buffer and throws exceptions to communicate failures:
 
@@ -964,7 +966,7 @@ namespace boost { namespace leaf {
 ----
 ====
 
-Objects of class `error` are values that identify a errors across the entire program. They can be copied, moved, assigned to, and compared to other error objects. They occupy as much memory as `unsigned int`, and are as fast.
+Objects of class `error` are values that identify a errors across the entire program. They can be copied, moved, assigned to, and compared to other error objects. They occupy as much memory, and are as fast as `unsigned int`.
 
 Whenever an `e...` sequence is passed `error` functions, these objects are moved into matching storage provided by `<<expect,expect>>` instances and associated with the `error` object, which can later be passed to `<<peek-expect,peek>>` or `<<handle_error-expect,handle_error>>` to retrieve them.
 
@@ -1954,7 +1956,7 @@ void read_file( FILE * f ) {
 ----
 ====
 
-This is a problem: the `catch` needs a file name, but at the point of the `throw` a file name is not available (only a `FILE` pointer is). In general the error might be detected in a library which can not assume that a meaningful name is available for any `FILE` it reads, even if a program that uses the library could reasonably make the same assumption.
+This is a problem: the `catch` needs a file name, but at the point of the `throw` a file name is not available (only a `FILE` pointer is). In general, the error might be detected in a library which can not assume that a meaningful name is available for any `FILE` it reads, even if a program that uses the library could reasonably make the same assumption.
 
 Using LEAF, a file name may be associated with any exception after it has been thrown, while anything available at the point of the `throw` (e.g. `errno`) may be passed directly to `<<throw_exception,throw_exception>>`:
 
