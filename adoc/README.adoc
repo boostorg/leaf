@@ -3,6 +3,7 @@
 :icons: font
 :prewrap!:
 :source-highlighter: coderay
+:stylesheet: zajo.css
 
 = LEAF
 Low-latency Error Augmentation Framework for C++11
@@ -772,7 +773,7 @@ namespace boost { namespace leaf {
 
 Effects: :: By default, each stored <<e-types,e-object>> is moved to a corresponding slot in other existing `expect` instances according to the rules described `<<expect,here>>`, but if a call to `<<handle_error-expect,handle_error>>` for `*this` has succeeded, all objects currently stored in `*this` are discarded.
 
-NOTE: A call to `<<expect::propagate,propagate>>` restores the default behavior of `~expect` after a successful call to `handle_error`.
+IMPORTANT: A call to `<<expect::propagate,propagate>>` restores the default behavior of `~expect` after a successful call to `handle_error`.
 
 '''
 
@@ -1075,7 +1076,7 @@ Returns: :: The `error` value which will be returned the next time the `<<error:
 +
 This function can be used to associate <<e-types,e-objects>> with the next `error` value to be reported. Use with caution, only when restricted to reporting errors using specific types, incompatible with LEAF, for example in a C callback. As soon as control exits this critical path, you should create and return a `leaf::error` object.
 
-NOTE: `error` values are unique across the entire program.
+IMPORTANT: `error` values are unique across the entire program.
 
 '''
 
@@ -1408,7 +1409,7 @@ To get a `result<T>` object in error state, initialize it with a `leaf::error` o
 
 Otherwise a `result<T>` is initialized in value state using the default constructor of `T`, or by copying or moving from `v`.
 
-NOTE: A `result` that is in value state converts to `true` in boolean contexts. A `result` that is in error state converts to `false` in boolean contexts.
+IMPORTANT: A `result` that is in value state converts to `true` in boolean contexts. A `result` that is in error state converts to `false` in boolean contexts.
 
 '''
 
@@ -1670,7 +1671,7 @@ Requirements: :: `Ex` must derive from `std::exception`.
 
 Returns: :: An exception object of unspecified type which derives publicly from both `Ex` and `leaf::<<error,error>>`, its `Ex` sub-object initialized by `std::forward<Ex>(ex)`, its `error` sub-object initialized by `<<error::error,error>>(std::forward<E>(e...))`.
 
-NOTE: If thrown, the returned exception object can be caught as `Ex &` or as `leaf::<<error,error>>`.
+IMPORTANT: If thrown, the returned exception object can be caught as `Ex &` or as `leaf::<<error,error>>`.
 
 '''
 
@@ -1692,7 +1693,7 @@ Requirements: :: `Ex` must derive from `std::exception`.
 
 Effects: :: As if: `throw <<make_exception,make_exception>>( std::forward<Ex>(ex), std::forward<E>(e)... )`.
 
-NOTE: The thrown exception object can be caught as `Ex &` or as `leaf::<<error,error>>`.
+IMPORTANT: The thrown exception object can be caught as `Ex &` or as `leaf::<<error,error>>`.
 
 '''
 
@@ -1751,7 +1752,7 @@ Returns: :: `f.get()`.
 
 Throws: :: Any exception thrown by `f.get()`. If the future function was launched using `<<capture_exception,capture_exception>><E...>`, all `E...` type <<e-types,e-objects>> captured in the worker thread are transported to the calling thread.
 
-NOTE: To store and to access the transported <<e-types,e-objects>>, the calling thread must provide a suitable `<<expect,expect>>` object.
+IMPORTANT: To store and to access the transported <<e-types,e-objects>>, the calling thread must provide a suitable `<<expect,expect>>` object.
 
 '''
 
@@ -1772,7 +1773,7 @@ Returns: ::
 * If `auto e = dynamic_cast<leaf::<<error,error>> const *>(&ex)` succeeds, returns `*e`.
 * Othrewise, it returns an unspecified `leaf::error` value, which is "temporarily" associated with any and all currently unhandled exceptions.
 +
-NOTE: A successful call to `<<handle_exception,handle_exception>>` breaks this association.
+IMPORTANT: A successful call to `<<handle_exception,handle_exception>>` breaks this association.
 
 '''
 
@@ -1792,7 +1793,7 @@ namespace boost { namespace leaf {
 
 Effects: :: Equivalent to: `if( !<<handle_error-expect,handle_error>>( exp, <<get_error,get_error>>(ex), std::forward<M>(m)...) ) throw;`
 
-NOTE: In case the dynamic type of `ex` does not derive from `leaf::error` and the call to `handle_error` succeeds, the association between the `leaf::error` value returned by `<<get_error,get_error>>` and the currently unhandled exceptions is broken.
+IMPORTANT: In case the dynamic type of `ex` does not derive from `leaf::error` and the call to `handle_error` succeeds, the association between the `leaf::error` value returned by `<<get_error,get_error>>` and the currently unhandled exceptions is broken.
 
 '''
 
@@ -2462,7 +2463,7 @@ LEAF is distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Softwar
 
 The source code is available in https://github.com/zajo/leaf[this GitHub repository].
 
-NOTE: LEAF is not part of Boost. Please post questions and feedback on the Boost Developers Mailing List.
+IMPORTANT: LEAF is not part of Boost. Please post questions and feedback on the Boost Developers Mailing List.
 
 [[building]]
 == Building

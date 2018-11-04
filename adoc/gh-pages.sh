@@ -1,5 +1,9 @@
+#!/bin/bash
 set -e
-asciidoctor README.adoc -o index1.html -a source-highlighter=coderay
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $DIR
+asciidoctor README.adoc -o ../index1.html
+cd ..
 git checkout gh-pages
 git pull
 rm -f index.html
