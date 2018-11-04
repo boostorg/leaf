@@ -236,7 +236,7 @@ leaf::result<void> file_read( FILE & f, void * buf, int size )
 <3> `result<void>` can be initialized with `{ }` to indicate success.
 ====
 
-NOTE: The `e_error_code` and `e_errno` structs are examples of types that may be passed to the `leaf::error` constructor. The requirement for such types is that they define an accessible data member `value` and `noexcept` move constructor. These types allow us to assign different error-related semantics to different valies of otherwise identical static types. +
+NOTE: The `e_error_code` and `e_errno` structs are examples of types that may be passed to the `leaf::error` constructor. The requirement for such types is that they define an accessible data member `value` and `noexcept` move constructor. These types allow us to assign different error-related semantics to different values of otherwise identical static types. +
  +
 For example, we could define `struct e_input_name { std::string value; }` and `struct e_output_name { std::string value; }` and LEAF will treat them as separate entities even though their `.value` members are of the same type `std::string`. +
  +
@@ -371,7 +371,7 @@ int main( int argc, char const * argv[ ] )
       case input_eof_error:
       {
         //In this case handle_error is given 3 match sets. It will first check if both
-        //e_file_name and e_errno, associated with r, are avialable in exp; if not, it will
+        //e_file_name and e_errno, associated with r, are available in exp; if not, it will
         //next check if just e_errno is available; and if not, the last (empty) set will
         //always match to print a generic error message.
         bool matched = handle_error( exp, r,
@@ -478,7 +478,7 @@ void file_read( FILE & f, void * buf, int size )
 <2> If `fread` reports that it couldn't read all of the data requested, we throw `input_eof_error`. In this case there is no relevant `errno` to pass on, because this is not an error as far as `fread` is concerned.
 ====
 
-NOTE: The `e_error_code` and `e_errno` structs are examples of types that may be passed to `<<throw_exception,throw_exception>>` (and to the `leaf::error` constructor). The requirement for such types is that they define an accessible data member `value` and `noexcept` move constructor. These types allow us to assign different error-related semantics to different valies of otherwise identical static types. +
+NOTE: The `e_error_code` and `e_errno` structs are examples of types that may be passed to `<<throw_exception,throw_exception>>` (and to the `leaf::error` constructor). The requirement for such types is that they define an accessible data member `value` and `noexcept` move constructor. These types allow us to assign different error-related semantics to different values of otherwise identical static types. +
  +
 For example, we could define `struct e_input_name { std::string value; }` and `struct e_output_name { std::string value; }` and LEAF will treat them as separate entities even though their `.value` members are of the same type `std::string`. +
  +
@@ -557,7 +557,7 @@ int main( int argc, char const * argv[ ] )
   catch( input_error const & ex )
   {
     //In this case handle_exception is given 3 match sets. It will first check if both
-    //e_file_name and e_errno, associated with ex, are avialable in exp; if not, it will
+    //e_file_name and e_errno, associated with ex, are available in exp; if not, it will
     //next check if just e_errno is available; and if not, the last (empty) set will
     //always match to print a generic error message.
     handle_exception( exp, ex,
@@ -832,7 +832,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-See `<<handle_error-expect>>` below.
+See `<<handle_error-expect,handle_error>>` below.
 
 '''
 
@@ -2016,7 +2016,7 @@ catch( file_io_error & e )
 ----
 ====
 
-NOTE: This technique works exacly the same way when errors are reported using `leaf::<<result,result>>` rather than by throwing exceptions.
+NOTE: This technique works exactly the same way when errors are reported using `leaf::<<result,result>>` rather than by throwing exceptions.
 
 '''
 
@@ -2100,7 +2100,7 @@ This works similarly to `preload`, except that capturing of the `errno` is defer
 
 What makes `<<preload,preload>>` and `<<defer,defer>>` useful (see <<technique_preload,Preloading Errors>> and <<technique_defer,Capturing `errno` with `defer`>>) is that they automatically include <<e-types,e-type>> objects with any exception or error reported by a function.
 
-But what if we need to include some e-object conditionally? When using excption handling, it would be nice to be able to do this in a `catch` statement which selectively augments passing exceptions.
+But what if we need to include some e-object conditionally? When using exception handling, it would be nice to be able to do this in a `catch` statement which selectively augments passing exceptions.
 
 LEAF supports the following approach, assuming all exceptions derive from `std::exception`:
 
