@@ -18,7 +18,14 @@ LEAF is a {CPP}11 error handling library capable of transporting arbitrary error
 
 LEAF does not allocate memory dynamicallyfootnote:[Except when transporting error info between threads, see <<capture-expect,`capture`>>.], which makes it suitable for low-latency and other performance-critical environments. It is equally applicable to programs that use exception handling and programs that do not.
 
-NOTE: LEAF is compatible with, not a replacement for `std::error_code`.
+NOTE: LEAF is compatible with (not an alternative to) `std::error_code`.
+
+[[distribution]]
+== Distribution
+
+Copyright (c) 2018 Emil Dotchevski. Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0]. The source code is https://github.com/zajo/leaf[available] on GitHub.
+
+Please post questions and feedback on the Boost Developers Mailing List (LEAF is not part of Boost).
 
 == Two Minute Introduction
 
@@ -2455,17 +2462,6 @@ That is to say, it is desirable to be able to dispatch error handling based not 
 Last but not least, there is certain redundancy and repetition in error-neutral contexts that simply forward errors to their caller. What is the point in receiving some error info from a lower level function (e.g. a file name), when at this point we can't do anything with it, except forward it to our caller, until we reach a scope that can actually make use of the data? Even with move semantics, why bother move such data one level at a time, from one stack location to another immediately above, only to move it again when we `return` again?
 
 It is more correct for such information to be passed from a context where it is available, _directly to the exact stack location where it would be accessed by the error handling code_. This is another reason why the storage for <<e-types,e-objects>> is provided by `<<expect,expect>>` instances, which all use automatic storage duration.
-
-[[distribution]]
-== Distribution
-
-Copyright (c) 2018 Emil Dotchevski.
-
-LEAF is distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
-
-The source code is available in https://github.com/zajo/leaf[this GitHub repository].
-
-IMPORTANT: LEAF is not part of Boost. Please post questions and feedback on the Boost Developers Mailing List.
 
 [[building]]
 == Building
