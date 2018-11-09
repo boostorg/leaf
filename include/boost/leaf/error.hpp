@@ -137,7 +137,7 @@ namespace boost { namespace leaf {
 			slot & operator=( slot const & ) = delete;
 			typedef optional<error_info<E>> base;
 			slot<E> * prev_;
-			public:
+		public:
 			typedef decltype(E::value) value_type;
 			slot() noexcept;
 			~slot() noexcept;
@@ -184,7 +184,7 @@ namespace boost { namespace leaf {
 	} //leaf_detail
 
 	template <class... E>
-	error error:: propagate( E && ... e ) const noexcept
+	error error::propagate( E && ... e ) const noexcept
 	{
 		{ using _ = void const * [ ]; (void) _ { 0, leaf_detail::put_slot(std::forward<E>(e),*this)... }; }
 		return *this;

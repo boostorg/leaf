@@ -2427,41 +2427,183 @@ NOTE: Follow this link to see a complete example program: https://github.com/zaj
 
 == Design Rationale
 
-The first observation driving the LEAF design is that unless a specific type of info (e.g. a file name) is used at the time an error is being handled, there is no need for it to be reported. On the other hand, if the error handling context can use or requires some info, that context would not be burdened by having to explicitly declare that need. The end result of this reasoning is `<<expect,expect>>`.
+Definition: :: Objects that carry information about error conditions are called error objects. For example, objects of type `std::error_code` are error objects.
 
-The second observation is that ideally, like any other communication mechanism, it makes sense to formally define an interface for the error info that can be used by the error handling code. In terms of {CPP} exception handling, it would be nice to be able to say something like:
+NOTE: The following reasoning is independent of what mechanics are used to transport error objects, whether it is exception handling or anything else.
+
+Definition: :: Depending on their interaction with error objects, functions can be classified as follows:
+* *Error-initiating*: functions that initiate error conditions by creating new error objects.
+* *Error-neutral*: functions that forward to the caller error objects returned by functions they call.
+* *Error-handling*: functions that dispose of error objects forwarded to them, recovering normal program operation.
+
+A crucial observation is that _error-initiating_ functions are typically low level functions that lack any context and can not determine, much less dictate, the correct program behavior in response to errors they initiate. Error conditions which (correctly) lead to termination in some programs may (correctly) be ignored in others; yet other programs may recover from them and resume normal operation.
+
+Stronger: authors of _error-initiating_ functions may not even reason about what information about the error is required to deal with it, by a specific _error-handling_ function in a specific program domain, except to pass any relevant information which is naturally available to them.
+
+If this is true about _error-initiating_ functions, it is doubly true about _error-neutral_ functions. Frequently, the error they receive is initiated by a function multiple levels removed from them in the call chain, a function which usually is -- and should be treated as -- an implementation detail. The _error-neutral_ function should not be coupled with any error object types used by _error-initiating_ functions, for the same reason it should not be coupled with their interface.
+
+Finally, _error-handling_ functions, by definition, have the full context they need to deal with at least some, if not all, failures. In this scope it is an absolute necessity that the author knows exactly what information must be communicated by lower level functions in order to recover from each error condition. Specifically, none of this necessary information can be treated as implementation details; the coupling which is to be avoided by _error-neutral_ functions is unavoidable and even desirable here.
+
+We're now ready to define our
+
+Design goals: ::
+* *Error-initiating* functions should be able to communicate all information available to them that is relevant to the failure being reported.
+* *Error-neutral* functions should not interfere or be coupled with error-related information that passes through them. They should be able to augment it with any additional information available to them, which may be relevant to any error they forward to the caller.
+* *Error-handling* functions should be able to access all the information communicated by _error-initiating_ or _error-neutral_ functions that is needed in their domain in order to deal with failures.
+
+The difficulty in reaching these design goals is in that they seem to require that all error objects be allocated dynamically (the Boost Exception library meets these design goals at the cost of dynamic memory allocation).
+
+As it turns out, dynamic memory allocation is not necessary with the following
+
+Adjustment: ::
+* *Error-handling* functions should specify which of the information _error-initiating_ and _error-neutral_ functions are [.underline]#able# to communicate is [.underline]#actually needed# in order to deal with failures in a particular program domain. Ideally, no resources should be [.line-through]#used# wasted storing or communicating information which is not currently needed, even if it is relevant to the failure.
+
+The `leaf::<<expect,expect>><E...>` class template implements this idea: it provides local storage for error objects of the `E...` types. Users instantiate this template in _error-handling_ functions, knowing which types of error information are needed. When an `expect` object is created, `thread_local` pointers of the `E...` types are set to point to the corresponding storage within it. Later on, error-reporting functions wanting to communicate an error object of type `E` access the corresponding `thread_local` pointer to see if there is currently storage available for this type:
+
+* If the pointer is not null, storage is available and the object is moved into that storage, exactly once -- regardless of how many levels of function calls must unwind before an appropriate _error-handling_ function is reached.
+* If the pointer is null, storage is not available and the error object is discarded, saving resources.
+
+This almost works, except we need to make sure that _error-handling_ functions are protected from accessing stale error objects stored in `expect` objects, left there from previous failures, which would be a serious logic error. To this end, each failure is assigned a unique serial number, which is transported inside `leaf::<<result,result>>` objects that communicate failures. Each of the `E...` objects stored in an `expect<E...>` object is assigned the same unique identifier, permanently associating it with a particular failure.
+
+Lastly, in _error-handling_ functions it makes sense to be able to not only recognize individual error conditions, but match specific error-handling code with the complete set of error objects that is required in each case.
+
+In terms of {CPP} exception handling, it would be nice to be able to say something like:
 
 ====
 [source,c++]
 ----
-try {
+try
+{
+  T r = process_file();
 
-  process_file();
-
-} catch( file_read_error<e_file_name,e_errno> & e ) {
-
+  //Success, use r:
+  ....
+}
+catch( file_read_error<e_file_name,e_errno> & e )
+{
   std::cerr <<
     "Could not read " << e.get<e_file_name>() <<
     ", errno=" << e.get<e_errno>() << std::endl;
-
-} catch( file_read_error<e_errno> & e ) {
-
+}
+catch( file_read_error<e_errno> & e )
+{
   std::cerr <<
     "File read error, errno=" << e.get<e_errno>() << std::endl;
-
-} catch( file_read_error<> & e ) {
-
+}
+catch( file_read_error<> & e )
+{
   std::cerr << "File read error!" << std::endl;
-
 }
 ----
 ====
 
-That is to say, it is desirable to be able to dispatch error handling based not only on the kind of failure being handled, but also based on the kind of error info available. Unfortunately this syntax is not possible and, even if it were, not all programs use exceptions to handle errors. The result of this train of thought is `<<handle_error-expect,handle_error>>`/`<<handle_exception,handle_exception>>`.
+That is to say, it is desirable to be able to dispatch error handling based not only on the kind of failure being handled, but also based on the kind of error objects available. Unfortunately this syntax is not possible and, even if it were, not all programs use exceptions to handle errors.
 
-Last but not least, there is certain redundancy and repetition in error-neutral contexts that simply forward errors to their caller. What is the point in receiving some error info from a lower level function (e.g. a file name), when at this point we can't do anything with it, except forward it to our caller, until we reach a scope that can actually make use of the data? Even with move semantics, why bother move such data one level at a time, from one stack location to another immediately above, only to move it again when we `return` again?
+Below is the same snippet, expressed in terms of LEAF:
 
-It is more correct for such information to be passed from a context where it is available, _directly to the exact stack location where it would be accessed by the error handling code_. This is another reason why the storage for <<e-types,e-objects>> is provided by `<<expect,expect>>` instances, which all use automatic storage duration.
+====
+[source,c++]
+----
+leaf::expect<e_file_name, e_errno> exp;
+
+try
+{
+  T r = process_file(); //Throws in case of failure, error objects stored inside exp.
+
+  //Success, use r:
+  ....
+}
+catch( file_read_error & e )
+{
+  //Match available error objects stored in exp,
+  //associated with the specific failure communicated by e.
+  leaf::handle_exception( exp, e,
+
+    match<e_file_name, e_errno>( [ ]( std::string const & file_name, int errno_ )
+    {
+      std::cerr <<
+        "Could not read " << file_name <<
+        ", errno=" << errno_ << std::endl;
+    } ),
+
+    match<e_errno>( [ ]( int errno_ )
+    {
+      std::cerr <<
+        "File read error, errno=" << errno_ << std::endl;
+    } ),
+
+    match<>( [ ]
+    {
+      std::cerr << "File read error!" << std::endl;
+    } )
+
+  );
+}
+----
+====
+
+Of course LEAF works without exception handling as well. Below is the same snippet, written using `<<result,result>><T>`:
+
+====
+[source,c++]
+----
+leaf::expect<e_what, e_file_name, e_errno> exp;
+
+if( result<T> r = process_file() ) //In case of failure error objects are stored inside exp.
+{
+  //Success, use r.value():
+  ....
+}
+else
+{
+  //e_what is used to dispatch between error conditions:
+  switch( *leaf::peek<e_what>(exp,r) )
+  {
+    case file_read_error:
+    {
+      //Match available error objects stored in exp,
+      //associated with the specific failure communicated by r.
+      bool handled = leaf::handle_error( exp, r,
+
+        match<e_file_name, e_errno>( [ ]( std::string const & file_name, int errno_ )
+        {
+          std::cerr <<
+            "Could not read " << file_name <<
+            ", errno=" << errno_ << std::endl;
+        } ),
+
+        match<e_errno>( [ ]( int errno_ )
+        {
+          std::cerr <<
+          "File read error, errno=" << errno_ << std::endl;
+        } ),
+
+        match<>( [ ]
+        {
+          std::cerr << "File read error!" << std::endl;
+        } )
+
+      );
+      if( handled )
+        break;
+    }
+    //fallthrough:
+    default:
+      return r; //Error not handled, forward to the caller.
+}
+----
+====
+
+NOTE: Please post questions and feedback on the Boost Developers Mailing List (LEAF is not part of Boost).
+
+== Alternatives to LEAF
+
+Here is a list of other error handling libraries:
+
+* https://www.boost.org/doc/libs/release/libs/exception/doc/boost-exception.html[Boost Exception]
+* https://ned14.github.io/outcome[Boost Outcome]
+* https://github.com/pdimov/variant2[variant2 / `expected<T,E...>`]
+* https://zajo.github.io/boost-noexcept[Noexcept]
 
 [[building]]
 == Building
