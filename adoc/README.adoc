@@ -31,8 +31,6 @@ LEAF is a {CPP}11 error handling library. Features:
 <<tutorial>> | <<techniques>> | <<reference>> | <<rationale>>
 ====
 
-{nbsp}
-
 [[introduction]]
 == Two Minute Introduction
 
