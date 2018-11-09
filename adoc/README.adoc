@@ -14,19 +14,28 @@ Low-latency Error Augmentation Framework for C++11
 [abstract]
 == Abstract
 
-LEAF is a {CPP}11 error handling library capable of transporting arbitrary error information from contexts that detect and report failures, as well as from intermediate error-neutral contexts, to scopes where the error is handled.
+LEAF is a {CPP}11 error handling library. Features:
 
-LEAF does not allocate memory dynamicallyfootnote:[Except when transporting error info between threads, see <<capture-expect,`capture`>>.], which makes it suitable for low-latency and other performance-critical environments. It is equally applicable to programs that use exception handling and programs that do not.
+====
+* No dynamic memory allocations.footnote:[Except when error objects are transported between threads, see <<capture-expect,`capture`>>.]
 
-NOTE: LEAF is compatible with (not an alternative to) `std::error_code`.
+* Asociate objects of arbitrary types with any failure -- when it is initially reported or at a later time.
 
-[[distribution]]
-== Distribution
+* Compatible with `std::error_code`, `errno` and any other error handling API.
 
-Copyright (c) 2018 Emil Dotchevski. Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0]. The source code is https://github.com/zajo/leaf[available] on GitHub.
+* Use with or without exception handling.
 
-Please post questions and feedback on the Boost Developers Mailing List (LEAF is not part of Boost).
+* Support for multi-thread programming.
+====
 
+Quick links: ::
+<<introduction>> +
+<<tutorial>> +
+<<techniques>> +
+<<reference>> +
+<<rationale>>
+
+[[introduction]]
 == Two Minute Introduction
 
 Let's assume that to handle a particular failure, we need an error code, a file name, and, optionally, a request ID. In terms of LEAF, we can write:
@@ -2425,6 +2434,7 @@ catch( my_exception & e )
 
 NOTE: Follow this link to see a complete example program: https://github.com/zajo/leaf/blob/master/example/capture_eh.cpp?ts=3[capture_eh.cpp].
 
+[[rationale]]
 == Design Rationale
 
 Definition: :: Objects that carry information about error conditions are called error objects. For example, objects of type `std::error_code` are error objects.
@@ -2605,6 +2615,20 @@ Here is a list of other error handling libraries:
 * https://github.com/pdimov/variant2[variant2 / `expected<T,E...>`]
 * https://zajo.github.io/boost-noexcept[Noexcept]
 
+[[distribution]]
+== Distribution
+
+Copyright (c) 2018 Emil Dotchevski. Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0]. The source code is https://github.com/zajo/leaf[available] on GitHub.
+
+Please post questions and feedback on the Boost Developers Mailing List (LEAF is not part of Boost).
+
+[[portability]]
+== Portability
+
+LEAF requires a {CPP}11 compiler.
+
+See unit test matrix at https://travis-ci.org/zajo/leaf[Travis-CI]. It has also been tested with Microsoft Visual Studio 2015 and 2017 (please install the latest patches from Microsoft).
+
 [[building]]
 == Building
 
@@ -2629,10 +2653,3 @@ meson bld/debug
 cd bld/debug
 meson test
 ----
-
-[[portability]]
-== Portability
-
-LEAF requires a {CPP}11 compiler.
-
-See unit test matrix at https://travis-ci.org/zajo/leaf[Travis-CI]. It has also been tested with Microsoft Visual Studio 2015 and 2017 (please install the latest patches from Microsoft).
