@@ -8,7 +8,7 @@
 #define UUID_87F274C4D4BA11E89928D55AC82C3C47
 
 #include <boost/leaf/expect.hpp>
-#include <boost/leaf/detail/throw_exception.hpp>
+#include <boost/leaf/detail/throw.hpp>
 
 namespace boost { namespace leaf {
 

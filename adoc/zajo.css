@@ -439,7 +439,7 @@ h5 code{color:#4101a7; font-size:113%}
 #toc ul code{font-size:111%}
 #toc a:hover code {color:#4101a7}
 a:focus{outline:0}
-body{text-align:justify; background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Istok Web","DejaVu Serif",serif;font-weight:400;font-style:normal;line-height:1;position:relative;cursor:auto;tab-size:4;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}
+body{text-align:left; background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Istok Web","DejaVu Serif",serif;font-weight:400;font-style:normal;line-height:1;position:relative;cursor:auto;tab-size:4;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}
 .subheader,.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{line-height:1.45;color:#a0a0a0;font-weight:400;margin-top:0;margin-bottom:.25em}
 a{color:#000000;text-decoration:underline;line-height:inherit}
 a:hover{color:#4101a7}

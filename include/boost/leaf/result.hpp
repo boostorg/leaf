@@ -8,7 +8,7 @@
 #define UUID_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
 
 #include <boost/leaf/error_capture.hpp>
-#include <boost/leaf/detail/throw_exception.hpp>
+#include <boost/leaf/detail/throw.hpp>
 
 #define LEAF_AUTO(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
 #define LEAF_CHECK(r) {auto _r_##v = r; if( !_r_##v ) return _r_##v.error();}
@@ -197,7 +197,7 @@ namespace boost { namespace leaf {
 			if( which_==variant::value )
 				return value_;
 			else
-				LEAF_THROW(bad_result());
+				LEAF_THROW<bad_result>();
 		}
 
 		T & value()
@@ -205,7 +205,7 @@ namespace boost { namespace leaf {
 			if( which_==variant::value )
 				return value_;
 			else
-				LEAF_THROW(bad_result());
+				LEAF_THROW<bad_result>();
 		}
 
 		T const & operator*() const

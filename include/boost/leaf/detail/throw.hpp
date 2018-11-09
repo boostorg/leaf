@@ -10,7 +10,7 @@
 #include <boost/leaf/common.hpp>
 #include <exception>
 
-#define LEAF_THROW ::boost::leaf::peek_next_error().propagate(::boost::leaf::e_source_location{::boost::leaf::e_source_location::loc(__FILE__,__LINE__,__FUNCTION__)}),throw::boost::leaf::make_exception
+#define LEAF_THROW ::boost::leaf::peek_next_error().propagate(::boost::leaf::e_source_location{::boost::leaf::e_source_location::loc(__FILE__,__LINE__,__FUNCTION__)}),throw::boost::leaf::exception
 
 namespace boost { namespace leaf {
 
@@ -46,34 +46,30 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		inline void enforce_std_exception( std::exception const & ) { }
-
-		template <class Ex>
-		class exception:
-			public Ex,
-			public error
-		{
-		public:
-
-			exception( Ex && ex, error  const & e ) noexcept:
-				Ex(std::move(ex)),
-				error(e)
-			{
-				enforce_std_exception(*this);
-			}
-		};
 	} //leaf_detail
 
-	template <class Ex,class... E>
-	leaf_detail::exception<Ex> make_exception( Ex && ex, E && ... e ) noexcept
+	template <class Ex>
+	class exception:
+		public Ex,
+		public error
 	{
-		return leaf_detail::exception<Ex>( std::forward<Ex>(ex), error(std::forward<E>(e)...) );
-	}
+	public:
 
-	template <class Ex,class... E> [[noreturn]]
-	void throw_exception( Ex && ex, E && ... e )
-	{
-		throw make_exception( std::forward<Ex>(ex), std::forward<E>(e)... );
-	}
+		template <class... E>
+		exception( E && ... e ) noexcept:
+			error(std::forward<E>(e)...)
+		{
+			leaf_detail::enforce_std_exception(*this);
+		}
+
+		template <class... E>
+		exception( Ex && ex, E && ... e ) noexcept:
+			Ex(std::move(ex)),
+			error(std::forward<E>(e)...)
+		{
+			leaf_detail::enforce_std_exception(*this);
+		}
+	};
 
 } }
 
