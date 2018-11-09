@@ -2745,3 +2745,7 @@ meson bld/debug
 cd bld/debug
 meson test
 ----
+
+== Acknowledgements
+
+Thanks to Peter Dimov for the countless library design discussions. Sean Palmer, Jason King, Vinnie Falco -- thanks for your feedback.
