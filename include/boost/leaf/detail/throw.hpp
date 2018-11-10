@@ -55,6 +55,9 @@ namespace boost { namespace leaf {
 	{
 	public:
 
+		exception( exception const & ) = default;
+		exception( exception && ) = default;
+
 		template <class... E>
 		exception( E && ... e ) noexcept:
 			error(std::forward<E>(e)...)

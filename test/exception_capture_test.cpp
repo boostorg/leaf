@@ -82,7 +82,7 @@ int main()
 		if( res>=0 )
 			return res;
 		else
-			throw leaf::exception<my_error>( info<1>{a}, info<2>{b}, info<3>{}) ;
+			throw leaf::exception<my_error>( info<1>{a}, info<2>{b}, info<3>{} );
 	} );
 
 	test( 42, [ ]( int a, int b, int res )
