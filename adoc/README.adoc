@@ -28,7 +28,7 @@ LEAF is a {CPP}11 error handling library. Features:
 * Support for multi-thread programming.
 
 [.text-right]
-<<tutorial>> | <<techniques>> | <<reference>> | <<rationale>>
+https://github.com/zajo/leaf[GitHub] | <<tutorial>> | <<techniques>> | <<reference>> | <<rationale>>
 ====
 
 [[introduction]]
@@ -2710,7 +2710,9 @@ Here is a list of other error handling libraries:
 [[distribution]]
 == Distribution
 
-Copyright (c) 2018 Emil Dotchevski. Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0]. The source code is https://github.com/zajo/leaf[available] on GitHub.
+The source code is https://github.com/zajo/leaf[available] on GitHub.
+
+Copyright (c) 2018 Emil Dotchevski. Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
 
 Please post questions and feedback on the Boost Developers Mailing List (LEAF is not part of Boost).
 
