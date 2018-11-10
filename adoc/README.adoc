@@ -21,7 +21,7 @@ LEAF is a {CPP}11 error handling library. Features:
 
 * Associate objects of arbitrary types with any failure -- when it is initially reported or at a later time.
 
-* Compatible with `std::error_code`, `errno` and any other error handling APIs.
+* Compatible with `std::error_code`, `errno` and any other error handling API.
 
 * Use with or without exception handling.
 
