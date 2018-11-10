@@ -1,6 +1,14 @@
-LEAF is a C++11 error handling library capable of transporting arbitrary error information from contexts that detect and report failures, as well as from intermediate error-neutral contexts, to scopes where the error is handled.
+LEAF is a C++11 error handling library. Features:
 
-LEAF does not allocate memory dynamically, which makes it suitable for low-latency and other performance-critical environments. It is equally applicable to programs that use exception handling and programs that do not.
+* No dynamic memory allocations.
+
+* Associate objects of arbitrary types with any failure -- when it is initially reported or at a later time.
+
+* Compatible with `std::error_code`, `errno` and any other error handling APIs.
+
+* Use with or without exception handling.
+
+* Support for multi-thread programming.
 
 Copyright (c) 2018 Emil Dotchevski. Distributed under the [Boost Software License, Version 1.0](http://www.boost.org/LICENSE_1_0.txt).
 
