@@ -667,7 +667,7 @@ NOTE: The complete program from this tutorial is available https://github.com/za
 [[synopsis]]
 == Synopsis
 
-*Class template `expect`*
+*Class Template `expect`*
 ====
 include::synopses/expect.adoc[]
 
@@ -699,7 +699,7 @@ include::synopses/error_capture.adoc[]
 <<error_capture>> | <<error_capture::error_capture>> | <<error_capture::operator_bool>> | <<error_capture::unload>> | <<handle_error-error_capture>> | <<peek-error_capture>> | <<diagnostic_output-error_capture>>
 ====
 
-*Class template `result`*
+*Class Template `result`*
 ====
 include::synopses/result.adoc[]
 
@@ -707,7 +707,7 @@ include::synopses/result.adoc[]
 <<result>> | <<result::result>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<capture-result>> | <<handle_error-result>> | <<peek-result>> | <<diagnostic_output-result>> | <<bad_result>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
 ====
 
-*Class template `exception`*
+*Class Template `exception`*
 ====
 include::synopses/exception.adoc[]
 
@@ -1365,7 +1365,7 @@ NOTE: The printing of each individual e-object is done by the rules described <<
 '''
 
 [[result]]
-=== Class template `result`
+=== Class Template `result`
 
 ====
 include::synopses/result.adoc[]
@@ -1596,7 +1596,7 @@ This exception is thrown by `<<result::value,value>>()`/`<<result::value,operato
 '''
 
 [[exception]]
-=== Class template `exception`
+=== Class Template `exception`
 
 ====
 include::synopses/exception.adoc[]
