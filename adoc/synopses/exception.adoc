@@ -1,0 +1,34 @@
+[source,c++]
+.#include <boost/leaf/exception.hpp>
+----
+namespace boost { namespace leaf {
+
+  template <class Ex>
+  class exception:
+    public Ex,
+    public error
+  {
+  public:
+
+    template <class... E>
+    exception( E && ... e ) noexcept;
+
+    template <class... E>
+    exception( Ex && ex, E && ... e ) noexcept;
+  };
+
+  error get_error( std::exception const & ex ) noexcept;
+
+  template <class P,class... E>
+  decltype(P::value) const * peek( expect<E...> const & exp, std::exception const & ex ) noexcept;
+
+  template <class... M,class... E>
+  void handle_exception( expect<E...> & exp, std::exception const & ex, M && ... m );
+
+  template <class... E>
+  void diagnostic_output( std::ostream & os, expect<E...> const & exp, std::exception const & ex );
+
+} }
+
+#define LEAF_THROW <<unspecified>>
+----

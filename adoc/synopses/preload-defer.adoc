@@ -1,0 +1,13 @@
+[source,c++]
+.#include <boost/leaf/error.hpp>
+----
+namespace boost { namespace leaf {
+
+  template <class... E>
+  <<unspecified-type>> preload( E && ... e ) noexcept;
+
+  template <class... F>
+  <<unspecified-type>> defer( F && ... f ) noexcept;
+
+} }
+----

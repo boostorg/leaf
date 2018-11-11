@@ -1,0 +1,27 @@
+.#include <boost/leaf/error_capture.hpp>
+[source,c++]
+----
+
+namespace boost { namespace leaf {
+
+  class error_capture
+  {
+  public:
+
+    error_capture() noexcept;
+
+    explicit operator bool() const noexcept;
+
+    error unload() noexcept;
+  };
+
+  template <class... M>
+  bool handle_error( error_capture const & ec, M && ... m ) noexcept;
+
+  template <class P>
+  decltype(P::value) const * peek( error_capture const & ec ) noexcept;
+
+  void diagnostic_output( std::ostream & os, error_capture const & ec );
+
+} }
+----

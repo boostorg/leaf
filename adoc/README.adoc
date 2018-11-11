@@ -1,10 +1,8 @@
-:sourcedir: .
 :last-update-label!:
 :icons: font
 :prewrap!:
 :source-highlighter: coderay
 :stylesheet: zajo.css
-
 = LEAF
 Low-latency Error Augmentation Framework for C++11
 :toclevels: 3
@@ -28,7 +26,7 @@ LEAF is a {CPP}11 error handling library. Features:
 * Support for multi-thread programming.
 
 [.text-right]
-https://github.com/zajo/leaf[GitHub] | <<tutorial>> | <<techniques>> | <<reference>> | <<rationale>>
+https://github.com/zajo/leaf[GitHub] | <<introduction,Introduction>> | <<tutorial>> | <<techniques>> | <<synopsis>> | <<reference>> | <<rationale>>
 ====
 
 [[introduction]]
@@ -190,7 +188,7 @@ T g()
 <2> Throw a `my_exception` object, store the passed `e_error_code` and `e_request_id` in appropriate `expect` object(s) from calling scopes. Presumably, at this point we don't have access to a relevant file name, but that's fine -- we associate with exception object what relevant information we do have: the error code and the request ID.
 
 [.text-right]
-`<<eh,exception>>` 
+<<exception>>
 ====
 
 Exceptions can be augmented in exception-neutral contexts:
@@ -518,14 +516,14 @@ void file_read( FILE & f, void * buf, int size )
     throw input_eof_error(); //<2>
 }
 ----
-<1> If `ferror` indicates an error, we throw `input_file_read_error` and, because there is a relevant `errno` code, we pass that to the `<<eh,exception>>` constructor _also_ (LEAF defines `struct e_errno { int value; }`).
+<1> If `ferror` indicates an error, we throw `input_file_read_error` and, because there is a relevant `errno` code, we pass that to the `<<exception::exception,exception>>` constructor _also_ (LEAF defines `struct e_errno { int value; }`).
 <2> If `fread` reports that it couldn't read all of the data requested, we throw `input_eof_error`. In this case there is no relevant `errno` to pass on, because this is not an error as far as `fread` is concerned.
 
 [.text-right]
-`<<eh,exception>>`
+<<exception>>
 ====
 
-NOTE: The `e_error_code` and `e_errno` structs are examples of types that may be passed to the `leaf::<<eh,exception>>` (and to the `leaf::<<error,error>>` constructor). The requirement for such types is that they define an accessible data member `value` and `noexcept` move constructor. These types allow us to assign different error-related semantics to different values of otherwise identical static types. +
+NOTE: The `e_error_code` and `e_errno` structs are examples of types that may be passed to the `leaf::<<exception::exception,exception>>` (and to the `leaf::<<error,error>>`) constructor. The requirement for such types is that they define an accessible data member `value` and `noexcept` move constructor. These types allow us to assign different error-related semantics to different values of otherwise identical static types. +
  +
 For example, we could define `struct e_input_name { std::string value; }` and `struct e_output_name { std::string value; }` and LEAF will treat them as separate entities even though their `.value` members are of the same type `std::string`. +
  +
@@ -551,7 +549,7 @@ void print_file( char const * file_name )
 }
 ----
 <1> `std::shared_ptr<FILE> file_open( char const * file_name)` throws on error.
-<2> `<<preload,preload>>` takes any number of <<e-types,e-type>> objects and prepares them to become associated (automatically, at the time the returned object expires) with the first exception thrown thereafter. The effect is that from this point on, a file name will be associated with any exception escaping `print_file`, in addition to everything else passed earlier to the `leaf::<<eh,exception>>` constructor explicitly (`e_file_name` is defined as `struct e_file_name { std::string value; }`).
+<2> `<<preload,preload>>` takes any number of <<e-types,e-type>> objects and prepares them to become associated (automatically, at the time the returned object expires) with the first exception thrown thereafter. The effect is that from this point on, a file name will be associated with any exception escaping `print_file`, in addition to everything else passed earlier to the `leaf::<<exception::exception,exception>>` constructor explicitly (`e_file_name` is defined as `struct e_file_name { std::string value; }`).
 <3> `int file_size( FILE & f )` throws on error.
 <4> `<<defer,defer>>` is similar to `preload`: it prepares an e-type object to become associated with the first exception thrown thereafter, but instead of taking the e-type object itself, `defer` takes a function that returns it. The function is invoked in the returned object's destructor, at which point it becomes associated with the exception being propagated. Assuming `std::cout` is configured to throw on error, the effect of this line is that those exceptions will have the relevant `errno` associated with them.
 
@@ -659,12 +657,63 @@ int main( int argc, char const * argv[ ] )
 
 To summarize, when using LEAF with exception handling:
 
-* In case a function detects a failure, it may throw instances of the `leaf::<<eh,exception>>` class template, initializing it with (in addition to the exception object) any number of <<e-types,e-type>> objects, to associate with the exception any information it has that is relevant to the failure.
+* In case a function detects a failure, it may throw instances of the `leaf::<<exception,exception>>` class template, initializing it with (in addition to the exception object) any number of <<e-types,e-type>> objects, to associate with the exception any information it has that is relevant to the failure.
 * Alternatively it may use `<<preload,preload>>` to associate <<e-types,e-type>> objects with the exception object (of any type) thrown later on, including exceptions thrown by third-party code.
-* In order for any e-type object passed to the `leaf::<<eh,exception>>` constructor to be stored rather than discarded, the function that catches the exception must contain an instance of the class template `<<expect,expect>>` that provides the necessary storage for its type.
+* In order for any e-type object passed to the `leaf::<<exception::exception,exception>>` constructor to be stored rather than discarded, the function that catches the exception must contain an instance of the class template `<<expect,expect>>` that provides the necessary storage for its type.
 * Using `<<handle_exception,handle_exception>>`, available <<e-types,e-type>> objects associated with the exception being handled can be matched to what is required in order to deal with that exception.
 
 NOTE: The complete program from this tutorial is available https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp?ts=3[here]. There is also https://github.com/zajo/leaf/blob/master/example/print_file_result.cpp?ts=3[another] version of the same program that does not use exception handling to report errors (see <<tutorial-noexcept,previous tutorial>>).
+
+[[synopsis]]
+== Synopsis
+
+*Class template `expect`*
+====
+include::synopses/expect.adoc[]
+
+[.text-right]
+<<expect>> | <<expect::expect>> | <<expect-dtor>> | <<expect::propagate>> | <<capture-expect>> | <<match>> | <<handle_error-expect>> | <<peek-expect>> | <<diagnostic_output-expect>>
+====
+
+*Class `error`*
+====
+include::synopses/error.adoc[]
+
+[.text-right]
+<<error>> | <<error::error>> | <<error::propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>> | <<peek_next_error>>
+====
+
+*Automatic Propagation*
+====
+include::synopses/preload-defer.adoc[]
+
+[.text-right]
+<<preload>> | <<defer>>
+====
+
+*Class `error_capture`*
+====
+include::synopses/error_capture.adoc[]
+
+[.text-right]
+<<error_capture>> | <<error_capture::error_capture>> | <<error_capture::operator_bool>> | <<error_capture::unload>> | <<handle_error-error_capture>> | <<peek-error_capture>> | <<diagnostic_output-error_capture>>
+====
+
+*Class template `result`*
+====
+include::synopses/result.adoc[]
+
+[.text-right]
+<<result>> | <<result::result>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<capture-result>> | <<handle_error-result>> | <<peek-result>> | <<diagnostic_output-result>> | <<bad_result>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
+====
+
+*Class template `exception`*
+====
+include::synopses/exception.adoc[]
+
+[.text-right]
+<<exception>> | <<exception::exception>> | <<get_error>> | <<peek-exception>> | <<handle_exception>> | <<diagnostic_output-exception>> | <<LEAF_THROW>>
+====
 
 [[reference]]
 == Reference
@@ -730,45 +779,7 @@ TIP: The output from `diagnostic_output` overloads is developer-friendly but not
 === Class Template `expect`
 
 ====
-.#include <boost/leaf/expect.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  class expect
-  {
-  public:
-
-    expect() noexcept;
-    ~expect() noexcept;
-
-    void propagate() noexcept;
-  };
-
-  template <class... E>
-  error_capture capture( expect<E...> & exp, error const & e );
-
-  template <class... E>
-  <<unspecified-type> match() noexcept;
-
-  template <class... E,class F>
-  <<unspecified-type> match( F && f ) noexcept;
-
-  template <class... E,class... M>
-  bool handle_error( expect<E...> & exp, error const & e, M && ... m ) noexcept;
-
-  template <class P,class... E>
-  decltype(P::value) const * peek( expect<E...> const & exp, error const & e ) noexcept;
-
-  template <class... E>
-  void diagnostic_output( std::ostream & os, expect<E...> const & exp );
-
-  template <class... E>
-  void diagnostic_output( std::ostream & os, expect<E...> const & exp, error const & e );
-
-} }
-----
+include::synopses/expect.adoc[]
 
 [.text-right]
 <<expect::expect>> | <<expect-dtor>> | <<expect::propagate>> | <<capture-expect>> | <<match>> | <<handle_error-expect>> | <<peek-expect>> | <<diagnostic_output-expect>>
@@ -994,31 +1005,7 @@ NOTE: The printing of each individual e-object is done by the rules described <<
 === Class `error`
 
 ====
-.#include <boost/leaf/error.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  class error
-  {
-  public:
-
-    template <class... E>
-    explicit error( E && ... e ) noexcept:
-
-    template <class... E>
-    error propagate( E && ... e ) const noexcept;
-
-    friend bool operator==( error const & e1, error const & e2 ) noexcept;
-    friend bool operator!=( error const & e1, error const & e2 ) noexcept;
-
-    friend std::ostream & operator<<( std::ostream & os, error const & e )
-  };
-
-  error peek_next_error() noexcept;
-
-} }
-----
+include::synopses/error.adoc[]
 
 [.text-right]
 <<error::error>> | <<error::propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>> | <<peek_next_error>>
@@ -1140,8 +1127,21 @@ IMPORTANT: `error` values are unique across the entire program.
 
 '''
 
+=== Automatic Propagation
+
+====
+include::synopses/preload-defer.adoc[]
+
+[.text-right]
+<<preload>> | <<defer>>
+====
+
+These two functions are used to automatically associate <<e-types,e-objects>> with failures that propagate through the scope where they are invoked.
+
+'''
+
 [[preload]]
-=== `preload`
+==== `preload`
 
 [source,c++]
 .#include <boost/leaf/error.hpp>
@@ -1161,7 +1161,7 @@ Effects: :: All `e...` objects are forwarded and stored into the returned object
 '''
 
 [[defer]]
-=== `defer`
+==== `defer`
 
 [source,c++]
 .#include <boost/leaf/error.hpp>
@@ -1186,33 +1186,7 @@ Effects: :: All `f...` objects are forwarded and stored into the returned object
 === Class `error_capture`
 
 ====
-.#include <boost/leaf/error_capture.hpp>
-[source,c++]
-----
-
-namespace boost { namespace leaf {
-
-  class error_capture
-  {
-  public:
-
-    error_capture() noexcept;
-
-    explicit operator bool() const noexcept;
-
-    error unload() noexcept;
-  };
-
-  template <class... M>
-  bool handle_error( error_capture const & ec, M && ... m ) noexcept;
-
-  template <class P>
-  decltype(P::value) const * peek( error_capture const & ec ) noexcept;
-
-  void diagnostic_output( std::ostream & os, error_capture const & ec );
-
-} }
-----
+include::synopses/error_capture.adoc[]
 
 [.text-right]
 <<error_capture::error_capture>> | <<error_capture::operator_bool>> | <<error_capture::unload>> | <<handle_error-error_capture>> | <<peek-error_capture>> | <<diagnostic_output-error_capture>>
@@ -1394,52 +1368,7 @@ NOTE: The printing of each individual e-object is done by the rules described <<
 === Class template `result`
 
 ====
-.#include <boost/leaf/result.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class T>
-  result
-  {
-  public:
-
-    result() noexcept;
-    result( T const & v );
-    result( T && v ) noexcept;
-    result( leaf::error const & e ) noexcept;
-    result( leaf::error_capture const & ec ) noexcept;
-
-    explicit operator bool() const noexcept;
-
-    T const & value() const;
-    T & value();
-    T const & operator*() const;
-    T & operator*();
-
-    template <class... E>
-    leaf::error error( E && ... e ) noexcept;
- };
-
-  template <class... E,class T>
-  result capture( expect<E...> & exp, result<T> const & r );
-
-  template <class... E,class T,class... M>
-  bool handle_error( expect<E...> & exp, result<T> & r, M && ... m ) noexcept;
-
-  template <class P,class... E,class T>
-  decltype(P::value) const * peek( expect<E...> const &, result<T> const & ) noexcept;
-
-  template <class... E,class T>
-  friend void diagnostic_output( std::ostream & os, expect<E...> const & exp, result<T> const & r );
-
-  struct bad_result: std::exception { };
-
-} }
-
-#define LEAF_AUTO(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
-#define LEAF_CHECK(r) {auto _r_##v = r; if( !_r_##v ) return _r_##v.error();}
-----
+include::synopses/result.adoc[]
 
 [.text-right]
 <<result::result>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<capture-result>> | <<handle_error-result>> | <<peek-result>> | <<diagnostic_output-result>> | <<bad_result>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
@@ -1666,44 +1595,11 @@ This exception is thrown by `<<result::value,value>>()`/`<<result::value,operato
 
 '''
 
-[[eh]]
-=== Exception Handling Interface
+[[exception]]
+=== Class template `exception`
 
 ====
-[source,c++]
-.#include <boost/leaf/exception.hpp>
-----
-namespace boost { namespace leaf {
-
-  template <class Ex>
-  class exception:
-    public Ex,
-    public error
-  {
-  public:
-
-    template <class... E>
-    exception( E && ... e ) noexcept;
-
-    template <class... E>
-    exception( Ex && ex, E && ... e ) noexcept;
-  };
-
-  error get_error( std::exception const & ex ) noexcept;
-
-  template <class P,class... E>
-  decltype(P::value) const * peek( expect<E...> const & exp, std::exception const & ex ) noexcept;
-
-  template <class... M,class... E>
-  void handle_exception( expect<E...> & exp, std::exception const & ex, M && ... m );
-
-  template <class... E>
-  void diagnostic_output( std::ostream & os, expect<E...> const & exp, std::exception const & ex );
-
-} }
-
-#define LEAF_THROW <<unspecified>>
-----
+include::synopses/exception.adoc[]
 
 [.text-right]
 <<exception::exception>> | <<get_error>> | <<peek-exception>> | <<handle_exception>> | <<diagnostic_output-exception>> | <<LEAF_THROW>>
@@ -1758,7 +1654,7 @@ Effects: ::
 * The `Ex` sub-object of `*this` is initialized by its default constructor or by `std::forward<Ex>(ex)` respectively.
 * The `error` sub-object is initialized by `<<error::error,error>>(std::forward<E>(e...))`.
 
-IMPORTANT: If thrown, a `leaf::<<eh,exception>><Ex>` can be caught as `Ex &` or as `leaf::<<error,error>>`.
+IMPORTANT: If thrown, a `leaf::<<exception,exception>><Ex>` can be caught as `Ex &` or as `leaf::<<error,error>>`.
 
 '''
 
@@ -1771,7 +1667,7 @@ IMPORTANT: If thrown, a `leaf::<<eh,exception>><Ex>` can be caught as `Ex &` or 
 #define LEAF_THROW <<unspecified>>
 ----
 
-Effects: :: `LEAF_THROW<Ex>(e...)` is equivalent to `throw leaf::<<eh,exception>><Ex>(e...)`, except the current source location is automatically passed to the `leaf::exception` constructor, in a `<<common,e_source_location>>` object.
+Effects: :: `LEAF_THROW<Ex>(e...)` is equivalent to `throw leaf::<<exception::exception,exception>><Ex>(e...)`, except the current source location is automatically passed to the `leaf::exception` constructor, in a `<<common,e_source_location>>` object.
 
 '''
 
@@ -2021,7 +1917,7 @@ void read_file( FILE * f ) {
 
 This is a problem: the `catch` needs a file name, but at the point of the `throw` a file name is not available (only a `FILE` pointer is). In general, the error might be detected in a library which can not assume that a meaningful name is available for any `FILE` it reads, even if a program that uses the library could reasonably make the same assumption.
 
-Using LEAF, a file name may be associated with any exception after it has been thrown, while anything available at the point of the `throw` (e.g. `errno`) may be passed directly to the `leaf::<<eh,exception>>` constructor:
+Using LEAF, a file name may be associated with any exception after it has been thrown, while anything available at the point of the `throw` (e.g. `errno`) may be passed directly to the `leaf::<<exception::exception,exception>>` constructor:
 
 ====
 [source,c++]
@@ -2055,7 +1951,7 @@ void process_file( char const * name )
 ----
 
 [.text-right]
-`<<eh,exception>>` | <<preload>>
+<<exception>> | <<preload>>
 ====
 
 The key is the call to `<<preload,preload>>`: it gets the file name ready to be associated with any exception that escapes `process_file`. This is fully automatic, and works regardless of whether the exception is thrown later in the same function, or by `read_file`, or by some third-party function we call.
@@ -2109,7 +2005,7 @@ void read_file(FILE * f) {
 ----
 
 [.text-right]
-`<<eh,exception>>`
+<<exception>>
 ====
 
 It is pretty straight-forward, reporting `e_errno` as it detects a `ferror`. But what if it calls `fread` multiple times?
@@ -2135,7 +2031,7 @@ void read_file(FILE * f) {
 ----
 
 [.text-right]
-`<<eh,exception>>`
+<<exception>>
 ====
 
 Ideally, associating `e_errno` with each exception should be automated. One way to achieve this is to not call `fread` directly, but wrap it in another function which checks for `ferror` and associates the `e_errno` with the exception it throws.
@@ -2168,7 +2064,7 @@ void read_file(FILE * f) {
 ----
 
 [.text-right]
-<<defer>> | `<<eh,exception>>`
+<<defer>> | <<exception>>
 ====
 
 This works similarly to `preload`, except that capturing of the `errno` is deferred until the destructor of the `propagate` object is called, which calls the passed lambda function to obtain the `errno`.

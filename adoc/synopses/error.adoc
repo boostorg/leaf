@@ -1,0 +1,25 @@
+.#include <boost/leaf/error.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  class error
+  {
+  public:
+
+    template <class... E>
+    explicit error( E && ... e ) noexcept:
+
+    template <class... E>
+    error propagate( E && ... e ) const noexcept;
+
+    friend bool operator==( error const & e1, error const & e2 ) noexcept;
+    friend bool operator!=( error const & e1, error const & e2 ) noexcept;
+
+    friend std::ostream & operator<<( std::ostream & os, error const & e )
+  };
+
+  error peek_next_error() noexcept;
+
+} }
+----

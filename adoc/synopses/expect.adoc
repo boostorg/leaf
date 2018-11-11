@@ -1,0 +1,39 @@
+.#include <boost/leaf/expect.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class... E>
+  class expect
+  {
+  public:
+
+    expect() noexcept;
+    ~expect() noexcept;
+
+    void propagate() noexcept;
+  };
+
+  template <class... E>
+  error_capture capture( expect<E...> & exp, error const & e );
+
+  template <class... E>
+  <<unspecified-type> match() noexcept;
+
+  template <class... E,class F>
+  <<unspecified-type> match( F && f ) noexcept;
+
+  template <class... E,class... M>
+  bool handle_error( expect<E...> & exp, error const & e, M && ... m ) noexcept;
+
+  template <class P,class... E>
+  decltype(P::value) const * peek( expect<E...> const & exp, error const & e ) noexcept;
+
+  template <class... E>
+  void diagnostic_output( std::ostream & os, expect<E...> const & exp );
+
+  template <class... E>
+  void diagnostic_output( std::ostream & os, expect<E...> const & exp, error const & e );
+
+} }
+----
