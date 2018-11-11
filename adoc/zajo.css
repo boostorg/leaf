@@ -443,6 +443,7 @@ body{text-align:left; background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;fo
 .subheader,.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{line-height:1.45;color:#a0a0a0;font-weight:400;margin-top:0;margin-bottom:.25em}
 a{color:#000000;text-decoration:underline;line-height:inherit}
 a:hover{color:#4101a7}
+a:focus{color:#000000}
 h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{font-family:"Quicksand","DejaVu Sans",sans-serif;font-weight:300;font-style:normal;color:#4101a7;text-rendering:optimizeLegibility;margin-top:1em;margin-bottom:.5em;line-height:1.0125em}
 code{font-family:"Anonymous Pro","DejaVu Sans Mono",monospace;font-weight:400;color:rgba(0,0,0,.9)}
 *:not(pre)>code{font-size:1.09em;font-style:normal!important;letter-spacing:0;padding:0 0;word-spacing:-.15em;background-color:transparent;-webkit-border-radius:0;border-radius:0;line-height:1.45;text-rendering:optimizeLegibility;word-wrap:break-word}
