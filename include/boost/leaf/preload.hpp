@@ -26,7 +26,7 @@ namespace boost { namespace leaf {
 		template <class Tuple>
 		struct tuple_for_each_preload<0, Tuple>
 		{
-			constexpr static void trigger( Tuple const &, error const & ) noexcept { }
+			static void trigger( Tuple const &, error const & ) noexcept { }
 		};
 	} //leaf_detail
 

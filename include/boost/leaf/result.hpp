@@ -69,7 +69,7 @@ namespace boost { namespace leaf {
 
 		variant which_;
 
-		constexpr void destroy() noexcept
+		void destroy() noexcept
 		{
 			switch( which_ )
 			{
@@ -86,7 +86,7 @@ namespace boost { namespace leaf {
 			which_= (variant)-1;
 		}
 
-		constexpr void copy_from( result const & x )
+		void copy_from( result const & x )
 		{
 			switch( x.which_ )
 			{
@@ -103,7 +103,7 @@ namespace boost { namespace leaf {
 			which_ = x.which_;
 		}
 
-		constexpr void move_from( result && x ) noexcept
+		void move_from( result && x ) noexcept
 		{
 			switch( x.which_ )
 			{
@@ -173,14 +173,14 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		constexpr result & operator=( result const & x )
+		result & operator=( result const & x )
 		{
 			destroy();
 			copy_from(x);
 			return *this;
 		}
 
-		constexpr result & operator=( result && x ) noexcept
+		result & operator=( result && x ) noexcept
 		{
 			destroy();
 			move_from(std::move(x));
@@ -200,7 +200,7 @@ namespace boost { namespace leaf {
 				LEAF_THROW<bad_result>();
 		}
 
-		constexpr T & value()
+		T & value()
 		{
 			if( which_==variant::value )
 				return value_;
@@ -213,7 +213,7 @@ namespace boost { namespace leaf {
 			return value();
 		}
 
-		constexpr T & operator*()
+		T & operator*()
 		{
 			return value();
 		}

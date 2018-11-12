@@ -45,7 +45,7 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		inline constexpr void enforce_std_exception( std::exception const & ) { }
+		inline void enforce_std_exception( std::exception const & ) { }
 	} //leaf_detail
 
 	template <class Ex>

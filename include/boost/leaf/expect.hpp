@@ -101,9 +101,9 @@ namespace boost { namespace leaf {
 		template <class Tuple>
 		struct tuple_for_each_expect<0, Tuple>
 		{
-			constexpr static void print( std::ostream &, Tuple const & ) noexcept { }
-			constexpr static void print( std::ostream &, Tuple const &, error const & ) noexcept { }
-			constexpr static void clear( Tuple & ) noexcept { }
+			static void print( std::ostream &, Tuple const & ) noexcept { }
+			static void print( std::ostream &, Tuple const &, error const & ) noexcept { }
+			static void clear( Tuple & ) noexcept { }
 		};
 
 		////////////////////////////////////////
