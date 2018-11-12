@@ -96,7 +96,7 @@ namespace boost { namespace leaf {
 		friend std::ostream & operator<<( std::ostream & os, error const & e )
 		{
 			char buf[sizeof(e.id_)*CHAR_BIT/4+1];
-			int nw = std::sprintf(buf,"%X",e.id_);
+			int nw = std::snprintf(buf,sizeof(buf),"%X",e.id_);
 			assert(nw>=0);
 			assert(nw<sizeof(buf));
 			os << buf;
