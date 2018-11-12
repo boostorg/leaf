@@ -24,36 +24,37 @@ namespace boost { namespace leaf {
 		public:
 
 			typedef T value_type;
-			optional() noexcept:
+
+			constexpr optional() noexcept:
 				has_value_(false)
 			{
 			}
 
-			optional( optional const & x ):
+			constexpr optional( optional const & x ):
 				has_value_(false)
 			{
 				(void) (*this = x);
 			}
 
-			optional( optional && x ) noexcept:
+			constexpr optional( optional && x ) noexcept:
 				has_value_(false)
 			{
 				(void) (*this = std::move(x));
 			}
 
-			optional( T const & v ):
+			constexpr optional( T const & v ):
 				has_value_(false)
 			{
 				put(v);
 			}
 
-			optional( T && v ) noexcept:
+			constexpr optional( T && v ) noexcept:
 				has_value_(false)
 			{
 				put(std::move(v));
 			}
 
-			optional & operator=( optional const & x )
+			constexpr optional & operator=( optional const & x )
 			{
 				reset();
 				if( x.has_value() )
@@ -61,7 +62,7 @@ namespace boost { namespace leaf {
 				return *this;
 			}
 
-			optional & operator=( optional && x ) noexcept
+			constexpr optional & operator=( optional && x ) noexcept
 			{
 				reset();
 				if( x.has_value() )
@@ -74,7 +75,7 @@ namespace boost { namespace leaf {
 				reset();
 			}
 
-			void reset() noexcept
+			constexpr void reset() noexcept
 			{
 				if( has_value() )
 				{
@@ -83,7 +84,7 @@ namespace boost { namespace leaf {
 				}
 			}
 
-			T & put( T const & v )
+			constexpr T & put( T const & v )
 			{
 				reset();
 				(void) new(&value_) T(v);
@@ -91,7 +92,7 @@ namespace boost { namespace leaf {
 				return value_;
 			}
 
-			T & put( T && v ) noexcept
+			constexpr T & put( T && v ) noexcept
 			{
 				reset();
 				(void) new(&value_) T(std::move(v));
@@ -99,30 +100,30 @@ namespace boost { namespace leaf {
 				return value_;
 			}
 
-			bool has_value() const noexcept
+			constexpr bool has_value() const noexcept
 			{
 				return has_value_;
 			}
 
-			T const & value() const & noexcept
+			constexpr T const & value() const & noexcept
 			{
 				assert(has_value());
 				return value_;
 			}
 
-			T & value() & noexcept
+			constexpr T & value() & noexcept
 			{
 				assert(has_value());
 				return value_;
 			}
 
-			T const && value() const && noexcept
+			constexpr T const && value() const && noexcept
 			{
 				assert(has_value());
 				return value_;
 			}
 
-			T value() && noexcept
+			constexpr T value() && noexcept
 			{
 				assert(has_value());
 				T tmp(std::move(value_));

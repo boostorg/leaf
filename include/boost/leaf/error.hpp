@@ -207,13 +207,13 @@ namespace boost { namespace leaf {
 	} //leaf_detail
 
 	template <class... E, class F>
-	leaf_detail::match_fn<F,E...> match( F && f ) noexcept
+	constexpr leaf_detail::match_fn<F,E...> match( F && f ) noexcept
 	{
 		return leaf_detail::match_fn<F,E...> { std::move(f) };
 	}
 
 	template <class... E>
-	leaf_detail::match_no_fn<E...> match() noexcept
+	constexpr leaf_detail::match_no_fn<E...> match() noexcept
 	{
 		return leaf_detail::match_no_fn<E...> { };
 	}

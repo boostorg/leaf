@@ -16,7 +16,7 @@ namespace boost { namespace leaf {
 		template <int I, class Tuple>
 		struct tuple_for_each_preload
 		{
-			static void trigger( Tuple & tup, error e ) noexcept
+			static void trigger( Tuple & tup, error const & e ) noexcept
 			{
 				tuple_for_each_preload<I-1,Tuple>::trigger(tup,e);
 				std::get<I-1>(tup).trigger(e);
@@ -26,7 +26,7 @@ namespace boost { namespace leaf {
 		template <class Tuple>
 		struct tuple_for_each_preload<0, Tuple>
 		{
-			static void trigger( Tuple const &, error ) noexcept { }
+			constexpr static void trigger( Tuple const &, error const & ) noexcept { }
 		};
 	} //leaf_detail
 

@@ -59,7 +59,7 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple>
 		struct slots_subset<SlotsTuple>
 		{
-			static bool have_values( SlotsTuple const &, error const & ) noexcept { return true; }
+			constexpr static bool have_values( SlotsTuple const &, error const & ) noexcept { return true; }
 		};
 
 		////////////////////////////////////////
@@ -101,9 +101,9 @@ namespace boost { namespace leaf {
 		template <class Tuple>
 		struct tuple_for_each_expect<0, Tuple>
 		{
-			static void print( std::ostream &, Tuple const & ) noexcept { }
-			static void print( std::ostream &, Tuple const &, error const & ) noexcept { }
-			static void clear( Tuple & ) noexcept { }
+			constexpr static void print( std::ostream &, Tuple const & ) noexcept { }
+			constexpr static void print( std::ostream &, Tuple const &, error const & ) noexcept { }
+			constexpr static void clear( Tuple & ) noexcept { }
 		};
 
 		////////////////////////////////////////

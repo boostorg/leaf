@@ -40,7 +40,7 @@ namespace boost { namespace leaf {
 		template <>
 		struct all_available<>
 		{
-			static bool check( error_capture const & ) noexcept { return true; }
+			constexpr static bool check( error_capture const & ) noexcept { return true; }
 		};
 
 		////////////////////////////////////////
@@ -78,9 +78,9 @@ namespace boost { namespace leaf {
 		template <class Tuple>
 		struct tuple_for_each_capture<0, Tuple>
 		{
-			static void const * dynamic_bind( Tuple const &, char const * (*)() ) noexcept { return 0; }
-			static void print( std::ostream &, Tuple const & ) { }
-			static void unload( error const &, Tuple && ) noexcept { }
+			constexpr static void const * dynamic_bind( Tuple const &, char const * (*)() ) noexcept { return 0; }
+			constexpr static void print( std::ostream &, Tuple const & ) noexcept { }
+			constexpr static void unload( error const &, Tuple && ) noexcept { }
 		};
 
 	} //leaf_detail

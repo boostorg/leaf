@@ -22,7 +22,7 @@ namespace boost { namespace leaf {
 			int const line;
 			char const * const function;
 
-			loc( char const * file, int line, char const * function ) noexcept:
+			constexpr loc( char const * file, int line, char const * function ) noexcept:
 				file(file),
 				line(line),
 				function(function)
@@ -45,7 +45,7 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		inline void enforce_std_exception( std::exception const & ) { }
+		inline constexpr void enforce_std_exception( std::exception const & ) { }
 	} //leaf_detail
 
 	template <class Ex>

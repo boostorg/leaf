@@ -12,7 +12,7 @@
 namespace boost { namespace leaf {
 
 	template <class Name>
-	char const * type() noexcept
+	constexpr char const * type() noexcept
 	{
 #ifdef __FUNCSIG__
 		return __FUNCSIG__;

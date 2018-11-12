@@ -69,7 +69,7 @@ namespace boost { namespace leaf {
 
 		variant which_;
 
-		void destroy() noexcept
+		constexpr void destroy() noexcept
 		{
 			switch( which_ )
 			{
@@ -86,7 +86,7 @@ namespace boost { namespace leaf {
 			which_= (variant)-1;
 		}
 
-		void copy_from( result const & x )
+		constexpr void copy_from( result const & x )
 		{
 			switch( x.which_ )
 			{
@@ -103,7 +103,7 @@ namespace boost { namespace leaf {
 			which_ = x.which_;
 		}
 
-		void move_from( result && x ) noexcept
+		constexpr void move_from( result && x ) noexcept
 		{
 			switch( x.which_ )
 			{
@@ -127,29 +127,29 @@ namespace boost { namespace leaf {
 			destroy();
 		}
 
-		result( result const & x )
+		constexpr result( result const & x )
 		{
 			copy_from(x);
 		}
 
-		result( result && x ) noexcept
+		constexpr result( result && x ) noexcept
 		{
 			move_from(std::move(x));
 		}
 
-		result() noexcept:
+		constexpr result() noexcept:
 			value_(T()),
 			which_(variant::value)
 		{
 		}
 
-		result( T const & v ):
+		constexpr result( T const & v ):
 			value_(v),
 			which_(variant::value)
 		{
 		}
 
-		result( T && v ) noexcept:
+		constexpr result( T && v ) noexcept:
 			value_(std::move(v)),
 			which_(variant::value)
 		{
@@ -173,26 +173,26 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		result & operator=( result const & x )
+		constexpr result & operator=( result const & x )
 		{
 			destroy();
 			copy_from(x);
 			return *this;
 		}
 
-		result & operator=( result && x ) noexcept
+		constexpr result & operator=( result && x ) noexcept
 		{
 			destroy();
 			move_from(std::move(x));
 			return *this;
 		}
 
-		explicit operator bool() const noexcept
+		constexpr explicit operator bool() const noexcept
 		{
 			return which_==variant::value;
 		}
 
-		T const & value() const
+		constexpr T const & value() const
 		{
 			if( which_==variant::value )
 				return value_;
@@ -200,7 +200,7 @@ namespace boost { namespace leaf {
 				LEAF_THROW<bad_result>();
 		}
 
-		T & value()
+		constexpr T & value()
 		{
 			if( which_==variant::value )
 				return value_;
@@ -208,12 +208,12 @@ namespace boost { namespace leaf {
 				LEAF_THROW<bad_result>();
 		}
 
-		T const & operator*() const
+		constexpr T const & operator*() const
 		{
 			return value();
 		}
 
-		T & operator*()
+		constexpr T & operator*()
 		{
 			return value();
 		}
@@ -270,7 +270,7 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		result() noexcept
+		constexpr result() noexcept
 		{
 		}
 
