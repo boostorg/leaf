@@ -29,14 +29,14 @@ namespace boost { namespace leaf {
 			{
 			}
 
-			constexpr optional( optional const & x ):
+			optional( optional const & x ):
 				has_value_(x.has_value_)
 			{
 				if( x.has_value_ )
 					(void) new (&value_) T( x.value_ );
 			}
 
-			constexpr optional( optional && x ) noexcept:
+			optional( optional && x ) noexcept:
 				has_value_(x.has_value_)
 			{
 				if( x.has_value_ )

@@ -127,12 +127,12 @@ namespace boost { namespace leaf {
 			destroy();
 		}
 
-		constexpr result( result const & x )
+		result( result const & x )
 		{
 			copy_from(x);
 		}
 
-		constexpr result( result && x ) noexcept
+		result( result && x ) noexcept
 		{
 			move_from(std::move(x));
 		}
@@ -192,7 +192,7 @@ namespace boost { namespace leaf {
 			return which_==variant::value;
 		}
 
-		constexpr T const & value() const
+		T const & value() const
 		{
 			if( which_==variant::value )
 				return value_;
@@ -208,7 +208,7 @@ namespace boost { namespace leaf {
 				LEAF_THROW<bad_result>();
 		}
 
-		constexpr T const & operator*() const
+		T const & operator*() const
 		{
 			return value();
 		}

@@ -27,9 +27,6 @@ namespace boost { namespace leaf {
 				line(line),
 				function(function)
 			{
-				assert(file!=0);
-				assert(line>0);
-				assert(function!=0);
 			}
 		};
 
