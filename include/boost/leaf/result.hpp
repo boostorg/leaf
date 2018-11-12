@@ -270,9 +270,7 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		constexpr result() noexcept
-		{
-		}
+		constexpr result() noexcept = default;
 
 		result( leaf::error const & e ) noexcept:
 			base(e)
