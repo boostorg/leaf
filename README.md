@@ -1,4 +1,8 @@
-LEAF is a C++11 error handling library. Features:
+LEAF is a C++11 error handling library.
+
+Official documentation: https://zajo.github.io/leaf/
+
+Features:
 
 * No dynamic memory allocations.
 
@@ -13,5 +17,3 @@ LEAF is a C++11 error handling library. Features:
 Copyright (c) 2018 Emil Dotchevski. Distributed under the [Boost Software License, Version 1.0](http://www.boost.org/LICENSE_1_0.txt).
 
 Please post questions and feedback on the Boost Developers Mailing List (LEAF is not part of Boost).
-
-Official documentation: https://zajo.github.io/leaf/
