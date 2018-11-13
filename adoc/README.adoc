@@ -704,7 +704,7 @@ include::synopses/error_capture.adoc[]
 include::synopses/result.adoc[]
 
 [.text-right]
-<<result>> | <<result::result>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<capture-result>> | <<handle_error-result>> | <<peek-result>> | <<diagnostic_output-result>> | <<bad_result>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
+<<result>> | <<result::result>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<capture-result>> | <<handle_error-result>> | <<peek-result>> | <<diagnostic_output-result>> | <<bad_result>> | <<LEAF_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
 ====
 
 *Class Template `exception`*
@@ -1371,7 +1371,7 @@ NOTE: The printing of each individual e-object is done by the rules described <<
 include::synopses/result.adoc[]
 
 [.text-right]
-<<result::result>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<capture-result>> | <<handle_error-result>> | <<peek-result>> | <<diagnostic_output-result>> | <<bad_result>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
+<<result::result>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<capture-result>> | <<handle_error-result>> | <<peek-result>> | <<diagnostic_output-result>> | <<bad_result>> | <<LEAF_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
 ====
 
 '''
@@ -1384,9 +1384,9 @@ include::synopses/result.adoc[]
 ----
 namespace boost { namespace leaf {
 
-  result::result() noexcept;
-  result::result( T const & v );
-  result::result( T && v ) noexcept;
+  constexpr result::result() noexcept;
+  constexpr result::result( T const & v );
+  constexpr result::result( T && v ) noexcept;
   result::result( leaf::error const & e ) noexcept;
   result::result( leaf::error_capture const & ec ) noexcept;
 
@@ -1414,7 +1414,7 @@ IMPORTANT: A `result` that is in value state converts to `true` in boolean conte
 ----
 namespace boost { namespace leaf {
 
-  result::operator bool() const noexcept;
+  constexpr result::operator bool() const noexcept;
 
 } }
 ----
@@ -1573,6 +1573,21 @@ This exception is thrown by `<<result::value,value>>()`/`<<result::value,operato
 
 '''
 
+[[LEAF_ERROR]]
+==== `LEAF_ERROR`
+
+[source,c++]
+.#include <boost/leaf/result.hpp>
+----
+#define LEAF_ERROR <<unspecified>>
+----
+
+Effects: :: `LEAF_ERROR(e...)` is equivalent to `leaf::<<error::error,error>>(e...)`, except the current source location is automatically passed to the `leaf::error` constructor, in a `<<common,e_source_location>>` object.
+
+NOTE: `LEAF_ERROR` is designed for use in `return` expressions, to automatically communicate the location of the error being reported (but see <<expect>>).
+
+'''
+
 [[LEAF_AUTO]]
 ==== `LEAF_AUTO`
 
@@ -1610,7 +1625,7 @@ include::synopses/exception.adoc[]
 namespace boost { namespace leaf {
 
   template <class... E,class F>
-  <<unspecified-type>> capture_exception( F && f ) noexcept;
+  constexpr <<unspecified-type>> capture_exception( F && f ) noexcept;
 
   template <class Future>
   decltype(std::declval<Future>().get()) get( Future && f );
@@ -1844,7 +1859,7 @@ namespace boost { namespace leaf {
       char const * const file;
       int const line;
       char const * const function;
-      loc( char const * file, int line, char const * function ) noexcept;
+      constexpr loc( char const * file, int line, char const * function ) noexcept;
     };
     loc value;
 

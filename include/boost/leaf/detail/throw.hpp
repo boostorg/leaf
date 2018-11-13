@@ -14,30 +14,6 @@
 
 namespace boost { namespace leaf {
 
-	struct e_source_location
-	{
-		struct loc
-		{
-			char const * const file;
-			int const line;
-			char const * const function;
-
-			constexpr loc( char const * file, int line, char const * function ) noexcept:
-				file(file),
-				line(line),
-				function(function)
-			{
-			}
-		};
-
-		loc value;
-
-		friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
-		{
-			return os << "At " << x.value.file << '(' << x.value.line << ") in function " << x.value.function << std::endl;
-		}
-	};
-
 	////////////////////////////////////////
 
 	namespace leaf_detail

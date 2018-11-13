@@ -17,7 +17,7 @@ struct info
 
 leaf::error f1()
 {
-	return leaf::error( info<1>{1} );
+	return LEAF_ERROR( info<1>{1} );
 }
 
 leaf::error f2()
@@ -34,7 +34,7 @@ leaf::error f3()
 
 leaf::error f4()
 {
-	leaf::expect<info<1>,info<2>,info<3>,info<4>> exp;
+	leaf::expect<leaf::e_source_location,info<1>,info<2>,info<3>,info<4>> exp;
 	{
 		leaf::error e = f3();
 		BOOST_TEST( handle_error( exp, e,
@@ -48,8 +48,11 @@ leaf::error f4()
 		{
 			++c1;
 		} ),
-		leaf::match<info<1>,info<2>,info<4>>( [&c2]( int i1, int i2, int i4 )
+		leaf::match<leaf::e_source_location,info<1>,info<2>,info<4>>( [&c2]( leaf::e_source_location::loc const & loc,int i1, int i2, int i4 )
 		{
+			BOOST_TEST(loc.line==20);
+			BOOST_TEST(strcmp(loc.file,__FILE__)==0);
+			BOOST_TEST(strstr(loc.function,"f1")!=0);
 			BOOST_TEST(i1==1);
 			BOOST_TEST(i2==2);
 			BOOST_TEST(i4==4);

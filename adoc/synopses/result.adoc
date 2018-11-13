@@ -8,13 +8,13 @@ namespace boost { namespace leaf {
   {
   public:
 
-    result() noexcept;
-    result( T const & v );
-    result( T && v ) noexcept;
+    constexpr result() noexcept;
+    constexpr result( T const & v );
+    constexpr result( T && v ) noexcept;
     result( leaf::error const & e ) noexcept;
     result( leaf::error_capture const & ec ) noexcept;
 
-    explicit operator bool() const noexcept;
+    constexpr explicit operator bool() const noexcept;
 
     T const & value() const;
     T & value();
@@ -41,6 +41,7 @@ namespace boost { namespace leaf {
 
 } }
 
+#define LEAF_ERROR <<unspecified>>
 #define LEAF_AUTO(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
 #define LEAF_CHECK(r) {auto _r_##v = r; if( !_r_##v ) return _r_##v.error();}
 ----

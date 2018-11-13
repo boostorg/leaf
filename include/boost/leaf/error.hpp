@@ -13,7 +13,35 @@
 #include <climits>
 #include <ostream>
 
+#define LEAF_ERROR ::boost::leaf::peek_next_error().propagate(::boost::leaf::e_source_location{::boost::leaf::e_source_location::loc(__FILE__,__LINE__,__FUNCTION__)}),::boost::leaf::error
+
 namespace boost { namespace leaf {
+
+	struct e_source_location
+	{
+		struct loc
+		{
+			char const * const file;
+			int const line;
+			char const * const function;
+
+			constexpr loc( char const * file, int line, char const * function ) noexcept:
+				file(file),
+				line(line),
+				function(function)
+			{
+			}
+		};
+
+		loc value;
+
+		friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
+		{
+			return os << "At " << x.value.file << '(' << x.value.line << ") in function " << x.value.function << std::endl;
+		}
+	};
+
+	////////////////////////////////////////
 
 	class error;
 
