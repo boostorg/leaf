@@ -178,10 +178,10 @@ namespace boost { namespace leaf {
 
 		void free() noexcept
 		{
-			if( s_ )
+			if( ds_ )
 			{
-				s_->release();
-				s_=0;
+				ds_->release();
+				ds_=0;
 			}
 		}
 
@@ -201,7 +201,7 @@ namespace boost { namespace leaf {
 			return 42;
 		}
 
-		dynamic_store * s_;
+		dynamic_store * ds_;
 		error e_;
 
 	protected:
@@ -214,16 +214,16 @@ namespace boost { namespace leaf {
 	public:			
 
 		error_capture() noexcept:
-			s_(0)
+			ds_(0)
 		{
 		}
 
 		template <class... E>
 		error_capture( error const & e, std::tuple<leaf_detail::optional<E>...> && s ) noexcept:
-			s_(new dynamic_store_impl<E...>(std::move(s))),
+			ds_(new dynamic_store_impl<E...>(std::move(s))),
 			e_(e)
 		{
-			s_->addref();
+			ds_->addref();
 		}
 
 		~error_capture() noexcept
@@ -232,46 +232,46 @@ namespace boost { namespace leaf {
 		}
 
 		error_capture( error_capture const & x ) noexcept:
-			s_(x.s_),
+			ds_(x.ds_),
 			e_(x.e_)
 		{
-			if( s_ )
-				s_->addref();
+			if( ds_ )
+				ds_->addref();
 		}
 
 		error_capture( error_capture && x ) noexcept:
-			s_(x.s_),
+			ds_(x.ds_),
 			e_(std::move(x.e_))
 		{
-			x.s_ = 0;
+			x.ds_ = 0;
 		}
 
 		error_capture & operator=( error_capture const & x ) noexcept
 		{
-			s_ = x.s_;
-			s_->addref();
+			ds_ = x.ds_;
+			ds_->addref();
 			e_ = x.e_;
 			return *this;
 		}
 
 		error_capture & operator=( error_capture && x ) noexcept
 		{
-			s_ = x.s_;
-			x.s_ = 0;
+			ds_ = x.ds_;
+			x.ds_ = 0;
 			e_ = x.e_;
 			return *this;
 		}
 
 		explicit operator bool() const noexcept
 		{
-			return s_!=0;
+			return ds_!=0;
 		}
 
 		error unload() noexcept
 		{
-			if( s_ )
+			if( ds_ )
 			{
-				s_->unload(e_);
+				ds_->unload(e_);
 				free();
 			}
 			return e_;
@@ -297,7 +297,7 @@ namespace boost { namespace leaf {
 	decltype(P::value) const * peek( error_capture const & e ) noexcept
 	{
 		if( e )
-			if( auto * opt = e.s_->bind<P>() )
+			if( auto * opt = e.ds_->bind<P>() )
 				if( opt->has_value() )
 					return &opt->value().value;
 		return 0;
@@ -306,7 +306,7 @@ namespace boost { namespace leaf {
 	inline void diagnostic_output( std::ostream & os, error_capture const & e )
 	{
 		if( e )
-			e.s_->diagnostic_output(os);
+			e.ds_->diagnostic_output(os);
 	}
 
 } }
