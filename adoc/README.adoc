@@ -15,6 +15,8 @@ Low-latency Error Augmentation Framework for C++11
 LEAF is a {CPP}11 error handling library. Features:
 
 ====
+* Header-only, C++11, no dependencies.
+
 * No dynamic memory allocations.footnote:[Except when error objects are transported between threads, see <<capture-expect,`capture`>>.]
 
 * Associate objects of arbitrary types with any failure -- when it is initially reported or at a later time.
@@ -119,7 +121,7 @@ leaf::result<T> f() noexcept
   }
   else
     return r.error( e_file_name{"file.txt"} ); //<2>
-}  
+}
 ----
 <1> Success, return `r`.
 <2> Forward the error reported in `r`, storing `e_file_name` in appropriate `expect` object(s) from calling scopes. The file name will be associated with the error in addition to the relevant `e_error_code` and `e_request_id` which (presumably) `g()` has already communicated.
@@ -201,7 +203,7 @@ void f()
   auto propagate = leaf::preload( e_file_name{"file.txt"} ); //<1>
 
   g();
-}  
+}
 ----
 <1> In case `g()` throws, the file name will be associated with the exception object, in addition to the relevant `e_error_code` and `e_request_id` which (presumably) `g()` has already communicated.
 
@@ -294,7 +296,7 @@ leaf::result<void> print_file( char const * file_name )
   leaf::result<void> fr = file_read(*f.value,&buffer[0],buffer.size()-1);
   if( !fr )
     return fr.error();
-  
+
   std::cout << buffer;
   std::cout.flush();
   if( std::cout.fail() )
@@ -566,7 +568,7 @@ int main( int argc, char const * argv[ ] )
 {
   //Configure std::cout to throw on error.
    std::cout.exceptions ( std::ostream::failbit | std::ostream::badbit );
- 
+
   //We expect e_error_code, e_file_name and e_errno objects to be associated
   //with exceptions handled in this function. They will be stored inside of exp.
   leaf::expect<e_file_name, e_errno> exp;
@@ -644,7 +646,7 @@ int main( int argc, char const * argv[ ] )
   catch(...)
   {
     //This catch-all case helps diagnose logic errors (presumably, missing catch).
-    std::cerr << "Unknown error, cryptic information follows." << std::endl; 
+    std::cerr << "Unknown error, cryptic information follows." << std::endl;
     current_exception_diagnostic_output(std::cerr,exp);
     return 5;
   }
@@ -2033,7 +2035,7 @@ void read_file(FILE * f) {
   size_t nr1=fread(buf1,1,count1,f);
   if( ferror(f) )
     throw leaf::exception<file_read_error>( e_errno{errno} );
-  
+
   size_t nr2=fread(buf2,1,count2,f);
   if( ferror(f) )
     throw leaf::exception<file_read_error>( e_errno{errno} );
@@ -2066,7 +2068,7 @@ void read_file(FILE * f) {
   size_t nr1=fread(buf1,1,count1,f);
   if( ferror(f) )
     throw leaf::exception<file_read_error>();
-  
+
   size_t nr2=fread(buf2,1,count2,f);
   if( ferror(f) )
     throw leaf::exception<file_read_error>();
