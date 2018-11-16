@@ -15,6 +15,7 @@ extern "C" {
 #include <boost/leaf/all.hpp>
 #include <iostream>
 #include <stdlib.h>
+#include <memory>
 
 namespace leaf = boost::leaf;
 

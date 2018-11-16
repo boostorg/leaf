@@ -1,0 +1,42 @@
+cc_binary(
+  name = "capture_eh",
+  srcs = [ "capture_eh.cpp" ],
+  deps = [ "//include:leaf" ],
+)
+
+cc_binary(
+  name = "capture_result",
+  srcs = [ "capture_result.cpp" ],
+  deps = [ "//include:leaf" ],
+)
+
+cc_binary(
+  name = "lua_callback_eh",
+  srcs = [ "lua_callback_eh.cpp" ],
+  deps = [ 
+    "@lua//:lua",
+    "//include:leaf" 
+  ],
+)
+
+cc_binary(
+  name = "lua_callback_result",
+  srcs = [ "lua_callback_result.cpp" ],
+  deps = [ 
+    "@lua//:lua",
+    "//include:leaf" 
+  ],
+)
+
+cc_binary(
+  name = "print_file_eh",
+  srcs = [ "print_file_eh.cpp" ],
+  deps = [ "//include:leaf" ],
+)
+
+cc_binary(
+  name = "print_file_result",
+  srcs = [ "print_file_result.cpp" ],
+  deps = [ "//include:leaf" ],
+)
+
