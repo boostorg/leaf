@@ -2088,6 +2088,90 @@ This works similarly to `preload`, except that capturing of the `errno` is defer
 
 '''
 
+[[technique_disparate_error_types]]
+=== Working with Disparate Error Codes
+
+Because most libraries define their own mechanism for reporting errors, programmers often need to use multiple incompatible error-reporting interfaces in the same program. This led to the introduction of `boost::error_code` which later became `std::error_code`. Each `std::error_code` object is assigned an `error_category`. Libraries that communicate errors in terms of `std::error_code` define their own `error_category`. For libraries that do not, the user can "easily" define a custom `error_category` and still translate domain-specific error codes to `std::error_code`.
+
+But let`s take a step back and consider _why_ do we have to express every error in terms of the same static type, `std::error_code`? We need this translation because the {CPP} static type-checking system makes it difficult to write functions that may return error objects of the disparate static types used by different libraries. Outside of this limitation, it would be preferable to be able to write functions that can communicate errors in terms of arbitrary {CPP} types, as needed.
+
+To drive this point further, consider the real world problem of mixing `boost::error_code` and `std::error_code` in the same program. In theory, both systems are designed to be able to express one error code in terms of the other. In practice, describing a _generic_ system of error categorization in terms of another _generic_ system of error categorization is not trivial.
+
+Ideally, functions should be able to communicate different error types without having to translate between them, and {CPP} does offer a mechanism that does just that, it's called exception handling. And it is not a coincidence that the attempt to bind {CPP} exception types with the static interface of each function, A.K.A. exception specifications, was so problematic that it had to be abandoned (while I am an outspoken proponent of exception handling, I do acknowledge that in practice, for good reasons or otherwise, exception handling may not be available or permitted).
+
+LEAF solves this problem without using exception handling. For example, to mix `std::error_code` and `boost::error_code` in the same program, we could define:
+
+[source,c++]
+----
+struct e_std_error_code { std::error_code value; };
+struct e_boost_error_code { boost::error_code value; };
+----
+
+Then, a scope which is able to handle either `std::error_code` or `boost::error_code` would look like this:
+
+====
+[source,c++]
+----
+{
+  leaf::expect<e_std_error_code,e_boost_error_code> exp;
+
+  if( leaf::result<T> r = f() )
+  {
+    //Success
+  }
+  else
+  {
+    bool matched = leaf::handle_error( exp, r,
+
+      leaf::match<e_std_error_code>( [ ]( std::error_code const & e )
+      {
+        //Handle std::error_code
+      } ),
+
+      leaf::match<e_boost_error_code>( [ ]( boost::error_code const & e )
+      {
+        //Handle boost::error_code
+      } )
+    );
+  }
+}
+----
+
+[.text-right]
+<<expect>> |  <<result>> | <<handle_error-expect>> | <<match>>
+====
+
+And here is a function which is able to report either `std::error_code` or `boost::error_code`:
+
+====
+[source,c++]
+----
+leaf::result<T> f()
+{
+  if( std::error_code ec = g1() )
+  {
+    //Success
+  }
+  else
+    return leaf::error( e_std_error_code { ec } );
+
+  if( boost::error_code ec = g2() )
+  {
+    //Success
+  }
+  else
+    return leaf::error( e_boost_error_code { ec } );
+}
+----
+
+[.text-right]
+<<result>> | <<error>>
+====
+
+Of course, under refactoring `f` can be changed to return any other error type as needed, without requiring a change in its static interface. With LEAF, such changes become transparent to any error-neutral function that calls and forwards errors from `f` to its caller; only the error handling scope needs to be updated to handle the new error types returned by `f`.
+
+'''
+
 [[technique_augment_in_catch]]
 === Augmenting Exceptions in a `catch`
 
