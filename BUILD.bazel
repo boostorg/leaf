@@ -1,0 +1,8 @@
+cc_library(
+  name = "leaf",
+  hdrs = glob( ["include/**/*.hpp"] ),
+  includes = [ "include" ],
+  strip_include_prefix = "include/",
+  linkopts = [ "-pthread" ],
+  visibility = [ "//visibility:public" ],
+)

@@ -6,6 +6,7 @@
 
 #include <boost/leaf/expect.hpp>
 #include <boost/detail/lightweight_test.hpp>
+#include <string.h>
 
 namespace leaf = boost::leaf;
 

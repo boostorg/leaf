@@ -4,5 +4,5 @@ TEST_FILES = glob( ["*.cpp"] )
     name = test_file[:-len(".cpp")],
     size = "small",
     srcs = [ test_file ],
-    deps = [ "//include:leaf" ],
+    deps = [ "//:leaf" ],
 ) for test_file in TEST_FILES]
