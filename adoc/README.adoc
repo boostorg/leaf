@@ -42,7 +42,7 @@ Let's assume that to handle a particular failure, we need an error code, a file 
 {
   leaf::expect<e_error_code, e_file_name, e_request_id> exp; //<1>
 
-  if( result<T> r = f() )
+  if( leaf::result<T> r = f() )
   {
     //Success! //<2>
   }
@@ -2113,7 +2113,7 @@ Then, a scope which is able to handle either `std::error_code` or `boost::error_
 [source,c++]
 ----
 {
-  leaf::expect<e_std_error_code,e_boost_error_code> exp;
+  leaf::expect<e_std_error_code, e_boost_error_code> exp;
 
   if( leaf::result<T> r = f() )
   {
@@ -2612,20 +2612,20 @@ catch( file_read_error & e )
   //associated with the specific failure communicated by e.
   leaf::handle_exception( exp, e,
 
-    match<e_file_name, e_errno>( [ ]( std::string const & file_name, int errno_ )
+    leaf::match<e_file_name, e_errno>( [ ]( std::string const & file_name, int errno_ )
     {
       std::cerr <<
         "Could not read " << file_name <<
         ", errno=" << errno_ << std::endl;
     } ),
 
-    match<e_errno>( [ ]( int errno_ )
+    leaf::match<e_errno>( [ ]( int errno_ )
     {
       std::cerr <<
         "File read error, errno=" << errno_ << std::endl;
     } ),
 
-    match<>( [ ]
+    leaf::match<>( [ ]
     {
       std::cerr << "File read error!" << std::endl;
     } )
@@ -2645,7 +2645,7 @@ Of course LEAF works without exception handling as well. Below is the same snipp
 ----
 leaf::expect<e_what, e_file_name, e_errno> exp;
 
-if( result<T> r = process_file() ) //In case of failure error objects are stored inside exp.
+if( leaf::result<T> r = process_file() ) //In case of failure error objects are stored inside exp.
 {
   //Success, use r.value():
   ....
@@ -2661,20 +2661,20 @@ else
       //associated with the specific failure communicated by r.
       bool handled = leaf::handle_error( exp, r,
 
-        match<e_file_name, e_errno>( [ ]( std::string const & file_name, int errno_ )
+        leaf::match<e_file_name, e_errno>( [ ]( std::string const & file_name, int errno_ )
         {
           std::cerr <<
             "Could not read " << file_name <<
             ", errno=" << errno_ << std::endl;
         } ),
 
-        match<e_errno>( [ ]( int errno_ )
+        leaf::match<e_errno>( [ ]( int errno_ )
         {
           std::cerr <<
           "File read error, errno=" << errno_ << std::endl;
         } ),
 
-        match<>( [ ]
+        leaf::match<>( [ ]
         {
           std::cerr << "File read error!" << std::endl;
         } )
