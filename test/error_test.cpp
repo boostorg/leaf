@@ -6,6 +6,7 @@
 
 #include <boost/leaf/expect.hpp>
 #include <boost/detail/lightweight_test.hpp>
+#include <string.h>
 
 namespace leaf = boost::leaf;
 
@@ -50,7 +51,7 @@ leaf::error f4()
 		} ),
 		leaf::match<leaf::e_source_location,info<1>,info<2>,info<4>>( [&c2]( leaf::e_source_location::loc const & loc,int i1, int i2, int i4 )
 		{
-			BOOST_TEST(loc.line==20);
+			BOOST_TEST(loc.line==21);
 			BOOST_TEST(strcmp(loc.file,__FILE__)==0);
 			BOOST_TEST(strstr(loc.function,"f1")!=0);
 			BOOST_TEST(i1==1);

@@ -4,7 +4,7 @@ Official documentation: https://zajo.github.io/leaf/
 
 Features:
 
-* Header-only, C++11, no dependencies.
+* Header-only, no dependencies.
 * No dynamic memory allocations.
 * Associate objects of arbitrary types with any failure -- when it is initially reported or at a later time.
 * Compatible with `std::error_code`, `errno` and any other error handling API.
