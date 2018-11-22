@@ -2733,18 +2733,19 @@ result<T, E1, E3> g() noexcept <2>
 
 The motivation here is to help avoid bugs in functions that handle errors that pop out of `g`: as long as the programmer deals with `E1` and `E3`, he can rest assured that no error is left unhandled.
 
-Congratulations, we've just discovered exception specifications. The difference is that exception specifications, before being removed from {CPP}, were enforced dynamically, while this idea is *equivalent* to statically-enforced exception specifications, like they are in Java.
+Congratulations, we've just discovered exception specifications. The difference is that exception specifications, before being removed from {CPP}, were enforced dynamically, while this idea is equivalent to statically-enforced exception specifications, like they are in Java.
 
-To quote Herb Sutterfootnote:[https://herbsutter.com/2007/01/24/questions-about-exception-specifications/]:
+Why not statically enforce exception specifications?
 
-Why not statically enforce exception specifications? :: The short answer is that nobody knows how to fix exception specifications in any language, because the dynamic enforcement C++ chose has only different (not greater or fewer) problems than the static enforcement Java chose. ... When you go down the Java path, people love exception specifications until they find themselves all too often encouraged, or even forced, to add `throws Exception`, which immediately renders the exception specification entirely meaningless. (Example: Imagine writing a Java generic that manipulates an arbitrary type `T`).
+"The short answer is that nobody knows how to fix exception specifications in any language, because the dynamic enforcement C++ chose has only different (not greater or fewer) problems than the static enforcement Java chose. ... When you go down the Java path, people love exception specifications until they find themselves all too often encouraged, or even forced, to add `throws Exception`, which immediately renders the exception specification entirely meaningless. (Example: Imagine writing a Java generic that manipulates an arbitrary type `T`)."
+-- Herb Sutterfootnote:[https://herbsutter.com/2007/01/24/questions-about-exception-specifications/]
 
-Stated differently, the problem is that attempts to harness the {CPP} static type checking system to help enforce correct error handling based on the types of errors a function may return leads to dynamic error types. Yes, it is possible to turn every error *type* into, say, a `std::error_code` *object*, but this immediately renders the use of static type checking to enforce correct error handling meaningless. Worse, the coupling of function signatures with the error types they may return interferes with the seamless propagation of errors throughout the program.
+Stated differently, the problem is that attempts to harness the {CPP} static type checking system to help enforce correct error handling based on the types of errors a function may return leads to dynamic error types. Yes, it is possible to turn every error *type* into, for example, a `std::error_code` *object*, but this immediately renders the use of static type checking to enforce correct error handling meaningless. Worse, the coupling of function signatures with the error types they may return interferes with the correct propagation of errors throughout the program.
 
 Error handling, by its very nature, is a dynamic process. An effective error handling strategy is to:
 
-. Facilitate efficient propagation of error objects of arbitrary types throughout the program, independent of funciton signatures (LEAF).
-. Write unit tests for each and every error condition. This, unfortunately, can't be assisted by static type checking.
+* Facilitate efficient propagation of error objects of arbitrary types throughout the program, independent of funciton signatures (LEAF).
+* Write unit tests for each and every error condition. To this end, unfortunately, static type checking can only provide limited assistance.
 
 == Alternatives to LEAF
 
