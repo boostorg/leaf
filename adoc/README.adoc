@@ -15,7 +15,7 @@ Low-latency Error Augmentation Framework for C++11
 LEAF is a {CPP}11 error handling library. Features:
 
 ====
-* Header-only, C++11, no dependencies.
+* Header-only, no dependencies.
 
 * No dynamic memory allocations.footnote:[Except when error objects are transported between threads, see <<capture-expect,`capture`>>.]
 
@@ -30,6 +30,8 @@ LEAF is a {CPP}11 error handling library. Features:
 [.text-right]
 https://github.com/zajo/leaf[GitHub] | <<introduction,Introduction>> | <<tutorial>> | <<techniques>> | <<synopsis>> | <<reference>> | <<rationale>>
 ====
+
+NOTE: If you're at least an intermediate level developer and have seen `expected`/`outcome`-like interfaces before, and you are also wondering how the heck you can return a type-erased error object without using heap allocations, you may want to read the <<rationale>> first.
 
 [[introduction]]
 == Two Minute Introduction
