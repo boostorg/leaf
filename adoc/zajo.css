@@ -427,8 +427,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 h1{font-size:4em}
 h2{font-size:1.74em}
 h3,#toctitle,.sidebarblock>.content>.title{font-size:1.5em}
-h4{font-size:1.4em}
-h5{font-size:1.125em}
+h4{font-size:1.2em}
+h5{font-size:1em}
 h6{font-size:1em}
 h1 code{color:#4101a7; font-size:113%}
 h2 code{color:#4101a7; font-size:113%}
