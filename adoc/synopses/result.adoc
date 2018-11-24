@@ -8,13 +8,13 @@ namespace boost { namespace leaf {
   {
   public:
 
-    constexpr result() noexcept;
-    constexpr result( T const & v );
-    constexpr result( T && v ) noexcept;
+    result() noexcept;
+    result( T const & v );
+    result( T && v ) noexcept;
     result( leaf::error const & e ) noexcept;
     result( leaf::error_capture const & ec ) noexcept;
 
-    constexpr explicit operator bool() const noexcept;
+    explicit operator bool() const noexcept;
 
     T const & value() const;
     T & value();
@@ -26,7 +26,7 @@ namespace boost { namespace leaf {
  };
 
   template <class... E,class T>
-  result capture( expect<E...> & exp, result<T> const & r );
+  result<T> capture( expect<E...> & exp, result<T> const & r );
 
   template <class... E,class T,class... M>
   bool handle_error( expect<E...> & exp, result<T> & r, M && ... m ) noexcept;
@@ -35,7 +35,7 @@ namespace boost { namespace leaf {
   decltype(P::value) const * peek( expect<E...> const &, result<T> const & ) noexcept;
 
   template <class... E,class T>
-  friend void diagnostic_output( std::ostream & os, expect<E...> const & exp, result<T> const & r );
+  void diagnostic_output( std::ostream & os, expect<E...> const & exp, result<T> const & r );
 
   struct bad_result: std::exception { };
 

@@ -18,10 +18,10 @@ namespace boost { namespace leaf {
   error_capture capture( expect<E...> & exp, error const & e );
 
   template <class... E>
-  constexpr <<unspecified-type> match() noexcept;
+  <<unspecified-type> match() noexcept;
 
   template <class... E,class F>
-  constexpr <<unspecified-type> match( F && f ) noexcept;
+  <<unspecified-type> match( F && f ) noexcept;
 
   template <class... E,class... M>
   bool handle_error( expect<E...> & exp, error const & e, M && ... m ) noexcept;

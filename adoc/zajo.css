@@ -454,7 +454,7 @@ kbd{font-family:"Anonymous Pro","DejaVu Sans Mono",monospace;display:inline-bloc
 #toc a:hover{color:#4101a7}
 #toc.toc2{background-color:#f7f8f7}
 .admonitionblock td.icon .icon-note::before{content:"\f05a";color:#606060}
-.admonitionblock td.icon .icon-tip::before{content:"\f0eb";color:#606060}
+.admonitionblock td.icon .icon-tip::before{content:"\f0eb";color:#606060;text-shadow:none}
 .admonitionblock td.icon .icon-warning::before{content:"\f071";color:#ff5100}
 .admonitionblock td.icon .icon-caution::before{content:"\f06d";color:#ff5100}
 .admonitionblock td.icon .icon-important::before{content:"\f06a";color:#ff5100}
