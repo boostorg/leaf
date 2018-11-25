@@ -53,18 +53,19 @@ leaf::result<my_value> f4( bool success )
 	else
 	{
 		int c1=0, c2=0;
-		BOOST_TEST( handle_error( exp, r,
-			leaf::match<info<1>,info<2>,info<3>,info<4>>( [&c1]( int, int, int, int )
+		bool handled = handle_error( exp, r,
+			[&c1]( info<1>, info<2>, info<3>, info<4> )
 			{
 				++c1;
-			} ),
-			leaf::match<info<1>,info<2>,info<4>>( [&c2]( int i1, int i2, int i4 )
+			},
+			[&c2]( info<1> const & i1, info<2> const & i2, info<4> const & i4 )
 			{
-				BOOST_TEST(i1==1);
-				BOOST_TEST(i2==2);
-				BOOST_TEST(i4==4);
+				BOOST_TEST(i1.value==1);
+				BOOST_TEST(i2.value==2);
+				BOOST_TEST(i4.value==4);
 				++c2;
-			} ) ) );
+			} );
+		BOOST_TEST(handled);
 		BOOST_TEST(c1==0);
 		BOOST_TEST(c2==1);
 		return leaf::error();

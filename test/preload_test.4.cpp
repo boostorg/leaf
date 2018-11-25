@@ -43,11 +43,11 @@ int main()
 	{
 		int c=0;
 		handle_exception( exp, e,
-			leaf::match<info>( [&c]( int x )
+			[&c]( info const & x )
 			{
-				BOOST_TEST(x==2);
+				BOOST_TEST(x.value==2);
 				++c;
-			} ) );
+			} );
 		BOOST_TEST(c==1);
 	}
 	return boost::report_errors();

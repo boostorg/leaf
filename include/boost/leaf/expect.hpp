@@ -8,6 +8,7 @@
 #define UUID_AFBBD676B2FF11E8984C7976AE35F1A2
 
 #include <boost/leaf/error.hpp>
+#include <boost/leaf/detail/function_traits.hpp>
 #include <boost/leaf/detail/print.hpp>
 #include <tuple>
 
@@ -19,7 +20,7 @@ namespace boost { namespace leaf {
 	{
 		template <class T, class... List>
 		struct type_index;
-	
+
 		template <class T, class... Cdr>
 		struct type_index<T, T, Cdr...>
 		{
@@ -128,11 +129,11 @@ namespace boost { namespace leaf {
 	template <class... E>
 	class expect;
 
-	template <class... E, class... M>
-	bool handle_error( expect<E...> &, error const &, M && ... ) noexcept;
+	template <class... E, class... F>
+	bool handle_error( expect<E...> &, error const &, F && ... ) noexcept;
 
 	template <class P, class... E>
-	decltype(P::value) const * peek( expect<E...> const &, error const & ) noexcept;
+	P const * peek( expect<E...> const &, error const & ) noexcept;
 
 	template <class... E>
 	void diagnostic_output( std::ostream &, expect<E...> const & );
@@ -148,11 +149,11 @@ namespace boost { namespace leaf {
 	{
 		friend class error;
 
-		template <class... E_, class... M>
-		friend bool leaf::handle_error( expect<E_...> &, error const &, M && ... ) noexcept;
+		template <class... E_, class... F>
+		friend bool leaf::handle_error( expect<E_...> &, error const &, F && ... ) noexcept;
 
 		template <class P, class... E_>
-		friend decltype(P::value) const * leaf::peek( expect<E_...> const &, error const & ) noexcept;
+		friend P const * leaf::peek( expect<E_...> const &, error const & ) noexcept;
 
 		template <class... E_>
 		friend void leaf::diagnostic_output( std::ostream &, expect<E_...> const & );
@@ -168,22 +169,19 @@ namespace boost { namespace leaf {
 
 		std::tuple<leaf_detail::slot<E>...>  s_;
 
-		template <class F, class... MatchTypes>
-		int unwrap( leaf_detail::match_fn<F,MatchTypes...> const & m, error const & e, bool & matched ) const
+		template <class F, class... T>
+		int unwrap_( leaf_detail::mp_list<T...>, F && f, error const & e, bool & matched ) const
 		{
 			using namespace leaf_detail;
-			if( !matched && (matched=slots_subset<decltype(s_),slot<MatchTypes>...>::have_values(s_,e)) )
-				(void) m.f( *leaf::peek<MatchTypes>(*this,e)... );
+			if( !matched && (matched=slots_subset<decltype(s_),slot<typename std::remove_cv<typename std::remove_reference<T>::type>::type>...>::have_values(s_,e)) )
+				(void) std::forward<F>(f)( *leaf::peek<typename std::remove_cv<typename std::remove_reference<T>::type>::type>(*this,e)... );
 			return 42;
 		}
 
-		template <class... MatchTypes>
-		int unwrap( leaf_detail::match_no_fn<MatchTypes...> const & m, error const & e, bool & matched ) const noexcept
+		template <class F>
+		int unwrap( F && f, error const & e, bool & matched ) const
 		{
-			using namespace leaf_detail;
-			if( !matched )
-				matched = slots_subset<decltype(s_),slot<MatchTypes>...>::have_values(s_,e);
-			return 42;
+			return unwrap_( typename leaf_detail::function_traits<F>::mp_args{ }, std::forward<F>(f), e, matched );
 		}
 
 		bool propagate_;
@@ -209,25 +207,25 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	template <class... E, class... M>
-	bool handle_error( expect<E...> & exp, error const & e, M && ... m ) noexcept
+	template <class... E, class... F>
+	bool handle_error( expect<E...> & exp, error const & e, F && ... f ) noexcept
 	{
 		bool matched = false;
-		{ using _ = int[ ]; (void) _ { 42, exp.unwrap(m,e,matched)... }; }
+		{ using _ = int[ ]; (void) _ { 42, exp.unwrap(std::forward<F>(f),e,matched)... }; }
 		if( matched )
 			exp.propagate_ = false;
 		return matched;
 	}
 
 	template <class P, class... E>
-	decltype(P::value) const * peek( expect<E...> const & exp, error const & e ) noexcept
+	P const * peek( expect<E...> const & exp, error const & e ) noexcept
 	{
 		auto & opt = std::get<leaf_detail::type_index<P,E...>::value>(exp.s_);
 		if( opt.has_value() )
 		{
 			auto & x = opt.value();
 			if( x.e==e )
-				return &x.v.value;
+				return &x.v;
 		}
 		return 0;
 	}

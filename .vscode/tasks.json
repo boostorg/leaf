@@ -102,6 +102,12 @@
             		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
 		},
 		{
+			"label": "function_traits_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test function_traits_test",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
 			"label": "multiple_errors_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test multiple_errors_test",

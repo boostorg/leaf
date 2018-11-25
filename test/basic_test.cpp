@@ -40,13 +40,13 @@ int main()
 	leaf::expect<info<1>,info<2>,info<4>> exp0;
 	leaf::error e0 = f4();
 	{
-		int const * p = leaf::peek<info<1>>(exp0,e0);
-		BOOST_TEST(p && *p==1);
+		info<1> const * p = leaf::peek<info<1>>(exp0,e0);
+		BOOST_TEST(p && p->value==1);
 	}
 
 	{
-		int const * p = leaf::peek<info<2>>(exp0,e0);
-		BOOST_TEST(p && *p==2);
+		info<2> const * p = leaf::peek<info<2>>(exp0,e0);
+		BOOST_TEST(p && p->value==2);
 	}
 
 	BOOST_TEST(!leaf::peek<info<4>>(exp0,e0));
@@ -54,13 +54,13 @@ int main()
 	leaf::error e1 = f4();
 
 	{
-		int const * p = leaf::peek<info<1>>(exp0,e0);
-		BOOST_TEST(p && *p==1);
+		info<1> const * p = leaf::peek<info<1>>(exp0,e0);
+		BOOST_TEST(p && p->value==1);
 	}
 
 	{
-		int const * p = leaf::peek<info<2>>(exp0,e0);
-		BOOST_TEST(p && *p==2);
+		info<2> const * p = leaf::peek<info<2>>(exp0,e0);
+		BOOST_TEST(p && p->value==2);
 	}
 
 	BOOST_TEST(!leaf::peek<info<4>>(exp0,e0));
@@ -69,48 +69,49 @@ int main()
 	BOOST_TEST(!leaf::peek<info<4>>(exp,e0));
 
 	{
-		int const * p = leaf::peek<info<1>>(exp,e1);
-		BOOST_TEST(p && *p==1);
+		info<1> const * p = leaf::peek<info<1>>(exp,e1);
+		BOOST_TEST(p && p->value==1);
 	}
 
 	{
-		int const * p = leaf::peek<info<2>>(exp,e1);
-		BOOST_TEST(p && *p==2);
+		info<2> const * p = leaf::peek<info<2>>(exp,e1);
+		BOOST_TEST(p && p->value==2);
 	}
 
 	BOOST_TEST(!leaf::peek<info<4>>(exp,e1));
-	BOOST_TEST( !handle_error(exp,e1,leaf::match<info<1>,info<2>,info<4>>()) );
+	BOOST_TEST( !handle_error( exp, e1, [ ](info<1>,info<2>,info<4>)->void { } ) );
 	leaf::error e2 = f4();
 
 	{
-		int const * p = leaf::peek<info<1>>(exp,e2);
-		BOOST_TEST(p && *p==1);
+		info<1> const * p = leaf::peek<info<1>>(exp,e2);
+		BOOST_TEST(p && p->value==1);
 	}
 
 	{
-		int const * p = leaf::peek<info<2>>(exp,e2);
-		BOOST_TEST(p && *p==2);
+		info<2> const * p = leaf::peek<info<2>>(exp,e2);
+		BOOST_TEST(p && p->value==2);
 	}
 
 	BOOST_TEST(!leaf::peek<info<4>>(exp,e2));
 
 	{
 		int c1=0, c2=0, c3=0;
-		BOOST_TEST( handle_error( exp, e2,
-			leaf::match<info<1>,info<2>,info<4>>( [&c1]( int, int, int )
+		bool handled = handle_error( exp, e2,
+			[&c1]( info<1>, info<2>, info<4> )
 			{
 				++c1;
-			} ),
-			leaf::match<info<1>,info<2>,info<4>>( [&c2]( int, int, int )
+			},
+			[&c2]( info<1>, info<2>, info<4> )
 			{
 				++c2;
-			} ),
-			leaf::match<info<2>,info<1>>( [&c3]( int i2,int i1 )
+			},
+			[&c3]( info<2> const & i2, info<1> const & i1 )
 			{
-				BOOST_TEST(i1==1);
-				BOOST_TEST(i2==2);
+				BOOST_TEST(i1.value==1);
+				BOOST_TEST(i2.value==2);
 				++c3;
-			} ) ) );
+			} );
+		BOOST_TEST(handled);
 		BOOST_TEST(c1==0);
 		BOOST_TEST(c2==0);
 		BOOST_TEST(c3==1);
@@ -118,13 +119,14 @@ int main()
 
 	{
 		int c=0;
-		BOOST_TEST( handle_error( exp0, e0,
-			leaf::match<info<2>,info<1>>( [&c]( int i2,int i1 )
+		bool handled = handle_error( exp0, e0,
+			[&c]( info<2> const & i2, info<1> const & i1 )
 			{
-				BOOST_TEST(i1==1);
-				BOOST_TEST(i2==2);
+				BOOST_TEST(i1.value==1);
+				BOOST_TEST(i2.value==2);
 				++c;
-			} ) ) );
+			} );
+		BOOST_TEST(handled);
 		BOOST_TEST(c==1);
 	}
 

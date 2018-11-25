@@ -8,6 +8,7 @@
 #define UUID_C86E4C4ED0F011E8BB777EB8A659E189
 
 #include <boost/leaf/error.hpp>
+#include <boost/leaf/detail/function_traits.hpp>
 #include <boost/leaf/detail/print.hpp>
 #include <tuple>
 
@@ -19,7 +20,7 @@ namespace boost { namespace leaf {
 	bool handle_error( error_capture const &, M && ... ) noexcept;
 
 	template <class P>
-	decltype(P::value) const * peek( error_capture const & ) noexcept;
+	P const * peek( error_capture const & ) noexcept;
 
 	void diagnostic_output( std::ostream &, error_capture const & );
 
@@ -93,7 +94,7 @@ namespace boost { namespace leaf {
 		friend bool leaf::handle_error( error_capture const &, M && ... ) noexcept;
 
 		template <class P>
-		friend decltype(P::value) const * leaf::peek( error_capture const & ) noexcept;
+		friend P const * leaf::peek( error_capture const & ) noexcept;
 
 		friend void leaf::diagnostic_output( std::ostream &, error_capture const & );
 
@@ -185,20 +186,18 @@ namespace boost { namespace leaf {
 			}
 		}
 
-		template <class F, class... MatchTypes>
-		int unwrap( leaf_detail::match_fn<F,MatchTypes...> const & m, bool & matched ) const
+		template <class F, class... T>
+		int unwrap_( leaf_detail::mp_list<T...>, F && f, bool & matched ) const
 		{
-			if( !matched && (matched=leaf_detail::all_available<MatchTypes...>::check(*this)) )
-				(void) m.f( *peek<MatchTypes>(*this)... );
+			if( !matched && (matched=leaf_detail::all_available<typename std::remove_cv<typename std::remove_reference<T>::type>::type...>::check(*this)) )
+				(void) std::forward<F>(f)( *peek<typename std::remove_cv<typename std::remove_reference<T>::type>::type>(*this)... );
 			return 42;
 		}
 
-		template <class... MatchTypes>
-		int unwrap( leaf_detail::match_no_fn<MatchTypes...> const & m, bool & matched ) const noexcept
+		template <class F>
+		int unwrap( F && f, bool & matched ) const
 		{
-			if( !matched  )
-				matched = leaf_detail::all_available<MatchTypes...>::check(*this);
-			return 42;
+			return unwrap_(typename leaf_detail::function_traits<F>::mp_args{ },std::forward<F>(f),matched);
 		}
 
 		dynamic_store * ds_;
@@ -211,7 +210,7 @@ namespace boost { namespace leaf {
 			e_ = e;
 		}
 
-	public:			
+	public:
 
 		error_capture() noexcept:
 			ds_(0)
@@ -294,12 +293,12 @@ namespace boost { namespace leaf {
 	}
 
 	template <class P>
-	decltype(P::value) const * peek( error_capture const & e ) noexcept
+	P const * peek( error_capture const & e ) noexcept
 	{
 		if( e )
 			if( auto * opt = e.ds_->bind<P>() )
 				if( opt->has_value() )
-					return &opt->value().value;
+					return &opt->value();
 		return 0;
 	}
 

@@ -10,6 +10,14 @@
 
 namespace leaf = boost::leaf;
 
+struct c0
+{
+	friend std::ostream & operator<<( std::ostream & os, c0 const & )
+	{
+		return os << "c0";
+	}
+};
+
 struct c1
 {
 	int value;
@@ -17,7 +25,7 @@ struct c1
 	friend std::ostream & operator<<( std::ostream & os, c1 const & )
 	{
 		return os << "c1";
-	}           
+	}
 };
 
 struct c2
@@ -28,7 +36,7 @@ struct c2
 std::ostream & operator<<( std::ostream & os, c2 const & )
 {
 	return os << "c2";
-}           
+}
 
 struct c3
 {
@@ -53,6 +61,7 @@ bool check( T const & x, char const * sub )
 
 int main()
 {
+	BOOST_TEST(check(c0{ },"c0"));
 	BOOST_TEST(check(c1{42},"c1"));
 	{
 		c1 x;

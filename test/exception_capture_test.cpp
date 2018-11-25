@@ -64,12 +64,12 @@ void test( int task_count, F && f ) noexcept
 		catch( my_error const & e )
 		{
 			int c=0;
-			handle_exception( exp, e, leaf::match<info<1>,info<2>>( [&f,&c]( int x1, int x2 )
+			handle_exception( exp, e, [&f,&c]( info<1> const & x1, info<2> const & x2 )
 				{
-					BOOST_TEST(x1==f.a);
-					BOOST_TEST(x2==f.b);
+					BOOST_TEST(x1.value==f.a);
+					BOOST_TEST(x2.value==f.b);
 					++c;
-				} ) );
+				} );
 			BOOST_TEST(c==1);
 		}
 	}

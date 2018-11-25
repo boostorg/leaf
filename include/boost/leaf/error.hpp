@@ -13,31 +13,19 @@
 #include <climits>
 #include <ostream>
 
-#define LEAF_ERROR ::boost::leaf::peek_next_error().propagate(::boost::leaf::e_source_location{::boost::leaf::e_source_location::loc(__FILE__,__LINE__,__FUNCTION__)}),::boost::leaf::error
+#define LEAF_ERROR ::boost::leaf::peek_next_error().propagate(::boost::leaf::e_source_location{__FILE__,__LINE__,__FUNCTION__}),::boost::leaf::error
 
 namespace boost { namespace leaf {
 
 	struct e_source_location
 	{
-		struct loc
-		{
-			char const * const file;
-			int const line;
-			char const * const function;
-
-			constexpr loc( char const * file, int line, char const * function ) noexcept:
-				file(file),
-				line(line),
-				function(function)
-			{
-			}
-		};
-
-		loc value;
+		char const * const file;
+		int const line;
+		char const * const function;
 
 		friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
 		{
-			return os << "At " << x.value.file << '(' << x.value.line << ") in function " << x.value.function << std::endl;
+			return os << "At " << x.file << '(' << x.line << ") in function " << x.function << std::endl;
 		}
 	};
 
@@ -166,7 +154,6 @@ namespace boost { namespace leaf {
 			typedef optional<error_info<E>> base;
 			slot<E> * prev_;
 		public:
-			typedef decltype(E::value) value_type;
 			slot() noexcept;
 			~slot() noexcept;
 			using base::put;
@@ -216,34 +203,6 @@ namespace boost { namespace leaf {
 	{
 		{ using _ = void const * [ ]; (void) _ { 0, leaf_detail::put_slot(std::forward<E>(e),*this)... }; }
 		return *this;
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		template <class F, class... E>
-		struct match_fn
-		{
-			F f;
-		};
-
-		template <class... E>
-		struct match_no_fn
-		{
-		};
-	} //leaf_detail
-
-	template <class... E, class F>
-	constexpr leaf_detail::match_fn<F,E...> match( F && f ) noexcept
-	{
-		return leaf_detail::match_fn<F,E...> { std::move(f) };
-	}
-
-	template <class... E>
-	constexpr leaf_detail::match_no_fn<E...> match() noexcept
-	{
-		return leaf_detail::match_no_fn<E...> { };
 	}
 
 } }

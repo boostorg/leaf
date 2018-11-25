@@ -48,6 +48,7 @@ tests = [
 	'expect_test.1',
 	'expect_test.2',
 	'expect_test.3',
+	'function_traits_test',
 	'multiple_errors_test',
 	'optional_test',
 	'preload_test.1',

@@ -126,13 +126,13 @@ int main( int argc, char const * argv[ ] )
 		//passing the .value of each of the e-types from the matched set.
 		handle_exception( exp, ex,
 
-			leaf::match<e_file_name, e_errno>( [ ] ( std::string const & fn, int errn )
+			[ ] ( e_file_name const & fn, e_errno const & errn )
 			{
-				if( errn==ENOENT )
-					std::cerr << "File not found: " << fn << std::endl;
+				if( errn.value==ENOENT )
+					std::cerr << "File not found: " << fn.value << std::endl;
 				else
-					std::cerr << "Failed to open " << fn << ", errno=" << errn << std::endl;
-			} )
+					std::cerr << "Failed to open " << fn.value << ", errno=" << errn.value << std::endl;
+			}
 
 		);
 		return 2;
@@ -145,20 +145,20 @@ int main( int argc, char const * argv[ ] )
 		//always match to print a generic error message.
 		handle_exception( exp, ex,
 
-			leaf::match<e_file_name, e_errno>( [ ] ( std::string const & fn, int errn )
+			[ ] ( e_file_name const & fn, e_errno const & errn )
 			{
-				std::cerr << "Input error, " << fn << ", errno=" << errn << std::endl;
-			} ),
+				std::cerr << "Input error, " << fn.value << ", errno=" << errn.value << std::endl;
+			},
 
-			leaf::match<e_errno>( [ ] ( int errn )
+			[ ] ( e_errno const & errn )
 			{
-				std::cerr << "Input error, errno=" << errn << std::endl;
-			} ),
+				std::cerr << "Input error, errno=" << errn.value << std::endl;
+			},
 
-			leaf::match<>( [ ]
+			[ ]
 			{
 				std::cerr << "Input error" << std::endl;
-			} )
+			}
 
 		);
 		return 3;
@@ -168,10 +168,10 @@ int main( int argc, char const * argv[ ] )
 		//Report failure to write to std::cout, print the relevant errno.
 		handle_exception( exp, ex,
 
-			leaf::match<e_errno>( [ ] ( int errn )
+			[ ] ( e_errno const & errn )
 			{
-				std::cerr << "Output error, errno=" << errn << std::endl;
-			} )
+				std::cerr << "Output error, errno=" << errn.value << std::endl;
+			}
 
 		);
 		return 4;
@@ -179,7 +179,7 @@ int main( int argc, char const * argv[ ] )
 	catch(...)
 	{
 		//This catch-all case helps diagnose logic errors (presumably, missing catch).
-		std::cerr << "Unknown error, cryptic information follows." << std::endl; 
+		std::cerr << "Unknown error, cryptic information follows." << std::endl;
 		current_exception_diagnostic_output(std::cerr,exp);
 		return 5;
 	}

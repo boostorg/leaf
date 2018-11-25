@@ -27,10 +27,10 @@ int main()
 	leaf::expect<info> exp;
 	int c=0;
 	BOOST_TEST( !handle_error( exp, f(),
-		leaf::match<info>( [&c]( int i )
+		[&c]( info )
 		{
 			++c;
-		} ) ) );
+		} ) );
 	BOOST_TEST(c==0);
 	return boost::report_errors();
 }

@@ -111,16 +111,16 @@ int main() noexcept
 			handle_exception( exp, e,
 
 				//Handle e_do_work failures:
-				leaf::match<e_do_work_error>( [ ]( int v )
+				[ ]( e_do_work_error const & e )
 				{
-					std::cout << "Got e_do_work_error, value = " << v <<  "!\n";
-				} ),
+					std::cout << "Got e_do_work_error, value = " << e.value <<  "!\n";
+				},
 
 				//Handle all other lua_pcall failures:
-				leaf::match<e_lua_pcall_error,e_lua_error_message>( [ ]( int err, std::string const & msg )
+				[ ]( e_lua_pcall_error const & err, e_lua_error_message const & msg )
 				{
-					std::cout << "Got e_lua_pcall_error, Lua error code = " << err << ", " << msg << "\n";
-				} )
+					std::cout << "Got e_lua_pcall_error, Lua error code = " << err.value << ", " << msg.value << "\n";
+				}
 			);
 		}
 	return 0;

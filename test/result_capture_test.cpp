@@ -65,12 +65,13 @@ int main()
 		else
 		{
 			int c=0;
-			BOOST_TEST( handle_error( exp, r, leaf::match<info<1>,info<2>>( [&f,&c]( int x1, int x2 )
+			bool handled = handle_error( exp, r, [&f,&c]( info<1> const & x1, info<2> const & x2 )
 			{
-				BOOST_TEST(x1==f.a);
-				BOOST_TEST(x2==f.b);
+				BOOST_TEST(x1.value==f.a);
+				BOOST_TEST(x2.value==f.b);
 				++c;
-			} ) ) );
+			} );
+			BOOST_TEST(handled);
 			BOOST_TEST(c==1);
 		}
 	}

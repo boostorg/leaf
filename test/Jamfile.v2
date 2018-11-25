@@ -38,6 +38,7 @@ run expect_test.1.cpp ;
 run expect_test.2.cpp ;
 run expect_test.3.cpp ;
 run multiple_errors_test.cpp ;
+run function_traits_test.cpp ;
 run optional_test.cpp ;
 run preload_test.1.cpp ;
 run preload_test.2.cpp ;
@@ -53,5 +54,7 @@ run result_void_capture_test.cpp : : : <threading>multi ;
 
 compile ../example/print_file_result.cpp ;
 compile ../example/print_file_eh.cpp ;
+#compile ../example/lua_callback_result.cpp ;
+#compile ../example/lua_callback_eh.cpp ;
 compile ../example/capture_result.cpp ;
 compile ../example/capture_eh.cpp ;
