@@ -776,7 +776,7 @@ Similar types that define an accessible data member `value` can be used with LEA
 
 *Diagnostic Information*
 
-LEAF will attempt to print error objects in various `diagnostic_output` overloads it defines. It will first attempt to use `operator<<` overload that takes actual error object type (e.g. the enclosing `struct`). If such overload does not exist, the fallback is to attempt to use `operator<<` overload that takes the `.value` (in case the error object type defines it). If that also doesn't work, LEAF is unable to print values of that particular error type (this is permissible, not an error).
+LEAF will attempt to print error objects in various `diagnostic_output` overloads it defines. It will first attempt to use `operator<<` overload that takes the actual error object type (e.g. the enclosing `struct`). If such overload does not exist, the fallback is to attempt to use `operator<<` overload that takes the `.value` (in case the error object type defines it). If that also doesn't work, LEAF is unable to print values of that particular error type (this is permissible, not an error).
 
 The `diagnostic_output` functions in LEAF can use the error types defined in the snippet above by default, because `int` and `std::string` values are printable. But even with printable values, the user may still want to overload `operator<<` for the enclosing `struct`, e.g.:
 
