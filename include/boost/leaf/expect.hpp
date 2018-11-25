@@ -170,7 +170,7 @@ namespace boost { namespace leaf {
 		std::tuple<leaf_detail::slot<E>...>  s_;
 
 		template <class F, class... T>
-		int unwrap_( leaf_detail::mp_list<T...>, F && f, error const & e, bool & matched ) const
+		int match_( leaf_detail::mp_list<T...>, F && f, error const & e, bool & matched ) const
 		{
 			using namespace leaf_detail;
 			if( !matched && (matched=slots_subset<decltype(s_),slot<typename std::remove_cv<typename std::remove_reference<T>::type>::type>...>::have_values(s_,e)) )
@@ -179,9 +179,9 @@ namespace boost { namespace leaf {
 		}
 
 		template <class F>
-		int unwrap( F && f, error const & e, bool & matched ) const
+		int match( F && f, error const & e, bool & matched ) const
 		{
-			return unwrap_( typename leaf_detail::function_traits<F>::mp_args{ }, std::forward<F>(f), e, matched );
+			return match_( typename leaf_detail::function_traits<F>::mp_args{ }, std::forward<F>(f), e, matched );
 		}
 
 		bool propagate_;
@@ -211,7 +211,7 @@ namespace boost { namespace leaf {
 	bool handle_error( expect<E...> & exp, error const & e, F && ... f ) noexcept
 	{
 		bool matched = false;
-		{ using _ = int[ ]; (void) _ { 42, exp.unwrap(std::forward<F>(f),e,matched)... }; }
+		{ using _ = int[ ]; (void) _ { 42, exp.match(std::forward<F>(f),e,matched)... }; }
 		if( matched )
 			exp.propagate_ = false;
 		return matched;

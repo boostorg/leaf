@@ -187,7 +187,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class F, class... T>
-		int unwrap_( leaf_detail::mp_list<T...>, F && f, bool & matched ) const
+		int match_( leaf_detail::mp_list<T...>, F && f, bool & matched ) const
 		{
 			if( !matched && (matched=leaf_detail::all_available<typename std::remove_cv<typename std::remove_reference<T>::type>::type...>::check(*this)) )
 				(void) std::forward<F>(f)( *peek<typename std::remove_cv<typename std::remove_reference<T>::type>::type>(*this)... );
@@ -195,9 +195,9 @@ namespace boost { namespace leaf {
 		}
 
 		template <class F>
-		int unwrap( F && f, bool & matched ) const
+		int match( F && f, bool & matched ) const
 		{
-			return unwrap_(typename leaf_detail::function_traits<F>::mp_args{ },std::forward<F>(f),matched);
+			return match_(typename leaf_detail::function_traits<F>::mp_args{ },std::forward<F>(f),matched);
 		}
 
 		dynamic_store * ds_;
@@ -285,7 +285,7 @@ namespace boost { namespace leaf {
 		if( e )
 		{
 			bool matched = false;
-			{ using _ = int[ ]; (void) _ { 42, e.unwrap(m,matched)... }; }
+			{ using _ = int[ ]; (void) _ { 42, e.match(m,matched)... }; }
 			if( matched )
 				return true;
 		}
