@@ -73,7 +73,7 @@ Let's assume that to handle errors from a given function `f` we need an error co
 <5> Handle the case where we only received `error_code` and `e_file_name` (associated with the failure reported in `r`).
 
 [.text-right]
-`<<expect,expect>>` | `<<result,result>>` | <<handle_error-result>> | <<match>>
+`<<expect,expect>>` | `<<result,result>>` | <<handle_error-result>>
 ====
 
 The `error_code` can be a simple `enum`:
@@ -179,7 +179,7 @@ Let's assume that to handle exceptions from a given function `f` we need a file 
 <4> Handle the case where we only received `e_file_name` (associated with the failure reported by `e`).
 
 [.text-right]
-`<<expect,expect>>` | <<handle_exception>> | <<match>>
+`<<expect,expect>>` | <<handle_exception>>
 ====
 
 Because both the file name and the request ID are strings, we will wrap each of them in a simple `struct`, so we can tell them apart:
@@ -256,6 +256,28 @@ enum error_code
 ----
 
 We don't need an enumerated value that indicates success. That's because we will use the handy class template `<<result,result>><T>` as the return type in functions which may fail. It is a value-or-error variant type which holds a `T` except if initialized with a `leaf::<<error,error>>`.
+
+To enable `leaf::error` to work our `error_code` `enum`, we need to specialize the <<is_error_type>> template:
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template<> struct is_error_type<error_code>: std::true_type { };
+
+} }
+----
+
+[TIP]
+--
+The `is_error_type` template needs not be specialized for:
+
+* types that define an accessible data member `value`,
+
+* `std::error_code`,
+
+* `boost::system::error_code`.
+--
 
 Here is a function that reads data from a `FILE` into a buffer and reports the various errors which may occur (it returns `result<void>` because in case of success it doesn't return a value):
 
@@ -474,7 +496,7 @@ int main( int argc, char const * argv[ ] )
 ----
 
 [.text-right]
-`<<expect,expect>>` | <<peek-result>> | <<handle_error-result>> | <<match>> | <<diagnostic_output-result>>
+`<<expect,expect>>` | <<peek-result>> | <<handle_error-result>> | <<diagnostic_output-result>>
 ====
 
 To summarize, when using LEAF without exception handling:
@@ -661,7 +683,7 @@ int main( int argc, char const * argv[ ] )
 ----
 
 [.text-right]
-`<<expect,expect>>` | <<handle_exception>> | <<match>> | <<current_exception_diagnostic_output>>
+`<<expect,expect>>` | <<handle_exception>> | <<current_exception_diagnostic_output>>
 ====
 
 To summarize, when using LEAF with exception handling:
@@ -681,7 +703,7 @@ NOTE: The complete program from this tutorial is available https://github.com/za
 include::synopses/expect.adoc[]
 
 [.text-right]
-<<expect>> | <<expect::expect>> | <<expect-dtor>> | <<expect::propagate>> | <<capture-expect>> | <<match>> | <<handle_error-expect>> | <<peek-expect>> | <<diagnostic_output-expect>>
+<<expect>> | <<expect::expect>> | <<expect-dtor>> | <<expect::propagate>> | <<capture-expect>> | <<handle_error-expect>> | <<peek-expect>> | <<diagnostic_output-expect>>
 ====
 
 *Class `error`*
@@ -689,7 +711,7 @@ include::synopses/expect.adoc[]
 include::synopses/error.adoc[]
 
 [.text-right]
-<<error>> | <<error::error>> | <<error::propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>> | <<peek_next_error>>
+<<error>> | <<error::error>> | <<error::propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>> | <<next_error_value>>
 ====
 
 *Automatic Propagation*
@@ -730,9 +752,9 @@ include::synopses/exception.adoc[]
 [[wrapping]]
 === Wrapping Error Objects
 
-With LEAF, users can efficiently associate with errors or with exceptions any number of values that pertain to a failure. These values may be of arbitrary movable types.
+With LEAF, users can efficiently associate with errors or with exceptions any number of values that pertain to a failure. These values may be of any no-throw movable type for which the <<is_error_type>> template is properly specialized.
 
-However, when using types that are not unique to error handling, each value should be enclosed in a C-`struct`, which acts as its compile-time identifier and gives it semantic meaning. Examples:
+However, when using general types that are not specific to error handling, each value should be enclosed in a C-`struct` that acts as its compile-time identifier and gives it semantic meaning. Examples:
 
 [source,c++]
 ----
@@ -743,14 +765,14 @@ struct e_minimum_temperature { int value; };
 struct e_maximum_temperature { int value; };
 ----
 
-By convention these structs use the `e_` prefix and define a single data member called `value`, whough any `noexcept`-movable type may be used.
-
 Various LEAF functions take a list of error objects to associate with an `<<error,error>>` value. For example, to indicate an error, a function that returns a `<<result,result>><T>` may use something like:
 
 [source,c++]
 ----
 return leaf::error( my_error_code, e_input_name{n1}, e_output_name{n2} );
 ----
+
+Similar types that define an accessible data member `value` can be used with LEAF without having to specialize the `is_error_type` template. By convention such types should use the `e_` prefix.
 
 *Diagnostic Information*
 
@@ -784,7 +806,7 @@ TIP: The output from `diagnostic_output` overloads is developer-friendly but not
 include::synopses/expect.adoc[]
 
 [.text-right]
-<<expect::expect>> | <<expect-dtor>> | <<expect::propagate>> | <<capture-expect>> | <<match>> | <<handle_error-expect>> | <<peek-expect>> | <<diagnostic_output-expect>>
+<<expect::expect>> | <<expect-dtor>> | <<expect::propagate>> | <<capture-expect>> | <<handle_error-expect>> | <<peek-expect>> | <<diagnostic_output-expect>>
 ====
 
 All `expect<E...>` objects must use automatic storage duration. They are not copyable and are not movable.
@@ -975,7 +997,7 @@ NOTE: The printing of each individual object is done by the rules described <<wr
 include::synopses/error.adoc[]
 
 [.text-right]
-<<error::error>> | <<error::propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>> | <<peek_next_error>>
+<<error::error>> | <<error::propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>> | <<next_error_value>>
 ====
 
 Objects of class `error` are values that identify an error across the entire program. They can be copied, moved, assigned to, and compared to other error objects. They occupy as much memory, and are as efficient as `unsigned int`.
@@ -997,6 +1019,8 @@ namespace boost { namespace leaf {
 
 } }
 ----
+
+Requirements: :: `<<is_error_type,is_error_type>><E>::value` must be `true` for each `E`.
 
 Effects: :: Each of the `e...` objects is either moved into the corresponding storage provided by `expect` instances (where it is associated with `*this`), or discarded. See `<<expect,expect>>`.
 
@@ -1073,24 +1097,74 @@ Effects: :: Prints an `unsigned int` value that uniquely identifies the value `e
 
 '''
 
-[[peek_next_error]]
-==== `peek_next_error`
+[[next_error_value]]
+==== `next_error_value`
 
 .#include <boost/leaf/error.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
 
-  error peek_next_error() noexcept;
+  error next_error_value() noexcept;
 
 } }
 ----
 
 Returns: :: The `error` value which will be returned the next time the `<<error::error,error>>` constructor is invoked from the calling thread.
 +
-This function can be used to associate error objects with the next `error` value to be reported. Use with caution, only when restricted to reporting errors using specific third-party types, incompatible with LEAF -- for example when reporting an error from a C callback. As soon as control exits this critical path, you should create and return a `leaf::error` object (which will be equal to the `error` object returned by `peek_next_error`).
+This function can be used to associate error objects with the next `error` value to be reported. Use with caution, only when restricted to reporting errors using specific third-party types, incompatible with LEAF -- for example when reporting an error from a C callback. As soon as control exits this critical path, you should create and return a `leaf::error` object (which will be equal to the `error` object returned by `next_error_value`).
 
 IMPORTANT: `error` values are unique across the entire program.
+
+'''
+
+[[is_error_type]]
+==== `is_error_type`
+
+.#include <boost/leaf/error.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class T>
+  struct is_error_type
+  {
+    static constexpr bool value = <<unspecified>>;
+  };
+
+} }
+----
+
+The `is_error_type` template should be specialized for each user-defined type which the user desires to be used as an error type with LEAF, for example:
+
+[source,c++]
+----
+enum my_error
+{
+  error1,
+  error2,
+  ....
+};
+
+namespace boost { namespace leaf {
+
+  template<> struct is_error_type<my_error>: std::true_type { };
+
+} }
+----
+
+This requirement is designed to trigger a diagnostic in case the user unintentionally passes some random object to the `leaf::error` constructor.
+
+[TIP]
+--
+The `is_error_type` template needs not be specialized for:
+
+* types that define an accessible data member `value`,
+
+* `std::error_code`,
+
+* `boost::system::error_code`.
+--
 
 '''
 
@@ -2168,7 +2242,7 @@ But if the caught exception doesn't  have a `leaf::error` subobject, `get_error`
 '''
 
 [[technique_preload_in_c_callbacks]]
-=== Using `peek_next_error` in C-callbacks
+=== Using `next_error_value` in C-callbacks
 
 Communicating information pertaining to a failure detected in a C callback is tricky, because C callbacks are limited to a specific static signature, which may not use {CPP} types.
 
@@ -2237,7 +2311,7 @@ int do_work( lua_State * L ) noexcept
   }
   else
   {
-    leaf::peek_next_error().propagate(ec1); //<3>
+    leaf::next_error_value().propagate(ec1); //<3>
     return luaL_error(L,"do_work_error"); //<4>
   }
 }
@@ -2248,7 +2322,7 @@ int do_work( lua_State * L ) noexcept
 <4> ...once control reaches it, after we tell the Lua interpreter to abort the program.
 
 [.text-right]
-<<peek_next_error>> | `<<error::propagate,error::propagate>>`
+<<next_error_value>> | `<<error::propagate,error::propagate>>`
 ====
 
 Now we'll write the function that calls the Lua interpreter to execute the Lua function `call_do_work`, which in turn calls `do_work`. We'll return `<<result,result>><int>`, so that our caller can get the answer in case of success, or an error:
@@ -2320,7 +2394,7 @@ int main() noexcept
 <4> Handle all other `lua_pcall` failures.
 
 [.text-right]
-`<<expect,expect>>` | `<<result,result>>` | <<handle_error-result>> | <<match>>
+`<<expect,expect>>` | `<<result,result>>` | <<handle_error-result>>
 ====
 
 [NOTE]
@@ -2403,7 +2477,7 @@ else
 ----
 
 [.text-right]
-`<<expect,expect>>` | `<<result,result>>` | <<handle_error-result>> | <<match>>
+`<<expect,expect>>` | `<<result,result>>` | <<handle_error-result>>
 ====
 
 NOTE: Follow this link to see a complete example program: https://github.com/zajo/leaf/blob/master/example/capture_result.cpp?ts=3[capture_result.cpp].
@@ -2475,7 +2549,7 @@ catch( my_exception & e )
 ----
 
 [.text-right]
-`<<expect,expect>>` |  <<get>> | <<handle_exception>> | <<match>>
+`<<expect,expect>>` |  <<get>> | <<handle_exception>>
 ====
 
 NOTE: Follow this link to see a complete example program: https://github.com/zajo/leaf/blob/master/example/capture_eh.cpp?ts=3[capture_eh.cpp].
@@ -2598,7 +2672,7 @@ catch( file_read_error & e )
 ----
 
 [.text-right]
-`<<expect,expect>>` | <<handle_exception>> | <<match>>
+`<<expect,expect>>` | <<handle_exception>>
 ====
 
 Of course LEAF works without exception handling as well. Below is the same snippet, written using `<<result,result>><T>`:
@@ -2653,7 +2727,7 @@ else
 ----
 
 [.text-right]
-`<<expect,expect>>` | `<<result,result>>` | <<peek-result>> | <<handle_error-result>> | <<match>>
+`<<expect,expect>>` | `<<result,result>>` | <<peek-result>> | <<handle_error-result>>
 ====
 
 NOTE: Please post questions and feedback on the Boost Developers Mailing List (LEAF is not part of Boost).

@@ -23,6 +23,9 @@ enum do_work_error_code
 	ec1=1,
 	ec2
 };
+namespace boost { namespace leaf {
+	template<> struct is_error_type<do_work_error_code>: std::true_type { };
+} }
 
 struct e_lua_pcall_error { int value; };
 struct e_lua_error_message { std::string value; };
@@ -46,7 +49,7 @@ int do_work( lua_State * L ) noexcept
 	{
 		//Associate an do_work_error_code object with the *next* leaf::error object we will
 		//definitely return from the call_lua function...
-		leaf::peek_next_error().propagate(ec1);
+		leaf::next_error_value().propagate(ec1);
 
 		//...once control reaches it, after we tell the Lua interpreter to abort the program.
 		return luaL_error(L,"do_work_error");

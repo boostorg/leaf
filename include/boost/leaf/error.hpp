@@ -12,8 +12,12 @@
 #include <cstdio>
 #include <climits>
 #include <ostream>
+#include <type_traits>
+#include <system_error>
 
-#define LEAF_ERROR ::boost::leaf::peek_next_error().propagate(::boost::leaf::e_source_location{__FILE__,__LINE__,__FUNCTION__}),::boost::leaf::error
+#define LEAF_ERROR ::boost::leaf::next_error_value().propagate(::boost::leaf::e_source_location{__FILE__,__LINE__,__FUNCTION__}),::boost::leaf::error
+
+namespace boost { namespace system { class error_code; } }
 
 namespace boost { namespace leaf {
 
@@ -29,15 +33,40 @@ namespace boost { namespace leaf {
 		}
 	};
 
+	namespace leaf_detail
+	{
+		template <class T, class E = void>
+		struct has_data_member_value
+		{
+			static constexpr bool value=false;
+		};
+
+		template <class T>
+		struct has_data_member_value<T, decltype(std::declval<T const &>().value, void())>
+		{
+			static constexpr bool value=std::is_member_object_pointer<decltype(&T::value)>::value;
+		};
+	}
+
+	template <class T>
+	struct is_error_type
+	{
+		static constexpr bool value = leaf_detail::has_data_member_value<T>::value;
+	};
+
+	template <> struct is_error_type<system::error_code>: std::true_type { };
+	template <> struct is_error_type<std::error_code>: std::true_type { };
+	template <> struct is_error_type<e_source_location>: std::true_type { };
+
 	////////////////////////////////////////
 
 	class error;
 
-	error peek_next_error() noexcept;
+	error next_error_value() noexcept;
 
 	class error
 	{
-		friend error leaf::peek_next_error() noexcept;
+		friend error leaf::next_error_value() noexcept;
 
 		unsigned id_;
 
@@ -119,7 +148,7 @@ namespace boost { namespace leaf {
 			return os;
 		}
 
-		static error peek_next_error() noexcept
+		static error next_error_value() noexcept
 		{
 			return error(id_factory::tl_instance().peek());
 		}
@@ -128,7 +157,7 @@ namespace boost { namespace leaf {
 		error propagate( E && ... ) const noexcept;
 	};
 
-	inline error peek_next_error() noexcept
+	inline error next_error_value() noexcept
 	{
 		return error(error::id_factory::tl_instance().peek());
 	}
@@ -153,6 +182,7 @@ namespace boost { namespace leaf {
 			slot & operator=( slot const & ) = delete;
 			typedef optional<error_info<E>> base;
 			slot<E> * prev_;
+			static_assert(is_error_type<E>::value,"All types passed to leaf::expect must be error types");
 		public:
 			slot() noexcept;
 			~slot() noexcept;

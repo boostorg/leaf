@@ -39,6 +39,7 @@ run expect_test.2.cpp ;
 run expect_test.3.cpp ;
 run multiple_errors_test.cpp ;
 run function_traits_test.cpp ;
+run is_error_type_test.cpp ;
 run optional_test.cpp ;
 run preload_test.1.cpp ;
 run preload_test.2.cpp ;

@@ -17,7 +17,7 @@ namespace boost { namespace leaf {
 		if( auto e = dynamic_cast<error const *>(&ex) )
 			return *e;
 		else
-			return peek_next_error();
+			return next_error_value();
 	}
 
 	template <class P, class... E>

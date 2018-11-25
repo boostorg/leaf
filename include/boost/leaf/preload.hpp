@@ -66,7 +66,7 @@ namespace boost { namespace leaf {
 
 			explicit preloaded( E && ... e ) noexcept:
 				p_(preloaded_item<E>(std::forward<E>(e))...),
-				e_(peek_next_error()),
+				e_(next_error_value()),
 				moved_(false)
 			{
 			}
@@ -81,7 +81,7 @@ namespace boost { namespace leaf {
 
 			~preloaded() noexcept
 			{
-				if( !moved_ && (e_!=peek_next_error() || std::uncaught_exception()) )
+				if( !moved_ && (e_!=next_error_value() || std::uncaught_exception()) )
 					leaf_detail::tuple_for_each_preload<sizeof...(E),decltype(p_)>::trigger(p_,e_);
 			}
 		};
@@ -131,7 +131,7 @@ namespace boost { namespace leaf {
 
 			explicit deferred( F && ... f ) noexcept:
 				d_(deferred_item<F>(std::forward<F>(f))...),
-				e_(peek_next_error()),
+				e_(next_error_value()),
 				moved_(false)
 			{
 			}
@@ -146,7 +146,7 @@ namespace boost { namespace leaf {
 
 			~deferred() noexcept
 			{
-				if( !moved_ && (e_!=peek_next_error() || std::uncaught_exception()) )
+				if( !moved_ && (e_!=next_error_value() || std::uncaught_exception()) )
 					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(d_)>::trigger(d_,e_);
 			}
 		};

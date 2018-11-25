@@ -19,7 +19,13 @@ namespace boost { namespace leaf {
     friend std::ostream & operator<<( std::ostream & os, error const & e )
   };
 
-  error peek_next_error() noexcept;
+  error next_error_value() noexcept;
+
+  template <class T>
+  struct is_error_type
+  {
+    static constexpr bool value = <<unspecified>>;
+  };
 
 } }
 ----

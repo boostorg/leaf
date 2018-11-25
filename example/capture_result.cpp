@@ -18,6 +18,7 @@
 namespace leaf = boost::leaf;
 
 //Define several e-types.
+struct e_thread_id { std::thread::id value; };
 struct e_failure_info1 { std::string value; };
 struct e_failure_info2 { int value; };
 struct e_failure_info3 { long value; };
@@ -33,7 +34,7 @@ leaf::result<task_result> task( bool succeed )
 		return task_result(); //Simulate successful result.
 	else
 		return leaf::error(
-			std::this_thread::get_id(),
+			e_thread_id{std::this_thread::get_id()},
 			e_failure_info1{"info"},
 			e_failure_info2{42},
 			e_failure_info4{42} );
@@ -61,7 +62,7 @@ int main()
 	//Launch tasks, transport the specified e-types. For demonstration, note that the task provides
 	//failure_info4 which we don't care about, and that we say we could use failure_info3, but which
 	//the task doesn't provide. So, we'll only get failed_thread_id, failure_info1 and failure_info2.
-	auto fut = launch_async_tasks<std::thread::id, e_failure_info1, e_failure_info2, e_failure_info3>(42);
+	auto fut = launch_async_tasks<e_thread_id, e_failure_info1, e_failure_info2, e_failure_info3>(42);
 
 	//Collect results or deal with failures.
 	for( auto & f : fut )
@@ -69,7 +70,7 @@ int main()
 		f.wait();
 
 		//Storage for e-objects.
-		leaf::expect<std::thread::id, e_failure_info1, e_failure_info2, e_failure_info3> exp;
+		leaf::expect<e_thread_id, e_failure_info1, e_failure_info2, e_failure_info3> exp;
 
 		//Get the task result, check for success.
 		if( leaf::result<task_result> r = f.get() )
@@ -81,9 +82,9 @@ int main()
 		{
 			//Failure! Handle error, print failure info.
 			bool matched = handle_error( exp, r,
-				[ ] ( e_failure_info1 const & v1, e_failure_info2 const & v2, std::thread::id const & tid )
+				[ ] ( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
 				{
-					std::cerr << "Error in thread " << tid << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
+					std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
 				} );
 			assert(matched);
 		}

@@ -31,6 +31,9 @@ enum error_code
 	input_eof_error,
 	cout_error
 };
+namespace boost { namespace leaf {
+	template<> struct is_error_type<error_code>: std::true_type { };
+} }
 
 
 leaf::result<std::shared_ptr<FILE>> file_open( char const * file_name )
