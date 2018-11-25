@@ -2072,7 +2072,7 @@ LEAF solves this problem without using exception handling: a scope that is able 
 [source,c++]
 ----
 {
-  leaf::expect<e_std_error_code, e_boost_error_code> exp;
+  leaf::expect<std::error_code, boost::error_code> exp;
 
   if( leaf::result<T> r = f() )
   {
