@@ -44,9 +44,9 @@ namespace boost { namespace leaf {
 		};
 
 		template <class T>
-		struct has_printable_member_value<T, decltype(T::value, void())>
+		struct has_printable_member_value<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>().value, void())>
 		{
-			static constexpr bool value=is_printable<decltype(T::value)>::value;
+			static constexpr bool value=true;
 		};
 
 		////////////////////////////////////////
