@@ -102,8 +102,8 @@ int main( int argc, char const * argv[ ] )
 	//Configure std::cout to throw on error.
 	std::cout.exceptions ( std::ostream::failbit | std::ostream::badbit );
 
-	//We expect e_error_code, e_file_name and e_errno objects to be associated
-	//with exceptions handled in this function. They will be stored inside of exp.
+	//We expect e_file_name and e_errno objects to be associated with errors
+	//handled in this function. They will be stored inside of exp.
 	leaf::expect<e_file_name, e_errno> exp;
 
 	try
@@ -116,43 +116,42 @@ int main( int argc, char const * argv[ ] )
 		std::cout << "Bad command line argument" << std::endl;
 		return 1;
 	}
-	catch( input_file_open_error const & ex )
+	catch( input_file_open_error const & e )
 	{
-		//handle_exception takes a list of match objects (in this case only one), each
-		//given a set of e-types. It attempts to match each set (in order) to objects of
-		//e-types available in exp, which are associated with the exception ex. If no
-		//set can be matched, handle_exeption rethrows the current exception. When
-		//a match is found, handle_exception calls the corresponding lambda function,
-		//passing the .value of each of the e-types from the matched set.
-		handle_exception( exp, ex,
+		//handle_exception takes a list of functions (in this case only one). It attempts to
+		//match each function (in order) to objects currently available in exp, which
+		//are associated with the error value stored in e. If no function can be matched,
+		//handle_exception returns false. Otherwise the matched function is invoked with
+		//the corresponding available error objects.
+		handle_exception( exp, e,
 
 			[ ] ( e_file_name const & fn, e_errno const & errn )
 			{
 				if( errn.value==ENOENT )
 					std::cerr << "File not found: " << fn.value << std::endl;
 				else
-					std::cerr << "Failed to open " << fn.value << ", errno=" << errn.value << std::endl;
+					std::cerr << "Failed to open " << fn.value << ", errno=" << errn << std::endl;
 			}
 
 		);
 		return 2;
 	}
-	catch( input_error const & ex )
+	catch( input_error const & e )
 	{
-		//In this case handle_exception is given 3 match sets. It will first check if both
-		//e_file_name and e_errno, associated with ex, are avialable in exp; if not, it will
-		//next check if just e_errno is available; and if not, the last (empty) set will
-		//always match to print a generic error message.
-		handle_exception( exp, ex,
+		//In this case handle_exception is given 3 functions. It will first check if both
+		//e_file_name and e_errno, associated with e, are avialable in exp; if not, it will
+		//next check if just e_errno is available; and if not, the last function (which
+		//takes no arguments) will always match to print a generic error message.
+		handle_exception( exp, e,
 
 			[ ] ( e_file_name const & fn, e_errno const & errn )
 			{
-				std::cerr << "Input error, " << fn.value << ", errno=" << errn.value << std::endl;
+				std::cerr << "Input error, " << fn.value << ", errno=" << errn << std::endl;
 			},
 
 			[ ] ( e_errno const & errn )
 			{
-				std::cerr << "Input error, errno=" << errn.value << std::endl;
+				std::cerr << "Input error, errno=" << errn << std::endl;
 			},
 
 			[ ]
@@ -163,14 +162,14 @@ int main( int argc, char const * argv[ ] )
 		);
 		return 3;
 	}
-	catch( std::ostream::failure const & ex )
+	catch( std::ostream::failure const & e )
 	{
 		//Report failure to write to std::cout, print the relevant errno.
-		handle_exception( exp, ex,
+		handle_exception( exp, e,
 
 			[ ] ( e_errno const & errn )
 			{
-				std::cerr << "Output error, errno=" << errn.value << std::endl;
+				std::cerr << "Output error, errno=" << errn << std::endl;
 			}
 
 		);

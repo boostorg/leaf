@@ -16,8 +16,8 @@ namespace boost { namespace leaf {
 
 	class error_capture;
 
-	template <class... M>
-	bool handle_error( error_capture const &, M && ... ) noexcept;
+	template <class... F>
+	bool handle_error( error_capture const &, F && ... ) noexcept;
 
 	template <class P>
 	P const * peek( error_capture const & ) noexcept;
@@ -90,8 +90,8 @@ namespace boost { namespace leaf {
 
 	class error_capture
 	{
-		template <class... M>
-		friend bool leaf::handle_error( error_capture const &, M && ... ) noexcept;
+		template <class... F>
+		friend bool leaf::handle_error( error_capture const &, F && ... ) noexcept;
 
 		template <class P>
 		friend P const * leaf::peek( error_capture const & ) noexcept;
@@ -279,13 +279,13 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	template <class... M>
-	bool handle_error( error_capture const & e, M && ... m ) noexcept
+	template <class... F>
+	bool handle_error( error_capture const & e, F && ... f ) noexcept
 	{
 		if( e )
 		{
 			bool matched = false;
-			{ using _ = int[ ]; (void) _ { 42, e.match(m,matched)... }; }
+			{ using _ = int[ ]; (void) _ { 42, e.match(f,matched)... }; }
 			if( matched )
 				return true;
 		}

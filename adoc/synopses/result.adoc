@@ -28,11 +28,11 @@ namespace boost { namespace leaf {
   template <class... E,class T>
   result<T> capture( expect<E...> & exp, result<T> const & r );
 
-  template <class... E,class T,class... M>
-  bool handle_error( expect<E...> & exp, result<T> & r, M && ... m ) noexcept;
+  template <class... E,class T,class... F>
+  bool handle_error( expect<E...> & exp, result<T> & r, F && ... f ) noexcept;
 
   template <class P,class... E,class T>
-  decltype(P::value) const * peek( expect<E...> const &, result<T> const & ) noexcept;
+  P const * peek( expect<E...> const &, result<T> const & ) noexcept;
 
   template <class... E,class T>
   void diagnostic_output( std::ostream & os, expect<E...> const & exp, result<T> const & r );

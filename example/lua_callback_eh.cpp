@@ -20,7 +20,11 @@ namespace leaf = boost::leaf;
 
 struct lua_failure: std::exception { };
 
-struct e_do_work_error { int value; };
+enum do_work_error_code
+{
+	ec1=1,
+	ec2
+};
 
 struct e_lua_pcall_error { int value; };
 struct e_lua_error_message { std::string value; };
@@ -43,7 +47,7 @@ int do_work( lua_State * L )
 	else
 	{
 		//Remarkably, the Lua interpreter is exception-safe. So, just throw.
-		throw leaf::exception<lua_failure>( e_do_work_error{-42} );
+		throw leaf::exception<lua_failure>(ec1);
 	}
 }
 
@@ -99,7 +103,7 @@ int call_lua( lua_State * L )
 int main() noexcept
 {
 	std::shared_ptr<lua_State> L=init_lua_state();
-	leaf::expect<e_do_work_error,e_lua_pcall_error,e_lua_error_message> exp;
+	leaf::expect<do_work_error_code,e_lua_pcall_error,e_lua_error_message> exp;
 	for( int i=0; i!=10; ++i )
 		try
 		{
@@ -110,10 +114,10 @@ int main() noexcept
 		{
 			handle_exception( exp, e,
 
-				//Handle e_do_work failures:
-				[ ]( e_do_work_error const & e )
+				//Handle do_work failures:
+				[ ]( do_work_error_code const & e )
 				{
-					std::cout << "Got e_do_work_error, value = " << e.value <<  "!\n";
+					std::cout << "Got do_work_error_code = " << e <<  "!\n";
 				},
 
 				//Handle all other lua_pcall failures:

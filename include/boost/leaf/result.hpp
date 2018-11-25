@@ -23,8 +23,8 @@ namespace boost { namespace leaf {
 	template <class... E>
 	class expect;
 
-	template <class... E, class T, class... M>
-	bool handle_error( expect<E...> &, result<T> &, M && ... ) noexcept;
+	template <class... E, class T, class... F>
+	bool handle_error( expect<E...> &, result<T> &, F && ... ) noexcept;
 
 	template <class P, class... E, class T>
 	P const * peek( expect<E...> const &, result<T> const & ) noexcept;
@@ -41,8 +41,8 @@ namespace boost { namespace leaf {
 	class result
 	{
 
-		template <class... E, class T_, class... M>
-		friend bool leaf::handle_error( expect<E...> &, result<T_> &, M && ... ) noexcept;
+		template <class... E, class T_, class... F>
+		friend bool leaf::handle_error( expect<E...> &, result<T_> &, F && ... ) noexcept;
 
 		template <class P, class... E, class T_>
 		friend P const * leaf::peek( expect<E...> const &, result<T_> const & ) noexcept;
@@ -245,8 +245,8 @@ namespace boost { namespace leaf {
 	class result<void>:
 		result<bool>
 	{
-		template <class... E,class T,class... M>
-		friend bool leaf::handle_error( expect<E...> &, result<T> &, M && ... ) noexcept;
+		template <class... E,class T,class... F>
+		friend bool leaf::handle_error( expect<E...> &, result<T> &, F && ... ) noexcept;
 
 		template <class P,class... E,class T>
 		friend P const * leaf::peek( expect<E...> const &, result<T> const & ) noexcept;
@@ -293,16 +293,16 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	template <class... E, class T, class... M>
-	bool handle_error( expect<E...> & exp, result<T> & r, M && ... m ) noexcept
+	template <class... E, class T, class... F>
+	bool handle_error( expect<E...> & exp, result<T> & r, F && ... f ) noexcept
 	{
 		assert(!r);
 		if( r.which_==result<T>::variant::err )
-			return handle_error(exp,r.err_,m...);
+			return handle_error(exp,r.err_,f...);
 		else
 		{
 			assert(r.which_==result<T>::variant::cap);
-			return handle_error(r.cap_,m...);
+			return handle_error(r.cap_,f...);
 		}
 	}
 

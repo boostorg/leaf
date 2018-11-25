@@ -15,11 +15,11 @@ namespace boost { namespace leaf {
     error unload() noexcept;
   };
 
-  template <class... M>
-  bool handle_error( error_capture const & ec, M && ... m ) noexcept;
+  template <class... F>
+  bool handle_error( error_capture const & ec, F && ... f ) noexcept;
 
   template <class P>
-  decltype(P::value) const * peek( error_capture const & ec ) noexcept;
+  P const * peek( error_capture const & ec ) noexcept;
 
   void diagnostic_output( std::ostream & os, error_capture const & ec );
 

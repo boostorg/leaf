@@ -20,10 +20,10 @@ namespace boost { namespace leaf {
   error get_error( std::exception const & ex ) noexcept;
 
   template <class P,class... E>
-  decltype(P::value) const * peek( expect<E...> const & exp, std::exception const & ex ) noexcept;
+  P const * peek( expect<E...> const & exp, std::exception const & ex ) noexcept;
 
-  template <class... M,class... E>
-  void handle_exception( expect<E...> & exp, std::exception const & ex, M && ... m );
+  template <class... E,class... F>
+  void handle_exception( expect<E...> & exp, std::exception const & ex, F && ... f );
 
   template <class... E>
   void diagnostic_output( std::ostream & os, expect<E...> const & exp, std::exception const & ex );

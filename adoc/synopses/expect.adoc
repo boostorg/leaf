@@ -17,17 +17,11 @@ namespace boost { namespace leaf {
   template <class... E>
   error_capture capture( expect<E...> & exp, error const & e );
 
-  template <class... E>
-  <<unspecified-type> match() noexcept;
-
-  template <class... E,class F>
-  <<unspecified-type> match( F && f ) noexcept;
-
-  template <class... E,class... M>
-  bool handle_error( expect<E...> & exp, error const & e, M && ... m ) noexcept;
+  template <class... E,class... F>
+  bool handle_error( expect<E...> & exp, error const & e, F && ... f ) noexcept;
 
   template <class P,class... E>
-  decltype(P::value) const * peek( expect<E...> const & exp, error const & e ) noexcept;
+  P const * peek( expect<E...> const & exp, error const & e ) noexcept;
 
   template <class... E>
   void diagnostic_output( std::ostream & os, expect<E...> const & exp );

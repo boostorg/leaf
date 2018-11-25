@@ -26,10 +26,10 @@ namespace boost { namespace leaf {
 		return peek<P>(exp,get_error(ex));
 	}
 
-	template <class... M, class... E>
-	void handle_exception( expect<E...> & exp, std::exception const & ex, M && ... m )
+	template <class... E, class... F>
+	void handle_exception( expect<E...> & exp, std::exception const & ex, F && ... f )
 	{
-		if( handle_error(exp,get_error(ex),m...) )
+		if( handle_error(exp,get_error(ex),f...) )
 			(void) error();
 		else
 			throw;
