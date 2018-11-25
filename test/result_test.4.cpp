@@ -15,12 +15,12 @@ template <class Expect>
 void check( Expect & exp, leaf::bad_result const & e )
 {
 		handle_exception( exp, e,
-			leaf::match<leaf::e_source_location>( [ ]( leaf::e_source_location::loc const & x )
+			[ ]( leaf::e_source_location const & x )
 			{
 				BOOST_TEST(strstr(x.file,"result.hpp")!=0);
 				BOOST_TEST(x.line>0);
 				BOOST_TEST(strstr(x.function,"value")!=0);
-			} ) );
+			} );
 }
 
 int main()

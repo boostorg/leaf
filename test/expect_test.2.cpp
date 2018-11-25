@@ -39,10 +39,10 @@ int main()
 		try
 		{
 			handle_exception( exp, e,
-				leaf::match<info>( [&c]( int i )
+				[&c]( info )
 				{
 					++c;
-				} ) );
+				} );
 			BOOST_TEST(false);
 		}
 		catch( my_error & )

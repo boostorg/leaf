@@ -27,7 +27,7 @@ namespace boost { namespace leaf {
 	bool handle_error( expect<E...> &, result<T> &, M && ... ) noexcept;
 
 	template <class P, class... E, class T>
-	decltype(P::value) const * peek( expect<E...> const &, result<T> const & ) noexcept;
+	P const * peek( expect<E...> const &, result<T> const & ) noexcept;
 
 	template <class... E, class T>
 	void diagnostic_output( std::ostream &, expect<E...> const &, result<T> const & );
@@ -45,7 +45,7 @@ namespace boost { namespace leaf {
 		friend bool leaf::handle_error( expect<E...> &, result<T_> &, M && ... ) noexcept;
 
 		template <class P, class... E, class T_>
-		friend decltype(P::value) const * leaf::peek( expect<E...> const &, result<T_> const & ) noexcept;
+		friend P const * leaf::peek( expect<E...> const &, result<T_> const & ) noexcept;
 
 		template <class... E, class T_>
 		friend void leaf::diagnostic_output( std::ostream &, expect<E...> const &, result<T_> const & );
@@ -249,7 +249,7 @@ namespace boost { namespace leaf {
 		friend bool leaf::handle_error( expect<E...> &, result<T> &, M && ... ) noexcept;
 
 		template <class P,class... E,class T>
-		friend decltype(P::value) const * leaf::peek( expect<E...> const &, result<T> const & ) noexcept;
+		friend P const * leaf::peek( expect<E...> const &, result<T> const & ) noexcept;
 
 		template <class... E,class T>
 		friend void leaf::diagnostic_output( std::ostream &, expect<E...> const &, result<T> const & );
@@ -307,7 +307,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class P, class... E, class T>
-	decltype(P::value) const * peek( expect<E...> const & exp, result<T> const & r ) noexcept
+	P const * peek( expect<E...> const & exp, result<T> const & r ) noexcept
 	{
 		assert(!r);
 		if( r.which_==result<T>::variant::err )

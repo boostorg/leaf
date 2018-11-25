@@ -21,7 +21,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class P, class... E>
-	decltype(P::value) const * peek( expect<E...> const & exp, std::exception const & ex ) noexcept
+	P const * peek( expect<E...> const & exp, std::exception const & ex ) noexcept
 	{
 		return peek<P>(exp,get_error(ex));
 	}

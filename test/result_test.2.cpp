@@ -402,7 +402,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2 = r1;
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}
@@ -417,7 +417,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2 = r1;
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}
@@ -432,7 +432,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2 = std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}
@@ -447,7 +447,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2 = std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}
@@ -462,7 +462,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2; r2=r1;
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}
@@ -477,7 +477,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2; r2=r1;
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}
@@ -492,7 +492,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2; r2=std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}
@@ -507,7 +507,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2; r2=std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}
@@ -522,7 +522,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2 = r1;
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}
@@ -537,7 +537,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2 = r1;
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}
@@ -552,7 +552,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2 = std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}
@@ -567,7 +567,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2 = std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}
@@ -582,7 +582,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2; r2=r1;
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}
@@ -597,7 +597,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2; r2=r1;
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}
@@ -612,7 +612,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2; r2=std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}
@@ -627,7 +627,7 @@ int main()
 		BOOST_TEST(val::count==0);
 		leaf::result<val> r2; r2=std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST(handle_error(exp,r2,leaf::match<>()));
+		BOOST_TEST(handle_error(exp,r2,[ ]{ }));
 		BOOST_TEST(err::count==1);
 		BOOST_TEST(val::count==0);
 	}

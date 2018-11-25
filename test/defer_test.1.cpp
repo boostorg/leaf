@@ -39,12 +39,13 @@ int main()
 {
 	leaf::expect<info> exp;
 	int c=0;
-	BOOST_TEST( handle_error( exp, f(),
-		leaf::match<info>( [&c]( int i42 )
+	bool handled = handle_error( exp, f(),
+		[&c]( info const & i42 )
 		{
-			BOOST_TEST(i42==42);
+			BOOST_TEST(i42.value==42);
 			++c;
-		} ) ) );
+		} );
+	BOOST_TEST(handled);
 	return boost::report_errors();
 	BOOST_TEST(c==1);
 }

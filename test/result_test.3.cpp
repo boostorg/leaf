@@ -54,6 +54,6 @@ int main()
 	leaf::expect<e_err1,e_err2> exp;
 	leaf::result<int> r2 = r0.error( e_err2{ } );
 	BOOST_TEST(err::count==2);
-	BOOST_TEST(handle_error(exp,r2,leaf::match<e_err1,e_err2>()));
+	BOOST_TEST(handle_error(exp,r2,[ ](e_err1,e_err2){ }));
 	return boost::report_errors();
 }
