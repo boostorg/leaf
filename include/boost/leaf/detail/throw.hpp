@@ -10,7 +10,7 @@
 #include <boost/leaf/common.hpp>
 #include <exception>
 
-#define LEAF_THROW ::boost::leaf::next_error_value().propagate(::boost::leaf::e_source_location{__FILE__,__LINE__,__FUNCTION__}),throw::boost::leaf::exception
+#define LEAF_THROW ::boost::leaf::next_error_value().propagate(::boost::leaf::meta::e_source_location{__FILE__,__LINE__,__FUNCTION__}),throw::boost::leaf::exception
 
 namespace boost { namespace leaf {
 

@@ -32,7 +32,7 @@ namespace boost { namespace leaf {
 	template <class... E, class T>
 	void diagnostic_output( std::ostream &, expect<E...> const &, result<T> const & );
 
-	template <class... E,class T>
+	template <class... E, class T>
 	result<T> capture( expect<E...> &, result<T> const & );
 
 	////////////////////////////////////////
@@ -50,7 +50,7 @@ namespace boost { namespace leaf {
 		template <class... E, class T_>
 		friend void leaf::diagnostic_output( std::ostream &, expect<E...> const &, result<T_> const & );
 
-		template <class... E,class T_>
+		template <class... E, class T_>
 		friend result<T_> leaf::capture( expect<E...> &, result<T_> const & );
 
 		union
@@ -245,16 +245,16 @@ namespace boost { namespace leaf {
 	class result<void>:
 		result<bool>
 	{
-		template <class... E,class T,class... F>
+		template <class... E, class T, class... F>
 		friend bool leaf::handle_error( expect<E...> &, result<T> &, F && ... ) noexcept;
 
-		template <class P,class... E,class T>
+		template <class P, class... E, class T>
 		friend P const * leaf::peek( expect<E...> const &, result<T> const & ) noexcept;
 
-		template <class... E,class T>
+		template <class... E, class T>
 		friend void leaf::diagnostic_output( std::ostream &, expect<E...> const &, result<T> const & );
 
-		template <class... E,class T>
+		template <class... E, class T>
 		friend result<T> leaf::capture( expect<E...> &, result<T> const & );
 
 		typedef result<bool> base;
@@ -332,7 +332,7 @@ namespace boost { namespace leaf {
 		}
 	}
 
-	template <class... E,class T>
+	template <class... E, class T>
 	result<T> capture( expect<E...> & exp, result<T> const & r )
 	{
 		if( r.which_==result<T>::variant::err )

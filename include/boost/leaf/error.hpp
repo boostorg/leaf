@@ -8,6 +8,7 @@
 #define UUID_BA049396D0D411E8B45DF7D4A759E189
 
 #include <boost/leaf/detail/optional.hpp>
+#include <boost/leaf/detail/print.hpp>
 #include <atomic>
 #include <cstdio>
 #include <climits>
@@ -15,23 +16,39 @@
 #include <type_traits>
 #include <system_error>
 
-#define LEAF_ERROR ::boost::leaf::next_error_value().propagate(::boost::leaf::e_source_location{__FILE__,__LINE__,__FUNCTION__}),::boost::leaf::error
+#define LEAF_ERROR ::boost::leaf::next_error_value().propagate(::boost::leaf::meta::e_source_location{__FILE__,__LINE__,__FUNCTION__}),::boost::leaf::error
 
 namespace boost { namespace system { class error_code; } }
 
 namespace boost { namespace leaf {
 
-	struct e_source_location
+	namespace meta
 	{
-		char const * const file;
-		int const line;
-		char const * const function;
-
-		friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
+		struct e_source_location
 		{
-			return os << "At " << x.file << '(' << x.line << ") in function " << x.function << std::endl;
-		}
-	};
+			char const * const file;
+			int const line;
+			char const * const function;
+
+			friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
+			{
+				return os << "At " << x.file << '(' << x.line << ") in function " << x.function << std::endl;
+			}
+		};
+
+		struct e_unexpected
+		{
+			char const * (*first_type)();
+			int count;
+
+			friend std::ostream & operator<<( std::ostream & os, e_unexpected const & x )
+			{
+				assert(x.first_type!=0);
+				assert(x.count>0);
+				return os << "Detected  " << x.count << " attempt(s) to communicate unexpected error objects, first is of type " << x.first_type() << std::endl;
+			}
+		};
+	}
 
 	namespace leaf_detail
 	{
@@ -56,7 +73,8 @@ namespace boost { namespace leaf {
 
 	template <> struct is_error_type<system::error_code>: std::true_type { };
 	template <> struct is_error_type<std::error_code>: std::true_type { };
-	template <> struct is_error_type<e_source_location>: std::true_type { };
+	template <> struct is_error_type<meta::e_unexpected>: std::true_type { };
+	template <> struct is_error_type<meta::e_source_location>: std::true_type { };
 
 	////////////////////////////////////////
 
@@ -222,9 +240,21 @@ namespace boost { namespace leaf {
 		E * put_slot( E && v, error const & e ) noexcept
 		{
 			if( leaf_detail::slot<E> * p = leaf_detail::tl_slot_ptr<E>() )
-				return &p->put(leaf_detail::error_info<E>{std::forward<E>(v),e}).v;
-			else
-				return 0;
+				return &p->put( leaf_detail::error_info<E>{std::forward<E>(v),e} ).v;
+			else if( leaf_detail::slot<meta::e_unexpected> * p = leaf_detail::tl_slot_ptr<meta::e_unexpected>() )
+			{
+				if( p->has_value() )
+				{
+					auto & v = p->value();
+					if( v.e==e )
+					{
+						++v.v.count;
+						return 0;
+					}
+				}
+				(void) p->put( leaf_detail::error_info<meta::e_unexpected>{meta::e_unexpected{&type<E>,1},e} );
+			}
+			return 0;
 		}
 	} //leaf_detail
 

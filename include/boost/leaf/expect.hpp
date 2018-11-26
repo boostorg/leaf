@@ -9,7 +9,6 @@
 
 #include <boost/leaf/error.hpp>
 #include <boost/leaf/detail/function_traits.hpp>
-#include <boost/leaf/detail/print.hpp>
 #include <tuple>
 
 namespace boost { namespace leaf {

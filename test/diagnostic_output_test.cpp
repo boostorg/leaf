@@ -73,7 +73,7 @@ int main()
 			non_printable_info_printable_payload,
 			non_printable_info_non_printable_payload,
 			leaf::e_errno,
-			leaf::e_source_location
+			leaf::meta::e_source_location
 			> exp;
 		try
 		{

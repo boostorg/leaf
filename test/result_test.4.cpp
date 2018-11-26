@@ -15,7 +15,7 @@ template <class Expect>
 void check( Expect & exp, leaf::bad_result const & e )
 {
 		handle_exception( exp, e,
-			[ ]( leaf::e_source_location const & x )
+			[ ]( leaf::meta::e_source_location const & x )
 			{
 				BOOST_TEST(strstr(x.file,"result.hpp")!=0);
 				BOOST_TEST(x.line>0);
@@ -26,7 +26,7 @@ void check( Expect & exp, leaf::bad_result const & e )
 int main()
 {
 	{
-		leaf::expect<leaf::e_source_location> exp;
+		leaf::expect<leaf::meta::e_source_location> exp;
 		try
 		{
 			leaf::result<int> r((leaf::error()));
@@ -39,7 +39,7 @@ int main()
 		}
 	}
 	{
-		leaf::expect<leaf::e_source_location> exp;
+		leaf::expect<leaf::meta::e_source_location> exp;
 		try
 		{
 			leaf::result<int> const r((leaf::error()));
@@ -52,7 +52,7 @@ int main()
 		}
 	}
 	{
-		leaf::expect<leaf::e_source_location> exp;
+		leaf::expect<leaf::meta::e_source_location> exp;
 		try
 		{
 			leaf::result<int> r((leaf::error()));
@@ -65,7 +65,7 @@ int main()
 		}
 	}
 	{
-		leaf::expect<leaf::e_source_location> exp;
+		leaf::expect<leaf::meta::e_source_location> exp;
 		try
 		{
 			leaf::result<int> const r((leaf::error()));

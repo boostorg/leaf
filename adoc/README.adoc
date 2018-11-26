@@ -31,12 +31,12 @@ LEAF is a {CPP}11 error handling library. Features:
 https://github.com/zajo/leaf[GitHub] | <<introduction,Introduction>> | <<tutorial>> | <<techniques>> | <<synopsis>> | <<reference>> | <<rationale>>
 ====
 
-NOTE: If you're at least an intermediate level developer and have seen `expected`/`outcome`-like interfaces before, and you are also wondering how the heck you can return a type-erased error object without using heap allocations, you may want to read the <<rationale>> first.
+NOTE: If you are at least an intermediate level developer and have seen `expected`/`outcome`-like interfaces before, and you are also wondering how the heck you can return a type-erased error object without using heap allocations, you may want to read the <<rationale>> first.
 
 [[introduction]]
 == Two Minute Introduction
 
-Let's assume that to handle errors from a given function `f` we need an error code and a file name. In addition -- depending on the error -- we may need a request ID, also a string. In terms of LEAF, we can write:
+Let's suppose that to handle errors from a given function `f` we need an error code and a file name. In addition -- depending on the error -- we may need a request ID, also of type string. In terms of LEAF, we can write:
 
 ====
 [source,c++]
@@ -68,7 +68,7 @@ Let's assume that to handle errors from a given function `f` we need an error co
 ----
 <1> The `exp` object provides storage for an `error_code`, an `e_file_name` and an `e_request_id`, which `f()` (next line) may communicate in case it fails.
 <2> Successful result values are stored inside of `r` of type `result<T>`, which is a value-or-error variant type.
-<3> The call to `f()` has failed; `handle_error` takes `exp`, `r`, and any number of error handling functions to be matched, in order, against error objects available in `exp`, associated with `r`.
+<3> The call to `f()` has failed; `handle_error` takes `exp`, `r`, and any number of error handling functions to be matched, in order, against the objects currently stored in `exp`, associated with `r`.
 <4> Handle the case where we received `error_code`, `e_file_name` and `e_request_id` (associated with the failure reported in `r`).
 <5> Handle the case where we only received `error_code` and `e_file_name` (associated with the failure reported in `r`).
 
@@ -88,7 +88,7 @@ enum error_code
 };
 ----
 
-Because both the file name and the request ID are strings, we will wrap each of them in a simple `struct`, so we can tell them apart:
+Because both the file name and the request ID are strings, we will wrap each of them in a simple `struct`, so that the type system can tell them apart:
 
 [source,c++]
 ----
@@ -116,7 +116,7 @@ leaf::result<T> g() noexcept
 `<<result,result>>` | `<<error::error,error::error>>`
 ====
 
-Forwarding an error reported by a lower level function looks like this:
+Forwarding errors reported by a lower level function looks like this:
 
 ====
 [source,c++]
@@ -133,7 +133,7 @@ leaf::result<T> f() noexcept
 }
 ----
 <1> Success, return `r`.
-<2> Forward the error reported in `r`, storing `e_file_name` in appropriate `expect` object(s) from calling scopes. The file name will be associated with the error in addition to the relevant `error_code` and `e_request_id` which (presumably) `g()` has already communicated.
+<2> Forward the error reported in `r`, storing `e_file_name` in appropriate `expect` object(s) from calling scopes. The file name will be associated with the error, in addition to the relevant `error_code` and `e_request_id` which, presumably, `g()` has already communicated.
 
 [.text-right]
 `<<result,result>>` | `<<result::error,result::error>>`
@@ -143,7 +143,7 @@ leaf::result<T> f() noexcept
 
 That would be a 1-minute introduction. :-)
 
-Let's assume that to handle exceptions from a given function `f` we need a file name. In addition -- depending on the error -- we may need a request ID, also a string. In terms of LEAF, we can write:
+Let's assume that to handle exceptions from a given function `f` we need a file name. In addition -- depending on the error -- we may need a request ID, also of type string. In terms of LEAF, we can write:
 
 ====
 [source,c++]
@@ -174,7 +174,7 @@ Let's assume that to handle exceptions from a given function `f` we need a file 
 }
 ----
 <1> The `exp` object provides storage for an `e_file_name` and an `e_request_id`, which `f()` (next line) may communicate in case it throws.
-<2> We caught a `my_error` exception; `handle_error` takes `exp`, `e`, and any number of error handling functions to be matched, in order, against error objects available in `exp`, associated with `e`.
+<2> We caught a `my_error` exception; `handle_error` takes `exp`, `e`, and any number of error handling functions to be matched, in order, against the error objects currently stored in `exp`, associated with `e`.
 <3> Handle the case where we received `e_file_name` and `e_request_id` (associated with the failure reported by `e`).
 <4> Handle the case where we only received `e_file_name` (associated with the failure reported by `e`).
 
@@ -182,7 +182,7 @@ Let's assume that to handle exceptions from a given function `f` we need a file 
 `<<expect,expect>>` | <<handle_exception>>
 ====
 
-Because both the file name and the request ID are strings, we will wrap each of them in a simple `struct`, so we can tell them apart:
+Because both the file name and the request ID are strings, we will wrap each of them in a simple `struct`, so that the type system can tell them apart:
 
 [source,c++]
 ----
@@ -222,7 +222,7 @@ void f()
   g();
 }
 ----
-<1> In case `g()` (next line) throws, the file name will be associated with the exception object, in addition to the relevant `e_request_id` which (presumably) `g()` has already communicated.
+<1> In case `g()` (next line) throws, the file name will be associated with the exception object, in addition to the relevant `e_request_id` which, presumably, `g()` has already communicated.
 
 [.text-right]
 <<preload>>
@@ -304,7 +304,7 @@ leaf::result<void> file_read( FILE & f, void * buf, int size )
 `<<result,result>>` | `<<error::error,error::error>>`
 ====
 
-NOTE: `leaf::error` may be passed objects of arbitrary movable types, however objects of types that are not unique to error handling -- such as `errno` values, which are of type `int` -- should be wrapped in a `struct`. By convention, such structs use the `e_` prefix and contain a single data member called `value`, e.g. `struct e_errno { int value; }`. +
+NOTE: `leaf::error` may be passed objects of arbitrary movable types, however objects of types that are not specific to error handling -- such as `errno` values, which are of type `int` -- should be wrapped in a `struct`. By convention, such structs use the `e_` prefix and contain a single data member called `value`, e.g. `struct e_errno { int value; }`. +
  +
 Similarly, we could define `struct e_input_name { std::string value; }` and `struct e_output_name { std::string value; }` and LEAF will treat them as separate entities even though their `.value` members are of the same type `std::string`.
 
@@ -517,7 +517,6 @@ NOTE: The complete program from this tutorial is available https://github.com/za
 
 And now, we'll write the same program that reads a text file in a buffer and prints it to `std::cout`, this time using exceptions to report errors. First, we need to define our exception class hierarchy:
 
-====
 [source,c++]
 ----
 struct print_file_error : virtual std::exception { };
@@ -530,7 +529,6 @@ struct input_file_size_error : virtual input_file_error { };
 struct input_file_read_error : virtual input_file_error { };
 struct input_eof_error : virtual input_file_error { };
 ----
-====
 
 TIP: To avoid ambiguities in the implicit type conversion done when catching a base type, it is generally recommended to use virtual inheritance in exception type hierarchies.
 
@@ -557,7 +555,7 @@ void file_read( FILE & f, void * buf, int size )
 <<exception>>
 ====
 
-NOTE: `leaf::error` may be passed objects of arbitrary movable types, however objects of types that are not unique to error handling -- such as `errno` values, which are of type `int` -- should be wrapped in a `struct`. By convention, such structs use the `e_` prefix and contain a single data member called `value`, e.g. `struct e_errno { int value; }`. +
+NOTE: `leaf::error` may be passed objects of arbitrary movable types, however objects of types that are not specific to error handling -- such as `errno` values, which are of type `int` -- should be wrapped in a `struct`. By convention, such structs use the `e_` prefix and contain a single data member called `value`, e.g. `struct e_errno { int value; }`. +
  +
 Similarly, we could define `struct e_input_name { std::string value; }` and `struct e_output_name { std::string value; }` and LEAF will treat them as separate entities even though their `.value` members are of the same type `std::string`.
 
@@ -904,7 +902,7 @@ NOTE: `error_capture` objects are useful for transporting error objects across t
 ----
 namespace boost { namespace leaf {
 
-  template <class... E,class... F>
+  template <class... E, class... F>
   bool handle_error( expect<E...> & exp, error const & e, F && ... f ) noexcept;
 
 } }
@@ -957,7 +955,7 @@ Assuming `struct e_file_name { std::string value; }` and `struct e_errno { int v
 ----
 namespace boost { namespace leaf {
 
-  template <class P,class... E>
+  template <class P, class... E>
   P const * peek( expect<E...> const & exp, error const & e ) noexcept;
 
 } }
@@ -1551,7 +1549,7 @@ NOTE: For an example, see <<technique_transport-result,Transporting Errors betwe
 ----
 namespace boost { namespace leaf {
 
-  template <class... E,class T,class... F>
+  template <class... E, class T, class... F>
   bool result::handle_error( expect<E...> & exp, result<T> & r, F && ... f ) noexcept;
 
 } }
@@ -1573,7 +1571,7 @@ Returns: ::
 ----
 namespace boost { namespace leaf {
 
-  template <class P,class... E,class T>
+  template <class P, class... E, class T>
   P const * peek( expect<E...> const & exp, result<T> const & r ) noexcept;
 
 } }
@@ -1595,7 +1593,7 @@ Returns: ::
 ----
 namespace boost { namespace leaf {
 
-  template <class... E,class T>
+  template <class... E, class T>
   void diagnostic_output( std::ostream & os, expect<E...> const & exp, result<T> const & r );
 
 } }
@@ -1635,7 +1633,7 @@ This exception is thrown by `<<result::value,value>>()`/`<<result::value,operato
 #define LEAF_ERROR <<unspecified>>
 ----
 
-Effects: :: `LEAF_ERROR(e...)` is equivalent to `leaf::<<error::error,error>>(e...)`, except the current source location is automatically passed to the `leaf::error` constructor, in a `<<common,e_source_location>>` object.
+Effects: :: `LEAF_ERROR(e...)` is equivalent to `leaf::<<error::error,error>>(e...)`, except the current source location is automatically passed to the `leaf::error` constructor, in a `<<common,meta::e_source_location>>` object.
 
 NOTE: `LEAF_ERROR` is designed for use in `return` expressions, to automatically communicate the location of the error being reported (but see <<expect>>).
 
@@ -1677,7 +1675,7 @@ include::synopses/exception.adoc[]
 ----
 namespace boost { namespace leaf {
 
-  template <class... E,class F>
+  template <class... E, class F>
   <<unspecified-type>> capture_exception( F && f ) noexcept;
 
   template <class Future>
@@ -1735,7 +1733,7 @@ IMPORTANT: If thrown, a `leaf::<<exception,exception>><Ex>` can be caught as `Ex
 #define LEAF_THROW <<unspecified>>
 ----
 
-Effects: :: `LEAF_THROW<Ex>(e...)` is equivalent to `throw leaf::<<exception::exception,exception>><Ex>(e...)`, except the current source location is automatically passed to the `leaf::exception` constructor, in a `<<common,e_source_location>>` object.
+Effects: :: `LEAF_THROW<Ex>(e...)` is equivalent to `throw leaf::<<exception::exception,exception>><Ex>(e...)`, except the current source location is automatically passed to the `leaf::exception` constructor, in a `<<common,meta::e_source_location>>` object.
 
 '''
 
@@ -1747,7 +1745,7 @@ Effects: :: `LEAF_THROW<Ex>(e...)` is equivalent to `throw leaf::<<exception::ex
 ----
 namespace boost { namespace leaf {
 
-  template <class... E,class F>
+  template <class... E, class F>
   <<unspecified-type>> capture_exception( F && f ) noexcept;
 
 } }
@@ -1814,7 +1812,7 @@ IMPORTANT: A successful call to `<<handle_exception,handle_exception>>` breaks t
 ----
 namespace boost { namespace leaf {
 
-  template <class... E,class... F>
+  template <class... E, class... F>
   void handle_exception( expect<E...> & exp, std::exception const & ex, F && ... f );
 
 } }
@@ -1834,7 +1832,7 @@ IMPORTANT: In case the dynamic type of `ex` does not derive from `leaf::error` a
 ----
 namespace boost { namespace leaf {
 
-  template <class P,class... E>
+  template <class P, class... E>
   P const * peek( expect<E...> const & exp, std::exception const & ex ) noexcept;
 
 } }
@@ -1887,8 +1885,6 @@ Effects: :: This function prints a developer-friendly (but not user-friendly) di
 .#include <boost/leaf/common.hpp>
 [source,c++]
 ----
-#define LEAF_SOURCE_LOCATION ::boost::leaf::e_source_location{::boost::leaf::e_source_location::loc(__FILE__,__LINE__,__FUNCTION__)}
-
 namespace boost { namespace leaf {
 
   struct e_api_function { char const * value; };
@@ -1900,15 +1896,25 @@ namespace boost { namespace leaf {
     friend std::ostream & operator<<( std::ostream & os, e_errno const & err );
   };
 
-  struct e_source_location
+  namespace meta
   {
-    char const * const file;
-    int const line;
-    char const * const function;
+    struct e_source_location
+    {
+      char const * const file;
+      int const line;
+      char const * const function;
 
-    friend std::ostream & operator<<( std::ostream & os, e_source_location const & x );
-  };
+      friend std::ostream & operator<<( std::ostream & os, e_source_location const & x );
+    };
 
+    struct e_unexpected
+    {
+      char const * (*first_type)();
+      int count;
+
+      friend std::ostream & operator<<( std::ostream & os, e_unexpected const & x );
+    };
+  }
 } }
 ----
 ====
@@ -1920,7 +1926,8 @@ This header defines some common error types which can be used directly:
 WARNING: The passed value is stored as a C string, so you should only pass string literals for `value`.
 - When a file operation fails, you could use `e_file_name` to store the name of the file.
 - `e_errno` is suitable to capture `errno`. `e_errno` objects use `strerror` to convert the `errno` code to a friendlier error message when `<<diagnostic_output-expect,diagnostic_output>>` is invoked.
-- The `LEAF_SOURCE_LOCATION` macro captures `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `e_source_location` object.  When `<<diagnostic_output-expect,diagnostic_output>>` is invoked, all three items are printed.
+- The <<LEAF_ERROR>> and <<LEAF_THROW>> macros capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `meta::e_source_location` object, if there is currently `<<expect,expect>>` storage available for it.  When `<<diagnostic_output-expect,diagnostic_output>>` is invoked, all three items are printed.
+- Whenever an error object of unexpected type (a type for which there is currently no `<<expect,expect>>` storage available) is passed to the `leaf::error` <<error::error,constructor>> or other similar function, if there is currently `expect` storage available for `meta::e_unexpected`, LEAF will communicate the type of the object in the first such occurrence, as well as the count of these occurrences regardless of type.
 
 [[techniques]]
 == Programming Techniques
