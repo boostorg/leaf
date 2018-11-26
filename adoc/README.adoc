@@ -696,7 +696,7 @@ NOTE: The complete program from this tutorial is available https://github.com/za
 [[synopsis]]
 == Synopsis
 
-*Class Template `expect`*
+=== Class Template `expect`
 ====
 include::synopses/expect.adoc[]
 
@@ -704,7 +704,7 @@ include::synopses/expect.adoc[]
 <<expect>> | <<expect::expect>> | <<expect-dtor>> | <<expect::propagate>> | <<capture-expect>> | <<handle_error-expect>> | <<peek-expect>> | <<diagnostic_output-expect>>
 ====
 
-*Class `error`*
+=== Class `error`
 ====
 include::synopses/error.adoc[]
 
@@ -712,7 +712,7 @@ include::synopses/error.adoc[]
 <<error>> | <<error::error>> | <<error::propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>> | <<next_error_value>>
 ====
 
-*Automatic Propagation*
+=== Automatic Propagation
 ====
 include::synopses/preload-defer.adoc[]
 
@@ -720,7 +720,7 @@ include::synopses/preload-defer.adoc[]
 <<preload>> | <<defer>>
 ====
 
-*Class `error_capture`*
+=== Class `error_capture`
 ====
 include::synopses/error_capture.adoc[]
 
@@ -728,7 +728,7 @@ include::synopses/error_capture.adoc[]
 <<error_capture>> | <<error_capture::error_capture>> | <<error_capture::operator_bool>> | <<error_capture::unload>> | <<handle_error-error_capture>> | <<peek-error_capture>> | <<diagnostic_output-error_capture>>
 ====
 
-*Class Template `result`*
+=== Class Template `result`
 ====
 include::synopses/result.adoc[]
 
@@ -736,7 +736,7 @@ include::synopses/result.adoc[]
 <<result>> | <<result::result>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<capture-result>> | <<handle_error-result>> | <<peek-result>> | <<diagnostic_output-result>> | <<bad_result>> | <<LEAF_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
 ====
 
-*Class Template `exception`*
+=== Class Template `exception`
 ====
 include::synopses/exception.adoc[]
 
@@ -744,15 +744,24 @@ include::synopses/exception.adoc[]
 <<exception>> | <<exception::exception>> | <<get_error>> | <<peek-exception>> | <<handle_exception>> | <<diagnostic_output-exception>> | <<LEAF_THROW>>
 ====
 
+=== Common Error Types
+
+====
+include::synopses/common.adoc[]
+
+[.text-right]
+<<common>>
+====
+
 [[reference]]
 == Reference
 
 [[wrapping]]
-=== Wrapping Error Objects
+=== Wrapping of Error Types
 
 With LEAF, users can efficiently associate with errors or with exceptions any number of values that pertain to a failure. These values may be of any no-throw movable type for which the <<is_error_type>> template is properly specialized.
 
-However, when using general types that are not specific to error handling, each value should be enclosed in a C-`struct` that acts as its compile-time identifier and gives it semantic meaning. Examples:
+However, when transporting objects of general types that are not specific to error handling, each value should be enclosed in a C-`struct` that acts as its compile-time identifier and gives it semantic meaning. Examples:
 
 [source,c++]
 ----
@@ -770,13 +779,15 @@ Various LEAF functions take a list of error objects to associate with an `<<erro
 return leaf::error( my_error_code, e_input_name{n1}, e_output_name{n2} );
 ----
 
-Similar types that define an accessible data member `value` can be used with LEAF without having to specialize the `is_error_type` template. By convention such types should use the `e_` prefix.
+Similar types that define an accessible data member `value` can be used with LEAF without having to specialize the `is_error_type` template. By convention such types use the `e_` prefix.
 
-*Diagnostic Information*
+'''
 
-LEAF will attempt to print error objects in various `diagnostic_output` overloads it defines. It will first attempt to use `operator<<` overload that takes the actual error object type (e.g. the enclosing `struct`). If such overload does not exist, the fallback is to attempt to use `operator<<` overload that takes the `.value` (in case the error object type defines it). If that also doesn't work, LEAF is unable to print values of that particular error type (this is permissible, not an error).
+=== Diagnostic Information
 
-The `diagnostic_output` functions in LEAF can use the error types defined in the snippet above by default, because `int` and `std::string` values are printable. But even with printable values, the user may still want to overload `operator<<` for the enclosing `struct`, e.g.:
+LEAF will attempt to print error objects in various `diagnostic_output` overloads it defines. It will first attempt to use `operator<<` overload that takes the actual error object type (e.g. the enclosing `struct`, see <<wrapping>>). If such overload does not exist, the fallback is to attempt to use `operator<<` overload that takes the `.value` (in case the error object type defines it). If that also doesn't work, LEAF is unable to print values of that particular error type (this is permissible, not an error).
+
+Even with types that define a printable `.value`, the user may still want to overload `operator<<` for the enclosing `struct`, e.g.:
 
 [source,c++]
 ----
@@ -791,7 +802,7 @@ struct e_errno
 };
 ----
 
-The `e_errno` type above is designed to hold `errno` values. The defined `operator<<` overload will automatically include the output from `strerror` when `e_errno` values are printed by `diagnostic_output` overloads (LEAF defines `e_errno` in `<boost/leaf/common.hpp>`, together with other commonly-used e-types).
+The `e_errno` type above is designed to hold `errno` values. The defined `operator<<` overload will automatically include the output from `strerror` when `e_errno` values are printed by `diagnostic_output` overloads (LEAF defines `e_errno` in `<boost/leaf/common.hpp>`, together with other commonly-used error types).
 
 TIP: The output from `diagnostic_output` overloads is developer-friendly but not user-friendly. Therefore, `operator<<` overloads for error types should only print technical information in English, and should not attempt to localize strings or to format a message. Formatting a localized user-friendly message should be done at the time individual errors are handled.
 
@@ -811,9 +822,9 @@ All `expect<E...>` objects must use automatic storage duration. They are not cop
 
 An `expect<E...>` object contains exactly `sizeof...(E)` _slots_, each slot providing storage for a single object of the corresponding type `E`.  It is invalid to specify the same type more than once in `E...`; so, each type `E` uniquely identifies an `expect` slot. All slots are initially empty.
 
-Slots of the same type `E` across different `expect` objects (that belong to the calling thread)  form a stack. The slot created last for a given type `E` is at the top of that stack. When an object is passed to the `leaf::<<error,error>>` constructor, it is moved into the corresponding slot on the top of that stack, and is associated with that `leaf::error` value. If no `expect` objects contain a corresponding slot, the e-object passed to the `leaf::error` constructor is discarded.
+Slots of the same type `E` across different `expect` objects (that belong to the calling thread)  form a stack. The slot created last for a given type `E` is at the top of that stack. When an object is passed to the `leaf::<<error,error>>` constructor, it is moved into the corresponding slot on the top of that stack, and is associated with that `leaf::error` value. If no `expect` objects contain a corresponding slot, the object passed to the `leaf::error` constructor is discarded (however, see <<e_unexpected>>).
 
-An object stored in an `expect` slot can be accessed in several different ways, all requiring the `leaf::error` value it was associated with. While an `expect` object can not store multiple values of the same type, this association guarantees that the returned object pertains to that specific `error` value.
+An object stored in an `expect` slot can be accessed in several different ways, all requiring the `leaf::error` value it was associated with. While an `expect` object can not store multiple values of the same type, this association guarantees that the object being accessed pertains to that specific `error` value (`error` values act as program-wide unique failure identifiers).
 
 Iff an error was successfully handled (for example, a call to `<<handle_error-expect,handle_error>>` returned `true`), then `~expect` discards all objects stored in `*this`. Otherwise, each stored object is moved to the corresponding slot one level below the top of the stack formed by the slots of the same type across different `expect` objects. If that stack is empty, the object is discarded.
 
@@ -1133,7 +1144,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-The `is_error_type` template should be specialized for each user-defined type which the user desires to be used as an error type with LEAF, for example:
+The `is_error_type` template should be specialized for each user-defined type which the user desires to be used as an error type within LEAF, for example:
 
 [source,c++]
 ----
@@ -1393,7 +1404,7 @@ namespace boost { namespace leaf {
 
 Effects: :: Prints diagnostic information about the objects stored in `ec`.
 
-NOTE: The printing of each individual e-object is done by the rules described <<wrapping,here>>.
+NOTE: The printing of each individual object is done by the rules described <<wrapping,here>>.
 
 '''
 
@@ -1753,7 +1764,7 @@ namespace boost { namespace leaf {
 
 Requirements: :: `F` must be a function type.
 
-Returns: :: A function of unspecified type which wraps `f` and, when called, forwards all its arguments to `f`, capturing the specified `E...` <<e-types>> in case it throws.
+Returns: :: A function of unspecified type which wraps `f` and, when called, forwards all its arguments to `f`, capturing the specified `E...` types in case it throws.
 
 NOTE: The `capture_exception` function is designed for use with `<<get,get>>`, to effectively transport error objects across thread boundaries (for example see <<technique_transport-exceptions,Transporting Errors between Threads using Exception Handling>>).
 
@@ -1881,20 +1892,78 @@ Effects: :: This function prints a developer-friendly (but not user-friendly) di
 [[common]]
 === Common Error Types
 
+
 ====
-.#include <boost/leaf/common.hpp>
+include::synopses/common.adoc[]
+====
+
+This header defines some common error types which can be used directly.
+
+'''
+
+[[e_api_function]]
+==== `e_api_function`
+
 [source,c++]
 ----
 namespace boost { namespace leaf {
 
   struct e_api_function { char const * value; };
+
+} }
+----
+
+
+The `e_api_function` type is designed to capture the name of the API function which returned an error. For example, if you're reporting an error from `fread`, you could use `leaf::e_api_function { "fread" }`.
+
+WARNING: The passed value is stored as a C string, so you should only pass string literals for `value`.
+
+'''
+
+[[e_file_name]]
+==== `e_file_name`
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
   struct e_file_name { std::string value; };
+
+} }
+----
+
+When a file operation fails, you could use `e_file_name` to store the name of the file.
+
+'''
+
+[[e_errno]]
+==== `e_errno`
+
+[source,c++]
+----
+namespace boost { namespace leaf {
 
   struct e_errno
   {
     int value;
     friend std::ostream & operator<<( std::ostream & os, e_errno const & err );
   };
+
+} }
+----
+
+`e_errno` is suitable to capture `errno`. `e_errno` objects use `strerror` to convert the `errno` code to a friendlier error message when `<<diagnostic_output-expect,diagnostic_output>>` is invoked.
+
+TIP: It is usually a logic error to use `e_errno` with <<preload>>; it should be passed to the `error` <<error::error,constructor>> directly, or used with <<defer>>.
+
+'''
+
+[[e_source_location]]
+==== `meta::e_source_location`
+
+[source,c++]
+----
+namespace boost { namespace leaf {
 
   namespace meta
   {
@@ -1906,7 +1975,24 @@ namespace boost { namespace leaf {
 
       friend std::ostream & operator<<( std::ostream & os, e_source_location const & x );
     };
+  }
 
+} }
+----
+
+The <<LEAF_ERROR>> and <<LEAF_THROW>> macros capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `meta::e_source_location` object, if there is currently `<<expect,expect>>` storage available for it.  When `<<diagnostic_output-expect,diagnostic_output>>` is invoked, all three items are printed.
+
+'''
+
+[[e_unexpected]]
+==== `meta::e_unexpected`
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  namespace meta
+  {
     struct e_unexpected
     {
       char const * (*first_type)();
@@ -1915,19 +2001,11 @@ namespace boost { namespace leaf {
       friend std::ostream & operator<<( std::ostream & os, e_unexpected const & x );
     };
   }
+
 } }
 ----
-====
 
-This header defines some common error types which can be used directly:
-
-- The `e_api_function` type is designed to capture the name of the API function which returned an error. For example, if you're reporting an error from `fread`, you could use `leaf::e_api_function { "fread" }`.
-+
-WARNING: The passed value is stored as a C string, so you should only pass string literals for `value`.
-- When a file operation fails, you could use `e_file_name` to store the name of the file.
-- `e_errno` is suitable to capture `errno`. `e_errno` objects use `strerror` to convert the `errno` code to a friendlier error message when `<<diagnostic_output-expect,diagnostic_output>>` is invoked.
-- The <<LEAF_ERROR>> and <<LEAF_THROW>> macros capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `meta::e_source_location` object, if there is currently `<<expect,expect>>` storage available for it.  When `<<diagnostic_output-expect,diagnostic_output>>` is invoked, all three items are printed.
-- Whenever an error object of unexpected type (a type for which there is currently no `<<expect,expect>>` storage available) is passed to the `leaf::error` <<error::error,constructor>> or other similar function, if there is currently `expect` storage available for `meta::e_unexpected`, LEAF will communicate the type of the object in the first such occurrence, as well as the count of these occurrences regardless of type.
+Whenever an error object of unexpected type (a type for which there is currently no `<<expect,expect>>` storage available) is passed to the `leaf::error` <<error::error,constructor>> or other similar function, if there is currently `expect` storage available for `meta::e_unexpected`, LEAF will communicate the type of the object in the first such occurrence, as well as the count of these occurrences regardless of type.
 
 [[techniques]]
 == Programming Techniques
@@ -2215,9 +2293,9 @@ Of course, under refactoring `f` can be changed to return any other error type a
 [[technique_augment_in_catch]]
 === Augmenting Exceptions in a `catch`
 
-What makes `<<preload,preload>>` and `<<defer,defer>>` useful (see <<technique_preload,Preloading Errors>> and <<technique_defer,Capturing `errno` with `defer`>>) is that they automatically include <<e-types,e-type>> objects with any exception or error reported by a function.
+What makes `<<preload,preload>>` and `<<defer,defer>>` useful (see <<technique_preload,Preloading Errors>> and <<technique_defer,Capturing `errno` with `defer`>>) is that they automatically include error objects with any exception or error reported by a function.
 
-But what if we need to include some e-object conditionally? When using exception handling, it would be nice to be able to do this in a `catch` statement which selectively augments passing exceptions.
+But what if we need to include some error object conditionally? When using exception handling, it would be nice to be able to do this in a `catch` statement which selectively augments passing exceptions.
 
 LEAF supports the following approach, assuming all exceptions derive from `std::exception`:
 

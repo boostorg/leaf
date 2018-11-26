@@ -32,20 +32,20 @@ namespace boost { namespace leaf {
 
 			friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
 			{
-				return os << "At " << x.file << '(' << x.line << ") in function " << x.function << std::endl;
+				return os << "At " << x.file << '(' << x.line << ") in function " << x.function;
 			}
 		};
 
 		struct e_unexpected
 		{
-			char const * (*first_type)();
+			char const * (*first_type)() noexcept;
 			int count;
 
 			friend std::ostream & operator<<( std::ostream & os, e_unexpected const & x )
 			{
 				assert(x.first_type!=0);
 				assert(x.count>0);
-				return os << "Detected  " << x.count << " attempt(s) to communicate unexpected error objects, first is of type " << x.first_type() << std::endl;
+				return os << "Detected " << x.count << " attempt(s) to communicate unexpected error object(s), the first one is of type " << x.first_type();
 			}
 		};
 	}
@@ -218,6 +218,32 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
+		void put_unexpected( leaf_detail::slot<meta::e_unexpected> & p, error const & e ) noexcept
+		{
+			if( p.has_value() )
+			{
+				auto & v = p.value();
+				if( v.e==e )
+				{
+					++v.v.count;
+					return;
+				}
+			}
+			(void) p.put( leaf_detail::error_info<meta::e_unexpected>{meta::e_unexpected{&type<E>,1},e} );
+		}
+
+		template <class E>
+		E * put_slot( E && v, error const & e ) noexcept
+		{
+			if( leaf_detail::slot<E> * p = leaf_detail::tl_slot_ptr<E>() )
+				return &p->put( leaf_detail::error_info<E>{std::forward<E>(v),e} ).v;
+			else
+				if( leaf_detail::slot<meta::e_unexpected> * p = leaf_detail::tl_slot_ptr<meta::e_unexpected>() )
+					put_unexpected<E>(*p,e);
+			return 0;
+		}
+
+		template <class E>
 		slot<E>::slot() noexcept
 		{
 			slot * & p = tl_slot_ptr<E>();
@@ -233,28 +259,11 @@ namespace boost { namespace leaf {
 				optional<error_info<E>> & p = *prev_;
 				p = std::move(*this);
 			}
+			else
+				if( has_value() )
+					if( leaf_detail::slot<meta::e_unexpected> * p = leaf_detail::tl_slot_ptr<meta::e_unexpected>() )
+						put_unexpected<E>(*p,value().e);
 			tl_slot_ptr<E>() = prev_;
-		}
-
-		template <class E>
-		E * put_slot( E && v, error const & e ) noexcept
-		{
-			if( leaf_detail::slot<E> * p = leaf_detail::tl_slot_ptr<E>() )
-				return &p->put( leaf_detail::error_info<E>{std::forward<E>(v),e} ).v;
-			else if( leaf_detail::slot<meta::e_unexpected> * p = leaf_detail::tl_slot_ptr<meta::e_unexpected>() )
-			{
-				if( p->has_value() )
-				{
-					auto & v = p->value();
-					if( v.e==e )
-					{
-						++v.v.count;
-						return 0;
-					}
-				}
-				(void) p->put( leaf_detail::error_info<meta::e_unexpected>{meta::e_unexpected{&type<E>,1},e} );
-			}
-			return 0;
 		}
 	} //leaf_detail
 

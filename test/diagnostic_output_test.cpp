@@ -12,6 +12,11 @@
 
 namespace leaf = boost::leaf;
 
+struct unexpected_test
+{
+	int value;
+};
+
 struct my_error:
 	virtual std::exception
 {
@@ -73,7 +78,8 @@ int main()
 			non_printable_info_printable_payload,
 			non_printable_info_non_printable_payload,
 			leaf::e_errno,
-			leaf::meta::e_source_location
+			leaf::meta::e_source_location,
+			leaf::meta::e_unexpected
 			> exp;
 		try
 		{
@@ -82,6 +88,7 @@ int main()
 				printable_info_non_printable_payload(),
 				non_printable_info_printable_payload(),
 				non_printable_info_non_printable_payload(),
+				unexpected_test{42},
 				leaf::e_errno{ENOENT} );
 		}
 		catch( my_error & e )
@@ -95,6 +102,7 @@ int main()
 			BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
 			BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
 			BOOST_TEST(s.find(") in function")!=s.npos);
+			BOOST_TEST(s.find("Detected 1 attempt(s) to communicate unexpected error object(s), the first one is of type ")!=s.npos);
 			std::cout << s;
 			handle_exception( exp, e, [ ]{ } );
 		}

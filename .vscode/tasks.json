@@ -54,9 +54,9 @@
             		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
 		},
 		{
-			"label": "diagnostic_print_test",
+			"label": "diagnostic_output_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test diagnostic_print_test",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test diagnostic_output_test",
             		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
 		},
 		{

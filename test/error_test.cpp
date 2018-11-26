@@ -35,8 +35,10 @@ leaf::error f2()
 
 leaf::error f3()
 {
-	leaf::expect<info<2>,info<3>> exp;
-	return f2().propagate( info<4>{4} );
+	leaf::expect<info<2>,info<3>,unexpected<1>> exp;
+	leaf::error e = f2().propagate( info<4>{4} );
+	BOOST_TEST(leaf::peek<unexpected<1>>(exp,e)->value==1);
+	return e;
 }
 
 leaf::error f4()
@@ -62,7 +64,7 @@ leaf::error f4()
 			BOOST_TEST(strcmp(loc.file,__FILE__)==0);
 			BOOST_TEST(strstr(loc.function,"f1")!=0);
 			BOOST_TEST(unx.count==2);
-			BOOST_TEST(unx.first_type==&leaf::type<unexpected<1>>);
+			BOOST_TEST(unx.first_type==&leaf::type<unexpected<2>>);
 			BOOST_TEST(i1.value==1);
 			BOOST_TEST(i2.value==2);
 			BOOST_TEST(i4.value==4);
