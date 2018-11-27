@@ -43,7 +43,7 @@ leaf::error f3()
 
 leaf::error f4()
 {
-	leaf::expect<leaf::meta::e_source_location,leaf::meta::e_unexpected,info<1>,info<2>,info<3>,info<4>> exp;
+	leaf::expect<leaf::e_source_location,leaf::e_unexpected,info<1>,info<2>,info<3>,info<4>> exp;
 	{
 		leaf::error e = f3();
 		bool handled = handle_error( exp, e,
@@ -58,7 +58,7 @@ leaf::error f4()
 		{
 			++c1;
 		},
-		[&c2]( leaf::meta::e_source_location const & loc, leaf::meta::e_unexpected const & unx, info<1> const & i1, info<2> const & i2, info<4> const & i4 )
+		[&c2]( leaf::e_source_location const & loc, leaf::e_unexpected const & unx, info<1> const & i1, info<2> const & i2, info<4> const & i4 )
 		{
 			BOOST_TEST(loc.line==27);
 			BOOST_TEST(strcmp(loc.file,__FILE__)==0);

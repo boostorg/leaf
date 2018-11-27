@@ -12,6 +12,7 @@
 
 namespace leaf = boost::leaf;
 
+template <int A>
 struct unexpected_test
 {
 	int value;
@@ -73,13 +74,14 @@ int main()
 	{
 		leaf::expect
 			<
+			leaf::e_source_location,
 			printable_info_printable_payload,
 			printable_info_non_printable_payload,
 			non_printable_info_printable_payload,
 			non_printable_info_non_printable_payload,
 			leaf::e_errno,
-			leaf::meta::e_source_location,
-			leaf::meta::e_unexpected
+			leaf::e_unexpected_diagnostic_output,
+			leaf::e_unexpected
 			> exp;
 		try
 		{
@@ -88,7 +90,8 @@ int main()
 				printable_info_non_printable_payload(),
 				non_printable_info_printable_payload(),
 				non_printable_info_non_printable_payload(),
-				unexpected_test{42},
+				unexpected_test<1>{1},
+				unexpected_test<2>{2},
 				leaf::e_errno{ENOENT} );
 		}
 		catch( my_error & e )
@@ -97,12 +100,13 @@ int main()
 			current_exception_diagnostic_output(st,exp);
 			std::string s = st.str();
 			BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
-			BOOST_TEST(s.find(" = N/A")!=s.npos);
-			BOOST_TEST(s.find(" = printed printable_payload")!=s.npos);
+			BOOST_TEST(s.find(": N/A")!=s.npos);
+			BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
 			BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
 			BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
 			BOOST_TEST(s.find(") in function")!=s.npos);
-			BOOST_TEST(s.find("Detected 1 attempt(s) to communicate unexpected error object(s), the first one is of type ")!=s.npos);
+			BOOST_TEST(s.find("Detected 2 attempts to communicate unexpected error objects, the first one of type ")!=s.npos);
+			BOOST_TEST(s.find("(unexpected) ")!=s.npos);
 			std::cout << s;
 			handle_exception( exp, e, [ ]{ } );
 		}

@@ -12,25 +12,22 @@ namespace boost { namespace leaf {
     friend std::ostream & operator<<( std::ostream & os, e_errno const & err );
   };
 
-  namespace meta
+  struct e_source_location
   {
-    struct e_source_location
-    {
-      char const * const file;
-      int const line;
-      char const * const function;
+    char const * const file;
+    int const line;
+    char const * const function;
 
-      friend std::ostream & operator<<( std::ostream & os, e_source_location const & x );
-    };
+    friend std::ostream & operator<<( std::ostream & os, e_source_location const & x );
+  };
 
-    struct e_unexpected
-    {
-      char const * (*first_type)();
-      int count;
+  struct e_unexpected
+  {
+    char const * (*first_type)();
+    int count;
 
-      friend std::ostream & operator<<( std::ostream & os, e_unexpected const & x );
-    };
-  }
+    friend std::ostream & operator<<( std::ostream & os, e_unexpected const & x );
+  };
 
 } }
 ----

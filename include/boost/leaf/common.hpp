@@ -25,7 +25,7 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, e_errno const & err ) {
 			using namespace std;
-			return os << type<e_errno>() << " = " << err.value << ", \"" << std::strerror(err.value) << '"';
+			return os << type<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
 		}
 	};
 

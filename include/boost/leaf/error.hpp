@@ -15,40 +15,52 @@
 #include <ostream>
 #include <type_traits>
 #include <system_error>
+#include <sstream>
 
-#define LEAF_ERROR ::boost::leaf::next_error_value().propagate(::boost::leaf::meta::e_source_location{__FILE__,__LINE__,__FUNCTION__}),::boost::leaf::error
+#define LEAF_ERROR ::boost::leaf::next_error_value().propagate(::boost::leaf::e_source_location{__FILE__,__LINE__,__FUNCTION__}),::boost::leaf::error
 
 namespace boost { namespace system { class error_code; } }
 
 namespace boost { namespace leaf {
 
-	namespace meta
+	struct e_source_location
 	{
-		struct e_source_location
+		char const * const file;
+		int const line;
+		char const * const function;
+
+		friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
 		{
-			char const * const file;
-			int const line;
-			char const * const function;
+			return os << "At " << x.file << '(' << x.line << ") in function " << x.function;
+		}
+	};
 
-			friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
-			{
-				return os << "At " << x.file << '(' << x.line << ") in function " << x.function;
-			}
-		};
+	struct e_unexpected
+	{
+		char const * (*first_type)() noexcept;
+		int count;
 
-		struct e_unexpected
+		friend std::ostream & operator<<( std::ostream & os, e_unexpected const & x )
 		{
-			char const * (*first_type)() noexcept;
-			int count;
+			assert(x.first_type!=0);
+			assert(x.count>0);
+			if( x.count==1 )
+				os << "Detected 1 attempt to communicate an unexpected error object of type ";
+			else
+				os << "Detected " << x.count << " attempts to communicate unexpected error objects, the first one of type ";
+			return os << x.first_type();
+		}
+	};
 
-			friend std::ostream & operator<<( std::ostream & os, e_unexpected const & x )
-			{
-				assert(x.first_type!=0);
-				assert(x.count>0);
-				return os << "Detected " << x.count << " attempt(s) to communicate unexpected error object(s), the first one is of type " << x.first_type();
-			}
-		};
-	}
+	struct e_unexpected_diagnostic_output
+	{
+		std::string value;
+
+		friend std::ostream & operator<<( std::ostream & os, e_unexpected_diagnostic_output const & x )
+		{
+			return os << x.value;
+		}
+	};
 
 	namespace leaf_detail
 	{
@@ -73,8 +85,8 @@ namespace boost { namespace leaf {
 
 	template <> struct is_error_type<system::error_code>: std::true_type { };
 	template <> struct is_error_type<std::error_code>: std::true_type { };
-	template <> struct is_error_type<meta::e_unexpected>: std::true_type { };
-	template <> struct is_error_type<meta::e_source_location>: std::true_type { };
+	template <> struct is_error_type<e_unexpected>: std::true_type { };
+	template <> struct is_error_type<e_source_location>: std::true_type { };
 
 	////////////////////////////////////////
 
@@ -218,29 +230,63 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		void put_unexpected( leaf_detail::slot<meta::e_unexpected> & p, error const & e ) noexcept
+		void put_unexpected( error_info<E> const & ev ) noexcept
 		{
-			if( p.has_value() )
+			if( slot<e_unexpected> * p = tl_slot_ptr<e_unexpected>() )
 			{
-				auto & v = p.value();
-				if( v.e==e )
+				if( p->has_value() )
 				{
-					++v.v.count;
-					return;
+					auto & p_ev = p->value();
+					if( p_ev.e==ev.e )
+					{
+						++p_ev.v.count;
+						return;
+					}
 				}
+				(void) p->put( error_info<e_unexpected>{e_unexpected{&type<E>,1},ev.e} );
 			}
-			(void) p.put( leaf_detail::error_info<meta::e_unexpected>{meta::e_unexpected{&type<E>,1},e} );
+		}
+
+		template <class E>
+		void put_unexpected_diagnostic_output( error_info<E> const & ev ) noexcept
+		{
+			if( slot<e_unexpected_diagnostic_output> * p = tl_slot_ptr<e_unexpected_diagnostic_output>() )
+			{
+				std::stringstream s;
+				if( !diagnostic<decltype(ev.v)>::print(s,ev.v) )
+					return;
+				if( p->has_value() )
+				{
+					auto & p_ev = p->value();
+					if( p_ev.e==ev.e )
+					{
+						std::string & value = p_ev.v.value;
+						value += "\n(unexpected) ";
+						value += s.str();
+						return;
+					}
+				}
+				(void) p->put( error_info<e_unexpected_diagnostic_output>{e_unexpected_diagnostic_output{"(unexpected) "+s.str()},ev.e} );
+			}
+		}
+
+		template <class E>
+		void no_expect_slot( error_info<E> const & ev ) noexcept
+		{
+			put_unexpected(ev);
+			put_unexpected_diagnostic_output(ev);
 		}
 
 		template <class E>
 		E * put_slot( E && v, error const & e ) noexcept
 		{
-			if( leaf_detail::slot<E> * p = leaf_detail::tl_slot_ptr<E>() )
-				return &p->put( leaf_detail::error_info<E>{std::forward<E>(v),e} ).v;
+			if( slot<E> * p = tl_slot_ptr<E>() )
+				return &p->put( error_info<E>{std::forward<E>(v),e} ).v;
 			else
-				if( leaf_detail::slot<meta::e_unexpected> * p = leaf_detail::tl_slot_ptr<meta::e_unexpected>() )
-					put_unexpected<E>(*p,e);
-			return 0;
+			{
+				no_expect_slot( error_info<E>{std::forward<E>(v),e} );
+				return 0;
+			}
 		}
 
 		template <class E>
@@ -261,8 +307,7 @@ namespace boost { namespace leaf {
 			}
 			else
 				if( has_value() )
-					if( leaf_detail::slot<meta::e_unexpected> * p = leaf_detail::tl_slot_ptr<meta::e_unexpected>() )
-						put_unexpected<E>(*p,value().e);
+					no_expect_slot(value());
 			tl_slot_ptr<E>() = prev_;
 		}
 	} //leaf_detail

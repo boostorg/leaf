@@ -69,7 +69,7 @@ namespace boost { namespace leaf {
 		{
 			static bool print( std::ostream & os, Wrapper const & x )
 			{
-				os << type<Wrapper>() << " = " << x.value;
+				os << type<Wrapper>() << ": " << x.value;
 				return true;
 			}
 		};
@@ -79,7 +79,7 @@ namespace boost { namespace leaf {
 		{
 			static bool print( std::ostream & os, Wrapper const & )
 			{
-				os << type<Wrapper>() << " = N/A";
+				os << type<Wrapper>() << ": N/A";
 				return true;
 			}
 		};

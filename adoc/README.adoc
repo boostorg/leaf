@@ -1644,7 +1644,7 @@ This exception is thrown by `<<result::value,value>>()`/`<<result::value,operato
 #define LEAF_ERROR <<unspecified>>
 ----
 
-Effects: :: `LEAF_ERROR(e...)` is equivalent to `leaf::<<error::error,error>>(e...)`, except the current source location is automatically passed to the `leaf::error` constructor, in a `<<common,meta::e_source_location>>` object.
+Effects: :: `LEAF_ERROR(e...)` is equivalent to `leaf::<<error::error,error>>(e...)`, except the current source location is automatically passed to the `leaf::error` constructor, in a `<<common,e_source_location>>` object.
 
 NOTE: `LEAF_ERROR` is designed for use in `return` expressions, to automatically communicate the location of the error being reported (but see <<expect>>).
 
@@ -1744,7 +1744,7 @@ IMPORTANT: If thrown, a `leaf::<<exception,exception>><Ex>` can be caught as `Ex
 #define LEAF_THROW <<unspecified>>
 ----
 
-Effects: :: `LEAF_THROW<Ex>(e...)` is equivalent to `throw leaf::<<exception::exception,exception>><Ex>(e...)`, except the current source location is automatically passed to the `leaf::exception` constructor, in a `<<common,meta::e_source_location>>` object.
+Effects: :: `LEAF_THROW<Ex>(e...)` is equivalent to `throw leaf::<<exception::exception,exception>><Ex>(e...)`, except the current source location is automatically passed to the `leaf::exception` constructor, in a `<<common,e_source_location>>` object.
 
 '''
 
@@ -1959,53 +1959,47 @@ TIP: It is usually a logic error to use `e_errno` with <<preload>>; it should be
 '''
 
 [[e_source_location]]
-==== `meta::e_source_location`
+==== `e_source_location`
 
 [source,c++]
 ----
 namespace boost { namespace leaf {
 
-  namespace meta
+  struct e_source_location
   {
-    struct e_source_location
-    {
-      char const * const file;
-      int const line;
-      char const * const function;
+    char const * const file;
+    int const line;
+    char const * const function;
 
-      friend std::ostream & operator<<( std::ostream & os, e_source_location const & x );
-    };
-  }
+    friend std::ostream & operator<<( std::ostream & os, e_source_location const & x );
+  };
 
 } }
 ----
 
-The <<LEAF_ERROR>> and <<LEAF_THROW>> macros capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `meta::e_source_location` object, if there is currently `<<expect,expect>>` storage available for it.  When `<<diagnostic_output-expect,diagnostic_output>>` is invoked, all three items are printed.
+The <<LEAF_ERROR>> and <<LEAF_THROW>> macros capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `e_source_location` object, if there is currently `<<expect,expect>>` storage available for it.  When `<<diagnostic_output-expect,diagnostic_output>>` is invoked, all three items are printed.
 
 '''
 
 [[e_unexpected]]
-==== `meta::e_unexpected`
+==== `e_unexpected`
 
 [source,c++]
 ----
 namespace boost { namespace leaf {
 
-  namespace meta
+  struct e_unexpected
   {
-    struct e_unexpected
-    {
-      char const * (*first_type)();
-      int count;
+    char const * (*first_type)();
+    int count;
 
-      friend std::ostream & operator<<( std::ostream & os, e_unexpected const & x );
-    };
-  }
+    friend std::ostream & operator<<( std::ostream & os, e_unexpected const & x );
+  };
 
 } }
 ----
 
-Whenever an error object of unexpected type (a type for which there is currently no `<<expect,expect>>` storage available) is passed to the `leaf::error` <<error::error,constructor>> or other similar function, if there is currently `expect` storage available for `meta::e_unexpected`, LEAF will communicate the type of the object in the first such occurrence, as well as the count of these occurrences regardless of type.
+Whenever an error object of unexpected type (a type for which there is currently no `<<expect,expect>>` storage available) is passed to the `leaf::error` <<error::error,constructor>> or other similar function, if there is currently `expect` storage available for `e_unexpected`, LEAF will communicate the type of the object in the first such occurrence, as well as the count of these occurrences regardless of type.
 
 [[techniques]]
 == Programming Techniques
