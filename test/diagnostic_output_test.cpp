@@ -71,6 +71,7 @@ struct non_printable_info_non_printable_payload
 
 int main()
 {
+	BOOST_TEST(leaf::leaf_detail::tl_unexpected_enabled_counter()==0);
 	{
 		leaf::expect
 			<
@@ -83,6 +84,7 @@ int main()
 			leaf::e_unexpected_diagnostic_output,
 			leaf::e_unexpected
 			> exp;
+		BOOST_TEST(leaf::leaf_detail::tl_unexpected_enabled_counter()==2);
 		try
 		{
 			LEAF_THROW<my_error>(
@@ -111,5 +113,6 @@ int main()
 			handle_exception( exp, e, [ ]{ } );
 		}
 	}
+	BOOST_TEST(leaf::leaf_detail::tl_unexpected_enabled_counter()==0);
 	return boost::report_errors();
 }

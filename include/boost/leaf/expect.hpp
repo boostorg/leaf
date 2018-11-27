@@ -17,6 +17,42 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
+		template <class E>
+		class expect_slot:
+			public slot<E>
+		{
+		};
+
+		class expect_slot_enable_unexpected
+		{
+		protected:
+			expect_slot_enable_unexpected() noexcept
+			{
+				++tl_unexpected_enabled_counter();
+			}
+
+			~expect_slot_enable_unexpected() noexcept
+			{
+				--tl_unexpected_enabled_counter();
+			}
+		};
+
+		template <>
+		class expect_slot<e_unexpected>:
+			public slot<e_unexpected>,
+			expect_slot_enable_unexpected
+		{
+		};
+
+		template <>
+		class expect_slot<e_unexpected_diagnostic_output>:
+			public slot<e_unexpected_diagnostic_output>,
+			expect_slot_enable_unexpected
+		{
+		};
+
+		////////////////////////////////////////
+
 		template <class T, class... List>
 		struct type_index;
 
@@ -109,7 +145,7 @@ namespace boost { namespace leaf {
 		////////////////////////////////////////
 
 		template <class T>
-		optional<T> convert_optional( slot<T> && x, error const & e ) noexcept
+		optional<T> convert_optional( expect_slot<T> && x, error const & e ) noexcept
 		{
 			if( x.has_value() && x.value().e==e )
 				return optional<T>(std::move(x).value().v);
@@ -166,13 +202,13 @@ namespace boost { namespace leaf {
 		expect( expect const & ) = delete;
 		expect & operator=( expect const & ) = delete;
 
-		std::tuple<leaf_detail::slot<E>...>  s_;
+		std::tuple<leaf_detail::expect_slot<E>...>  s_;
 
 		template <class F, class... T>
 		int match_( leaf_detail::mp_list<T...>, F && f, error const & e, bool & matched ) const
 		{
 			using namespace leaf_detail;
-			if( !matched && (matched=slots_subset<decltype(s_),slot<typename std::remove_cv<typename std::remove_reference<T>::type>::type>...>::have_values(s_,e)) )
+			if( !matched && (matched=slots_subset<decltype(s_),expect_slot<typename std::remove_cv<typename std::remove_reference<T>::type>::type>...>::have_values(s_,e)) )
 				(void) std::forward<F>(f)( *leaf::peek<typename std::remove_cv<typename std::remove_reference<T>::type>::type>(*this,e)... );
 			return 42;
 		}
@@ -249,7 +285,7 @@ namespace boost { namespace leaf {
 			e,
 			std::make_tuple(
 				convert_optional(
-					std::move(std::get<tuple_type_index<slot<E>,decltype(exp.s_)>::value>(exp.s_)),e)...));
+					std::move(std::get<tuple_type_index<expect_slot<E>,decltype(exp.s_)>::value>(exp.s_)),e)...));
 		return cap;
 	}
 

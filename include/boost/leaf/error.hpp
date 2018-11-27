@@ -196,13 +196,18 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-
 		template <class E>
 		struct error_info
 		{
 			E v;
 			error e;
 		};
+
+		inline int & tl_unexpected_enabled_counter() noexcept
+		{
+			static thread_local int c;
+			return c;
+		}
 
 		template <class E>
 		class slot:
@@ -213,9 +218,10 @@ namespace boost { namespace leaf {
 			typedef optional<error_info<E>> base;
 			slot<E> * prev_;
 			static_assert(is_error_type<E>::value,"All types passed to leaf::expect must be error types");
-		public:
+		protected:
 			slot() noexcept;
 			~slot() noexcept;
+		public:
 			using base::put;
 			using base::has_value;
 			using base::value;
@@ -284,7 +290,10 @@ namespace boost { namespace leaf {
 				return &p->put( error_info<E>{std::forward<E>(v),e} ).v;
 			else
 			{
-				no_expect_slot( error_info<E>{std::forward<E>(v),e} );
+				int c = tl_unexpected_enabled_counter();
+				assert(c>=0);
+				if( c )
+					no_expect_slot( error_info<E>{std::forward<E>(v),e} );
 				return 0;
 			}
 		}
@@ -306,8 +315,12 @@ namespace boost { namespace leaf {
 				p = std::move(*this);
 			}
 			else
-				if( has_value() )
+			{
+				int c = tl_unexpected_enabled_counter();
+				assert(c>=0);
+				if( c && has_value() )
 					no_expect_slot(value());
+			}
 			tl_slot_ptr<E>() = prev_;
 		}
 	} //leaf_detail
