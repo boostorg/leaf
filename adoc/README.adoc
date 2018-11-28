@@ -2001,6 +2001,29 @@ namespace boost { namespace leaf {
 
 Whenever an error object of unexpected type (a type for which there is currently no `<<expect,expect>>` storage available) is passed to the `leaf::error` <<error::error,constructor>> or other similar function, if there is currently `expect` storage available for `e_unexpected`, LEAF will communicate the type of the object in the first such occurrence, as well as the count of these occurrences regardless of type.
 
+'''
+
+[[e_unexpected_diagnostic_output]]
+==== `e_unexpected_diagnostic_output`
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  struct e_unexpected_diagnostic_output
+  {
+    <<unspecified>>
+
+    friend std::ostream & operator<<( std::ostream & os, e_unexpected_diagnostic_output const & x );
+  };
+
+} }
+----
+
+Whenever an error object of unexpected type (a type for which there is currently no `<<expect,expect>>` storage available) is passed to the `leaf::error` <<error::error,constructor>> or other similar function, if there is currently `expect` storage available for `e_unexpected_diagnostic_output`, even though the error object itself is not communicated, it will show in the text printed by <<diagnostic_output-expect>>.
+
+WARNING: Using `e_unexpected_diagnostic_output` may allocate memory dynamically.
+
 [[techniques]]
 == Programming Techniques
 

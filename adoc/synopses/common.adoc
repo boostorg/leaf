@@ -29,5 +29,12 @@ namespace boost { namespace leaf {
     friend std::ostream & operator<<( std::ostream & os, e_unexpected const & x );
   };
 
+  struct e_unexpected_diagnostic_output
+  {
+    <<unspecified>>
+
+    friend std::ostream & operator<<( std::ostream & os, e_unexpected_diagnostic_output const & x );
+  };
+
 } }
 ----
