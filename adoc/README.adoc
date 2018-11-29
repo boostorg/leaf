@@ -1,7 +1,7 @@
 :last-update-label!:
 :icons: font
 :prewrap!:
-//:source-highlighter: coderay
+:source-highlighter: coderay
 :stylesheet: zajo.css
 = LEAF
 Low-latency Error Augmentation Framework for C++11
