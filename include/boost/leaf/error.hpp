@@ -93,10 +93,12 @@ namespace boost { namespace leaf {
 	class error;
 
 	error next_error_value() noexcept;
+	error last_error_value() noexcept;
 
 	class error
 	{
 		friend error leaf::next_error_value() noexcept;
+		friend error leaf::last_error_value() noexcept;
 
 		unsigned id_;
 
@@ -117,9 +119,11 @@ namespace boost { namespace leaf {
 			}
 
 			unsigned next_id_;
+			unsigned last_id_;
 
 			id_factory() noexcept:
-				next_id_(new_error_id())
+				next_id_(new_error_id()),
+				last_id_(next_id_-1)
 			{
 			}
 
@@ -131,14 +135,19 @@ namespace boost { namespace leaf {
 				return s;
 			}
 
-			unsigned peek() noexcept
+			unsigned next_id() noexcept
 			{
 				return next_id_;
 			}
 
+			unsigned last_id() noexcept
+			{
+				return last_id_;
+			}
+
 			unsigned get() noexcept
 			{
-				unsigned id = next_id_;
+				unsigned id = last_id_ = next_id_;
 				next_id_ = new_error_id();
 				return id;
 			}
@@ -178,18 +187,18 @@ namespace boost { namespace leaf {
 			return os;
 		}
 
-		static error next_error_value() noexcept
-		{
-			return error(id_factory::tl_instance().peek());
-		}
-
 		template <class... E>
 		error propagate( E && ... ) const noexcept;
 	};
 
 	inline error next_error_value() noexcept
 	{
-		return error(error::id_factory::tl_instance().peek());
+		return error(error::id_factory::tl_instance().next_id());
+	}
+
+	inline error last_error_value() noexcept
+	{
+		return error(error::id_factory::tl_instance().last_id());
 	}
 
 	////////////////////////////////////////

@@ -54,6 +54,18 @@
             		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
 		},
 		{
+			"label": "defer_test.6",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.6",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"label": "defer_test.7",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.7",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
 			"label": "diagnostic_output_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test diagnostic_output_test",
@@ -78,9 +90,15 @@
             		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
 		},
 		{
-			"label": "exception_test",
+			"label": "exception_test.1",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test exception_test",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test exception_test.1",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"label": "exception_test.2",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test exception_test.2",
             		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
 		},
 		{
@@ -147,6 +165,18 @@
 			"label": "preload_test.4",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.4",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"label": "preload_test.5",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.5",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"label": "preload_test.6",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.6",
             		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
 		},
 		{

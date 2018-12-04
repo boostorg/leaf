@@ -18,13 +18,13 @@ struct info
 
 leaf::error f0()
 {
-	auto propagate = leaf::defer( [ ] { return info<0>{-1}; } );
+	auto propagate = leaf::preload( info<0>{-1} );
 	return leaf::error( info<1>{-1} );
 }
 
 leaf::error f1()
 {
-	auto propagate = leaf::defer( [ ] { return info<0>{0}; }, [ ] { return info<1>{1}; }, [ ] { return info<2>{2}; } );
+	auto propagate = leaf::preload( info<0>{0}, info<1>{1}, info<2>{2} );
 	(void) f0();
 	return leaf::error();
 }
