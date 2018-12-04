@@ -23,11 +23,24 @@ namespace boost { namespace leaf {
 	{
 		int value;
 
-		friend std::ostream & operator<<( std::ostream & os, e_errno const & err ) {
+		friend std::ostream & operator<<( std::ostream & os, e_errno const & err )
+		{
 			using namespace std;
 			return os << type<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
 		}
 	};
+
+	struct e_type_info_name { char const * value; };
+
+	struct e_at_line { int value; };
+
+	namespace windows
+	{
+		struct e_LastError
+		{
+			unsigned value;
+		};
+	}
 
 } }
 
