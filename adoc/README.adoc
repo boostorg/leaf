@@ -6,7 +6,7 @@
 = LEAF
 Low-latency Error Augmentation Framework for C++11
 :toclevels: 3
-:toc: left
+//:toc: left
 :toc-title:
 
 [abstract]
@@ -1060,7 +1060,26 @@ namespace boost { namespace leaf {
 
 Returns: :: The `error` value which will be returned the next time the `<<error::error,error>>` constructor is invoked from the calling thread.
 +
-This function can be used to associate error objects with the next `error` value to be reported. Use with caution, only when restricted to reporting errors using specific third-party types, incompatible with LEAF -- for example when reporting an error from a C callback. As soon as control exits this critical path, you should create and return a `leaf::error` object (which will be equal to the `error` object returned by `next_error_value`).
+This function can be used to associate error objects with the next `error` value to be reported. Use with caution, only when restricted to reporting errors using specific third-party types, incompatible with LEAF -- for example when reporting an error from a C callback. As soon as control exits this critical path, you should create and return a `leaf::error` object (which will be equal to the `error` object returned by the earlier call to `next_error_value`).
+
+IMPORTANT: `error` values are unique across the entire program.
+
+'''
+
+[[last_error_value]]
+==== `last_error_value`
+
+.#include <boost/leaf/error.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  error last_error_value() noexcept;
+
+} }
+----
+
+Returns: :: The last `error` value created in the calling thread.
 
 IMPORTANT: `error` values are unique across the entire program.
 
