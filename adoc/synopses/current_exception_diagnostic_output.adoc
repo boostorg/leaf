@@ -1,0 +1,11 @@
+.#include <boost/leaf/current_exception_diagnostic_output.hpp>
+[source,c++]
+----
+
+namespace boost { namespace leaf {
+
+  template <class... E>
+  void current_exception_diagnostic_output( std::ostream & os, expect<E...> const & exp );
+
+} }
+----

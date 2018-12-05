@@ -3,19 +3,8 @@
 ----
 namespace boost { namespace leaf {
 
-  template <class Ex>
-  class exception:
-    public Ex,
-    public error
-  {
-  public:
-
-    template <class... E>
-    exception( E && ... e ) noexcept;
-
-    template <class... E>
-    exception( Ex && ex, E && ... e ) noexcept;
-  };
+  template <class Ex, class... E>
+  <<unspecified>> exception( Ex && ex, E... && e ) noexcept;
 
   error get_error( std::exception const & ex ) noexcept;
 
@@ -30,5 +19,10 @@ namespace boost { namespace leaf {
 
 } }
 
-#define LEAF_THROW <<unspecified>>
+#define LEAF_EXCEPTION(...) <<unspecified>>
+
+#define LEAF_THROW(...) throw LEAF_EXCEPTION(__VA_ARGS__)
 ----
+
+[.text-right]
+<<exception>> | <<get_error>> | <<peek-exception>> | <<handle_exception>> | <<diagnostic_output-exception>> | <<LEAF_THROW>> | <<LEAF_EXCEPTION>>

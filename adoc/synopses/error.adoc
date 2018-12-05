@@ -29,3 +29,6 @@ namespace boost { namespace leaf {
 
 } }
 ----
+
+[.text-right]
+`<<error,error>>` | <<error::error>> | <<error::propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>> | <<next_error_value>>

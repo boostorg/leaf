@@ -4,6 +4,7 @@
 namespace boost { namespace leaf {
 
   struct e_api_function { char const * value; };
+
   struct e_file_name { std::string value; };
 
   struct e_errno
@@ -11,6 +12,18 @@ namespace boost { namespace leaf {
     int value;
     friend std::ostream & operator<<( std::ostream & os, e_errno const & err );
   };
+
+  namespace windows
+  {
+    struct e_LastError
+    {
+      unsigned value;
+    };
+  }
+
+  struct e_at_line { int value; };
+
+  struct e_type_info_name { char const * value; };
 
   struct e_source_location
   {
@@ -38,3 +51,6 @@ namespace boost { namespace leaf {
 
 } }
 ----
+
+[.text-right]
+<<e_api_function>> | <<e_file_name>> | <<e_errno>> | <<e_LastError>> | <<e_at_line>> | <<e_type_info_name>> | <<e_source_location>> | <<e_unexpected>> | <<e_unexpected_diagnostic_output>>

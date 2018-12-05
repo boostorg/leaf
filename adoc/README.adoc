@@ -673,45 +673,34 @@ NOTE: The complete program from this tutorial is available https://github.com/za
 === Class Template `expect`
 include::synopses/expect.adoc[]
 
-[.text-right]
-`<<expect,expect>>` | <<expect::expect>> | <<expect-dtor>> | <<expect::propagate>> | <<capture-expect>> | <<handle_error-expect>> | <<peek-expect>> | <<diagnostic_output-expect>>
-
 === Class `error`
 include::synopses/error.adoc[]
 
-[.text-right]
-`<<error,error>>` | <<error::error>> | <<error::propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>> | <<next_error_value>>
-
 === Automatic Propagation
-include::synopses/preload-defer.adoc[]
-
-[.text-right]
-<<preload>> | <<defer>>
+include::synopses/preload.adoc[]
 
 === Class `error_capture`
 include::synopses/error_capture.adoc[]
 
-[.text-right]
-`<<error_capture,error_capture>>` | <<error_capture::error_capture>> | <<error_capture::operator_bool>> | <<error_capture::unload>> | <<handle_error-error_capture>> | <<peek-error_capture>> | <<diagnostic_output-error_capture>>
-
 === Class Template `result`
 include::synopses/result.adoc[]
 
-[.text-right]
-`<<result,result>>` | <<result::result>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<capture-result>> | <<handle_error-result>> | <<peek-result>> | <<diagnostic_output-result>> | <<bad_result>> | <<LEAF_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
-
-=== Class Template `exception`
-include::synopses/exception.adoc[]
-
-[.text-right]
-`<<exception,exception>>` | <<exception::exception>> | <<get_error>> | <<peek-exception>> | <<handle_exception>> | <<diagnostic_output-exception>> | <<LEAF_THROW>>
-
 === Common Error Types
-
 include::synopses/common.adoc[]
 
+== Synopsis (Exception Handling)
+
+=== Working with Exception Objects
+include::synopses/exception.adoc[]
+
+=== Diagnostic Output for the Current Exception
+include::synopses/current_exception_diagnostic_output.adoc[]
+
 [.text-right]
-<<common>>
+`<<current_exception_diagnostic_output,current_exception_diagnostic_output>>`
+
+=== Transporting of Exceptions between Threads
+include::synopses/exception_capture.adoc[]
 
 [[reference]]
 == Reference
@@ -772,9 +761,6 @@ TIP: The output from `diagnostic_output` overloads is developer-friendly but not
 === Class Template `expect`
 
 include::synopses/expect.adoc[]
-
-[.text-right]
-<<expect::expect>> | <<expect-dtor>> | <<expect::propagate>> | <<capture-expect>> | <<handle_error-expect>> | <<peek-expect>> | <<diagnostic_output-expect>>
 
 All `expect<E...>` objects must use automatic storage duration. They are not copyable and are not movable.
 
@@ -962,9 +948,6 @@ NOTE: The printing of each individual object is done by the rules described <<wr
 
 include::synopses/error.adoc[]
 
-[.text-right]
-<<error::error>> | <<error::propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>> | <<next_error_value>>
-
 Objects of class `error` are values that identify an error across the entire program. They can be copied, moved, assigned to, and compared to other error objects. They occupy as much memory, and are as efficient as `unsigned int`.
 
 When an `e...` sequence is passed to the `error` constructor or to <<error::propagate>>, these objects are moved into matching storage provided by `<<expect,expect>>` instances, where it is  associated with the `error` object (which can later be passed to `<<peek-expect,peek>>` or `<<handle_error-expect,handle_error>>` to retrieve them).
@@ -1135,10 +1118,7 @@ The `is_error_type` template needs not be specialized for:
 
 === Automatic Propagation
 
-include::synopses/preload-defer.adoc[]
-
-[.text-right]
-<<preload>> | <<defer>>
+include::synopses/preload.adoc[]
 
 These two functions are used to automatically associate error objects with failures that propagate through the scope where they are invoked.
 
@@ -1190,9 +1170,6 @@ Effects: :: All `f...` objects are forwarded and stored into the returned object
 === Class `error_capture`
 
 include::synopses/error_capture.adoc[]
-
-[.text-right]
-<<error_capture::error_capture>> | <<error_capture::operator_bool>> | <<error_capture::unload>> | <<handle_error-error_capture>> | <<peek-error_capture>> | <<diagnostic_output-error_capture>>
 
 Objects of class `error_capture` are similar to `<<expect,expect>>` instances in that they contain error objects and can be examined by (their own overloads of) `<<peek-error_capture,peek>>` and `<<handle_error-error_capture,handle_error>>`. However, unlike `expect` objects, `error_capture` objects:
 
@@ -1364,9 +1341,6 @@ NOTE: The printing of each individual object is done by the rules described <<wr
 === Class Template `result`
 
 include::synopses/result.adoc[]
-
-[.text-right]
-<<result::result>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<capture-result>> | <<handle_error-result>> | <<peek-result>> | <<diagnostic_output-result>> | <<bad_result>> | <<LEAF_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
 
 '''
 
@@ -1620,227 +1594,8 @@ NOTE: `LEAF_ERROR` is designed for use in `return` expressions, to automatically
 #define LEAF_CHECK(r) {auto _r = r; if( !_r ) return _r.error();}
 ----
 
-'''
-
-[[exception]]
-=== Class Template `exception`
-
-include::synopses/exception.adoc[]
-
-[.text-right]
-<<exception::exception>> | <<get_error>> | <<peek-exception>> | <<handle_exception>> | <<diagnostic_output-exception>> | <<LEAF_THROW>>
-
-.#include <boost/leaf/exception_capture.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E, class F>
-  <<unspecified-type>> capture_exception( F && f ) noexcept;
-
-  template <class Future>
-  decltype(std::declval<Future>().get()) get( Future && f );
-
-  template <class... E>
-  void current_exception_diagnostic_output( std::ostream & os, expect<E...> const & exp );
-
-} }
-----
-
-[.text-right]
-<<capture_exception>> | <<get>> | <<current_exception_diagnostic_output>>
-
-The two headers `<boost/leaf/exception.hpp>` and `<boost/leaf/exception_capture>` define functions designed for programs that use exception handling.
-
-'''
-
-[[exception::exception]]
-==== `Constructors`
-
-[source,c++]
-.#include <boost/leaf/exception.hpp>
-----
-namespace boost { namespace leaf {
-
-  template <class Ex>
-  template <class... E>
-  exception<Ex>::exception( E && ... e ) noexcept;
-
-  template <class Ex>
-  template <class... E>
-  exception<Ex>::exception( Ex && ex, E && ... e ) noexcept;
-
-} }
-----
-
-Requirements: :: `Ex` must derive from `std::exception`.
-
-Effects: ::
-* The `Ex` sub-object of `*this` is initialized by its default constructor or by `std::forward<Ex>(ex)` respectively.
-* The `error` sub-object is initialized by `<<error::error,error>>(std::forward<E>(e...))`.
-
-IMPORTANT: If thrown, a `leaf::<<exception,exception>><Ex>` can be caught as `Ex &` or as `leaf::<<error,error>>`.
-
-'''
-
-[[LEAF_THROW]]
-==== `LEAF_THROW`
-
-[source,c++]
-.#include <boost/leaf/exception.hpp>
-----
-#define LEAF_THROW <<unspecified>>
-----
-
-Effects: :: `LEAF_THROW<Ex>(e...)` is equivalent to `throw leaf::<<exception::exception,exception>><Ex>(e...)`, except the current source location is automatically passed to the `leaf::exception` constructor, in a `<<common,e_source_location>>` object.
-
-'''
-
-[[capture_exception]]
-==== `capture_exception`
-
-.#include <boost/leaf/exception_capture.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E, class F>
-  <<unspecified-type>> capture_exception( F && f ) noexcept;
-
-} }
-----
-
-Requirements: :: `F` must be a function type.
-
-Returns: :: A function of unspecified type which wraps `f` and, when called, forwards all its arguments to `f`, capturing the specified `E...` types in case it throws.
-
-NOTE: The `capture_exception` function is designed for use with `<<get,get>>`, to effectively transport error objects across thread boundaries (for example see <<technique_transport-exceptions,Transporting Errors between Threads using Exception Handling>>).
-
-'''
-
-[[get]]
-==== `get`
-
-.#include <boost/leaf/exception_capture.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class Future>
-  decltype(std::declval<Future>().get()) get( Future && f );
-
-} }
-----
-
-Requirements: :: `Future` must be a `std::future` or other similar type used to recover future values by a member function `get()`.
-
-Returns: :: `f.get()`.
-
-Throws: :: Any exception thrown by `f.get()`. If the future function was launched using `<<capture_exception,capture_exception>><E...>`, all `E...` type objects captured in the worker thread are transported to the calling thread.
-
-IMPORTANT: To store and to access the transported error objects, the calling thread must provide suitable `<<expect,expect>>` object(s).
-
-'''
-
-[[get_error]]
-==== `get_error`
-
-.#include <boost/leaf/exception.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  error get_error( std::exception const & ex ) noexcept;
-
-} }
-----
-
-Returns: ::
-* If `auto e = dynamic_cast<leaf::<<error,error>> const *>(&ex)` succeeds, returns `*e`.
-* Othrewise, it returns an unspecified `leaf::error` value, which is "temporarily" associated with any and all currently unhandled exceptions.
-+
-IMPORTANT: A successful call to `<<handle_exception,handle_exception>>` breaks this association.
-
-'''
-
-[[handle_exception]]
-==== `handle_exception`
-
-.#include <boost/leaf/exception.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E, class... F>
-  void handle_exception( expect<E...> & exp, std::exception const & ex, F && ... f );
-
-} }
-----
-
-Effects: :: Equivalent to: `if( !<<handle_error-expect,handle_error>>( exp, <<get_error,get_error>>(ex), std::forward<F>(f)...) ) throw;`
-
-IMPORTANT: In case the dynamic type of `ex` does not derive from `leaf::error` and the call to `handle_error` succeeds, the association between the `leaf::error` value returned by `<<get_error,get_error>>` and the currently unhandled exceptions is broken.
-
-'''
-
-[[peek-exception]]
-==== `peek`
-
-.#include <boost/leaf/exception.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class P, class... E>
-  P const * peek( expect<E...> const & exp, std::exception const & ex ) noexcept;
-
-} }
-----
-
-Effects: :: As if `return leaf::<<peek-expect,peek>><P>( exp, <<get_error,get_error>>(ex) );`
-
-'''
-
-[[diagnostic_output-exception]]
-==== `diagnostic_output`
-
-.#include <boost/leaf/exception.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  void diagnostic_output( std::ostream & os, expect<E...> const & exp, std::exception const & ex );
-
-} }
-----
-
-Effects: :: Equivalent to: `<<diagnostic_output-expect,diagnostic_output>>( os, exp, <<get_error,get_error>>(ex) );`
-
-'''
-
-[[current_exception_diagnostic_output]]
-==== `current_exception_diagnostic_output`
-
-.#include <boost/leaf/exception_capture.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  void current_exception_diagnostic_output( std::ostream & os, expect<E...> const & exp );
-
-} }
-----
-
-Effects: :: This function prints a developer-friendly (but not user-friendly) diagnostic information about the current exception to `os`.
-
-'''
-
 [[common]]
 === Common Error Types
-
-
 include::synopses/common.adoc[]
 
 This header defines some common error types which can be used directly.
@@ -1904,6 +1659,60 @@ TIP: It is usually a logic error to use `e_errno` with <<preload>>; it should be
 
 '''
 
+[[e_LastError]]
+==== `e_LastError`
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  namespace windows
+  {
+    struct e_LastError
+    {
+      unsigned value;
+    };
+  }
+
+} }
+----
+
+`e_LastError` is designed to communicate `GetLastError()` values on Windows.
+
+'''
+
+[[e_at_line]]
+==== `e_at_line`
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  struct e_at_line { int value; };
+
+} }
+----
+
+`e_at_line` can be used to communicate the line number in a text file when reporting parse errors.
+
+'''
+
+[[e_type_info_name]]
+==== `e_type_info_name`
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  struct e_type_info_name { char const * value; };
+
+} }
+----
+
+`e_type_info_name` is designed to store the return value of `std::type_info::name`.
+
+'''
+
 [[e_source_location]]
 ==== `e_source_location`
 
@@ -1923,7 +1732,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-The <<LEAF_ERROR>> and <<LEAF_THROW>> macros capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `e_source_location` object, if there is currently `<<expect,expect>>` storage available for it.  When `<<diagnostic_output-expect,diagnostic_output>>` is invoked, all three items are printed.
+The <<LEAF_ERROR>>, <<LEAF_EXCEPTION>> and <<LEAF_THROW>> macros capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `e_source_location` object, if there is currently `<<expect,expect>>` storage available for it.  When `<<diagnostic_output-expect,diagnostic_output>>` is invoked, all three items are printed.
 
 '''
 
@@ -1969,6 +1778,202 @@ namespace boost { namespace leaf {
 Whenever an error object of unexpected type (a type for which there is currently no `<<expect,expect>>` storage available) is passed to the `leaf::error` <<error::error,constructor>> or other similar function, if there is currently `expect` storage available for `e_unexpected_diagnostic_output`, even though the error object itself is not communicated, it will show in the text printed by <<diagnostic_output-expect>>.
 
 WARNING: Using `e_unexpected_diagnostic_output` may allocate memory dynamically.
+
+== Reference (Exception Handling)
+
+=== Working with Exception Objects
+include::synopses/exception.adoc[]
+
+'''
+
+[[exception]]
+==== `exception`
+
+[source,c++]
+.#include <boost/leaf/exception.hpp>
+----
+namespace boost { namespace leaf {
+
+  template <class Ex, class... E>
+  <<unspecified>> exception( Ex && ex, E && ... e ) noexcept;
+
+} }
+----
+
+Requirements: :: `Ex` must derive from `std::exception`.
+
+Returns: :: An object of unspecified type which derives publicly from `Ex` and from class `<<error,error>>`, its `Ex` subobject initialized by `std::forward<Ex>(ex)`, its `error` subojbect initialized by `std::forward<E>(e)...`.
+
+TIP: If thrown, the returned object can be caught as `Ex &` or as `leaf::<<error,error>>`.
+
+NOTE: To automatically capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` with the returned object, use <<LEAF_EXCEPTION>>.
+
+'''
+
+[[get_error]]
+==== `get_error`
+
+.#include <boost/leaf/exception.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  error get_error( std::exception const & ex ) noexcept;
+
+} }
+----
+
+Returns: ::
+* If `auto e = dynamic_cast<leaf::<<error,error>> const *>(&ex)` succeeds, returns `*e`.
+* Othrewise, it returns an unspecified `leaf::error` value, which is "temporarily" associated with any and all currently unhandled exceptions.
++
+IMPORTANT: A successful call to `<<handle_exception,handle_exception>>` breaks this association.
+
+'''
+
+[[peek-exception]]
+==== `peek`
+
+.#include <boost/leaf/exception.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class P, class... E>
+  P const * peek( expect<E...> const & exp, std::exception const & ex ) noexcept;
+
+} }
+----
+
+Effects: :: As if `return leaf::<<peek-expect,peek>><P>( exp, <<get_error,get_error>>(ex) );`
+
+'''
+
+[[handle_exception]]
+==== `handle_exception`
+
+.#include <boost/leaf/exception.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class... E, class... F>
+  void handle_exception( expect<E...> & exp, std::exception const & ex, F && ... f );
+
+} }
+----
+
+Effects: :: Equivalent to: `if( !<<handle_error-expect,handle_error>>( exp, <<get_error,get_error>>(ex), std::forward<F>(f)...) ) throw;`
+
+IMPORTANT: In case the dynamic type of `ex` does not derive from `leaf::error` and the call to `handle_error` succeeds, the association between the `leaf::error` value returned by `<<get_error,get_error>>` and the currently unhandled exceptions is broken.
+
+'''
+
+[[diagnostic_output-exception]]
+==== `diagnostic_output`
+
+.#include <boost/leaf/exception.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class... E>
+  void diagnostic_output( std::ostream & os, expect<E...> const & exp, std::exception const & ex );
+
+} }
+----
+
+Effects: :: Equivalent to: `<<diagnostic_output-expect,diagnostic_output>>( os, exp, <<get_error,get_error>>(ex) );`
+
+'''
+
+[[LEAF_EXCEPTION]]
+==== `LEAF_EXCEPTION`
+
+[source,c++]
+.#include <boost/leaf/exception.hpp>
+----
+#define LEAF_EXCEPTION(...) <<unspecified>>
+----
+
+Effects: :: This is a variadic macro which forwards its arguments to the function template <<exception>>, in addition capturing `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]`.
+
+'''
+
+[[LEAF_THROW]]
+==== `LEAF_THROW`
+
+[source,c++]
+.#include <boost/leaf/exception.hpp>
+----
+#define LEAF_THROW(...) throw LEAF_EXCEPTION(__VA_ARGS__)
+----
+
+Effects: :: Throws the exception object returned by <<LEAF_EXCEPTION>>.
+
+'''
+
+[[current_exception_diagnostic_output]]
+=== Diagnostic Output for the Current Exception
+include::synopses/current_exception_diagnostic_output.adoc[]
+
+Effects: :: This function prints a developer-friendly (but not user-friendly) diagnostic information about the current exception to `os`.
+
+'''
+
+=== Transporting of Exceptions between Threads
+
+include::synopses/exception_capture.adoc[]
+
+This header defines functions that can be used to transport exceptions and associated error objects from one thread to another.
+
+'''
+
+[[capture_exception]]
+==== `capture_exception`
+
+.#include <boost/leaf/exception_capture.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class... E, class F>
+  <<unspecified-type>> capture_exception( F && f ) noexcept;
+
+} }
+----
+
+Requirements: :: `F` must be a function type.
+
+Returns: :: A function of unspecified type which wraps `f` and, when called, forwards all its arguments to `f`, capturing the specified `E...` types in case it throws.
+
+NOTE: The `capture_exception` function is designed for use with `<<get,get>>`, to effectively transport error objects across thread boundaries (for example see <<technique_transport-exceptions,Transporting Errors between Threads using Exception Handling>>).
+
+'''
+
+[[get]]
+==== `get`
+
+.#include <boost/leaf/exception_capture.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class Future>
+  decltype(std::declval<Future>().get()) get( Future && f );
+
+} }
+----
+
+Requirements: :: `Future` must be a `std::future` or other similar type used to recover future values by a member function `get()`.
+
+Returns: :: `f.get()`.
+
+Throws: :: Any exception thrown by `f.get()`. If the future function was launched using `<<capture_exception,capture_exception>><E...>`, all `E...` type objects captured in the worker thread are transported to the calling thread.
+
+IMPORTANT: To store and to access the transported error objects, the calling thread must provide suitable `<<expect,expect>>` object(s).
+
+'''
 
 [[techniques]]
 == Programming Techniques

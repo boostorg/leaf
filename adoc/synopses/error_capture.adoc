@@ -25,3 +25,6 @@ namespace boost { namespace leaf {
 
 } }
 ----
+
+[.text-right]
+`<<error_capture,error_capture>>` | <<error_capture::error_capture>> | <<error_capture::operator_bool>> | <<error_capture::unload>> | <<handle_error-error_capture>> | <<peek-error_capture>> | <<diagnostic_output-error_capture>>

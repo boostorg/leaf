@@ -11,3 +11,6 @@ namespace boost { namespace leaf {
 
 } }
 ----
+
+[.text-right]
+<<preload>> | <<defer>>

@@ -31,3 +31,6 @@ namespace boost { namespace leaf {
 
 } }
 ----
+
+[.text-right]
+<<expect::expect>> | <<expect-dtor>> | <<expect::propagate>> | <<capture-expect>> | <<handle_error-expect>> | <<peek-expect>> | <<diagnostic_output-expect>>
