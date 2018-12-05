@@ -17,7 +17,7 @@
 #include <system_error>
 #include <sstream>
 
-#define LEAF_ERROR ::boost::leaf::next_error_value().propagate(::boost::leaf::e_source_location{__FILE__,__LINE__,__FUNCTION__}),::boost::leaf::error
+#define LEAF_ERROR(...) ::boost::leaf::leaf_detail::make_error(__FILE__,__LINE__,__FUNCTION__,__VA_ARGS__)
 
 namespace boost { namespace system { class error_code; } }
 
@@ -331,6 +331,15 @@ namespace boost { namespace leaf {
 					no_expect_slot(value());
 			}
 			tl_slot_ptr<E>() = prev_;
+		}
+
+		template <class... E>
+		error make_error( char const * file, int line, char const * function, E && ... e )
+		{
+			assert(file&&*file);
+			assert(line>0);
+			assert(function&&*function);
+			return error( e_source_location{file,line,function}, std::forward<E>(e)... );
 		}
 	} //leaf_detail
 
