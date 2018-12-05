@@ -328,7 +328,7 @@ leaf::result<void> print_file( char const * file_name )
 
 <1> If `file_open` returns an error...
 <2> ...we forward it to the caller. Notice that we don't return `leaf::error()`, which would indicate a newly detected error; we return `f.error()`, which propagates the error already stored in `f`.
-<3> `<<preload,preload>>` takes any number of error objects and prepares them to become associated (automatically, at the time the returned object expires) with the first `leaf::<<error,error>>` value created thereafter. The effect is that from this point on, any error returned or forwarded by `print_file` will have an associated file name, in addition to everything else passed to `leaf::<<error,error>>` explicitly (`e_file_name` is defined as `struct e_file_name { std::string value; }`).
+<3> `<<preload,preload>>` takes any number of error objects and prepares them to become associated (automatically, at the time the returned object expires) with a `leaf::<<error,error>>` value created in the future. The effect is that from this point on, any error returned or forwarded by `print_file` will have an associated file name, in addition to everything else passed to `leaf::<<error,error>>` explicitly (`e_file_name` is defined as `struct e_file_name { std::string value; }`).
 <4> If `file_size` returns an error...
 <5> ...we forward it to the caller.
 <6> If `std::cout` fails to write the buffer, we return `cout_error`.
@@ -559,9 +559,9 @@ void print_file( char const * file_name )
 <<preload>> | <<defer>>
 
 <1> `std::shared_ptr<FILE> file_open( char const * file_name)` throws on error.
-<2> `<<preload,preload>>` takes any number of error objects and prepares them to become associated (automatically, at the time the returned object expires) with the first exception thrown thereafter. The effect is that from this point on, a file name will be associated with any exception escaping `print_file`, in addition to everything else passed earlier to the `leaf::<<exception,exception>>` function template explicitly (`e_file_name` is defined as `struct e_file_name { std::string value; }`).
+<2> `<<preload,preload>>` takes any number of error objects and prepares them to become associated (automatically, at the time the returned object expires) with an exception thrown in the future. The effect is that from this point on, a file name will be associated with any exception escaping `print_file`, in addition to everything else passed earlier to the `leaf::<<exception,exception>>` function template explicitly (`e_file_name` is defined as `struct e_file_name { std::string value; }`).
 <3> `int file_size( FILE & f )` throws on error.
-<4> `<<defer,defer>>` is similar to `preload`: it prepares an error object to become associated with the first exception thrown thereafter, but instead of taking the object itself, `defer` takes a function that returns it. The function is invoked in the returned object's destructor, at which point it becomes associated with the exception being propagated. Assuming `std::cout` is configured to throw on error, the effect of this line is that those exceptions will have the relevant `errno` associated with them.
+<4> `<<defer,defer>>` is similar to `preload`: it prepares an error object to become associated with an exception thrown in the future, but instead of taking the object itself, `defer` takes a function that returns it. The function is invoked in the returned object's destructor, at which point it becomes associated with the exception being propagated. Assuming `std::cout` is configured to throw on error, the effect of this line is that those exceptions will have the relevant `errno` associated with them.
 
 Finally, let's consider the `main` function, which is able to handle exceptions thrown by `print_file`:
 
@@ -661,7 +661,7 @@ int main( int argc, char const * argv[ ] )
 To summarize, when using LEAF with exception handling:
 
 * In case a function detects a failure, it may throw instances of the `leaf::<<exception,exception>>` class template, initializing it with any number of error objects, to associate with the exception any information it has that is relevant to the failure.
-* Alternatively it may use `<<preload,preload>>` to associate error objects with the exception object (of any type) thrown later on, including exceptions thrown by third-party code.
+* Alternatively it may use `<<preload,preload>>` to associate error objects with an exception object (of any type) thrown later on, including exceptions thrown by third-party code.
 * In order for any error object passed to the `leaf::<<exception,exception>>` function template to be stored rather than discarded, the function that catches the exception must contain an instance of the class template `<<expect,expect>>` that provides the necessary storage for its type.
 * Using `<<handle_exception,handle_exception>>`, available error objects associated with the exception being handled can be matched to what is required in order to deal with that exception.
 
@@ -1139,7 +1139,8 @@ namespace boost { namespace leaf {
 ----
 
 Effects: :: All `e...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
-* If a new `leaf::<<error,error>>` value was created (in the calling thread) since it was created, the stored `e...` objects are propagated and become associated with  the _first_ `leaf::error` value created after `preload` was called;
+* If a new `leaf::<<error,error>>` value was created (in the calling thread) since the object returned by `preload` was created, the stored `e...` objects are propagated and become associated with  the _last_ such `leaf::error` value;
+* Otherwise, if `std::unhandled_exception()` returns `true`, the stored `e...` objects are propagated and become associated with the _first_ `leaf::error` value created later on;
 * Otherwise, the stored `e...` objects are discarded.
 
 '''
@@ -1161,8 +1162,9 @@ namespace boost { namespace leaf {
 Requirements: :: All `f...` objects must be functions that do not throw exceptions, take no arguments and return an object of a no-throw movable type.
 
 Effects: :: All `f...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
-* If a new `leaf::<<error,error>>` value was created (in the calling thread) since it was created, each of the stored `f...` is called, and the returned objects are propagated and become associated with  the _first_ `leaf::error` value created after `defer` was called;
-* The stored `f...` objects are discarded.
+* If a new `leaf::<<error,error>>` value was created (in the calling thread) since the object returned by `defer` was created, each of the stored `f...` is called, and the returned objects are propagated and become associated with  the _last_ such `leaf::error` value;
+* Otherwise, if `std::unhandled_exception()` returns `true`, each of the stored `f...` is called, and the returned objects are propagated and become associated with the _first_ `leaf::error` value created later on;
+* Otherwise, the stored `f...` objects are discarded.
 
 '''
 
