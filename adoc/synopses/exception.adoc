@@ -25,4 +25,4 @@ namespace boost { namespace leaf {
 ----
 
 [.text-right]
-<<exception>> | <<get_error>> | <<peek-exception>> | <<handle_exception>> | <<diagnostic_output-exception>> | <<LEAF_THROW>> | <<LEAF_EXCEPTION>>
+<<exception>> | <<get_error>> | <<peek-exception>> | <<handle_exception>> | <<diagnostic_output-exception>> | <<LEAF_EXCEPTION>> | <<LEAF_THROW>>

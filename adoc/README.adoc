@@ -191,7 +191,7 @@ T g()
   if( success )
     return T(....); <1>
   else
-    throw leaf::exception<my_error>( e_request_id{id} ); //<2>
+    throw leaf::exception( my_error(), e_request_id{id} ); //<2>
 }
 ----
 [.text-right]
@@ -521,7 +521,7 @@ void file_read( FILE & f, void * buf, int size )
   int n = fread( buf, 1, size, &f );
 
   if( ferror(&f) )
-    throw leaf::exception<input_file_read_error>( e_errno{errno} ); //<1>
+    throw leaf::exception( input_file_read_error(), e_errno{errno} ); //<1>
 
   if( n!=size )
     throw input_eof_error(); //<2>
@@ -530,7 +530,7 @@ void file_read( FILE & f, void * buf, int size )
 [.text-right]
 `<<exception,exception>>`
 
-<1> If `ferror` indicates an error, we throw `input_file_read_error` and, because there is a relevant `errno` code, we pass that to the `<<exception::exception,exception>>` constructor _also_ (LEAF defines `struct e_errno { int value; }`).
+<1> If `ferror` indicates an error, we throw `input_file_read_error` and, because there is a relevant `errno` code, we pass that to the `<<exception,exception>>` function template _also_ (LEAF defines `struct e_errno { int value; }`).
 <2> If `fread` reports that it couldn't read all of the data requested, we throw `input_eof_error`. In this case there is no relevant `errno` to pass on, because this is not an error as far as `fread` is concerned.
 
 NOTE: `leaf::error` may be passed objects of arbitrary movable types, however objects of types that are not specific to error handling -- such as `errno` values, which are of type `int` -- should be wrapped in a `struct`. By convention, such structs use the `e_` prefix and contain a single data member called `value`, e.g. `struct e_errno { int value; }`. +
@@ -559,7 +559,7 @@ void print_file( char const * file_name )
 <<preload>> | <<defer>>
 
 <1> `std::shared_ptr<FILE> file_open( char const * file_name)` throws on error.
-<2> `<<preload,preload>>` takes any number of error objects and prepares them to become associated (automatically, at the time the returned object expires) with the first exception thrown thereafter. The effect is that from this point on, a file name will be associated with any exception escaping `print_file`, in addition to everything else passed earlier to the `leaf::<<exception::exception,exception>>` constructor explicitly (`e_file_name` is defined as `struct e_file_name { std::string value; }`).
+<2> `<<preload,preload>>` takes any number of error objects and prepares them to become associated (automatically, at the time the returned object expires) with the first exception thrown thereafter. The effect is that from this point on, a file name will be associated with any exception escaping `print_file`, in addition to everything else passed earlier to the `leaf::<<exception,exception>>` function template explicitly (`e_file_name` is defined as `struct e_file_name { std::string value; }`).
 <3> `int file_size( FILE & f )` throws on error.
 <4> `<<defer,defer>>` is similar to `preload`: it prepares an error object to become associated with the first exception thrown thereafter, but instead of taking the object itself, `defer` takes a function that returns it. The function is invoked in the returned object's destructor, at which point it becomes associated with the exception being propagated. Assuming `std::cout` is configured to throw on error, the effect of this line is that those exceptions will have the relevant `errno` associated with them.
 
@@ -662,7 +662,7 @@ To summarize, when using LEAF with exception handling:
 
 * In case a function detects a failure, it may throw instances of the `leaf::<<exception,exception>>` class template, initializing it with any number of error objects, to associate with the exception any information it has that is relevant to the failure.
 * Alternatively it may use `<<preload,preload>>` to associate error objects with the exception object (of any type) thrown later on, including exceptions thrown by third-party code.
-* In order for any error object passed to the `leaf::<<exception::exception,exception>>` constructor to be stored rather than discarded, the function that catches the exception must contain an instance of the class template `<<expect,expect>>` that provides the necessary storage for its type.
+* In order for any error object passed to the `leaf::<<exception,exception>>` function template to be stored rather than discarded, the function that catches the exception must contain an instance of the class template `<<expect,expect>>` that provides the necessary storage for its type.
 * Using `<<handle_exception,handle_exception>>`, available error objects associated with the exception being handled can be matched to what is required in order to deal with that exception.
 
 NOTE: The complete program from this tutorial is available https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp?ts=3[here]. There is also https://github.com/zajo/leaf/blob/master/example/print_file_result.cpp?ts=3[another] version of the same program that does not use exception handling to report errors (see <<tutorial-noexcept,previous tutorial>>).
@@ -2022,7 +2022,7 @@ void read_file( FILE * f ) {
 
 This is a problem: the `catch` needs a file name, but at the point of the `throw` a file name is not available (only a `FILE` pointer is). In general, the error might be detected in a library which can not assume that a meaningful name is available for any `FILE` it reads, even if a program that uses the library could reasonably make the same assumption.
 
-Using LEAF, a file name may be associated with any exception after it has been thrown, while anything available at the point of the `throw` (e.g. `errno`) may be passed directly to the `leaf::<<exception::exception,exception>>` constructor:
+Using LEAF, a file name may be associated with any exception after it has been thrown, while anything available at the point of the `throw` (e.g. `errno`) may be passed directly to the `leaf::<<exception,exception>>` function template:
 
 [source,c++]
 ----
@@ -2035,7 +2035,7 @@ void read_file( FILE * f )
   ....
   size_t nr=fread( buf,1,count,f );
   if( ferror(f) )
-    throw leaf::exception<file_read_error>( e_errno{errno} );
+    throw leaf::exception( file_read_error(), e_errno{errno} );
   ....
 }
 
@@ -2050,7 +2050,7 @@ void process_file( char const * name )
     ....
   }
   else
-    throw leaf::exception<file_open_error>();
+    throw leaf::exception(file_open_error());
 }
 ----
 
@@ -2099,7 +2099,7 @@ void read_file(FILE * f) {
   ....
   size_t nr=fread(buf,1,count,f);
   if( ferror(f) )
-    throw leaf::exception<file_read_error>( e_errno{errno} );
+    throw leaf::exception( file_read_error(), e_errno{errno} );
   ....
 }
 ----
@@ -2115,15 +2115,15 @@ void read_file(FILE * f) {
   ....
   size_t nr1=fread(buf1,1,count1,f);
   if( ferror(f) )
-    throw leaf::exception<file_read_error>( e_errno{errno} );
+    throw leaf::exception( file_read_error(), e_errno{errno} );
 
   size_t nr2=fread(buf2,1,count2,f);
   if( ferror(f) )
-    throw leaf::exception<file_read_error>( e_errno{errno} );
+    throw leaf::exception( file_read_error(), e_errno{errno} );
 
   size_t nr3=fread(buf3,1,count3,f);
   if( ferror(f) )
-    throw leaf::exception<file_read_error>( e_errno{errno} );
+    throw leaf::exception( file_read_error(), e_errno{errno} );
   ....
 }
 ----
@@ -2146,15 +2146,15 @@ void read_file(FILE * f) {
   ....
   size_t nr1=fread(buf1,1,count1,f);
   if( ferror(f) )
-    throw leaf::exception<file_read_error>();
+    throw leaf::exception(file_read_error());
 
   size_t nr2=fread(buf2,1,count2,f);
   if( ferror(f) )
-    throw leaf::exception<file_read_error>();
+    throw leaf::exception(file_read_error());
 
   size_t nr3=fread(buf3,1,count3,f);
   if( ferror(f) )
-    throw leaf::exception<file_read_error>();
+    throw leaf::exception(file_read_error());
   ....
 }
 ----
