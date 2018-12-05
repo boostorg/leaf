@@ -1994,8 +1994,6 @@ Throws: :: Any exception thrown by `f.get()`. If the future function was launche
 
 IMPORTANT: To store and to access the transported error objects, the calling thread must provide suitable `<<expect,expect>>` object(s).
 
-'''
-
 [[techniques]]
 == Programming Techniques
 
