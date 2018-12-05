@@ -87,7 +87,7 @@ int main()
 		BOOST_TEST(leaf::leaf_detail::tl_unexpected_enabled_counter()==2);
 		try
 		{
-			LEAF_THROW<my_error>(
+			LEAF_THROW( my_error(),
 				printable_info_printable_payload(),
 				printable_info_non_printable_payload(),
 				non_printable_info_printable_payload(),

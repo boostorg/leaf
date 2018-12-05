@@ -17,7 +17,7 @@ struct my_error: std::exception { };
 void g()
 {
 	leaf::expect<info> exp;
-	throw leaf::exception<my_error>();
+	throw leaf::exception(my_error());
 }
 
 void f()

@@ -22,7 +22,7 @@ void g1()
 
 void g2()
 {
-	throw leaf::exception<my_error>();
+	throw leaf::exception(my_error());
 }
 
 void f()

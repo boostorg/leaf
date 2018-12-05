@@ -10,7 +10,8 @@
 #include <boost/leaf/common.hpp>
 #include <exception>
 
-#define LEAF_THROW ::boost::leaf::next_error_value().propagate(::boost::leaf::e_source_location{__FILE__,__LINE__,__FUNCTION__}),throw::boost::leaf::exception
+#define LEAF_EXCEPTION(...) ::boost::leaf::leaf_detail::make_exception(__FILE__,__LINE__,__FUNCTION__,__VA_ARGS__)
+#define LEAF_THROW(...) throw LEAF_EXCEPTION(__VA_ARGS__)
 
 namespace boost { namespace leaf {
 
@@ -32,13 +33,6 @@ namespace boost { namespace leaf {
 		exception( exception && ) = default;
 
 		template <class... E>
-		exception( E && ... e ) noexcept:
-			error(std::forward<E>(e)...)
-		{
-			leaf_detail::enforce_std_exception(*this);
-		}
-
-		template <class... E>
 		exception( Ex && ex, E && ... e ) noexcept:
 			Ex(std::move(ex)),
 			error(std::forward<E>(e)...)
@@ -46,6 +40,18 @@ namespace boost { namespace leaf {
 			leaf_detail::enforce_std_exception(*this);
 		}
 	};
+
+	namespace leaf_detail
+	{
+		template <class Ex, class... E>
+		exception<Ex> make_exception( char const * file, int line, char const * function, Ex && ex, E && ... e )
+		{
+			assert(file&&*file);
+			assert(line>0);
+			assert(function&&*function);
+			return exception<Ex>( std::forward<Ex>(ex), e_source_location{file,line,function}, std::forward<E>(e)... );
+		}
+	}
 
 } }
 

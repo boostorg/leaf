@@ -197,7 +197,7 @@ namespace boost { namespace leaf {
 			if( which_==variant::value )
 				return value_;
 			else
-				LEAF_THROW<bad_result>();
+				LEAF_THROW(bad_result());
 		}
 
 		T & value()
@@ -205,7 +205,7 @@ namespace boost { namespace leaf {
 			if( which_==variant::value )
 				return value_;
 			else
-				LEAF_THROW<bad_result>();
+				LEAF_THROW(bad_result());
 		}
 
 		T const & operator*() const

@@ -50,7 +50,7 @@ int do_work( lua_State * L )
 	else
 	{
 		//Remarkably, the Lua interpreter is exception-safe. So, just throw.
-		throw leaf::exception<lua_failure>(ec1);
+		throw leaf::exception(lua_failure(),ec1);
 	}
 }
 
@@ -92,7 +92,7 @@ int call_lua( lua_State * L )
 		//This is definitely not a do_work failure, because it throws on error.
 		auto propagate = leaf::preload( e_lua_error_message{lua_tostring(L,1)} );
 		lua_pop(L,1);
-		throw leaf::exception<lua_failure>( e_lua_pcall_error{err} );
+		throw leaf::exception( lua_failure(), e_lua_pcall_error{err} );
 	}
 	else
 	{

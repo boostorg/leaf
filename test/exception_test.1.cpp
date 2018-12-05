@@ -104,12 +104,12 @@ int main()
 {
 	test( [ ]
 	{
-		throw leaf::exception<my_error>( info<1>{1} );
+		LEAF_THROW( my_error(), info<1>{1} );
 	} );
 
 	test( [ ]
 	{
-		LEAF_THROW<my_error>( info<1>{1} );
+		throw LEAF_EXCEPTION( my_error{}, info<1>{1} );
 	} );
 
 	test( [ ]

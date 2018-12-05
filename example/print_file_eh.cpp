@@ -39,7 +39,7 @@ std::shared_ptr<FILE> file_open( char const * file_name )
 	if( FILE * f = fopen(file_name,"rb") )
 		return std::shared_ptr<FILE>(f,&fclose);
 	else
-		throw leaf::exception<input_file_open_error>( e_file_name{file_name}, e_errno{errno} );
+		throw leaf::exception( input_file_open_error(), e_file_name{file_name}, e_errno{errno} );
 }
 
 
@@ -67,7 +67,7 @@ void file_read( FILE & f, void * buf, int size )
 	int n = fread(buf,1,size,&f);
 
 	if( ferror(&f) )
-		throw leaf::exception<input_file_read_error>( e_errno{errno} );
+		throw leaf::exception( input_file_read_error(), e_errno{errno} );
 
 	if( n!=size )
 		throw input_eof_error();

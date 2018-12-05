@@ -38,7 +38,8 @@ task_result task( bool succeed )
 	if( succeed )
 		return task_result(); //Simulate successful result.
 	else
-		throw leaf::exception<failure>(
+		throw leaf::exception(
+			failure(),
 			e_thread_id{std::this_thread::get_id()},
 			e_failure_info1{"info"},
 			e_failure_info2{42},
