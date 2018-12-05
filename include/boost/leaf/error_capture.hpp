@@ -138,8 +138,8 @@ namespace boost { namespace leaf {
 					return 0;
 			}
 
-			virtual void diagnostic_output( std::ostream & ) const = 0;
-			virtual void unload( error const & ) noexcept = 0;
+			virtual void diagnostic_output_( std::ostream & ) const = 0;
+			virtual void unload_( error const & ) noexcept = 0;
 		};
 
 		////////////////////////////////////////
@@ -163,12 +163,12 @@ namespace boost { namespace leaf {
 				return tuple_for_each_capture<sizeof...(T),std::tuple<optional<T>...>>::dynamic_bind(s_,type_id);
 			}
 
-			void diagnostic_output( std::ostream & os ) const
+			void diagnostic_output_( std::ostream & os ) const
 			{
 				leaf_detail::tuple_for_each_capture<sizeof...(T),decltype(s_)>::print(os,s_);
 			}
 
-			void unload( error const & e ) noexcept
+			void unload_( error const & e ) noexcept
 			{
 				leaf_detail::tuple_for_each_capture<sizeof...(T),decltype(s_)>::unload(e,std::move(s_));
 			}
@@ -269,7 +269,7 @@ namespace boost { namespace leaf {
 		{
 			if( ds_ )
 			{
-				ds_->unload(e_);
+				ds_->unload_(e_);
 				free();
 			}
 			return e_;
@@ -304,7 +304,7 @@ namespace boost { namespace leaf {
 	inline void diagnostic_output( std::ostream & os, error_capture const & e )
 	{
 		if( e )
-			e.ds_->diagnostic_output(os);
+			e.ds_->diagnostic_output_(os);
 	}
 
 } }

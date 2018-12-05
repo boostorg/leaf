@@ -5,6 +5,7 @@
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/common.hpp>
+#include <boost/leaf/current_exception_diagnostic_output.hpp>
 #include <boost/leaf/error_capture.hpp>
 #include <boost/leaf/error.hpp>
 #include <boost/leaf/exception_capture.hpp>

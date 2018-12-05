@@ -44,7 +44,7 @@ namespace boost { namespace leaf {
 				std::rethrow_exception(ex_);
 			}
 
-			friend void diagnostic_output( std::ostream & os, captured_exception const & ce )
+			friend void diagnostic_output_( std::ostream & os, captured_exception const & ce )
 			{
 				diagnostic_output(os,static_cast<error_capture const &>(ce));
 			}
@@ -100,45 +100,6 @@ namespace boost { namespace leaf {
 		catch( leaf_detail::captured_exception & ex )
 		{
 			ex.rethrow_original_exception();
-		}
-	}
-
-	////////////////////////////////////////
-
-	template <class... E>
-	void current_exception_diagnostic_output( std::ostream & os, expect<E...> const & exp )
-	{
-		os << "Current Exception Diagnostic Information:" << std::endl;
-		try
-		{
-			throw;
-		}
-		catch( std::exception const & ex )
-		{
-			os <<
-				"Exception dynamic type: " << typeid(ex).name() << std::endl <<
-				"std::exception::what(): " << ex.what() << std::endl;
-		}
-		catch( ... )
-		{
-			os << "Unknown exception type (not a std::exception)" << std::endl;
-		}
-
-		try
-		{
-			throw;
-		}
-		catch( leaf_detail::captured_exception const & e )
-		{
-			diagnostic_output(os,e);
-		}
-		catch( error const & e )
-		{
-			diagnostic_output(os,exp,e);
-		}
-		catch( ... )
-		{
-			diagnostic_output(os,exp);
 		}
 	}
 
