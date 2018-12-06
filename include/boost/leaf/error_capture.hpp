@@ -190,7 +190,7 @@ namespace boost { namespace leaf {
 		{
 			if( !matched && (matched=leaf_detail::all_available<typename std::remove_cv<typename std::remove_reference<T>::type>::type...>::check(*this)) )
 				(void) std::forward<F>(f)( *peek<typename std::remove_cv<typename std::remove_reference<T>::type>::type>(*this)... );
-			return 42;
+			return 0;
 		}
 
 		template <class F>

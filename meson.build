@@ -49,6 +49,7 @@ tests = [
 	'expect_test.1',
 	'expect_test.2',
 	'expect_test.3',
+	'expect_test.4',
 	'function_traits_test',
 	'is_error_type_test',
 	'multiple_errors_test',

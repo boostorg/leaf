@@ -210,7 +210,7 @@ namespace boost { namespace leaf {
 			using namespace leaf_detail;
 			if( !matched && (matched=slots_subset<decltype(s_),expect_slot<typename std::remove_cv<typename std::remove_reference<T>::type>::type>...>::have_values(s_,e)) )
 				(void) std::forward<F>(f)( *leaf::peek<typename std::remove_cv<typename std::remove_reference<T>::type>::type>(*this,e)... );
-			return 42;
+			return 0;
 		}
 
 		template <class F>

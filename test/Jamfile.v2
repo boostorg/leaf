@@ -40,6 +40,7 @@ run exception_test.1.cpp ;
 run expect_test.1.cpp ;
 run expect_test.2.cpp ;
 run expect_test.3.cpp ;
+run expect_test.4.cpp ;
 run multiple_errors_test.cpp ;
 run function_traits_test.cpp ;
 run is_error_type_test.cpp ;

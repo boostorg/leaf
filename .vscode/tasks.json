@@ -120,6 +120,12 @@
             		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
 		},
 		{
+			"label": "expect_test.4",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test expect_test.4",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
 			"label": "function_traits_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test function_traits_test",

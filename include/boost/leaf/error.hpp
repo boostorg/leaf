@@ -226,7 +226,6 @@ namespace boost { namespace leaf {
 			slot & operator=( slot const & ) = delete;
 			typedef optional<error_info<E>> base;
 			slot<E> * prev_;
-			static_assert(is_error_type<E>::value,"All types passed to leaf::expect must be error types");
 		protected:
 			slot() noexcept;
 			~slot() noexcept;
@@ -293,18 +292,19 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		E * put_slot( E && v, error const & e ) noexcept
+		int put_slot( E && v, error const & e ) noexcept
 		{
-			if( slot<E> * p = tl_slot_ptr<E>() )
-				return &p->put( error_info<E>{std::forward<E>(v),e} ).v;
+			using T = typename std::remove_cv<typename std::remove_reference<E>::type>::type;
+			if( slot<T> * p = tl_slot_ptr<T>() )
+				(void) p->put( error_info<T>{std::forward<E>(v),e} );
 			else
 			{
 				int c = tl_unexpected_enabled_counter();
 				assert(c>=0);
 				if( c )
-					no_expect_slot( error_info<E>{std::forward<E>(v),e} );
-				return 0;
+					no_expect_slot( error_info<T>{std::forward<E>(v),e} );
 			}
+			return 0;
 		}
 
 		template <class E>
@@ -346,7 +346,7 @@ namespace boost { namespace leaf {
 	template <class... E>
 	error error::propagate( E && ... e ) const noexcept
 	{
-		{ using _ = void const * [ ]; (void) _ { 0, leaf_detail::put_slot(std::forward<E>(e),*this)... }; }
+		{ using _ = int const [ ]; (void) _ { 0, leaf_detail::put_slot(std::forward<E>(e),*this)... }; }
 		return *this;
 	}
 
