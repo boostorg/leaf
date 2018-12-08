@@ -40,8 +40,9 @@ int main()
 	BOOST_TEST(!leaf::peek<info<3>>(exp,e));
 	int c=0;
 	bool handled = handle_error( exp, e,
-		[&c]( info<1> const & i1, info<2> const & i2, info<4> const & i4 )
+		[&c]( info<0> const & i0, info<1> const & i1, info<2> const & i2, info<4> const & i4 )
 		{
+			BOOST_TEST(i0.value==0);
 			BOOST_TEST(i1.value==1);
 			BOOST_TEST(i2.value==2);
 			BOOST_TEST(i4.value==4);
