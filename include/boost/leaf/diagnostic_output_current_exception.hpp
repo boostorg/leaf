@@ -12,7 +12,7 @@
 namespace boost { namespace leaf {
 
 	template <class... E>
-	void current_exception_diagnostic_output( std::ostream & os, expect<E...> const & exp )
+	void diagnostic_output_current_exception( std::ostream & os, expect<E...> const & exp )
 	{
 		os << "Current Exception Diagnostic Information:" << std::endl;
 

@@ -649,14 +649,14 @@ int main( int argc, char const * argv[ ] )
   {
     //This catch-all case helps diagnose logic errors (presumably, missing catch).
     std::cerr << "Unknown error, cryptic information follows." << std::endl;
-    current_exception_diagnostic_output(std::cerr,exp);
+    diagnostic_output_current_exception(std::cerr,exp);
     return 5;
   }
 }
 ----
 
 [.text-right]
-`<<expect,expect>>` | <<handle_exception>> | <<current_exception_diagnostic_output>>
+`<<expect,expect>>` | <<handle_exception>> | <<diagnostic_output_current_exception>>
 
 To summarize, when using LEAF with exception handling:
 
@@ -694,10 +694,10 @@ include::synopses/common.adoc[]
 include::synopses/exception.adoc[]
 
 === Diagnostic Output for the Current Exception
-include::synopses/current_exception_diagnostic_output.adoc[]
+include::synopses/diagnostic_output_current_exception.adoc[]
 
 [.text-right]
-`<<current_exception_diagnostic_output,current_exception_diagnostic_output>>`
+`<<diagnostic_output_current_exception,diagnostic_output_current_exception>>`
 
 === Transporting of Exceptions between Threads
 include::synopses/exception_capture.adoc[]
@@ -1934,9 +1934,9 @@ Effects: :: Throws the exception object returned by <<LEAF_EXCEPTION>>.
 
 '''
 
-[[current_exception_diagnostic_output]]
+[[diagnostic_output_current_exception]]
 === Diagnostic Output for the Current Exception
-include::synopses/current_exception_diagnostic_output.adoc[]
+include::synopses/diagnostic_output_current_exception.adoc[]
 
 Effects: :: This function prints a developer-friendly (but not user-friendly) diagnostic information about the current exception to `os`.
 

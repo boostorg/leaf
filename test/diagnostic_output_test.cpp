@@ -4,7 +4,7 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/current_exception_diagnostic_output.hpp>
+#include <boost/leaf/diagnostic_output_current_exception.hpp>
 #include <boost/leaf/common.hpp>
 #include <boost/leaf/exception.hpp>
 #include <boost/detail/lightweight_test.hpp>
@@ -99,7 +99,7 @@ int main()
 		catch( my_error & e )
 		{
 			std::ostringstream st;
-			current_exception_diagnostic_output(st,exp);
+			diagnostic_output_current_exception(st,exp);
 			std::string s = st.str();
 			BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
 			BOOST_TEST(s.find(": N/A")!=s.npos);
@@ -108,7 +108,7 @@ int main()
 			BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
 			BOOST_TEST(s.find(") in function")!=s.npos);
 			BOOST_TEST(s.find("Detected 2 attempts to communicate unexpected error objects, the first one of type ")!=s.npos);
-			BOOST_TEST(s.find("(unexpected) ")!=s.npos);
+			BOOST_TEST(s.find("unexpected_test")!=s.npos);
 			std::cout << s;
 			handle_exception( exp, e, [ ]{ } );
 		}

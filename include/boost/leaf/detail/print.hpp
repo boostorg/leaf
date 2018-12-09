@@ -8,17 +8,22 @@
 #define UUID_3BAB50A2B87E11E89EEB30600C39171A
 
 #include <ostream>
+#include <cstring>
 
 namespace boost { namespace leaf {
 
 	template <class Name>
 	char const * type() noexcept
 	{
+	char const * t =
 #ifdef __FUNCSIG__
-		return __FUNCSIG__;
+		__FUNCSIG__;
 #else
-		return __PRETTY_FUNCTION__;
+		__PRETTY_FUNCTION__;
 #endif
+		if( std::strncmp(t,"const char *boost::leaf::type() ",32)==0 )
+			t += 32;
+		return t;
 	}
 
 	namespace leaf_detail

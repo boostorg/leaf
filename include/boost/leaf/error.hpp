@@ -31,7 +31,7 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
 		{
-			return os << "At " << x.file << '(' << x.line << ") in function " << x.function;
+			return os << leaf::type<e_source_location>() << ": " << x.file << '(' << x.line << ") in function " << x.function;
 		}
 	};
 
@@ -55,11 +55,6 @@ namespace boost { namespace leaf {
 	struct e_unexpected_diagnostic_output
 	{
 		std::string value;
-
-		friend std::ostream & operator<<( std::ostream & os, e_unexpected_diagnostic_output const & x )
-		{
-			return os << x.value;
-		}
 	};
 
 	namespace leaf_detail
@@ -269,18 +264,18 @@ namespace boost { namespace leaf {
 				std::stringstream s;
 				if( !diagnostic<decltype(ev.v)>::print(s,ev.v) )
 					return;
+				std::string val = "\n\t";
+				val += s.str();
 				if( p->has_value() )
 				{
 					auto & p_ev = p->value();
 					if( p_ev.e==ev.e )
 					{
-						std::string & value = p_ev.v.value;
-						value += "\n(unexpected) ";
-						value += s.str();
+						p_ev.v.value += std::move(val);
 						return;
 					}
 				}
-				(void) p->put( error_info<e_unexpected_diagnostic_output>{e_unexpected_diagnostic_output{"(unexpected) "+s.str()},ev.e} );
+				(void) p->put( error_info<e_unexpected_diagnostic_output>{e_unexpected_diagnostic_output{std::move(val)},ev.e} );
 			}
 		}
 
