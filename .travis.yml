@@ -206,8 +206,8 @@ install:
 script:
   - |-
     echo "using $TOOLSET : : $COMPILER ;" > ~/user-config.jam
-  - ./b2 variant=debug libs/leaf/test toolset=$TOOLSET cxxstd=$CXXSTD cxxflags=-w ${CXXFLAGS:+cxxflags="$CXXFLAGS"} ${LINKFLAGS:+linkflags="$LINKFLAGS"}
-  - ./b2 variant=release libs/leaf/test toolset=$TOOLSET cxxstd=$CXXSTD cxxflags=-w ${CXXFLAGS:+cxxflags="$CXXFLAGS"} ${LINKFLAGS:+linkflags="$LINKFLAGS"}
+  - ./b2 variant=debug libs/leaf/test toolset=$TOOLSET cxxstd=$CXXSTD cxxflags=-w ${CXXFLAGS:+cxxflags="$CXXFLAGS"} ${LINKFLAGS:+linkflags="$LINKFLAGS"} --verbose-test
+  - ./b2 variant=release libs/leaf/test toolset=$TOOLSET cxxstd=$CXXSTD cxxflags=-w ${CXXFLAGS:+cxxflags="$CXXFLAGS"} ${LINKFLAGS:+linkflags="$LINKFLAGS"}--verbose-test
 
 notifications:
   email:
