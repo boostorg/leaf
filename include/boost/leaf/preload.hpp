@@ -48,8 +48,19 @@ namespace boost { namespace leaf {
 
 			void trigger( error e ) noexcept
 			{
-				if( s_ && (!s_->has_value() || s_->value().e!=e) )
-					s_->put( leaf_detail::error_info<E>{std::move(v_),e} );
+				if( s_ )
+				{
+					if( !s_->has_value() || s_->value().e!=e )
+						s_->put( leaf_detail::error_info<E>{std::move(v_),e} );
+				}
+				else
+				{
+					using T = typename std::remove_cv<typename std::remove_reference<E>::type>::type;
+					int c = tl_unexpected_enabled_counter();
+					assert(c>=0);
+					if( c )
+						no_expect_slot( error_info<T>{std::forward<E>(v_),e} );
+				}
 			}
 		};
 
@@ -122,8 +133,19 @@ namespace boost { namespace leaf {
 
 			void trigger( error e ) noexcept
 			{
-				if( s_ && (!s_->has_value() || s_->value().e!=e) )
-					s_->put( leaf_detail::error_info<E>{f_(),e} );
+				if( s_ )
+				{
+					if( !s_->has_value() || s_->value().e!=e )
+						s_->put( leaf_detail::error_info<E>{f_(),e} );
+				}
+				else
+				{
+					using T = typename std::remove_cv<typename std::remove_reference<E>::type>::type;
+					int c = tl_unexpected_enabled_counter();
+					assert(c>=0);
+					if( c )
+						no_expect_slot( error_info<T>{std::forward<E>(f_()),e} );
+				}
 			}
 		};
 

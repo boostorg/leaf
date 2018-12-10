@@ -66,6 +66,12 @@
             		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
 		},
 		{
+			"label": "defer_test.8",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.8",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
 			"label": "diagnostic_output_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test diagnostic_output_test",
@@ -183,6 +189,12 @@
 			"label": "preload_test.6",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.6",
+            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
+		},
+		{
+			"label": "preload_test.7",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.7",
             		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
 		},
 		{
