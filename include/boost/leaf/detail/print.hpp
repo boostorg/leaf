@@ -9,6 +9,7 @@
 
 #include <ostream>
 #include <cstring>
+#include <cassert>
 
 namespace boost { namespace leaf {
 
