@@ -12,6 +12,15 @@
 
 namespace boost { namespace leaf {
 
+	namespace leaf_detail
+	{
+		template <int N>
+		inline char const * check_prefix( char const * t, char const (&prefix)[N] )
+		{
+			return std::strncmp(t,prefix,sizeof(prefix)-1)==0 ? t+sizeof(prefix)-1 : t;
+		}
+	}
+
 	template <class Name>
 	char const * type() noexcept
 	{
@@ -21,8 +30,20 @@ namespace boost { namespace leaf {
 #else
 		__PRETTY_FUNCTION__;
 #endif
-		if( std::strncmp(t,"const char *boost::leaf::type() ",32)==0 )
-			t += 32;
+#if defined(__clang__)
+		assert(leaf_detail::check_prefix(t,"const char *boost::leaf::type() ")==t+32);
+		return t+32;
+#elif defined(__GNUC__)
+		assert(leaf_detail::check_prefix(t,"const char* boost::leaf::type() ")==t+32);
+		return t+32;
+#else
+		char const * clang_style = leaf_detail::check_prefix(t,"const char *boost::leaf::type() ");
+		if( clang_style!=t )
+			return clang_style;
+		char const * gcc_style = leaf_detail::check_prefix(t,"const char* boost::leaf::type() ");
+		if( gcc_style!=t )
+			return gcc_style;
+#endif
 		return t;
 	}
 
