@@ -1,3 +1,6 @@
+#ifndef BOOST_LEAF_3382F652FCDD11E8AAD1CCB3642D5A5F
+#define BOOST_LEAF_3382F652FCDD11E8AAD1CCB3642D5A5F
+
 //Copyright (c) 2018 Emil Dotchevski
 //Copyright (c) 2018 Second Spectrum, Inc.
 
@@ -13,3 +16,5 @@
 #include <boost/leaf/expect.hpp>
 #include <boost/leaf/preload.hpp>
 #include <boost/leaf/result.hpp>
+
+#endif

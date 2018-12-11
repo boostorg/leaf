@@ -1,11 +1,11 @@
+#ifndef BOOST_LEAF_C86E4C4ED0F011E8BB777EB8A659E189
+#define BOOST_LEAF_C86E4C4ED0F011E8BB777EB8A659E189
+
 //Copyright (c) 2018 Emil Dotchevski
 //Copyright (c) 2018 Second Spectrum, Inc.
 
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-#ifndef UUID_C86E4C4ED0F011E8BB777EB8A659E189
-#define UUID_C86E4C4ED0F011E8BB777EB8A659E189
 
 #include <boost/leaf/error.hpp>
 #include <boost/leaf/detail/function_traits.hpp>

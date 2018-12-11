@@ -1,11 +1,11 @@
+#ifndef BOOST_LEAF_BA049396D0D411E8B45DF7D4A759E189
+#define BOOST_LEAF_BA049396D0D411E8B45DF7D4A759E189
+
 //Copyright (c) 2018 Emil Dotchevski
 //Copyright (c) 2018 Second Spectrum, Inc.
 
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-#ifndef UUID_BA049396D0D411E8B45DF7D4A759E189
-#define UUID_BA049396D0D411E8B45DF7D4A759E189
 
 #include <boost/leaf/detail/optional.hpp>
 #include <boost/leaf/detail/print.hpp>
@@ -55,6 +55,11 @@ namespace boost { namespace leaf {
 	struct e_unexpected_diagnostic_output
 	{
 		std::string value;
+
+		friend std::ostream & operator<<( std::ostream & os, e_unexpected_diagnostic_output const & x )
+		{
+			return os << x.value;
+		}
 	};
 
 	namespace leaf_detail
@@ -264,18 +269,19 @@ namespace boost { namespace leaf {
 				std::stringstream s;
 				if( !diagnostic<decltype(ev.v)>::print(s,ev.v) )
 					return;
-				std::string val = "\n\t";
-				val += s.str();
 				if( p->has_value() )
 				{
 					auto & p_ev = p->value();
 					if( p_ev.e==ev.e )
 					{
-						p_ev.v.value += std::move(val);
+						std::string & value = p_ev.v.value;
+						value += '\n';
+						value += s.str();
+						value += " {unexpected}";
 						return;
 					}
 				}
-				(void) p->put( error_info<e_unexpected_diagnostic_output>{e_unexpected_diagnostic_output{std::move(val)},ev.e} );
+				(void) p->put( error_info<e_unexpected_diagnostic_output>{e_unexpected_diagnostic_output{s.str()+" {unexpected}"},ev.e} );
 			}
 		}
 

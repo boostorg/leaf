@@ -1,13 +1,14 @@
+#ifndef BOOST_LEAF_17228D24F83C11E8AAC53F8F652D5A5F
+#define BOOST_LEAF_17228D24F83C11E8AAC53F8F652D5A5F
+
 //Copyright (c) 2018 Emil Dotchevski
 //Copyright (c) 2018 Second Spectrum, Inc.
 
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef UUID_17228D24F83C11E8AAC53F8F652D5A5F
-#define UUID_17228D24F83C11E8AAC53F8F652D5A5F
-
 #include <boost/leaf/exception_capture.hpp>
+#include <boost/leaf/detail/demangle.hpp>
 
 namespace boost { namespace leaf {
 
@@ -23,7 +24,7 @@ namespace boost { namespace leaf {
 		catch( std::exception const & ex )
 		{
 			os <<
-				"Exception dynamic type: " << typeid(ex).name() << std::endl <<
+				"Exception dynamic type: " << leaf_detail::demangle(typeid(ex).name()) << std::endl <<
 				"std::exception::what(): " << ex.what() << std::endl;
 		}
 		catch( ... )

@@ -1,11 +1,11 @@
+#ifndef BOOST_LEAF_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
+#define BOOST_LEAF_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
+
 //Copyright (c) 2018 Emil Dotchevski
 //Copyright (c) 2018 Second Spectrum, Inc.
 
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-#ifndef UUID_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
-#define UUID_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
 
 #include <boost/leaf/error_capture.hpp>
 #include <boost/leaf/detail/throw.hpp>
