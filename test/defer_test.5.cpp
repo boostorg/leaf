@@ -6,7 +6,7 @@
 
 #include <boost/leaf/expect.hpp>
 #include <boost/leaf/preload.hpp>
-#include <boost/detail/lightweight_test.hpp>
+#include "boost/core/lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
 

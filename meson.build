@@ -18,8 +18,6 @@ if not meson.is_subproject()
 	endif
 endif
 
-boost_headers = dependency('boost', fallback:['boost','headers'])
-
 includes = [ include_directories('include') ]
 
 leaf = declare_dependency( include_directories: includes )
@@ -73,7 +71,7 @@ tests = [
 	'result_void_capture_test'
 ]
 foreach t : tests
-	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [ boost_headers, leaf] ) )
+	test(t, executable(t, 'test/'+t+'.cpp', dependencies: leaf ) )
 endforeach
 
 examples = [
@@ -83,11 +81,11 @@ examples = [
 	'print_file_eh'
 ]
 foreach e : examples
-	executable(e, 'example/'+e+'.cpp', dependencies: [ boost_headers, leaf ] )
+	executable(e, 'example/'+e+'.cpp', dependencies: leaf )
 endforeach
 
 if get_option('build_lua_examples')
 	lua=subproject('lua').get_variable('all')
-	executable('lua_callback_result', 'example/lua_callback_result.cpp', dependencies: [ boost_headers, leaf, lua ] )
-	executable('lua_callback_eh', 'example/lua_callback_eh.cpp', dependencies: [ boost_headers, leaf, lua ] )
+	executable('lua_callback_result', 'example/lua_callback_result.cpp', dependencies: [ leaf, lua ] )
+	executable('lua_callback_eh', 'example/lua_callback_eh.cpp', dependencies: [ leaf, lua ] )
 endif

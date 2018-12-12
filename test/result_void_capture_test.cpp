@@ -6,7 +6,7 @@
 
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/expect.hpp>
-#include <boost/detail/lightweight_test.hpp>
+#include "boost/core/lightweight_test.hpp"
 #include <vector>
 #include <future>
 #include <iterator>

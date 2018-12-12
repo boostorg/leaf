@@ -7,7 +7,7 @@
 #include <boost/leaf/exception_capture.hpp>
 #include <boost/leaf/preload.hpp>
 #include <boost/leaf/exception.hpp>
-#include <boost/detail/lightweight_test.hpp>
+#include "boost/core/lightweight_test.hpp"
 #include <vector>
 #include <future>
 #include <iterator>

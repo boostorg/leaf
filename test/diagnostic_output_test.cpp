@@ -7,7 +7,7 @@
 #include <boost/leaf/diagnostic_output_current_exception.hpp>
 #include <boost/leaf/common.hpp>
 #include <boost/leaf/exception.hpp>
-#include <boost/detail/lightweight_test.hpp>
+#include "boost/core/lightweight_test.hpp"
 #include <sstream>
 
 namespace leaf = boost::leaf;
