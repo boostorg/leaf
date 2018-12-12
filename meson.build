@@ -18,7 +18,7 @@ if not meson.is_subproject()
 	endif
 endif
 
-boost_headers = dependency('boost')
+boost_headers = dependency('boost', fallback:['boost','headers'])
 
 includes = [ include_directories('include') ]
 
