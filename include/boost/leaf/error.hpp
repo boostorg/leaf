@@ -340,7 +340,8 @@ namespace boost { namespace leaf {
 			assert(file&&*file);
 			assert(line>0);
 			assert(function&&*function);
-			return error( e_source_location{file,line,function}, std::forward<E>(e)... );
+			e_source_location sl { file, line, function }; //Temp object MSVC workaround
+			return error( std::move(sl), std::forward<E>(e)... );
 		}
 	} //leaf_detail
 
