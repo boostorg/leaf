@@ -2832,17 +2832,20 @@ See unit test matrix at https://travis-ci.org/zajo/leaf[Travis-CI]. It has also 
 
 LEAF is a header-only library and it requires no building. It does not depend on Boost or on any other library.
 
-The unit tests require Boost and can be run with Boost Build or with https://mesonbuild.com[Meson Build]. To run the unit tests:
+The unit tests can be run with Boost Build or with https://mesonbuild.com[Meson Build]. To run the unit tests:
 
-. Clone LEAF under your `boost/libs` directory.
-.. If using Boost Build:
+. If using Boost Build:
+.. Clone LEAF under your `boost/libs` directory.
+.. Execute:
 +
 [source,sh]
 ----
 cd leaf/test
 ../../../b2
 ----
-.. If using Meson Build:
+. If using Meson Build:
+.. Clone LEAF into any local directory.
+.. Execute:
 +
 [source,sh]
 ----
