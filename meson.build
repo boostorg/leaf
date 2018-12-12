@@ -4,7 +4,7 @@
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-project('leaf', 'cpp', default_options : ['cpp_std=c++17','b_pch=false'], license : 'boost')
+project('leaf', 'cpp', default_options : ['cpp_std=c++11','b_pch=false'], license : 'boost')
 
 compiler = meson.get_compiler('cpp')
 compiler_id = compiler.get_id()
@@ -17,6 +17,8 @@ if not meson.is_subproject()
 			language:'cpp' )
 	endif
 endif
+
+boost_headers = dependency('boost')
 
 includes = [ include_directories('include') ]
 
@@ -71,7 +73,7 @@ tests = [
 	'result_void_capture_test'
 ]
 foreach t : tests
-	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [ leaf ] ) )
+	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [ boost_headers, leaf] ) )
 endforeach
 
 examples = [
@@ -81,11 +83,11 @@ examples = [
 	'print_file_eh'
 ]
 foreach e : examples
-	executable(e, 'example/'+e+'.cpp', dependencies: [ leaf ] )
+	executable(e, 'example/'+e+'.cpp', dependencies: [ boost_headers, leaf ] )
 endforeach
 
 if get_option('build_lua_examples')
 	lua=subproject('lua').get_variable('all')
-	executable('lua_callback_result', 'example/lua_callback_result.cpp', dependencies: [ leaf, lua ] )
-	executable('lua_callback_eh', 'example/lua_callback_eh.cpp', dependencies: [ leaf, lua ] )
+	executable('lua_callback_result', 'example/lua_callback_result.cpp', dependencies: [ boost_headers, leaf, lua ] )
+	executable('lua_callback_eh', 'example/lua_callback_eh.cpp', dependencies: [ boost_headers, leaf, lua ] )
 endif
