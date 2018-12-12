@@ -12,6 +12,15 @@
 #include <cstring>
 #include <cerrno>
 #include <cassert>
+#ifdef _WIN32
+#include <Windows.h>
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+#endif
 
 namespace boost { namespace leaf {
 
@@ -25,7 +34,6 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, e_errno const & err )
 		{
-			using namespace std;
 			return os << type<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
 		}
 	};
@@ -39,6 +47,38 @@ namespace boost { namespace leaf {
 		struct e_LastError
 		{
 			unsigned value;
+
+#ifdef _WIN32
+			friend std::ostream & operator<<( std::ostream & os, e_LastError const & err )
+			{
+				struct msg_buf
+				{
+					LPVOID * p;
+					msg_buf(): p(0) { }
+					~msg_buf() { if(p) LocalFree(p); }
+				};
+				msg_buf mb;
+				if( FormatMessageA(
+					FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS,
+					0,
+					err.value,
+					MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
+					(LPSTR)&mb.p,
+					0,
+					0) )
+				{
+					assert(mb.p!=0);
+					char * z = std::strchr((LPSTR)mb.p,0);
+					if( z[-1] == '\n' )
+						*--z = 0;
+					if( z[-1] == '\r' )
+						*--z = 0;
+					return os << type<e_LastError>() << ": " << err.value << ", \"" << (LPCSTR)mb.p << '"';
+				}
+			}
+#else
+			// TODO : Other platforms
+#endif
 		};
 	}
 
