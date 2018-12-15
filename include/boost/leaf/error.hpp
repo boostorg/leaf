@@ -16,6 +16,7 @@
 #include <type_traits>
 #include <system_error>
 #include <sstream>
+#include <set>
 
 #define LEAF_ERROR(...) ::boost::leaf::leaf_detail::make_error(__FILE__,__LINE__,__FUNCTION__,__VA_ARGS__)
 
@@ -55,11 +56,8 @@ namespace boost { namespace leaf {
 	struct e_unexpected_diagnostic_output
 	{
 		std::string value;
-
-		friend std::ostream & operator<<( std::ostream & os, e_unexpected_diagnostic_output const & x )
-		{
-			return os << x.value;
-		}
+		std::set<char const *(*)()> already;
+		friend std::ostream & operator<<( std::ostream & os, e_unexpected_diagnostic_output const & x ) noexcept { return os; }
 	};
 
 	namespace leaf_detail
@@ -274,10 +272,13 @@ namespace boost { namespace leaf {
 					auto & p_ev = p->value();
 					if( p_ev.e==ev.e )
 					{
-						std::string & value = p_ev.v.value;
-						value += '\n';
-						value += s.str();
-						value += " {unexpected}";
+						if( p_ev.v.already.insert(&type<E>).second )
+						{
+							std::string & value = p_ev.v.value;
+							value += '\n';
+							value += s.str();
+							value += " {unexpected}";
+						}
 						return;
 					}
 				}
@@ -342,6 +343,15 @@ namespace boost { namespace leaf {
 			assert(function&&*function);
 			e_source_location sl { file, line, function }; //Temp object MSVC workaround
 			return error( std::move(sl), std::forward<E>(e)... );
+		}
+
+		inline void diagnostic_output_prefix( std::ostream & os, leaf::error const * e )
+		{
+			if( e )
+				os << "leaf::error serial number: " << *e << std::endl;
+			if( leaf_detail::slot<e_unexpected_diagnostic_output> const * unx = leaf_detail::tl_slot_ptr<e_unexpected_diagnostic_output>() )
+				if( unx->has_value() )
+					os << unx->value().v.value << std::endl;
 		}
 	} //leaf_detail
 

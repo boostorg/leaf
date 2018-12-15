@@ -9,6 +9,7 @@
 
 #include <boost/leaf/expect.hpp>
 #include <boost/leaf/detail/throw.hpp>
+#include <boost/leaf/detail/demangle.hpp>
 
 namespace boost { namespace leaf {
 
@@ -38,6 +39,9 @@ namespace boost { namespace leaf {
 	template <class... E>
 	void diagnostic_output( std::ostream & os, expect<E...> const & exp, std::exception const & ex )
 	{
+		os <<
+			"Exception dynamic type: " << leaf_detail::demangle(typeid(ex).name()) << std::endl <<
+			"std::exception::what(): " << ex.what() << std::endl;
 		diagnostic_output(os,exp,get_error(ex));
 	}
 
