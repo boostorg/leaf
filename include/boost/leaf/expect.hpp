@@ -268,12 +268,14 @@ namespace boost { namespace leaf {
 	template <class... E>
 	void diagnostic_output( std::ostream & os, expect<E...> const & exp )
 	{
+		leaf_detail::diagnostic_output_prefix(os,0);
 		leaf_detail::tuple_for_each_expect<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_);
 	}
 
 	template <class... E>
 	void diagnostic_output( std::ostream & os, expect<E...> const & exp, error const & e )
 	{
+		leaf_detail::diagnostic_output_prefix(os,&e);
 		leaf_detail::tuple_for_each_expect<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_,e);
 	}
 

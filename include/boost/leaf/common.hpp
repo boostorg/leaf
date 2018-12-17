@@ -75,6 +75,7 @@ namespace boost { namespace leaf {
 						*--z = 0;
 					return os << type<e_LastError>() << ": " << err.value << ", \"" << (LPCSTR)mb.p << '"';
 				}
+				return os;
 			}
 #else
 			// TODO : Other platforms
