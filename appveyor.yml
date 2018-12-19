@@ -1,0 +1,48 @@
+# Copyright 2016, 2017 Peter Dimov
+# Copyright 2018 Emil Dotchevski
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at http://boost.org/LICENSE_1_0.txt)
+
+version: 1.0.{build}-{branch}
+
+shallow_clone: true
+
+branches:
+  only:
+    - master
+    - develop
+    - /feature\/.*/
+
+environment:
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+      TOOLSET: msvc-12.0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      TOOLSET: msvc-14.0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      TOOLSET: msvc-14.1
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      TOOLSET: msvc-14.1
+      CXXSTD: 17
+
+install:
+  - set BOOST_BRANCH=develop
+  - if "%APPVEYOR_REPO_BRANCH%" == "master" set BOOST_BRANCH=master
+  - cd ..
+  - git clone -b %BOOST_BRANCH% --depth 1 https://github.com/boostorg/boost.git boost-root
+  - cd boost-root
+  - git submodule update --init tools/build
+  - git submodule update --init tools/boost_install
+  - git submodule update --init libs/config
+  - git submodule update --init libs/headers
+  - git submodule update --init tools/boostdep
+  - xcopy /s /e /q %APPVEYOR_BUILD_FOLDER% libs\leaf\
+  - python tools/boostdep/depinst/depinst.py leaf
+  - cmd /c bootstrap
+  - b2 headers
+
+build: off
+
+test_script:
+  - if not "%CXXSTD%" == "" set CXXSTD=cxxstd=%CXXSTD%
+  - b2 -j3 libs/leaf/test toolset=%TOOLSET% %CXXSTD%
