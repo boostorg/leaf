@@ -59,7 +59,7 @@ namespace boost { namespace leaf {
 
 		public:
 
-			constexpr explicit exception_trap( F && f ) noexcept:
+			explicit exception_trap( F && f ) noexcept:
 				f_(std::move(f))
 			{
 			}
@@ -85,7 +85,7 @@ namespace boost { namespace leaf {
 	} //leaf_detail
 
 	template <class... E, class F>
-	constexpr leaf_detail::exception_trap<F,E...> capture_exception( F && f ) noexcept
+	leaf_detail::exception_trap<F,E...> capture_exception( F && f ) noexcept
 	{
 		return leaf_detail::exception_trap<F,E...>(std::move(f));
 	}

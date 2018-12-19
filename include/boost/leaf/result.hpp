@@ -137,19 +137,19 @@ namespace boost { namespace leaf {
 			move_from(std::move(x));
 		}
 
-		constexpr result() noexcept:
+		result() noexcept:
 			value_(T()),
 			which_(variant::value)
 		{
 		}
 
-		constexpr result( T const & v ):
+		result( T const & v ):
 			value_(v),
 			which_(variant::value)
 		{
 		}
 
-		constexpr result( T && v ) noexcept:
+		result( T && v ) noexcept:
 			value_(std::move(v)),
 			which_(variant::value)
 		{
@@ -187,7 +187,7 @@ namespace boost { namespace leaf {
 			return *this;
 		}
 
-		constexpr explicit operator bool() const noexcept
+		explicit operator bool() const noexcept
 		{
 			return which_==variant::value;
 		}
@@ -270,7 +270,7 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		constexpr result() noexcept = default;
+		result() noexcept = default;
 
 		result( leaf::error const & e ) noexcept:
 			base(e)

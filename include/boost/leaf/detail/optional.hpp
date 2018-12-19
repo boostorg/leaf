@@ -24,7 +24,7 @@ namespace boost { namespace leaf {
 		public:
 
 			typedef T value_type;
-			constexpr optional() noexcept:
+			optional() noexcept:
 				has_value_(false)
 			{
 			}
@@ -47,13 +47,13 @@ namespace boost { namespace leaf {
 				}
 			}
 
-			constexpr optional( T const & v ):
+			optional( T const & v ):
 				value_(v),
 				has_value_(true)
 			{
 			}
 
-			constexpr optional( T && v ) noexcept:
+			optional( T && v ) noexcept:
 				value_(std::move(v)),
 				has_value_(true)
 			{

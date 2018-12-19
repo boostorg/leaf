@@ -95,7 +95,7 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple>
 		struct slots_subset<SlotsTuple>
 		{
-			constexpr static bool have_values( SlotsTuple const &, error const & ) noexcept { return true; }
+			static constexpr bool have_values( SlotsTuple const &, error const & ) noexcept { return true; }
 		};
 
 		////////////////////////////////////////
