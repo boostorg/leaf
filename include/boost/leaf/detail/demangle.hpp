@@ -18,8 +18,10 @@
 
 #include <string>
 
-#if !defined(_MSC_VER) && defined(__has_include) && __has_include(<cxxabi.h>)
-#	define BOOST_LEAF_HAS_CXXABI_H
+#if !defined(_MSC_VER)
+#	if defined(__has_include) && __has_include(<cxxabi.h>)
+#		define BOOST_LEAF_HAS_CXXABI_H
+#	endif
 #endif
 
 #if defined( BOOST_LEAF_HAS_CXXABI_H )
