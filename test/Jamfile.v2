@@ -8,7 +8,8 @@ import testing ;
 
 project
     : requirements
-        <toolset>gcc:<cxxflags>"-std=c++11"<linkflags>"-pthread"
+        <toolset>gcc:<cxxflags>"-std=c++11"
+        <toolset>gcc:<linkflags>"-pthread"
         <toolset>darwin:<cxxflags>"-std=c++11 -Wno-unused-variable -Wno-non-virtual-dtor -Wno-dangling-else"
 		<toolset>msvc:<cxxflags>"-wd 4267 -wd 4996"
 		<include>../../..
