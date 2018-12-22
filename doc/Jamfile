@@ -1,0 +1,25 @@
+# Copyright 2017 Peter Dimov
+# Copyright 2018 Emil Dotchevski
+#
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+project doc/leaf ;
+
+import asciidoctor ;
+
+html index.html : leaf.adoc ;
+
+install html_ : index.html : <location>html ;
+
+pdf leaf.pdf : leaf.adoc ;
+explicit leaf.pdf ;
+
+install pdf_ : leaf.pdf : <location>pdf ;
+explicit pdf_ ;
+
+alias boostdoc ;
+explicit boostdoc ;
+alias boostrelease : html_ ;
+explicit boostrelease ;

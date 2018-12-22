@@ -22,12 +22,46 @@ env:
   matrix:
     - BOGUS_JOB=true
 
+addons:
+  apt:
+    packages:
+      - g++-4.9
+      - g++-5
+      - g++-6
+      - clang-3.6
+      - clang-3.7
+      - clang-3.8
+      - ruby-full
+
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise
+      - llvm-toolchain-precise-3.6
+      - llvm-toolchain-precise-3.7
+      - llvm-toolchain-precise-3.8
+
 matrix:
 
   exclude:
     - env: BOGUS_JOB=true
 
   include:
+
+    - os: linux
+      env: DOC=1
+      script:
+        - |-
+          echo "using asciidoctor ;" > ~/user-config.jam
+        - ./b2 libs/leaf/doc
+      deploy:
+        local-dir: ../boost-root/libs/leaf/doc/html
+        provider: pages
+        skip-cleanup: true
+        github-token: $GH_PAGES_TOKEN
+        keep-history: false
+        on:
+          branch: master
+
     - os: osx
       compiler: clang++
       env: TOOLSET=clang COMPILER=clang++ CXXSTD=11,14,1z
@@ -190,6 +224,8 @@ matrix:
             - llvm-toolchain-trusty-6.0
 
 install:
+  - gem install asciidoctor
+  - gem install coderay
   - cd ..
   - git clone -b $TRAVIS_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
   - cd boost-root
@@ -197,7 +233,6 @@ install:
   - git submodule update --init tools/inspect
   - git submodule update --init libs/config
   - git submodule update --init tools/boostdep
-  - mkdir libs/leaf
   - cp -r $TRAVIS_BUILD_DIR/* libs/leaf
   - python tools/boostdep/depinst/depinst.py leaf -I example
   - ./bootstrap.sh
@@ -206,8 +241,8 @@ install:
 script:
   - |-
     echo "using $TOOLSET : : $COMPILER ;" > ~/user-config.jam
-  - ./b2 variant=debug libs/leaf/test toolset=$TOOLSET cxxstd=$CXXSTD cxxflags=-w ${CXXFLAGS:+cxxflags="$CXXFLAGS"} ${LINKFLAGS:+linkflags="$LINKFLAGS"} --verbose-test
-  - ./b2 variant=release libs/leaf/test toolset=$TOOLSET cxxstd=$CXXSTD cxxflags=-w ${CXXFLAGS:+cxxflags="$CXXFLAGS"} ${LINKFLAGS:+linkflags="$LINKFLAGS"}--verbose-test
+  - ./b2 variant=debug libs/leaf/test toolset=$TOOLSET cxxstd=$CXXSTD
+  - ./b2 variant=release libs/leaf/test toolset=$TOOLSET cxxstd=$CXXSTD
 
 notifications:
   email:
