@@ -2650,6 +2650,160 @@ catch( my_exception & e )
 
 NOTE: Follow this link to see a complete example program: https://github.com/zajo/leaf/blob/master/example/capture_eh.cpp?ts=3[capture_eh.cpp].
 
+[[boost_exception]]
+== Boost Exception => LEAF
+
+When using LEAF with exception handling, it can be viewed as a better, more optimal alternative to Boost Exception.
+
+NOTE: Unlike Boost Exception, LEAF can be used with or without exception handling.
+
+The following tables outline the differences between the two libraries which should be considered when code that uses Boost Exception is refactored to use LEAF instead:
+
+.Defining a custom type for transporting values of type T
+[cols="1a,1a",options="header",stripes=none]
+|====
+| Boost Exception | LEAF
+|
+[source,c++,options="nowrap"]
+----
+typedef error_info<struct my_info_,T> my_info;
+----
+[.text-right]
+https://www.boost.org/doc/libs/release/libs/exception/doc/error_info.html[`boost::error_info`]
+|
+[source,c++,options="nowrap"]
+----
+struct my_info { T value; };
+----
+|====
+
+.Passing arbitrary info at the point of the throw
+[cols="1a,1a",options="header",stripes=none]
+|====
+| Boost Exception | LEAF
+|
+[source,c++,options="nowrap"]
+----
+throw my_exception() <<
+  my_info(x) <<
+  my_info(y);
+----
+[.text-right]
+https://www.boost.org/doc/libs/release/libs/exception/doc/exception_operator_shl.html[`operator<<`]
+|
+[source,c++,options="nowrap"]
+----
+throw leaf::exception( my_exception(),
+  my_info{x},
+  my_info{y} );
+----
+[.text-right]
+<<exception>>
+|====
+
+.Augmenting exceptions in exception-neutral contexts
+[cols="1a,1a",options="header",stripes=none]
+|====
+| Boost Exception | LEAF
+|
+[source,c++,options="nowrap"]
+----
+try
+{
+  f();
+}
+catch( boost::exception & e )
+{
+  e << my_info(x);
+  throw;
+}
+----
+[.text-right]
+https://www.boost.org/doc/libs/release/libs/exception/doc/exception.html[`boost::exception`] \| https://www.boost.org/doc/libs/release/libs/exception/doc/exception_operator_shl.html[`operator<<`]
+|
+[source,c++,options="nowrap"]
+----
+auto propagate = leaf::preload( my_info{x} );
+
+f();
+----
+[.text-right]
+<<preload>>
+|====
+
+.Obtaining arbitrary info at the point of the catch
+[cols="1a,1a",options="header",stripes=none]
+|====
+| Boost Exception | LEAF
+|
+[source,c++,options="nowrap"]
+----
+try
+{
+  f();
+}
+catch( my_exception & e )
+{
+  if( T * v = get_error_info<my_info>(e) )
+  {
+    //my_info is available in e.
+  }
+}
+----
+[.text-right]
+https://www.boost.org/doc/libs/release/libs/exception/doc/get_error_info.html[`boost::get_error_info`]
+|
+[source,c++,options="nowrap"]
+----
+leaf::expect<my_info> exp;
+try
+{
+  f();
+}
+catch( my_exception & e )
+{
+  leaf::handle_exception( exp, e,
+    [ ]( my_info const & x )
+    {
+      //my_info is available in e.
+    } );
+}
+----
+[.text-right]
+`<<expect,expect>>` \| <<handle_exception>> \| <<peek-expect>>
+|====
+
+.Error object propagation
+[cols="1a,1a",options="header",stripes=none]
+|====
+| Boost Exception | LEAF
+| All supplied https://www.boost.org/doc/libs/release/libs/exception/doc/error_info.html[`boost::error_info`] objects are allocated dynamically, stored in the https://www.boost.org/doc/libs/release/libs/exception/doc/exception.html[`boost::exception`] object, and propagated.
+|  User-defined error objects are stored statically in `leaf::<<expect,expect>>` objects but only if their types are used in the instantiation the `expect` class template; otherwise they are discarded.
+|====
+
+.Transporting of error objects across thread boundaries
+[cols="1a,1a",options="header",stripes=none]
+|====
+| Boost Exception | LEAF
+| https://www.boost.org/doc/libs/release/libs/exception/doc/exception_ptr.html[`boost::exception_ptr`] automatically captures https://www.boost.org/doc/libs/release/libs/exception/doc/error_info.html[`boost::error_info`] objects stored in a `boost::exception` and can transport them across thread boundaries.
+| Transporting error objects across thread boundaries requires the use of <<capture_exception>>.
+|====
+
+.Printing of error objects in automatically-generated diagnostic information messages
+[cols="1a,1a",options="header",stripes=none]
+|====
+| Boost Exception | LEAF
+| `boost::error_info` types may define conversion to `std::string` by providing `to_string` overloads *or* by overloading `operator<<` for `std::ostream`.
+| LEAF does not use `to_string`. Error types may define `operator<<` overloads for `std::ostream`.
+|====
+
+[WARNING]
+====
+The fact that Boost Exception stores all supplied `boost::error_info` objects while LEAF discards them if they aren't needed affects the completeness of the message printed by `leaf::<<diagnostic_output-expect,diagnostic_output>>` compared to the string returned by https://www.boost.org/doc/libs/release/libs/exception/doc/diagnostic_information.html[`boost::diagnostic_information`].
+
+By default, the `leaf::<<diagnostic_output-expect,diagnostic_output>>` includes only error objects of types used in the instantiation of the `<<expect,expect>>` class template. If the user requires a complete `diagnostic_output` message, the solution is to use <<e_unexpected_diagnostic_output>> with `expect`. In this case, before unused error objects are discarded by LEAF, they are converted to string and stored in the `e_unexpected_diagnostic_output` object. Note that this allocates memory dynamically.
+====
+
 [[rationale]]
 == Design Rationale
 
@@ -2880,160 +3034,6 @@ Here is a list of other error handling libraries:
 * https://ned14.github.io/outcome[Boost Outcome]
 * https://github.com/pdimov/variant2[variant2 / `expected<T,E...>`]
 * https://zajo.github.io/boost-noexcept[Noexcept]
-
-[[boost_exception]]
-== Refactoring Boost Exception code to LEAF
-
-When using LEAF with exception handling, it can be viewed as a better, more optimal alternative to Boost Exception.
-
-NOTE: Unlike Boost Exception, LEAF can be used with or without exception handling.
-
-The following tables outline the differences between the two libraries which should be considered when code that uses Boost Exception is refactored to use LEAF instead:
-
-.Defining a custom type for transporting values of type T
-[cols="1a,1a",options="header",stripes=none]
-|====
-| Boost Exception | LEAF
-|
-[source,c++,options="nowrap"]
-----
-typedef error_info<struct my_info_,T> my_info;
-----
-[.text-right]
-https://www.boost.org/doc/libs/release/libs/exception/doc/error_info.html[`boost::error_info`]
-|
-[source,c++,options="nowrap"]
-----
-struct my_info { T value; };
-----
-|====
-
-.Passing arbitrary info at the point of the throw
-[cols="1a,1a",options="header",stripes=none]
-|====
-| Boost Exception | LEAF
-|
-[source,c++,options="nowrap"]
-----
-throw my_exception() <<
-  my_info(x) <<
-  my_info(y);
-----
-[.text-right]
-https://www.boost.org/doc/libs/release/libs/exception/doc/exception_operator_shl.html[`operator<<`]
-|
-[source,c++,options="nowrap"]
-----
-throw leaf::exception( my_exception(),
-  my_info{x},
-  my_info{y} );
-----
-[.text-right]
-<<exception>>
-|====
-
-.Augmenting exceptions in exception-neutral contexts
-[cols="1a,1a",options="header",stripes=none]
-|====
-| Boost Exception | LEAF
-|
-[source,c++,options="nowrap"]
-----
-try
-{
-  f();
-}
-catch( boost::exception & e )
-{
-  e << my_info(x);
-  throw;
-}
-----
-[.text-right]
-https://www.boost.org/doc/libs/release/libs/exception/doc/exception.html[`boost::exception`] \| https://www.boost.org/doc/libs/release/libs/exception/doc/exception_operator_shl.html[`operator<<`]
-|
-[source,c++,options="nowrap"]
-----
-auto propagate = leaf::preload( my_info{x} );
-
-f();
-----
-[.text-right]
-<<preload>>
-|====
-
-.Obtaining arbitrary info at the point of the catch
-[cols="1a,1a",options="header",stripes=none]
-|====
-| Boost Exception | LEAF
-|
-[source,c++,options="nowrap"]
-----
-try
-{
-  f();
-}
-catch( my_exception & e )
-{
-  if( T * v = get_error_info<my_info>(e) )
-  {
-    //my_info is available in e.
-  }
-}
-----
-[.text-right]
-https://www.boost.org/doc/libs/release/libs/exception/doc/get_error_info.html[`boost::get_error_info`]
-|
-[source,c++,options="nowrap"]
-----
-leaf::expect<my_info> exp;
-try
-{
-  f();
-}
-catch( my_exception & e )
-{
-  leaf::handle_exception( exp, e,
-    [ ]( my_info const & x )
-    {
-      //my_info is available in e.
-    } );
-}
-----
-[.text-right]
-`<<expect,expect>>` \| <<handle_exception>> \| <<peek-expect>>
-|====
-
-.Error object propagation
-[cols="1a,1a",options="header",stripes=none]
-|====
-| Boost Exception | LEAF
-| All supplied https://www.boost.org/doc/libs/release/libs/exception/doc/error_info.html[`boost::error_info`] objects are allocated dynamically, stored in the https://www.boost.org/doc/libs/release/libs/exception/doc/exception.html[`boost::exception`] object, and propagated.
-|  User-defined error objects are stored statically in `leaf::<<expect,expect>>` objects but only if their types are used in the instantiation the `expect` class template; otherwise they are discarded.
-|====
-
-.Transporting of error objects across thread boundaries
-[cols="1a,1a",options="header",stripes=none]
-|====
-| Boost Exception | LEAF
-| https://www.boost.org/doc/libs/release/libs/exception/doc/exception_ptr.html[`boost::exception_ptr`] automatically captures https://www.boost.org/doc/libs/release/libs/exception/doc/error_info.html[`boost::error_info`] objects stored in a `boost::exception` and can transport them across thread boundaries.
-| Transporting error objects across thread boundaries requires the use of <<capture_exception>>.
-|====
-
-.Printing of error objects in automatically-generated diagnostic information messages
-[cols="1a,1a",options="header",stripes=none]
-|====
-| Boost Exception | LEAF
-| `boost::error_info` types may define conversion to `std::string` by providing `to_string` overloads *or* by overloading `operator<<` for `std::ostream`.
-| LEAF does not use `to_string`. Error types may define `operator<<` overloads for `std::ostream`.
-|====
-
-[WARNING]
-====
-The fact that Boost Exception stores all supplied `boost::error_info` objects while LEAF discards them if they aren't needed affects the completeness of the message printed by `leaf::<<diagnostic_output-expect,diagnostic_output>>` compared to the string returned by https://www.boost.org/doc/libs/release/libs/exception/doc/diagnostic_information.html[`boost::diagnostic_information`].
-
-By default, the `leaf::<<diagnostic_output-expect,diagnostic_output>>` includes only error objects of types used in the instantiation of the `<<expect,expect>>` class template. If the user requires a complete `diagnostic_output` message, the solution is to use <<e_unexpected_diagnostic_output>> with `expect`. In this case, before unused error objects are discarded by LEAF, they are converted to string and stored in the `e_unexpected_diagnostic_output` object. Note that this allocates memory dynamically.
-====
 
 [[distribution]]
 == Distribution
