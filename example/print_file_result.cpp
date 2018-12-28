@@ -134,7 +134,7 @@ int main( int argc, char const * argv[ ] )
 				//are associated with the error value stored in r. If no function can be matched,
 				//handle_error returns false. Otherwise the matched function is invoked with
 				//the matching corresponding error objects.
-				bool matched = handle_error( exp, r,
+				bool matched = leaf::handle_error( exp, r,
 
 					[ ] ( e_file_name const & fn, e_errno const & errn )
 					{
@@ -157,7 +157,7 @@ int main( int argc, char const * argv[ ] )
 				//e_file_name and e_errno, associated with r, are avialable in exp; if not, it will
 				//next check if just e_errno is available; and if not, the last function (which
 				//takes no arguments) will always match to print a generic error message.
-				bool matched = handle_error( exp, r,
+				bool matched = leaf::handle_error( exp, r,
 
 					[ ] ( e_file_name const & fn, e_errno const & errn )
 					{
@@ -182,7 +182,7 @@ int main( int argc, char const * argv[ ] )
 			case cout_error:
 			{
 				//Report failure to write to std::cout, print the relevant errno.
-				bool matched = handle_error( exp, r,
+				bool matched = leaf::handle_error( exp, r,
 
 					[ ] ( e_errno const & errn )
 					{
@@ -199,7 +199,7 @@ int main( int argc, char const * argv[ ] )
 			default:
 			{
 				std::cerr << "Unknown error code " << ec << ", cryptic information follows." << std::endl; //<7>
-				diagnostic_output(std::cerr,exp,r);
+				leaf::diagnostic_output(std::cerr,exp,r);
 				return 5;
 			}
 		}
