@@ -1,5 +1,5 @@
 [source,c++]
-.#include <boost/leaf/error.hpp>
+.#include <boost/leaf/preload.hpp>
 ----
 namespace boost { namespace leaf {
 

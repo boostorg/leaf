@@ -676,36 +676,48 @@ NOTE: The complete program from this tutorial is available https://github.com/za
 [[synopsis]]
 == Synopsis
 
-=== Class Template `expect`
+=== `expect.hpp`
 include::synopses/expect.adoc[]
 
-=== Class `error`
+'''
+
+=== `error.hpp`
 include::synopses/error.adoc[]
 
-=== Automatic Propagation
+'''
+
+=== `preload.hpp`
 include::synopses/preload.adoc[]
 
-=== Class `error_capture`
+'''
+
+=== `error_capture.hpp`
 include::synopses/error_capture.adoc[]
 
-=== Class Template `result`
+'''
+
+=== `result.hpp`
 include::synopses/result.adoc[]
 
-=== Common Error Types
+'''
+
+=== `common.hpp`
 include::synopses/common.adoc[]
 
-== Synopsis (Exception Handling)
+'''
 
-=== Working with Exception Objects
+=== `exception.hpp`
 include::synopses/exception.adoc[]
 
-=== Diagnostic Output for the Current Exception
+'''
+
+=== `diagnostic_output_current_exception.hpp`
 include::synopses/diagnostic_output_current_exception.adoc[]
 
 [.text-right]
 `<<diagnostic_output_current_exception,diagnostic_output_current_exception>>`
 
-=== Transporting of Exceptions between Threads
+=== `exception_capture.hpp`
 include::synopses/exception_capture.adoc[]
 
 [[reference]]
