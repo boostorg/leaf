@@ -185,6 +185,11 @@ namespace boost { namespace leaf {
 			return os;
 		}
 
+		error propagate() const noexcept
+		{
+			return *this;
+		}
+
 		template <class... E>
 		error propagate( E && ... ) const noexcept;
 	};
@@ -358,7 +363,7 @@ namespace boost { namespace leaf {
 	template <class... E>
 	error error::propagate( E && ... e ) const noexcept
 	{
-		{ using _ = int const [ ]; (void) _ { 0, leaf_detail::put_slot(std::forward<E>(e),*this)... }; }
+		{ auto _ = { leaf_detail::put_slot(std::forward<E>(e),*this)... }; }
 		return *this;
 	}
 

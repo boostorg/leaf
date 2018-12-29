@@ -285,7 +285,7 @@ namespace boost { namespace leaf {
 		if( e )
 		{
 			bool matched = false;
-			{ using _ = int[ ]; (void) _ { 42, e.match(f,matched)... }; }
+			{ auto _ = { e.match(f,matched)... }; }
 			if( matched )
 				return true;
 		}

@@ -246,7 +246,7 @@ namespace boost { namespace leaf {
 	bool handle_error( expect<E...> & exp, error const & e, F && ... f ) noexcept
 	{
 		bool matched = false;
-		{ using _ = int[ ]; (void) _ { 42, exp.match(std::forward<F>(f),e,matched)... }; }
+		{ auto _ = { exp.match(std::forward<F>(f),e,matched)... }; }
 		if( matched )
 			exp.propagate_ = false;
 		return matched;
