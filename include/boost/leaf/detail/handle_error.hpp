@@ -49,14 +49,14 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class F, class ReturnType=typename function_traits<F>::return_type>
-		struct handler_wrapper
+		template <class F,class R=typename function_traits<F>::return_type>
+		struct handler_wrapper_base
 		{
-			typedef ReturnType return_type;
+			typedef typename function_traits<F>::return_type return_type;
 
 			F f_;
 
-			explicit handler_wrapper( F && f ) noexcept:
+			explicit handler_wrapper_base( F && f ) noexcept:
 				f_(std::forward<F>(f))
 			{
 			}
@@ -69,13 +69,13 @@ namespace boost { namespace leaf {
 		};
 
 		template <class F>
-		struct handler_wrapper<F,void>
+		struct handler_wrapper_base<F,void>
 		{
 			typedef bool return_type;
 
 			F f_;
 
-			explicit handler_wrapper( F && f ) noexcept:
+			explicit handler_wrapper_base( F && f ) noexcept:
 				f_(std::forward<F>(f))
 			{
 			}
@@ -85,6 +85,20 @@ namespace boost { namespace leaf {
 			{
 				f_(std::forward<E>(e)...);
 				return true;
+			}
+		};
+
+		template <class F, class R=void>
+		struct handler_wrapper
+		{
+		};
+
+		template <class F>
+		struct handler_wrapper<F,void_t<typename function_traits<F>::return_type>>: handler_wrapper_base<F>
+		{
+			explicit handler_wrapper( F && f ) noexcept:
+				handler_wrapper_base<F>(std::forward<F>(f))
+			{
 			}
 		};
 
