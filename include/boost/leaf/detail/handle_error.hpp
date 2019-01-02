@@ -91,6 +91,7 @@ namespace boost { namespace leaf {
 		template <class F, class R=void>
 		struct handler_wrapper
 		{
+			typedef void return_type;
 		};
 
 		template <class F>
