@@ -29,7 +29,7 @@ namespace boost { namespace leaf {
   result<T> capture( expect<E...> & exp, result<T> const & r );
 
   template <class... E, class T, class... F>
-  bool handle_error( expect<E...> & exp, result<T> & r, F && ... f ) noexcept;
+  <<deduced_return_type>> handle_error( expect<E...> const & exp, result<T> const & r, F && ... f ) noexcept;
 
   template <class P, class... E, class T>
   P const * peek( expect<E...> const &, result<T> const & ) noexcept;

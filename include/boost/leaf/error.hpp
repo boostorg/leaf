@@ -10,8 +10,6 @@
 #include <boost/leaf/detail/optional.hpp>
 #include <boost/leaf/detail/print.hpp>
 #include <atomic>
-#include <cstdio>
-#include <climits>
 #include <ostream>
 #include <type_traits>
 #include <system_error>
@@ -78,11 +76,12 @@ namespace boost { namespace leaf {
 	template <class T>
 	struct is_error_type
 	{
-		static constexpr bool value = leaf_detail::has_data_member_value<T>::value;
+		static constexpr bool value = leaf_detail::has_data_member_value<T>::value || std::is_base_of<std::exception,T>::value;
 	};
 
-	template <> struct is_error_type<system::error_code>: std::true_type { };
+	template <> struct is_error_type<std::exception_ptr>: std::true_type { };
 	template <> struct is_error_type<std::error_code>: std::true_type { };
+	template <> struct is_error_type<system::error_code>: std::true_type { };
 	template <> struct is_error_type<e_unexpected>: std::true_type { };
 	template <> struct is_error_type<e_source_location>: std::true_type { };
 
@@ -177,11 +176,7 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, error const & e )
 		{
-			char buf[sizeof(e.id_)*CHAR_BIT/4+1];
-			int nw = std::snprintf(buf,sizeof(buf),"%X",e.id_);
-			assert(nw>=0);
-			assert(nw<sizeof(buf));
-			os << buf;
+			os << e.id_;
 			return os;
 		}
 
@@ -224,6 +219,7 @@ namespace boost { namespace leaf {
 			slot & operator=( slot const & ) = delete;
 			typedef optional<error_info<E>> base;
 			slot<E> * prev_;
+			static_assert(is_error_type<E>::value,"Not an error type");
 		protected:
 			slot() noexcept;
 			~slot() noexcept;

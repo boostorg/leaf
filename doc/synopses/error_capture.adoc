@@ -16,7 +16,7 @@ namespace boost { namespace leaf {
   };
 
   template <class... F>
-  bool handle_error( error_capture const & ec, F && ... f ) noexcept;
+  <<deduced_return_type>> handle_error( error_capture const & ec, F && ... f ) noexcept;
 
   template <class P>
   P const * peek( error_capture const & ec ) noexcept;

@@ -10,15 +10,19 @@ namespace boost { namespace leaf {
 
     expect() noexcept;
     ~expect() noexcept;
-
-    void propagate() noexcept;
   };
 
   template <class... E>
   error_capture capture( expect<E...> & exp, error const & e );
 
+	template <class R>
+	struct uhnandled_error
+	{
+		static constexpr R value( error const & ) noexcept;
+	};
+
   template <class... E, class... F>
-  bool handle_error( expect<E...> & exp, error const & e, F && ... f ) noexcept;
+  <<deduced_return_type>> handle_error( expect<E...> const & exp, error const & e, F && ... f ) noexcept;
 
   template <class P, class... E>
   P const * peek( expect<E...> const & exp, error const & e ) noexcept;

@@ -7,9 +7,7 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/error.hpp>
-#include <boost/leaf/detail/function_traits.hpp>
-#include <tuple>
+#include <boost/leaf/detail/handle_error.hpp>
 
 namespace boost { namespace leaf {
 
@@ -111,7 +109,7 @@ namespace boost { namespace leaf {
 				{
 					auto & x = opt.value();
 					if( diagnostic<decltype(x.v)>::print(os,x.v) )
-						os << "(0x" << x.e << ')' << std::endl;
+						os << " {" << x.e << '}' << std::endl;
 				}
 			}
 
@@ -158,14 +156,13 @@ namespace boost { namespace leaf {
 		{
 			typedef leaf::error_capture error_capture;
 		};
-
 	} //leaf_detail
 
 	template <class... E>
 	class expect;
 
 	template <class... E, class... F>
-	bool handle_error( expect<E...> &, error const &, F && ... ) noexcept;
+	typename leaf_detail::handler_pack_return_type<F...>::return_type handle_error( expect<E...> const &, error const &, F && ... ) noexcept;
 
 	template <class P, class... E>
 	P const * peek( expect<E...> const &, error const & ) noexcept;
@@ -185,7 +182,7 @@ namespace boost { namespace leaf {
 		friend class error;
 
 		template <class... E_, class... F>
-		friend bool leaf::handle_error( expect<E_...> &, error const &, F && ... ) noexcept;
+		friend typename leaf_detail::handler_pack_return_type<F...>::return_type leaf::handle_error( expect<E_...> const &, error const &, F && ... ) noexcept;
 
 		template <class P, class... E_>
 		friend P const * leaf::peek( expect<E_...> const &, error const & ) noexcept;
@@ -204,52 +201,43 @@ namespace boost { namespace leaf {
 
 		std::tuple<leaf_detail::expect_slot<E>...>  s_;
 
-		template <class F, class... T>
-		int match_( leaf_detail::mp_list<T...>, F && f, error const & e, bool & matched ) const
+		template <class F,class... T>
+		std::pair<bool, typename leaf_detail::handler_wrapper<F>::return_type> check_handler_( error const & e, F && f, leaf_detail::mp_list<T...> ) const
 		{
 			using namespace leaf_detail;
-			if( !matched && (matched=slots_subset<decltype(s_),expect_slot<typename std::remove_cv<typename std::remove_reference<T>::type>::type>...>::have_values(s_,e)) )
-				(void) std::forward<F>(f)( *leaf::peek<typename std::remove_cv<typename std::remove_reference<T>::type>::type>(*this,e)... );
-			return 0;
+			typedef typename handler_wrapper<F>::return_type return_type;
+			if( slots_subset<decltype(s_),expect_slot<typename std::remove_cv<typename std::remove_reference<T>::type>::type>...>::have_values(s_,e) )
+				return std::make_pair(true, handler_wrapper<F>(std::forward<F>(f))( *leaf::peek<typename std::remove_cv<typename std::remove_reference<T>::type>::type>(*this,e)... ));
+			else
+				return std::make_pair(false, uhnandled_error<return_type>::value(e));
 		}
 
 		template <class F>
-		int match( F && f, error const & e, bool & matched ) const
+		std::pair<bool, typename leaf_detail::handler_wrapper<F>::return_type>  find_handler_( error const & e, F && f ) const
 		{
-			return match_( typename leaf_detail::function_traits<F>::mp_args{ }, std::forward<F>(f), e, matched );
+			return check_handler_( e, std::forward<F>(f), typename leaf_detail::function_traits<F>::mp_args{ } );
 		}
 
-		bool propagate_;
+		template <class CarF,class... CdrF>
+		std::pair<bool, typename leaf_detail::handler_wrapper<CarF>::return_type>  find_handler_( error const & e, CarF && car_f, CdrF && ... cdr_f ) const
+		{
+			using namespace leaf_detail;
+			auto r = check_handler_( e, std::forward<CarF>(car_f), typename leaf_detail::function_traits<CarF>::mp_args{ } );
+			return r.first ? r : find_handler_(e,std::forward<CdrF>(cdr_f)...);
+		}
 
 	public:
 
-		expect() noexcept:
-			propagate_(true)
-		{
-		}
+		expect() noexcept = default;
 
-		~expect() noexcept
-		{
-			if( !propagate_ )
-				leaf_detail::tuple_for_each_expect<sizeof...(E),decltype(s_)>::clear(s_);
-		}
-
-		void propagate() noexcept
-		{
-			propagate_ = true;
-		}
 	};
 
 	////////////////////////////////////////
 
 	template <class... E, class... F>
-	bool handle_error( expect<E...> & exp, error const & e, F && ... f ) noexcept
+	typename leaf_detail::handler_pack_return_type<F...>::return_type handle_error( expect<E...> const & exp, error const & e, F && ... f ) noexcept
 	{
-		bool matched = false;
-		{ using _ = int[ ]; (void) _ { 42, exp.match(std::forward<F>(f),e,matched)... }; }
-		if( matched )
-			exp.propagate_ = false;
-		return matched;
+		return exp.find_handler_( e, std::forward<F>(f)... ).second;
 	}
 
 	template <class P, class... E>

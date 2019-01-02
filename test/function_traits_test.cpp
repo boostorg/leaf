@@ -12,7 +12,7 @@ void check_traits( F )
 {
 	using namespace boost::leaf::leaf_detail;
 	static_assert(function_traits<F>::arity==4,"arity");
-	static_assert(std::is_same<typename function_traits<F>::ret,double>::value,"ret");
+	static_assert(std::is_same<typename function_traits<F>::return_type,double>::value,"return_type");
 	static_assert(std::is_same<typename function_traits<F>::template arg<0>::type,int>::value,"arg<0>");
 	static_assert(std::is_same<typename function_traits<F>::template arg<0>::type_,int>::value,"arg<0>");
 	static_assert(std::is_same<typename function_traits<F>::template arg<1>::type,float>::value,"arg<1>");

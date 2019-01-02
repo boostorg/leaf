@@ -25,7 +25,7 @@ namespace boost { namespace leaf {
 		private:
 			typedef function_traits<decltype(&F::operator())> tr;
 		public:
-			typedef typename tr::ret ret;
+			typedef typename tr::return_type return_type;
 			static constexpr int arity = tr::arity - 1;
 			using mp_args = typename mp_list_pop_front<typename tr::mp_args>::type;
 
@@ -39,7 +39,7 @@ namespace boost { namespace leaf {
 		template<class R, class... Args>
 		struct function_traits<R(Args...)>
 		{
-			typedef R ret;
+			typedef R return_type;
 			static constexpr int arity = sizeof...(Args);
 
 			using mp_args = mp_list<Args...>;

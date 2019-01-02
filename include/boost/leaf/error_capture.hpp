@@ -7,16 +7,14 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/error.hpp>
-#include <boost/leaf/detail/function_traits.hpp>
-#include <tuple>
+#include <boost/leaf/detail/handle_error.hpp>
 
 namespace boost { namespace leaf {
 
 	class error_capture;
 
 	template <class... F>
-	bool handle_error( error_capture const &, F && ... ) noexcept;
+	typename leaf_detail::handler_pack_return_type<F...>::return_type handle_error( error_capture const &, F && ... ) noexcept;
 
 	template <class P>
 	P const * peek( error_capture const & ) noexcept;
@@ -90,7 +88,7 @@ namespace boost { namespace leaf {
 	class error_capture
 	{
 		template <class... F>
-		friend bool leaf::handle_error( error_capture const &, F && ... ) noexcept;
+		friend typename leaf_detail::handler_pack_return_type<F...>::return_type handle_error( error_capture const &, F && ... ) noexcept;
 
 		template <class P>
 		friend P const * leaf::peek( error_capture const & ) noexcept;
@@ -186,18 +184,29 @@ namespace boost { namespace leaf {
 			}
 		}
 
-		template <class F, class... T>
-		int match_( leaf_detail::mp_list<T...>, F && f, bool & matched ) const
+		template <class F,class... T>
+		std::pair<bool, typename leaf_detail::handler_wrapper<F>::return_type> check_handler_( F && f, leaf_detail::mp_list<T...> ) const
 		{
-			if( !matched && (matched=leaf_detail::all_available<typename std::remove_cv<typename std::remove_reference<T>::type>::type...>::check(*this)) )
-				(void) std::forward<F>(f)( *peek<typename std::remove_cv<typename std::remove_reference<T>::type>::type>(*this)... );
-			return 0;
+			using namespace leaf_detail;
+			typedef typename handler_wrapper<F>::return_type return_type;
+			if( leaf_detail::all_available<typename std::remove_cv<typename std::remove_reference<T>::type>::type...>::check(*this) )
+				return std::make_pair(true, handler_wrapper<F>(std::forward<F>(f))( *leaf::peek<typename std::remove_cv<typename std::remove_reference<T>::type>::type>(*this)... ));
+			else
+				return std::make_pair(false, return_type(uhnandled_error<return_type>::value(e_)));
 		}
 
 		template <class F>
-		int match( F && f, bool & matched ) const
+		std::pair<bool, typename leaf_detail::handler_wrapper<F>::return_type>  find_handler_( F && f ) const
 		{
-			return match_(typename leaf_detail::function_traits<F>::mp_args{ },std::forward<F>(f),matched);
+			return check_handler_( std::forward<F>(f), typename leaf_detail::function_traits<F>::mp_args{ } );
+		}
+
+		template <class CarF,class... CdrF>
+		std::pair<bool, typename leaf_detail::handler_wrapper<CarF>::return_type>  find_handler_( CarF && car_f, CdrF && ... cdr_f ) const
+		{
+			using namespace leaf_detail;
+			auto r = check_handler_( std::forward<CarF>(car_f), typename leaf_detail::function_traits<CarF>::mp_args{ } );
+			return r.first ? r : find_handler_(std::forward<CdrF>(cdr_f)...);
 		}
 
 		dynamic_store * ds_;
@@ -280,16 +289,9 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////
 
 	template <class... F>
-	bool handle_error( error_capture const & e, F && ... f ) noexcept
+	typename leaf_detail::handler_pack_return_type<F...>::return_type handle_error( error_capture const & ec, F && ... f ) noexcept
 	{
-		if( e )
-		{
-			bool matched = false;
-			{ using _ = int[ ]; (void) _ { 42, e.match(f,matched)... }; }
-			if( matched )
-				return true;
-		}
-		return false;
+		return ec.find_handler_( std::forward<F>(f)... ).second;
 	}
 
 	template <class P>

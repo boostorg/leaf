@@ -42,7 +42,8 @@ tests = [
 	'defer_test.7',
 	'defer_test.8',
 	'diagnostic_output_test',
-	'error_capture_test',
+	'error_capture_test.1',
+	'error_capture_test.2',
 	'error_test',
 	'exception_capture_test',
 	'exception_test.1',
@@ -51,6 +52,7 @@ tests = [
 	'expect_test.2',
 	'expect_test.3',
 	'expect_test.4',
+	'expect_test.5',
 	'function_traits_test',
 	'is_error_type_test',
 	'multiple_errors_test',
@@ -68,6 +70,8 @@ tests = [
 	'result_test.2',
 	'result_test.3',
 	'result_test.4',
+	'result_test.5',
+	'result_test.6',
 	'result_void_capture_test'
 ]
 foreach t : tests
@@ -78,7 +82,9 @@ examples = [
 	'capture_result',
 	'capture_eh',
 	'print_file_result',
-	'print_file_eh'
+	'print_file_eh',
+	'print_half',
+	'return_exception'
 ]
 foreach e : examples
 	executable(e, 'example/'+e+'.cpp', dependencies: leaf )
