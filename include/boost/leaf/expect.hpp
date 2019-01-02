@@ -228,7 +228,9 @@ namespace boost { namespace leaf {
 
 	public:
 
-		expect() noexcept = default;
+		constexpr expect() noexcept
+		{
+		}
 
 	};
 
