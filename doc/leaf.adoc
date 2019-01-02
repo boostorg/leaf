@@ -28,10 +28,10 @@ LEAF is a {CPP}11 error handling library. Features:
 * Support for multi-thread programming.
 
 [.text-right]
-https://github.com/zajo/leaf[GitHub] | <<introduction,Introduction>> | <<tutorial>> | <<techniques>> | <<synopsis>> | <<reference>> | <<rationale>>
+https://github.com/zajo/leaf[GitHub] | <<introduction,Introduction>> | <<tutorial>> | <<techniques>> | <<synopsis>> | <<reference>> | <<rationale,Design Rationale>>
 ====
 
-NOTE: If you are at least an intermediate level developer and have seen `expected`/`outcome`-like interfaces before, and you are also wondering how the heck you can return a type-erased error object without using heap allocations, you may want to read the <<rationale>> first.
+NOTE: If you are at least an intermediate level developer and have seen `expected`/`outcome`-like interfaces before, and you are also wondering how the heck you can return a type-erased error object without using heap allocations, you may want to read the <<rationale,Design Rationale>> first.
 
 [[introduction]]
 == Two Minute Introduction
@@ -2704,7 +2704,9 @@ catch( my_exception & e )
 NOTE: Follow this link to see a complete example program: https://github.com/zajo/leaf/blob/master/example/capture_eh.cpp?ts=3[capture_eh.cpp].
 
 [[rationale]]
-== Design Rationale
+== Design
+
+=== Rationale
 
 Definition: :: Objects that carry information about error conditions are called error objects. For example, objects of type `std::error_code` are error objects.
 
