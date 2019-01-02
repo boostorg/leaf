@@ -2922,6 +2922,7 @@ Conclusion: :: Attempts to harness the {CPP} static type checking system to help
 
 '''
 
+[[translation]]
 === Critique 2: LEAF Does Not Facilitate Mapping Between Disparate Error Codes
 
 Most {CPP} programs use multiple C and {CPP} libraries, and each library may provide its own system of error codes. But because it is difficult to define static interfaces that can communicate arbitrary error code types, a popular idea is to map each library-specific error code to a common program-wide enum.
@@ -3184,9 +3185,10 @@ By default, the `leaf::<<diagnostic_output-expect,diagnostic_output>>` includes 
 
 '''
 
+[[boost_outcome]]
 === Comparison to Boost Outcome
 
-==== 1. Design Differences
+==== Design Differences
 
 Like LEAF, the https://ned14.github.io/outcome[Boost Outcome] library is designed to work in low latency environments. It provides two class templates, `result<>` and `outcome<>`:
 
@@ -3210,7 +3212,7 @@ The `leaf::result<>` template deletes both `EC` and `EP`, which decouples it fro
 
 TIP: The LEAF examples include an adaptation of the program from the https://ned14.github.io/outcome/tutorial/result/[Boost Outcome `result<>` tutorial]. You can https://github.com/zajo/leaf/blob/master/example/print_half.cpp?ts=3[view it on GitHub].
 
-==== 2. The Interoperability Problem
+==== The Interoperability Problem
 
 The Boost Outcome documentation discusses the important problem of bringing together multiple libraries -- each using its own error reporting mechanism -- and incorporating them in a robust error handling infrastructure in a client program.
 
