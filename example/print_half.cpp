@@ -9,6 +9,7 @@
 
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/expect.hpp>
+#include <boost/leaf/diagnostic_output.hpp>
 #include <algorithm>
 #include <ctype.h>
 #include <string>
@@ -97,13 +98,13 @@ int main( int argc, char const * argv[ ] )
 				}
 				return 1;
 			},
-			[&exp,&r]
+			[&r]
 			{
 				//This will never execute in this program, but it would detect logic errors where an unknown error reaches main.
 				//In this case, we print diagnostic information. Consider using leaf::unexpected_diagnostic_output in the
 				//definition of exp.
 				std::cerr << "Unknown error, cryptic diagnostic information follows." << std::endl;
-				leaf::diagnostic_output(std::cerr,exp,r);
+				leaf::diagnostic_output(std::cerr,r);
 				return 2;
 			} );
 	}

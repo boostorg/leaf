@@ -55,11 +55,25 @@ namespace boost { namespace leaf {
 	{
 		std::string value;
 		std::set<char const *(*)()> already;
-		friend std::ostream & operator<<( std::ostream & os, e_unexpected_diagnostic_output const & x ) noexcept { return os; }
 	};
 
 	namespace leaf_detail
 	{
+		template <>
+		struct diagnostic<e_unexpected_diagnostic_output,false,true>
+		{
+			static bool print( std::ostream & os, e_unexpected_diagnostic_output const & x ) noexcept
+			{
+				if( x.value.empty() )
+					return false;
+				else
+				{
+					os << x.value;
+					return true;
+				}
+			}
+		};
+
 		template <class T, class E = void>
 		struct has_data_member_value
 		{
@@ -216,8 +230,44 @@ namespace boost { namespace leaf {
 			return c;
 		}
 
+		class slot_base
+		{
+			slot_base( slot_base const & ) = delete;
+			slot_base & operator=( slot_base const & ) = delete;
+
+			virtual bool slot_diagnostic_output( std::ostream &, error const * e ) const = 0;
+
+		public:
+
+			static void diagnostic_output( std::ostream & os, error const * e );
+
+		protected:
+
+			static slot_base const * & first() noexcept
+			{
+				static thread_local slot_base const * p = 0;
+				return p;
+			}
+
+			slot_base const * const next_;
+
+			slot_base() noexcept:
+				next_(first())
+			{
+				first() = this;
+			}
+
+			~slot_base() noexcept
+			{
+				slot_base const * & p = first();
+				assert(p==this);
+				p = next_;
+			}
+		};
+
 		template <class E>
 		class slot:
+			slot_base,
 			optional<error_info<E>>
 		{
 			slot( slot const & ) = delete;
@@ -225,10 +275,16 @@ namespace boost { namespace leaf {
 			typedef optional<error_info<E>> base;
 			slot<E> * prev_;
 			static_assert(is_error_type<E>::value,"Not an error type");
+
+			bool slot_diagnostic_output( std::ostream & os, error const * e ) const;
+
 		protected:
+
 			slot() noexcept;
 			~slot() noexcept;
+
 		public:
+
 			using base::put;
 			using base::has_value;
 			using base::value;
@@ -336,6 +392,27 @@ namespace boost { namespace leaf {
 			tl_slot_ptr<E>() = prev_;
 		}
 
+		template <class E>
+		bool slot<E>::slot_diagnostic_output( std::ostream & os, error const * e ) const
+		{
+			if( tl_slot_ptr<E>()==this )
+				if( error_info<E> const * ev = has_value() )
+					if( e )
+					{
+						if( ev->e==*e )
+							return diagnostic<decltype(ev->v)>::print(os,ev->v);
+					}
+					else
+					{
+						if( diagnostic<decltype(ev->v)>::print(os,ev->v) )
+						{
+							os << " {" << ev->e << '}';
+							return true;
+						}
+					}
+			return false;
+		}
+
 		template <class... E>
 		error make_error( char const * file, int line, char const * function, E && ... e )
 		{
@@ -346,14 +423,12 @@ namespace boost { namespace leaf {
 			return error( std::move(sl), std::forward<E>(e)... );
 		}
 
-		inline void diagnostic_output_prefix( std::ostream & os, leaf::error const * e )
+		enum class result_variant
 		{
-			if( e )
-				os << "leaf::error serial number: " << *e << std::endl;
-			if( leaf_detail::slot<e_unexpected_diagnostic_output> const * unx = leaf_detail::tl_slot_ptr<e_unexpected_diagnostic_output>() )
-				if( unx->has_value() )
-					os << unx->value().v.value << std::endl;
-		}
+			value,
+			err,
+			cap
+		};
 	} //leaf_detail
 
 	template <class... E>

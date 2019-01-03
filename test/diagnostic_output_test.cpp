@@ -99,7 +99,7 @@ int main()
 		catch( my_error & e )
 		{
 			std::ostringstream st;
-			diagnostic_output_current_exception(st,exp);
+			leaf::diagnostic_output_current_exception(st);
 			std::string s = st.str();
 			BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
 			BOOST_TEST(s.find(": N/A")!=s.npos);
@@ -108,7 +108,7 @@ int main()
 			BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
 			BOOST_TEST(s.find(") in function")!=s.npos);
 			BOOST_TEST(s.find("Detected 2 attempts to communicate unexpected error objects, the first one of type ")!=s.npos);
-			BOOST_TEST(s.find("unexpected_test")!=s.npos);
+			BOOST_TEST(s.find("unexpected_test<2>")!=s.npos);
 			std::cout << s;
 			handle_exception( exp, e, [ ]{ } );
 		}

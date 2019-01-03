@@ -9,11 +9,11 @@
 
 #include <boost/leaf/detail/print.hpp>
 #include <string>
-#include <cstring>
 #include <cerrno>
 #include <cassert>
 #ifdef _WIN32
 #include <Windows.h>
+#include <cstring>
 #ifdef min
 #undef min
 #endif

@@ -105,32 +105,37 @@ namespace boost { namespace leaf {
 				return value_;
 			}
 
-			bool has_value() const noexcept
+			T const * has_value() const noexcept
 			{
-				return has_value_;
+				return has_value_ ? &value_ : 0;
+			}
+
+			T * has_value() noexcept
+			{
+				return has_value_ ? &value_ : 0;
 			}
 
 			T const & value() const & noexcept
 			{
-				assert(has_value());
+				assert(has_value()!=0);
 				return value_;
 			}
 
 			T & value() & noexcept
 			{
-				assert(has_value());
+				assert(has_value()!=0);
 				return value_;
 			}
 
 			T const && value() const && noexcept
 			{
-				assert(has_value());
+				assert(has_value()!=0);
 				return value_;
 			}
 
 			T value() && noexcept
 			{
-				assert(has_value());
+				assert(has_value()!=0);
 				T tmp(std::move(value_));
 				reset();
 				return tmp;

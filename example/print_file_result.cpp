@@ -199,7 +199,7 @@ int main( int argc, char const * argv[ ] )
 			default:
 			{
 				std::cerr << "Unknown error code " << ec << ", cryptic information follows." << std::endl; //<7>
-				leaf::diagnostic_output(std::cerr,exp,r);
+				leaf::diagnostic_output(std::cerr,r);
 				return 5;
 			}
 		}

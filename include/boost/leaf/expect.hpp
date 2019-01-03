@@ -98,50 +98,6 @@ namespace boost { namespace leaf {
 
 		////////////////////////////////////////
 
-		template <int I, class Tuple>
-		struct tuple_for_each_expect
-		{
-			static void print( std::ostream & os, Tuple const & tup )
-			{
-				tuple_for_each_expect<I-1,Tuple>::print(os,tup);
-				auto & opt = std::get<I-1>(tup);
-				if( opt.has_value() )
-				{
-					auto & x = opt.value();
-					if( diagnostic<decltype(x.v)>::print(os,x.v) )
-						os << " {" << x.e << '}' << std::endl;
-				}
-			}
-
-			static void print( std::ostream & os, Tuple const & tup, error const & e )
-			{
-				tuple_for_each_expect<I-1,Tuple>::print(os,tup,e);
-				auto & opt = std::get<I-1>(tup);
-				if( opt.has_value() )
-				{
-					auto & x = opt.value();
-					if( x.e==e && diagnostic<decltype(x.v)>::print(os,x.v) )
-						os << std::endl;
-				}
-			}
-
-			static void clear( Tuple & tup ) noexcept
-			{
-				tuple_for_each_expect<I-1,Tuple>::clear(tup);
-				std::get<I-1>(tup).reset();
-			}
-		};
-
-		template <class Tuple>
-		struct tuple_for_each_expect<0, Tuple>
-		{
-			static void print( std::ostream &, Tuple const & ) noexcept { }
-			static void print( std::ostream &, Tuple const &, error const & ) noexcept { }
-			static void clear( Tuple & ) noexcept { }
-		};
-
-		////////////////////////////////////////
-
 		template <class T>
 		optional<T> convert_optional( expect_slot<T> && x, error const & e ) noexcept
 		{
@@ -167,11 +123,6 @@ namespace boost { namespace leaf {
 	template <class P, class... E>
 	P const * peek( expect<E...> const &, error const & ) noexcept;
 
-	template <class... E>
-	void diagnostic_output( std::ostream &, expect<E...> const & );
-
-	template <class... E>
-	void diagnostic_output( std::ostream &, expect<E...> const &, error const & );
 
 	template <class... E>
 	typename leaf_detail::dependent_type<expect<E...>>::error_capture capture( expect<E...> &, error const & );
@@ -186,12 +137,6 @@ namespace boost { namespace leaf {
 
 		template <class P, class... E_>
 		friend P const * leaf::peek( expect<E_...> const &, error const & ) noexcept;
-
-		template <class... E_>
-		friend void leaf::diagnostic_output( std::ostream &, expect<E_...> const & );
-
-		template <class... E_>
-		friend void leaf::diagnostic_output( std::ostream &, expect<E_...> const &, error const & );
 
 		template <class... E_>
 		friend typename leaf_detail::dependent_type<expect<E_...>>::error_capture leaf::capture( expect<E_...> &, error const & );
@@ -253,20 +198,6 @@ namespace boost { namespace leaf {
 				return &x.v;
 		}
 		return 0;
-	}
-
-	template <class... E>
-	void diagnostic_output( std::ostream & os, expect<E...> const & exp )
-	{
-		leaf_detail::diagnostic_output_prefix(os,0);
-		leaf_detail::tuple_for_each_expect<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_);
-	}
-
-	template <class... E>
-	void diagnostic_output( std::ostream & os, expect<E...> const & exp, error const & e )
-	{
-		leaf_detail::diagnostic_output_prefix(os,&e);
-		leaf_detail::tuple_for_each_expect<sizeof...(E),decltype(exp.s_)>::print(os,exp.s_,e);
 	}
 
 	template <class... E>

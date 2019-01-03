@@ -38,23 +38,13 @@ namespace boost { namespace leaf {
 	template <class P, class... E, class T>
 	P const * peek( expect<E...> const &, result<T> const & ) noexcept;
 
-	template <class... E, class T>
-	void diagnostic_output( std::ostream &, expect<E...> const &, result<T> const & );
+	template <class T>
+	void diagnostic_output( std::ostream &, result<T> const & );
 
 	template <class... E, class T>
 	result<T> capture( expect<E...> &, result<T> const & );
 
 	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		enum class result_variant
-		{
-			value,
-			err,
-			cap
-		};
-	}
 
 	template <class T>
 	class result
@@ -65,8 +55,8 @@ namespace boost { namespace leaf {
 		template <class P, class... E, class T_>
 		friend P const * leaf::peek( expect<E...> const &, result<T_> const & ) noexcept;
 
-		template <class... E, class T_>
-		friend void leaf::diagnostic_output( std::ostream &, expect<E...> const &, result<T_> const & );
+		template <class T_>
+		friend void leaf::diagnostic_output( std::ostream &, result<T_> const & );
 
 		template <class... E, class T_>
 		friend result<T_> leaf::capture( expect<E...> &, result<T_> const & );
@@ -254,12 +244,12 @@ namespace boost { namespace leaf {
 			case leaf_detail::result_variant::value:
 				return leaf::error(std::forward<E>(e)...);
 			case leaf_detail::result_variant::cap:
-			{
-				error_capture cap = cap_;
-				destroy();
-				(void) new(&err_) leaf::error(cap.unload());
-				which_ = leaf_detail::result_variant::err;
-			}
+				{
+					error_capture cap = cap_;
+					destroy();
+					(void) new(&err_) leaf::error(cap.unload());
+					which_ = leaf_detail::result_variant::err;
+				}
 			default:
 				assert(which_==leaf_detail::result_variant::err);
 				return err_.propagate(std::forward<E>(e)...);
@@ -279,8 +269,8 @@ namespace boost { namespace leaf {
 		template <class P, class... E, class T>
 		friend P const * leaf::peek( expect<E...> const &, result<T> const & ) noexcept;
 
-		template <class... E, class T>
-		friend void leaf::diagnostic_output( std::ostream &, expect<E...> const &, result<T> const & );
+		template <class T>
+		friend void leaf::diagnostic_output( std::ostream &, result<T> const & );
 
 		template <class... E, class T>
 		friend result<T> leaf::capture( expect<E...> &, result<T> const & );
@@ -347,19 +337,6 @@ namespace boost { namespace leaf {
 		{
 			assert(r.which_==leaf_detail::result_variant::cap);
 			return peek<P>(r.cap_);
-		}
-	}
-
-	template <class... E, class T>
-	void diagnostic_output( std::ostream & os, expect<E...> const & exp, result<T> const & r )
-	{
-		assert(!r);
-		if( r.which_==leaf_detail::result_variant::err )
-			return diagnostic_output(os,exp,r.err_);
-		else
-		{
-			assert(r.which_==leaf_detail::result_variant::cap);
-			return diagnostic_output(os,r.cap_);
 		}
 	}
 

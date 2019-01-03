@@ -100,7 +100,7 @@ int main()
 				//std::exception_ptr, together with any other unknow exception. Presumably this should
 				//never happen, therefore at this point we treat this situation a a logic error: we print
 				//diagnostic information and bail out.
-				[&exp]( std::exception_ptr const & ep )
+				[ ]( std::exception_ptr const & ep )
 				{
 					assert(ep);
 					try
@@ -109,7 +109,7 @@ int main()
 					}
 					catch(...)
 					{
-						leaf::diagnostic_output_current_exception(std::cerr,exp);
+						leaf::diagnostic_output_current_exception(std::cerr);
 					}
 				}
 

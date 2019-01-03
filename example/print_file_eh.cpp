@@ -179,7 +179,7 @@ int main( int argc, char const * argv[ ] )
 	{
 		//This catch-all case helps diagnose logic errors (presumably, missing catch).
 		std::cerr << "Unknown error, cryptic information follows." << std::endl;
-		leaf::diagnostic_output_current_exception(std::cerr,exp);
+		leaf::diagnostic_output_current_exception(std::cerr);
 		return 5;
 	}
 }

@@ -163,7 +163,6 @@ namespace boost { namespace leaf {
 
 			void diagnostic_output_( std::ostream & os ) const
 			{
-				leaf_detail::diagnostic_output_prefix(os,0);
 				leaf_detail::tuple_for_each_capture<sizeof...(T),decltype(s_)>::print(os,s_);
 			}
 

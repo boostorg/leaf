@@ -8,12 +8,13 @@
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/exception_capture.hpp>
+#include <boost/leaf/diagnostic_output.hpp>
 #include <boost/leaf/detail/demangle.hpp>
 
 namespace boost { namespace leaf {
 
 	template <class... E>
-	void diagnostic_output_current_exception( std::ostream & os, expect<E...> const & exp )
+	void diagnostic_output_current_exception( std::ostream & os )
 	{
 		os << "Current Exception Diagnostic Information:" << std::endl;
 
@@ -42,11 +43,11 @@ namespace boost { namespace leaf {
 		}
 		catch( error const & e )
 		{
-			diagnostic_output(os,exp,e);
+			diagnostic_output(os,e);
 		}
 		catch( ... )
 		{
-			diagnostic_output(os,exp);
+			diagnostic_output(os);
 		}
 	}
 
