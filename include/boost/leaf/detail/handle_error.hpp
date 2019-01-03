@@ -103,13 +103,40 @@ namespace boost { namespace leaf {
 			}
 		};
 
+		template <class R1, class R2>
+		struct handler_pack_return_type_helper
+		{
+		};
+
+		template <class R>
+		struct handler_pack_return_type_helper<R,R>
+		{
+			typedef R type;
+		};
+
 		template <class... F>
 		struct handler_pack_return_type;
 
-		template <class Car,class... Cdr>
-		struct handler_pack_return_type<Car,Cdr...>
+		template <class F>
+		struct handler_pack_return_type<F>
 		{
-			typedef typename handler_wrapper<Car>::return_type return_type;
+			typedef typename handler_wrapper<F>::return_type return_type;
+		};
+
+		template <class F1,class F2>
+		struct handler_pack_return_type<F1,F2>
+		{
+			typedef typename handler_pack_return_type_helper<
+				typename handler_wrapper<F1>::return_type,
+				typename handler_wrapper<F2>::return_type>::type return_type;
+		};
+
+		template <class F1,class F2,class... Rest>
+		struct handler_pack_return_type<F1,F2,Rest...>
+		{
+			typedef typename handler_pack_return_type_helper<
+				typename handler_wrapper<F1>::return_type,
+				typename handler_pack_return_type<F2,Rest...>::return_type>::type return_type;
 		};
 	} //leaf_detail
 
