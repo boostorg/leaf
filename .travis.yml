@@ -241,14 +241,14 @@ install:
   - ./bootstrap.sh
   - ./b2 headers
   - cd libs/leaf
-  - meson bld/debug
+#  - meson bld/debug
 
 script:
   - |-
     echo "using $TOOLSET : : $COMPILER ;" > ~/user-config.jam
   - ./b2 variant=debug test toolset=$TOOLSET cxxstd=$CXXSTD
   - ./b2 variant=release test toolset=$TOOLSET cxxstd=$CXXSTD
-  - cd bld/debug && meson test
+#  - cd bld/debug && meson test
 
 notifications:
   email:
