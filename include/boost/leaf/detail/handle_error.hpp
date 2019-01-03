@@ -106,6 +106,7 @@ namespace boost { namespace leaf {
 		template <class R1, class R2>
 		struct handler_pack_return_type_helper
 		{
+			struct type;
 		};
 
 		template <class R>
