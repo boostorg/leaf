@@ -77,7 +77,7 @@ tests = [
 	'result_void_capture_test'
 ]
 foreach t : tests
-	test(t, executable(t, 'test/'+t+'.cpp', dependencies: leaf ) )
+	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf,thread_dep] ) )
 endforeach
 
 examples = [

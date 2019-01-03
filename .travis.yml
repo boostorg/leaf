@@ -32,6 +32,7 @@ addons:
       - clang-3.7
       - clang-3.8
       - ruby-full
+      - ninja-build
 
     sources:
       - ubuntu-toolchain-r-test
@@ -226,6 +227,7 @@ matrix:
 install:
   - gem install asciidoctor
   - gem install coderay
+  - pip3 install meson
   - cd ..
   - git clone -b $TRAVIS_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
   - cd boost-root
@@ -238,12 +240,15 @@ install:
   - python tools/boostdep/depinst/depinst.py leaf -I example
   - ./bootstrap.sh
   - ./b2 headers
+  - cd libs/leaf
+  - meson bld/debug
 
 script:
   - |-
     echo "using $TOOLSET : : $COMPILER ;" > ~/user-config.jam
-  - ./b2 variant=debug libs/leaf/test toolset=$TOOLSET cxxstd=$CXXSTD
-  - ./b2 variant=release libs/leaf/test toolset=$TOOLSET cxxstd=$CXXSTD
+  - ./b2 variant=debug test toolset=$TOOLSET cxxstd=$CXXSTD
+  - ./b2 variant=release test toolset=$TOOLSET cxxstd=$CXXSTD
+  - cd bld/debug && meson test
 
 notifications:
   email:
