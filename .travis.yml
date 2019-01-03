@@ -32,6 +32,7 @@ addons:
       - clang-3.7
       - clang-3.8
       - ruby-full
+#      - python-3.6
       - ninja-build
 
     sources:
@@ -227,7 +228,7 @@ matrix:
 install:
   - gem install asciidoctor
   - gem install coderay
-  - pip3 install meson
+#  - pip3 install meson
   - cd ..
   - git clone -b $TRAVIS_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
   - cd boost-root
