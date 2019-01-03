@@ -18,6 +18,8 @@ if not meson.is_subproject()
 	endif
 endif
 
+thread_dep = dependency('threads')
+
 includes = [ include_directories('include') ]
 
 leaf = declare_dependency( include_directories: includes )
@@ -87,7 +89,7 @@ examples = [
 	'return_exception'
 ]
 foreach e : examples
-	executable(e, 'example/'+e+'.cpp', dependencies: leaf )
+	executable(e, 'example/'+e+'.cpp', dependencies: [leaf,thread_dep] )
 endforeach
 
 if get_option('build_lua_examples')
