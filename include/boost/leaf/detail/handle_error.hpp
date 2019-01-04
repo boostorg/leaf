@@ -49,14 +49,14 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class F,class R=typename function_traits<F>::return_type>
-		struct handler_wrapper_base
+		template <class F, class ReturnType=typename function_traits<F>::return_type>
+		struct handler_wrapper
 		{
-			typedef typename function_traits<F>::return_type return_type;
+			typedef ReturnType return_type;
 
 			F f_;
 
-			explicit handler_wrapper_base( F && f ) noexcept:
+			explicit handler_wrapper( F && f ) noexcept:
 				f_(std::forward<F>(f))
 			{
 			}
@@ -69,13 +69,13 @@ namespace boost { namespace leaf {
 		};
 
 		template <class F>
-		struct handler_wrapper_base<F,void>
+		struct handler_wrapper<F,void>
 		{
 			typedef bool return_type;
 
 			F f_;
 
-			explicit handler_wrapper_base( F && f ) noexcept:
+			explicit handler_wrapper( F && f ) noexcept:
 				f_(std::forward<F>(f))
 			{
 			}
@@ -88,56 +88,13 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		template <class F, class R=void>
-		struct handler_wrapper
-		{
-			typedef void return_type;
-		};
-
-		template <class F>
-		struct handler_wrapper<F,void_t<typename function_traits<F>::return_type>>: handler_wrapper_base<F>
-		{
-			explicit handler_wrapper( F && f ) noexcept:
-				handler_wrapper_base<F>(std::forward<F>(f))
-			{
-			}
-		};
-
-		template <class R1, class R2>
-		struct handler_pack_return_type_helper
-		{
-			struct type;
-		};
-
-		template <class R>
-		struct handler_pack_return_type_helper<R,R>
-		{
-			typedef R type;
-		};
-
 		template <class... F>
 		struct handler_pack_return_type;
 
-		template <class F>
-		struct handler_pack_return_type<F>
+		template <class Car,class... Cdr>
+		struct handler_pack_return_type<Car,Cdr...>
 		{
-			typedef typename handler_wrapper<F>::return_type return_type;
-		};
-
-		template <class F1,class F2>
-		struct handler_pack_return_type<F1,F2>
-		{
-			typedef typename handler_pack_return_type_helper<
-				typename handler_wrapper<F1>::return_type,
-				typename handler_wrapper<F2>::return_type>::type return_type;
-		};
-
-		template <class F1,class F2,class... Rest>
-		struct handler_pack_return_type<F1,F2,Rest...>
-		{
-			typedef typename handler_pack_return_type_helper<
-				typename handler_wrapper<F1>::return_type,
-				typename handler_pack_return_type<F2,Rest...>::return_type>::type return_type;
+			typedef typename handler_wrapper<Car>::return_type return_type;
 		};
 	} //leaf_detail
 
