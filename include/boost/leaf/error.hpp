@@ -188,19 +188,21 @@ namespace boost { namespace leaf {
 			return e1.id_!=e2.id_;
 		}
 
+		error propagate() const noexcept
+		{
+			return *this;
+		}
+
 		friend std::ostream & operator<<( std::ostream & os, error const & e )
 		{
 			os << e.id_;
 			return os;
 		}
 
-		error propagate() const noexcept
-		{
-			return *this;
-		}
-
 		template <class... E>
 		error propagate( E && ... ) const noexcept;
+
+		void diagnostic_output( std::ostream & os ) const;
 	};
 
 	inline error next_error_value() noexcept
@@ -239,7 +241,12 @@ namespace boost { namespace leaf {
 
 		public:
 
-			static void diagnostic_output( std::ostream & os, error const * e );
+			static void diagnostic_output( std::ostream & os, error const * e )
+			{
+				for( slot_base const * p = first(); p; p=p->next_ )
+					if( p->slot_diagnostic_output(os,e) )
+						os << std::endl;
+			}
 
 		protected:
 
@@ -439,6 +446,16 @@ namespace boost { namespace leaf {
 		return *this;
 	}
 
+	inline void error::diagnostic_output( std::ostream & os ) const
+	{
+		os << "leaf::error serial number: " << *this << std::endl;
+		leaf_detail::slot_base::diagnostic_output(os,this);
+	}
+
+	inline void global_diagnostic_output( std::ostream & os )
+	{
+		leaf_detail::slot_base::diagnostic_output(os,0);
+	}
 } }
 
 #endif

@@ -50,26 +50,26 @@ int main()
 {
 	{
 		leaf::error_capture ec1 = make_capture();
-		BOOST_TEST( handle_error( ec1, [ ]( info<1>, info<3> ) { } ) );
+		BOOST_TEST( ec1.handle_error( [ ]( info<1>, info<3> ) { } ) );
 		BOOST_TEST(count==2);
 		leaf::error_capture ec2(ec1);
 		BOOST_TEST(count==2);
-		BOOST_TEST( handle_error( ec1, [ ]( info<1>, info<3> ) { } ) );
-		BOOST_TEST( handle_error( ec2, [ ]( info<1>, info<3> ) { } ) );
+		BOOST_TEST( ec1.handle_error( [ ]( info<1>, info<3> ) { } ) );
+		BOOST_TEST( ec2.handle_error( [ ]( info<1>, info<3> ) { } ) );
 		leaf::error_capture ec3(std::move(ec2));
 		BOOST_TEST(count==2);
-		BOOST_TEST( handle_error( ec1, [ ]( info<1>, info<3> ) { } ) );
-		BOOST_TEST( handle_error( ec3, [ ]( info<1>, info<3> ) { } ) );
+		BOOST_TEST( ec1.handle_error( [ ]( info<1>, info<3> ) { } ) );
+		BOOST_TEST( ec3.handle_error( [ ]( info<1>, info<3> ) { } ) );
 		leaf::error_capture ec4; ec4 = ec3;
 		BOOST_TEST(count==2);
-		BOOST_TEST( handle_error( ec1, [ ]( info<1>, info<3> ) { } ) );
-		BOOST_TEST( handle_error( ec3, [ ]( info<1>, info<3> ) { } ) );
-		BOOST_TEST( handle_error( ec4, [ ]( info<1>, info<3> ) { } ) );
+		BOOST_TEST( ec1.handle_error( [ ]( info<1>, info<3> ) { } ) );
+		BOOST_TEST( ec3.handle_error( [ ]( info<1>, info<3> ) { } ) );
+		BOOST_TEST( ec4.handle_error( [ ]( info<1>, info<3> ) { } ) );
 		leaf::error_capture ec5; ec5 = std::move(ec4);
 		BOOST_TEST(count==2);
-		BOOST_TEST( handle_error( ec1, [ ]( info<1>, info<3> ) { } ) );
-		BOOST_TEST( handle_error( ec3, [ ]( info<1>, info<3> ) { } ) );
-		BOOST_TEST( handle_error( ec5, [ ]( info<1>, info<3> ) { } ) );
+		BOOST_TEST( ec1.handle_error( [ ]( info<1>, info<3> ) { } ) );
+		BOOST_TEST( ec3.handle_error( [ ]( info<1>, info<3> ) { } ) );
+		BOOST_TEST( ec5.handle_error( [ ]( info<1>, info<3> ) { } ) );
 	}
 	BOOST_TEST(count==0);
 	return boost::report_errors();

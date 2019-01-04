@@ -40,63 +40,63 @@ int main()
 	leaf::expect<info<1>,info<2>,info<4>> exp0;
 	leaf::error e0 = f4();
 	{
-		info<1> const * p = leaf::peek<info<1>>(exp0,e0);
+		info<1> const * p = exp0.peek<info<1>>(e0);
 		BOOST_TEST(p && p->value==1);
 	}
 
 	{
-		info<2> const * p = leaf::peek<info<2>>(exp0,e0);
+		info<2> const * p = exp0.peek<info<2>>(e0);
 		BOOST_TEST(p && p->value==2);
 	}
 
-	BOOST_TEST(!leaf::peek<info<4>>(exp0,e0));
+	BOOST_TEST(!exp0.peek<info<4>>(e0));
 	leaf::expect<info<1>,info<2>,info<4>> exp;
 	leaf::error e1 = f4();
 
 	{
-		info<1> const * p = leaf::peek<info<1>>(exp0,e0);
+		info<1> const * p = exp0.peek<info<1>>(e0);
 		BOOST_TEST(p && p->value==1);
 	}
 
 	{
-		info<2> const * p = leaf::peek<info<2>>(exp0,e0);
+		info<2> const * p = exp0.peek<info<2>>(e0);
 		BOOST_TEST(p && p->value==2);
 	}
 
-	BOOST_TEST(!leaf::peek<info<4>>(exp0,e0));
-	BOOST_TEST(!leaf::peek<info<1>>(exp,e0));
-	BOOST_TEST(!leaf::peek<info<2>>(exp,e0));
-	BOOST_TEST(!leaf::peek<info<4>>(exp,e0));
+	BOOST_TEST(!exp0.peek<info<4>>(e0));
+	BOOST_TEST(!exp.peek<info<1>>(e0));
+	BOOST_TEST(!exp.peek<info<2>>(e0));
+	BOOST_TEST(!exp.peek<info<4>>(e0));
 
 	{
-		info<1> const * p = leaf::peek<info<1>>(exp,e1);
+		info<1> const * p = exp.peek<info<1>>(e1);
 		BOOST_TEST(p && p->value==1);
 	}
 
 	{
-		info<2> const * p = leaf::peek<info<2>>(exp,e1);
+		info<2> const * p = exp.peek<info<2>>(e1);
 		BOOST_TEST(p && p->value==2);
 	}
 
-	BOOST_TEST(!leaf::peek<info<4>>(exp,e1));
-	BOOST_TEST( !handle_error( exp, e1, [ ](info<1>,info<2>,info<4>)->void { } ) );
+	BOOST_TEST(!exp.peek<info<4>>(e1));
+	BOOST_TEST( !exp.handle_error( e1, [ ](info<1>,info<2>,info<4>)->void { } ) );
 	leaf::error e2 = f4();
 
 	{
-		info<1> const * p = leaf::peek<info<1>>(exp,e2);
+		info<1> const * p = exp.peek<info<1>>(e2);
 		BOOST_TEST(p && p->value==1);
 	}
 
 	{
-		info<2> const * p = leaf::peek<info<2>>(exp,e2);
+		info<2> const * p = exp.peek<info<2>>(e2);
 		BOOST_TEST(p && p->value==2);
 	}
 
-	BOOST_TEST(!leaf::peek<info<4>>(exp,e2));
+	BOOST_TEST(!exp.peek<info<4>>(e2));
 
 	{
 		int c1=0, c2=0, c3=0;
-		bool handled = handle_error( exp, e2,
+		bool handled = exp.handle_error( e2,
 			[&c1]( info<1>, info<2>, info<4> )
 			{
 				++c1;
@@ -119,7 +119,7 @@ int main()
 
 	{
 		int c=0;
-		bool handled = handle_error( exp0, e0,
+		bool handled = exp0.handle_error( e0,
 			[&c]( info<2> const & i2, info<1> const & i1 )
 			{
 				BOOST_TEST(i1.value==1);

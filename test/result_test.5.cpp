@@ -23,7 +23,7 @@ int main()
 
 	{
 		int c=0;
-		bool r = handle_error( exp, f(),
+		bool r = exp.handle_error( f(),
 			[&c]( info<1> const & x )
 			{
 				BOOST_TEST(c==0);
@@ -36,7 +36,7 @@ int main()
 
 	{
 		int c=0;
-		bool r = handle_error( exp, f(),
+		bool r = exp.handle_error( f(),
 			[&c]( info<2> const & x )
 			{
 				BOOST_TEST(c==0);
@@ -49,7 +49,7 @@ int main()
 
 	{
 		int c=0;
-		int r = handle_error( exp, f(),
+		int r = exp.handle_error( f(),
 			[&c]( info<1> const & x )
 			{
 				BOOST_TEST(c==0);
@@ -61,7 +61,7 @@ int main()
 
 	{
 		int c=0;
-		int r = handle_error( exp, f(),
+		int r = exp.handle_error( f(),
 			[&c]( info<2> const & x )
 			{
 				BOOST_TEST(c==0);
@@ -73,7 +73,7 @@ int main()
 
 	{
 		int c=0;
-		bool r = handle_error( exp, f(),
+		bool r = exp.handle_error( f(),
 			[&c]( info<1> const & x, info<2> const & )
 			{
 				BOOST_TEST(c==0);
@@ -98,7 +98,7 @@ int main()
 
 	{
 		int c=0;
-		bool r = handle_error( exp, f(),
+		bool r = exp.handle_error( f(),
 			[&c]( info<1> const & x, info<2> const & )
 			{
 				BOOST_TEST(c==0);
@@ -124,7 +124,7 @@ int main()
 
 	{
 		int c=0;
-		leaf::result<int> r = handle_error( exp, f(),
+		leaf::result<int> r = exp.handle_error( f(),
 			[&c]( info<1> const & x, info<3> const & ) -> leaf::result<int>
 			{
 				BOOST_TEST(c==0);
@@ -139,7 +139,7 @@ int main()
 		int c=0;
 		leaf::result<void> r1 = f();
 		leaf::expect<info<42>> exp1;
-		leaf::result<int> r2 = handle_error( exp, r1,
+		leaf::result<int> r2 = exp.handle_error( r1,
 			[&c]( info<1> const & x, info<3> const & ) -> leaf::result<int>
 			{
 				BOOST_TEST(c==0);
@@ -148,7 +148,7 @@ int main()
 			} );
 		BOOST_TEST(c==1);
 		c = 0;
-		bool b = handle_error( exp1, r2,
+		bool b = exp1.handle_error( r2,
 			[&c]( info<42> const & x )
 			{
 				BOOST_TEST(c==0);
@@ -162,7 +162,7 @@ int main()
 	{
 		int c=0;
 		leaf::result<void> r1 = f();
-		leaf::result<int> r2 = handle_error( exp, r1,
+		leaf::result<int> r2 = exp.handle_error( r1,
 			[&c]( info<2> const & ) -> leaf::result<int>
 			{
 				BOOST_TEST(c==0);
@@ -170,7 +170,7 @@ int main()
 				return 42;
 			} );
 		BOOST_TEST(c==0);
-		bool b = handle_error( exp, r2,
+		bool b = exp.handle_error( r2,
 			[&c]( info<1> const & x, info<3> const & y )
 			{
 				BOOST_TEST(c==0);

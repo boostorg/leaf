@@ -43,7 +43,7 @@ leaf::result<int> handle_some_errors( int what_to_do )
 	if( leaf::result<int> r = compute_answer(what_to_do) )
 		return r;
 	else
-		return handle_error( exp, r,
+		return exp.handle_error( r,
 			[&r]( error_code ec ) -> leaf::result<int>
 			{
 				if( ec==error_code::error1 )
@@ -59,7 +59,7 @@ leaf::result<float> handle_some_errors_float( int what_to_do )
 	if( leaf::result<int> r = compute_answer(what_to_do) )
 		return r;
 	else
-		return handle_error( exp, r,
+		return exp.handle_error( r,
 			[&r]( error_code ec ) -> leaf::result<float>
 			{
 				if( ec==error_code::error2 )
@@ -75,7 +75,7 @@ leaf::result<void> handle_some_errors_void( int what_to_do )
 	if( leaf::result<int> r = compute_answer(what_to_do) )
 		return { };
 	else
-		return handle_error( exp, r,
+		return exp.handle_error( r,
 			[&r]( error_code ec ) -> leaf::result<void>
 			{
 				if( ec==error_code::error3 )
@@ -97,7 +97,7 @@ int main()
 		leaf::result<int> r = handle_some_errors(2);
 		BOOST_TEST(!r);
 		int c=0;
-		BOOST_TEST( handle_error( exp, r,
+		BOOST_TEST( exp.handle_error( r,
 			[&c]( error_code ec )
 			{
 				BOOST_TEST(ec==error_code::error2);
@@ -109,7 +109,7 @@ int main()
 		leaf::result<float> r = handle_some_errors(3);
 		BOOST_TEST(!r);
 		int c=0;
-		BOOST_TEST( handle_error( exp, r,
+		BOOST_TEST( exp.handle_error( r,
 			[&c]( error_code ec )
 			{
 				BOOST_TEST(ec==error_code::error3);
@@ -125,7 +125,7 @@ int main()
 		leaf::result<float> r = handle_some_errors_float(1);
 		BOOST_TEST(!r);
 		int c=0;
-		BOOST_TEST( handle_error( exp, r,
+		BOOST_TEST( exp.handle_error( r,
 			[&c]( error_code ec )
 			{
 				BOOST_TEST(ec==error_code::error1);
@@ -138,7 +138,7 @@ int main()
 		leaf::result<int> r = handle_some_errors_float(3);
 		BOOST_TEST(!r);
 		int c=0;
-		BOOST_TEST( handle_error( exp, r,
+		BOOST_TEST( exp.handle_error( r,
 			[&c]( error_code ec )
 			{
 				BOOST_TEST(ec==error_code::error3);
@@ -154,7 +154,7 @@ int main()
 		leaf::result<void> r = handle_some_errors_void(1);
 		BOOST_TEST(!r);
 		int c=0;
-		BOOST_TEST( handle_error( exp, r,
+		BOOST_TEST( exp.handle_error( r,
 			[&c]( error_code ec )
 			{
 				BOOST_TEST(ec==error_code::error1);
@@ -166,7 +166,7 @@ int main()
 		leaf::result<void> r = handle_some_errors_void(2);
 		BOOST_TEST(!r);
 		int c=0;
-		BOOST_TEST( handle_error( exp, r,
+		BOOST_TEST( exp.handle_error( r,
 			[&c]( error_code ec )
 			{
 				BOOST_TEST(ec==error_code::error2);

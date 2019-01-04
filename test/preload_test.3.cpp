@@ -42,7 +42,7 @@ int main()
 	catch( my_error & e )
 	{
 		int c=0;
-		handle_exception( exp, e,
+		exp.handle_exception( e,
 			[&c]( info const & x )
 			{
 				BOOST_TEST(x.value==2);

@@ -64,7 +64,7 @@ void test( int task_count, F && f ) noexcept
 		catch( my_error const & e )
 		{
 			int c=0;
-			handle_exception( exp, e, [&f,&c]( info<1> const & x1, info<2> const & x2 )
+			exp.handle_exception( e, [&f,&c]( info<1> const & x1, info<2> const & x2 )
 				{
 					BOOST_TEST(x1.value==f.a);
 					BOOST_TEST(x2.value==f.b);

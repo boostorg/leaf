@@ -84,7 +84,7 @@ int main()
 			continue;
 		else
 		{
-			leaf::handle_error( exp, r,
+			exp.handle_error( r,
 
 				[ ]( error_a const & e )
 				{

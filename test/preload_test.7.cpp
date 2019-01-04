@@ -31,7 +31,7 @@ int main()
 	leaf::expect<leaf::e_unexpected,leaf::e_unexpected_diagnostic_output> exp;
 	leaf::error e = f1();
 	int c=0;
-	bool handled = handle_error( exp, e,
+	bool handled = exp.handle_error( e,
 		[&c]( leaf::e_unexpected const & unx, leaf::e_unexpected_diagnostic_output const & unxdo )
 		{
 			BOOST_TEST(unx.count==1);

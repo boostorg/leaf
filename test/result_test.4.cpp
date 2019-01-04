@@ -14,7 +14,7 @@ namespace leaf = boost::leaf;
 template <class Expect>
 void check( Expect & exp, leaf::bad_result const & e )
 {
-	handle_exception( exp, e,
+	exp.handle_exception( e,
 		[ ]( leaf::e_source_location const & x )
 		{
 			BOOST_TEST(strstr(x.file,"result.hpp")!=0);

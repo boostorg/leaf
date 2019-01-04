@@ -19,7 +19,7 @@ int main()
 {
 	leaf::expect<info<1>,info<2>,info<3>> exp;
 
-	(void) handle_error( exp, f(),
+	(void) exp.handle_error( f(),
 		[ ]( info<1>, info<2> )
 		{
 			return 42;

@@ -22,7 +22,7 @@ int main()
 
 	{
 		int c=0;
-		bool r = handle_error( exp, f(),
+		bool r = exp.handle_error( f(),
 			[&c]( info<1> const & x )
 			{
 				BOOST_TEST(c==0);
@@ -35,7 +35,7 @@ int main()
 
 	{
 		int c=0;
-		bool r = handle_error( exp, f(),
+		bool r = exp.handle_error( f(),
 			[&c]( info<2> const & x )
 			{
 				BOOST_TEST(c==0);
@@ -48,7 +48,7 @@ int main()
 
 	{
 		int c=0;
-		int r = handle_error( exp, f(),
+		int r = exp.handle_error( f(),
 			[&c]( info<1> const & x )
 			{
 				BOOST_TEST(c==0);
@@ -60,7 +60,7 @@ int main()
 
 	{
 		int c=0;
-		int r = handle_error( exp, f(),
+		int r = exp.handle_error( f(),
 			[&c]( info<2> const & x )
 			{
 				BOOST_TEST(c==0);
@@ -72,7 +72,7 @@ int main()
 
 	{
 		int c=0;
-		bool r = handle_error( exp, f(),
+		bool r = exp.handle_error( f(),
 			[&c]( info<1> const & x, info<2> const & )
 			{
 				BOOST_TEST(c==0);
@@ -97,7 +97,7 @@ int main()
 
 	{
 		int c=0;
-		bool r = handle_error( exp, f(),
+		bool r = exp.handle_error( f(),
 			[&c]( info<1> const & x, info<2> const & )
 			{
 				BOOST_TEST(c==0);

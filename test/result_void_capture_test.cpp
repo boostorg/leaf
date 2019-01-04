@@ -64,7 +64,7 @@ int main()
 		else
 		{
 			int c=0;
-			bool handled = handle_error( exp, r, [&f,&c]( info<1> const & x1, info<2> const & x2 )
+			bool handled = exp.handle_error( r, [&f,&c]( info<1> const & x1, info<2> const & x2 )
 				{
 				BOOST_TEST(x1.value==f.a);
 				BOOST_TEST(x2.value==f.b);

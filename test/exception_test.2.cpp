@@ -60,7 +60,7 @@ void f4()
 	catch( my_error const & e )
 	{
 		int c1=0, c2=0;
-		handle_exception( exp, e,
+		exp.handle_exception( e,
 			[&c1]( info<1>, info<2>, info<3>, info<4> )
 			{
 				++c1;
@@ -90,9 +90,9 @@ void test( std::function<void()> const & f )
 	}
 	catch( my_error const & e )
 	{
-		BOOST_TEST(!leaf::peek<info<2>>(exp,e));
-		BOOST_TEST(!leaf::peek<info<3>>(exp,e));
-		BOOST_TEST(!leaf::peek<info<4>>(exp,e));
+		BOOST_TEST(!exp.peek<info<2>>(e));
+		BOOST_TEST(!exp.peek<info<3>>(e));
+		BOOST_TEST(!exp.peek<info<4>>(e));
 		BOOST_TEST(leaf::leaf_detail::tl_slot_ptr<info<1>>()==0);
 		BOOST_TEST(leaf::leaf_detail::tl_slot_ptr<info<2>>()!=0);
 		BOOST_TEST(leaf::leaf_detail::tl_slot_ptr<info<3>>()!=0);

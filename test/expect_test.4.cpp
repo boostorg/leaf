@@ -23,7 +23,7 @@ int main()
 		MStatus copy = ms;
 		{
 			int c=0;
-			bool handled = leaf::handle_error( exp, leaf::error(copy),
+			bool handled = exp.handle_error( leaf::error(copy),
 				[&c]( MStatus ms )
 				{
 					++c;
@@ -33,7 +33,7 @@ int main()
 		}
 		{
 			int c=0;
-			bool handled = leaf::handle_error( exp, leaf::error(copy),
+			bool handled = exp.handle_error( leaf::error(copy),
 				[&c]( MStatus const ms )
 				{
 					++c;
@@ -43,7 +43,7 @@ int main()
 		}
 		{
 			int c=0;
-			bool handled = leaf::handle_error( exp, leaf::error(copy),
+			bool handled = exp.handle_error( leaf::error(copy),
 				[&c]( MStatus const & ms )
 				{
 					++c;
@@ -56,7 +56,7 @@ int main()
 		MStatus & ref = ms;
 		{
 			int c=0;
-			bool handled = leaf::handle_error( exp, leaf::error(ref),
+			bool handled = exp.handle_error( leaf::error(ref),
 				[&c]( MStatus ms )
 				{
 					++c;
@@ -66,7 +66,7 @@ int main()
 		}
 		{
 			int c=0;
-			bool handled = leaf::handle_error( exp, leaf::error(ref),
+			bool handled = exp.handle_error( leaf::error(ref),
 				[&c]( MStatus const ms )
 				{
 					++c;
@@ -76,7 +76,7 @@ int main()
 		}
 		{
 			int c=0;
-			bool handled = leaf::handle_error( exp, leaf::error(ref),
+			bool handled = exp.handle_error( leaf::error(ref),
 				[&c]( MStatus const & ms )
 				{
 					++c;
@@ -89,7 +89,7 @@ int main()
 		{
 			MStatus const & cref = ms;
 			int c=0;
-			bool handled = leaf::handle_error( exp, leaf::error(cref),
+			bool handled = exp.handle_error( leaf::error(cref),
 				[&c]( MStatus ms )
 				{
 					++c;
@@ -100,7 +100,7 @@ int main()
 		{
 			MStatus const & cref = ms;
 			int c=0;
-			bool handled = leaf::handle_error( exp, leaf::error(cref),
+			bool handled = exp.handle_error( leaf::error(cref),
 				[&c]( MStatus const ms )
 				{
 					++c;
@@ -111,7 +111,7 @@ int main()
 		{
 			MStatus const & cref = ms;
 			int c=0;
-			bool handled = leaf::handle_error( exp, leaf::error(cref),
+			bool handled = exp.handle_error( leaf::error(cref),
 				[&c]( MStatus const & ms )
 				{
 					++c;

@@ -8,10 +8,15 @@
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/detail/handle_error.hpp>
+#include <boost/leaf/error.hpp>
+#include <tuple>
 
 namespace boost { namespace leaf {
 
 	class error_capture;
+
+	template <class T>
+	class result;
 
 	namespace leaf_detail
 	{
@@ -117,13 +122,6 @@ namespace boost { namespace leaf {
 	template <class... E>
 	class expect;
 
-	template <class... E, class... F>
-	typename leaf_detail::handler_pack_return_type<F...>::return_type handle_error( expect<E...> const &, error const &, F && ... ) noexcept;
-
-	template <class P, class... E>
-	P const * peek( expect<E...> const &, error const & ) noexcept;
-
-
 	template <class... E>
 	typename leaf_detail::dependent_type<expect<E...>>::error_capture capture( expect<E...> &, error const & );
 
@@ -131,12 +129,6 @@ namespace boost { namespace leaf {
 	class expect
 	{
 		friend class error;
-
-		template <class... E_, class... F>
-		friend typename leaf_detail::handler_pack_return_type<F...>::return_type leaf::handle_error( expect<E_...> const &, error const &, F && ... ) noexcept;
-
-		template <class P, class... E_>
-		friend P const * leaf::peek( expect<E_...> const &, error const & ) noexcept;
 
 		template <class... E_>
 		friend typename leaf_detail::dependent_type<expect<E_...>>::error_capture leaf::capture( expect<E_...> &, error const & );
@@ -152,7 +144,7 @@ namespace boost { namespace leaf {
 			using namespace leaf_detail;
 			typedef typename handler_wrapper<F>::return_type return_type;
 			if( slots_subset<decltype(s_),expect_slot<typename std::remove_cv<typename std::remove_reference<T>::type>::type>...>::have_values(s_,e) )
-				return std::make_pair(true, handler_wrapper<F>(std::forward<F>(f))( *leaf::peek<typename std::remove_cv<typename std::remove_reference<T>::type>::type>(*this,e)... ));
+				return std::make_pair(true, handler_wrapper<F>(std::forward<F>(f))( *peek<typename std::remove_cv<typename std::remove_reference<T>::type>::type>(e)... ));
 			else
 				return std::make_pair(false, uhnandled_error<return_type>::value(e));
 		}
@@ -177,28 +169,65 @@ namespace boost { namespace leaf {
 		{
 		}
 
+		//////////////////////////////////////////////
+
+		template <class... F>
+		typename leaf_detail::handler_pack_return_type<F...>::return_type handle_error( error const & e, F && ... f ) const noexcept
+		{
+			return this->find_handler_( e, std::forward<F>(f)... ).second;
+		}
+
+		template <class P>
+		P const * peek( error const & e ) const noexcept
+		{
+			auto & opt = std::get<leaf_detail::type_index<P,E...>::value>(s_);
+			if( opt.has_value() )
+			{
+				auto & x = opt.value();
+				if( x.e==e )
+					return &x.v;
+			}
+			return 0;
+		}
+
+		//////////////////////////////////////////////
+
+		template <class T, class... F>
+		typename leaf_detail::handler_pack_return_type<F...>::return_type  handle_error( result<T> const & r, F && ... f ) const noexcept
+		{
+			assert(!r);
+			if( r.which_ == leaf_detail::result_variant::err )
+				return this->handle_error(r.err_,f...);
+			else
+			{
+				assert(r.which_==leaf_detail::result_variant::cap);
+				return r.cap_.handle_error(f...);
+			}
+		}
+
+		template <class P, class T>
+		P const * peek( result<T> const & r ) const noexcept
+		{
+			assert(!r);
+			if( r.which_==leaf_detail::result_variant::err )
+				return this->template peek<P>(r.err_);
+			else
+			{
+				assert(r.which_==leaf_detail::result_variant::cap);
+				return r.cap_.template peek<P>();
+			}
+		}
+
+		//////////////////////////////////////////////
+
+		template <class P>
+		P const * peek( std::exception const & ) const noexcept;
+
+		template <class... F>
+		void handle_exception( std::exception const &, F && ... ) const;
 	};
 
 	////////////////////////////////////////
-
-	template <class... E, class... F>
-	typename leaf_detail::handler_pack_return_type<F...>::return_type handle_error( expect<E...> const & exp, error const & e, F && ... f ) noexcept
-	{
-		return exp.find_handler_( e, std::forward<F>(f)... ).second;
-	}
-
-	template <class P, class... E>
-	P const * peek( expect<E...> const & exp, error const & e ) noexcept
-	{
-		auto & opt = std::get<leaf_detail::type_index<P,E...>::value>(exp.s_);
-		if( opt.has_value() )
-		{
-			auto & x = opt.value();
-			if( x.e==e )
-				return &x.v;
-		}
-		return 0;
-	}
 
 	template <class... E>
 	typename leaf_detail::dependent_type<expect<E...>>::error_capture capture( expect<E...> & exp, error const & e )

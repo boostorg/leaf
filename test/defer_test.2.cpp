@@ -37,9 +37,9 @@ int main()
 {
 	leaf::expect<info<0>,info<1>,info<2>,info<3>,info<4>> exp;
 	leaf::error e = f2();
-	BOOST_TEST(!leaf::peek<info<3>>(exp,e));
+	BOOST_TEST(!exp.peek<info<3>>(e));
 	int c=0;
-	bool handled = handle_error( exp, e,
+	bool handled = exp.handle_error( e,
 		[&c]( info<1> const & i1, info<2> const & i2, info<4> const & i4 )
 		{
 			BOOST_TEST(i1.value==1);

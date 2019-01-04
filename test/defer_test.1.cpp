@@ -39,7 +39,7 @@ int main()
 {
 	leaf::expect<info> exp;
 	int c=0;
-	bool handled = handle_error( exp, f(),
+	bool handled = exp.handle_error( f(),
 		[&c]( info const & i42 )
 		{
 			BOOST_TEST(i42.value==42);

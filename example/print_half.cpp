@@ -9,7 +9,6 @@
 
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/expect.hpp>
-#include <boost/leaf/diagnostic_output.hpp>
 #include <algorithm>
 #include <ctype.h>
 #include <string>
@@ -62,7 +61,7 @@ leaf::result<void> print_half(const std::string& text)
 	}
 	else
 	{
-		return leaf::handle_error( exp, r,
+		return exp.handle_error( r,
 			[&]( ConversionErrc ec ) -> leaf::result<void>
 			{
 				if( ec != ConversionErrc::TooLong )
@@ -84,7 +83,7 @@ int main( int argc, char const * argv[ ] )
 	}
 	else
 	{
-		return handle_error( exp, r,
+		return exp.handle_error( r,
 			[ ]( ConversionErrc ec )
 			{
 				switch(ec)
@@ -104,7 +103,7 @@ int main( int argc, char const * argv[ ] )
 				//In this case, we print diagnostic information. Consider using leaf::unexpected_diagnostic_output in the
 				//definition of exp.
 				std::cerr << "Unknown error, cryptic diagnostic information follows." << std::endl;
-				leaf::diagnostic_output(std::cerr,r);
+				r.diagnostic_output(std::cerr);
 				return 2;
 			} );
 	}

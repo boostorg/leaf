@@ -44,9 +44,9 @@ namespace boost { namespace leaf {
 				std::rethrow_exception(ex_);
 			}
 
-			friend void diagnostic_output_( std::ostream & os, captured_exception const & ce )
+			void diagnostic_output( std::ostream & os ) const
 			{
-				diagnostic_output(os,static_cast<error_capture const &>(ce));
+				static_cast<error_capture const *>(this)->diagnostic_output(os);
 			}
 		};
 

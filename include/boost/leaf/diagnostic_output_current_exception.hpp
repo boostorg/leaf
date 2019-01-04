@@ -8,7 +8,6 @@
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/exception_capture.hpp>
-#include <boost/leaf/diagnostic_output.hpp>
 #include <boost/leaf/detail/demangle.hpp>
 
 namespace boost { namespace leaf {
@@ -37,17 +36,17 @@ namespace boost { namespace leaf {
 		{
 			throw;
 		}
-		catch( leaf_detail::captured_exception const & e )
+		catch( leaf_detail::captured_exception const & ce )
 		{
-			diagnostic_output_(os,e);
+			ce.diagnostic_output(os);
 		}
 		catch( error const & e )
 		{
-			diagnostic_output(os,e);
+			e.diagnostic_output(os);
 		}
 		catch( ... )
 		{
-			diagnostic_output(os);
+			global_diagnostic_output(os);
 		}
 	}
 

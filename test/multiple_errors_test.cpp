@@ -32,7 +32,7 @@ int main()
 	leaf::error e2=f34();
 	{
 		int e1c1=0, e1c2=0;
-		bool handled = handle_error( exp, e1,
+		bool handled = exp.handle_error( e1,
 			[&e1c1]( info<3>, info<4> )
 			{
 				++e1c1;
@@ -49,7 +49,7 @@ int main()
 	}
 	{
 		int e2c1=0, e2c2=0;
-		bool handled = handle_error( exp, e2,
+		bool handled = exp.handle_error( e2,
 			[&e2c1]( info<1>, info<2> )
 			{
 				++e2c1;

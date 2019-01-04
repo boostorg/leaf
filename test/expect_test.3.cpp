@@ -38,7 +38,7 @@ int main()
 		int c=0;
 		try
 		{
-			handle_exception( exp, e,
+			exp.handle_exception( e,
 				[&c]( info )
 				{
 					++c;

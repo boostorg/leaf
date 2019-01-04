@@ -32,7 +32,7 @@ int main()
 	leaf::expect<info> exp;
 	leaf::error e = f1();
 	int c=0;
-	bool handled = handle_error( exp, e,
+	bool handled = exp.handle_error( e,
 		[&c]( info const & i0 )
 		{
 			BOOST_TEST(i0.value==0);

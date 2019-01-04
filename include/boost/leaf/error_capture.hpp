@@ -13,14 +13,6 @@ namespace boost { namespace leaf {
 
 	class error_capture;
 
-	template <class... F>
-	typename leaf_detail::handler_pack_return_type<F...>::return_type handle_error( error_capture const &, F && ... ) noexcept;
-
-	template <class P>
-	P const * peek( error_capture const & ) noexcept;
-
-	void diagnostic_output( std::ostream &, error_capture const & );
-
 	namespace leaf_detail
 	{
 		template <class... List>
@@ -29,10 +21,7 @@ namespace boost { namespace leaf {
 		template <class Car, class... Cdr>
 		struct all_available<Car, Cdr...>
 		{
-			static bool check( error_capture const & cap ) noexcept
-			{
-				return peek<Car>(cap) && all_available<Cdr...>::check(cap);
-			}
+			static bool check( error_capture const & cap ) noexcept;
 		};
 
 		template <>
@@ -87,16 +76,6 @@ namespace boost { namespace leaf {
 
 	class error_capture
 	{
-		template <class... F>
-		friend typename leaf_detail::handler_pack_return_type<F...>::return_type handle_error( error_capture const &, F && ... ) noexcept;
-
-		template <class P>
-		friend P const * leaf::peek( error_capture const & ) noexcept;
-
-		friend void leaf::diagnostic_output( std::ostream &, error_capture const & );
-
-		////////////////////////////////////////
-
 		class dynamic_store
 		{
 			mutable std::atomic<int> refcount_;
@@ -189,7 +168,7 @@ namespace boost { namespace leaf {
 			using namespace leaf_detail;
 			typedef typename handler_wrapper<F>::return_type return_type;
 			if( leaf_detail::all_available<typename std::remove_cv<typename std::remove_reference<T>::type>::type...>::check(*this) )
-				return std::make_pair(true, handler_wrapper<F>(std::forward<F>(f))( *leaf::peek<typename std::remove_cv<typename std::remove_reference<T>::type>::type>(*this)... ));
+				return std::make_pair(true, handler_wrapper<F>(std::forward<F>(f))( *this->template peek<typename std::remove_cv<typename std::remove_reference<T>::type>::type>()... ));
 			else
 				return std::make_pair(false, return_type(uhnandled_error<return_type>::value(e_)));
 		}
@@ -283,30 +262,37 @@ namespace boost { namespace leaf {
 			}
 			return e_;
 		}
+
+		template <class... F>
+		typename leaf_detail::handler_pack_return_type<F...>::return_type handle_error( F && ... f ) const noexcept
+		{
+			return this->find_handler_( std::forward<F>(f)... ).second;
+		}
+
+		template <class P>
+		P const * peek() const noexcept
+		{
+			if( *this )
+				if( auto * opt = ds_->bind<P>() )
+					if( opt->has_value() )
+						return &opt->value();
+			return 0;
+		}
+
+		void diagnostic_output( std::ostream & os ) const
+		{
+			if( *this )
+				ds_->diagnostic_output_(os);
+		}
 	};
 
-	////////////////////////////////////////
-
-	template <class... F>
-	typename leaf_detail::handler_pack_return_type<F...>::return_type handle_error( error_capture const & ec, F && ... f ) noexcept
+	namespace leaf_detail
 	{
-		return ec.find_handler_( std::forward<F>(f)... ).second;
-	}
-
-	template <class P>
-	P const * peek( error_capture const & e ) noexcept
-	{
-		if( e )
-			if( auto * opt = e.ds_->bind<P>() )
-				if( opt->has_value() )
-					return &opt->value();
-		return 0;
-	}
-
-	inline void diagnostic_output( std::ostream & os, error_capture const & e )
-	{
-		if( e )
-			e.ds_->diagnostic_output_(os);
+		template <class Car, class... Cdr>
+		bool all_available<Car, Cdr...>::check( error_capture const & cap ) noexcept
+		{
+			return cap.template peek<Car>() && all_available<Cdr...>::check(cap);
+		}
 	}
 
 } }

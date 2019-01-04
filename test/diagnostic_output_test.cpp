@@ -110,7 +110,7 @@ int main()
 			BOOST_TEST(s.find("Detected 2 attempts to communicate unexpected error objects, the first one of type ")!=s.npos);
 			BOOST_TEST(s.find("unexpected_test<2>")!=s.npos);
 			std::cout << s;
-			handle_exception( exp, e, [ ]{ } );
+			exp.handle_exception( e, [ ]{ } );
 		}
 	}
 	BOOST_TEST(leaf::leaf_detail::tl_unexpected_enabled_counter()==0);

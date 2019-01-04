@@ -119,7 +119,7 @@ int main() noexcept
 			std::cout << "do_work succeeded, answer=" << *r << '\n';
 		else
 		{
-			bool matched = handle_error( exp, r,
+			bool matched = exp.handle_error( r,
 
 				//Handle e_do_work failures:
 				[ ]( do_work_error_code e )

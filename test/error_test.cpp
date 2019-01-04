@@ -37,7 +37,7 @@ leaf::error f3()
 {
 	leaf::expect<info<2>,info<3>,unexp<1>> exp;
 	leaf::error e = f2().propagate( info<4>{4} );
-	BOOST_TEST(leaf::peek<unexp<1>>(exp,e)->value==1);
+	BOOST_TEST(exp.peek<unexp<1>>(e)->value==1);
 	return e;
 }
 
@@ -46,14 +46,14 @@ leaf::error f4()
 	leaf::expect<leaf::e_source_location,leaf::e_unexpected,info<1>,info<2>,info<3>,info<4>> exp;
 	{
 		leaf::error e = f3();
-		bool handled = handle_error( exp, e,
+		bool handled = exp.handle_error( e,
 			[ ]( info<1>, info<2>, info<3>, info<4> ){ },
 			[ ]( info<1>, info<2>, info<4> ) { } );
 		BOOST_TEST(handled);
 	}
 	leaf::error e = f3();
 	int c1=0, c2=0;
-	bool handled = handle_error( exp, e,
+	bool handled = exp.handle_error( e,
 		[&c1]( info<1>,info<2>,info<3>,info<4> )
 		{
 			++c1;
@@ -80,9 +80,9 @@ int main()
 {
 	leaf::expect<info<2>,info<3>,info<4>> exp;
 	leaf::error e=f4();
-	BOOST_TEST(!leaf::peek<info<2>>(exp,e));
-	BOOST_TEST(!leaf::peek<info<3>>(exp,e));
-	BOOST_TEST(!leaf::peek<info<4>>(exp,e));
+	BOOST_TEST(!exp.peek<info<2>>(e));
+	BOOST_TEST(!exp.peek<info<3>>(e));
+	BOOST_TEST(!exp.peek<info<4>>(e));
 	BOOST_TEST(leaf::leaf_detail::tl_slot_ptr<info<1>>()==0);
 	BOOST_TEST(leaf::leaf_detail::tl_slot_ptr<info<2>>()!=0);
 	BOOST_TEST(leaf::leaf_detail::tl_slot_ptr<info<3>>()!=0);

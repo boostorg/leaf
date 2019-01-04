@@ -123,7 +123,7 @@ int main( int argc, char const * argv[ ] )
 		//are associated with the error value stored in e. If no function can be matched,
 		//handle_exception returns false. Otherwise the matched function is invoked with
 		//the corresponding available error objects.
-		leaf::handle_exception( exp, e,
+		exp.handle_exception( e,
 
 			[ ] ( e_file_name const & fn, e_errno const & errn )
 			{
@@ -142,7 +142,7 @@ int main( int argc, char const * argv[ ] )
 		//e_file_name and e_errno, associated with e, are avialable in exp; if not, it will
 		//next check if just e_errno is available; and if not, the last function (which
 		//takes no arguments) will always match to print a generic error message.
-		leaf::handle_exception( exp, e,
+		exp.handle_exception( e,
 
 			[ ] ( e_file_name const & fn, e_errno const & errn )
 			{
@@ -165,7 +165,7 @@ int main( int argc, char const * argv[ ] )
 	catch( std::ostream::failure const & e )
 	{
 		//Report failure to write to std::cout, print the relevant errno.
-		leaf::handle_exception( exp, e,
+		exp.handle_exception( e,
 
 			[ ] ( e_errno const & errn )
 			{

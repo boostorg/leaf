@@ -29,7 +29,7 @@ int main()
 
 	{
 		int c=0;
-		bool r = handle_error( ec,
+		bool r = ec.handle_error(
 			[&c]( info<1> const & x )
 			{
 				BOOST_TEST(c==0);
@@ -42,7 +42,7 @@ int main()
 
 	{
 		int c=0;
-		bool r = handle_error( ec,
+		bool r = ec.handle_error(
 			[&c]( info<2> const & x )
 			{
 				BOOST_TEST(c==0);
@@ -55,7 +55,7 @@ int main()
 
 	{
 		int c=0;
-		int r = handle_error( ec,
+		int r = ec.handle_error(
 			[&c]( info<1> const & x )
 			{
 				BOOST_TEST(c==0);
@@ -67,7 +67,7 @@ int main()
 
 	{
 		int c=0;
-		int r = handle_error( ec,
+		int r = ec.handle_error(
 			[&c]( info<2> const & x )
 			{
 				BOOST_TEST(c==0);
@@ -79,7 +79,7 @@ int main()
 
 	{
 		int c=0;
-		bool r = handle_error( ec,
+		bool r = ec.handle_error(
 			[&c]( info<1> const & x, info<2> const & )
 			{
 				BOOST_TEST(c==0);
@@ -104,7 +104,7 @@ int main()
 
 	{
 		int c=0;
-		bool r = handle_error( ec,
+		bool r = ec.handle_error(
 			[&c]( info<1> const & x, info<2> const & )
 			{
 				BOOST_TEST(c==0);
@@ -134,7 +134,7 @@ int main()
 		leaf::error e2 = ec.unload();
 			{
 			int c = 0;
-			bool r = handle_error( exp, e1,
+			bool r = exp.handle_error( e1,
 				[&c]( info<1>, info<2>, info<3> )
 				{
 					BOOST_TEST(c==0);
@@ -156,7 +156,7 @@ int main()
 			}
 			{
 			int c = 0;
-			bool r = handle_error( exp, e2,
+			bool r = exp.handle_error( e2,
 				[&c]( info<1>, info<2>, info<3> )
 				{
 					BOOST_TEST(c==0);
