@@ -166,6 +166,9 @@ namespace boost { namespace leaf {
 
 	public:
 
+		error( error const & ) noexcept = default;
+		error( error && ) noexcept = default;
+
 		error() noexcept:
 			id_(id_factory::tl_instance().get())
 		{

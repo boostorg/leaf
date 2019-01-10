@@ -296,7 +296,7 @@ namespace boost { namespace leaf {
 			struct get_one_argument<error>
 			{
 				template <class StaticStore>
-				static error get( StaticStore const &, error const & e ) noexcept
+				static error const & get( StaticStore const &, error const & e ) noexcept
 				{
 					return e;
 				}
