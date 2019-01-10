@@ -47,10 +47,6 @@ namespace boost { namespace leaf {
 		{
 			return ss.handle_error(get_error(ex), &ex, std::forward<Handlers>(handlers)..., [ ]() -> typename leaf_detail::function_traits<TryBlock>::return_type { throw; });
 		}
-		catch( ... )
-		{
-			return ss.handle_error(next_error_value(), 0, std::forward<Handlers>(handlers)..., [ ]() -> typename leaf_detail::function_traits<TryBlock>::return_type { throw; });
-		}
 	}
 
 	namespace leaf_detail
