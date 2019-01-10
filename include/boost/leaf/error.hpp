@@ -174,6 +174,13 @@ namespace boost { namespace leaf {
 		{
 		}
 
+		template <class E>
+		explicit error( E && e ) noexcept:
+			id_(id_factory::tl_instance().get())
+		{
+			propagate(std::forward<E>(e));
+		}
+
 		template <class... E>
 		explicit error( E && ... e ) noexcept:
 			id_(id_factory::tl_instance().get())

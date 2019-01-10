@@ -37,6 +37,8 @@ namespace boost { namespace leaf {
 			try
 			{
 				cap.unload_and_rethrow_original_exception();
+				assert(0);
+				throw;
 			}
 			catch( std::exception const & ex )
 			{
