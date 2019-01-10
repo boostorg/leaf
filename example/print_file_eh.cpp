@@ -8,7 +8,9 @@
 //additional information when using exceptions to report failures. See print_file_result.cpp
 //for the variant that doesn't use exceptions.
 
-#include <boost/leaf/all.hpp>
+#include <boost/leaf/throw.hpp>
+#include <boost/leaf/try.hpp>
+#include <boost/leaf/preload.hpp>
 #include <iostream>
 #include <memory>
 #include <stdio.h>
@@ -74,21 +76,6 @@ void file_read( FILE & f, void * buf, int size )
 }
 
 
-void print_file( char const * file_name )
-{
-	std::shared_ptr<FILE> f = file_open( file_name );
-
-	auto propagate1 = leaf::preload( e_file_name{file_name} );
-
-	std::string buffer( 1+file_size(*f), '\0' );
-	file_read(*f,&buffer[0],buffer.size()-1);
-
-	auto propagate2 = leaf::defer([ ] { return e_errno{errno}; } );
-	std::cout << buffer;
-	std::cout.flush();
-}
-
-
 char const * parse_command_line( int argc, char const * argv[ ] )
 {
 	if( argc!=2 )
@@ -102,84 +89,58 @@ int main( int argc, char const * argv[ ] )
 	//Configure std::cout to throw on error.
 	std::cout.exceptions ( std::ostream::failbit | std::ostream::badbit );
 
-	//We expect e_file_name and e_errno objects to be associated with errors
-	//handled in this function. They will be stored inside of exp.
-	leaf::expect<e_file_name, e_errno> exp;
+	return leaf::try_(
+		[&]
+		{
+			char const * file_name = parse_command_line(argc,argv);
+			std::shared_ptr<FILE> f = file_open( file_name );
 
-	try
-	{
-		print_file(parse_command_line(argc,argv));
-		return 0;
-	}
-	catch( bad_command_line const & )
-	{
-		std::cout << "Bad command line argument" << std::endl;
-		return 1;
-	}
-	catch( input_file_open_error const & e )
-	{
-		//handle_exception takes a list of functions (in this case only one). It attempts to
-		//match each function (in order) to objects currently available in exp, which
-		//are associated with the error value stored in e. If no function can be matched,
-		//handle_exception returns false. Otherwise the matched function is invoked with
-		//the corresponding available error objects.
-		exp.handle_exception( e,
+			auto propagate1 = leaf::preload( e_file_name{file_name} );
 
-			[ ] ( e_file_name const & fn, e_errno const & errn )
-			{
-				if( errn.value==ENOENT )
-					std::cerr << "File not found: " << fn.value << std::endl;
-				else
-					std::cerr << "Failed to open " << fn.value << ", errno=" << errn << std::endl;
-			}
+			std::string buffer( 1+file_size(*f), '\0' );
+			file_read(*f,&buffer[0],buffer.size()-1);
 
-		);
-		return 2;
-	}
-	catch( input_error const & e )
-	{
-		//In this case handle_exception is given 3 functions. It will first check if both
-		//e_file_name and e_errno, associated with e, are avialable in exp; if not, it will
-		//next check if just e_errno is available; and if not, the last function (which
-		//takes no arguments) will always match to print a generic error message.
-		exp.handle_exception( e,
+			auto propagate2 = leaf::defer([ ] { return e_errno{errno}; } );
+			std::cout << buffer;
+			std::cout.flush();
 
-			[ ] ( e_file_name const & fn, e_errno const & errn )
-			{
-				std::cerr << "Input error, " << fn.value << ", errno=" << errn << std::endl;
-			},
+			return 0;
+		},
 
-			[ ] ( e_errno const & errn )
-			{
-				std::cerr << "Input error, errno=" << errn << std::endl;
-			},
+		[ ]( leaf::catch_<bad_command_line> )
+		{
+			std::cout << "Bad command line argument" << std::endl;
+			return 1;
+		},
 
-			[ ]
-			{
-				std::cerr << "Input error" << std::endl;
-			}
+		[ ]( leaf::catch_<input_file_open_error>, leaf::match<e_errno,ENOENT>, e_file_name const & fn )
+		{
+			std::cerr << "File not found: " << fn.value << std::endl;
+			return 2;
+		},
 
-		);
-		return 3;
-	}
-	catch( std::ostream::failure const & e )
-	{
-		//Report failure to write to std::cout, print the relevant errno.
-		exp.handle_exception( e,
+		[ ]( leaf::catch_<input_file_open_error>, e_errno const & errn, e_file_name const & fn )
+		{
+			std::cerr << "Failed to open " << fn.value << ", errno=" << errn << std::endl;
+			return 3;
+		},
 
-			[ ] ( e_errno const & errn )
-			{
-				std::cerr << "Output error, errno=" << errn << std::endl;
-			}
+		[ ]( leaf::catch_<input_error>, e_errno const & errn, e_file_name const & fn )
+		{
+			std::cerr << "Failed to access " << fn.value << ", errno=" << errn << std::endl;
+			return 4;
+		},
 
-		);
-		return 4;
-	}
-	catch(...)
-	{
-		//This catch-all case helps diagnose logic errors (presumably, missing catch).
-		std::cerr << "Unknown error, cryptic information follows." << std::endl;
-		leaf::diagnostic_output_current_exception(std::cerr);
-		return 5;
-	}
+		[ ]( leaf::catch_<std::ostream::failure>, e_errno const & errn )
+		{
+			std::cerr << "Output error, errno=" << errn << std::endl;
+			return 5;
+		},
+
+		[ ]( leaf::error e )
+		{
+			std::cerr << "Unknown error, cryptic information follows." << std::endl;
+			e.diagnostic_output(std::cerr);
+			return 6;
+		} );
 }

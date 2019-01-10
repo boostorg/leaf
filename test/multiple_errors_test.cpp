@@ -4,7 +4,7 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/expect.hpp>
+#include <boost/leaf/static_store.hpp>
 #include "boost/core/lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
@@ -27,7 +27,7 @@ leaf::error f34()
 
 int main()
 {
-	leaf::expect<info<1>,info<2>,info<3>,info<4>> exp;
+	leaf::static_store<info<1>,info<2>,info<3>,info<4>> exp;
 	leaf::error e1=f12();
 	leaf::error e2=f34();
 	{

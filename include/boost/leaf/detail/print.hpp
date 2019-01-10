@@ -50,30 +50,50 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class T, class E = void>
-		struct is_printable
+		template <class... T>
+		struct print_types;
+
+		template <class Car>
+		struct print_types<Car>
 		{
-			static constexpr bool value=false;
+			static void print( std::ostream & os )
+			{
+				os << type<Car>();
+			}
 		};
 
-		template <class T>
-		struct is_printable<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>(), void())>
+		template <class Car, class... Cdr>
+		struct print_types<Car,Cdr...>
 		{
-			static constexpr bool value=true;
+			static void print( std::ostream & os )
+			{
+				os << type<Car>() << ", ";
+				print_types<Cdr...>::print(os);
+			}
 		};
 
 		////////////////////////////////////////
 
 		template <class T, class E = void>
-		struct has_printable_member_value
+		struct is_printable: std::false_type
 		{
-			static constexpr bool value=false;
 		};
 
 		template <class T>
-		struct has_printable_member_value<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>().value, void())>
+		struct is_printable<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>(), void())>: std::true_type
 		{
-			static constexpr bool value=true;
+		};
+
+		////////////////////////////////////////
+
+		template <class T, class E = void>
+		struct has_printable_member_value: std::false_type
+		{
+		};
+
+		template <class T>
+		struct has_printable_member_value<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>().value, void())>: std::true_type
+		{
 		};
 
 		////////////////////////////////////////
@@ -108,6 +128,15 @@ namespace boost { namespace leaf {
 			{
 				os << type<Wrapper>() << ": N/A";
 				return true;
+			}
+		};
+
+		template <>
+		struct diagnostic<std::exception_ptr, false, false>
+		{
+			static bool print( std::ostream & os, std::exception_ptr const & )
+			{
+				return false;
 			}
 		};
 	} //leaf_detail

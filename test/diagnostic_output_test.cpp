@@ -4,9 +4,8 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/diagnostic_output_current_exception.hpp>
+#include <boost/leaf/try.hpp>
 #include <boost/leaf/common.hpp>
-#include <boost/leaf/exception.hpp>
 #include "boost/core/lightweight_test.hpp"
 #include <sstream>
 
@@ -72,20 +71,8 @@ struct non_printable_info_non_printable_payload
 int main()
 {
 	BOOST_TEST(leaf::leaf_detail::tl_unexpected_enabled_counter()==0);
-	{
-		leaf::expect
-			<
-			leaf::e_source_location,
-			printable_info_printable_payload,
-			printable_info_non_printable_payload,
-			non_printable_info_printable_payload,
-			non_printable_info_non_printable_payload,
-			leaf::e_errno,
-			leaf::e_unexpected_diagnostic_output,
-			leaf::e_unexpected
-			> exp;
-		BOOST_TEST(leaf::leaf_detail::tl_unexpected_enabled_counter()==2);
-		try
+	leaf::try_(
+		[ ]
 		{
 			LEAF_THROW( my_error(),
 				printable_info_printable_payload(),
@@ -95,8 +82,16 @@ int main()
 				unexpected_test<1>{1},
 				unexpected_test<2>{2},
 				leaf::e_errno{ENOENT} );
-		}
-		catch( my_error & e )
+		},
+		[ ](
+			leaf::e_source_location,
+			printable_info_printable_payload,
+			printable_info_non_printable_payload,
+			non_printable_info_printable_payload,
+			non_printable_info_non_printable_payload,
+			leaf::e_errno,
+			leaf::e_unexpected_diagnostic_output,
+			leaf::e_unexpected	)
 		{
 			std::ostringstream st;
 			leaf::diagnostic_output_current_exception(st);
@@ -110,9 +105,6 @@ int main()
 			BOOST_TEST(s.find("Detected 2 attempts to communicate unexpected error objects, the first one of type ")!=s.npos);
 			BOOST_TEST(s.find("unexpected_test<2>")!=s.npos);
 			std::cout << s;
-			exp.handle_exception( e, [ ]{ } );
-		}
-	}
-	BOOST_TEST(leaf::leaf_detail::tl_unexpected_enabled_counter()==0);
+		} );
 	return boost::report_errors();
 }

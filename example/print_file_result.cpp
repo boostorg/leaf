@@ -8,7 +8,8 @@
 //additional information when using result<T> to report failures. See print_file_eh.cpp
 //for the variant that uses exception handling.
 
-#include <boost/leaf/all.hpp>
+#include <boost/leaf/handle.hpp>
+#include <boost/leaf/preload.hpp>
 #include <iostream>
 #include <memory>
 #include <stdio.h>
@@ -22,17 +23,17 @@ using leaf::e_file_name;
 using leaf::e_errno;
 
 
-//Error codes
-enum error_code
+enum error_codes
 {
-	input_file_open_error=1,
+	bad_command_line = 1,
+	input_file_open_error,
 	input_file_size_error,
 	input_file_read_error,
 	input_eof_error,
 	cout_error
 };
 namespace boost { namespace leaf {
-	template<> struct is_error_type<error_code>: std::true_type { };
+	template<> struct is_error_type<error_codes>: std::true_type { };
 } }
 
 
@@ -76,132 +77,76 @@ leaf::result<void> file_read( FILE & f, void * buf, int size )
 }
 
 
-leaf::result<void> print_file( char const * file_name )
+leaf::result<char const *> parse_command_line( int argc, char const * argv[ ] )
 {
-	LEAF_AUTO(f,file_open(file_name));
-
-	auto propagate = leaf::preload( e_file_name{file_name} );
-
-	LEAF_AUTO(s,file_size(*f));
-
-	std::string buffer( 1+s, '\0' );
-	LEAF_CHECK(file_read(*f,&buffer[0],buffer.size()-1));
-
-	std::cout << buffer;
-	std::cout.flush();
-	if( std::cout.fail() )
-		return leaf::error( cout_error );
-
-	return { };
-}
-
-
-char const * parse_command_line( int argc, char const * argv[ ] )
-{
-	if( argc!=2 )
-		return 0;
-	else
+	if( argc==2 )
 		return argv[1];
+	else
+		return leaf::error(bad_command_line);
 }
 
 
 int main( int argc, char const * argv[ ] )
 {
-	char const * fn = parse_command_line(argc,argv);
-	if( !fn )
-	{
-		std::cout << "Bad command line argument" << std::endl;
-		return 1;
-	}
+	return leaf::handle_all(
 
-	//We expect error_code, e_file_name and e_errno objects to be associated
-	//with errors handled in this function. They will be stored inside of exp.
-	leaf::expect<error_code, e_file_name, e_errno> exp;
-
-	if( auto r = print_file(fn) )
-	{
-		return 0; //Success, we're done!
-	}
-	else
-	{
-		//Probe exp for the error_code object associated with the error stored in r.
-		switch( auto ec = *exp.peek<error_code>(r) )
+		[&]() -> leaf::result<int>
 		{
-			case input_file_open_error:
-			{
-				//handle_error takes a list of functions (in this case only one). It attempts to
-				//match each function (in order) to objects currently available in exp, which
-				//are associated with the error value stored in r. If no function can be matched,
-				//handle_error returns false. Otherwise the matched function is invoked with
-				//the matching corresponding error objects.
-				bool matched = exp.handle_error( r,
+			LEAF_AUTO(file_name, parse_command_line(argc,argv));
 
-					[ ] ( e_file_name const & fn, e_errno const & errn )
-					{
-						if( errn.value==ENOENT )
-							std::cerr << "File not found: " << fn.value << std::endl;
-						else
-							std::cerr << "Failed to open " << fn.value << ", errno=" << errn << std::endl;
-					}
+			LEAF_AUTO(f, file_open(file_name));
 
-				);
-				assert(matched);
-				return 2;
-			}
+			auto propagate1 = leaf::preload( e_file_name{file_name} );
 
-			case input_file_size_error:
-			case input_file_read_error:
-			case input_eof_error:
-			{
-				//In this case handle_error is given 3 functions. It will first check if both
-				//e_file_name and e_errno, associated with r, are avialable in exp; if not, it will
-				//next check if just e_errno is available; and if not, the last function (which
-				//takes no arguments) will always match to print a generic error message.
-				bool matched = exp.handle_error( r,
+			LEAF_AUTO(s, file_size(*f));
 
-					[ ] ( e_file_name const & fn, e_errno const & errn )
-					{
-						std::cerr << "Failed to access " << fn.value << ", errno=" << errn << std::endl;
-					},
+			std::string buffer( 1+s, '\0' );
+			LEAF_CHECK(file_read(*f,&buffer[0],buffer.size()-1));
 
-					[ ] ( e_errno const & errn )
-					{
-						std::cerr << "I/O error, errno=" << errn << std::endl;
-					},
+			auto propagate2 = leaf::defer([ ] { return e_errno{errno}; } );
+			std::cout << buffer;
+			std::cout.flush();
+			if( std::cout.fail() )
+				return leaf::error( cout_error );
 
-					[ ]
-					{
-						std::cerr << "I/O error" << std::endl;
-					}
+			return 0;
+		},
 
-				);
-				assert(matched);
-				return 3;
-			}
+		[ ]( leaf::match<error_codes, bad_command_line> )
+		{
+			std::cout << "Bad command line argument" << std::endl;
+			return 1;
+		},
 
-			case cout_error:
-			{
-				//Report failure to write to std::cout, print the relevant errno.
-				bool matched = exp.handle_error( r,
+		[ ]( leaf::match<error_codes, input_file_open_error>, leaf::match<e_errno, ENOENT>, e_file_name const & fn )
+		{
+			std::cerr << "File not found: " << fn.value << std::endl;
+			return 2;
+		},
 
-					[ ] ( e_errno const & errn )
-					{
-						std::cerr << "Output error, errno=" << errn << std::endl;
-					}
+		[ ]( leaf::match<error_codes, input_file_open_error>, e_errno const & errn, e_file_name const & fn )
+		{
+			std::cerr << "Failed to open " << fn.value << ", errno=" << errn << std::endl;
+			return 3;
+		},
 
-				);
-				assert(matched);
-				return 4;
-			}
+		[ ](  leaf::match<error_codes, input_file_size_error, input_file_read_error, input_eof_error>, e_errno const & errn, e_file_name const & fn )
+		{
+			std::cerr << "Failed to access " << fn.value << ", errno=" << errn << std::endl;
+			return 4;
+		},
 
-			//This catch-all case helps diagnose logic errors (presumably, missing case labels
-			//in the switch statement).
-			default:
-			{
-				std::cerr << "Unknown error code " << ec << ", cryptic information follows." << std::endl; //<7>
-				r.diagnostic_output(std::cerr);
-				return 5;
-			}
+		[ ]( leaf::match<error_codes, cout_error>, e_errno const & errn )
+		{
+			std::cerr << "Output error, errno=" << errn << std::endl;
+			return 5;
+		},
+
+		[ ]( leaf::error e )
+		{
+			std::cerr << "Unknown error, cryptic information follows." << std::endl;
+			e.diagnostic_output(std::cerr);
+			return 6;
 		}
-	}
+	);
 }
