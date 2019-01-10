@@ -9,6 +9,7 @@
 
 #include <boost/leaf/detail/dynamic_store.hpp>
 #include <boost/leaf/throw.hpp>
+#include <memory>
 
 #define LEAF_AUTO(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
 #define LEAF_CHECK(r) {auto _r = r; if( !_r ) return _r.error();}
