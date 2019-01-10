@@ -46,7 +46,7 @@ leaf::error f2()
 	{
 		BOOST_TEST(false);
 	}
-	return leaf::error();
+	return leaf::new_error();
 }
 
 int main()

@@ -97,7 +97,7 @@ leaf::result<int> call_lua( lua_State * L )
 		//error code and an error message.
 		auto propagate = leaf::preload( e_lua_error_message{lua_tostring(L,1)} );
 		lua_pop(L,1);
-		return leaf::error( e_lua_pcall_error{err} );
+		return leaf::new_error( e_lua_pcall_error{err} );
 	}
 	else
 	{

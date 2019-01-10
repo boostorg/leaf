@@ -31,7 +31,7 @@ namespace boost { namespace leaf {
 			}
 			catch( Ex1 const & ex1 )
 			{
-				return leaf::error(ex1);
+				return leaf::new_error(ex1);
 			}
 		}
 	}
@@ -45,7 +45,7 @@ namespace boost { namespace leaf {
 		}
 		catch(...)
 		{
-			return leaf::error(std::current_exception());
+			return leaf::new_error(std::current_exception());
 		}
 	};
 

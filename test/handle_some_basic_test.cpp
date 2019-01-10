@@ -27,12 +27,12 @@ leaf::result<int> compute_answer( int what_to_do ) noexcept
 	case 0:
 		return 42;
 	case 1:
-		return leaf::error(error_code::error1);
+		return leaf::new_error(error_code::error1);
 	case 2:
-		return leaf::error(error_code::error2);
+		return leaf::new_error(error_code::error2);
 	default:
 		assert(what_to_do==3);
-		return leaf::error(error_code::error3);
+		return leaf::new_error(error_code::error3);
 	}
 }
 

@@ -108,6 +108,8 @@ namespace boost { namespace leaf {
 
 	class error
 	{
+		template <class... E>
+		friend error new_error( E && ... ) noexcept;
 		friend error leaf::next_error_value() noexcept;
 		friend error leaf::last_error_value() noexcept;
 
@@ -169,25 +171,6 @@ namespace boost { namespace leaf {
 		error( error const & ) noexcept = default;
 		error( error && ) noexcept = default;
 
-		error() noexcept:
-			id_(id_factory::tl_instance().get())
-		{
-		}
-
-		template <class E>
-		explicit error( E && e ) noexcept:
-			id_(id_factory::tl_instance().get())
-		{
-			propagate(std::forward<E>(e));
-		}
-
-		template <class... E>
-		explicit error( E && ... e ) noexcept:
-			id_(id_factory::tl_instance().get())
-		{
-			propagate(std::forward<E>(e)...);
-		}
-
 		friend bool operator==( error const & e1, error const & e2 ) noexcept
 		{
 			return e1.id_==e2.id_;
@@ -214,6 +197,12 @@ namespace boost { namespace leaf {
 
 		void diagnostic_output( std::ostream & os ) const;
 	};
+
+	template <class... E>
+	error new_error( E && ... e ) noexcept
+	{
+		return error(error::id_factory::tl_instance().get()).propagate(std::forward<E>(e)...);
+	}
 
 	inline error next_error_value() noexcept
 	{

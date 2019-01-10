@@ -9,7 +9,6 @@
 
 namespace leaf = boost::leaf;
 
-struct error { };
 int object_count=0;
 int value_count=0;
 
@@ -64,7 +63,7 @@ public:
 
 	throws_on_copy( throws_on_copy const & )
 	{
-		throw error();
+		throw std::exception();
 	}
 
 	throws_on_copy( throws_on_copy && )
@@ -107,7 +106,7 @@ void run_tests()
 			optional<throws_on_copy> x(a);
 			BOOST_TEST(false);
 		}
-		catch( error & )
+		catch( std::exception & )
 		{
 		}
 	}
@@ -201,7 +200,7 @@ void run_tests()
 		{
 			(void) (y=x);
 		}
-		catch( error & )
+		catch( std::exception & )
 		{
 		}
 		BOOST_TEST(object_count==1);

@@ -30,7 +30,7 @@ leaf::result<R> f( error_codes ec )
 	if( ec==error_codes::ok )
 		return R(42);
 	else
-		return leaf::error(ec,error_codes_{ec},info<1>{1},info<2>{2},info<3>{3});
+		return leaf::new_error(ec,error_codes_{ec},info<1>{1},info<2>{2},info<3>{3});
 }
 
 int main()

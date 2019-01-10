@@ -157,7 +157,7 @@ int main()
 	test(
 		[ ]() -> leaf::result<void>
 		{
-			return leaf::error( info<1>{1}, info<3>{3} );
+			return leaf::new_error( info<1>{1}, info<3>{3} );
 		} );
 	return boost::report_errors();
 }

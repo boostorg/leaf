@@ -34,7 +34,7 @@ leaf::result<task_result> task()
 	if( succeed )
 		return task_result { };
 	else
-		return leaf::error(
+		return leaf::new_error(
 			e_thread_id{std::this_thread::get_id()},
 			e_failure_info1{"info"},
 			e_failure_info2{42} );

@@ -17,12 +17,12 @@ struct info
 
 leaf::error f12()
 {
-	return leaf::error( info<1>{1}, info<2>{2} );
+	return leaf::new_error( info<1>{1}, info<2>{2} );
 }
 
 leaf::error f34()
 {
-	return leaf::error( info<3>{3}, info<4>{4} );
+	return leaf::new_error( info<3>{3}, info<4>{4} );
 }
 
 int main()

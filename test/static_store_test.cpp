@@ -17,7 +17,7 @@ struct info
 
 leaf::error f1()
 {
-	return leaf::error( info<1>{1} );
+	return leaf::new_error( info<1>{1} );
 }
 
 leaf::error f2()

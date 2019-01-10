@@ -54,7 +54,7 @@ int main()
 				if( res>=0 )
 					return res;
 				else
-					return leaf::error( info<1>{a}, info<2>{b}, info<3>{} );
+					return leaf::new_error( info<1>{a}, info<2>{b}, info<3>{} );
 			} ) );
 
 	for( auto & f : fut )

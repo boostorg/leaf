@@ -33,7 +33,7 @@ namespace boost { namespace leaf {
 			template <class... E>
 			exception( Ex && ex, E && ... e ) noexcept:
 				Ex(std::move(ex)),
-				error(std::forward<E>(e)...)
+				error(new_error(std::forward<E>(e)...))
 			{
 				leaf_detail::enforce_std_exception(*this);
 			}

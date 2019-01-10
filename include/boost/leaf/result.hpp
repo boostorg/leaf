@@ -208,7 +208,7 @@ namespace boost { namespace leaf {
 			switch( which_ )
 			{
 			case leaf_detail::result_variant::value:
-				return leaf::error(std::forward<E>(e)...);
+				return leaf::new_error(std::forward<E>(e)...);
 			case leaf_detail::result_variant::cap:
 				{
 					dynamic_store_ptr cap = cap_;

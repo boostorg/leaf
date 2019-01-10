@@ -27,7 +27,7 @@ leaf::error g()
 	global = 0;
 	auto propagate = leaf::defer( [ ] { return info{get_global()}; } );
 	global = 42;
-	return leaf::error();
+	return leaf::new_error();
 }
 
 leaf::error f()

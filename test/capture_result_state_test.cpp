@@ -41,7 +41,7 @@ int main()
 	auto f = leaf::capture_result<info<1>, info<2>, info<3>>(
 		[ ]() -> leaf::result<void>
 		{
-			return leaf::error( info<1>{}, info<3>{} );
+			return leaf::new_error( info<1>{}, info<3>{} );
 		} );
 	leaf::handle_all(
 		[&f]

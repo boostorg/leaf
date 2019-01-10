@@ -18,7 +18,7 @@ struct info
 leaf::error g()
 {
 	auto propagate = leaf::preload( info{42} );
-	return leaf::error();
+	return leaf::new_error();
 }
 
 leaf::error f()

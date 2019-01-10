@@ -101,7 +101,7 @@ namespace boost { namespace leaf {
 				}
 				catch(...)
 				{
-					throw captured_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(error(),std::move(ss)), false );
+					throw captured_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(new_error(),std::move(ss)), false );
 				}
 			}
 		};

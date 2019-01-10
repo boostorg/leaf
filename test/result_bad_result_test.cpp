@@ -24,7 +24,7 @@ int main()
 		int r = leaf::try_(
 			[ ]
 			{
-				leaf::result<int> r((leaf::error()));
+				leaf::result<int> r = leaf::new_error();
 				(void) r.value();
 				return 0;
 			},
@@ -35,7 +35,7 @@ int main()
 		int r = leaf::try_(
 			[ ]
 			{
-				leaf::result<int> const r((leaf::error()));
+				leaf::result<int> const r = leaf::new_error();
 				(void) r.value();
 				return 0;
 			},
@@ -46,7 +46,7 @@ int main()
 		int r = leaf::try_(
 			[ ]
 			{
-				leaf::result<int> r((leaf::error()));
+				leaf::result<int> r = leaf::new_error();
 				(void) *r;
 				return 0;
 			},
@@ -57,7 +57,7 @@ int main()
 		int r = leaf::try_(
 			[ ]
 			{
-				leaf::result<int> const r((leaf::error()));
+				leaf::result<int> const r = leaf::new_error();
 				(void) *r;
 				return 0;
 			},

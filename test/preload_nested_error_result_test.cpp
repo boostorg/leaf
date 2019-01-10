@@ -19,7 +19,7 @@ struct info
 leaf::error f0()
 {
 	auto propagate = leaf::preload( info<0>{0} );
-	return leaf::error( info<2>{2} );
+	return leaf::new_error( info<2>{2} );
 }
 
 leaf::error f1()

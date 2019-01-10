@@ -20,7 +20,7 @@ leaf::result<void> g1()
 
 leaf::result<void> g2()
 {
-	return leaf::error();
+	return leaf::new_error();
 }
 
 leaf::result<void> f()

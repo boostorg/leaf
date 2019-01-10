@@ -29,13 +29,13 @@ namespace boost { namespace leaf {
 leaf::result<int> convert(const std::string& str) noexcept
 {
 	if (str.empty())
-		return leaf::error(ConversionErrc::EmptyString);
+		return leaf::new_error(ConversionErrc::EmptyString);
 
 	if (!std::all_of(str.begin(), str.end(), ::isdigit))
-		return leaf::error(ConversionErrc::IllegalChar);
+		return leaf::new_error(ConversionErrc::IllegalChar);
 
 	if (str.length() > 9)
-		return leaf::error(ConversionErrc::TooLong);
+		return leaf::new_error(ConversionErrc::TooLong);
 
 	return atoi(str.c_str());
 }
