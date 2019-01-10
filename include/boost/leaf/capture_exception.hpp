@@ -43,6 +43,7 @@ namespace boost { namespace leaf {
 				{
 					error err = ds->unload();
 					assert(err==*this);
+					(void) err;
 				}
 				else
 					ds->unload(next_error_value());

@@ -37,7 +37,7 @@ namespace boost { namespace leaf {
 				f_(std::forward<F>(f))
 			{
 			}
-			R operator()( A... a ) noexcept
+			R operator()( A... a )
 			{
 				return f_(a...);
 			}

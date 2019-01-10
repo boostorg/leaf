@@ -70,6 +70,7 @@ int main()
 
 				//Success! Use r to access task_result.
 				std::cout << "Success!" << std::endl;
+				(void) r;
 
 			},
 
