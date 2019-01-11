@@ -21,15 +21,15 @@ namespace boost { namespace leaf {
 			public leaf::error
 		{
 			std::exception_ptr ex_;
-			std::shared_ptr<dynamic_store> cap_;
+			std::shared_ptr<dynamic_store> ds_;
 			bool had_error_;
 
 		public:
 
-			captured_exception_impl( std::exception_ptr && ex, std::shared_ptr<dynamic_store> && cap, bool had_error ) noexcept:
-				error(cap->get_error()),
+			captured_exception_impl( std::exception_ptr && ex, std::shared_ptr<dynamic_store> && ds, bool had_error ) noexcept:
+				error(ds->get_error()),
 				ex_(std::move(ex)),
-				cap_(std::move(cap)),
+				ds_(std::move(ds)),
 				had_error_(had_error)
 			{
 				assert(ex_);
@@ -37,7 +37,7 @@ namespace boost { namespace leaf {
 
 			[[noreturn]] void unload_and_rethrow_original_exception()
 			{
-				std::shared_ptr<dynamic_store> ds; ds.swap(cap_);
+				std::shared_ptr<dynamic_store> ds; ds.swap(ds_);
 				assert(ds);
 				if( had_error_ )
 				{
@@ -50,21 +50,10 @@ namespace boost { namespace leaf {
 				std::rethrow_exception(ex_);
 			}
 
-			void diagnostic_output( std::ostream & os, void (*printer)(std::ostream &) ) const
+			void print( std::ostream & os ) const
 			{
-				assert(cap_);
-				assert(printer!=0);
-				os << "Detected exception_capture" << std::endl;
-				cap_->diagnostic_output(os);
-				os << std::endl << "Diagnostic Information about the original exception follows" << std::endl;
-				try
-				{
-					std::rethrow_exception(ex_);
-				}
-				catch(...)
-				{
-					printer(os);
-				}
+				assert(ds_);
+				ds_->print(os);
 			}
 		};
 

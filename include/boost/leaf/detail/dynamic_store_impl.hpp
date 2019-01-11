@@ -68,7 +68,7 @@ namespace boost { namespace leaf {
 				return e;
 			}
 
-			void diagnostic_output( std::ostream & os ) const
+			void print( std::ostream & os ) const
 			{
 				os << "Types being captured: ";
 				print_types<E...>::print(os);

@@ -30,7 +30,7 @@ namespace boost { namespace leaf {
 		public:
 
 			[[noreturn]] virtual void unload_and_rethrow_original_exception() = 0;
-			virtual void diagnostic_output( std::ostream &, void (*)(std::ostream &) ) const = 0;
+			virtual void print( std::ostream & ) const = 0;
 		};
 	}
 

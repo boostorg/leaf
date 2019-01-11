@@ -79,12 +79,12 @@ int main()
 				std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
 			},
 
-			[ ]( leaf::error e )
+			[ ]( leaf::error_info const & ei )
 			{
 				std::cerr <<
 					"Unknown failure detected" << std::endl <<
-					"Cryptic diagnostic information follows" << std::endl;
-				e.diagnostic_output(std::cerr);
+					"Cryptic diagnostic information follows" << std::endl <<
+					ei;
 			} );
 	}
 }

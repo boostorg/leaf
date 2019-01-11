@@ -89,12 +89,14 @@ int main( int argc, char const * argv[ ] )
 			return 2;
 		},
 
-		[ ]( leaf::error e )
+		[ ]( leaf::error_info const & ei )
 		{
 			//This will never execute in this program, but it would detect logic errors where an unknown error reaches main.
 			//In this case, we print diagnostic information.
-			std::cerr << "Unknown error, cryptic diagnostic information follows." << std::endl;
-			e.diagnostic_output(std::cerr);
+			std::cerr <<
+				"Unknown failure detected" << std::endl <<
+				"Cryptic diagnostic information follows" << std::endl <<
+				ei;
 			return 3;
 		} );
 }

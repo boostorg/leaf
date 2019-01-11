@@ -90,11 +90,11 @@ int main()
 			non_printable_info_printable_payload,
 			non_printable_info_non_printable_payload,
 			leaf::e_errno,
-			leaf::e_unexpected_diagnostic_output,
-			leaf::e_unexpected	)
+			leaf::unexpected_error_info const &,
+			leaf::complete_diagnostic_info const & di )
 		{
 			std::ostringstream st;
-			leaf::diagnostic_output_current_exception(st);
+			st << di;
 			std::string s = st.str();
 			BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
 			BOOST_TEST(s.find(": N/A")!=s.npos);

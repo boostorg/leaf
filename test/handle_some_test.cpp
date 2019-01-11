@@ -46,11 +46,11 @@ int main()
 				c = answer;
 				return { };
 			},
-			[&c]( leaf::error e )
+			[&c]( leaf::error_info const & ei )
 			{
 				BOOST_TEST(c==0);
 				c = 1;
-				return e;
+				return ei.get_error();
 			} );
 		BOOST_TEST(r);
 		BOOST_TEST(c==42);
@@ -576,9 +576,9 @@ int main()
 				LEAF_AUTO(answer, f<int>(error_codes::ok));
 				return answer;
 			},
-			[ ]( leaf::error e )
+			[ ]( leaf::error_info const & ei )
 			{
-				return e;
+				return ei.get_error();
 			} );
 		BOOST_TEST(r && *r==42);
 	}

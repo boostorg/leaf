@@ -137,10 +137,12 @@ int main( int argc, char const * argv[ ] )
 			return 5;
 		},
 
-		[ ]( leaf::error e )
+		[ ]( leaf::error_info const & ei )
 		{
-			std::cerr << "Unknown error, cryptic information follows." << std::endl;
-			e.diagnostic_output(std::cerr);
+			std::cerr <<
+				"Unknown failure detected" << std::endl <<
+				"Cryptic diagnostic information follows" << std::endl <<
+				ei;
 			return 6;
 		} );
 }

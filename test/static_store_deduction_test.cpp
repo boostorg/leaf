@@ -40,34 +40,32 @@ void not_called_on_purpose()
 	test< static_store<info<1>> >( expd([ ]( info<1> ){ }) );
 	test< static_store<info<1>> >( expd([ ]( info<1> const ){ }) );
 	test< static_store<info<1>> >( expd([ ]( info<1> const & ){ }) );
-	test< static_store<info<1>> >( expd([ ]( info<1>, leaf::error ){ }) );
-	test< static_store<info<1>> >( expd([ ]( info<1>, leaf::error const ){ }) );
-	test< static_store<info<1>> >( expd([ ]( info<1>, leaf::error const & ){ }) );
+	test< static_store<info<1>> >( expd([ ]( info<1>, leaf::error_info const & ){ }) );
 
 	test< static_store<info<1>,info<2>> >( expd([ ]( info<1> ){ }, [ ]( info<2> ){ }) );
 	test< static_store<info<1>,info<2>> >( expd([ ]( info<1> ){ }, [ ]( info<1>, info<2> ){ }) );
 	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, info<2> ){ }, [ ]( info<2> ){ }) );
 	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, info<2> ){ }, [ ]( info<1>, info<2> ){ }) );
 
-	test< static_store<info<1>,info<2>> >( expd([ ]( leaf::error, info<1> ){ }, [ ]( info<2> ){ }) );
-	test< static_store<info<1>,info<2>> >( expd([ ]( leaf::error, info<1> ){ }, [ ]( info<1>, info<2> ){ }) );
-	test< static_store<info<1>,info<2>> >( expd([ ]( leaf::error, info<1>, info<2> ){ }, [ ]( info<2> ){ }) );
-	test< static_store<info<1>,info<2>> >( expd([ ]( leaf::error, info<1>, info<2> ){ }, [ ]( info<1>, info<2> ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( leaf::error_info const &, info<1> ){ }, [ ]( info<2> ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( leaf::error_info const &, info<1> ){ }, [ ]( info<1>, info<2> ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( leaf::error_info const &, info<1>, info<2> ){ }, [ ]( info<2> ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( leaf::error_info const &, info<1>, info<2> ){ }, [ ]( info<1>, info<2> ){ }) );
 
-	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, leaf::error ){ }, [ ]( info<2> ){ }) );
-	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, leaf::error ){ }, [ ]( info<1>, info<2> ){ }) );
-	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, leaf::error, info<2> ){ }, [ ]( info<2> ){ }) );
-	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, leaf::error, info<2> ){ }, [ ]( info<1>, info<2> ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, leaf::error_info const & ){ }, [ ]( info<2> ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, leaf::error_info const & ){ }, [ ]( info<1>, info<2> ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, leaf::error_info const &, info<2> ){ }, [ ]( info<2> ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, leaf::error_info const &, info<2> ){ }, [ ]( info<1>, info<2> ){ }) );
 
-	test< static_store<info<1>,info<2>> >( expd([ ]( info<1> ){ }, [ ]( leaf::error, info<2> ){ }) );
-	test< static_store<info<1>,info<2>> >( expd([ ]( info<1> ){ }, [ ]( leaf::error, info<1>, info<2> ){ }) );
-	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, info<2> ){ }, [ ]( leaf::error, info<2> ){ }) );
-	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, info<2> ){ }, [ ]( leaf::error, info<1>, info<2> ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( info<1> ){ }, [ ]( leaf::error_info const &, info<2> ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( info<1> ){ }, [ ]( leaf::error_info const &, info<1>, info<2> ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, info<2> ){ }, [ ]( leaf::error_info const &, info<2> ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, info<2> ){ }, [ ]( leaf::error_info const &, info<1>, info<2> ){ }) );
 
-	test< static_store<info<1>,info<2>> >( expd([ ]( info<1> ){ }, [ ]( info<2>, leaf::error ){ }) );
-	test< static_store<info<1>,info<2>> >( expd([ ]( info<1> ){ }, [ ]( info<1>, leaf::error, info<2> ){ }) );
-	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, info<2> ){ }, [ ]( info<2>, leaf::error ){ }) );
-	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, info<2> ){ }, [ ]( info<1>, leaf::error, info<2> ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( info<1> ){ }, [ ]( info<2>, leaf::error_info const & ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( info<1> ){ }, [ ]( info<1>, leaf::error_info const &, info<2> ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, info<2> ){ }, [ ]( info<2>, leaf::error_info const & ){ }) );
+	test< static_store<info<1>,info<2>> >( expd([ ]( info<1>, info<2> ){ }, [ ]( info<1>, leaf::error_info const &, info<2> ){ }) );
 
 	test< static_store<info<1>,info<2>,info<3>> >( expd([ ]( info<1> ){ }, [ ]( info<2> ){ }, [ ]( info<3> ){ }) );
 	test< static_store<info<1>,info<2>,info<3>> >( expd([ ]( info<1> ){ }, [ ]( info<1>, info<2> ){ }, [ ]( info<1>, info<3> ){ }) );

@@ -52,7 +52,7 @@ namespace boost { namespace leaf {
 				if( s_ )
 				{
 					if( !s_->has_value() || s_->value().e!=e )
-						s_->put( leaf_detail::error_info<E>{std::move(v_),e} );
+						s_->put( leaf_detail::ev_type<E>(e,std::move(v_)) );
 				}
 				else
 				{
@@ -60,7 +60,7 @@ namespace boost { namespace leaf {
 					int c = tl_unexpected_enabled_counter();
 					assert(c>=0);
 					if( c )
-						no_expect_slot( error_info<T>{std::forward<E>(v_),e} );
+						no_expect_slot( ev_type<T>(e,std::forward<E>(v_)) );
 				}
 			}
 		};
@@ -137,7 +137,7 @@ namespace boost { namespace leaf {
 				if( s_ )
 				{
 					if( !s_->has_value() || s_->value().e!=e )
-						s_->put( leaf_detail::error_info<E>{f_(),e} );
+						s_->put( leaf_detail::ev_type<E>(e,f_()) );
 				}
 				else
 				{
@@ -145,7 +145,7 @@ namespace boost { namespace leaf {
 					int c = tl_unexpected_enabled_counter();
 					assert(c>=0);
 					if( c )
-						no_expect_slot( error_info<T>{std::forward<E>(f_()),e} );
+						no_expect_slot( ev_type<T>(e,std::forward<E>(f_())) );
 				}
 			}
 		};

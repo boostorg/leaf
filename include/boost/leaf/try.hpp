@@ -9,8 +9,7 @@
 
 #include <boost/leaf/throw.hpp>
 #include <boost/leaf/detail/static_store.hpp>
-#include <boost/leaf/detail/captured_exception.hpp>
-#include <boost/leaf/detail/demangle.hpp>
+#include <boost/leaf/detail/print_exception_info.hpp>
 
 namespace boost { namespace leaf {
 
@@ -32,7 +31,7 @@ namespace boost { namespace leaf {
 		{
 			return std::forward<TryBlock>(try_block)();
 		}
-		catch( leaf_detail::captured_exception & cap )
+		catch( captured_exception & cap )
 		{
 			try
 			{
@@ -42,105 +41,25 @@ namespace boost { namespace leaf {
 			}
 			catch( std::exception const & ex )
 			{
-				return ss.handle_error(get_error(ex), &ex, std::forward<Handlers>(handlers)..., [ ]() -> typename leaf_detail::function_traits<TryBlock>::return_type { throw; });
+				error const e = get_error(ex);
+				return ss.handle_error(error_info(e,&ex,&cap,&print_exception_info), std::forward<Handlers>(handlers)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
+			}
+			catch( ... )
+			{
+				error const e = next_error_value();
+				return ss.handle_error(error_info(e,0,&cap,&print_exception_info), std::forward<Handlers>(handlers)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
 			}
 		}
 		catch( std::exception const & ex )
 		{
-			return ss.handle_error(get_error(ex), &ex, std::forward<Handlers>(handlers)..., [ ]() -> typename leaf_detail::function_traits<TryBlock>::return_type { throw; });
+			error const e = get_error(ex);
+			return ss.handle_error(error_info(e,&ex,0,&print_exception_info), std::forward<Handlers>(handlers)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
 		}
-	}
-
-	namespace leaf_detail
-	{
-		inline void diagnostic_output_std_exception( std::ostream & os, std::exception const & ex )
+		catch( ...  )
 		{
-			os <<
-				"Exception dynamic type: " << leaf_detail::demangle(typeid(ex).name()) << std::endl <<
-				"std::exception::what(): " << ex.what() << std::endl;
+			error const e = next_error_value();
+			return ss.handle_error(error_info(e,0,0,&print_exception_info), std::forward<Handlers>(handlers)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
 		}
-
-		inline void diagnostic_output_current_exception_no_capture( std::ostream & os )
-		{
-			try
-			{
-				throw;
-			}
-			catch( std::exception const & ex )
-			{
-				diagnostic_output_std_exception(os,ex);
-			}
-			catch( ... )
-			{
-				os << "Unknown exception type (not a std::exception)" << std::endl;
-			}
-			try
-			{
-				throw;
-			}
-			catch( error const & e )
-			{
-				e.diagnostic_output(os);
-			}
-			catch( ... )
-			{
-				global_diagnostic_output(os);
-			}
-		}
-
-		inline void diagnostic_output_current_exception_( std::ostream & os )
-		{
-			try
-			{
-				try
-				{
-					throw;
-				}
-				catch( leaf_detail::captured_exception const & cap )
-				{
-					cap.diagnostic_output( os, &leaf_detail::diagnostic_output_current_exception_no_capture );
-				}
-			}
-			catch(...)
-			{
-				leaf_detail::diagnostic_output_current_exception_no_capture(os);
-			}
-		}
-	} //namespace leaf_detail
-
-	inline void diagnostic_output_current_exception( std::ostream & os )
-	{
-		os << "Current Exception Diagnostic Information:" << std::endl;
-		leaf_detail::diagnostic_output_current_exception_(os);
-	}
-
-	inline void diagnostic_output( std::ostream & os, std::exception const & ex )
-	{
-		if( leaf_detail::captured_exception const * cap = dynamic_cast<leaf_detail::captured_exception const *>(&ex) )
-			cap->diagnostic_output( os, &leaf_detail::diagnostic_output_current_exception_no_capture );
-		else
-		{
-			leaf_detail::diagnostic_output_std_exception(os,ex);
-			get_error(ex).diagnostic_output(os);
-		}
-	}
-
-	inline void diagnostic_output( std::ostream & os, std::exception_ptr const & ep )
-	{
-		if( ep )
-		{
-			os << "std::exception_ptr Diagnostic Information:" << std::endl;
-			try
-			{
-				std::rethrow_exception(ep);
-			}
-			catch(...)
-			{
-				leaf_detail::diagnostic_output_current_exception_(os);
-			}
-		}
-		else
-			os << "Empty" << std::endl;
 	}
 
 } }

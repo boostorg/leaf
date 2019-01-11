@@ -50,7 +50,7 @@ tests = [
 	'defer_nested_new_error_result_test',
 	'defer_nested_success_exception_test',
 	'defer_nested_success_result_test',
-	'diagnostic_output_test',
+	'diagnostic_info_test',
 	'function_traits_test',
 	'handle_all_test',
 	'handle_some_basic_test',

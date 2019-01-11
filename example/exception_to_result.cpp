@@ -96,7 +96,15 @@ int main()
 				//(with 0 passed for ep). Had we taken it by value or by const &, the program
 				//would not compile.
 				if( ep )
-					leaf::diagnostic_output(std::cerr,*ep);
+					leaf::try_(
+						[&]
+						{
+							std::rethrow_exception(*ep);
+						},
+						[ ]( leaf::error_info const & ei )
+						{
+							std::cerr << ei << std::endl;
+						} );
 			} );
 	}
 
