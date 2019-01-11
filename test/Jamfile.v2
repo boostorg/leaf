@@ -43,7 +43,7 @@ run defer_nested_new_error_exception_test.cpp ;
 run defer_nested_new_error_result_test.cpp ;
 run defer_nested_success_exception_test.cpp ;
 run defer_nested_success_result_test.cpp ;
-run diagnostic_output_test.cpp ;
+run diagnostic_info_test.cpp ;
 run function_traits_test.cpp ;
 run handle_all_test.cpp ;
 run handle_some_basic_test.cpp ;
