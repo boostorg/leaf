@@ -303,7 +303,7 @@ namespace boost { namespace leaf {
 			assert(print_ex_!=0);
 		}
 
-		error const & get_error() const noexcept
+		error const & error() const noexcept
 		{
 			return e_;
 		}

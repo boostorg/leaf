@@ -177,7 +177,7 @@ namespace boost { namespace leaf {
 				static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
 				{
 					auto & sl = std::get<tuple_type_index<static_store_slot<T>,SlotsTuple>::value>(tup);
-					return sl.has_value() && sl.value().e==ei.get_error();
+					return sl.has_value() && sl.value().e==ei.error();
 				}
 			};
 
@@ -199,7 +199,7 @@ namespace boost { namespace leaf {
 					if( sl.has_value() )
 					{
 						auto const & v = sl.value();
-						return v.e==ei.get_error() && check_value_pack(match_type<E>::get(v.v),Value...);
+						return v.e==ei.error() && check_value_pack(match_type<E>::get(v.v),Value...);
 					}
 					else
 						return false;
@@ -253,7 +253,7 @@ namespace boost { namespace leaf {
 				template <class StaticStore>
 				static T const & get( StaticStore const & ss, error_info const & ei ) noexcept
 				{
-					T const * arg = ss.template peek<T>(ei.get_error());
+					T const * arg = ss.template peek<T>(ei.error());
 					assert(arg!=0);
 					return *arg;
 				}
@@ -265,7 +265,7 @@ namespace boost { namespace leaf {
 				template <class StaticStore>
 				static T const * get( StaticStore const & ss, error_info const & ei ) noexcept
 				{
-					return ss.template peek<T>(ei.get_error());
+					return ss.template peek<T>(ei.error());
 				}
 			};
 
@@ -275,7 +275,7 @@ namespace boost { namespace leaf {
 				template <class StaticStore>
 				static match<E,Value...> get( StaticStore const & ss, error_info const & ei ) noexcept
 				{
-					E const * arg = ss.template peek<E>(ei.get_error());
+					E const * arg = ss.template peek<E>(ei.error());
 					assert(arg!=0);
 					return match<E,Value...>{match_type<E>::get(*arg)};
 				}
@@ -307,7 +307,7 @@ namespace boost { namespace leaf {
 				template <class StaticStore>
 				static verbose_diagnostic_info const & get( StaticStore const & ss, error_info const & ei ) noexcept
 				{
-					verbose_diagnostic_info const * cdi = ss.template peek<verbose_diagnostic_info>(ei.get_error());
+					verbose_diagnostic_info const * cdi = ss.template peek<verbose_diagnostic_info>(ei.error());
 					assert(cdi!=0);
 					cdi->set_error_info(ei);
 					return *cdi;
