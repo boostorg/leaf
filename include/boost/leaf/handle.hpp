@@ -13,7 +13,7 @@
 namespace boost { namespace leaf {
 
 	template <class TryBlock, class... Handlers>
-	typename std::remove_reference<decltype(std::declval<typename leaf_detail::function_traits<TryBlock>::return_type>().value())>::type handle_all( TryBlock && try_block, Handlers && ... handlers ) noexcept
+	typename std::remove_reference<decltype(std::declval<typename leaf_detail::function_traits<TryBlock>::return_type>().value())>::type handle_all( TryBlock && try_block, Handlers && ... handlers )
 	{
 		using namespace leaf_detail;
 		typename deduce_static_store<typename handlers_args_set<Handlers...>::type>::type ss;
@@ -37,7 +37,7 @@ namespace boost { namespace leaf {
 				f_(std::forward<F>(f))
 			{
 			}
-			R operator()( A... a )
+			R operator()( A... a ) const
 			{
 				return f_(a...);
 			}
@@ -60,7 +60,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class TryBlock, class... Handlers>
-	typename leaf_detail::function_traits<TryBlock>::return_type handle_some( TryBlock && try_block, Handlers && ... handlers ) noexcept
+	typename leaf_detail::function_traits<TryBlock>::return_type handle_some( TryBlock && try_block, Handlers && ... handlers )
 	{
 		using namespace leaf_detail;
 		using R = typename function_traits<TryBlock>::return_type;

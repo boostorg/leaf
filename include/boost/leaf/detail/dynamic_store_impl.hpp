@@ -52,7 +52,7 @@ namespace boost { namespace leaf {
 			error e_;
 			std::tuple<leaf_detail::optional<E>...> s_;
 
-			error get_error() const noexcept
+			error const & get_error() const noexcept
 			{
 				return e_;
 			}

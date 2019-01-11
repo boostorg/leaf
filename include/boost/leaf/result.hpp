@@ -131,7 +131,7 @@ namespace boost { namespace leaf {
 			move_from(std::move(x));
 		}
 
-		result() noexcept:
+		result():
 			value_(T()),
 			which_(leaf_detail::result_variant::value)
 		{
@@ -247,7 +247,7 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		result() noexcept = default;
+		result() = default;
 
 		result( leaf::error const & e ) noexcept:
 			base(e)

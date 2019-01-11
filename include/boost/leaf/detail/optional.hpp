@@ -89,6 +89,15 @@ namespace boost { namespace leaf {
 				}
 			}
 
+			template <class... A>
+			T & emplace( A && ... a )
+			{
+				reset();
+				(void) new(&value_) T(std::forward<A>(a)...);
+				has_value_=true;
+				return value_;
+			}
+
 			T & put( T const & v )
 			{
 				reset();

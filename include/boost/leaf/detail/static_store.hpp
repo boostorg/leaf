@@ -162,13 +162,13 @@ namespace boost { namespace leaf {
 			template <class Ex>
 			bool check_exception_pack( error_info const & ei, Ex const * ) noexcept
 			{
-				return dynamic_cast<Ex const *>(ei.get_exception())!=0;
+				return dynamic_cast<Ex const *>(ei.exception())!=0;
 			}
 
 			template <class Ex, class... ExRest>
 			bool check_exception_pack( error_info const & ei, Ex const *, ExRest const * ... ex_rest ) noexcept
 			{
-				return dynamic_cast<Ex const *>(ei.get_exception())!=0 || check_exception_pack(ei, ex_rest...);
+				return dynamic_cast<Ex const *>(ei.exception())!=0 || check_exception_pack(ei, ex_rest...);
 			}
 
 			template <class SlotsTuple,class T>

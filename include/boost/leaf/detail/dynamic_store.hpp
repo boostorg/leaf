@@ -29,7 +29,7 @@ namespace boost { namespace leaf {
 
 		public:
 
-			virtual error get_error() const noexcept = 0;
+			virtual error const & get_error() const noexcept = 0;
 			virtual error unload() noexcept = 0;
 			virtual error unload( error const & ) noexcept = 0;
 		};

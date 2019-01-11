@@ -147,9 +147,6 @@ namespace boost { namespace leaf {
 
 	public:
 
-		error( error const & ) noexcept = default;
-		error( error && ) noexcept = default;
-
 		friend bool operator==( error const & e1, error const & e2 ) noexcept
 		{
 			return e1.id_==e2.id_;
@@ -200,6 +197,11 @@ namespace boost { namespace leaf {
 		{
 			error e;
 			E v;
+
+			explicit ev_type( error const & e ) noexcept:
+				e(e)
+			{
+			}
 
 			ev_type( error const & e, E const & v ):
 				e(e),
@@ -303,14 +305,19 @@ namespace boost { namespace leaf {
 			assert(print_ex_!=0);
 		}
 
-		error const & error() const noexcept
+		leaf::error const & error() const noexcept
 		{
 			return e_;
 		}
 
-		std::exception const * get_exception() const noexcept
+		bool exception_caught() const noexcept
 		{
-			assert(print_ex_!=0);
+			return print_ex_!=0;
+		}
+
+		std::exception const * exception() const noexcept
+		{
+			assert(exception_caught());
 			return ex_;
 		}
 
@@ -334,7 +341,12 @@ namespace boost { namespace leaf {
 
 	public:
 
-		verbose_diagnostic_info( verbose_diagnostic_info && x ):
+		verbose_diagnostic_info() noexcept:
+			ei_(0)
+		{
+		}
+
+		verbose_diagnostic_info( verbose_diagnostic_info && x ) noexcept:
 			ei_(0),
 			value_(std::move(x.value_)),
 			already_(std::move(x.already_))
@@ -342,10 +354,10 @@ namespace boost { namespace leaf {
 			x.ei_ = 0;
 		}
 
-		explicit verbose_diagnostic_info( std::stringstream const & s ):
-			ei_(0),
-			value_(s.str()+" {unexpected}")
+		void reset() noexcept
 		{
+			value_.clear();
+			already_.clear();
 		}
 
 		template <class E>
@@ -359,7 +371,7 @@ namespace boost { namespace leaf {
 			}
 		}
 
-		void set_error_info( error_info const & ei ) const
+		void set_error_info( error_info const & ei ) const noexcept
 		{
 			ei_ = &ei;
 		}
@@ -380,7 +392,7 @@ namespace boost { namespace leaf {
 		template <>
 		struct diagnostic<verbose_diagnostic_info,true,false>
 		{
-			static bool print( std::ostream & os, verbose_diagnostic_info const & )
+			static bool print( std::ostream & os, verbose_diagnostic_info const & ) noexcept
 			{
 				return false;
 			}
@@ -415,6 +427,7 @@ namespace boost { namespace leaf {
 			using base::has_value;
 			using base::value;
 			using base::reset;
+			using base::emplace;
 		};
 
 		template <class E>
@@ -445,21 +458,22 @@ namespace boost { namespace leaf {
 		template <class E>
 		void put_verbose_diagnostic_info( ev_type<E> const & ev ) noexcept
 		{
-			if( slot<verbose_diagnostic_info> * p = tl_slot_ptr<verbose_diagnostic_info>() )
+			if( slot<verbose_diagnostic_info> * sl = tl_slot_ptr<verbose_diagnostic_info>() )
 			{
 				std::stringstream s;
 				if( !diagnostic<decltype(ev.v)>::print(s,ev.v) )
 					return;
-				if( p->has_value() )
+				if( auto * pv = sl->has_value() )
 				{
-					auto & p_ev = p->value();
-					if( p_ev.e==ev.e )
+					if( pv->e!=ev.e )
 					{
-						p_ev.v.add<E>(s);
-						return;
+						pv->e = ev.e;
+						pv->v.reset();
 					}
+					pv->v.add<E>(s);
 				}
-				(void) p->put( ev_type<verbose_diagnostic_info>(ev.e,verbose_diagnostic_info(s)) );
+				else
+					sl->emplace(ev.e).v.template add<E>(s);
 			}
 		}
 
@@ -523,7 +537,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class... E>
-		error make_error( char const * file, int line, char const * function, E && ... e )
+		error make_error( char const * file, int line, char const * function, E && ... e ) noexcept
 		{
 			assert(file&&*file);
 			assert(line>0);

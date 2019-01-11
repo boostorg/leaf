@@ -41,7 +41,7 @@ namespace boost { namespace leaf {
 			{
 			}
 
-			decltype(std::declval<F>()(std::declval<A>()...)) operator()( A ... a ) const noexcept
+			decltype(std::declval<F>()(std::declval<A>()...)) operator()( A ... a ) const
 			{
 				static_store<E...> ss;
 				ss.set_reset(true);

@@ -40,14 +40,16 @@ namespace boost { namespace leaf {
 		{
 			slot<E> * s_;
 			E v_;
+
 		public:
+
 			explicit preloaded_item( E && v ) noexcept:
 				s_(tl_slot_ptr<E>()),
 				v_(std::forward<E>(v))
 			{
 			}
 
-			void trigger( error e ) noexcept
+			void trigger( error const & e ) noexcept
 			{
 				if( s_ )
 				{
@@ -132,7 +134,7 @@ namespace boost { namespace leaf {
 			{
 			}
 
-			void trigger( error e ) noexcept
+			void trigger( error const & e ) noexcept
 			{
 				if( s_ )
 				{
