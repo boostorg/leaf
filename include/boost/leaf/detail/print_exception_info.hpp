@@ -19,9 +19,9 @@ namespace boost { namespace leaf {
 		{
 			if( cap )
 			{
-				os << "Detected exception_capture" << std::endl;
+				os << "Detected exception_capture of the following error types:" << std::endl;
 				cap->print(os);
-				os << std::endl << "Diagnostic Information about the original exception follows" << std::endl;
+				os << "Diagnostic Information about the original exception follows" << std::endl;
 			}
 			if( ex )
 			{

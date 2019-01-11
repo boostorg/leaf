@@ -26,8 +26,11 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class F, class... E>
-		class result_trap
+		template <class F, class mp_args, class... E>
+		struct result_trap;
+
+		template <class F, template<class...> class L, class... A, class... E>
+		struct result_trap<F, L<A...>,E...>
 		{
 			F f_;
 
@@ -38,8 +41,7 @@ namespace boost { namespace leaf {
 			{
 			}
 
-			template <class... A>
-			decltype(std::declval<F>()(std::declval<A>()...)) operator()( A && ... a ) const noexcept
+			decltype(std::declval<F>()(std::declval<A>()...)) operator()( A ... a ) const noexcept
 			{
 				static_store<E...> ss;
 				ss.set_reset(true);
@@ -52,9 +54,10 @@ namespace boost { namespace leaf {
 	}
 
 	template <class... E, class F>
-	leaf_detail::result_trap<F,E...> capture_result( F && f ) noexcept
+	leaf_detail::result_trap<F,typename leaf_detail::function_traits<F>::mp_args,E...> capture_result( F && f ) noexcept
 	{
-		return leaf_detail::result_trap<F,E...>(std::move(f));
+		using namespace leaf_detail;
+		return result_trap<F,typename function_traits<F>::mp_args,E...>(std::move(f));
 	}
 
 } }

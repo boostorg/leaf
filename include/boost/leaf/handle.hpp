@@ -21,10 +21,7 @@ namespace boost { namespace leaf {
 		if( auto r = std::forward<TryBlock>(try_block)() )
 			return *r;
 		else
-		{
-			error const e = r.error();
-			return ss.handle_error(error_info(e), std::forward<Handlers>(handlers)...);
-		}
+			return ss.handle_error(error_info(r.error()), std::forward<Handlers>(handlers)...);
 	}
 
 	namespace leaf_detail
@@ -54,7 +51,7 @@ namespace boost { namespace leaf {
 				f_(std::forward<F>(f))
 			{
 			}
-			result<void> operator()( A... a )
+			result<void> operator()( A... a ) const
 			{
 				f_(a...);
 				return { };
@@ -73,17 +70,13 @@ namespace boost { namespace leaf {
 			ss.set_reset(true);
 			return r;
 		}
-		else
+		else if( auto rr = ss.handle_error(error_info(r.error()), handler_wrapper<R,Handlers>(std::forward<Handlers>(handlers))..., [&r] { return r; } ) )
 		{
-			error const e = r.error();
-			if( auto rr = ss.handle_error(error_info(e), handler_wrapper<R,Handlers>(std::forward<Handlers>(handlers))..., [&r] { return r; } ) )
-			{
-				ss.set_reset(true);
-				return rr;
-			}
-			else
-				return rr;
+			ss.set_reset(true);
+			return rr;
 		}
+		else
+			return rr;
 	}
 
 } }

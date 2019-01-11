@@ -32,7 +32,6 @@ namespace boost { namespace leaf {
 			virtual error get_error() const noexcept = 0;
 			virtual error unload() noexcept = 0;
 			virtual error unload( error const & ) noexcept = 0;
-			virtual void print( std::ostream & ) const = 0;
 		};
 	}
 

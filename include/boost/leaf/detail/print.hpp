@@ -50,30 +50,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class... T>
-		struct print_types;
-
-		template <class Car>
-		struct print_types<Car>
-		{
-			static void print( std::ostream & os )
-			{
-				os << type<Car>();
-			}
-		};
-
-		template <class Car, class... Cdr>
-		struct print_types<Car,Cdr...>
-		{
-			static void print( std::ostream & os )
-			{
-				os << type<Car>() << ", ";
-				print_types<Cdr...>::print(os);
-			}
-		};
-
-		////////////////////////////////////////
-
 		template <class T, class E = void>
 		struct is_printable: std::false_type
 		{

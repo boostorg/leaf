@@ -113,8 +113,8 @@ namespace boost { namespace leaf {
 			};
 
 			template <>
-			class static_store_slot<complete_diagnostic_info>:
-				public slot<complete_diagnostic_info>,
+			class static_store_slot<verbose_diagnostic_info>:
+				public slot<verbose_diagnostic_info>,
 				enable_any
 			{
 			};
@@ -302,12 +302,12 @@ namespace boost { namespace leaf {
 			};
 
 			template <>
-			struct get_one_argument<complete_diagnostic_info>
+			struct get_one_argument<verbose_diagnostic_info>
 			{
 				template <class StaticStore>
-				static complete_diagnostic_info const & get( StaticStore const & ss, error_info const & ei ) noexcept
+				static verbose_diagnostic_info const & get( StaticStore const & ss, error_info const & ei ) noexcept
 				{
-					complete_diagnostic_info const * cdi = ss.template peek<complete_diagnostic_info>(ei.get_error());
+					verbose_diagnostic_info const * cdi = ss.template peek<verbose_diagnostic_info>(ei.get_error());
 					assert(cdi!=0);
 					cdi->set_error_info(ei);
 					return *cdi;
@@ -320,7 +320,7 @@ namespace boost { namespace leaf {
 			template <class T> struct acceptable_last_handler_argument<T const *>: is_error_type<T> { };
 			template <> struct acceptable_last_handler_argument<error_info const &>: std::true_type { };
 			template <> struct acceptable_last_handler_argument<unexpected_error_info const &>: std::true_type { };
-			template <> struct acceptable_last_handler_argument<complete_diagnostic_info const &>: std::true_type { };
+			template <> struct acceptable_last_handler_argument<verbose_diagnostic_info const &>: std::true_type { };
 
 			template <class>
 			struct ensure_last_handler_matches: std::false_type
@@ -404,7 +404,7 @@ namespace boost { namespace leaf {
 			{
 				using namespace static_store_internal;
 				static_assert(ensure_last_handler_matches<typename function_traits<F>::mp_args>::value,
-					"The last handler for handle_all may only take arguments of type error_info const &, complete_diagnostic_info const &, unexpected_error_info const &, or any number of pointer-to-const arguments.");
+					"The last handler for handle_all may only take arguments of type error_info const &, verbose_diagnostic_info const &, unexpected_error_info const &, or any number of pointer-to-const arguments.");
 				return call_handler( ei, std::forward<F>(f), typename function_traits<F>::mp_args{ } );
 			}
 

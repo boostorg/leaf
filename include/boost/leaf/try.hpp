@@ -41,24 +41,20 @@ namespace boost { namespace leaf {
 			}
 			catch( std::exception const & ex )
 			{
-				error const e = get_error(ex);
-				return ss.handle_error(error_info(e,&ex,&cap,&print_exception_info), std::forward<Handlers>(handlers)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
+				return ss.handle_error(error_info(get_error(ex),&ex,&cap,&print_exception_info), std::forward<Handlers>(handlers)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
 			}
 			catch( ... )
 			{
-				error const e = next_error_value();
-				return ss.handle_error(error_info(e,0,&cap,&print_exception_info), std::forward<Handlers>(handlers)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
+				return ss.handle_error(error_info(next_error_value(),0,&cap,&print_exception_info), std::forward<Handlers>(handlers)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
 			}
 		}
 		catch( std::exception const & ex )
 		{
-			error const e = get_error(ex);
-			return ss.handle_error(error_info(e,&ex,0,&print_exception_info), std::forward<Handlers>(handlers)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
+			return ss.handle_error(error_info(get_error(ex),&ex,0,&print_exception_info), std::forward<Handlers>(handlers)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
 		}
 		catch( ...  )
 		{
-			error const e = next_error_value();
-			return ss.handle_error(error_info(e,0,0,&print_exception_info), std::forward<Handlers>(handlers)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
+			return ss.handle_error(error_info(next_error_value(),0,0,&print_exception_info), std::forward<Handlers>(handlers)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
 		}
 	}
 

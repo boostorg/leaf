@@ -68,14 +68,6 @@ namespace boost { namespace leaf {
 				return e;
 			}
 
-			void print( std::ostream & os ) const
-			{
-				os << "Types being captured: ";
-				print_types<E...>::print(os);
-				os << std::endl << "Values actually captured:" << std::endl;
-				dynamic_store_internal::tuple_for_each<sizeof...(E),decltype(s_)>::print(os,s_);
-			}
-
 		public:
 
 			dynamic_store_impl( error const & e, static_store<E...> && ss ) noexcept:

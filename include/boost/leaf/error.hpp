@@ -270,10 +270,10 @@ namespace boost { namespace leaf {
 		error_info( error_info const & ) = delete;
 		error_info & operator=( error_info const & ) = delete;
 
-		error const & e_;
-		std::exception const * ex_;
-		leaf_detail::captured_exception const * cap_;
-		void (*print_ex_)( std::ostream &, std::exception const *, leaf_detail::captured_exception const * );
+		error const e_;
+		std::exception const * const ex_;
+		leaf_detail::captured_exception const * const cap_;
+		void (* const print_ex_)( std::ostream &, std::exception const *, leaf_detail::captured_exception const * );
 
 	public:
 
@@ -324,17 +324,17 @@ namespace boost { namespace leaf {
 		}
 	};
 
-	class complete_diagnostic_info
+	class verbose_diagnostic_info
 	{
-		complete_diagnostic_info( complete_diagnostic_info const & ) = delete;
-		complete_diagnostic_info & operator=( complete_diagnostic_info const & ) = delete;
+		verbose_diagnostic_info( verbose_diagnostic_info const & ) = delete;
+		verbose_diagnostic_info & operator=( verbose_diagnostic_info const & ) = delete;
 		mutable error_info const * ei_;
 		std::string value_;
 		std::set<char const *(*)()> already_;
 
 	public:
 
-		complete_diagnostic_info( complete_diagnostic_info && x ):
+		verbose_diagnostic_info( verbose_diagnostic_info && x ):
 			ei_(0),
 			value_(std::move(x.value_)),
 			already_(std::move(x.already_))
@@ -342,7 +342,7 @@ namespace boost { namespace leaf {
 			x.ei_ = 0;
 		}
 
-		explicit complete_diagnostic_info( std::stringstream const & s ):
+		explicit verbose_diagnostic_info( std::stringstream const & s ):
 			ei_(0),
 			value_(s.str()+" {unexpected}")
 		{
@@ -364,7 +364,7 @@ namespace boost { namespace leaf {
 			ei_ = &ei;
 		}
 
-		friend std::ostream & operator<<( std::ostream & os, complete_diagnostic_info const & x )
+		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
 		{
 			os << *x.ei_;
 			if( !x.value_.empty() )
@@ -373,14 +373,14 @@ namespace boost { namespace leaf {
 		}
 	};
 
-	template <> struct is_error_type<complete_diagnostic_info>: std::true_type { };
+	template <> struct is_error_type<verbose_diagnostic_info>: std::true_type { };
 
 	namespace leaf_detail
 	{
 		template <>
-		struct diagnostic<complete_diagnostic_info,true,false>
+		struct diagnostic<verbose_diagnostic_info,true,false>
 		{
-			static bool print( std::ostream & os, complete_diagnostic_info const & )
+			static bool print( std::ostream & os, verbose_diagnostic_info const & )
 			{
 				return false;
 			}
@@ -443,9 +443,9 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		void put_complete_diagnostic_info( ev_type<E> const & ev ) noexcept
+		void put_verbose_diagnostic_info( ev_type<E> const & ev ) noexcept
 		{
-			if( slot<complete_diagnostic_info> * p = tl_slot_ptr<complete_diagnostic_info>() )
+			if( slot<verbose_diagnostic_info> * p = tl_slot_ptr<verbose_diagnostic_info>() )
 			{
 				std::stringstream s;
 				if( !diagnostic<decltype(ev.v)>::print(s,ev.v) )
@@ -459,7 +459,7 @@ namespace boost { namespace leaf {
 						return;
 					}
 				}
-				(void) p->put( ev_type<complete_diagnostic_info>(ev.e,complete_diagnostic_info(s)) );
+				(void) p->put( ev_type<verbose_diagnostic_info>(ev.e,verbose_diagnostic_info(s)) );
 			}
 		}
 
@@ -467,7 +467,7 @@ namespace boost { namespace leaf {
 		void no_expect_slot( ev_type<E> const & ev ) noexcept
 		{
 			put_unexpected(ev);
-			put_complete_diagnostic_info(ev);
+			put_verbose_diagnostic_info(ev);
 		}
 
 		template <class E>
