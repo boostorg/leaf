@@ -305,7 +305,7 @@ namespace boost { namespace leaf {
 			assert(print_ex_!=0);
 		}
 
-		leaf::error const & error() const noexcept
+		leaf::error const & get_error() const noexcept
 		{
 			return e_;
 		}
@@ -315,7 +315,7 @@ namespace boost { namespace leaf {
 			return print_ex_!=0;
 		}
 
-		std::exception const * exception() const noexcept
+		std::exception const * get_exception() const noexcept
 		{
 			assert(exception_caught());
 			return ex_;

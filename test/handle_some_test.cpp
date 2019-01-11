@@ -50,7 +50,7 @@ int main()
 			{
 				BOOST_TEST(c==0);
 				c = 1;
-				return ei.error();
+				return ei.get_error();
 			} );
 		BOOST_TEST(r);
 		BOOST_TEST(c==42);
@@ -578,7 +578,7 @@ int main()
 			},
 			[ ]( leaf::error_info const & ei )
 			{
-				return ei.error();
+				return ei.get_error();
 			} );
 		BOOST_TEST(r && *r==42);
 	}
