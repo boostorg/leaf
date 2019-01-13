@@ -1,0 +1,14 @@
+[source,c++]
+.#include <boost/leaf/capture_result.hpp>
+----
+namespace boost { namespace leaf {
+
+  template <class... E, class F>
+  <<unspecified_function_type>> capture_result( F && f ) noexcept;
+
+} }
+----
+
+[.text-right]
+<<capture_result>>
+

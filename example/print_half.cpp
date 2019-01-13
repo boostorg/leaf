@@ -1,11 +1,11 @@
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-//This program is an adaptation of the following Boost Outcome example:
-//https://github.com/ned14/outcome/blob/master/doc/src/snippets/using_result.cpp
+// This program is an adaptation of the following Boost Outcome example:
+// https://github.com/ned14/outcome/blob/master/doc/src/snippets/using_result.cpp
 
 #include <boost/leaf/handle.hpp>
 #include <algorithm>
@@ -23,7 +23,7 @@ enum class ConversionErrc
 };
 
 namespace boost { namespace leaf {
-	template <> struct is_error_type<ConversionErrc>: public std::true_type { };
+	template <> struct is_e_type<ConversionErrc>: public std::true_type { };
 } }
 
 leaf::result<int> convert(const std::string& str) noexcept
@@ -40,7 +40,7 @@ leaf::result<int> convert(const std::string& str) noexcept
 	return atoi(str.c_str());
 }
 
-//Do not static_store BigInt to actually work -- it's a stub.
+// Do not static_store BigInt to actually work -- it's a stub.
 struct BigInt
 {
 	static leaf::result<BigInt> fromString(const std::string& s) { return BigInt{s}; }
@@ -49,7 +49,7 @@ struct BigInt
 	friend std::ostream& operator<<(std::ostream& o, const BigInt&) { return o << "big int half"; }
 };
 
-//This function handles ConversionErrc::TooLong errors, forwards any other error to the caller.
+// This function handles ConversionErrc::TooLong errors, forwards any other error to the caller.
 leaf::result<void> print_half(const std::string& text)
 {
 	return leaf::handle_some(
@@ -89,14 +89,14 @@ int main( int argc, char const * argv[ ] )
 			return 2;
 		},
 
-		[ ]( leaf::error_info const & ei )
+		[ ]( leaf::error_info const & unmatched )
 		{
-			//This will never execute in this program, but it would detect logic errors where an unknown error reaches main.
-			//In this case, we print diagnostic information.
+			// This will never execute in this program, but it would detect logic errors where an unknown error reaches main.
+			// In this case, we print diagnostic information.
 			std::cerr <<
 				"Unknown failure detected" << std::endl <<
 				"Cryptic diagnostic information follows" << std::endl <<
-				ei;
+				unmatched;
 			return 3;
 		} );
 }

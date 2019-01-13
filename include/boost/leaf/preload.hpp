@@ -1,11 +1,11 @@
 #ifndef BOOST_LEAF_25AF99F6DC6F11E8803DE9BC9723C688
 #define BOOST_LEAF_25AF99F6DC6F11E8803DE9BC9723C688
 
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/error.hpp>
 #include <tuple>
@@ -29,7 +29,7 @@ namespace boost { namespace leaf {
 		{
 			static void trigger( Tuple const &, error const & ) noexcept { }
 		};
-	} //leaf_detail
+	} // leaf_detail
 
 	////////////////////////////////////////
 
@@ -107,7 +107,7 @@ namespace boost { namespace leaf {
 					leaf_detail::tuple_for_each_preload<sizeof...(E),decltype(p_)>::trigger(p_,e);
 			}
 		};
-	} //leaf_detail
+	} // leaf_detail
 
 	template <class... E>
 	leaf_detail::preloaded<E...> preload( E && ... e ) noexcept
@@ -191,7 +191,7 @@ namespace boost { namespace leaf {
 					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(d_)>::trigger(d_,e);
 			}
 		};
-	} //leaf_detail
+	} // leaf_detail
 
 	template <class... F>
 	leaf_detail::deferred<F...> defer( F && ... f ) noexcept

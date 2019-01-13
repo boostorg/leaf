@@ -1,8 +1,8 @@
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/handle.hpp>
 #include "boost/core/lightweight_test.hpp"
@@ -17,7 +17,7 @@ enum class error_code
 };
 
 namespace boost { namespace leaf {
-	template <> struct is_error_type<error_code>: public std::true_type { };
+	template <> struct is_e_type<error_code>: public std::true_type { };
 } }
 
 leaf::result<int> compute_answer( int what_to_do ) noexcept

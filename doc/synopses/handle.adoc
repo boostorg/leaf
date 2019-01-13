@@ -1,0 +1,18 @@
+.#include <boost/leaf/handle.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class TryBlock, class... Handler>
+  typename std::remove_reference<decltype(std::declval<TryBlock>()().value())>::type
+  handle_all( TryBlock && try_block, Handler && ... handler );
+
+  template <class TryBlock, class... Handler>
+  decltype(std::declval<TryBlock>()())
+  handle_some( TryBlock && try_block, Handler && ... handler );
+
+} }
+----
+
+[.text-right]
+`<<error,error>>` | <<error::error>> | <<error::propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>> | <<next_error_value>> | <<last_error_value>>

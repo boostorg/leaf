@@ -1,11 +1,11 @@
 #ifndef BOOST_LEAF_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
 #define BOOST_LEAF_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
 
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/detail/dynamic_store.hpp>
 #include <boost/leaf/throw.hpp>

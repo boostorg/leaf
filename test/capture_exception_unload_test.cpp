@@ -1,8 +1,8 @@
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/capture_exception.hpp>
 #include <boost/leaf/try.hpp>
@@ -157,14 +157,14 @@ int main()
 	test(
 		[ ]
 		{
-			throw leaf::exception( std::exception(), info<1>{1}, info<3>{3} ); //Derives from leaf::error
+			throw leaf::exception( std::exception(), info<1>{1}, info<3>{3} ); // Derives from leaf::error
 		} );
 
 	test(
 		[ ]
 		{
 			auto propagate = leaf::preload( info<1>{1}, info<3>{3} );
-			throw std::exception(); //Does not derive from leaf::error
+			throw std::exception(); // Does not derive from leaf::error
 		} );
 
 	return boost::report_errors();

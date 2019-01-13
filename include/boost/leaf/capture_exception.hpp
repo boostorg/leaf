@@ -1,11 +1,11 @@
 #ifndef BOOST_LEAF_BC24FB98B2DE11E884419CF5AD35F1A2
 #define BOOST_LEAF_BC24FB98B2DE11E884419CF5AD35F1A2
 
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/detail/dynamic_store_impl.hpp>
 #include <boost/leaf/detail/captured_exception.hpp>
@@ -120,7 +120,7 @@ namespace boost { namespace leaf {
 			}
 		};
 
-	} //leaf_detail
+	} // leaf_detail
 
 	template <class... E, class F>
 	leaf_detail::exception_trap<F,typename leaf_detail::function_traits<F>::mp_args,E...> capture_exception( F && f ) noexcept

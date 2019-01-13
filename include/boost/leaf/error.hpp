@@ -1,11 +1,11 @@
 #ifndef BOOST_LEAF_BA049396D0D411E8B45DF7D4A759E189
 #define BOOST_LEAF_BA049396D0D411E8B45DF7D4A759E189
 
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/detail/optional.hpp>
 #include <boost/leaf/detail/print.hpp>
@@ -64,19 +64,24 @@ namespace boost { namespace leaf {
 		{
 			static constexpr bool value=std::is_member_object_pointer<decltype(&T::value)>::value;
 		};
+
+		template <class T>
+		struct is_error_type_default
+		{
+			static constexpr bool value = has_data_member_value<T>::value || std::is_base_of<std::exception,T>::value;
+		};
+
+		template <> struct is_error_type_default<std::exception_ptr>: std::true_type { };
+		template <> struct is_error_type_default<std::error_code>: std::true_type { };
+		template <> struct is_error_type_default<system::error_code>: std::true_type { };
+		template <> struct is_error_type_default<unexpected_error_info>: std::true_type { };
+		template <> struct is_error_type_default<e_source_location>: std::true_type { };
 	}
 
 	template <class T>
-	struct is_error_type
+	struct is_e_type: leaf_detail::is_error_type_default<T>
 	{
-		static constexpr bool value = leaf_detail::has_data_member_value<T>::value || std::is_base_of<std::exception,T>::value;
 	};
-
-	template <> struct is_error_type<std::exception_ptr>: std::true_type { };
-	template <> struct is_error_type<std::error_code>: std::true_type { };
-	template <> struct is_error_type<system::error_code>: std::true_type { };
-	template <> struct is_error_type<unexpected_error_info>: std::true_type { };
-	template <> struct is_error_type<e_source_location>: std::true_type { };
 
 	////////////////////////////////////////
 
@@ -385,10 +390,12 @@ namespace boost { namespace leaf {
 		}
 	};
 
-	template <> struct is_error_type<verbose_diagnostic_info>: std::true_type { };
-
 	namespace leaf_detail
 	{
+		template <> struct is_error_type_default<verbose_diagnostic_info>: std::true_type
+		{
+		};
+
 		template <>
 		struct diagnostic<verbose_diagnostic_info,true,false>
 		{
@@ -412,7 +419,7 @@ namespace boost { namespace leaf {
 			slot & operator=( slot const & ) = delete;
 			typedef optional<ev_type<E>> base;
 			slot<E> * prev_;
-			static_assert(is_error_type<E>::value,"Not an error type");
+			static_assert(is_e_type<E>::value,"Not an error type");
 
 			bool slot_print( std::ostream &, error const & ) const;
 
@@ -542,7 +549,7 @@ namespace boost { namespace leaf {
 			assert(file&&*file);
 			assert(line>0);
 			assert(function&&*function);
-			e_source_location sl { file, line, function }; //Temp object MSVC workaround
+			e_source_location sl { file, line, function }; // Temp object MSVC workaround
 			return error( std::move(sl), std::forward<E>(e)... );
 		}
 
@@ -552,7 +559,7 @@ namespace boost { namespace leaf {
 			err,
 			cap
 		};
-	} //leaf_detail
+	} // leaf_detail
 
 	template <class... E>
 	error error::propagate( E && ... e ) const noexcept

@@ -1,11 +1,11 @@
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-//This is a simple program that demonstrates the use of LEAF to transport e-objects between threads,
-//without using exception handling. See capture_eh.cpp for the exception-handling variant.
+// This is a simple program that demonstrates the use of LEAF to transport e-objects between threads,
+// without using exception handling. See capture_eh.cpp for the exception-handling variant.
 
 #include <boost/leaf/capture_exception.hpp>
 #include <boost/leaf/try.hpp>
@@ -19,15 +19,15 @@
 
 namespace leaf = boost::leaf;
 
-//Define several e-types.
+// Define several e-types.
 struct e_thread_id { std::thread::id value; };
 struct e_failure_info1 { std::string value; };
 struct e_failure_info2 { int value; };
 
-//A type that represents a successfully returned result from a task.
+// A type that represents a successfully returned result from a task.
 struct task_result { };
 
- //This is our task function. It produces objects of type task_result, but it may fail...
+ // This is our task function. It produces objects of type task_result, but it may fail...
 task_result task()
 {
 	bool succeed = (rand()%4) !=0; //...at random.
@@ -44,12 +44,12 @@ int main()
 {
 	int const task_count = 42;
 
-	//Container to collect the generated std::future objects.
+	// Container to collect the generated std::future objects.
 	std::vector<std::future<task_result>> fut;
 
-	//Launch the tasks, but rather than launching the task function directly, we launch the
-	//wrapper function returned by leaf::capture_result. It captures the specified error object
-	//types and automatically transports them in the leaf::result<task_result> it returns.
+	// Launch the tasks, but rather than launching the task function directly, we launch the
+	// wrapper function returned by leaf::capture_result. It captures the specified error object
+	// types and automatically transports them in the leaf::result<task_result> it returns.
 	std::generate_n( std::inserter(fut,fut.end()), task_count,
 		[ ]
 		{
@@ -58,7 +58,7 @@ int main()
 				leaf::capture_exception<e_thread_id, e_failure_info1, e_failure_info2>(task) );
 		} );
 
-	//Wait on the futures, get the task results, handle errors.
+	// Wait on the futures, get the task results, handle errors.
 	for( auto & f : fut )
 	{
 		f.wait();
@@ -68,7 +68,7 @@ int main()
 			{
 				task_result r = f.get();
 
-				//Success! Use r to access task_result.
+				// Success! Use r to access task_result.
 				std::cout << "Success!" << std::endl;
 				(void) r;
 
@@ -79,12 +79,12 @@ int main()
 				std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
 			},
 
-			[ ]( leaf::error_info const & ei )
+			[ ]( leaf::error_info const & unmatched )
 			{
 				std::cerr <<
 					"Unknown failure detected" << std::endl <<
 					"Cryptic diagnostic information follows" << std::endl <<
-					ei;
+					unmatched;
 			} );
 	}
 }

@@ -1,11 +1,11 @@
 #ifndef BOOST_LEAF_14440B9CF07011E88377FD4B0ABE8030
 #define BOOST_LEAF_14440B9CF07011E88377FD4B0ABE8030
 
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/detail/mp11.hpp>
 #include <tuple>
@@ -65,7 +65,7 @@ namespace boost { namespace leaf {
 		template<class C, class R, class... A> struct function_traits<R(C::*)(A...)> : function_traits<R(C&,A...)> { };
 		template<class C, class R, class... A> struct function_traits<R(C::*)(A...) const> : function_traits<R(C const &,A...)> { };
 		template<class C, class R> struct function_traits<R(C::*)> : function_traits<R(C&)> { };
-	} //namespace leaf_detail
+	} // namespace leaf_detail
 
 } }
 

@@ -1,8 +1,8 @@
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/try.hpp>
 #include <boost/leaf/capture_exception.hpp>
@@ -91,10 +91,10 @@ int main()
 			non_printable_info_non_printable_payload,
 			leaf::e_errno,
 			leaf::unexpected_error_info const &,
-			leaf::error_info const & ei )
+			leaf::error_info const & unmatched )
 		{
 			std::ostringstream st;
-			st << ei;
+			st << unmatched;
 			std::string s = st.str();
 			BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
 			BOOST_TEST(s.find(": N/A")!=s.npos);

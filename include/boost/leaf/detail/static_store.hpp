@@ -1,11 +1,11 @@
 #ifndef BOOST_LEAF_AFBBD676B2FF11E8984C7976AE35F1A2
 #define BOOST_LEAF_AFBBD676B2FF11E8984C7976AE35F1A2
 
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/error.hpp>
 #include <boost/leaf/detail/function_traits.hpp>
@@ -40,17 +40,63 @@ namespace boost { namespace leaf {
 				return e;
 			}
 		};
+
+		template <class T>
+		bool check_value_pack( T const & x, T const & v ) noexcept
+		{
+			return x==v;
+		}
+
+		template <class T, class... VRest>
+		bool check_value_pack( T const & x, T const & v1, VRest const & ... v_rest ) noexcept
+		{
+			return x==v1 || check_value_pack(x,v_rest...);
+		}
+
+		template <class Ex>
+		bool check_exception_pack( std::exception const * ex, Ex const * ) noexcept
+		{
+			return dynamic_cast<Ex const *>(ex)!=0;
+		}
+
+		template <class Ex, class... ExRest>
+		bool check_exception_pack( std::exception const * ex, Ex const *, ExRest const * ... ex_rest ) noexcept
+		{
+			return dynamic_cast<Ex const *>(ex)!=0 || check_exception_pack(ex, ex_rest...);
+		}
 	}
 
-	template <class E, typename leaf_detail::match_type<E>::type... Value>
+	template <class E, typename leaf_detail::match_type<E>::type... V>
 	struct match
 	{
-		typename leaf_detail::match_type<E>::type value;
+		using type = typename leaf_detail::match_type<E>::type;
+		type const & value;
+
+		explicit match( E const & e ):
+			value(leaf_detail::match_type<E>::get(e))
+		{
+		}
+
+		bool operator()() const noexcept
+		{
+			return leaf_detail::check_value_pack(value,V...);
+		}
 	};
 
 	template <class... Ex>
 	struct catch_
 	{
+		std::exception const & value;
+
+		explicit catch_( std::exception const & ex ):
+			value(ex)
+		{
+		}
+
+		bool operator()() const noexcept
+		{
+			return leaf_detail::check_exception_pack(&value,static_cast<Ex const *>(0)...);
+		}
 	};
 
 	namespace leaf_detail
@@ -147,30 +193,6 @@ namespace boost { namespace leaf {
 
 			////////////////////////////////////////
 
-			template <class T>
-			bool check_value_pack( T const & x, T const & v ) noexcept
-			{
-				return x==v;
-			}
-
-			template <class T, class... VRest>
-			bool check_value_pack( T const & x, T const & v1, VRest const & ... v_rest ) noexcept
-			{
-				return x==v1 || check_value_pack(x,v_rest...);
-			}
-
-			template <class Ex>
-			bool check_exception_pack( error_info const & ei, Ex const * ) noexcept
-			{
-				return dynamic_cast<Ex const *>(ei.get_exception())!=0;
-			}
-
-			template <class Ex, class... ExRest>
-			bool check_exception_pack( error_info const & ei, Ex const *, ExRest const * ... ex_rest ) noexcept
-			{
-				return dynamic_cast<Ex const *>(ei.get_exception())!=0 || check_exception_pack(ei, ex_rest...);
-			}
-
 			template <class SlotsTuple,class T>
 			struct check_one_argument
 			{
@@ -190,8 +212,8 @@ namespace boost { namespace leaf {
 				}
 			};
 
-			template <class SlotsTuple, class E, typename match_type<E>::type... Value>
-			struct check_one_argument<SlotsTuple,match<E,Value...>>
+			template <class SlotsTuple, class E, typename match_type<E>::type... V>
+			struct check_one_argument<SlotsTuple,match<E,V...>>
 			{
 				static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
 				{
@@ -199,7 +221,7 @@ namespace boost { namespace leaf {
 					if( sl.has_value() )
 					{
 						auto const & v = sl.value();
-						return v.e==ei.get_error() && check_value_pack(match_type<E>::get(v.v),Value...);
+						return v.e==ei.get_error() && match<E,V...>(v.v)();
 					}
 					else
 						return false;
@@ -211,7 +233,10 @@ namespace boost { namespace leaf {
 			{
 				static bool check( SlotsTuple const &, error_info const & ei ) noexcept
 				{
-					return check_exception_pack(ei,static_cast<Ex const *>(0)...);
+					if( std::exception const * ex = ei.get_exception() )
+						return catch_<Ex...>(*ex)();
+					else
+						return false;
 				}
 			};
 
@@ -269,15 +294,15 @@ namespace boost { namespace leaf {
 				}
 			};
 
-			template <class E, typename match_type<E>::type... Value>
-			struct get_one_argument<match<E,Value...>>
+			template <class E, typename match_type<E>::type... V>
+			struct get_one_argument<match<E,V...>>
 			{
 				template <class StaticStore>
-				static match<E,Value...> get( StaticStore const & ss, error_info const & ei ) noexcept
+				static match<E,V...> get( StaticStore const & ss, error_info const & ei ) noexcept
 				{
 					E const * arg = ss.template peek<E>(ei.get_error());
 					assert(arg!=0);
-					return match<E,Value...>{match_type<E>::get(*arg)};
+					return match<E,V...>(*arg);
 				}
 			};
 
@@ -285,9 +310,11 @@ namespace boost { namespace leaf {
 			struct get_one_argument<catch_<Ex...>>
 			{
 				template <class StaticStore>
-				static constexpr catch_<Ex...> get( StaticStore const &, error_info const & ) noexcept
+				static catch_<Ex...> get( StaticStore const &, error_info const & ei ) noexcept
 				{
-					return { };
+					std::exception const * ex = ei.get_exception();
+					assert(ex!=0);
+					return catch_<Ex...>(*ex);
 				}
 			};
 
@@ -317,7 +344,7 @@ namespace boost { namespace leaf {
 			////////////////////////////////////////
 
 			template <class T> struct acceptable_last_handler_argument: std::false_type { };
-			template <class T> struct acceptable_last_handler_argument<T const *>: is_error_type<T> { };
+			template <class T> struct acceptable_last_handler_argument<T const *>: is_e_type<T> { };
 			template <> struct acceptable_last_handler_argument<error_info const &>: std::true_type { };
 			template <> struct acceptable_last_handler_argument<unexpected_error_info const &>: std::true_type { };
 			template <> struct acceptable_last_handler_argument<verbose_diagnostic_info const &>: std::true_type { };
@@ -419,13 +446,13 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		//Static store deduction
+		// Static store deduction
 
 		template <class T> struct translate_expect_deduction { typedef T type; };
 		template <class T> struct translate_expect_deduction<T const> { typedef T type; };
 		template <class T> struct translate_expect_deduction<T const &> { typedef T type; };
 		template <class T> struct translate_expect_deduction<T const *> { typedef T type; };
-		template <class E,typename match_type<E>::type... Value> struct translate_expect_deduction<match<E,Value...>> { typedef E type; };
+		template <class E,typename match_type<E>::type... V> struct translate_expect_deduction<match<E,V...>> { typedef E type; };
 		template <class... Exceptions> struct translate_expect_deduction<catch_<Exceptions...>> { typedef void type; };
 
 		template <class... T>
@@ -443,15 +470,15 @@ namespace boost { namespace leaf {
 		template <> struct does_not_participate_in_expect_deduction<error_info>: std::true_type { };
 		template <> struct does_not_participate_in_expect_deduction<void>: std::true_type { };
 
-		template <class... Handlers>
-		struct handlers_args_set
+		template <class... Handler>
+		struct handler_args_set
 		{
 			using type =
 				leaf_detail_mp11::mp_remove_if<
 					leaf_detail_mp11::mp_unique<
 						translate_list<
 							leaf_detail_mp11::mp_append<
-								typename function_traits<Handlers>::mp_args...
+								typename function_traits<Handler>::mp_args...
 							>
 						>
 					>,
@@ -467,7 +494,7 @@ namespace boost { namespace leaf {
 		{
 			typedef static_store<T...> type;
 		};
-	} //leaf_detail
+	} // leaf_detail
 
 } }
 

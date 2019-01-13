@@ -1,8 +1,8 @@
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/try.hpp>
 #include <boost/leaf/throw.hpp>
@@ -30,7 +30,7 @@ R f()
 
 int main()
 {
-	//void, handle_all (success)
+	// void, handle_all (success)
 	{
 		int c=0;
 		leaf::try_(
@@ -46,7 +46,7 @@ int main()
 		BOOST_TEST(c==42);
 	}
 
-	//void, handle_all (failure), match_enum (single enum value)
+	// void, handle_all (failure), match_enum (single enum value)
 	{
 		int c=0;
 		leaf::try_(
@@ -74,7 +74,7 @@ int main()
 		BOOST_TEST(c==2);
 	}
 
-	//void, handle_all (failure), match_enum (multiple enum values)
+	// void, handle_all (failure), match_enum (multiple enum values)
 	{
 		int c=0;
 		leaf::try_(
@@ -102,7 +102,7 @@ int main()
 		BOOST_TEST(c==2);
 	}
 
-	//void, handle_all (failure), match_value (single value)
+	// void, handle_all (failure), match_value (single value)
 	{
 		int c=0;
 		leaf::try_(
@@ -130,7 +130,7 @@ int main()
 		BOOST_TEST(c==2);
 	}
 
-	//void, handle_all (failure), match_value (multiple values)
+	// void, handle_all (failure), match_value (multiple values)
 	{
 		int c=0;
 		leaf::try_(
@@ -160,7 +160,7 @@ int main()
 
 	//////////////////////////////////////
 
-	//void, handle_some (failure, initially not matched), match_enum (single enum value)
+	// void, handle_some (failure, initially not matched), match_enum (single enum value)
 	{
 		int c=0;
 		leaf::try_(
@@ -193,7 +193,7 @@ int main()
 		BOOST_TEST(c==2);
 	}
 
-	//void, handle_some (failure, initially not matched), match_enum (multiple enum values)
+	// void, handle_some (failure, initially not matched), match_enum (multiple enum values)
 	{
 		int c=0;
 		leaf::try_(
@@ -226,7 +226,7 @@ int main()
 		BOOST_TEST(c==2);
 	}
 
-	//void, handle_some (failure, initially matched), match_enum (single enum value)
+	// void, handle_some (failure, initially matched), match_enum (single enum value)
 	{
 		int c=0;
 		leaf::try_(
@@ -258,7 +258,7 @@ int main()
 		BOOST_TEST(c==1);
 	}
 
-	//void, handle_some (failure, initially matched), match_enum (multiple enum values)
+	// void, handle_some (failure, initially matched), match_enum (multiple enum values)
 	{
 		int c=0;
 		leaf::try_(
@@ -292,7 +292,7 @@ int main()
 
 	//////////////////////////////////////
 
-	//int, handle_all (success)
+	// int, handle_all (success)
 	{
 		int r = leaf::try_(
 			[ ]
@@ -306,7 +306,7 @@ int main()
 		BOOST_TEST(r==42);
 	}
 
-	//int, handle_all (failure), match_enum (single enum value)
+	// int, handle_all (failure), match_enum (single enum value)
 	{
 		int r = leaf::try_(
 			[ ]
@@ -330,7 +330,7 @@ int main()
 		BOOST_TEST(r==2);
 	}
 
-	//int, handle_all (failure), match_enum (multiple enum values)
+	// int, handle_all (failure), match_enum (multiple enum values)
 	{
 		int r = leaf::try_(
 			[ ]
@@ -356,7 +356,7 @@ int main()
 
 	//////////////////////////////////////
 
-	//int, handle_some (failure, matched), match_enum (single enum value)
+	// int, handle_some (failure, matched), match_enum (single enum value)
 	{
 		int r = leaf::try_(
 			[ ]
@@ -376,7 +376,7 @@ int main()
 		BOOST_TEST(r==2);
 	}
 
-	//int, handle_some (failure, matched), match_enum (multiple enum values)
+	// int, handle_some (failure, matched), match_enum (multiple enum values)
 	{
 		int r = leaf::try_(
 			[ ]
@@ -396,7 +396,7 @@ int main()
 		BOOST_TEST(r==2);
 	}
 
-	//int, handle_some (failure, initially not matched), match_enum (single enum value)
+	// int, handle_some (failure, initially not matched), match_enum (single enum value)
 	{
 		int r = leaf::try_(
 			[ ]
@@ -426,7 +426,7 @@ int main()
 		BOOST_TEST(r==2);
 	}
 
-	//int, handle_some (failure, initially not matched), match_enum (multiple enum values)
+	// int, handle_some (failure, initially not matched), match_enum (multiple enum values)
 	{
 		int r = leaf::try_(
 			[ ]
@@ -456,7 +456,7 @@ int main()
 		BOOST_TEST(r==2);
 	}
 
-	//int, handle_some (failure, initially matched), match_enum (single enum value)
+	// int, handle_some (failure, initially matched), match_enum (single enum value)
 	{
 		int r = leaf::try_(
 			[ ]
@@ -486,7 +486,7 @@ int main()
 		BOOST_TEST(r==1);
 	}
 
-	//int, handle_some (failure, initially matched), match_enum (multiple enum values)
+	// int, handle_some (failure, initially matched), match_enum (multiple enum values)
 	{
 		int r = leaf::try_(
 			[ ]

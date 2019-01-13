@@ -1,15 +1,15 @@
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/handle.hpp>
 
 namespace leaf = boost::leaf;
 
-template <class... Handlers>
-typename leaf::leaf_detail::deduce_static_store<typename leaf::leaf_detail::handlers_args_set<Handlers...>::type>::type * expd( Handlers && ... )
+template <class... Handler>
+typename leaf::leaf_detail::deduce_static_store<typename leaf::leaf_detail::handler_args_set<Handler...>::type>::type * expd( Handler && ... )
 {
 	return 0;
 }
@@ -30,7 +30,7 @@ enum class my_error_code
 	error3
 };
 namespace boost { namespace leaf {
-	template <> struct is_error_type<my_error_code>: std::true_type { };
+	template <> struct is_e_type<my_error_code>: std::true_type { };
 } }
 
 void not_called_on_purpose()
