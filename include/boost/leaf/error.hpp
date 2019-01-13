@@ -388,7 +388,7 @@ namespace boost { namespace leaf {
 
 		void reset() noexcept
 		{
-			s_ = std::stringstream();
+			s_.str(std::string());
 			already_.clear();
 		}
 
