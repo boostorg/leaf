@@ -380,7 +380,9 @@ namespace boost { namespace leaf {
 
 	public:
 
-		verbose_diagnostic_info() noexcept = default;
+		verbose_diagnostic_info() noexcept
+		{
+		}
 
 		using monitor_base::set_error_info;
 
