@@ -90,7 +90,6 @@ int main()
 			non_printable_info_printable_payload,
 			non_printable_info_non_printable_payload,
 			leaf::e_errno,
-			leaf::unexpected_error_info const &,
 			leaf::error_info const & unmatched )
 		{
 			std::ostringstream st;
@@ -102,7 +101,44 @@ int main()
 			BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
 			BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
 			BOOST_TEST(s.find(") in function")!=s.npos);
-			BOOST_TEST(s.find("Detected 2 attempts to communicate unexpected error objects, the first one of type ")!=s.npos);
+			BOOST_TEST(s.find("unexpected")==s.npos);
+			std::cout << s;
+		} );
+
+	std::cout << std::endl;
+
+	leaf::try_(
+		[ ]
+		{
+			LEAF_THROW( my_error(),
+				printable_info_printable_payload(),
+				printable_info_non_printable_payload(),
+				non_printable_info_printable_payload(),
+				non_printable_info_non_printable_payload(),
+				unexpected_test<1>{1},
+				unexpected_test<2>{2},
+				leaf::e_errno{ENOENT} );
+		},
+		[ ](
+			leaf::e_source_location,
+			printable_info_printable_payload,
+			printable_info_non_printable_payload,
+			non_printable_info_printable_payload,
+			non_printable_info_non_printable_payload,
+			leaf::e_errno,
+			leaf::unexpected_error_info const & unmatched )
+		{
+			std::ostringstream st;
+			st << unmatched;
+			std::string s = st.str();
+			BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
+			BOOST_TEST(s.find(": N/A")!=s.npos);
+			BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
+			BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
+			BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
+			BOOST_TEST(s.find(") in function")!=s.npos);
+			BOOST_TEST(s.find("Detected 2 attempts")!=s.npos);
+			BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
 			BOOST_TEST(s.find("unexpected_test<2>")==s.npos);
 			std::cout << s;
 		} );
@@ -128,7 +164,6 @@ int main()
 			non_printable_info_printable_payload,
 			non_printable_info_non_printable_payload,
 			leaf::e_errno,
-			leaf::unexpected_error_info const &,
 			leaf::verbose_diagnostic_info const & di )
 		{
 			std::ostringstream st;
@@ -140,57 +175,12 @@ int main()
 			BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
 			BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
 			BOOST_TEST(s.find(") in function")!=s.npos);
-			BOOST_TEST(s.find("Detected 2 attempts to communicate unexpected error objects, the first one of type ")!=s.npos);
+			BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
 			BOOST_TEST(s.find("unexpected_test<2>")!=s.npos);
 			std::cout << s;
 		} );
 
 	std::cout << std::endl;
-
-	leaf::try_(
-		leaf::capture_exception<
-			printable_info_printable_payload,
-			printable_info_non_printable_payload,
-			non_printable_info_printable_payload,
-			non_printable_info_non_printable_payload,
-			unexpected_test<1>,
-			unexpected_test<2>,
-			leaf::e_errno>(
-				[ ]
-				{
-					LEAF_THROW( my_error(),
-					printable_info_printable_payload(),
-					printable_info_non_printable_payload(),
-					non_printable_info_printable_payload(),
-					non_printable_info_non_printable_payload(),
-					unexpected_test<1>{1},
-					unexpected_test<2>{2},
-					leaf::e_errno{ENOENT} );
-				} ),
-		[ ](
-			leaf::e_source_location,
-			printable_info_printable_payload,
-			printable_info_non_printable_payload,
-			non_printable_info_printable_payload,
-			non_printable_info_non_printable_payload,
-			leaf::e_errno,
-			leaf::unexpected_error_info const &,
-			leaf::verbose_diagnostic_info const & di )
-		{
-			std::ostringstream st;
-			st << di;
-			std::string s = st.str();
-			BOOST_TEST(s.find("Detected exception_capture")!=s.npos);
-			BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
-			BOOST_TEST(s.find(": N/A")!=s.npos);
-			BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
-			BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
-			BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
-			BOOST_TEST(s.find(") in function")!=s.npos);
-			BOOST_TEST(s.find("Detected 2 attempts to communicate unexpected error objects, the first one of type ")!=s.npos);
-			BOOST_TEST(s.find("unexpected_test<2>")!=s.npos);
-			std::cout << s;
-		} );
 
 	return boost::report_errors();
 }

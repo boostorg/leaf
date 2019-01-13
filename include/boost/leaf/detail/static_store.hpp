@@ -329,15 +329,28 @@ namespace boost { namespace leaf {
 			};
 
 			template <>
+			struct get_one_argument<unexpected_error_info>
+			{
+				template <class StaticStore>
+				static unexpected_error_info const & get( StaticStore const & ss, error_info const & ei ) noexcept
+				{
+					unexpected_error_info const * uei = ss.template peek<unexpected_error_info>(ei.get_error());
+					assert(uei!=0);
+					uei->set_error_info(ei);
+					return *uei;
+				}
+			};
+
+			template <>
 			struct get_one_argument<verbose_diagnostic_info>
 			{
 				template <class StaticStore>
 				static verbose_diagnostic_info const & get( StaticStore const & ss, error_info const & ei ) noexcept
 				{
-					verbose_diagnostic_info const * cdi = ss.template peek<verbose_diagnostic_info>(ei.get_error());
-					assert(cdi!=0);
-					cdi->set_error_info(ei);
-					return *cdi;
+					verbose_diagnostic_info const * vdi = ss.template peek<verbose_diagnostic_info>(ei.get_error());
+					assert(vdi!=0);
+					vdi->set_error_info(ei);
+					return *vdi;
 				}
 			};
 
@@ -431,7 +444,7 @@ namespace boost { namespace leaf {
 			{
 				using namespace static_store_internal;
 				static_assert(ensure_last_handler_matches<typename function_traits<F>::mp_args>::value,
-					"The last handler for handle_all may only take arguments of type error_info const &, verbose_diagnostic_info const &, unexpected_error_info const &, or any number of pointer-to-const arguments.");
+					"The last handler for handle_all must match any error.");
 				return call_handler( ei, std::forward<F>(f), typename function_traits<F>::mp_args{ } );
 			}
 

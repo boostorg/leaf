@@ -22,69 +22,6 @@ namespace boost { namespace system { class error_code; } }
 
 namespace boost { namespace leaf {
 
-	struct e_source_location
-	{
-		char const * const file;
-		int const line;
-		char const * const function;
-
-		friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
-		{
-			return os << leaf::type<e_source_location>() << ": " << x.file << '(' << x.line << ") in function " << x.function;
-		}
-	};
-
-	struct unexpected_error_info
-	{
-		char const * (*first_type)() noexcept;
-		int count;
-
-		friend std::ostream & operator<<( std::ostream & os, unexpected_error_info const & x )
-		{
-			assert(x.first_type!=0);
-			assert(x.count>0);
-			if( x.count==1 )
-				os << "Detected 1 attempt to communicate an unexpected error object of type ";
-			else
-				os << "Detected " << x.count << " attempts to communicate unexpected error objects, the first one of type ";
-			return os << x.first_type();
-		}
-	};
-
-	namespace leaf_detail
-	{
-		template <class T, class E = void>
-		struct has_data_member_value
-		{
-			static constexpr bool value=false;
-		};
-
-		template <class T>
-		struct has_data_member_value<T, decltype(std::declval<T const &>().value, void())>
-		{
-			static constexpr bool value=std::is_member_object_pointer<decltype(&T::value)>::value;
-		};
-
-		template <class T>
-		struct is_error_type_default
-		{
-			static constexpr bool value = has_data_member_value<T>::value || std::is_base_of<std::exception,T>::value;
-		};
-
-		template <> struct is_error_type_default<std::exception_ptr>: std::true_type { };
-		template <> struct is_error_type_default<std::error_code>: std::true_type { };
-		template <> struct is_error_type_default<system::error_code>: std::true_type { };
-		template <> struct is_error_type_default<unexpected_error_info>: std::true_type { };
-		template <> struct is_error_type_default<e_source_location>: std::true_type { };
-	}
-
-	template <class T>
-	struct is_e_type: leaf_detail::is_error_type_default<T>
-	{
-	};
-
-	////////////////////////////////////////
-
 	class error;
 
 	error next_error_value() noexcept;
@@ -197,36 +134,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class E>
-		struct ev_type
-		{
-			error e;
-			E v;
-
-			explicit ev_type( error const & e ) noexcept:
-				e(e)
-			{
-			}
-
-			ev_type( error const & e, E const & v ):
-				e(e),
-				v(v)
-			{
-			}
-
-			ev_type( error const & e, E && v ) noexcept:
-				e(e),
-				v(std::forward<E>(v))
-			{
-			}
-		};
-
-		inline int & tl_unexpected_enabled_counter() noexcept
-		{
-			static thread_local int c;
-			return c;
-		}
-
 		class slot_base
 		{
 			slot_base( slot_base const & ) = delete;
@@ -336,28 +243,146 @@ namespace boost { namespace leaf {
 		}
 	};
 
-	class verbose_diagnostic_info
+	////////////////////////////////////////
+
+	namespace leaf_detail
 	{
-		verbose_diagnostic_info( verbose_diagnostic_info const & ) = delete;
-		verbose_diagnostic_info & operator=( verbose_diagnostic_info const & ) = delete;
-		mutable error_info const * ei_;
+		template <class T, class E = void>
+		struct has_data_member_value
+		{
+			static constexpr bool value=false;
+		};
+
+		template <class T>
+		struct has_data_member_value<T, decltype(std::declval<T const &>().value, void())>
+		{
+			static constexpr bool value=std::is_member_object_pointer<decltype(&T::value)>::value;
+		};
+
+		template <class T>
+		struct is_error_type_default
+		{
+			static constexpr bool value = has_data_member_value<T>::value || std::is_base_of<std::exception,T>::value;
+		};
+
+		template <> struct is_error_type_default<std::exception_ptr>: std::true_type { };
+		template <> struct is_error_type_default<std::error_code>: std::true_type { };
+		template <> struct is_error_type_default<system::error_code>: std::true_type { };
+	}
+
+	template <class T>
+	struct is_e_type: leaf_detail::is_error_type_default<T>
+	{
+	};
+
+	////////////////////////////////////////
+
+	struct e_source_location
+	{
+		char const * const file;
+		int const line;
+		char const * const function;
+
+		friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
+		{
+			return os << leaf::type<e_source_location>() << ": " << x.file << '(' << x.line << ") in function " << x.function;
+		}
+	};
+
+	namespace leaf_detail
+	{
+		template <> struct is_error_type_default<e_source_location>: std::true_type { };
+	}
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		class monitor_base
+		{
+			monitor_base( monitor_base const & ) = delete;
+			monitor_base & operator=( monitor_base const & ) = delete;
+
+			mutable error_info const * ei_;
+
+		protected:
+
+			monitor_base() noexcept:
+				ei_(0)
+			{
+			}
+
+			monitor_base( monitor_base && x ) noexcept:
+				ei_(0)
+			{
+				x.ei_ = 0;
+			}
+
+			void set_error_info( error_info const & ei ) const noexcept
+			{
+				ei_ = &ei;
+			}
+
+			error_info const & get_error_info() const noexcept
+			{
+				assert(ei_!=0);
+				return *ei_;
+			}
+		};
+	}
+
+	class unexpected_error_info: leaf_detail::monitor_base
+	{
+	public:
+
+		char const * (*first_type)();
+		int count;
+
+		explicit unexpected_error_info( char const * (*first_type)() ) noexcept:
+			first_type(first_type),
+			count(1)
+		{
+		}
+
+		using monitor_base::set_error_info;
+
+		friend std::ostream & operator<<( std::ostream & os, unexpected_error_info const & x )
+		{
+			assert(x.first_type!=0);
+			assert(x.count>0);
+			os << x.get_error_info() << "Detected ";
+			if( x.count==1 )
+				os << "1 attempt to communicate an E-object";
+			else
+				os << x.count << " attempts to communicate unexpected E-objects, the first one";
+			return os << " of type " << x.first_type() << std::endl;
+		}
+	};
+
+	namespace leaf_detail
+	{
+		template <> struct is_error_type_default<unexpected_error_info>: std::true_type { };
+
+		template <>
+		struct diagnostic<unexpected_error_info,true,false>
+		{
+			static bool print( std::ostream & os, unexpected_error_info const & ) noexcept
+			{
+				return false;
+			}
+		};
+	}
+
+	class verbose_diagnostic_info: leaf_detail::monitor_base
+	{
 		std::string value_;
 		std::set<char const *(*)()> already_;
 
 	public:
 
-		verbose_diagnostic_info() noexcept:
-			ei_(0)
-		{
-		}
+		verbose_diagnostic_info() noexcept = default;
 
-		verbose_diagnostic_info( verbose_diagnostic_info && x ) noexcept:
-			ei_(0),
-			value_(std::move(x.value_)),
-			already_(std::move(x.already_))
-		{
-			x.ei_ = 0;
-		}
+		using monitor_base::set_error_info;
 
 		void reset() noexcept
 		{
@@ -370,31 +395,21 @@ namespace boost { namespace leaf {
 		{
 			if( already_.insert(&type<E>).second )
 			{
-				value_ += '\n';
 				value_ += s.str();
-				value_ += " {unexpected}";
+				value_ += " {unexpected}\n";
 			}
-		}
-
-		void set_error_info( error_info const & ei ) const noexcept
-		{
-			ei_ = &ei;
 		}
 
 		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
 		{
-			os << *x.ei_;
-			if( !x.value_.empty() )
-				os << x.value_ << std::endl;
+			os << x.get_error_info() << x.value_;
 			return os;
 		}
 	};
 
 	namespace leaf_detail
 	{
-		template <> struct is_error_type_default<verbose_diagnostic_info>: std::true_type
-		{
-		};
+		template <> struct is_error_type_default<verbose_diagnostic_info>: std::true_type { };
 
 		template <>
 		struct diagnostic<verbose_diagnostic_info,true,false>
@@ -404,6 +419,41 @@ namespace boost { namespace leaf {
 				return false;
 			}
 		};
+	}
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		template <class E>
+		struct ev_type
+		{
+			error e;
+			E v;
+
+			explicit ev_type( error const & e ) noexcept:
+				e(e)
+			{
+			}
+
+			ev_type( error const & e, E const & v ):
+				e(e),
+				v(v)
+			{
+			}
+
+			ev_type( error const & e, E && v ) noexcept:
+				e(e),
+				v(std::forward<E>(v))
+			{
+			}
+		};
+
+		inline int & tl_unexpected_enabled_counter() noexcept
+		{
+			static thread_local int c;
+			return c;
+		}
 	}
 
 	////////////////////////////////////////
@@ -458,7 +508,7 @@ namespace boost { namespace leaf {
 						return;
 					}
 				}
-				(void) p->put( ev_type<unexpected_error_info>(ev.e,unexpected_error_info{&type<E>,1}) );
+				(void) p->put( ev_type<unexpected_error_info>(ev.e,unexpected_error_info(&type<E>)) );
 			}
 		}
 

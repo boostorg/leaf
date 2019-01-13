@@ -591,6 +591,90 @@ TIP: This automatically-generated diagnostic messages are developer-friendly, bu
 
 '''
 
+[[error_info]]
+=== `error_info`
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  class error_info
+  {
+    //Constructors unspecified
+
+  public:
+
+    leaf::error const & get_error() const noexcept;
+
+    bool exception_caught() const noexcept;
+
+    std::exception const * get_exception() const noexcept;
+
+    friend std::ostream & operator<<( std::ostream & os, error_info const & x );
+  };
+
+} }
+----
+
+Handlers passed to <<handle_some>>, <<handle_all>> or <<try_>> may take an argument of type `error_info const &` to receive information about the error.
+
+The `get_error` member function returns a program-wide unique identifier of the <<error>>.
+
+The `exception_caught` member function returns `true` if the handler that received `*this` is being invoked by <<try_>>, `false` otherwise.
+
+The `get_exception` member function returns a pointer to the `std::exception` subobject of the exception caught by `try_`, or `0` if that exception could not be converted to `std::exception`. It is illegal to call `get_exception` unless `exception_caught()` is `true`.
+
+The `operator<<` overload prints diagnostic information about all E-objects, associated with the <<error>> value returned by `get_error()`, currently stored in any active <<handle_some>>, <<handle_all>> or <<try_>> scope.
+
+'''
+
+[[verbose_diagnostic_info]]
+=== `verbose_diagnostic_info`
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  class verbose_diagnostic_info
+  {
+    //Constructors unspecified
+
+  public:
+
+    friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x );
+  };
+
+} }
+----
+
+Handlers passed to <<handle_some>>, <<handle_all>> or <<try_>> may take an argument of type `verbose_diagnostic_info const &` to be able to print information about the error.
+
+The `get_error` member function returns a program-wide unique identifier of the <<error>>.
+
+The `exception_caught` member function returns `true` if the handler that received `*this` is being invoked by <<try_>>, `false` otherwise.
+
+The `get_exception` member function returns a pointer to the `std::exception` subobject of the exception caught by `try_`, or `0` if that exception could not be converted to `std::exception`. It is illegal to call `get_exception` unless `exception_caught()` is `true`.
+
+The `operator<<` overload prints diagnostic information about all E-objects, associated with the <<error>> value returned by `get_error()`, currently stored in any active <<handle_some>>, <<handle_all>> or <<try_>> scope.
+
+'''
+
+[[unexpected_error_info]]
+=== `unexpected_error_info`
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  class unexpected_error_info;
+
+} }
+----
+
+The members of the `unexpected_error_info` type are not specified.  If a handler passed to <<handle_some>>, <<handle_all>> or <<try_>> takes an argument of type `unexpected_error_info const &`, the diagnostic information output when printing an <<error_info>> object will include information about any E-objects communicated to LEAF, for which there was no storage reserved in any active <<handle_some>> or <<handle_all>> or <<try_>> scope.
+
+'''
+
 [[handle_some]]
 === `handle_some`
 
@@ -652,17 +736,17 @@ If the value `handle_some` is returning indicates success, all stored E-objects 
 
 Handler Matching Procedure: ::
 +
-A `handler` matches the reported failure iff `handle_some` is able to produce values to pass as its arguments. As soon as it is determined that an argument value can not be produced, the current handler is dropped and the matching procedure continues with the next handler, if any.
+A `handler` matches the reported failure iff `handle_some` is able to produce values to pass as its arguments. As soon as it is determined that an argument value can not be produced, the current `handler` is dropped and the matching procedure continues with the next `handler`, if any.
 +
-Each argument value `a`~i~ to be passed to the handler currently under consideration is produced as follows:
+If `e` is the specific <<error>> value  stored in the `result<T>` returned by the `try_block`, each argument value `a`~i~ to be passed to the `handler` currently under consideration is produced as follows:
 +
 --
 * If `a`~i~ is of type `error_info const &` or `unexpected_error_info const &` or `verbose_diagnostic_info const &`,  `handle_some` is always able to produce it.
 * If `a`~i~ is of type `A`~i~ `const &`:
-** If an E-object of type `A`~i~ is currently stored in the `handle_some` scope *and* is associated with the specific `<<error,error>>` value stored in `r`, `a`~i~ is initialized with a reference to the stored object; otherwise the handler is dropped.
-** If `A`~i~ is of the predicate type `<<match,match>><E>`, if an object of type `E` is currently stored in the `handle_some` scope *and* is associated with the specific `error` value stored in `r`, `a`~i~ is initialized with a reference to the stored object; otherwise the handler is dropped. The handler is also dropped if the expression `a`~i~`()` evaluates to `false`.
-* If `a`~i~ is of type `A`~i~ `const pass:[*]`, `handle_some` is always able to produce it: if an E-object of type `A`~i~ is currently stored in the `handle_some` scope *and* is associated with the specific `<<error,error>>` value stored in `r`, `a`~i~ is initialized with the address of the stored object, otherwise it is initialized with `0`.
-* It is illegal to pass to `handle_some` handlers that take any other argument types.
+** If an E-object of type `A`~i~, associated with `e`, is currently stored in the `handle_some` scope, `a`~i~ is initialized with a reference to the stored object; otherwise the handler is dropped.
+** If `A`~i~ is of the predicate type `<<match,match>><E>`, if an object of type `E`, associated with `e`, is currently stored in the `handle_some` scope, `a`~i~ is initialized with a reference to the stored object; otherwise the handler is dropped. The handler is also dropped if the expression `a`~i~`()` evaluates to `false`.
+* If `a`~i~ is of type `A`~i~ `const pass:[*]`, `handle_some` is always able to produce it: if an E-object of type `A`~i~, associated with `e`, is currently stored in the `handle_some` scope, `a`~i~ is initialized with the address of the stored object, otherwise it is initialized with `0`.
+* It is illegal to pass to `handle_some` a `handler` that takes any other argument types.
 --
 
 TIP: Because `handle_some` can always produce arguments of type `error_info const &`, `unexpected_error_info const &` and `verbose_diagnostic_info const &`, if a handler only takes arguments of these types, it will match any error.
