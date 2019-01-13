@@ -331,14 +331,14 @@ namespace boost { namespace leaf {
 		};
 	}
 
-	class unexpected_error_info: leaf_detail::monitor_base
+	class diagnostic_info: leaf_detail::monitor_base
 	{
 	public:
 
 		char const * (*first_type)();
 		int count;
 
-		explicit unexpected_error_info( char const * (*first_type)() ) noexcept:
+		explicit diagnostic_info( char const * (*first_type)() ) noexcept:
 			first_type(first_type),
 			count(1)
 		{
@@ -346,11 +346,11 @@ namespace boost { namespace leaf {
 
 		using monitor_base::set_error_info;
 
-		friend std::ostream & operator<<( std::ostream & os, unexpected_error_info const & x )
+		friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
 		{
 			assert(x.first_type!=0);
 			assert(x.count>0);
-			os << x.get_error_info() << "Detected ";
+			os << x.get_error_info() << "diagnostic_info: Detected ";
 			if( x.count==1 )
 				os << "1 attempt to communicate an E-object";
 			else
@@ -361,12 +361,12 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <> struct is_error_type_default<unexpected_error_info>: std::true_type { };
+		template <> struct is_error_type_default<diagnostic_info>: std::true_type { };
 
 		template <>
-		struct diagnostic<unexpected_error_info,true,false>
+		struct diagnostic<diagnostic_info,true,false>
 		{
-			static bool print( std::ostream & os, unexpected_error_info const & ) noexcept
+			static bool print( std::ostream & os, diagnostic_info const & ) noexcept
 			{
 				return false;
 			}
@@ -375,7 +375,7 @@ namespace boost { namespace leaf {
 
 	class verbose_diagnostic_info: leaf_detail::monitor_base
 	{
-		std::string value_;
+		std::stringstream s_;
 		std::set<char const *(*)()> already_;
 
 	public:
@@ -388,23 +388,26 @@ namespace boost { namespace leaf {
 
 		void reset() noexcept
 		{
-			value_.clear();
+			std::stringstream().swap(s_);
 			already_.clear();
 		}
 
 		template <class E>
-		void add( std::stringstream const & s )
+		void add( E const & e )
 		{
-			if( already_.insert(&type<E>).second )
+			if( already_.find(&type<E>)==already_.end() && leaf_detail::diagnostic<E>::print(s_,e) )
 			{
-				value_ += s.str();
-				value_ += " {unexpected}\n";
+				s_ << std::endl;
+				already_.insert(&type<E>);
 			}
 		}
 
 		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
 		{
-			os << x.get_error_info() << x.value_;
+			os <<
+				x.get_error_info() <<
+				"verbose_diagnostic_info:" << std::endl <<
+				x.s_.str();
 			return os;
 		}
 	};
@@ -499,7 +502,7 @@ namespace boost { namespace leaf {
 		template <class E>
 		void put_unexpected( ev_type<E> const & ev ) noexcept
 		{
-			if( slot<unexpected_error_info> * p = tl_slot_ptr<unexpected_error_info>() )
+			if( slot<diagnostic_info> * p = tl_slot_ptr<diagnostic_info>() )
 			{
 				if( p->has_value() )
 				{
@@ -510,7 +513,7 @@ namespace boost { namespace leaf {
 						return;
 					}
 				}
-				(void) p->put( ev_type<unexpected_error_info>(ev.e,unexpected_error_info(&type<E>)) );
+				(void) p->put( ev_type<diagnostic_info>(ev.e,diagnostic_info(&type<E>)) );
 			}
 		}
 
@@ -519,9 +522,6 @@ namespace boost { namespace leaf {
 		{
 			if( slot<verbose_diagnostic_info> * sl = tl_slot_ptr<verbose_diagnostic_info>() )
 			{
-				std::stringstream s;
-				if( !diagnostic<decltype(ev.v)>::print(s,ev.v) )
-					return;
 				if( auto * pv = sl->has_value() )
 				{
 					if( pv->e!=ev.e )
@@ -529,10 +529,10 @@ namespace boost { namespace leaf {
 						pv->e = ev.e;
 						pv->v.reset();
 					}
-					pv->v.add<E>(s);
+					pv->v.add(ev.v);
 				}
 				else
-					sl->emplace(ev.e).v.template add<E>(s);
+					sl->emplace(ev.e).v.add(ev.v);
 			}
 		}
 

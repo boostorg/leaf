@@ -126,7 +126,7 @@ int main()
 			non_printable_info_printable_payload,
 			non_printable_info_non_printable_payload,
 			leaf::e_errno,
-			leaf::unexpected_error_info const & unmatched )
+			leaf::diagnostic_info const & unmatched )
 		{
 			std::ostringstream st;
 			st << unmatched;

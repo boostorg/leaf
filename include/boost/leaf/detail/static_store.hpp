@@ -152,8 +152,8 @@ namespace boost { namespace leaf {
 			};
 
 			template <>
-			class static_store_slot<unexpected_error_info>:
-				public slot<unexpected_error_info>,
+			class static_store_slot<diagnostic_info>:
+				public slot<diagnostic_info>,
 				enable_any
 			{
 			};
@@ -329,12 +329,12 @@ namespace boost { namespace leaf {
 			};
 
 			template <>
-			struct get_one_argument<unexpected_error_info>
+			struct get_one_argument<diagnostic_info>
 			{
 				template <class StaticStore>
-				static unexpected_error_info const & get( StaticStore const & ss, error_info const & ei ) noexcept
+				static diagnostic_info const & get( StaticStore const & ss, error_info const & ei ) noexcept
 				{
-					unexpected_error_info const * uei = ss.template peek<unexpected_error_info>(ei.get_error());
+					diagnostic_info const * uei = ss.template peek<diagnostic_info>(ei.get_error());
 					assert(uei!=0);
 					uei->set_error_info(ei);
 					return *uei;
@@ -359,7 +359,7 @@ namespace boost { namespace leaf {
 			template <class T> struct acceptable_last_handler_argument: std::false_type { };
 			template <class T> struct acceptable_last_handler_argument<T const *>: is_e_type<T> { };
 			template <> struct acceptable_last_handler_argument<error_info const &>: std::true_type { };
-			template <> struct acceptable_last_handler_argument<unexpected_error_info const &>: std::true_type { };
+			template <> struct acceptable_last_handler_argument<diagnostic_info const &>: std::true_type { };
 			template <> struct acceptable_last_handler_argument<verbose_diagnostic_info const &>: std::true_type { };
 
 			template <class>
