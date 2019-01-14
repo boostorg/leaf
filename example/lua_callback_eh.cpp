@@ -18,8 +18,6 @@ extern "C" {
 
 namespace leaf = boost::leaf;
 
-struct lua_failure: std::exception { };
-
 enum do_work_error_code
 {
 	ec1=1,
@@ -50,7 +48,7 @@ int do_work( lua_State * L )
 	else
 	{
 		// Remarkably, the Lua interpreter is exception-safe. So, just throw.
-		throw leaf::exception(lua_failure(),ec1);
+		throw leaf::exception(std::exception(),ec1);
 	}
 }
 
@@ -88,11 +86,11 @@ int call_lua( lua_State * L )
 	lua_getfield( L, LUA_GLOBALSINDEX, "call_do_work" );
 	if( int err=lua_pcall(L,0,1,0) )
 	{
-		// Something went wrong with the call, so we'll throw lua_failure.
+		// Something went wrong with the call, so we'll throw std::exception.
 		// This is definitely not a do_work failure, because it throws on error.
 		auto propagate = leaf::preload( e_lua_error_message{lua_tostring(L,1)} );
 		lua_pop(L,1);
-		throw leaf::exception( lua_failure(), e_lua_pcall_error{err} );
+		throw leaf::exception( std::exception(), e_lua_pcall_error{err} );
 	}
 	else
 	{
@@ -106,29 +104,22 @@ int call_lua( lua_State * L )
 int main() noexcept
 {
 	std::shared_ptr<lua_State> L=init_lua_state();
-	leaf::static_store<do_work_error_code,e_lua_pcall_error,e_lua_error_message> exp;
+
 	for( int i=0; i!=10; ++i )
-		try
-		{
-			int r = call_lua(&*L);
-			std::cout << "do_work succeeded, answer=" << r << '\n';
-		}
-		catch( lua_failure const & e )
-		{
-			handle_exception( exp, e,
+		leaf::try_(
+			[&]
+			{
+				int r = call_lua(&*L);
+				std::cout << "do_work succeeded, answer=" << r << '\n';
+			},
+			[ ]( do_work_error_code const & e )
+			{
+				std::cout << "Got do_work_error_code = " << e <<  "!\n";
+			},
+			[ ]( e_lua_pcall_error const & err, e_lua_error_message const & msg )
+			{
+				std::cout << "Got e_lua_pcall_error, Lua error code = " << err.value << ", " << msg.value << "\n";
+			} );
 
-				// Handle do_work failures:
-				[ ]( do_work_error_code const & e )
-				{
-					std::cout << "Got do_work_error_code = " << e <<  "!\n";
-				},
-
-				// Handle all other lua_pcall failures:
-				[ ]( e_lua_pcall_error const & err, e_lua_error_message const & msg )
-				{
-					std::cout << "Got e_lua_pcall_error, Lua error code = " << err.value << ", " << msg.value << "\n";
-				}
-			);
-		}
 	return 0;
 }

@@ -89,7 +89,7 @@ foreach e : examples
 endforeach
 
 if get_option('build_lua_examples')
-#	lua=subproject('lua').get_variable('all')
-#	executable('lua_callback_result', 'example/lua_callback_result.cpp', dependencies: [ leaf, lua ] )
-#	executable('lua_callback_eh', 'example/lua_callback_eh.cpp', dependencies: [ leaf, lua ] )
+	lua=subproject('lua').get_variable('all')
+	executable('lua_callback_result', 'example/lua_callback_result.cpp', dependencies: [ leaf, lua ] )
+	executable('lua_callback_eh', 'example/lua_callback_eh.cpp', dependencies: [ leaf, lua ] )
 endif

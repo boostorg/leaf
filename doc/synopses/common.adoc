@@ -34,16 +34,8 @@ namespace boost { namespace leaf {
     friend std::ostream & operator<<( std::ostream & os, e_source_location const & x );
   };
 
-  struct e_unexpected
-  {
-    char const * (*first_type)();
-    int count;
-
-    friend std::ostream & operator<<( std::ostream & os, e_unexpected const & x );
-  };
-
 } }
 ----
 
 [.text-right]
-<<e_api_function>> | <<e_file_name>> | <<e_errno>> | <<e_LastError>> | <<e_at_line>> | <<e_type_info_name>> | <<e_source_location>> | <<e_unexpected>> | <<e_unexpected_diagnostic_output>>
+<<e_api_function>> | <<e_file_name>> | <<e_errno>> | <<e_LastError>> | <<e_at_line>> | <<e_type_info_name>> | <<e_source_location>>

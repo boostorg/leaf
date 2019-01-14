@@ -356,25 +356,25 @@ namespace boost { namespace leaf {
 
 			////////////////////////////////////////
 
-			template <class T> struct acceptable_last_handler_argument: std::false_type { };
-			template <class T> struct acceptable_last_handler_argument<T const *>: is_e_type<T> { };
-			template <> struct acceptable_last_handler_argument<error_info const &>: std::true_type { };
-			template <> struct acceptable_last_handler_argument<diagnostic_info const &>: std::true_type { };
-			template <> struct acceptable_last_handler_argument<verbose_diagnostic_info const &>: std::true_type { };
+			template <class T> struct argument_matches_any_error: std::false_type { };
+			template <class T> struct argument_matches_any_error<T const *>: is_e_type<T> { };
+			template <> struct argument_matches_any_error<error_info const &>: std::true_type { };
+			template <> struct argument_matches_any_error<diagnostic_info const &>: std::true_type { };
+			template <> struct argument_matches_any_error<verbose_diagnostic_info const &>: std::true_type { };
 
 			template <class>
-			struct ensure_last_handler_matches: std::false_type
+			struct handler_matches_any_error: std::false_type
 			{
 			};
 
 			template <template<class...> class L, class Car, class... Cdr>
-			struct ensure_last_handler_matches<L<Car,Cdr...>>
+			struct handler_matches_any_error<L<Car,Cdr...>>
 			{
-				constexpr static bool value = acceptable_last_handler_argument<Car>::value && ensure_last_handler_matches<L<Cdr...>>::value;
+				constexpr static bool value = argument_matches_any_error<Car>::value && handler_matches_any_error<L<Cdr...>>::value;
 			};
 
 			template <template<class...> class L>
-			struct ensure_last_handler_matches<L<>>: std::true_type
+			struct handler_matches_any_error<L<>>: std::true_type
 			{
 			};
 		}
@@ -443,16 +443,17 @@ namespace boost { namespace leaf {
 			typename function_traits<F>::return_type handle_error( error_info const & ei, F && f ) const
 			{
 				using namespace static_store_internal;
-				static_assert(ensure_last_handler_matches<typename function_traits<F>::mp_args>::value,
-					"The last handler for handle_all must match any error.");
-				return call_handler( ei, std::forward<F>(f), typename function_traits<F>::mp_args{ } );
+				if( handler_matches_any_error<typename function_traits<F>::mp_args>::value || check_handler( ei, typename function_traits<F>::mp_args{ } ) )
+					return call_handler( ei, std::forward<F>(f), typename function_traits<F>::mp_args{ } );
+				else
+					std::terminate();
 			}
 
 			template <class CarF, class CdarF, class... CddrF>
 			typename function_traits<CarF>::return_type handle_error( error_info const & ei, CarF && car_f, CdarF && cdar_f, CddrF && ... cddr_f ) const
 			{
 				using namespace static_store_internal;
-				if( check_handler( ei, typename function_traits<CarF>::mp_args{ } ) )
+				if( handler_matches_any_error<typename function_traits<CarF>::mp_args>::value || check_handler( ei, typename function_traits<CarF>::mp_args{ } ) )
 					return call_handler( ei, std::forward<CarF>(car_f), typename function_traits<CarF>::mp_args{ } );
 				else
 					return handle_error( ei, std::forward<CdarF>(cdar_f), std::forward<CddrF>(cddr_f)...);

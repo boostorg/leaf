@@ -112,28 +112,22 @@ int main() noexcept
 {
 	std::shared_ptr<lua_State> L=init_lua_state();
 
-	leaf::static_store<do_work_error_code,e_lua_pcall_error,e_lua_error_message> exp;
-
 	for( int i=0; i!=10; ++i )
-		if( leaf::result<int> r = call_lua(&*L) )
-			std::cout << "do_work succeeded, answer=" << *r << '\n';
-		else
-		{
-			bool matched = exp.handle_error( r,
+		leaf::handle_all(
+			[&]() -> leaf::result<void>
+		 	{
+				LEAF_AUTO(answer, call_lua(&*L));
+				std::cout << "do_work succeeded, answer=" << answer << '\n';
+				return { };
+			},
+			[ ]( do_work_error_code e )
+			{
+				std::cout << "Got do_work_error_code = " << e <<  "!\n";
+			},
+			[ ]( e_lua_pcall_error const & err, e_lua_error_message const & msg )
+			{
+				std::cout << "Got e_lua_pcall_error, Lua error code = " << err.value << ", " << msg.value << "\n";
+			} );
 
-				// Handle e_do_work failures:
-				[ ]( do_work_error_code e )
-				{
-					std::cout << "Got do_work_error_code = " << e <<  "!\n";
-				},
-
-				// Handle all other lua_pcall failures:
-				[ ]( e_lua_pcall_error const & err, e_lua_error_message const & msg )
-				{
-					std::cout << "Got e_lua_pcall_error, Lua error code = " << err.value << ", " << msg.value << "\n";
-				}
-			);
-			assert(matched);
-		}
 	return 0;
 }
