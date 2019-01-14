@@ -24,15 +24,15 @@ namespace boost { namespace leaf {
 
 	class error;
 
-	error next_error_value() noexcept;
-	error last_error_value() noexcept;
+	error next_error() noexcept;
+	error last_error() noexcept;
 
 	class error
 	{
 		template <class... E>
 		friend error new_error( E && ... ) noexcept;
-		friend error leaf::next_error_value() noexcept;
-		friend error leaf::last_error_value() noexcept;
+		friend error leaf::next_error() noexcept;
+		friend error leaf::last_error() noexcept;
 
 		unsigned id_;
 
@@ -120,12 +120,12 @@ namespace boost { namespace leaf {
 		return error(error::id_factory::tl_instance().get()).propagate(std::forward<E>(e)...);
 	}
 
-	inline error next_error_value() noexcept
+	inline error next_error() noexcept
 	{
 		return error(error::id_factory::tl_instance().next_id());
 	}
 
-	inline error last_error_value() noexcept
+	inline error last_error() noexcept
 	{
 		return error(error::id_factory::tl_instance().last_id());
 	}
@@ -375,30 +375,29 @@ namespace boost { namespace leaf {
 
 	class verbose_diagnostic_info: leaf_detail::monitor_base
 	{
-		std::stringstream s_;
+		std::string s_;
 		std::set<char const *(*)()> already_;
 
 	public:
 
-		verbose_diagnostic_info() noexcept
-		{
-		}
+		verbose_diagnostic_info() noexcept = default;
 
 		using monitor_base::set_error_info;
 
 		void reset() noexcept
 		{
-			s_.str(std::string());
+			s_.clear();
 			already_.clear();
 		}
 
 		template <class E>
 		void add( E const & e )
 		{
-			if( already_.find(&type<E>)==already_.end() && leaf_detail::diagnostic<E>::print(s_,e) )
+			std::stringstream s;
+			if( leaf_detail::diagnostic<E>::print(s,e) && already_.insert(&type<E>).second  )
 			{
-				s_ << std::endl;
-				already_.insert(&type<E>);
+				s << std::endl;
+				s_ += s.str();
 			}
 		}
 
@@ -407,7 +406,7 @@ namespace boost { namespace leaf {
 			os <<
 				x.get_error_info() <<
 				"verbose_diagnostic_info:" << std::endl <<
-				x.s_.str();
+				x.s_;
 			return os;
 		}
 	};

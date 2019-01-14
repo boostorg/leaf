@@ -25,18 +25,6 @@ namespace boost { namespace leaf {
     leaf::error error( E && ... e ) noexcept;
  };
 
-  template <class... E, class T>
-  result<T> capture( expect<E...> & exp, result<T> const & r );
-
-  template <class... E, class T, class... F>
-  <<deduced_return_type>> handle_error( expect<E...> const & exp, result<T> const & r, F && ... f ) noexcept;
-
-  template <class P, class... E, class T>
-  P const * peek( expect<E...> const &, result<T> const & ) noexcept;
-
-  template <class... E, class T>
-  void diagnostic_output( std::ostream & os, expect<E...> const & exp, result<T> const & r );
-
   struct bad_result: std::exception { };
 
 } }
@@ -49,4 +37,4 @@ namespace boost { namespace leaf {
 ----
 
 [.text-right]
-`<<result,result>>` | <<result::result>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<capture-result>> | <<handle_error-result>> | <<peek-result>> | <<diagnostic_output-result>> | <<bad_result>> | <<LEAF_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
+<<result>> | <<result::result>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<bad_result>> | <<LEAF_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>

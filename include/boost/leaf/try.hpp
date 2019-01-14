@@ -18,7 +18,7 @@ namespace boost { namespace leaf {
 		if( auto e = dynamic_cast<error const *>(&ex) )
 			return *e;
 		else
-			return next_error_value();
+			return next_error();
 	}
 
 	template <class TryBlock, class... Handler>
@@ -45,7 +45,7 @@ namespace boost { namespace leaf {
 			}
 			catch( ... )
 			{
-				return ss.handle_error(error_info(next_error_value(),0,&cap,&print_exception_info), std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
+				return ss.handle_error(error_info(next_error(),0,&cap,&print_exception_info), std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
 			}
 		}
 		catch( std::exception const & ex )
@@ -54,7 +54,7 @@ namespace boost { namespace leaf {
 		}
 		catch( ...  )
 		{
-			return ss.handle_error(error_info(next_error_value(),0,0,&print_exception_info), std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
+			return ss.handle_error(error_info(next_error(),0,0,&print_exception_info), std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
 		}
 	}
 

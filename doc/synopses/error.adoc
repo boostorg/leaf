@@ -3,6 +3,15 @@
 ----
 namespace boost { namespace leaf {
 
+  class error;
+
+  template <class... E>
+  error new_error( E && ... e ) noexcept;
+
+  error next_error() noexcept;
+
+  error last_error() noexcept;
+
   class error
   {
   public:
@@ -16,13 +25,6 @@ namespace boost { namespace leaf {
     friend std::ostream & operator<<( std::ostream & os, error const & e )
   };
 
-  template <class... E>
-  error new_error( E && ... e ) noexcept;
-
-  error next_error_value() noexcept;
-
-  error last_error_value() noexcept;
-
   template <class T>
   struct is_e_type
   {
@@ -33,4 +35,4 @@ namespace boost { namespace leaf {
 ----
 
 [.text-right]
-<<error>> | <<error::propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>> | <<new_error>> | <<next_error_value>> | <<last_error_value>>
+<<new_error>> | <<next_error>> | <<last_error>> | <<propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>>

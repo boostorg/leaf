@@ -8,7 +8,3 @@ namespace boost { namespace leaf {
 
 } }
 ----
-
-[.text-right]
-<<capture_result>>
-

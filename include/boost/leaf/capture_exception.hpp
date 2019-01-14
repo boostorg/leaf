@@ -49,7 +49,7 @@ namespace boost { namespace leaf {
 					(void) err;
 				}
 				else
-					ds->unload(next_error_value());
+					ds->unload(next_error());
 				std::rethrow_exception(ex_);
 			}
 
