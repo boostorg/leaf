@@ -55,7 +55,7 @@ int main()
 		{
 			return std::async(
 				std::launch::async,
-				leaf::capture_result<e_thread_id, e_failure_info1, e_failure_info2>(task) );
+				leaf::capture_result<e_thread_id, e_failure_info1, e_failure_info2>(&task) );
 		} );
 
 	// Wait on the futures, get the task results, handle errors.

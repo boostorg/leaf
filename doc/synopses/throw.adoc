@@ -1,4 +1,4 @@
-.#include <boost/leaf/result.hpp>
+.#include <boost/leaf/throw.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {

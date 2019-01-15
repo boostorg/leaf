@@ -35,4 +35,4 @@ namespace boost { namespace leaf {
 ----
 
 [.text-right]
-<<new_error>> | <<next_error>> | <<last_error>> | <<propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>>
+<<error>> | <<new_error>> | <<next_error>> | <<last_error>> | <<propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>> | <<is_e_type>>

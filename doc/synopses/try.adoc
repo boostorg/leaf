@@ -1,15 +1,15 @@
-.#include <boost/leaf/result.hpp>
+.#include <boost/leaf/try.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
 
-  error get_error( std::exception const & ex ) noexcept;
-
   template <class TryBlock, class... Handler>
   decltype(std::declval<TryBlock>()()) try_( TryBlock && try_block, Handler && ... handler );
+
+  error get_error( std::exception const & ex ) noexcept;
 
 } }
 ----
 
 [.text-right]
-<<try_>>
+<<try_>> | <<get_error>>
