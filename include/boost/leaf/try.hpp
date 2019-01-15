@@ -15,8 +15,8 @@ namespace boost { namespace leaf {
 
 	inline error_id get_error_id( std::exception const & ex ) noexcept
 	{
-		if( auto e = dynamic_cast<error_id const *>(&ex) )
-			return *e;
+		if( auto id = dynamic_cast<error_id const *>(&ex) )
+			return *id;
 		else
 			return next_error();
 	}

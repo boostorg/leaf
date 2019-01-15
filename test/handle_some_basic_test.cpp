@@ -17,7 +17,7 @@ enum class error_code
 };
 
 namespace boost { namespace leaf {
-	template <> struct is_e_type<error_code>: public std::true_type { };
+	template <> struct is_error_type<error_code>: public std::true_type { };
 } }
 
 leaf::result<int> compute_answer( int what_to_do ) noexcept

@@ -19,7 +19,7 @@ enum class error_code
 	error3
 };
 namespace boost { namespace leaf {
-	template <> struct is_e_type<error_code>: std::true_type { };
+	template <> struct is_error_type<error_code>: std::true_type { };
 } }
 
 struct error_codes_ { error_code value; };

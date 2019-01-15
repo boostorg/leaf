@@ -11,8 +11,8 @@ namespace boost { namespace leaf {
     result() noexcept;
     result( T const & v );
     result( T && v ) noexcept;
-    result( leaf::error const & e ) noexcept;
-    result( leaf::error_capture const & ec ) noexcept;
+    result( error_id const & e ) noexcept;
+    result( error_capture const & ec ) noexcept;
 
     explicit operator bool() const noexcept;
 
@@ -22,7 +22,7 @@ namespace boost { namespace leaf {
     T & operator*();
 
     template <class... E>
-    leaf::error error( E && ... e ) noexcept;
+    error_id error( E && ... e ) noexcept;
  };
 
   struct bad_result: std::exception { };

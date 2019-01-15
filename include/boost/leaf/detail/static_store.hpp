@@ -141,11 +141,11 @@ namespace boost { namespace leaf {
 				public slot<E>
 			{
 			public:
-				optional<E> extract_optional( error_id const & e ) && noexcept
+				optional<E> extract_optional( error_id const & id ) && noexcept
 				{
 					slot<E> const & s = *this;
-					if( s.has_value() && s.value().e==e )
-						return optional<E>(std::move(*this).value().v);
+					if( s.has_value() && s.value().id==id )
+						return optional<E>(std::move(*this).value().e);
 					else
 						return optional<E>();
 				}
@@ -199,7 +199,7 @@ namespace boost { namespace leaf {
 				static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
 				{
 					auto & sl = std::get<tuple_type_index<static_store_slot<T>,SlotsTuple>::value>(tup);
-					return sl.has_value() && sl.value().e==ei.error();
+					return sl.has_value() && sl.value().id==ei.error();
 				}
 			};
 
@@ -221,7 +221,7 @@ namespace boost { namespace leaf {
 					if( sl.has_value() )
 					{
 						auto const & v = sl.value();
-						return v.e==ei.error() && match<E,V...>(v.v)();
+						return v.id==ei.error() && match<E,V...>(v.e)();
 					}
 					else
 						return false;
@@ -357,7 +357,7 @@ namespace boost { namespace leaf {
 			////////////////////////////////////////
 
 			template <class T> struct argument_matches_any_error: std::false_type { };
-			template <class T> struct argument_matches_any_error<T const *>: is_e_type<T> { };
+			template <class T> struct argument_matches_any_error<T const *>: is_error_type<T> { };
 			template <> struct argument_matches_any_error<error_info const &>: std::true_type { };
 			template <> struct argument_matches_any_error<diagnostic_info const &>: std::true_type { };
 			template <> struct argument_matches_any_error<verbose_diagnostic_info const &>: std::true_type { };
@@ -427,14 +427,14 @@ namespace boost { namespace leaf {
 			}
 
 			template <class P>
-			P const * peek( error_id const & e ) const noexcept
+			P const * peek( error_id const & id ) const noexcept
 			{
 				auto & opt = std::get<static_store_internal::type_index<P,E...>::value>(s_);
 				if( opt.has_value() )
 				{
-					auto & x = opt.value();
-					if( x.e==e )
-						return &x.v;
+					auto & v = opt.value();
+					if( v.id==id )
+						return &v.e;
 				}
 				return 0;
 			}

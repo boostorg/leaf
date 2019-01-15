@@ -33,7 +33,7 @@ struct info
 };
 
 namespace boost { namespace leaf {
-	template <int I> struct is_e_type<info<I>>: public std::true_type { };
+	template <int I> struct is_error_type<info<I>>: public std::true_type { };
 } }
 
 int main()

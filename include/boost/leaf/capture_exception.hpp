@@ -44,9 +44,9 @@ namespace boost { namespace leaf {
 				assert(ds);
 				if( had_error_ )
 				{
-					error_id err = ds->unload();
-					assert(err==*this);
-					(void) err;
+					error_id id = ds->unload();
+					assert(id==*this);
+					(void) id;
 				}
 				else
 					ds->unload(next_error());
@@ -109,9 +109,9 @@ namespace boost { namespace leaf {
 				{
 					throw;
 				}
-				catch( error_id const & e )
+				catch( error_id const & id )
 				{
-					throw captured_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(e,std::move(ss)), true, &print_types<E...>::print );
+					throw captured_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(id,std::move(ss)), true, &print_types<E...>::print );
 				}
 				catch(...)
 				{
