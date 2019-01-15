@@ -443,10 +443,8 @@ namespace boost { namespace leaf {
 			typename function_traits<F>::return_type handle_error( error_info const & ei, F && f ) const
 			{
 				using namespace static_store_internal;
-				if( handler_matches_any_error<typename function_traits<F>::mp_args>::value || check_handler( ei, typename function_traits<F>::mp_args{ } ) )
-					return call_handler( ei, std::forward<F>(f), typename function_traits<F>::mp_args{ } );
-				else
-					std::terminate();
+				static_assert( handler_matches_any_error<typename function_traits<F>::mp_args>::value, "The last handler passed to handle_all must match any error." );
+				return call_handler( ei, std::forward<F>(f), typename function_traits<F>::mp_args{ } );
 			}
 
 			template <class CarF, class CdarF, class... CddrF>

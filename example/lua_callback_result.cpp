@@ -113,21 +113,34 @@ int main() noexcept
 	std::shared_ptr<lua_State> L=init_lua_state();
 
 	for( int i=0; i!=10; ++i )
+	{
 		leaf::handle_all(
+
 			[&]() -> leaf::result<void>
-		 	{
+			{
 				LEAF_AUTO(answer, call_lua(&*L));
 				std::cout << "do_work succeeded, answer=" << answer << '\n';
 				return { };
 			},
+
 			[ ]( do_work_error_code e )
 			{
 				std::cout << "Got do_work_error_code = " << e <<  "!\n";
 			},
+
 			[ ]( e_lua_pcall_error const & err, e_lua_error_message const & msg )
 			{
 				std::cout << "Got e_lua_pcall_error, Lua error code = " << err.value << ", " << msg.value << "\n";
+			},
+
+			[ ]( leaf::error_info const & unmatched )
+			{
+				std::cerr <<
+					"Unknown failure detected" << std::endl <<
+					"Cryptic diagnostic information follows" << std::endl <<
+					unmatched;
 			} );
+	}
 
 	return 0;
 }

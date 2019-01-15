@@ -2,13 +2,13 @@
 :icons: font
 :prewrap!:
 :source-highlighter: coderay
-:stylesheet: ../zajo.css
+:stylesheet: zajo.css
 = LEAF
 Low-latency Error Augmentation Framework for C++11
 :toclevels: 3
-:toc: left
+//:toc: right
 :toc-title:
-:sourcedir: ..
+:sourcedir: .
 
 [abstract]
 == Abstract
@@ -2036,7 +2036,15 @@ enum do_work_error_code
   ec1=1,
   ec2
 };
+
+namespace boost { namespace leaf {
+
+  template<> struct is_e_type<do_work_error_code>: std::true_type { };
+
+} }
 ----
+[.text-right]
+<<is_e_type>>
 
 We're now ready to define the `do_work` callback function:
 
@@ -2076,7 +2084,7 @@ leaf::result<int> call_lua( lua_State * L )
   {
     auto propagate = leaf::preload( e_lua_error_message{lua_tostring(L,1)} ); //<2>
     lua_pop(L,1);
-    return leaf::error( e_lua_pcall_error{err} );
+    return leaf::new_error( e_lua_pcall_error{err} );
   }
   else
   {
@@ -2101,37 +2109,32 @@ int main() noexcept
 {
   std::shared_ptr<lua_State> L=init_lua_state();
 
-  leaf::expect<do_work_error_code,e_lua_pcall_error,e_lua_error_message> exp; //<1>
-
   for( int i=0; i!=10; ++i )
-    if( leaf::result<int> r = call_lua(&*L) )
-      std::cout << "do_work succeeded, answer=" << *r << '\n'; //<2>
-    else
-    {
-      bool matched = handle_error( exp, r,
+    leaf::handle_all(
+      [&]() -> leaf::result<void>
+      {
+        LEAF_AUTO(answer, call_lua(&*L));
+        std::cout << "do_work succeeded, answer=" << answer << '\n'; <1>
+        return { };
+      },
+      [ ]( do_work_error_code e ) <2>
+      {
+        std::cout << "Got do_work_error_code = " << e <<  "!\n";
+      },
+      [ ]( e_lua_pcall_error const & err, e_lua_error_message const & msg ) <3>
+      {
+        std::cout << "Got e_lua_pcall_error, Lua error code = " << err.value << ", " << msg.value << "\n";
+      } );
 
-        [ ]( do_work_error_code e ) //<3>
-        {
-          std::cout << "Got do_work_error_code = " << e <<  "!\n";
-        },
-
-        [ ]( e_lua_pcall_error const & err, e_lua_error_message const & msg ) //<4>
-        {
-          std::cout << "Got e_lua_pcall_error, Lua error code = " << err.value << ", " << msg.value << "\n";
-        }
-      );
-      assert(matched);
-    }
   return 0;
 }
 ----
 [.text-right]
-`<<expect,expect>>` | <<result>>
+<<handle_all>> | <<result>>
 
-<1> Tell LEAF what error objects are expected.
-<2> If the call to `call_lua` succeeded, just print the answer.
-<3> Handle `e_do_work` failures.
-<4> Handle all other `lua_pcall` failures.
+<1> If the call to `call_lua` succeeded, just print the answer.
+<2> Handle `e_do_work` failures.
+<3> Handle all other `lua_pcall` failures.
 
 [NOTE]
 --
@@ -2143,7 +2146,7 @@ Remarkably, the Lua interpreter is {CPP} exception-safe, even though it is writt
 '''
 
 [[technique_transport]]
-=== Transporting Error Objects between Threads
+=== Transporting E-Objects Between Threads
 
 With LEAF, error objects use automatic storage duration, stored inside `<<expect,expect>>` instances. When using concurrency, we need a mechanism to detach error objects from a worker thread and transport them to another thread where errors are handled.
 

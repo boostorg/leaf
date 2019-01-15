@@ -78,8 +78,8 @@ std::shared_ptr<lua_State> init_lua_state()
 // in Lua, and returns the value from do_work, which is written in C++ and
 // registered with the Lua interpreter as a C callback.
 
-// If do_work succeeds, we return the resulting int answer. If it fails, we'll
-// communicate that failure to our caller.
+// If do_work succeeds, we return the resulting int answer.
+// If it fails, we'll communicate that failure to our caller.
 int call_lua( lua_State * L )
 {
 	// Ask the Lua interpreter to call the global Lua function call_do_work.
@@ -106,20 +106,33 @@ int main() noexcept
 	std::shared_ptr<lua_State> L=init_lua_state();
 
 	for( int i=0; i!=10; ++i )
+	{
 		leaf::try_(
+
 			[&]
 			{
-				int r = call_lua(&*L);
-				std::cout << "do_work succeeded, answer=" << r << '\n';
+				int answer = call_lua(&*L);
+				std::cout << "do_work succeeded, answer=" << answer << '\n';
 			},
-			[ ]( do_work_error_code const & e )
+
+			[ ]( do_work_error_code e )
 			{
 				std::cout << "Got do_work_error_code = " << e <<  "!\n";
 			},
+
 			[ ]( e_lua_pcall_error const & err, e_lua_error_message const & msg )
 			{
 				std::cout << "Got e_lua_pcall_error, Lua error code = " << err.value << ", " << msg.value << "\n";
+			},
+
+			[ ]( leaf::error_info const & unmatched )
+			{
+				std::cerr <<
+					"Unknown failure detected" << std::endl <<
+					"Cryptic diagnostic information follows" << std::endl <<
+					unmatched;
 			} );
+	}
 
 	return 0;
 }

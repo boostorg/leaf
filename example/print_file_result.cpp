@@ -55,29 +55,22 @@ int main( int argc, char const * argv[ ] )
 
 		[&]() -> leaf::result<int>
 		{
-			leaf::result<char const *> file_name = parse_command_line(argc,argv);
-			if( !file_name )
-				return file_name.error();
+			LEAF_AUTO(file_name, parse_command_line(argc,argv));
 
-			auto propagate = leaf::preload( leaf::e_file_name{*file_name} );
+			auto propagate = leaf::preload( leaf::e_file_name{file_name} );
 
-			leaf::result<std::shared_ptr<FILE>> f = file_open(*file_name);
-			if( !f )
-				return f.error();
+			LEAF_AUTO(f, file_open(file_name));
 
-			leaf::result<int> s = file_size(**f);
-			if( !s )
-				return s.error();
+			LEAF_AUTO(s, file_size(*f));
 
-			std::string buffer( 1 + *s, '\0' );
-			leaf::result<void> fr = file_read(**f, &buffer[0], buffer.size()-1);
-			if( !fr )
-				return fr.error();
+			std::string buffer( 1 + s, '\0' );
+			LEAF_CHECK(file_read(*f, &buffer[0], buffer.size()-1));
 
+			auto propagate2 = leaf::defer([ ] { return leaf::e_errno{errno}; } );
 			std::cout << buffer;
 			std::cout.flush();
 			if( std::cout.fail() )
-				return leaf::new_error( cout_error, leaf::e_errno{errno} );
+				return leaf::new_error( cout_error );
 
 			return 0;
 		},
@@ -133,9 +126,7 @@ int main( int argc, char const * argv[ ] )
 
 		// This last handler matches any error: it prints diagnostic information to help debug logic errors in the program, since it
 		// failed to match  an appropriate error handler to the error condition it encountered. In this program this handler will
-		// never be called, but it is required by handle_all because, well, it must handle all errors (the alternative is to use
-		// handle_some instead, which doesn't require a "catch all" last-resort handler; instead, if it fails to find a suitable
-		// handler for an error, it returns the error to its caller.)
+		// never be called.
 		[ ]( leaf::error_info const & unmatched )
 		{
 			std::cerr <<
@@ -143,8 +134,7 @@ int main( int argc, char const * argv[ ] )
 				"Cryptic diagnostic information follows" << std::endl <<
 				unmatched;
 			return 6;
-		}
-	);
+		} );
 }
 
 
@@ -167,24 +157,25 @@ leaf::result<std::shared_ptr<FILE>> file_open( char const * file_name )
 	if( FILE * f = fopen(file_name,"rb") )
 		return std::shared_ptr<FILE>(f,&fclose);
 	else
-		return leaf::new_error( input_file_open_error, leaf::e_errno{errno} );
+		return leaf::new_error(input_file_open_error, leaf::e_errno{errno});
 }
 
 
 // Return the size of the file.
 leaf::result<int> file_size( FILE & f )
 {
-	auto propagate = leaf::defer([ ] { return leaf::e_errno{errno}; } );
+	// All exceptions escaping this function will automatically propagate errno.
+	auto propagate = leaf::defer([ ] { return leaf::e_errno{errno}; });
 
 	if( fseek(&f,0,SEEK_END) )
-		return leaf::new_error( input_file_size_error );
+		return leaf::new_error(input_file_size_error);
 
 	int s = ftell(&f);
 	if( s==-1L )
-		return leaf::new_error( input_file_size_error );
+		return leaf::new_error(input_file_size_error);
 
 	if( fseek(&f,0,SEEK_SET) )
-		return leaf::new_error( input_file_size_error );
+		return leaf::new_error(input_file_size_error);
 
 	return s;
 }
@@ -194,11 +185,12 @@ leaf::result<int> file_size( FILE & f )
 leaf::result<void> file_read( FILE & f, void * buf, int size )
 {
 	int n = fread(buf,1,size,&f);
+
 	if( ferror(&f) )
-		return leaf::new_error( input_file_read_error, leaf::e_errno{errno} );
+		return leaf::new_error(input_file_read_error, leaf::e_errno{errno});
 
 	if( n!=size )
-		return leaf::new_error( input_eof_error );
+		return leaf::new_error(input_eof_error);
 
 	return { };
 }
