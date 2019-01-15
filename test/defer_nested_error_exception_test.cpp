@@ -35,7 +35,7 @@ void f2()
 	{
 		f1();
 	}
-	catch( leaf::error e )
+	catch( leaf::error_id e )
 	{
 		e.propagate( info<3>{3} );
 		throw;

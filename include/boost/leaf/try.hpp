@@ -13,9 +13,9 @@
 
 namespace boost { namespace leaf {
 
-	inline error get_error( std::exception const & ex ) noexcept
+	inline error_id get_error_id( std::exception const & ex ) noexcept
 	{
-		if( auto e = dynamic_cast<error const *>(&ex) )
+		if( auto e = dynamic_cast<error_id const *>(&ex) )
 			return *e;
 		else
 			return next_error();
@@ -41,7 +41,7 @@ namespace boost { namespace leaf {
 			}
 			catch( std::exception const & ex )
 			{
-				return ss.handle_error(error_info(get_error(ex),&ex,&cap,&print_exception_info), std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
+				return ss.handle_error(error_info(get_error_id(ex),&ex,&cap,&print_exception_info), std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
 			}
 			catch( ... )
 			{
@@ -50,7 +50,7 @@ namespace boost { namespace leaf {
 		}
 		catch( std::exception const & ex )
 		{
-			return ss.handle_error(error_info(get_error(ex),&ex,0,&print_exception_info), std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
+			return ss.handle_error(error_info(get_error_id(ex),&ex,0,&print_exception_info), std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
 		}
 		catch( ...  )
 		{

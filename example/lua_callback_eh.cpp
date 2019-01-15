@@ -4,7 +4,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// This is a simple program that shows how to propagate leaf::error objects out
+// This is a simple program that shows how to propagate error objects out
 // of a C-callback, and converting them to leaf::result<T> as soon as control
 // reaches C++.
 

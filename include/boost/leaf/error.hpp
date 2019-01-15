@@ -22,21 +22,21 @@ namespace boost { namespace system { class error_code; } }
 
 namespace boost { namespace leaf {
 
-	class error;
+	class error_id;
 
-	error next_error() noexcept;
-	error last_error() noexcept;
+	error_id next_error() noexcept;
+	error_id last_error() noexcept;
 
-	class error
+	class error_id
 	{
 		template <class... E>
-		friend error new_error( E && ... ) noexcept;
-		friend error leaf::next_error() noexcept;
-		friend error leaf::last_error() noexcept;
+		friend error_id new_error( E && ... ) noexcept;
+		friend error_id leaf::next_error() noexcept;
+		friend error_id leaf::last_error() noexcept;
 
 		unsigned id_;
 
-		explicit error( unsigned id ) noexcept:
+		explicit error_id( unsigned id ) noexcept:
 			id_(id)
 		{
 		}
@@ -89,45 +89,45 @@ namespace boost { namespace leaf {
 
 	public:
 
-		friend bool operator==( error const & e1, error const & e2 ) noexcept
+		friend bool operator==( error_id const & e1, error_id const & e2 ) noexcept
 		{
 			return e1.id_==e2.id_;
 		}
 
-		friend bool operator!=( error const & e1, error const & e2 ) noexcept
+		friend bool operator!=( error_id const & e1, error_id const & e2 ) noexcept
 		{
 			return e1.id_!=e2.id_;
 		}
 
-		error propagate() const noexcept
+		error_id propagate() const noexcept
 		{
 			return *this;
 		}
 
-		friend std::ostream & operator<<( std::ostream & os, error const & e )
+		friend std::ostream & operator<<( std::ostream & os, error_id const & e )
 		{
 			os << e.id_;
 			return os;
 		}
 
 		template <class... E>
-		error propagate( E && ... ) const noexcept;
+		error_id propagate( E && ... ) const noexcept;
 	};
 
 	template <class... E>
-	error new_error( E && ... e ) noexcept
+	error_id new_error( E && ... e ) noexcept
 	{
-		return error(error::id_factory::tl_instance().get()).propagate(std::forward<E>(e)...);
+		return error_id(error_id::id_factory::tl_instance().get()).propagate(std::forward<E>(e)...);
 	}
 
-	inline error next_error() noexcept
+	inline error_id next_error() noexcept
 	{
-		return error(error::id_factory::tl_instance().next_id());
+		return error_id(error_id::id_factory::tl_instance().next_id());
 	}
 
-	inline error last_error() noexcept
+	inline error_id last_error() noexcept
 	{
-		return error(error::id_factory::tl_instance().last_id());
+		return error_id(error_id::id_factory::tl_instance().last_id());
 	}
 
 	////////////////////////////////////////
@@ -139,11 +139,11 @@ namespace boost { namespace leaf {
 			slot_base( slot_base const & ) = delete;
 			slot_base & operator=( slot_base const & ) = delete;
 
-			virtual bool slot_print( std::ostream &, error const & e ) const = 0;
+			virtual bool slot_print( std::ostream &, error_id const & e ) const = 0;
 
 		public:
 
-			static void print( std::ostream & os, error const & e )
+			static void print( std::ostream & os, error_id const & e )
 			{
 				for( slot_base const * p = first(); p; p=p->next_ )
 					if( p->slot_print(os,e) )
@@ -184,14 +184,14 @@ namespace boost { namespace leaf {
 		error_info( error_info const & ) = delete;
 		error_info & operator=( error_info const & ) = delete;
 
-		error const e_;
+		error_id const e_;
 		std::exception const * const ex_;
 		leaf_detail::captured_exception const * const cap_;
 		void (* const print_ex_)( std::ostream &, std::exception const *, leaf_detail::captured_exception const * );
 
 	public:
 
-		explicit error_info( error const & e ) noexcept:
+		explicit error_info( error_id const & e ) noexcept:
 			e_(e),
 			ex_(0),
 			cap_(0),
@@ -199,7 +199,7 @@ namespace boost { namespace leaf {
 			{
 			}
 
-		error_info( error const & e, std::exception const * ex, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::captured_exception const *) ) noexcept:
+		error_info( error_id const & e, std::exception const * ex, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::captured_exception const *) ) noexcept:
 			e_(e),
 			ex_(ex),
 			cap_(0),
@@ -208,7 +208,7 @@ namespace boost { namespace leaf {
 			assert(print_ex_!=0);
 		}
 
-		error_info( error const & e, std::exception const * ex, leaf_detail::captured_exception const * cap, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::captured_exception const *) ) noexcept:
+		error_info( error_id const & e, std::exception const * ex, leaf_detail::captured_exception const * cap, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::captured_exception const *) ) noexcept:
 			e_(e),
 			ex_(ex),
 			cap_(cap),
@@ -217,7 +217,7 @@ namespace boost { namespace leaf {
 			assert(print_ex_!=0);
 		}
 
-		leaf::error const & get_error() const noexcept
+		error_id const & error() const noexcept
 		{
 			return e_;
 		}
@@ -227,7 +227,7 @@ namespace boost { namespace leaf {
 			return print_ex_!=0;
 		}
 
-		std::exception const * get_exception() const noexcept
+		std::exception const * exception() const noexcept
 		{
 			assert(exception_caught());
 			return ex_;
@@ -235,7 +235,7 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, error_info const & x )
 		{
-			os << "leaf::error serial number: " << x.e_ << std::endl;
+			os << "leaf::error_id: " << x.e_ << std::endl;
 			if( x.print_ex_ )
 				x.print_ex_(os,x.ex_,x.cap_);
 			leaf_detail::slot_base::print(os,x.e_);
@@ -434,21 +434,21 @@ namespace boost { namespace leaf {
 		template <class E>
 		struct ev_type
 		{
-			error e;
+			error_id e;
 			E v;
 
-			explicit ev_type( error const & e ) noexcept:
+			explicit ev_type( error_id const & e ) noexcept:
 				e(e)
 			{
 			}
 
-			ev_type( error const & e, E const & v ):
+			ev_type( error_id const & e, E const & v ):
 				e(e),
 				v(v)
 			{
 			}
 
-			ev_type( error const & e, E && v ) noexcept:
+			ev_type( error_id const & e, E && v ) noexcept:
 				e(e),
 				v(std::forward<E>(v))
 			{
@@ -477,7 +477,7 @@ namespace boost { namespace leaf {
 			slot<E> * prev_;
 			static_assert(is_e_type<E>::value,"Not an error type");
 
-			bool slot_print( std::ostream &, error const & ) const;
+			bool slot_print( std::ostream &, error_id const & ) const;
 
 		protected:
 
@@ -545,7 +545,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		int put_slot( E && v, error const & e ) noexcept
+		int put_slot( E && v, error_id const & e ) noexcept
 		{
 			using T = typename std::remove_cv<typename std::remove_reference<E>::type>::type;
 			if( slot<T> * p = tl_slot_ptr<T>() )
@@ -587,7 +587,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		bool slot<E>::slot_print( std::ostream & os, error const & e ) const
+		bool slot<E>::slot_print( std::ostream & os, error_id const & e ) const
 		{
 			if( tl_slot_ptr<E>()==this )
 				if( ev_type<E> const * ev = has_value() )
@@ -597,13 +597,13 @@ namespace boost { namespace leaf {
 		}
 
 		template <class... E>
-		error make_error( char const * file, int line, char const * function, E && ... e ) noexcept
+		error_id make_error( char const * file, int line, char const * function, E && ... e ) noexcept
 		{
 			assert(file&&*file);
 			assert(line>0);
 			assert(function&&*function);
 			e_source_location sl { file, line, function }; // Temp object MSVC workaround
-			return error( std::move(sl), std::forward<E>(e)... );
+			return error_id( std::move(sl), std::forward<E>(e)... );
 		}
 
 		enum class result_variant
@@ -615,7 +615,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... E>
-	error error::propagate( E && ... e ) const noexcept
+	error_id error_id::propagate( E && ... e ) const noexcept
 	{
 		auto _ = { leaf_detail::put_slot(std::forward<E>(e),*this)... };
 		(void) _;

@@ -18,7 +18,7 @@ namespace boost { namespace leaf {
 	{
 		class captured_exception_impl:
 			public captured_exception,
-			public leaf::error
+			public error_id
 		{
 			std::exception_ptr ex_;
 			std::shared_ptr<dynamic_store> ds_;
@@ -28,7 +28,7 @@ namespace boost { namespace leaf {
 		public:
 
 			captured_exception_impl( std::exception_ptr && ex, std::shared_ptr<dynamic_store> && ds, bool had_error, void (*print_captured_types)(std::ostream &) ) noexcept:
-				error(ds->get_error()),
+				error_id(ds->error()),
 				ex_(std::move(ex)),
 				ds_(std::move(ds)),
 				had_error_(had_error),
@@ -44,7 +44,7 @@ namespace boost { namespace leaf {
 				assert(ds);
 				if( had_error_ )
 				{
-					error err = ds->unload();
+					error_id err = ds->unload();
 					assert(err==*this);
 					(void) err;
 				}
@@ -109,7 +109,7 @@ namespace boost { namespace leaf {
 				{
 					throw;
 				}
-				catch( error const & e )
+				catch( error_id const & e )
 				{
 					throw captured_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(e,std::move(ss)), true, &print_types<E...>::print );
 				}

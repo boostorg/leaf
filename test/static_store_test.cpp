@@ -15,22 +15,22 @@ struct info
 	int value;
 };
 
-leaf::error f1()
+leaf::error_id f1()
 {
 	return leaf::new_error( info<1>{1} );
 }
 
-leaf::error f2()
+leaf::error_id f2()
 {
 	return f1().propagate( info<2>{2} );
 }
 
-leaf::error f3()
+leaf::error_id f3()
 {
 	return f2().propagate( info<3>{3} );
 }
 
-leaf::error f4()
+leaf::error_id f4()
 {
 	return f3().propagate();
 }
@@ -40,7 +40,7 @@ int main()
 	using leaf::leaf_detail::static_store;
 
 	static_store<info<1>,info<2>,info<4>> exp0;
-	leaf::error e0 = f4();
+	leaf::error_id e0 = f4();
 	{
 		info<1> const * p = exp0.peek<info<1>>(e0);
 		BOOST_TEST(p && p->value==1);
@@ -53,7 +53,7 @@ int main()
 
 	BOOST_TEST(!exp0.peek<info<4>>(e0));
 	static_store<info<1>,info<2>,info<4>> exp;
-	leaf::error e1 = f4();
+	leaf::error_id e1 = f4();
 
 	{
 		info<1> const * p = exp0.peek<info<1>>(e0);
@@ -93,7 +93,7 @@ int main()
 			} );
 		BOOST_TEST(r==2);
 	}
-	leaf::error e2 = f4();
+	leaf::error_id e2 = f4();
 
 	{
 		info<1> const * p = exp.peek<info<1>>(e2);

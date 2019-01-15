@@ -15,12 +15,12 @@ struct info
 	int value;
 };
 
-leaf::error f12()
+leaf::error_id f12()
 {
 	return leaf::new_error( info<1>{1}, info<2>{2} );
 }
 
-leaf::error f34()
+leaf::error_id f34()
 {
 	return leaf::new_error( info<3>{3}, info<4>{4} );
 }
@@ -28,8 +28,8 @@ leaf::error f34()
 int main()
 {
 	leaf::static_store<info<1>,info<2>,info<3>,info<4>> exp;
-	leaf::error e1=f12();
-	leaf::error e2=f34();
+	leaf::error_id e1=f12();
+	leaf::error_id e2=f34();
 	{
 		int e1c1=0, e1c2=0;
 		bool handled = exp.handle_error( e1,

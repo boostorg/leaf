@@ -50,7 +50,7 @@ int main()
 			{
 				BOOST_TEST(c==0);
 				c = 1;
-				return unmatched.get_error();
+				return unmatched.error();
 			} );
 		BOOST_TEST(r);
 		BOOST_TEST(c==42);
@@ -578,7 +578,7 @@ int main()
 			},
 			[ ]( leaf::error_info const & unmatched )
 			{
-				return unmatched.get_error();
+				return unmatched.error();
 			} );
 		BOOST_TEST(r && *r==42);
 	}

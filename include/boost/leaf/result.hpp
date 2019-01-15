@@ -31,7 +31,7 @@ namespace boost { namespace leaf {
 		union
 		{
 			T value_;
-			error err_;
+			error_id err_;
 			dynamic_store_ptr cap_;
 		};
 
@@ -45,7 +45,7 @@ namespace boost { namespace leaf {
 				value_.~T();
 				break;
 			case leaf_detail::result_variant::err:
-				err_.~error();
+				err_.~error_id();
 				break;
 			default:
 				assert(which_==leaf_detail::result_variant::cap);
@@ -63,7 +63,7 @@ namespace boost { namespace leaf {
 				(void) new(&value_) T(x.value_);
 				break;
 			case leaf_detail::result_variant::err:
-				(void) new(&err_) leaf::error(x.err_);
+				(void) new(&err_) error_id(x.err_);
 				break;
 			default:
 				assert(x.which_==leaf_detail::result_variant::cap);
@@ -82,7 +82,7 @@ namespace boost { namespace leaf {
 				which_ = x.which_;
 				break;
 			case leaf_detail::result_variant::err:
-				(void) new(&err_) leaf::error(std::move(x.err_));
+				(void) new(&err_) error_id(std::move(x.err_));
 				which_ = x.which_;
 				break;
 			default:
@@ -90,7 +90,7 @@ namespace boost { namespace leaf {
 				if( dynamic_store_ptr cap = std::move(x.cap_) )
 				{
 					x.destroy();
-					(void) new(&x.err_) leaf::error(cap->get_error());
+					(void) new(&x.err_) error_id(cap->error());
 					x.which_ = leaf_detail::result_variant::err;
 					(void) new(&cap_) dynamic_store_ptr(std::move(cap));
 				}
@@ -149,7 +149,7 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		result( leaf::error const & e ) noexcept:
+		result( error_id const & e ) noexcept:
 			err_(e),
 			which_(leaf_detail::result_variant::err)
 		{
@@ -203,7 +203,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class... E>
-		leaf::error error( E && ... e ) noexcept
+		error_id error( E && ... e ) noexcept
 		{
 			switch( which_ )
 			{
@@ -213,7 +213,7 @@ namespace boost { namespace leaf {
 				{
 					dynamic_store_ptr cap = cap_;
 					destroy();
-					(void) new(&err_) leaf::error(cap->unload());
+					(void) new(&err_) error_id(cap->unload());
 					which_ = leaf_detail::result_variant::err;
 				}
 			default:
@@ -249,7 +249,7 @@ namespace boost { namespace leaf {
 
 		result() = default;
 
-		result( leaf::error const & e ) noexcept:
+		result( error_id const & e ) noexcept:
 			base(e)
 		{
 		}

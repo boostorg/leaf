@@ -30,14 +30,14 @@ void f1()
 	throw leaf::exception(std::exception());
 }
 
-leaf::error f2()
+leaf::error_id f2()
 {
 	try
 	{
 		f1();
 		BOOST_TEST(false);
 	}
-	catch( leaf::error e )
+	catch( leaf::error_id e )
 	{
 		e.propagate( info<3>{3} );
 		throw;

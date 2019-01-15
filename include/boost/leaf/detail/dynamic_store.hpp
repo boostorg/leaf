@@ -11,7 +11,7 @@
 
 namespace boost { namespace leaf {
 
-	class error;
+	class error_id;
 
 	namespace leaf_detail
 	{
@@ -29,9 +29,9 @@ namespace boost { namespace leaf {
 
 		public:
 
-			virtual error const & get_error() const noexcept = 0;
-			virtual error unload() noexcept = 0;
-			virtual error unload( error const & ) noexcept = 0;
+			virtual error_id const & error() const noexcept = 0;
+			virtual error_id unload() noexcept = 0;
+			virtual error_id unload( error_id const & ) noexcept = 0;
 		};
 	}
 

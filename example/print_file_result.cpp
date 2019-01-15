@@ -26,7 +26,7 @@ enum error_code
 	cout_error
 };
 
-// To enable leaf::error to work with our error_code enum, we need to specialize the is_e_type template:
+// To enable LEAF to work with our error_code enum, we need to specialize the is_e_type template:
 namespace boost { namespace leaf {
 	template<> struct is_e_type<error_code>: std::true_type { };
 } }

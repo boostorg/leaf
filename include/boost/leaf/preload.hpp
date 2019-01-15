@@ -17,7 +17,7 @@ namespace boost { namespace leaf {
 		template <int I, class Tuple>
 		struct tuple_for_each_preload
 		{
-			static void trigger( Tuple & tup, error const & e ) noexcept
+			static void trigger( Tuple & tup, error_id const & e ) noexcept
 			{
 				tuple_for_each_preload<I-1,Tuple>::trigger(tup,e);
 				std::get<I-1>(tup).trigger(e);
@@ -27,7 +27,7 @@ namespace boost { namespace leaf {
 		template <class Tuple>
 		struct tuple_for_each_preload<0, Tuple>
 		{
-			static void trigger( Tuple const &, error const & ) noexcept { }
+			static void trigger( Tuple const &, error_id const & ) noexcept { }
 		};
 	} // leaf_detail
 
@@ -49,7 +49,7 @@ namespace boost { namespace leaf {
 			{
 			}
 
-			void trigger( error const & e ) noexcept
+			void trigger( error_id const & e ) noexcept
 			{
 				if( s_ )
 				{
@@ -73,7 +73,7 @@ namespace boost { namespace leaf {
 			preloaded & operator=( preloaded const & ) = delete;
 
 			std::tuple<preloaded_item<E>...> p_;
-			error e_;
+			error_id e_;
 			bool moved_;
 
 		public:
@@ -97,7 +97,7 @@ namespace boost { namespace leaf {
 			{
 				if( moved_ )
 					return;
-				error const e = last_error();
+				error_id const e = last_error();
 				if( e==e_ )
 				{
 					if( std::uncaught_exception() )
@@ -134,7 +134,7 @@ namespace boost { namespace leaf {
 			{
 			}
 
-			void trigger( error const & e ) noexcept
+			void trigger( error_id const & e ) noexcept
 			{
 				if( s_ )
 				{
@@ -157,7 +157,7 @@ namespace boost { namespace leaf {
 		{
 			deferred & operator=( deferred const & ) = delete;
 			std::tuple<deferred_item<F>...> d_;
-			error e_;
+			error_id e_;
 			bool moved_;
 
 		public:
@@ -181,7 +181,7 @@ namespace boost { namespace leaf {
 			{
 				if( moved_ )
 					return;
-				error const e = last_error();
+				error_id const e = last_error();
 				if( e==e_ )
 				{
 					if( std::uncaught_exception() )

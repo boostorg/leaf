@@ -141,7 +141,7 @@ namespace boost { namespace leaf {
 				public slot<E>
 			{
 			public:
-				optional<E> extract_optional( error const & e ) && noexcept
+				optional<E> extract_optional( error_id const & e ) && noexcept
 				{
 					slot<E> const & s = *this;
 					if( s.has_value() && s.value().e==e )
@@ -199,7 +199,7 @@ namespace boost { namespace leaf {
 				static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
 				{
 					auto & sl = std::get<tuple_type_index<static_store_slot<T>,SlotsTuple>::value>(tup);
-					return sl.has_value() && sl.value().e==ei.get_error();
+					return sl.has_value() && sl.value().e==ei.error();
 				}
 			};
 
@@ -221,7 +221,7 @@ namespace boost { namespace leaf {
 					if( sl.has_value() )
 					{
 						auto const & v = sl.value();
-						return v.e==ei.get_error() && match<E,V...>(v.v)();
+						return v.e==ei.error() && match<E,V...>(v.v)();
 					}
 					else
 						return false;
@@ -233,7 +233,7 @@ namespace boost { namespace leaf {
 			{
 				static bool check( SlotsTuple const &, error_info const & ei ) noexcept
 				{
-					if( std::exception const * ex = ei.get_exception() )
+					if( std::exception const * ex = ei.exception() )
 						return catch_<Ex...>(*ex)();
 					else
 						return false;
@@ -278,7 +278,7 @@ namespace boost { namespace leaf {
 				template <class StaticStore>
 				static T const & get( StaticStore const & ss, error_info const & ei ) noexcept
 				{
-					T const * arg = ss.template peek<T>(ei.get_error());
+					T const * arg = ss.template peek<T>(ei.error());
 					assert(arg!=0);
 					return *arg;
 				}
@@ -290,7 +290,7 @@ namespace boost { namespace leaf {
 				template <class StaticStore>
 				static T const * get( StaticStore const & ss, error_info const & ei ) noexcept
 				{
-					return ss.template peek<T>(ei.get_error());
+					return ss.template peek<T>(ei.error());
 				}
 			};
 
@@ -300,7 +300,7 @@ namespace boost { namespace leaf {
 				template <class StaticStore>
 				static match<E,V...> get( StaticStore const & ss, error_info const & ei ) noexcept
 				{
-					E const * arg = ss.template peek<E>(ei.get_error());
+					E const * arg = ss.template peek<E>(ei.error());
 					assert(arg!=0);
 					return match<E,V...>(*arg);
 				}
@@ -312,7 +312,7 @@ namespace boost { namespace leaf {
 				template <class StaticStore>
 				static catch_<Ex...> get( StaticStore const &, error_info const & ei ) noexcept
 				{
-					std::exception const * ex = ei.get_exception();
+					std::exception const * ex = ei.exception();
 					assert(ex!=0);
 					return catch_<Ex...>(*ex);
 				}
@@ -334,7 +334,7 @@ namespace boost { namespace leaf {
 				template <class StaticStore>
 				static diagnostic_info const & get( StaticStore const & ss, error_info const & ei ) noexcept
 				{
-					diagnostic_info const * uei = ss.template peek<diagnostic_info>(ei.get_error());
+					diagnostic_info const * uei = ss.template peek<diagnostic_info>(ei.error());
 					assert(uei!=0);
 					uei->set_error_info(ei);
 					return *uei;
@@ -347,7 +347,7 @@ namespace boost { namespace leaf {
 				template <class StaticStore>
 				static verbose_diagnostic_info const & get( StaticStore const & ss, error_info const & ei ) noexcept
 				{
-					verbose_diagnostic_info const * vdi = ss.template peek<verbose_diagnostic_info>(ei.get_error());
+					verbose_diagnostic_info const * vdi = ss.template peek<verbose_diagnostic_info>(ei.error());
 					assert(vdi!=0);
 					vdi->set_error_info(ei);
 					return *vdi;
@@ -427,7 +427,7 @@ namespace boost { namespace leaf {
 			}
 
 			template <class P>
-			P const * peek( error const & e ) const noexcept
+			P const * peek( error_id const & e ) const noexcept
 			{
 				auto & opt = std::get<static_store_internal::type_index<P,E...>::value>(s_);
 				if( opt.has_value() )
