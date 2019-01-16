@@ -15,7 +15,7 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		void print_exception_info( std::ostream & os, std::exception const * ex, captured_exception const * cap )
+		inline void print_exception_info( std::ostream & os, std::exception const * ex, captured_exception const * cap )
 		{
 			if( cap )
 			{
