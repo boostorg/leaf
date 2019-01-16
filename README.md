@@ -5,7 +5,6 @@ Official documentation: https://zajo.github.io/leaf/
 Features:
 
 * Header-only, no dependencies.
-
 * No dynamic memory allocations (except when error objects are transported between threads).
 * Any error-related object of any movable type is efficiently delivered to the correct error handler.
 * Compatible with `std::error_code`, `errno` and any other error code type.

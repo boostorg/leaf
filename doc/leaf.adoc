@@ -186,7 +186,7 @@ enum error_code
 };
 ----
 
-Looks good, but how does LEAF know that this `enum` represents error codes and not, say, types of cold cuts sold at http://order.bcdeli.com/[Bay Cities Italian Deli]? It doesn't, unless we tell it:
+Looks good, but how does LEAF know that this `enum` represents error codes and not, say, types of cold cuts sold at Bay Cities Italian Deli? It doesn't, unless we tell it:
 
 [source,c++]
 ----
