@@ -18,7 +18,7 @@ LEAF is a {CPP}11 error handling library. Features:
 ====
 * Header-only, no dependencies.
 
-* No dynamic memory allocations.footnote:[Except when error objects are transported between threads, see <<capture_result>> / <<capture_exception>>.]
+* No dynamic memory allocations.footnote:[Except when error objects are transported between threads, see <<capture_result>>/<<capture_exception>>.]
 
 * Any error-related object of any movable type is efficiently delivered to the correct error handler.
 
@@ -2792,8 +2792,8 @@ Congratulations, we've just discovered exception specifications. The difference 
 
 Why not statically enforce exception specifications?
 
-"The short answer is that nobody knows how to fix exception specifications in any language, because the dynamic enforcement C++ chose has only different (not greater or fewer) problems than the static enforcement Java chose. ... When you go down the Java path, people love exception specifications until they find themselves all too often encouraged, or even forced, to add `throws Exception`, which immediately renders the exception specification entirely meaningless. (Example: Imagine writing a Java generic that manipulates an arbitrary type `T`)."
--- Herb Sutterfootnote:[https://herbsutter.com/2007/01/24/questions-about-exception-specifications/]
+"The short answer is that nobody knows how to fix exception specifications in any language, because the dynamic enforcement C++ chose has only different (not greater or fewer) problems than the static enforcement Java chose. ... When you go down the Java path, people love exception specifications until they find themselves all too often encouraged, or even forced, to add `throws Exception`, which immediately renders the exception specification entirely meaningless. (Example: Imagine writing a Java generic that manipulates an arbitrary type `T`).footnote:[https://herbsutter.com/2007/01/24/questions-about-exception-specifications/]"
+-- Herb Sutter
 
 While it is possible to turn every  error *type* into, for example, a `std::error_code` *object*, this would eliminate the static type checking benefits we sought. Worse, the excessive coupling between the signatures of <<rationale,error-neutral>> functions (read: most functions in a program) and the error types they need to forward up the call stack interferes with the lossless propagation of errors throughout the program.
 
