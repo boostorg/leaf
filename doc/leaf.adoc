@@ -6,7 +6,7 @@
 = LEAF
 Low-latency Error Augmentation Framework for C++11
 :toclevels: 3
-:toc: right
+:toc: left
 :toc-title:
 :sourcedir: .
 
