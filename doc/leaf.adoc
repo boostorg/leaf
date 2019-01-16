@@ -524,7 +524,7 @@ include::{sourcedir}/synopses/capture_exception.adoc[]
 <<capture_exception>>
 
 [[reference]]
-== Reference
+== Common API
 
 [[e_objects]]
 === E-Objects
@@ -911,7 +911,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-Requirements: :: Each of the `f~i~` objects must be a function that does not throw exceptions, takes no arguments and returns an object of a no-throw movable type `E~i~` for which `<<is_error_type,is_error_type>><E~i~>::value` is `true`.
+Requirements: :: Each of `f~i~` in `f...` must be a function that does not throw exceptions, takes no arguments and returns an object of a no-throw movable type `E~i~` for which `<<is_error_type,is_error_type>><E~i~>::value` is `true`.
 
 Effects: :: All `f...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
 +
@@ -1015,7 +1015,7 @@ The additional information includes the types and the values of all such E-objec
 
 WARNING: Using `verbose_diagnostic_info` will likely allocate memory dynamically.
 
-== `noexcept` API
+== Noexcept API
 
 [[result]]
 === `result`
@@ -1399,7 +1399,7 @@ Effects: ::
 ** The type of the parameter pack `V...` is deduced as  `E`;
 ** The `match` constructor initializes the `value` reference with `e`.
 
-The `match` template is a predicate function type: `operator()` returns `true` iff the expression `value == V~i~` is `true` for at least one of `V...` values.
+The `match` template is a predicate function type: `operator()` returns `true` iff the expression `value == V~i~` is `true` for at least one `V`~i~ in `V...`.
 
 .Example 1:
 [source,c++]
@@ -1761,7 +1761,7 @@ Returns: :: If the dynamic type of `ex` derives from <<error_id>>, returns the `
 
 NOTE: Please read the documentation for <<try_>> to understand why `get_error_id` is needed.
 
-TIP: Whenever possible, pass exceptions you throw throught the <<exception>> function template (or use <<LEAF_THROW>>). This ensures that the thrown exceptions derive from <<error_id>>, which is always preferable to the <<next_error>> hack.
+TIP: Whenever possible, pass exceptions you throw through the <<exception>> function template (or use <<LEAF_THROW>>). This ensures that the thrown exceptions derive from <<error_id>>, which is always preferable to the <<next_error>> hack.
 
 '''
 
@@ -1770,7 +1770,7 @@ TIP: Whenever possible, pass exceptions you throw throught the <<exception>> fun
 
 include::{sourcedir}/synopses/exception_to_result.adoc[]
 
-This function can be used to catch exceptions from a lower-level library and conevrt them to `<<result,result>><T>`.
+This function can be used to catch exceptions from a lower-level library and convert them to `<<result,result>><T>`.
 
 Returns: :: If `f` returns `T`, `exception_to_result` returns `result<T>`.
 
@@ -1991,7 +1991,7 @@ void process_file( char const * name )
 [.text-right]
 `<<exception,exception>>` | <<preload>>
 
-The key is the call to `<<preload,preload>>`: it ensures tha the passed `e_file_name` will be associated with any exception that escapes `process_file`. This is fully automatic, and works regardless of whether the exception is thrown later in the same function, or by `read_file`, or by some third-party function we call.
+The key is the call to `<<preload,preload>>`: it ensures that the passed `e_file_name` will be associated with any exception that escapes `process_file`. This is fully automatic, and works regardless of whether the exception is thrown later in the same function, or by `read_file`, or by some third-party function we call.
 
 Now, exceptions thrown by `process_file` may be handled like this:
 
@@ -2224,7 +2224,7 @@ leaf::result<T> f()
 [[technique_exception_to_result]]
 === Converting Exceptions to `result<T>`
 
-It is sometimes necessary to catch exceptions thrown by lower-level library fuction, and report the error through different means, to a higher-level library which may not use exception handling.
+It is sometimes necessary to catch exceptions thrown by lower-level library function, and report the error through different means, to a higher-level library which may not use exception handling.
 
 Suppose we have an exception type hierarchy and a function `compute_answer_throws`:
 
@@ -2637,7 +2637,7 @@ As it turns out, dynamic memory allocation is not necessary due to the following
 Fact: ::
 * *Error-handling* functions already "know" which of the information _error-initiating_ and _error-neutral_ functions are [.underline]#able# to communicate is [.underline]#actually needed# in order to deal with failures in a particular program domain. Ideally, no resources should be [.line-through]#used# wasted storing or communicating information which is not currently needed to handle errors, even if it is relevant to the failure.
 
-The LEAF functions <<handle_some>>, <<handle_all>> and <<try_>> implement this idea. Users provide error-handling lambda funcitons which, naturally, take the arguments types they need. LEAF simply provides space needed to store these types, using automatic storage duration, before they are passed to a handler.
+The LEAF functions <<handle_some>>, <<handle_all>> and <<try_>> implement this idea. Users provide error-handling lambda functions which, naturally, take the arguments types they need. LEAF simply provides space needed to store these types, using automatic storage duration, before they are passed to a handler.
 
 When this space is created, `thread_local` pointers of the required error types are set to point to the corresponding storage within the scope of <<handle_some>>, <<handle_all>> or <<try_>>. Later on, _error-initiating_ or _error-neutral_ functions wanting to communicate an error object of type `E` access the corresponding `thread_local` pointer to see if there is currently storage available for this type:
 
@@ -2871,7 +2871,7 @@ There are several problems with this idea:
 
 * It does not compose well. For example, if `lib_a` and `lib_b` use `lib_c`, errors that originate in `lib_c` would be obfuscated by the different APIs exposed by each of the higher level libraries.
 
-* It presumes that all errors in the program can be specified by exaclty one error code, which is false.
+* It presumes that all errors in the program can be specified by exactly one error code, which is false.
 
 Consider a program that attempts to read a configuration file from three different locations: in case all of the attempts fail, it should communicate each of the failures. In theory `result<T,E>` handles this case well:
 
