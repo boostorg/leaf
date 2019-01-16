@@ -1272,6 +1272,39 @@ If `err` is the specific <<error_id>>  stored in the `result<T>` returned by the
 * If `a`~i~ is taken as `A`~i~ `const &` or by value:
 ** If an E-object of type `A`~i~, associated with `err`, is currently stored in the `handle_some` scope, `a`~i~ is initialized with a reference to the stored object; otherwise the handler is dropped.
 ** If `A`~i~ is of the predicate type `<<match,match>><E>`, if an object of type `E`, associated with `err`, is currently stored in the `handle_some` scope, `a`~i~ is initialized with a reference to the stored object; otherwise the handler is dropped. The handler is also dropped if the expression `a`~i~`()` evaluates to `false`.
++
+.Example:
+[source,c++]
+----
+enum class errors
+{
+  ec1=1,
+  ec2,
+  ec3
+};
+
+....
+
+return leaf::handle_some(
+
+  [ ]() -> leaf::result<void>
+  {
+    ....
+  },
+
+  [ ]( leaf::match<errors, errors::ec1> ) <1>
+  {
+    ....
+  },
+
+  [ ]( leaf::errors ec ) <2>
+  {
+    ....
+  } );
+----
+<1> This handler matches if the error includes an object of type `errors` with value `ec1`.
+<2> This handler matches if the error includes an object of type `errors` regardless of its value.
++
 * If `a`~i~ is of type `A`~i~ `const pass:[*]`, `handle_some` is always able to produce it: if an E-object of type `A`~i~, associated with `err`, is currently stored in the `handle_some` scope, `a`~i~ is initialized with the address of the stored object, otherwise it is initialized with `0`.
 * If `a`~i~ is of type `error_info const &` or `diagnostic_info const &` or `verbose_diagnostic_info const &`,  `handle_some` is always able to produce it.
 * It is illegal to pass to `handle_some` a `handler` that takes any other argument types.
@@ -1309,7 +1342,7 @@ Effects: ::
 
 The `handle_all` function works the same as <<handle_some>>, but because it is guaranteed to be able to match any error communicated by the `try_block` with a `handler`, it doesn't need to return a `result<T>`.
 
-.Example
+.Example:
 [source,c++]
 ----
 int main()
@@ -1628,6 +1661,35 @@ With the `error_id` value thus obtained, the `handler`-matching procedure works 
 
 * If `a`~i~ is taken as `A`~i~ `const &` or by value:
 ** If `A`~i~ is of the predicate type `<<catch_,catch_>><Ex...>`, `a`~i~ is initialized with the caught `std::exception const &`. The handler is dropped if the expression `a`~i~`()` evaluates to `false`.
++
+.Example:
+[source,c++]
+----
+struct exception1: std::exception { };
+struct exception2: std::exception { };
+struct exception3: std::exception { };
+
+....
+
+return leaf::try_(
+
+  [ ]() -> leaf::result<void>
+  {
+    ....
+  },
+
+  [ ]( leaf::catch_<exception1, exception2> ) <1>
+  {
+    ....
+  },
+
+  [ ]( leaf::error_info const & info ) <2>
+  {
+    ....
+  } );
+----
+<1> This handler matches if the exception caught by `try_` is either of type `exception1` or `exception2`.
+<2> This handler matches any error. Use `info.<<error_info,exception>>()` to access any caught `std::exception` object.
 
 '''
 
