@@ -1,15 +1,14 @@
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/detail/optional.hpp>
 #include "boost/core/lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
 
-struct error { };
 int object_count=0;
 int value_count=0;
 
@@ -64,7 +63,7 @@ public:
 
 	throws_on_copy( throws_on_copy const & )
 	{
-		throw error();
+		throw std::exception();
 	}
 
 	throws_on_copy( throws_on_copy && )
@@ -107,7 +106,7 @@ void run_tests()
 			optional<throws_on_copy> x(a);
 			BOOST_TEST(false);
 		}
-		catch( error & )
+		catch( std::exception & )
 		{
 		}
 	}
@@ -201,7 +200,7 @@ void run_tests()
 		{
 			(void) (y=x);
 		}
-		catch( error & )
+		catch( std::exception & )
 		{
 		}
 		BOOST_TEST(object_count==1);

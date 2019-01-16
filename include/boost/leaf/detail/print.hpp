@@ -1,11 +1,11 @@
 #ifndef BOOST_LEAF_3BAB50A2B87E11E89EEB30600C39171A
 #define BOOST_LEAF_3BAB50A2B87E11E89EEB30600C39171A
 
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <ostream>
 #include <cstring>
@@ -51,29 +51,25 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class T, class E = void>
-		struct is_printable
+		struct is_printable: std::false_type
 		{
-			static constexpr bool value=false;
 		};
 
 		template <class T>
-		struct is_printable<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>(), void())>
+		struct is_printable<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>(), void())>: std::true_type
 		{
-			static constexpr bool value=true;
 		};
 
 		////////////////////////////////////////
 
 		template <class T, class E = void>
-		struct has_printable_member_value
+		struct has_printable_member_value: std::false_type
 		{
-			static constexpr bool value=false;
 		};
 
 		template <class T>
-		struct has_printable_member_value<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>().value, void())>
+		struct has_printable_member_value<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>().value, void())>: std::true_type
 		{
-			static constexpr bool value=true;
 		};
 
 		////////////////////////////////////////
@@ -110,7 +106,16 @@ namespace boost { namespace leaf {
 				return true;
 			}
 		};
-	} //leaf_detail
+
+		template <>
+		struct diagnostic<std::exception_ptr, false, false>
+		{
+			static bool print( std::ostream & os, std::exception_ptr const & )
+			{
+				return false;
+			}
+		};
+	} // leaf_detail
 
 } }
 

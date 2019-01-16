@@ -1,0 +1,10 @@
+[source,c++]
+.#include <boost/leaf/capture_exception.hpp>
+----
+namespace boost { namespace leaf {
+
+  template <class... E, class F>
+  <<unspecified_function_type>> capture_exception( F && f ) noexcept;
+
+} }
+----

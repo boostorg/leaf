@@ -1,14 +1,15 @@
 #ifndef BOOST_LEAF_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
 #define BOOST_LEAF_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
 
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/error_capture.hpp>
-#include <boost/leaf/detail/throw.hpp>
+#include <boost/leaf/detail/dynamic_store.hpp>
+#include <boost/leaf/throw.hpp>
+#include <memory>
 
 #define LEAF_AUTO(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
 #define LEAF_CHECK(r) {auto _r = r; if( !_r ) return _r.error();}
@@ -17,59 +18,12 @@ namespace boost { namespace leaf {
 
 	class bad_result: public std::exception { };
 
-	template <class... E>
-	class expect;
-
-	template <class T>
-	class result;
-
-	namespace leaf_detail
-	{
-		template <class T>
-		struct unhandled_error_base<result<T>>
-		{
-			static leaf::error value( leaf::error const & e ) noexcept { return e; }
-		};
-	}
-
-	template <class... E, class T, class... F>
-	typename leaf_detail::handler_pack_return_type<F...>::return_type  handle_error( expect<E...> const &, result<T> const &, F && ... ) noexcept;
-
-	template <class P, class... E, class T>
-	P const * peek( expect<E...> const &, result<T> const & ) noexcept;
-
-	template <class... E, class T>
-	void diagnostic_output( std::ostream &, expect<E...> const &, result<T> const & );
-
-	template <class... E, class T>
-	result<T> capture( expect<E...> &, result<T> const & );
-
 	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		enum class result_variant
-		{
-			value,
-			err,
-			cap
-		};
-	}
 
 	template <class T>
 	class result
 	{
-		template <class... E, class T_, class... F>
-		friend typename leaf_detail::handler_pack_return_type<F...>::return_type  leaf::handle_error( expect<E...> const &, result<T_> const &, F && ... ) noexcept;
-
-		template <class P, class... E, class T_>
-		friend P const * leaf::peek( expect<E...> const &, result<T_> const & ) noexcept;
-
-		template <class... E, class T_>
-		friend void leaf::diagnostic_output( std::ostream &, expect<E...> const &, result<T_> const & );
-
-		template <class... E, class T_>
-		friend result<T_> leaf::capture( expect<E...> &, result<T_> const & );
+		using dynamic_store_ptr = std::shared_ptr<leaf_detail::dynamic_store>;
 
 		template <class U>
 		friend class result;
@@ -77,8 +31,8 @@ namespace boost { namespace leaf {
 		union
 		{
 			T value_;
-			error err_;
-			error_capture cap_;
+			error_id err_;
+			dynamic_store_ptr cap_;
 		};
 
 		leaf_detail::result_variant which_;
@@ -91,11 +45,11 @@ namespace boost { namespace leaf {
 				value_.~T();
 				break;
 			case leaf_detail::result_variant::err:
-				err_.~error();
+				err_.~error_id();
 				break;
 			default:
 				assert(which_==leaf_detail::result_variant::cap);
-				cap_.~error_capture();
+				cap_.~dynamic_store_ptr();
 			}
 			which_= (leaf_detail::result_variant)-1;
 		}
@@ -109,11 +63,11 @@ namespace boost { namespace leaf {
 				(void) new(&value_) T(x.value_);
 				break;
 			case leaf_detail::result_variant::err:
-				(void) new(&err_) leaf::error(x.err_);
+				(void) new(&err_) error_id(x.err_);
 				break;
 			default:
 				assert(x.which_==leaf_detail::result_variant::cap);
-				(void) new(&cap_) error_capture(x.cap_);
+				(void) new(&cap_) dynamic_store_ptr(x.cap_);
 			};
 			which_ = x.which_;
 		}
@@ -125,27 +79,34 @@ namespace boost { namespace leaf {
 			{
 			case leaf_detail::result_variant:: value:
 				(void) new(&value_) T(std::move(x.value_));
+				which_ = x.which_;
 				break;
 			case leaf_detail::result_variant::err:
-				(void) new(&err_) leaf::error(std::move(x.err_));
+				(void) new(&err_) error_id(std::move(x.err_));
+				which_ = x.which_;
 				break;
 			default:
 				assert(x.which_==leaf_detail::result_variant::cap);
-				(void) new(&cap_) error_capture(std::move(x.cap_));
+				if( dynamic_store_ptr cap = std::move(x.cap_) )
+				{
+					x.destroy();
+					(void) new(&x.err_) error_id(cap->error());
+					x.which_ = leaf_detail::result_variant::err;
+					(void) new(&cap_) dynamic_store_ptr(std::move(cap));
+				}
+				else
+					(void) new(&cap_) dynamic_store_ptr(std::move(x.cap_));
+				which_ = leaf_detail::result_variant::cap;
 			};
-			which_ = x.which_;
 		}
 
 	public:
 
+		typedef T value_type;
+
 		~result() noexcept
 		{
 			destroy();
-		}
-
-		result( result const & x )
-		{
-			copy_from(x);
 		}
 
 		result( result && x ) noexcept
@@ -153,8 +114,7 @@ namespace boost { namespace leaf {
 			move_from(std::move(x));
 		}
 
-		template <class U>
-		result( result<U> const & x )
+		result( result const & x )
 		{
 			copy_from(x);
 		}
@@ -165,14 +125,14 @@ namespace boost { namespace leaf {
 			move_from(std::move(x));
 		}
 
-		result() noexcept:
-			value_(T()),
-			which_(leaf_detail::result_variant::value)
+		template <class U>
+		result( result<U> const & x )
 		{
+			copy_from(x);
 		}
 
-		result( T const & v ):
-			value_(v),
+		result():
+			value_(T()),
 			which_(leaf_detail::result_variant::value)
 		{
 		}
@@ -183,22 +143,25 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		result( leaf::error const & e ) noexcept:
-			err_(e),
+		result( T const & v ):
+			value_(v),
+			which_(leaf_detail::result_variant::value)
+		{
+		}
+
+		result( error_id const & id ) noexcept:
+			err_(id),
 			which_(leaf_detail::result_variant::err)
 		{
 		}
 
-		result( leaf::error_capture const & cap ) noexcept:
-			cap_(cap),
-			which_(leaf_detail::result_variant::cap)
-		{
-		}
+		result( std::shared_ptr<leaf_detail::dynamic_store> && ) noexcept;
 
-		result( leaf::error_capture && cap ) noexcept:
-			cap_(std::move(cap)),
-			which_(leaf_detail::result_variant::cap)
+		result & operator=( result && x ) noexcept
 		{
+			destroy();
+			move_from(std::move(x));
+			return *this;
 		}
 
 		result & operator=( result const & x )
@@ -208,10 +171,19 @@ namespace boost { namespace leaf {
 			return *this;
 		}
 
-		result & operator=( result && x ) noexcept
+		template <class U>
+		result & operator=( result<U> && x ) noexcept
 		{
 			destroy();
 			move_from(std::move(x));
+			return *this;
+		}
+
+		template <class U>
+		result & operator=( result<U> const & x )
+		{
+			destroy();
+			copy_from(x);
 			return *this;
 		}
 
@@ -247,19 +219,19 @@ namespace boost { namespace leaf {
 		}
 
 		template <class... E>
-		leaf::error error( E && ... e ) noexcept
+		error_id error( E && ... e ) noexcept
 		{
 			switch( which_ )
 			{
 			case leaf_detail::result_variant::value:
-				return leaf::error(std::forward<E>(e)...);
+				return leaf::new_error(std::forward<E>(e)...);
 			case leaf_detail::result_variant::cap:
-			{
-				error_capture cap = cap_;
-				destroy();
-				(void) new(&err_) leaf::error(cap.unload());
-				which_ = leaf_detail::result_variant::err;
-			}
+				{
+					dynamic_store_ptr cap = cap_;
+					destroy();
+					(void) new(&err_) error_id(cap->unload());
+					which_ = leaf_detail::result_variant::err;
+				}
 			default:
 				assert(which_==leaf_detail::result_variant::err);
 				return err_.propagate(std::forward<E>(e)...);
@@ -273,22 +245,10 @@ namespace boost { namespace leaf {
 	class result<void>:
 		result<bool>
 	{
-		template <class... E, class T, class... F>
-		friend typename leaf_detail::handler_pack_return_type<F...>::return_type  leaf::handle_error( expect<E...> const &, result<T> const &, F && ... ) noexcept;
-
-		template <class P, class... E, class T>
-		friend P const * leaf::peek( expect<E...> const &, result<T> const & ) noexcept;
-
-		template <class... E, class T>
-		friend void leaf::diagnostic_output( std::ostream &, expect<E...> const &, result<T> const & );
-
-		template <class... E, class T>
-		friend result<T> leaf::capture( expect<E...> &, result<T> const & );
+		typedef result<bool> base;
 
 		template <class U>
 		friend class result;
-
-		typedef result<bool> base;
 
 		result( result<bool> && rb ):
 			base(std::move(rb))
@@ -297,80 +257,34 @@ namespace boost { namespace leaf {
 
 	public:
 
+		typedef void value_type;
+
 		~result() noexcept
 		{
 		}
 
-		result() noexcept = default;
+		result() = default;
 
-		result( leaf::error const & e ) noexcept:
-			base(e)
+		result( error_id const & id ) noexcept:
+			base(id)
 		{
 		}
 
-		result( leaf::error_capture const & cap ) noexcept:
-			base(cap)
+		result( std::shared_ptr<leaf_detail::dynamic_store> && ) noexcept;
+
+		void value() const
 		{
+			(void) base::value();
 		}
 
-		result( leaf::error_capture && cap ) noexcept:
-			base(std::move(cap))
+		void operator*() const
 		{
+			return value();
 		}
 
 		using base::operator bool;
 		using base::error;
 	};
-
-	////////////////////////////////////////
-
-	template <class... E, class T, class... F>
-	typename leaf_detail::handler_pack_return_type<F...>::return_type  handle_error( expect<E...> const & exp, result<T> const & r, F && ... f ) noexcept
-	{
-		assert(!r);
-		if( r.which_ == leaf_detail::result_variant::err )
-			return handle_error(exp,r.err_,f...);
-		else
-		{
-			assert(r.which_==leaf_detail::result_variant::cap);
-			return handle_error(r.cap_,f...);
-		}
-	}
-
-	template <class P, class... E, class T>
-	P const * peek( expect<E...> const & exp, result<T> const & r ) noexcept
-	{
-		assert(!r);
-		if( r.which_==leaf_detail::result_variant::err )
-			return peek<P>(exp,r.err_);
-		else
-		{
-			assert(r.which_==leaf_detail::result_variant::cap);
-			return peek<P>(r.cap_);
-		}
-	}
-
-	template <class... E, class T>
-	void diagnostic_output( std::ostream & os, expect<E...> const & exp, result<T> const & r )
-	{
-		assert(!r);
-		if( r.which_==leaf_detail::result_variant::err )
-			return diagnostic_output(os,exp,r.err_);
-		else
-		{
-			assert(r.which_==leaf_detail::result_variant::cap);
-			return diagnostic_output(os,r.cap_);
-		}
-	}
-
-	template <class... E, class T>
-	result<T> capture( expect<E...> & exp, result<T> const & r )
-	{
-		if( r.which_==leaf_detail::result_variant::err )
-			return capture(exp,r.err_);
-		else
-			return r;
-	}
 
 } }
 

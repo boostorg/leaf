@@ -1,10 +1,10 @@
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/expect.hpp>
+#include <boost/leaf/static_store.hpp>
 #include "boost/core/lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
@@ -15,24 +15,24 @@ struct info
 	int value;
 };
 
-leaf::error f12()
+leaf::error_id f12()
 {
-	return leaf::error( info<1>{1}, info<2>{2} );
+	return leaf::new_error( info<1>{1}, info<2>{2} );
 }
 
-leaf::error f34()
+leaf::error_id f34()
 {
-	return leaf::error( info<3>{3}, info<4>{4} );
+	return leaf::new_error( info<3>{3}, info<4>{4} );
 }
 
 int main()
 {
-	leaf::expect<info<1>,info<2>,info<3>,info<4>> exp;
-	leaf::error e1=f12();
-	leaf::error e2=f34();
+	leaf::static_store<info<1>,info<2>,info<3>,info<4>> exp;
+	leaf::error_id e1=f12();
+	leaf::error_id e2=f34();
 	{
 		int e1c1=0, e1c2=0;
-		bool handled = handle_error( exp, e1,
+		bool handled = exp.handle_error( e1,
 			[&e1c1]( info<3>, info<4> )
 			{
 				++e1c1;
@@ -49,7 +49,7 @@ int main()
 	}
 	{
 		int e2c1=0, e2c2=0;
-		bool handled = handle_error( exp, e2,
+		bool handled = exp.handle_error( e2,
 			[&e2c1]( info<1>, info<2> )
 			{
 				++e2c1;

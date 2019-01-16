@@ -1,11 +1,11 @@
 #ifndef BOOST_LEAF_47258FCCB6B411E8A1F35AA00C39171A
 #define BOOST_LEAF_47258FCCB6B411E8A1F35AA00C39171A
 
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <utility>
 #include <new>
@@ -89,6 +89,15 @@ namespace boost { namespace leaf {
 				}
 			}
 
+			template <class... A>
+			T & emplace( A && ... a )
+			{
+				reset();
+				(void) new(&value_) T(std::forward<A>(a)...);
+				has_value_=true;
+				return value_;
+			}
+
 			T & put( T const & v )
 			{
 				reset();
@@ -105,39 +114,44 @@ namespace boost { namespace leaf {
 				return value_;
 			}
 
-			bool has_value() const noexcept
+			T const * has_value() const noexcept
 			{
-				return has_value_;
+				return has_value_ ? &value_ : 0;
+			}
+
+			T * has_value() noexcept
+			{
+				return has_value_ ? &value_ : 0;
 			}
 
 			T const & value() const & noexcept
 			{
-				assert(has_value());
+				assert(has_value()!=0);
 				return value_;
 			}
 
 			T & value() & noexcept
 			{
-				assert(has_value());
+				assert(has_value()!=0);
 				return value_;
 			}
 
 			T const && value() const && noexcept
 			{
-				assert(has_value());
+				assert(has_value()!=0);
 				return value_;
 			}
 
 			T value() && noexcept
 			{
-				assert(has_value());
+				assert(has_value()!=0);
 				T tmp(std::move(value_));
 				reset();
 				return tmp;
 			}
 		};
 
-	} //leaf_detail
+	} // leaf_detail
 
 } }
 

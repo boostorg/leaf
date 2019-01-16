@@ -1,11 +1,11 @@
 #ifndef BOOST_LEAF_BA049396D0D411E8B45DF7D4A759E189
 #define BOOST_LEAF_BA049396D0D411E8B45DF7D4A759E189
 
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018 Emil Dotchevski
+// Copyright (c) 2018 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/detail/optional.hpp>
 #include <boost/leaf/detail/print.hpp>
@@ -22,84 +22,21 @@ namespace boost { namespace system { class error_code; } }
 
 namespace boost { namespace leaf {
 
-	struct e_source_location
+	class error_id;
+
+	error_id next_error() noexcept;
+	error_id last_error() noexcept;
+
+	class error_id
 	{
-		char const * const file;
-		int const line;
-		char const * const function;
-
-		friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
-		{
-			return os << leaf::type<e_source_location>() << ": " << x.file << '(' << x.line << ") in function " << x.function;
-		}
-	};
-
-	struct e_unexpected
-	{
-		char const * (*first_type)() noexcept;
-		int count;
-
-		friend std::ostream & operator<<( std::ostream & os, e_unexpected const & x )
-		{
-			assert(x.first_type!=0);
-			assert(x.count>0);
-			if( x.count==1 )
-				os << "Detected 1 attempt to communicate an unexpected error object of type ";
-			else
-				os << "Detected " << x.count << " attempts to communicate unexpected error objects, the first one of type ";
-			return os << x.first_type();
-		}
-	};
-
-	struct e_unexpected_diagnostic_output
-	{
-		std::string value;
-		std::set<char const *(*)()> already;
-		friend std::ostream & operator<<( std::ostream & os, e_unexpected_diagnostic_output const & x ) noexcept { return os; }
-	};
-
-	namespace leaf_detail
-	{
-		template <class T, class E = void>
-		struct has_data_member_value
-		{
-			static constexpr bool value=false;
-		};
-
-		template <class T>
-		struct has_data_member_value<T, decltype(std::declval<T const &>().value, void())>
-		{
-			static constexpr bool value=std::is_member_object_pointer<decltype(&T::value)>::value;
-		};
-	}
-
-	template <class T>
-	struct is_error_type
-	{
-		static constexpr bool value = leaf_detail::has_data_member_value<T>::value || std::is_base_of<std::exception,T>::value;
-	};
-
-	template <> struct is_error_type<std::exception_ptr>: std::true_type { };
-	template <> struct is_error_type<std::error_code>: std::true_type { };
-	template <> struct is_error_type<system::error_code>: std::true_type { };
-	template <> struct is_error_type<e_unexpected>: std::true_type { };
-	template <> struct is_error_type<e_source_location>: std::true_type { };
-
-	////////////////////////////////////////
-
-	class error;
-
-	error next_error_value() noexcept;
-	error last_error_value() noexcept;
-
-	class error
-	{
-		friend error leaf::next_error_value() noexcept;
-		friend error leaf::last_error_value() noexcept;
+		template <class... E>
+		friend error_id new_error( E && ... ) noexcept;
+		friend error_id leaf::next_error() noexcept;
+		friend error_id leaf::last_error() noexcept;
 
 		unsigned id_;
 
-		explicit error( unsigned id ) noexcept:
+		explicit error_id( unsigned id ) noexcept:
 			id_(id)
 		{
 		}
@@ -152,51 +89,342 @@ namespace boost { namespace leaf {
 
 	public:
 
-		error() noexcept:
-			id_(id_factory::tl_instance().get())
-		{
-		}
-
-		template <class... E>
-		explicit error( E && ... e ) noexcept:
-			id_(id_factory::tl_instance().get())
-		{
-			propagate(std::forward<E>(e)...);
-		}
-
-		friend bool operator==( error const & e1, error const & e2 ) noexcept
+		friend bool operator==( error_id const & e1, error_id const & e2 ) noexcept
 		{
 			return e1.id_==e2.id_;
 		}
 
-		friend bool operator!=( error const & e1, error const & e2 ) noexcept
+		friend bool operator!=( error_id const & e1, error_id const & e2 ) noexcept
 		{
 			return e1.id_!=e2.id_;
 		}
 
-		friend std::ostream & operator<<( std::ostream & os, error const & e )
-		{
-			os << e.id_;
-			return os;
-		}
-
-		error propagate() const noexcept
+		error_id propagate() const noexcept
 		{
 			return *this;
 		}
 
+		friend std::ostream & operator<<( std::ostream & os, error_id const & id )
+		{
+			os << id.id_;
+			return os;
+		}
+
 		template <class... E>
-		error propagate( E && ... ) const noexcept;
+		error_id propagate( E && ... ) const noexcept;
 	};
 
-	inline error next_error_value() noexcept
+	template <class... E>
+	error_id new_error( E && ... e ) noexcept
 	{
-		return error(error::id_factory::tl_instance().next_id());
+		return error_id(error_id::id_factory::tl_instance().get()).propagate(std::forward<E>(e)...);
 	}
 
-	inline error last_error_value() noexcept
+	inline error_id next_error() noexcept
 	{
-		return error(error::id_factory::tl_instance().last_id());
+		return error_id(error_id::id_factory::tl_instance().next_id());
+	}
+
+	inline error_id last_error() noexcept
+	{
+		return error_id(error_id::id_factory::tl_instance().last_id());
+	}
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		class slot_base
+		{
+			slot_base( slot_base const & ) = delete;
+			slot_base & operator=( slot_base const & ) = delete;
+
+			virtual bool slot_print( std::ostream &, error_id const & ) const = 0;
+
+		public:
+
+			static void print( std::ostream & os, error_id const & id )
+			{
+				for( slot_base const * p = first(); p; p=p->next_ )
+					if( p->slot_print(os,id) )
+						os << std::endl;
+			}
+
+		protected:
+
+			static slot_base const * & first() noexcept
+			{
+				static thread_local slot_base const * p = 0;
+				return p;
+			}
+
+			slot_base const * const next_;
+
+			slot_base() noexcept:
+				next_(first())
+			{
+				first() = this;
+			}
+
+			~slot_base() noexcept
+			{
+				slot_base const * & p = first();
+				assert(p==this);
+				p = next_;
+			}
+		};
+	}
+
+	////////////////////////////////////////
+
+	namespace leaf_detail { class captured_exception; }
+
+	class error_info
+	{
+		error_info( error_info const & ) = delete;
+		error_info & operator=( error_info const & ) = delete;
+
+		error_id const id_;
+		std::exception const * const ex_;
+		leaf_detail::captured_exception const * const cap_;
+		void (* const print_ex_)( std::ostream &, std::exception const *, leaf_detail::captured_exception const * );
+
+	public:
+
+		explicit error_info( error_id const & id ) noexcept:
+			id_(id),
+			ex_(0),
+			cap_(0),
+			print_ex_(0)
+			{
+			}
+
+		error_info( error_id const & id, std::exception const * ex, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::captured_exception const *) ) noexcept:
+			id_(id),
+			ex_(ex),
+			cap_(0),
+			print_ex_(print_ex)
+		{
+			assert(print_ex_!=0);
+		}
+
+		error_info( error_id const & id, std::exception const * ex, leaf_detail::captured_exception const * cap, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::captured_exception const *) ) noexcept:
+			id_(id),
+			ex_(ex),
+			cap_(cap),
+			print_ex_(print_ex)
+		{
+			assert(print_ex_!=0);
+		}
+
+		error_id const & error() const noexcept
+		{
+			return id_;
+		}
+
+		bool exception_caught() const noexcept
+		{
+			return print_ex_!=0;
+		}
+
+		std::exception const * exception() const noexcept
+		{
+			assert(exception_caught());
+			return ex_;
+		}
+
+		friend std::ostream & operator<<( std::ostream & os, error_info const & x )
+		{
+			os << "leaf::error_id: " << x.id_ << std::endl;
+			if( x.print_ex_ )
+				x.print_ex_(os,x.ex_,x.cap_);
+			leaf_detail::slot_base::print(os,x.id_);
+			return os;
+		}
+	};
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		template <class T, class E = void>
+		struct has_data_member_value
+		{
+			static constexpr bool value=false;
+		};
+
+		template <class T>
+		struct has_data_member_value<T, decltype(std::declval<T const &>().value, void())>
+		{
+			static constexpr bool value=std::is_member_object_pointer<decltype(&T::value)>::value;
+		};
+
+		template <class T>
+		struct is_error_type_default
+		{
+			static constexpr bool value = has_data_member_value<T>::value || std::is_base_of<std::exception,T>::value;
+		};
+
+		template <> struct is_error_type_default<std::exception_ptr>: std::true_type { };
+		template <> struct is_error_type_default<std::error_code>: std::true_type { };
+		template <> struct is_error_type_default<system::error_code>: std::true_type { };
+	}
+
+	template <class T>
+	struct is_error_type: leaf_detail::is_error_type_default<T>
+	{
+	};
+
+	////////////////////////////////////////
+
+	struct e_source_location
+	{
+		char const * const file;
+		int const line;
+		char const * const function;
+
+		friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
+		{
+			return os << leaf::type<e_source_location>() << ": " << x.file << '(' << x.line << ") in function " << x.function;
+		}
+	};
+
+	namespace leaf_detail
+	{
+		template <> struct is_error_type_default<e_source_location>: std::true_type { };
+	}
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		class monitor_base
+		{
+			monitor_base( monitor_base const & ) = delete;
+			monitor_base & operator=( monitor_base const & ) = delete;
+
+			mutable error_info const * ei_;
+
+		protected:
+
+			monitor_base() noexcept:
+				ei_(0)
+			{
+			}
+
+			monitor_base( monitor_base && x ) noexcept:
+				ei_(0)
+			{
+				x.ei_ = 0;
+			}
+
+			void set_error_info( error_info const & ei ) const noexcept
+			{
+				ei_ = &ei;
+			}
+
+			error_info const & get_error_info() const noexcept
+			{
+				assert(ei_!=0);
+				return *ei_;
+			}
+		};
+	}
+
+	class diagnostic_info: leaf_detail::monitor_base
+	{
+	public:
+
+		char const * (*first_type)();
+		int count;
+
+		explicit diagnostic_info( char const * (*first_type)() ) noexcept:
+			first_type(first_type),
+			count(1)
+		{
+		}
+
+		using monitor_base::set_error_info;
+
+		friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
+		{
+			assert(x.first_type!=0);
+			assert(x.count>0);
+			os << x.get_error_info() << "diagnostic_info: Detected ";
+			if( x.count==1 )
+				os << "1 attempt to communicate an E-object";
+			else
+				os << x.count << " attempts to communicate unexpected E-objects, the first one";
+			return os << " of type " << x.first_type() << std::endl;
+		}
+	};
+
+	namespace leaf_detail
+	{
+		template <> struct is_error_type_default<diagnostic_info>: std::true_type { };
+
+		template <>
+		struct diagnostic<diagnostic_info,true,false>
+		{
+			static bool print( std::ostream & os, diagnostic_info const & ) noexcept
+			{
+				return false;
+			}
+		};
+	}
+
+	class verbose_diagnostic_info: leaf_detail::monitor_base
+	{
+		std::string s_;
+		std::set<char const *(*)()> already_;
+
+	public:
+
+		verbose_diagnostic_info() noexcept
+		{
+		}
+
+		using monitor_base::set_error_info;
+
+		void reset() noexcept
+		{
+			s_.clear();
+			already_.clear();
+		}
+
+		template <class E>
+		void add( E const & e )
+		{
+			std::stringstream s;
+			if( leaf_detail::diagnostic<E>::print(s,e) && already_.insert(&type<E>).second  )
+			{
+				s << std::endl;
+				s_ += s.str();
+			}
+		}
+
+		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
+		{
+			os <<
+				x.get_error_info() <<
+				"verbose_diagnostic_info:" << std::endl <<
+				x.s_;
+			return os;
+		}
+	};
+
+	namespace leaf_detail
+	{
+		template <> struct is_error_type_default<verbose_diagnostic_info>: std::true_type { };
+
+		template <>
+		struct diagnostic<verbose_diagnostic_info,true,false>
+		{
+			static bool print( std::ostream & os, verbose_diagnostic_info const & ) noexcept
+			{
+				return false;
+			}
+		};
 	}
 
 	////////////////////////////////////////
@@ -204,10 +432,27 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class E>
-		struct error_info
+		struct id_e_pair
 		{
-			E v;
-			error e;
+			error_id id;
+			E e;
+
+			explicit id_e_pair( error_id const & id ) noexcept:
+				id(id)
+			{
+			}
+
+			id_e_pair( error_id const & id, E const & e ):
+				id(id),
+				e(e)
+			{
+			}
+
+			id_e_pair( error_id const & id, E && e ) noexcept:
+				id(id),
+				e(std::forward<E>(e))
+			{
+			}
 		};
 
 		inline int & tl_unexpected_enabled_counter() noexcept
@@ -215,24 +460,37 @@ namespace boost { namespace leaf {
 			static thread_local int c;
 			return c;
 		}
+	}
 
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
 		template <class E>
 		class slot:
-			optional<error_info<E>>
+			slot_base,
+			optional<id_e_pair<E>>
 		{
 			slot( slot const & ) = delete;
 			slot & operator=( slot const & ) = delete;
-			typedef optional<error_info<E>> base;
+			typedef optional<id_e_pair<E>> base;
 			slot<E> * prev_;
 			static_assert(is_error_type<E>::value,"Not an error type");
+
+			bool slot_print( std::ostream &, error_id const & ) const;
+
 		protected:
+
 			slot() noexcept;
 			~slot() noexcept;
+
 		public:
+
 			using base::put;
 			using base::has_value;
 			using base::value;
 			using base::reset;
+			using base::emplace;
 		};
 
 		template <class E>
@@ -243,69 +501,61 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		void put_unexpected( error_info<E> const & ev ) noexcept
+		void put_unexpected( id_e_pair<E> const & id_e ) noexcept
 		{
-			if( slot<e_unexpected> * p = tl_slot_ptr<e_unexpected>() )
+			if( slot<diagnostic_info> * p = tl_slot_ptr<diagnostic_info>() )
 			{
 				if( p->has_value() )
 				{
-					auto & p_ev = p->value();
-					if( p_ev.e==ev.e )
+					auto & p_id_e = p->value();
+					if( p_id_e.id==id_e.id )
 					{
-						++p_ev.v.count;
+						++p_id_e.e.count;
 						return;
 					}
 				}
-				(void) p->put( error_info<e_unexpected>{e_unexpected{&type<E>,1},ev.e} );
+				(void) p->put( id_e_pair<diagnostic_info>(id_e.id,diagnostic_info(&type<E>)) );
 			}
 		}
 
 		template <class E>
-		void put_unexpected_diagnostic_output( error_info<E> const & ev ) noexcept
+		void put_verbose_diagnostic_info( id_e_pair<E> const & id_e ) noexcept
 		{
-			if( slot<e_unexpected_diagnostic_output> * p = tl_slot_ptr<e_unexpected_diagnostic_output>() )
+			if( slot<verbose_diagnostic_info> * sl = tl_slot_ptr<verbose_diagnostic_info>() )
 			{
-				std::stringstream s;
-				if( !diagnostic<decltype(ev.v)>::print(s,ev.v) )
-					return;
-				if( p->has_value() )
+				if( auto * pv = sl->has_value() )
 				{
-					auto & p_ev = p->value();
-					if( p_ev.e==ev.e )
+					if( pv->id!=id_e.id )
 					{
-						if( p_ev.v.already.insert(&type<E>).second )
-						{
-							std::string & value = p_ev.v.value;
-							value += '\n';
-							value += s.str();
-							value += " {unexpected}";
-						}
-						return;
+						pv->id = id_e.id;
+						pv->e.reset();
 					}
+					pv->e.add(id_e.e);
 				}
-				(void) p->put( error_info<e_unexpected_diagnostic_output>{e_unexpected_diagnostic_output{s.str()+" {unexpected}"},ev.e} );
+				else
+					sl->emplace(id_e.id).e.add(id_e.e);
 			}
 		}
 
 		template <class E>
-		void no_expect_slot( error_info<E> const & ev ) noexcept
+		void no_expect_slot( id_e_pair<E> const & id_e ) noexcept
 		{
-			put_unexpected(ev);
-			put_unexpected_diagnostic_output(ev);
+			put_unexpected(id_e);
+			put_verbose_diagnostic_info(id_e);
 		}
 
 		template <class E>
-		int put_slot( E && v, error const & e ) noexcept
+		int put_slot( E && e, error_id const & id ) noexcept
 		{
 			using T = typename std::remove_cv<typename std::remove_reference<E>::type>::type;
 			if( slot<T> * p = tl_slot_ptr<T>() )
-				(void) p->put( error_info<T>{std::forward<E>(v),e} );
+				(void) p->put( id_e_pair<T>(id,std::forward<E>(e)) );
 			else
 			{
 				int c = tl_unexpected_enabled_counter();
 				assert(c>=0);
 				if( c )
-					no_expect_slot( error_info<T>{std::forward<E>(v),e} );
+					no_expect_slot( id_e_pair<T>(id,std::forward<E>(e)) );
 			}
 			return 0;
 		}
@@ -323,7 +573,7 @@ namespace boost { namespace leaf {
 		{
 			if( prev_ )
 			{
-				optional<error_info<E>> & p = *prev_;
+				optional<id_e_pair<E>> & p = *prev_;
 				p = std::move(*this);
 			}
 			else
@@ -336,28 +586,36 @@ namespace boost { namespace leaf {
 			tl_slot_ptr<E>() = prev_;
 		}
 
+		template <class E>
+		bool slot<E>::slot_print( std::ostream & os, error_id const & id ) const
+		{
+			if( tl_slot_ptr<E>()==this )
+				if( id_e_pair<E> const * id_e = has_value() )
+					if( id_e->id==id )
+						return diagnostic<decltype(id_e->e)>::print(os,id_e->e);
+			return false;
+		}
+
 		template <class... E>
-		error make_error( char const * file, int line, char const * function, E && ... e )
+		error_id make_error( char const * file, int line, char const * function, E && ... e ) noexcept
 		{
 			assert(file&&*file);
 			assert(line>0);
 			assert(function&&*function);
-			e_source_location sl { file, line, function }; //Temp object MSVC workaround
-			return error( std::move(sl), std::forward<E>(e)... );
+			e_source_location sl { file, line, function }; // Temp object MSVC workaround
+			return error_id( std::move(sl), std::forward<E>(e)... );
 		}
 
-		inline void diagnostic_output_prefix( std::ostream & os, leaf::error const * e )
+		enum class result_variant
 		{
-			if( e )
-				os << "leaf::error serial number: " << *e << std::endl;
-			if( leaf_detail::slot<e_unexpected_diagnostic_output> const * unx = leaf_detail::tl_slot_ptr<e_unexpected_diagnostic_output>() )
-				if( unx->has_value() )
-					os << unx->value().v.value << std::endl;
-		}
-	} //leaf_detail
+			value,
+			err,
+			cap
+		};
+	} // leaf_detail
 
 	template <class... E>
-	error error::propagate( E && ... e ) const noexcept
+	error_id error_id::propagate( E && ... e ) const noexcept
 	{
 		auto _ = { leaf_detail::put_slot(std::forward<E>(e),*this)... };
 		(void) _;
