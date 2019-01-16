@@ -143,7 +143,7 @@ int main( int argc, char const * argv[ ] )
 <3> From now on, all errors escaping this scope will automatically communicate the (now successfully parsed from the command line) file name (LEAF defines `struct e_file_name {std::string value;}`). It's as if every time one of the following functions reports an error, `preload` says "wait, put this `e_file_name` thing with the error, it's important!"
 <4> Call more functions, forward each failure to the caller...
 <5> ...but this is slightly different: we didn't get a failure via `result<T>` from another function, this is our own error we've detected! We return a `new_error`, passing the `cout_error` error code and the system `errno` (LEAF defines `struct e_errno {int value;}`).
-<6> List of error handler goes here. We'll see that later.
+<6> List of error handlers goes here. We'll see that later.
 <7> This concludes the `handle_all` arguments -- as well as our program!
 
 Nice and simple! Writing the `TryBlock`, we concentrate on the "no errors" code path -- if we encounter any error we just return it to `handle_all` for processing. Well, that's if we're being good and using RAII for automatic clean-up -- which we are, `shared_ptr` will automatically close the file for us.
@@ -344,7 +344,7 @@ int main( int argc, char const * argv[ ] )
 <3> If any of the functions we call throws, `try_` will find an appropriate handler to invoke. We'll look at that later.
 <4> From now on, all exceptions escaping this scope will automatically communicate the (now successfully parsed from the command line) file name (LEAF defines `struct e_file_name {std::string value;}`). It's as if every time one of the following functions throws an exception, `preload` says "wait, put this `e_file_name` thing with the exception, it's important!"
 <5> `defer` is similar to `preload`, but instead of the error object, it takes a function that returns it. From this point on, when an exception escapes this scope, `defer` will call the passed function and include the returned `e_errno` with the exception (LEAF defines `struct e_errno {int value;}`).
-<6> List of error handler goes here. We'll see that later.
+<6> List of error handlers goes here. We'll see that later.
 <7> This concludes the `try_` arguments -- as well as our program!
 
 As it is always the case when using exception handling, as long as our `TryBlock` is exception-safe, we can concentrate on the "no errors" code path. Of course, our `TryBlock` is exception-safe, since `shared_ptr` will automatically close the file for us in case an exception is thrown.
