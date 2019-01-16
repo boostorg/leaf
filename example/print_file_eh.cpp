@@ -48,7 +48,7 @@ void file_read( FILE & f, void * buf, int size );
 int main( int argc, char const * argv[ ] )
 {
 	// Configure std::cout to throw on error.
-	std::cout.exceptions ( std::ostream::failbit | std::ostream::badbit );
+	std::cout.exceptions(std::ostream::failbit | std::ostream::badbit);
 
 	return leaf::try_(
 		[&]

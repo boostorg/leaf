@@ -90,7 +90,7 @@ leaf::result<int> call_lua( lua_State * L )
 	lua_getfield( L, LUA_GLOBALSINDEX, "call_do_work" );
 	if( int err=lua_pcall(L,0,1,0) )
 	{
-		// Something went wrong with the call, so we'll return a leaf::new_error.
+		// Something went wrong with the call, so we'll return a new_error.
 		// If this is a do_work failure, the do_work_error_code object prepared in
 		// do_work will become associated with this leaf::error_id value. If not,
 		// we will still need to communicate that the lua_pcall failed with an

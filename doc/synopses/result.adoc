@@ -9,15 +9,33 @@ namespace boost { namespace leaf {
   public:
 
     result() noexcept;
-    result( T const & v );
     result( T && v ) noexcept;
-    result( error_id const & e ) noexcept;
-    result( error_capture const & ec ) noexcept;
+    result( T const & v );
+    result( error_id const & err ) noexcept;
+
+    result( result && r ) noexcept;
+    result( result const & r );
+
+    template <class U>
+    result( result<U> && r ) noexcept
+
+    template <class U>
+    result( result<U> const & r )
+
+    result & operator=( result && r ) noexcept;
+    result & operator=( result const & r );
+
+    template <class U>
+    result & operator=( result<U> && r ) noexcept
+
+    template <class U>
+    result & operator=( result<U> const & r )
 
     explicit operator bool() const noexcept;
 
     T const & value() const;
     T & value();
+
     T const & operator*() const;
     T & operator*();
 
@@ -29,12 +47,10 @@ namespace boost { namespace leaf {
 
 } }
 
-#define LEAF_ERROR(...) <<unspecified>>
-
-#define LEAF_AUTO(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
-
-#define LEAF_CHECK(r) {auto _r = r; if( !_r ) return _r.error();}
+#define LEAF_ERROR(...) ....
+#define LEAF_AUTO(v,r) ....
+#define LEAF_CHECK(r) ....
 ----
 
 [.text-right]
-<<result>> | <<result::result>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<bad_result>> | <<LEAF_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
+<<result>> | <<result::result>> | <<result::operator_eq>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<bad_result>> | <<LEAF_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>

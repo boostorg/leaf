@@ -6,10 +6,16 @@ namespace boost { namespace leaf {
   template <class TryBlock, class... Handler>
   decltype(std::declval<TryBlock>()()) try_( TryBlock && try_block, Handler && ... handler );
 
+  template <class E, typename deduced-type<E>::type... V>
+  struct match;
+
+  template <class... Ex>
+  struct catch_;
+
   error_id get_error_id( std::exception const & ex ) noexcept;
 
 } }
 ----
 
 [.text-right]
-<<try_>> | <<get_error_id>>
+<<try_>> | <<match>> | <<catch_>> | <<get_error_id>>

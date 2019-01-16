@@ -11,8 +11,11 @@ namespace boost { namespace leaf {
   decltype(std::declval<TryBlock>()())
   handle_some( TryBlock && try_block, Handler && ... handler );
 
+  template <class E, typename deduced-type<E>::type... V>
+  struct match;
+
 } }
 ----
 
 [.text-right]
-<<handle_all>> | <<handle_some>>
+<<handle_all>> | <<handle_some>> | <<match>>

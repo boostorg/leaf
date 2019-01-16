@@ -8,9 +8,9 @@ namespace boost { namespace leaf {
 
 } }
 
-#define LEAF_EXCEPTION(...) <<unspecified>>
+#define LEAF_EXCEPTION(...) ....
 
-#define LEAF_THROW(...) throw <<unspecified>>
+#define LEAF_THROW(...) ....
 ----
 
 [.text-right]

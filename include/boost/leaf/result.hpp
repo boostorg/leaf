@@ -109,18 +109,12 @@ namespace boost { namespace leaf {
 			destroy();
 		}
 
-		result( result const & x )
-		{
-			copy_from(x);
-		}
-
 		result( result && x ) noexcept
 		{
 			move_from(std::move(x));
 		}
 
-		template <class U>
-		result( result<U> const & x )
+		result( result const & x )
 		{
 			copy_from(x);
 		}
@@ -131,20 +125,26 @@ namespace boost { namespace leaf {
 			move_from(std::move(x));
 		}
 
+		template <class U>
+		result( result<U> const & x )
+		{
+			copy_from(x);
+		}
+
 		result():
 			value_(T()),
 			which_(leaf_detail::result_variant::value)
 		{
 		}
 
-		result( T const & v ):
-			value_(v),
+		result( T && v ) noexcept:
+			value_(std::move(v)),
 			which_(leaf_detail::result_variant::value)
 		{
 		}
 
-		result( T && v ) noexcept:
-			value_(std::move(v)),
+		result( T const & v ):
+			value_(v),
 			which_(leaf_detail::result_variant::value)
 		{
 		}
@@ -157,6 +157,13 @@ namespace boost { namespace leaf {
 
 		result( std::shared_ptr<leaf_detail::dynamic_store> && ) noexcept;
 
+		result & operator=( result && x ) noexcept
+		{
+			destroy();
+			move_from(std::move(x));
+			return *this;
+		}
+
 		result & operator=( result const & x )
 		{
 			destroy();
@@ -164,10 +171,19 @@ namespace boost { namespace leaf {
 			return *this;
 		}
 
-		result & operator=( result && x ) noexcept
+		template <class U>
+		result & operator=( result<U> && x ) noexcept
 		{
 			destroy();
 			move_from(std::move(x));
+			return *this;
+		}
+
+		template <class U>
+		result & operator=( result<U> const & x )
+		{
+			destroy();
+			copy_from(x);
 			return *this;
 		}
 
