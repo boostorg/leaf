@@ -66,11 +66,10 @@ int main( int argc, char const * argv[ ] )
 			std::string buffer( 1 + s, '\0' );
 			LEAF_CHECK(file_read(*f, &buffer[0], buffer.size()-1));
 
-			auto propagate2 = leaf::defer([ ] { return leaf::e_errno{errno}; } );
 			std::cout << buffer;
 			std::cout.flush();
 			if( std::cout.fail() )
-				return leaf::new_error( cout_error );
+				return leaf::new_error( cout_error, leaf::e_errno{errno} );
 
 			return 0;
 		},

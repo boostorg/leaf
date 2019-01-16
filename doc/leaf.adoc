@@ -35,38 +35,111 @@ https://github.com/zajo/leaf[GitHub] | <<introduction,Introduction>> | <<techniq
 [[introduction]]
 == Five Minute Introduction
 
-We'll write a short but complete program that reads a text file in a buffer and prints it to `std::cout`, using LEAF to handle errors. For demonstration, we'll implement two versions: one using error codes, and one using exception handling.
+For demonstration, we'll implement two versions of the same program: one using error codes to handle errors, and one using exception handling.
 
 [[introduction-result]]
 === Using Error Codes
 
-First, we need an `enum` to define our error codes:
+We'll write a short but complete program that reads a text file in a buffer and prints it to `std::cout`, using LEAF to handle errors.
+
+Let's jump ahead and start with the `main` function: it will call functions as needed and handle all the errors that occur. Did I say *all* the errors? I did, so we'll use `leaf::handle_all`. It has the following signature:
 
 [source,c++]
 ----
-enum error_code
+template <class TryBlock, class... Handler>
+<<deduced-type>> handle_all( TryBlock && try_block, Handler && ... handler );
+----
+
+`TryBlock` is a function type, almost always a lambda. It is required to return `leaf::result<T>`, which holds a value of type `T` or else it communicates a failure.
+
+The first thing `handle_all` does is invoke `try_block`. If the returned object indicates success, `handle_all` returns the contained value; otherwise it calls a suitable error handling function from the `handler...` list.
+
+We'll see later just what kind of a `TryBlock` will our `main` function pass to `handle_all`, but first, let's look at the juicy error-handling part:
+
+[source,c++]
+----
+int main( int argc, char const * argv[ ] )
 {
-  bad_command_line = 1,
-  input_file_open_error,
-  input_file_size_error,
-  input_file_read_error,
-  input_eof_error,
-  cout_error
-};
+  return leaf::handle_all(
+
+    [&]() -> leaf::result<int>
+    {
+      // The TryBlock code goes here, we'll see it later
+    },
+
+    [ ](leaf::match<error_code, input_file_open_error>, <1>
+        leaf::match<leaf::e_errno, ENOENT>,
+        leaf::e_file_name const & fn)
+    {
+      std::cerr << "File not found: " << fn.value << std::endl;
+      return 1;
+    },
+
+    [ ](leaf::match<error_code, input_file_open_error>, <2>
+        leaf::e_errno const & errn,
+        leaf::e_file_name const & fn)
+    {
+      std::cerr << "Failed to open " << fn.value << ", errno=" << errn << std::endl;
+      return 2;
+    },
+
+    [ ](leaf::match<error_code, input_file_size_error, input_file_read_error, input_eof_error>, <3>
+        leaf::e_errno const & errn,
+        leaf::e_file_name const & fn)
+    {
+      std::cerr << "Failed to access " << fn.value << ", errno=" << errn << std::endl;
+      return 3;
+    },
+
+    [ ](leaf::match<error_code, cout_error>, <4>
+        leaf::e_errno const & errn)
+    {
+      std::cerr << "Output error, errno=" << errn << std::endl;
+      return 4;
+    },
+
+    [ ](leaf::match<error_code, bad_command_line>) <5>
+    {
+      std::cout << "Bad command line argument" << std::endl;
+      return 5;
+    },
+
+    [ ](leaf::error_info const & unmatched) <6>
+    {
+      std::cerr <<
+        "Unknown failure detected" << std::endl <<
+        "Cryptic diagnostic information follows" << std::endl <<
+        unmatched;
+      return 6;
+    }
+  );
+}
 ----
 
-Very nice, but how does LEAF know that this `enum` represents error codes and not, say, types of cold cuts sold at http://order.bcdeli.com/[Bay Cities Italian Deli]? It doesn't, unless we tell it:
+<1> This handler will be called if the error includes: +
+pass:[•] an object of type `error_code` equal to `input_file_open_error`, and +
+pass:[•] an object of type `leaf::e_errno` that has `.value` equal to `ENOENT`, and +
+pass:[•] an object of type `leaf::e_file_name`.
 
-[source,c++]
-----
-namespace boost { namespace leaf {
+<2> This handler will be called if the error includes: +
+pass:[•] an object of type `error_code` equal to `input_file_open_error`, and +
+pass:[•] an object of type `leaf::e_errno` (regardless of its `.value`), and +
+pass:[•] an object of type `leaf::e_file_name`.
 
-  template<> struct is_error_type<error_code>: std::true_type { };
+<3> This handler will be called if the error includes: +
+pass:[•] an object of type `error_code` equal to any of `input_file_size_error`, `input_file_read_error`, `input_eof_error`, and +
+pass:[•] an object of type `leaf::e_errno` (regardless of its `.value`), and +
+pass:[•] an object of type `leaf::e_file_name`.
 
-} }
-----
+<4> This handler will be called if the error includes: +
+pass:[•] an object of type `error_code` equal to `cout_error`, and +
+pass:[•] an object of type `leaf::e_errno` (regardless of its `.value`),
 
-Now, reading and printing a file may not seem like a complex job, but let's split it into several functions, each communicating failures using `leaf::result<T>`:
+<5> This handler will be called if the error includes an object of type `error_code` equal to `bad_command_line`.
+
+<6> This last handler matches any error: it prints diagnostic information to help debug logic errors in the program, since it failed to match  an appropriate error handler to the error condition it encountered.
+
+Now, reading and printing a file may not seem like a complex job, but let's split it into several functions, each communicating failures using `result<T>`:
 
 [source,c++]
 ----
@@ -83,159 +156,7 @@ leaf::result<int> file_size( FILE & f );
 leaf::result<void> file_read( FILE & f, void * buf, int size );
 ----
 
-What's this `result<T>` template, you ask? It's a simple variant: it holds a value of type `T` or else it represents an error condition. This way, functions can communicate failures -- and we don't even need an error code to represent success. Which makes sense if you think about it.
-
-Now on to the `main` function: it will call functions as needed and handle all the errors that occur. Did I say *all* the errors? I did, so we'll use `leaf::handle_all`. It has the following signature:
-
-[source,c++]
-----
-template <class TryBlock, class... Handler>
-<<deduced-type>> handle_all( TryBlock && try_block, Handler && ... handler );
-----
-
-`TryBlock` is a function type, almost always a lambda, which is required to return an instance of the `result` template. The first thing `handle_all` does is invoke the `try_block`. If the returned object indicates success, `handle_all` returns the contained value; otherwise it calls a suitable error handling function from the `handler...` list.
-
-Now, let's see just what kind of a `TryBlock` will our `main` function pass to `handle_all`:
-
-[source,c++]
-----
-int main( int argc, char const * argv[ ] )
-{
-  return leaf::handle_all(
-
-    [&]() -> leaf::result<int> <1>
-    {
-      leaf::result<char const *> file_name = parse_command_line(argc,argv);
-      if( !file_name )
-        return file_name.error(); <2>
-
-      auto propagate = leaf::preload( leaf::e_file_name{*file_name} ); <3>
-
-      leaf::result<std::shared_ptr<FILE>> f = file_open(*file_name);
-      if( !f )
-        return f.error(); <4>
-
-      leaf::result<int> s = file_size(**f);
-      if( !s )
-        return s.error(); <4>
-
-      std::string buffer( 1 + *s, '\0' );
-      leaf::result<void> fr = file_read(**f, &buffer[0], buffer.size()-1);
-      if( !fr )
-        return fr.error(); <4>
-
-      std::cout << buffer;
-      std::cout.flush();
-      if( std::cout.fail() )
-        return leaf::new_error( cout_error, leaf::e_errno{errno} ); <5>
-
-      return 0;
-    },
-
-    .... <6>
-
-  ); <7>
-}
-----
-
-<1> Our `TryBlock` returns a `result<int>`. In case of success, it will hold `0`, which will be returned from `main` to the OS.
-<2> If `parse_command_line` returns an error, we return that error to `handle_all` (which invoked us). Otherwise, the returned `file_name` stores a value of type `char const *`, which we can access by "dereferencing" it: `*file_name`.
-<3> From now on, all errors escaping this scope will automatically communicate the (now successfully parsed from the command line) file name (LEAF defines `struct e_file_name {std::string value;}`). It's as if every time one of the following functions reports an error, `preload` says "wait, put this `e_file_name` thing with the error, it's important!"
-<4> Call more functions, forward each failure to the caller...
-<5> ...but this is slightly different: we didn't get a failure via `result<T>` from another function, this is our own error we've detected! We return a `new_error`, passing the `cout_error` error code and the system `errno` (LEAF defines `struct e_errno {int value;}`).
-<6> List of error handlers goes here. We'll see that later.
-<7> This concludes the `handle_all` arguments -- as well as our program!
-
-Nice and simple! Writing the `TryBlock`, we concentrate on the "no errors" code path -- if we encounter any error we just return it to `handle_all` for processing. Well, that's if we're being good and using RAII for automatic clean-up -- which we are, `shared_ptr` will automatically close the file for us.
-
-Now let's look at the juicy second part of the call to `handle_all`, which lists our error handlers:
-
-[source,c++]
-----
-int main( int argc, char const * argv[ ] )
-{
-  return leaf::handle_all(
-
-    [&]() -> leaf::result<int>
-    {
-      .... <1>
-    },
-
-    [ ](leaf::match<error_code, input_file_open_error>, <2>
-        leaf::match<leaf::e_errno, ENOENT>,
-        leaf::e_file_name const & fn)
-    {
-      std::cerr << "File not found: " << fn.value << std::endl;
-      return 1;
-    },
-
-    [ ](leaf::match<error_code, input_file_open_error>, <3>
-        leaf::e_errno const & errn,
-        leaf::e_file_name const & fn)
-    {
-      std::cerr << "Failed to open " << fn.value << ", errno=" << errn << std::endl;
-      return 2;
-    },
-
-    [ ](leaf::match<error_code, input_file_size_error, input_file_read_error, input_eof_error>, <4>
-        leaf::e_errno const & errn,
-        leaf::e_file_name const & fn)
-    {
-      std::cerr << "Failed to access " << fn.value << ", errno=" << errn << std::endl;
-      return 3;
-    },
-
-    [ ](leaf::match<error_code, cout_error>, <5>
-        leaf::e_errno const & errn)
-    {
-      std::cerr << "Output error, errno=" << errn << std::endl;
-      return 4;
-    },
-
-    [ ](leaf::match<error_code, bad_command_line>) <6>
-    {
-      std::cout << "Bad command line argument" << std::endl;
-      return 5;
-    },
-
-    [ ](leaf::error_info const & unmatched) <7>
-    {
-      std::cerr <<
-        "Unknown failure detected" << std::endl <<
-        "Cryptic diagnostic information follows" << std::endl <<
-        unmatched;
-      return 6;
-    }
-  );
-}
-----
-
-<1> This is the `TryBlock` from the previous listing, it does all the work and bails out if it encounters an error. In that case, `handle_all` will consider the error handlers that follow, in order, and it will call the first one that can deal with the error:
-
-<2> This handler will be called if the error includes: +
-pass:[•] an object of type `error_code` equal to `input_file_open_error`, and +
-pass:[•] an object of type `leaf::e_errno` that has `.value` equal to `ENOENT`, and +
-pass:[•] an object of type `leaf::e_file_name`.
-
-<3> This handler will be called if the error includes: +
-pass:[•] an object of type `error_code` equal to `input_file_open_error`, and +
-pass:[•] an object of type `leaf::e_errno` (regardless of its `.value`), and +
-pass:[•] an object of type `leaf::e_file_name`.
-
-<4> This handler will be called if the error includes: +
-pass:[•] an object of type `error_code` equal to any of `input_file_size_error`, `input_file_read_error`, `input_eof_error`, and +
-pass:[•] an object of type `leaf::e_errno` (regardless of its `.value`), and +
-pass:[•] an object of type `leaf::e_file_name`.
-
-<5> This handler will be called if the error includes: +
-pass:[•] an object of type `error_code` equal to `cout_error`, and +
-pass:[•] an object of type `leaf::e_errno` (regardless of its `.value`),
-
-<6> This handler will be called if the error includes an object of type `error_code` equal to `bad_command_line`.
-
-<7> This last handler matches any error: it prints diagnostic information to help debug logic errors in the program, since it failed to match  an appropriate error handler to the error condition it encountered. In this program this handler will never be called, but it is required by `handle_all` because, well, it must handle all errors (the alternative is to use `handle_some` instead, which doesn't require a "catch all" last-resort handler; instead, if it fails to find a suitable handler for an error, it returns the error to its caller).
-
-To conclude this introduction, let's look at one of the error-reporting functions that our `TryBlock` calls, for example `file_open`:
+For example, let's look at `file_open`:
 
 [source,c++]
 ----
@@ -248,7 +169,95 @@ leaf::result<std::shared_ptr<FILE>> file_open( char const * file_name )
 }
 ----
 
-If `fopen` succeeds, we return a `shared_ptr` which will automatically call `fclose` as needed. If `fopen` fails, we report an error by calling `new_error`, which takes any number of error objects to send with the error. In this case we pass the error code (`input_file_open_error`), as well as the system `errno` (LEAF defines `struct e_errno {int value;}`).
+If `fopen` succeeds, we return a `shared_ptr` which will automatically call `fclose` as needed. If `fopen` fails, we report an error by calling `new_error`, which takes any number of error objects to send with the error. In this case we pass the system `errno` (LEAF defines `struct e_errno {int value;}`), and our own error code value, `input_file_open_error`.
+
+Here is our complete error code `enum`:
+
+[source,c++]
+----
+enum error_code
+{
+  bad_command_line = 1,
+  input_file_open_error,
+  input_file_size_error,
+  input_file_read_error,
+  input_eof_error,
+  cout_error
+};
+----
+
+Looks good, but how does LEAF know that this `enum` represents error codes and not, say, types of cold cuts sold at http://order.bcdeli.com/[Bay Cities Italian Deli]? It doesn't, unless we tell it:
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template<> struct is_error_type<error_code>: std::true_type { };
+
+} }
+----
+
+We're now ready to look at the `TryBlock` we'll pass to `handle_all`. It does all the work, bails out if it encounters an error:
+
+[source,c++]
+----
+int main( int argc, char const * argv[ ] )
+{
+  return leaf::handle_all(
+
+    [&]() -> leaf::result<int>
+    {
+      leaf::result<char const *> file_name = parse_command_line(argc,argv);
+      if( !file_name )
+        return file_name.error();
+....
+----
+
+Stop the presses! What's this, if "error" return "error"? There is a better way: we'll use `LEAF_AUTO`. It takes a `result<T>` and bails out in case of a failure (control leaves the calling function), otherwise defines a local variable to access the `T` value stored in the `result` object.
+
+This is what our `TryBlock` really looks like:
+
+[source,c++]
+----
+int main( int argc, char const * argv[ ] )
+{
+  return leaf::handle_all(
+
+    [&]() -> leaf::result<int> <1>
+    {
+      LEAF_AUTO(file_name, parse_command_line(argc,argv)); <2>
+
+      auto propagate = leaf::preload( leaf::e_file_name{file_name} ); <3>
+
+      LEAF_AUTO(f, file_open(file_name)); <4>
+
+      LEAF_AUTO(s, file_size(*f)); <4>
+
+      std::string buffer( 1 + s, '\0' );
+      LEAF_CHECK(file_read(*f, &buffer[0], buffer.size()-1)); <4>
+
+      std::cout << buffer;
+      std::cout.flush();
+      if( std::cout.fail() ) <5>
+        return leaf::new_error( cout_error, leaf::e_errno{errno} );
+
+      return 0;
+    },
+
+    .... // The list of error handlers goes here
+
+  ); <7>
+}
+----
+
+<1> Our `TryBlock` returns a `result<int>`. In case of success, it will hold `0`, which will be returned from `main` to the OS.
+<2> If `parse_command_line` returns an error, we forward that error to `handle_all` (which invoked us) verbatim. Otherwise, `LEAF_AUTO` get us a local variable `file_name` to access the `char const *` result.
+<3> From now on, all errors escaping this scope will automatically communicate the (now successfully parsed from the command line) file name (LEAF defines `struct e_file_name {std::string value;}`). It's as if every time one of the following functions reports an error, `preload` says "wait, put this `e_file_name` thing with the error, it's important!"
+<4> Call more functions, forward each failure to the caller...
+<5> ...but this is slightly different: we didn't get a failure via `result<T>` from another function, this is our own error we've detected! We return a `new_error`, passing the `cout_error` error code and the system `errno` (LEAF defines `struct e_errno {int value;}`).
+<6> This concludes the `handle_all` arguments -- as well as our program!
+
+Nice and simple! Writing the `TryBlock`, we concentrate on the "no errors" code path -- if we encounter any error we just return it to `handle_all` for processing. Well, that's if we're being good and using RAII for automatic clean-up -- which we are, `shared_ptr` will automatically close the file for us.
 
 TIP: The complete program from this tutorial is available https://github.com/zajo/leaf/blob/master/example/print_file_result.cpp?ts=3[here]. The https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp?ts=3[other] version of the same program uses exception handling to report errors (see <<introduction-eh,below>>).
 
@@ -257,11 +266,7 @@ TIP: The complete program from this tutorial is available https://github.com/zaj
 [[introduction-eh]]
 === Using Exception Handling
 
-And now, we'll write the same program that reads a text file in a buffer and prints it to `std::cout`, this time using exceptions to report errors.
-
-TIP: When used with exception handling, LEAF can be viewed as <<boost_exception,a better Boost Exception>>.
-
-First, we need to define our exception class hierarchy:
+And now, we'll write the same program that reads a text file in a buffer and prints it to `std::cout`, this time using exceptions to report errors. First, we need to define our exception class hierarchy:
 
 [source,c++]
 ----
@@ -278,7 +283,7 @@ struct input_eof_error : virtual input_file_error { };
 
 NOTE: To avoid ambiguities in the dynamic type conversion which occur when catching a base type, it is generally recommended to use virtual inheritance in exception type hierarchies.
 
-We'll split the job into several functions, each communicating failures by throwing exceptions:
+Again, we'll split the job into several functions, each communicating failures by throwing exceptions:
 
 [source,c++]
 ----
@@ -453,7 +458,7 @@ std::shared_ptr<FILE> file_open( char const * file_name )
 
 If `fopen` succeeds, it returns a `shared_ptr` which will automatically call `fclose` as needed. If `fopen` fails, we throw the exception object returned by `leaf::exception`, which takes as its first argument an exception object, followed by any number of error objects to send with it. In this case we pass the system `errno` (LEAF defines `struct e_errno {int value;}`). The returned object can be caught as `input_file_open_error`.
 
-NOTE: `try_` can work with any exception, not only exceptions thrown using `leaf::exception`.
+NOTE: `try_` works with any exception, not only exceptions thrown using `leaf::exception`.
 
 TIP: The complete program from this tutorial is available https://github.com/zajo/leaf/blob/master/example/print_file_eh.cpp?ts=3[here]. The https://github.com/zajo/leaf/blob/master/example/print_file_result.cpp?ts=3[other] version of the same program does not use exception handling to report errors (see the <<introduction-result,previous introduction>>).
 
