@@ -9,13 +9,7 @@
 
 #include <exception>
 
-#ifndef LEAF_NO_EXCEPTIONS
-#	if !__cpp_exceptions
-#		define LEAF_NO_EXCEPTIONS
-#	endif
-#endif
-
-#ifdef LEAF_NO_EXCEPTIONS
+#if defined(LEAF_NO_EXCEPTIONS) || defined(BOOST_EXCEPTIONS)
 
 namespace boost
 {
