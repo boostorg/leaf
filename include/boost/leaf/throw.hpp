@@ -9,10 +9,11 @@
 
 #include <boost/leaf/common.hpp>
 #include <boost/leaf/error.hpp>
+#include <boost/leaf/throw_exception.hpp>
 #include <exception>
 
 #define LEAF_EXCEPTION(...) ::boost::leaf::leaf_detail::exception_(__FILE__,__LINE__,__FUNCTION__,__VA_ARGS__)
-#define LEAF_THROW(...) throw LEAF_EXCEPTION(__VA_ARGS__)
+#define LEAF_THROW(...) ::boost::leaf::throw_exception(LEAF_EXCEPTION(__VA_ARGS__))
 
 namespace boost { namespace leaf {
 

@@ -7,6 +7,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <boost/leaf/throw_exception.hpp>
 #include <boost/leaf/detail/dynamic_store_impl.hpp>
 #include <boost/leaf/detail/captured_exception.hpp>
 #include <typeinfo>
@@ -111,11 +112,11 @@ namespace boost { namespace leaf {
 				}
 				catch( error_id const & id )
 				{
-					throw captured_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(id,std::move(ss)), true, &print_types<E...>::print );
+					throw_exception(captured_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(id,std::move(ss)), true, &print_types<E...>::print ));
 				}
 				catch(...)
 				{
-					throw captured_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(new_error(),std::move(ss)), false, &print_types<E...>::print );
+					throw_exception(captured_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(new_error(),std::move(ss)), false, &print_types<E...>::print ));
 				}
 			}
 		};
