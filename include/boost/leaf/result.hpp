@@ -35,9 +35,9 @@ namespace boost { namespace leaf {
 			dynamic_store_ptr cap_;
 		};
 
-		leaf_detail::result_variant which_;
+		mutable leaf_detail::result_variant which_;
 
-		void destroy() noexcept
+		void destroy() const noexcept
 		{
 			switch( which_ )
 			{
@@ -219,7 +219,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class... E>
-		error_id error( E && ... e ) noexcept
+		error_id error( E && ... e ) const noexcept
 		{
 			switch( which_ )
 			{
@@ -285,6 +285,12 @@ namespace boost { namespace leaf {
 		using base::operator bool;
 		using base::error;
 	};
+
+	template <class T>
+	error_id get_error_id( result<T> const & r )
+	{
+		return r.error();
+	}
 
 } }
 

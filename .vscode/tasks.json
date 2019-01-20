@@ -159,6 +159,15 @@
 			}
 		},
 		{
+			"label": "handle_all_error_code_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test handle_all_error_code_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test handle_all_error_code_test"
+			}
+		},
+		{
 			"label": "handle_all_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test handle_all_test",
@@ -174,6 +183,15 @@
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
 				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test handle_some_basic_test"
+			}
+		},
+		{
+			"label": "handle_some_error_code_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test handle_some_error_code_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test handle_some_error_code_test"
 			}
 		},
 		{

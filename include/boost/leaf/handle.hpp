@@ -7,10 +7,18 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/result.hpp>
 #include <boost/leaf/detail/static_store.hpp>
 
 namespace boost { namespace leaf {
+
+	template <class T>
+	class result;
+
+	template <class T>
+	bool succeeded( result<T> const & r )
+	{
+		return bool(r);
+	}
 
 	template <class TryBlock, class... Handler>
 	typename std::remove_reference<decltype(std::declval<TryBlock>()().value())>::type handle_all( TryBlock && try_block, Handler && ... handler )
@@ -18,14 +26,21 @@ namespace boost { namespace leaf {
 		using namespace leaf_detail;
 		typename deduce_static_store<typename handler_args_set<Handler...>::type>::type ss;
 		ss.set_reset(true);
-		if( auto r = std::forward<TryBlock>(try_block)() )
-			return *r;
+		auto r = std::forward<TryBlock>(try_block)();
+		if( succeeded(r) )
+			return r.value();
 		else
-			return ss.handle_error(error_info(r.error()), std::forward<Handler>(handler)...);
+			return ss.handle_error(error_info(get_error_id(r)), std::forward<Handler>(handler)...);
 	}
 
 	namespace leaf_detail
 	{
+		template <class... A>
+		struct dependent_type_result_void
+		{
+			using type = result<void>;
+		};
+
 		template <class R, class F, class = typename function_traits<F>::mp_args>
 		struct handler_wrapper;
 
@@ -51,7 +66,7 @@ namespace boost { namespace leaf {
 				f_(std::forward<F>(f))
 			{
 			}
-			result<void> operator()( A... a ) const
+			typename dependent_type_result_void<A...>::type operator()( A... a ) const
 			{
 				f_(a...);
 				return { };
@@ -65,18 +80,24 @@ namespace boost { namespace leaf {
 		using namespace leaf_detail;
 		using R = typename function_traits<TryBlock>::return_type;
 		typename deduce_static_store<typename handler_args_set<Handler...>::type>::type ss;
-		if( auto r = std::forward<TryBlock>(try_block)() )
+
+		auto r = std::forward<TryBlock>(try_block)();
+		if( succeeded(r) )
 		{
 			ss.set_reset(true);
 			return r;
 		}
-		else if( auto rr = ss.handle_error(error_info(r.error()), handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } ) )
-		{
-			ss.set_reset(true);
-			return rr;
-		}
 		else
-			return rr;
+		{
+			auto rr = ss.handle_error(error_info(get_error_id(r)), handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
+			if( succeeded(rr) )
+			{
+				ss.set_reset(true);
+				return rr;
+			}
+			else
+				return rr;
+		}
 	}
 
 } }

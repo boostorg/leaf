@@ -26,6 +26,7 @@ namespace boost { namespace leaf {
 
 	error_id next_error() noexcept;
 	error_id last_error() noexcept;
+	error_id get_error_id( std::error_code const & ) noexcept;
 
 	class error_id
 	{
@@ -33,6 +34,7 @@ namespace boost { namespace leaf {
 		friend error_id new_error( E && ... ) noexcept;
 		friend error_id leaf::next_error() noexcept;
 		friend error_id leaf::last_error() noexcept;
+		friend error_id get_error_id( std::error_code const & ) noexcept;
 
 		unsigned id_;
 
@@ -112,6 +114,8 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		error_id propagate( E && ... ) const noexcept;
+
+		std::error_code to_error_code() const noexcept;
 	};
 
 	template <class... E>

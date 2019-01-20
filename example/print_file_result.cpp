@@ -8,6 +8,7 @@
 // using LEAF to handle errors. It does not use exception handling.
 
 #include <boost/leaf/handle.hpp>
+#include <boost/leaf/result.hpp>
 #include <boost/leaf/preload.hpp>
 #include <iostream>
 #include <memory>
