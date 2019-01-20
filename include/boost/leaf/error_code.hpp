@@ -56,6 +56,11 @@ namespace boost { namespace leaf {
 			std::error_code( -1, leaf_detail::get_error_category0() );
 	}
 
+	inline bool succeeded( std::error_code const & ec )
+	{
+		return !ec;
+	}
+
 	inline error_id get_error_id( std::error_code const & ec ) noexcept
 	{
 		std::error_category const & cat =  ec.category();
@@ -68,11 +73,6 @@ namespace boost { namespace leaf {
 		}
 		else
 			return leaf::next_error();
-	}
-
-	inline bool succeeded( std::error_code const & ec )
-	{
-		return !ec;
 	}
 
 } }

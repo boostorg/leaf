@@ -287,6 +287,12 @@ namespace boost { namespace leaf {
 	};
 
 	template <class T>
+	bool succeeded( result<T> const & r )
+	{
+		return bool(r);
+	}
+
+	template <class T>
 	error_id get_error_id( result<T> const & r )
 	{
 		return r.error();

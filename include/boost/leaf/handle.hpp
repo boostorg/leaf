@@ -14,12 +14,6 @@ namespace boost { namespace leaf {
 	template <class T>
 	class result;
 
-	template <class T>
-	bool succeeded( result<T> const & r )
-	{
-		return bool(r);
-	}
-
 	template <class TryBlock, class... Handler>
 	typename std::remove_reference<decltype(std::declval<TryBlock>()().value())>::type handle_all( TryBlock && try_block, Handler && ... handler )
 	{
