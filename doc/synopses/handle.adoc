@@ -14,8 +14,11 @@ namespace boost { namespace leaf {
   template <class E, typename deduced-type<E>::type... V>
   struct match;
 
+  template <class R>
+  struct failed;
+
 } }
 ----
 
 [.text-right]
-<<handle_all>> | <<handle_some>> | <<match>>
+<<handle_all>> | <<handle_some>> | <<match>> | <<failed>>

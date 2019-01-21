@@ -45,6 +45,9 @@ namespace boost { namespace leaf {
 
   struct bad_result: std::exception { };
 
+  template <class T>
+  error_id get_error_id( result<T> const & r ) noexcept;
+
 } }
 
 #define LEAF_ERROR(...) ....
@@ -53,4 +56,4 @@ namespace boost { namespace leaf {
 ----
 
 [.text-right]
-<<result>> | <<result::result>> | <<result::operator_eq>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<bad_result>> | <<LEAF_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
+<<result>> | <<result::result>> | <<result::operator_eq>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<bad_result>> | <<succeeded-result>> | <<get_error_id-result>> | <<LEAF_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>

@@ -21,10 +21,10 @@ namespace boost { namespace leaf {
 		typename deduce_static_store<typename handler_args_set<Handler...>::type>::type ss;
 		ss.set_reset(true);
 		auto r = std::forward<TryBlock>(try_block)();
-		if( succeeded(r) )
-			return r.value();
+		if( auto id = get_error_id(r) )
+			return ss.handle_error(error_info(id), &r, std::forward<Handler>(handler)...);
 		else
-			return ss.handle_error(error_info(get_error_id(r)), &r, std::forward<Handler>(handler)...);
+			return r.value();
 	}
 
 	namespace leaf_detail
@@ -74,23 +74,22 @@ namespace boost { namespace leaf {
 		using namespace leaf_detail;
 		using R = decltype(std::declval<TryBlock>()());
 		typename deduce_static_store<typename handler_args_set<Handler...>::type>::type ss;
-
 		auto r = std::forward<TryBlock>(try_block)();
-		if( succeeded(r) )
+		if( auto id = get_error_id(r) )
 		{
-			ss.set_reset(true);
-			return r;
+			auto h = ss.handle_error(error_info(id), &r, handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
+			if( get_error_id(h) )
+				return h;
+			else
+			{
+				ss.set_reset(true);
+				return h;
+			}
 		}
 		else
 		{
-			auto rr = ss.handle_error(error_info(get_error_id(r)), &r, handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
-			if( succeeded(rr) )
-			{
-				ss.set_reset(true);
-				return rr;
-			}
-			else
-				return rr;
+			ss.set_reset(true);
+			return r;
 		}
 	}
 

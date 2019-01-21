@@ -1,0 +1,11 @@
+.#include <boost/leaf/error_code.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  std::error_code get_error_code( error_id id ) noexcept;
+
+  error_id get_error_id( std::error_code ec ) noexcept;
+
+} }
+----

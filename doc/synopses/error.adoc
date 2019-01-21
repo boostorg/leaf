@@ -5,6 +5,8 @@ namespace boost { namespace leaf {
 
   class error_id;
 
+  error_id success() noexcept;
+
   template <class... E>
   error_id new_error( E && ... e ) noexcept;
 
@@ -16,13 +18,15 @@ namespace boost { namespace leaf {
   {
   public:
 
+    explicit operator bool() const noexcept;
+
     template <class... E>
     error_id propagate( E && ... e ) const noexcept;
 
     friend bool operator==( error_id const & e1, error_id const & e2 ) noexcept;
     friend bool operator!=( error_id const & e1, error_id const & e2 ) noexcept;
 
-    friend std::ostream & operator<<( std::ostream & os, error_id const & e )
+    friend std::ostream & operator<<( std::ostream & os, error_id const & e );
   };
 
   template <class T>
@@ -35,4 +39,4 @@ namespace boost { namespace leaf {
 ----
 
 [.text-right]
-<<error_id>> | <<new_error>> | <<next_error>> | <<last_error>> | <<propagate>> | <<operator_eq-error_id>> | <<operator_neq-error_id>> | <<operator_shl-error_id>> | <<is_error_type>>
+<<error_id>> | <<success>> | <<new_error>> | <<next_error>> | <<last_error>> | <<propagate>> | <<error_id::operator_bool>> | <<operator_eq-error_id>> | <<operator_neq-error_id>> | <<operator_shl-error_id>> | <<is_error_type>>

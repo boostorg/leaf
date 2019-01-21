@@ -224,7 +224,7 @@ namespace boost { namespace leaf {
 			switch( which_ )
 			{
 			case leaf_detail::result_variant::value:
-				return leaf::new_error(std::forward<E>(e)...);
+				return success();
 			case leaf_detail::result_variant::cap:
 				{
 					dynamic_store_ptr cap = cap_;
@@ -287,13 +287,7 @@ namespace boost { namespace leaf {
 	};
 
 	template <class T>
-	bool succeeded( result<T> const & r )
-	{
-		return bool(r);
-	}
-
-	template <class T>
-	error_id get_error_id( result<T> const & r )
+	error_id get_error_id( result<T> const & r ) noexcept
 	{
 		return r.error();
 	}

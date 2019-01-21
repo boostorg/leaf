@@ -92,7 +92,7 @@ namespace boost { namespace leaf {
 
 		operator bool() const noexcept
 		{
-			return id_==0;
+			return id_!=0;
 		}
 
 		friend bool operator==( error_id e1, error_id e2 ) noexcept
@@ -338,6 +338,23 @@ namespace boost { namespace leaf {
 			{
 				assert(ei_!=0);
 				return *ei_;
+			}
+
+		public:
+
+			error_id error() const noexcept
+			{
+				return ei_->error();
+			}
+
+			bool exception_caught() const noexcept
+			{
+				return ei_->exception_caught();
+			}
+
+			std::exception const * exception() const noexcept
+			{
+				return ei_->exception();
 			}
 		};
 	}
@@ -631,11 +648,6 @@ namespace boost { namespace leaf {
 		auto _ = { leaf_detail::put_slot(std::forward<E>(e),*this)... };
 		(void) _;
 		return *this;
-	}
-
-	inline bool succeeded( error_id  id ) noexcept
-	{
-		return bool(id);
 	}
 
 	inline error_id get_error_id( error_id id ) noexcept
