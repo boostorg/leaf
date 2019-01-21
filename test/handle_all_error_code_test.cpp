@@ -31,7 +31,7 @@ int main()
 		int r = leaf::handle_all(
 			[&]
 			{
-				std::error_code ec = leaf::new_error(info<1>{1}).to_error_code();
+				std::error_code ec = get_error_code(leaf::new_error(info<1>{1}));
 				BOOST_TEST(ec);
 				BOOST_TEST(ec.message()=="LEAF error, use with leaf::handle_some or leaf::handle_all.");
 				BOOST_TEST(!std::strcmp(ec.category().name(),"LEAF error, use with leaf::handle_some or leaf::handle_all."));
@@ -52,7 +52,7 @@ int main()
 		int r = leaf::handle_all(
 			[&]
 			{
-				return leaf::new_error(info<2>{2},std::error_code(ENOENT,std::system_category())).to_error_code();
+				return get_error_code(leaf::new_error(info<2>{2},std::error_code(ENOENT,std::system_category())));
 			},
 			[ ]( info<2> const & x, std::error_code const & ec )
 			{

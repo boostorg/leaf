@@ -41,35 +41,26 @@ namespace boost { namespace leaf {
 			static error_category cat;
 			return cat;
 		}
-
-		inline error_category const & get_error_category0() noexcept
-		{
-			static error_category cat;
-			return cat;
-		}
 	}
 
-	inline std::error_code error_id::to_error_code() const noexcept
+	inline std::error_code get_error_code( error_id id ) noexcept
 	{
-		return id_ ?
-			std::error_code( int(id_), leaf_detail::get_error_category() ) :
-			std::error_code( -1, leaf_detail::get_error_category0() );
+		return id?
+			std::error_code() :
+			std::error_code(id.id_, leaf_detail::get_error_category());
 	}
 
-	inline bool succeeded( std::error_code const & ec )
+	inline bool succeeded( std::error_code ec )
 	{
 		return !ec;
 	}
 
-	inline error_id get_error_id( std::error_code const & ec ) noexcept
+	inline error_id get_error_id( std::error_code ec ) noexcept
 	{
-		std::error_category const & cat =  ec.category();
-		if( &cat==&leaf_detail::get_error_category() )
-			return error_id(ec.value());
-		else if( &cat==&leaf_detail::get_error_category0() )
+		if( &ec.category()==&leaf_detail::get_error_category() )
 		{
-			assert(ec.value()==-1);
-			return error_id(0);
+			assert(ec);
+			return error_id{ec.value()};
 		}
 		else
 			return leaf::next_error();

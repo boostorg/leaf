@@ -82,7 +82,7 @@ int main()
 
 	BOOST_TEST(!exp.peek<info<4>>(e1));
 	{
-		int r = exp.handle_error( leaf::error_info(e1),
+		int r = exp.handle_error( leaf::error_info(e1), (void *)0,
 			[ ](info<1>,info<2>,info<4>)
 			{
 				return 1;
@@ -108,7 +108,7 @@ int main()
 	BOOST_TEST(!exp.peek<info<4>>(e2));
 
 	{
-		int r = exp.handle_error( leaf::error_info(e2),
+		int r = exp.handle_error( leaf::error_info(e2), (void *)0,
 			[ ]( info<1>, info<2>, info<4> )
 			{
 				return 1;
@@ -131,7 +131,7 @@ int main()
 	}
 
 	{
-		int r = exp0.handle_error( leaf::error_info(e0),
+		int r = exp0.handle_error( leaf::error_info(e0), (void *)0,
 			[ ]( info<2> const & i2, info<1> const & i1 )
 			{
 				BOOST_TEST(i1.value==1);

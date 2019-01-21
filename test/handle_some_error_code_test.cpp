@@ -20,7 +20,7 @@ int main()
 		std::error_code r = leaf::handle_some(
 			[&]
 			{
-				std::error_code ec = leaf::new_error(info<1>{1}).to_error_code();
+				std::error_code ec = get_error_code(leaf::new_error(info<1>{1}));
 				BOOST_TEST(ec);
 				BOOST_TEST(ec.message()=="LEAF error, use with leaf::handle_some or leaf::handle_all.");
 				BOOST_TEST(!std::strcmp(ec.category().name(),"LEAF error, use with leaf::handle_some or leaf::handle_all."));
@@ -40,14 +40,77 @@ int main()
 		std::error_code ec = leaf::handle_some(
 			[&]
 			{
-				return leaf::new_error(info<2>{2},std::error_code(ENOENT,std::system_category())).to_error_code();
+				return get_error_code(leaf::new_error(info<2>{2},std::error_code(ENOENT,std::system_category())));
 			},
 			[&]( info<2> const & x, std::error_code const & ec )
 			{
-				what = 2;
+				what = 1;
 				BOOST_TEST(x.value==2);
 				BOOST_TEST(ec==std::error_code(ENOENT,std::system_category()));
 				return ec;
+			} );
+		BOOST_TEST(ec==std::error_code(ENOENT,std::system_category()));
+		BOOST_TEST(what==1);
+	}
+	{
+		int what=0;
+		std::error_code ec = leaf::handle_some(
+			[&]
+			{
+				return std::error_code(ENOENT,std::system_category());
+			},
+			[&]( std::error_code const & ec )
+			{
+				what = 1;
+				return ec;
+			},
+			[&]( leaf::failed<std::error_code> const & ec )
+			{
+				what = 2;
+				BOOST_TEST(ec.value==std::error_code(ENOENT,std::system_category()));
+				return ec.value;
+			} );
+		BOOST_TEST(ec==std::error_code(ENOENT,std::system_category()));
+		BOOST_TEST(what==2);
+	}
+	{
+		int what=0;
+		std::error_code ec = leaf::handle_some(
+			[&]
+			{
+				return std::error_code(ENOENT,std::system_category());
+			},
+			[&]( std::error_code const & ec )
+			{
+				what = 1;
+				return ec;
+			},
+			[&]( leaf::failed<std::error_code> ec )
+			{
+				what = 2;
+				BOOST_TEST(ec.value==std::error_code(ENOENT,std::system_category()));
+				return ec.value;
+			} );
+		BOOST_TEST(ec==std::error_code(ENOENT,std::system_category()));
+		BOOST_TEST(what==2);
+	}
+	{
+		int what=0;
+		std::error_code ec = leaf::handle_some(
+			[&]
+			{
+				return std::error_code(ENOENT,std::system_category());
+			},
+			[&]( std::error_code const & ec )
+			{
+				what = 1;
+				return ec;
+			},
+			[&]( leaf::failed<std::error_code> && ec )
+			{
+				what = 2;
+				BOOST_TEST(ec.value==std::error_code(ENOENT,std::system_category()));
+				return ec.value;
 			} );
 		BOOST_TEST(ec==std::error_code(ENOENT,std::system_category()));
 		BOOST_TEST(what==2);

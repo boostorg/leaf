@@ -149,7 +149,7 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		result( error_id const & id ) noexcept:
+		result( error_id id ) noexcept:
 			err_(id),
 			which_(leaf_detail::result_variant::err)
 		{
@@ -265,7 +265,7 @@ namespace boost { namespace leaf {
 
 		result() = default;
 
-		result( error_id const & id ) noexcept:
+		result( error_id id ) noexcept:
 			base(id)
 		{
 		}

@@ -24,7 +24,7 @@ namespace boost { namespace leaf {
 		if( succeeded(r) )
 			return r.value();
 		else
-			return ss.handle_error(error_info(get_error_id(r)), std::forward<Handler>(handler)...);
+			return ss.handle_error(error_info(get_error_id(r)), &r, std::forward<Handler>(handler)...);
 	}
 
 	namespace leaf_detail
@@ -48,7 +48,7 @@ namespace boost { namespace leaf {
 			}
 			R operator()( A... a ) const
 			{
-				return f_(a...);
+				return f_(std::forward<A>(a)...);
 			}
 		};
 
@@ -62,7 +62,7 @@ namespace boost { namespace leaf {
 			}
 			typename dependent_type_result_void<A...>::type operator()( A... a ) const
 			{
-				f_(a...);
+				f_(std::forward<A>(a)...);
 				return { };
 			}
 		};
@@ -72,7 +72,7 @@ namespace boost { namespace leaf {
 	decltype(std::declval<TryBlock>()()) handle_some( TryBlock && try_block, Handler && ... handler )
 	{
 		using namespace leaf_detail;
-		using R = typename function_traits<TryBlock>::return_type;
+		using R = decltype(std::declval<TryBlock>()());
 		typename deduce_static_store<typename handler_args_set<Handler...>::type>::type ss;
 
 		auto r = std::forward<TryBlock>(try_block)();
@@ -83,7 +83,7 @@ namespace boost { namespace leaf {
 		}
 		else
 		{
-			auto rr = ss.handle_error(error_info(get_error_id(r)), handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
+			auto rr = ss.handle_error(error_info(get_error_id(r)), &r, handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
 			if( succeeded(rr) )
 			{
 				ss.set_reset(true);

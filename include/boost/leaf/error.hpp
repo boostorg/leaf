@@ -22,23 +22,19 @@ namespace boost { namespace system { class error_code; } }
 
 namespace boost { namespace leaf {
 
-	class error_id;
-
-	error_id next_error() noexcept;
-	error_id last_error() noexcept;
-	error_id get_error_id( std::error_code const & ) noexcept;
-
 	class error_id
 	{
 		template <class... E>
 		friend error_id new_error( E && ... ) noexcept;
-		friend error_id leaf::next_error() noexcept;
-		friend error_id leaf::last_error() noexcept;
-		friend error_id get_error_id( std::error_code const & ) noexcept;
+		friend error_id next_error() noexcept;
+		friend error_id last_error() noexcept;
+		friend error_id success() noexcept;
+		friend error_id get_error_id( std::error_code ) noexcept;
+		friend std::error_code get_error_code( error_id ) noexcept;
 
-		unsigned id_;
+		int id_;
 
-		explicit error_id( unsigned id ) noexcept:
+		explicit error_id( int id ) noexcept:
 			id_(id)
 		{
 		}
@@ -48,14 +44,17 @@ namespace boost { namespace leaf {
 			id_factory( id_factory const & ) = delete;
 			id_factory & operator=( id_factory const & ) = delete;
 
-			static unsigned new_error_id() noexcept
+			static int new_error_id() noexcept
 			{
-				static std::atomic<int> c;
-				return ++c;
+				static std::atomic<unsigned> c;
+				if( unsigned id = ++c )
+					return int(id);
+				else
+					return int(++c);
 			}
 
-			unsigned next_id_;
-			unsigned last_id_;
+			int next_id_;
+			int last_id_;
 
 			id_factory() noexcept:
 				next_id_(new_error_id()),
@@ -71,19 +70,19 @@ namespace boost { namespace leaf {
 				return s;
 			}
 
-			unsigned next_id() noexcept
+			int next_id() noexcept
 			{
 				return next_id_;
 			}
 
-			unsigned last_id() noexcept
+			int last_id() noexcept
 			{
 				return last_id_;
 			}
 
-			unsigned get() noexcept
+			int new_id() noexcept
 			{
-				unsigned id = last_id_ = next_id_;
+				int id = last_id_ = next_id_;
 				next_id_ = new_error_id();
 				return id;
 			}
@@ -91,12 +90,17 @@ namespace boost { namespace leaf {
 
 	public:
 
-		friend bool operator==( error_id const & e1, error_id const & e2 ) noexcept
+		operator bool() const noexcept
+		{
+			return id_==0;
+		}
+
+		friend bool operator==( error_id e1, error_id e2 ) noexcept
 		{
 			return e1.id_==e2.id_;
 		}
 
-		friend bool operator!=( error_id const & e1, error_id const & e2 ) noexcept
+		friend bool operator!=( error_id e1, error_id e2 ) noexcept
 		{
 			return e1.id_!=e2.id_;
 		}
@@ -106,7 +110,7 @@ namespace boost { namespace leaf {
 			return *this;
 		}
 
-		friend std::ostream & operator<<( std::ostream & os, error_id const & id )
+		friend std::ostream & operator<<( std::ostream & os, error_id id )
 		{
 			os << id.id_;
 			return os;
@@ -114,14 +118,12 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		error_id propagate( E && ... ) const noexcept;
-
-		std::error_code to_error_code() const noexcept;
 	};
 
 	template <class... E>
 	error_id new_error( E && ... e ) noexcept
 	{
-		return error_id(error_id::id_factory::tl_instance().get()).propagate(std::forward<E>(e)...);
+		return error_id(error_id::id_factory::tl_instance().new_id()).propagate(std::forward<E>(e)...);
 	}
 
 	inline error_id next_error() noexcept
@@ -134,6 +136,11 @@ namespace boost { namespace leaf {
 		return error_id(error_id::id_factory::tl_instance().last_id());
 	}
 
+	inline error_id success() noexcept
+	{
+		return error_id(0);
+	}
+
 	////////////////////////////////////////
 
 	namespace leaf_detail
@@ -143,11 +150,11 @@ namespace boost { namespace leaf {
 			slot_base( slot_base const & ) = delete;
 			slot_base & operator=( slot_base const & ) = delete;
 
-			virtual bool slot_print( std::ostream &, error_id const & ) const = 0;
+			virtual bool slot_print( std::ostream &, error_id ) const = 0;
 
 		public:
 
-			static void print( std::ostream & os, error_id const & id )
+			static void print( std::ostream & os, error_id id )
 			{
 				for( slot_base const * p = first(); p; p=p->next_ )
 					if( p->slot_print(os,id) )
@@ -195,7 +202,7 @@ namespace boost { namespace leaf {
 
 	public:
 
-		explicit error_info( error_id const & id ) noexcept:
+		explicit error_info( error_id id ) noexcept:
 			id_(id),
 			ex_(0),
 			cap_(0),
@@ -203,7 +210,7 @@ namespace boost { namespace leaf {
 			{
 			}
 
-		error_info( error_id const & id, std::exception const * ex, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::captured_exception const *) ) noexcept:
+		error_info( error_id id, std::exception const * ex, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::captured_exception const *) ) noexcept:
 			id_(id),
 			ex_(ex),
 			cap_(0),
@@ -212,7 +219,7 @@ namespace boost { namespace leaf {
 			assert(print_ex_!=0);
 		}
 
-		error_info( error_id const & id, std::exception const * ex, leaf_detail::captured_exception const * cap, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::captured_exception const *) ) noexcept:
+		error_info( error_id id, std::exception const * ex, leaf_detail::captured_exception const * cap, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::captured_exception const *) ) noexcept:
 			id_(id),
 			ex_(ex),
 			cap_(cap),
@@ -221,7 +228,7 @@ namespace boost { namespace leaf {
 			assert(print_ex_!=0);
 		}
 
-		error_id const & error() const noexcept
+		error_id error() const noexcept
 		{
 			return id_;
 		}
@@ -441,18 +448,18 @@ namespace boost { namespace leaf {
 			error_id id;
 			E e;
 
-			explicit id_e_pair( error_id const & id ) noexcept:
+			explicit id_e_pair( error_id id ) noexcept:
 				id(id)
 			{
 			}
 
-			id_e_pair( error_id const & id, E const & e ):
+			id_e_pair( error_id id, E const & e ):
 				id(id),
 				e(e)
 			{
 			}
 
-			id_e_pair( error_id const & id, E && e ) noexcept:
+			id_e_pair( error_id id, E && e ) noexcept:
 				id(id),
 				e(std::forward<E>(e))
 			{
@@ -481,7 +488,7 @@ namespace boost { namespace leaf {
 			slot<E> * prev_;
 			static_assert(is_error_type<E>::value,"Not an error type");
 
-			bool slot_print( std::ostream &, error_id const & ) const;
+			bool slot_print( std::ostream &, error_id ) const;
 
 		protected:
 
@@ -549,7 +556,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		int put_slot( E && e, error_id const & id ) noexcept
+		int put_slot( E && e, error_id id ) noexcept
 		{
 			using T = typename std::remove_cv<typename std::remove_reference<E>::type>::type;
 			if( slot<T> * p = tl_slot_ptr<T>() )
@@ -591,7 +598,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		bool slot<E>::slot_print( std::ostream & os, error_id const & id ) const
+		bool slot<E>::slot_print( std::ostream & os, error_id id ) const
 		{
 			if( tl_slot_ptr<E>()==this )
 				if( id_e_pair<E> const * id_e = has_value() )
@@ -624,6 +631,16 @@ namespace boost { namespace leaf {
 		auto _ = { leaf_detail::put_slot(std::forward<E>(e),*this)... };
 		(void) _;
 		return *this;
+	}
+
+	inline bool succeeded( error_id  id ) noexcept
+	{
+		return bool(id);
+	}
+
+	inline error_id get_error_id( error_id id ) noexcept
+	{
+		return id;
 	}
 
 } }
