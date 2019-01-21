@@ -66,5 +66,22 @@ int main()
 			} );
 		BOOST_TEST(r==1);
 	}
+	{
+		int r = leaf::handle_all(
+			[&]
+			{
+				return std::error_code(ENOENT,std::system_category());
+			},
+			[ ]( std::error_code const & )
+			{
+				return 1;
+			},
+			[ ]( leaf::failed<std::error_code> && ec )
+			{
+				BOOST_TEST(ec.value==std::error_code(ENOENT,std::system_category()));
+				return 2;
+			} );
+		BOOST_TEST(r==2);
+	}
 	return boost::report_errors();
 }
