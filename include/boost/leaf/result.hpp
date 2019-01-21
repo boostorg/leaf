@@ -31,7 +31,7 @@ namespace boost { namespace leaf {
 		union
 		{
 			T value_;
-			error_id err_;
+			mutable error_id err_;
 			dynamic_store_ptr cap_;
 		};
 
