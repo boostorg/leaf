@@ -29,10 +29,24 @@ namespace boost { namespace leaf {
 			else
 				return catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>{ });
 		}
+
+		////////////////////////////////////////
+
+		template <class T>
+		struct deduce_exception_to_result_return_type
+		{
+			using type = result<T>;
+		};
+
+		template <class T>
+		struct deduce_exception_to_result_return_type<result<T>>
+		{
+			using type = result<T>;
+		};
 	}
 
 	template <class... Ex, class F>
-	leaf::result<typename leaf_detail::function_traits<F>::return_type> exception_to_result( F && f ) noexcept
+	typename leaf_detail::deduce_exception_to_result_return_type<typename leaf_detail::function_traits<F>::return_type>::type exception_to_result( F && f ) noexcept
 	{
 		try
 		{
