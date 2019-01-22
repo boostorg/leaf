@@ -48,7 +48,7 @@ namespace boost { namespace leaf {
 				if( auto r = f_(std::forward<A>(a)...) )
 					return r;
 				else
-					return decltype(r)( std::make_shared<dynamic_store_impl<E...>>(r.error(),std::move(ss)) );
+					return decltype(r)( std::make_shared<dynamic_store_impl<E...>>(r.error().value(),std::move(ss)) );
 			}
 		};
 	}

@@ -4,7 +4,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/static_store.hpp>
+#include <boost/leaf/handle.hpp>
+#include <boost/leaf/result.hpp>
 #include "boost/core/lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
@@ -15,54 +16,40 @@ struct info
 	int value;
 };
 
-leaf::error_id f12()
+leaf::result<void> f12()
 {
 	return leaf::new_error( info<1>{1}, info<2>{2} );
 }
 
-leaf::error_id f34()
+leaf::result<void> f23()
 {
-	return leaf::new_error( info<3>{3}, info<4>{4} );
+	return leaf::new_error( info<2>{2}, info<3>{3} );
 }
 
 int main()
 {
-	leaf::static_store<info<1>,info<2>,info<3>,info<4>> exp;
-	leaf::error_id e1=f12();
-	leaf::error_id e2=f34();
-	{
-		int e1c1=0, e1c2=0;
-		bool handled = exp.handle_error( e1,
-			[&e1c1]( info<3>, info<4> )
-			{
-				++e1c1;
-			},
-			[&e1c2]( info<1> const & i1, info<2> const & i2 )
-			{
-				BOOST_TEST(i1.value==1);
-				BOOST_TEST(i2.value==2);
-				++e1c2;
-			} );
-		BOOST_TEST(handled);
-		BOOST_TEST(e1c1==0);
-		BOOST_TEST(e1c2==1);
-	}
-	{
-		int e2c1=0, e2c2=0;
-		bool handled = exp.handle_error( e2,
-			[&e2c1]( info<1>, info<2> )
-			{
-				++e2c1;
-			},
-			[&e2c2]( info<3> const & i3, info<4> const & i4 )
-			{
-				BOOST_TEST(i3.value==3);
-				BOOST_TEST(i4.value==4);
-				++e2c2;
-			} );
-		BOOST_TEST(handled);
-		BOOST_TEST(e2c1==0);
-		BOOST_TEST(e2c2==1);
-	}
+	int r = leaf::handle_all(
+		[ ]() -> leaf::result<int>
+		{
+			leaf::result<void> r1 = f12();
+			(void) r1;
+			leaf::result<void> r2 = f23();
+			return r2.error();
+		},
+		[ ]( info<1> )
+		{
+			return 1;
+		},
+		[ ]( info<2> const & x, info<3> const & y )
+		{
+			BOOST_TEST(x.value==2);
+			BOOST_TEST(y.value==3);
+			return 2;
+		},
+		[ ]
+		{
+			return 3;
+		} );
+	BOOST_TEST(r==2);
 	return boost::report_errors();
 }

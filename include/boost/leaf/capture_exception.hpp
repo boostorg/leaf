@@ -7,10 +7,10 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/throw_exception.hpp>
-#include <boost/leaf/detail/dynamic_store_impl.hpp>
 #include <boost/leaf/detail/captured_exception.hpp>
-#include <typeinfo>
+#include <boost/leaf/detail/dynamic_store_impl.hpp>
+#include <boost/leaf/throw_exception.hpp>
+#include <boost/leaf/error.hpp>
 #include <memory>
 
 namespace boost { namespace leaf {
@@ -19,7 +19,7 @@ namespace boost { namespace leaf {
 	{
 		class captured_exception_impl:
 			public captured_exception,
-			public error_id
+			public error
 		{
 			std::exception_ptr ex_;
 			std::shared_ptr<dynamic_store> ds_;
@@ -29,7 +29,7 @@ namespace boost { namespace leaf {
 		public:
 
 			captured_exception_impl( std::exception_ptr && ex, std::shared_ptr<dynamic_store> && ds, bool had_error, void (*print_captured_types)(std::ostream &) ) noexcept:
-				error_id(ds->error()),
+				error(leaf_detail::make_error(ds->error_id())),
 				ex_(std::move(ex)),
 				ds_(std::move(ds)),
 				had_error_(had_error),
@@ -45,12 +45,12 @@ namespace boost { namespace leaf {
 				assert(ds);
 				if( had_error_ )
 				{
-					error_id id = ds->unload();
-					assert(id==*this);
-					(void) id;
+					int error_id = ds->unload();
+					assert(error_id==value());
+					(void) error_id;
 				}
 				else
-					ds->unload(next_error());
+					ds->unload(leaf_detail::next_id());
 				std::rethrow_exception(ex_);
 			}
 
@@ -110,13 +110,13 @@ namespace boost { namespace leaf {
 				{
 					throw;
 				}
-				catch( error_id id )
+				catch( error const & err )
 				{
-					throw_exception(captured_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(id,std::move(ss)), true, &print_types<E...>::print ));
+					throw_exception(captured_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(err.value(),std::move(ss)), true, &print_types<E...>::print ));
 				}
 				catch(...)
 				{
-					throw_exception(captured_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(new_error(),std::move(ss)), false, &print_types<E...>::print ));
+					throw_exception(captured_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(leaf_detail::new_id(),std::move(ss)), false, &print_types<E...>::print ));
 				}
 			}
 		};

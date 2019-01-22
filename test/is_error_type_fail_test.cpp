@@ -10,7 +10,7 @@ namespace leaf = boost::leaf;
 
 struct no_member_value { };
 
-leaf::error_id f()
+leaf::error f()
 {
 	// Note: the line below should trigger a compile error (via static_assert).
 	return leaf::new_error( no_member_value{ } );

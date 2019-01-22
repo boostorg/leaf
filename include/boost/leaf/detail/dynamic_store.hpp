@@ -7,11 +7,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <ostream>
-
 namespace boost { namespace leaf {
-
-	class error_id;
 
 	namespace leaf_detail
 	{
@@ -29,9 +25,9 @@ namespace boost { namespace leaf {
 
 		public:
 
-			virtual error_id error() const noexcept = 0;
-			virtual error_id unload() noexcept = 0;
-			virtual error_id unload( error_id ) noexcept = 0;
+			virtual int error_id() const noexcept = 0;
+			virtual int unload() noexcept = 0;
+			virtual int unload( int error_code ) noexcept = 0;
 		};
 	}
 

@@ -16,13 +16,13 @@ struct info
 	int value;
 };
 
-leaf::error_id g()
+leaf::error g()
 {
 	auto propagate = leaf::preload( info{42} );
 	return leaf::new_error();
 }
 
-leaf::error_id f()
+leaf::error f()
 {
 	return g();
 }

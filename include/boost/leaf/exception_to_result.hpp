@@ -16,23 +16,18 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class F>
-		leaf::result<typename leaf_detail::function_traits<F>::return_type> catch_exceptions_helper( F && f, leaf_detail_mp11::mp_list<> )
+		inline leaf::error catch_exceptions_helper( std::exception const & ex, leaf_detail_mp11::mp_list<> )
 		{
-			return std::forward<F>(f)();
+			return leaf::new_error(ex);
 		}
 
-		template <class Ex1, class... Ex, class F>
-		leaf::result<typename leaf_detail::function_traits<F>::return_type> catch_exceptions_helper( F && f, leaf_detail_mp11::mp_list<Ex1,Ex...> )
+		template <class Ex1, class... Ex>
+		leaf::error catch_exceptions_helper( std::exception const & ex, leaf_detail_mp11::mp_list<Ex1,Ex...> )
 		{
-			try
-			{
-				return catch_exceptions_helper(std::forward<F>(f),leaf_detail_mp11::mp_list<Ex...>{ });
-			}
-			catch( Ex1 const & ex1 )
-			{
-				return leaf::new_error(ex1);
-			}
+			if( Ex1 const * p = dynamic_cast<Ex1 const *>(&ex) )
+				return leaf::new_error(*p);
+			else
+				return catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>{ });
 		}
 	}
 
@@ -41,7 +36,11 @@ namespace boost { namespace leaf {
 	{
 		try
 		{
-			return leaf_detail::catch_exceptions_helper(std::forward<F>(f), leaf_detail_mp11::mp_list<Ex...>());
+			return std::forward<F>(f)();
+		}
+		catch( std::exception const & ex )
+		{
+			return leaf_detail::catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>());
 		}
 		catch(...)
 		{

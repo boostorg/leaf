@@ -23,7 +23,7 @@ struct info
 	int value;
 };
 
-leaf::error_id g()
+leaf::error g()
 {
 	global = 0;
 	auto propagate = leaf::defer( [ ] { return info{get_global()}; } );
@@ -31,7 +31,7 @@ leaf::error_id g()
 	return leaf::new_error();
 }
 
-leaf::error_id f()
+leaf::error f()
 {
 	return g();
 }

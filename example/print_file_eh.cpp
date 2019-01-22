@@ -10,6 +10,7 @@
 #include <boost/leaf/throw.hpp>
 #include <boost/leaf/try.hpp>
 #include <boost/leaf/preload.hpp>
+#include <boost/leaf/common.hpp>
 #include <iostream>
 #include <memory>
 #include <stdio.h>

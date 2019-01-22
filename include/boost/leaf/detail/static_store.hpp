@@ -7,7 +7,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/error.hpp>
+#include <boost/leaf/detail/teleport.hpp>
 #include <boost/leaf/detail/function_traits.hpp>
 #include <boost/leaf/detail/mp11.hpp>
 #include <tuple>
@@ -20,7 +20,13 @@ namespace boost { namespace leaf {
 		R value;
 	};
 
-	template <class R> struct is_error_type<failed<R>>: std::false_type { };
+	namespace leaf_detail
+	{
+		template <class R>
+		struct is_error_type_default<failed<R>>: std::false_type
+		{
+		};
+	}
 
 	namespace leaf_detail
 	{
@@ -149,10 +155,11 @@ namespace boost { namespace leaf {
 				public slot<E>
 			{
 			public:
-				optional<E> extract_optional( error_id const & id ) && noexcept
+				optional<E> extract_optional( int error_id ) && noexcept
 				{
+					assert(error_id);
 					slot<E> const & s = *this;
-					if( s.has_value() && s.value().id==id )
+					if( s.has_value() && s.value().error_id==error_id )
 						return optional<E>(std::move(*this).value().e);
 					else
 						return optional<E>();
@@ -207,7 +214,7 @@ namespace boost { namespace leaf {
 				static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
 				{
 					auto & sl = std::get<tuple_type_index<static_store_slot<T>,SlotsTuple>::value>(tup);
-					return sl.has_value() && sl.value().id==ei.error();
+					return sl.has_value() && sl.value().error_id==ei.error_id();
 				}
 			};
 
@@ -238,7 +245,7 @@ namespace boost { namespace leaf {
 					if( sl.has_value() )
 					{
 						auto const & v = sl.value();
-						return v.id==ei.error() && match<E,V...>(v.e)();
+						return v.error_id==ei.error_id() && match<E,V...>(v.e)();
 					}
 					else
 						return false;
@@ -295,7 +302,7 @@ namespace boost { namespace leaf {
 				template <class StaticStore, class R>
 				static T const & get( StaticStore const & ss, error_info const & ei, R * ) noexcept
 				{
-					T const * arg = ss.template peek<T>(ei.error());
+					T const * arg = ss.template peek<T>(ei.error_id());
 					assert(arg!=0);
 					return *arg;
 				}
@@ -307,7 +314,7 @@ namespace boost { namespace leaf {
 				template <class StaticStore, class R>
 				static T const * get( StaticStore const & ss, error_info const & ei, R * ) noexcept
 				{
-					return ss.template peek<T>(ei.error());
+					return ss.template peek<T>(ei.error_id());
 				}
 			};
 
@@ -328,7 +335,7 @@ namespace boost { namespace leaf {
 				template <class StaticStore, class R>
 				static match<E,V...> get( StaticStore const & ss, error_info const & ei, R * ) noexcept
 				{
-					E const * arg = ss.template peek<E>(ei.error());
+					E const * arg = ss.template peek<E>(ei.error_id());
 					assert(arg!=0);
 					return match<E,V...>(*arg);
 				}
@@ -362,7 +369,7 @@ namespace boost { namespace leaf {
 				template <class StaticStore, class R>
 				static diagnostic_info const & get( StaticStore const & ss, error_info const & ei, R * ) noexcept
 				{
-					diagnostic_info const * uei = ss.template peek<diagnostic_info>(ei.error());
+					diagnostic_info const * uei = ss.template peek<diagnostic_info>(ei.error_id());
 					assert(uei!=0);
 					uei->set_error_info(ei);
 					return *uei;
@@ -375,7 +382,7 @@ namespace boost { namespace leaf {
 				template <class StaticStore, class R>
 				static verbose_diagnostic_info const & get( StaticStore const & ss, error_info const & ei, R * ) noexcept
 				{
-					verbose_diagnostic_info const * vdi = ss.template peek<verbose_diagnostic_info>(ei.error());
+					verbose_diagnostic_info const * vdi = ss.template peek<verbose_diagnostic_info>(ei.error_id());
 					assert(vdi!=0);
 					vdi->set_error_info(ei);
 					return *vdi;
@@ -457,13 +464,13 @@ namespace boost { namespace leaf {
 			}
 
 			template <class P>
-			P const * peek( error_id const & id ) const noexcept
+			P const * peek( int error_id ) const noexcept
 			{
 				auto & opt = std::get<static_store_internal::type_index<P,E...>::value>(s_);
-				if( opt.has_value() )
+				if( error_id && opt.has_value() )
 				{
 					auto & v = opt.value();
-					if( v.id==id )
+					if( v.error_id==error_id )
 						return &v.e;
 				}
 				return 0;

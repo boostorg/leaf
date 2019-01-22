@@ -15,6 +15,7 @@
 #include <boost/leaf/handle.hpp>
 #include <boost/leaf/preload.hpp>
 #include <boost/leaf/result.hpp>
+#include <boost/leaf/throw_exception.hpp>
 #include <boost/leaf/throw.hpp>
 #include <boost/leaf/try.hpp>
 
