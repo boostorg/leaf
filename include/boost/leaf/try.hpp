@@ -7,8 +7,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/throw.hpp>
-#include <boost/leaf/detail/static_store.hpp>
+#include <boost/leaf/handle.hpp>
+#include <boost/leaf/detail/result_traits.hpp>
 #include <boost/leaf/detail/print_exception_info.hpp>
 
 namespace boost { namespace leaf {
@@ -30,6 +30,41 @@ namespace boost { namespace leaf {
 			else
 				return next_id();
 		}
+
+		template <class TryBlock, class R = decltype(std::declval<TryBlock>()()), bool ReturnsResultType = is_result_type<R>::value>
+		struct call_try_block;
+
+		template <class TryBlock, class R>
+		struct call_try_block<TryBlock, R, false>
+		{
+			template <class StaticStore, class... Handler>
+			static R call( StaticStore & ss, TryBlock && try_block, Handler && ... )
+			{
+				ss.set_reset(true);
+				return std::forward<TryBlock>(try_block)();
+			}
+		};
+
+		template <class TryBlock, class R>
+		struct call_try_block<TryBlock, R, true>
+		{
+			template <class StaticStore, class... Handler>
+			static R call( StaticStore & ss, TryBlock && try_block, Handler && ... handler )
+			{
+				if( auto r = std::forward<TryBlock>(try_block)() )
+				{
+					ss.set_reset(true);
+					return r;
+				}
+				else
+				{
+					auto rr = ss.handle_error(error_info(handle_get_error_id(r.error())), &r, handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
+					if( rr )
+						ss.set_reset(true);
+					return rr;
+				}
+			}
+		};
 	}
 
 	template <class TryBlock, class... Handler>
@@ -37,10 +72,9 @@ namespace boost { namespace leaf {
 	{
 		using namespace leaf_detail;
 		typename deduce_static_store<typename handler_args_set<Handler...>::type>::type ss;
-		ss.set_reset(true);
 		try
 		{
-			return std::forward<TryBlock>(try_block)();
+			return leaf_detail::call_try_block<TryBlock>::call(ss, std::forward<TryBlock>(try_block), std::forward<Handler>(handler)...);
 		}
 		catch( captured_exception & cap )
 		{

@@ -71,8 +71,10 @@ tests = [
 	'print_test',
 	'result_bad_result_test',
 	'result_state_test',
+	'result_traits_test',
 	'static_store_deduction_test',
 	'static_store_test',
+	'try_exception_and_result_test',
 	'try_exception_test',
 	'try_test'
 ]
