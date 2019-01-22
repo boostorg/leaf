@@ -16,22 +16,22 @@ struct info
 	int value;
 };
 
-leaf::error f1()
+leaf::error_id f1()
 {
 	return leaf::new_error( info<1>{1} );
 }
 
-leaf::error f2()
+leaf::error_id f2()
 {
 	return f1().propagate( info<2>{2} );
 }
 
-leaf::error f3()
+leaf::error_id f3()
 {
 	return f2().propagate( info<3>{3} );
 }
 
-leaf::error f4()
+leaf::error_id f4()
 {
 	return f3().propagate();
 }

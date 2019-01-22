@@ -13,11 +13,11 @@
 namespace boost { namespace leaf {
 
 	namespace leaf_detail {
-		inline int handle_get_error_id( error const & err ) noexcept
+		inline int handle_get_err_id( error_id const & err ) noexcept
 		{
 			return err.value();
 		}
-		inline int handle_get_error_id( std::error_code const & ec ) noexcept
+		inline int handle_get_err_id( std::error_code const & ec ) noexcept
 		{
 			return is_leaf_error(ec) ? ec.value() : 0;
 		}
@@ -32,7 +32,7 @@ namespace boost { namespace leaf {
 		if( auto r = std::forward<TryBlock>(try_block)() )
 			return r.value();
 		else
-			return ss.handle_error(error_info(handle_get_error_id(r.error())), &r, std::forward<Handler>(handler)...);
+			return ss.handle_error(error_info(handle_get_err_id(r.error())), &r, std::forward<Handler>(handler)...);
 	}
 
 	namespace leaf_detail
@@ -83,7 +83,7 @@ namespace boost { namespace leaf {
 		}
 		else
 		{
-			auto rr = ss.handle_error(error_info(handle_get_error_id(r.error())), &r, handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
+			auto rr = ss.handle_error(error_info(handle_get_err_id(r.error())), &r, handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
 			if( rr )
 				ss.set_reset(true);
 			return rr;

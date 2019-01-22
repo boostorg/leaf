@@ -19,12 +19,12 @@ namespace boost { namespace leaf {
 			template <int I, class Tuple>
 			struct tuple_for_each
 			{
-				static void unload( int error_id, Tuple && tup ) noexcept
+				static void unload( int err_id, Tuple && tup ) noexcept
 				{
-					tuple_for_each<I-1,Tuple>::unload(error_id,std::move(tup));
+					tuple_for_each<I-1,Tuple>::unload(err_id,std::move(tup));
 					auto && opt = std::get<I-1>(std::move(tup));
 					if( opt.has_value() )
-						put_slot(error_id, std::move(opt).value());
+						put_slot(err_id, std::move(opt).value());
 				}
 
 				static void print( std::ostream & os, Tuple const & tup )
@@ -49,30 +49,30 @@ namespace boost { namespace leaf {
 		class dynamic_store_impl:
 			public dynamic_store
 		{
-			int error_id_;
+			int err_id_;
 			std::tuple<leaf_detail::optional<E>...> s_;
 
-			int error_id() const noexcept
+			int err_id() const noexcept
 			{
-				return error_id_;
+				return err_id_;
 			}
 
 			int unload() noexcept
 			{
-				return unload(error_id_);
+				return unload(err_id_);
 			}
 
-			int unload( int error_id ) noexcept
+			int unload( int err_id ) noexcept
 			{
-				dynamic_store_internal::tuple_for_each<sizeof...(E),decltype(s_)>::unload(error_id,std::move(s_));
-				return error_id;
+				dynamic_store_internal::tuple_for_each<sizeof...(E),decltype(s_)>::unload(err_id,std::move(s_));
+				return err_id;
 			}
 
 		public:
 
-			dynamic_store_impl( int error_id, static_store<E...> && ss ) noexcept:
-				error_id_(error_id),
-				s_(std::make_tuple( std::get<static_store_internal::tuple_type_index<static_store_internal::static_store_slot<E>,decltype(ss.s_)>::value>(std::move(ss.s_)).extract_optional(error_id)... ))
+			dynamic_store_impl( int err_id, static_store<E...> && ss ) noexcept:
+				err_id_(err_id),
+				s_(std::make_tuple( std::get<static_store_internal::tuple_type_index<static_store_internal::static_store_slot<E>,decltype(ss.s_)>::value>(std::move(ss.s_)).extract_optional(err_id)... ))
 			{
 			}
 		};

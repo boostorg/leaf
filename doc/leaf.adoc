@@ -480,11 +480,6 @@ include::{sourcedir}/synopses/common.adoc[]
 ==== `result.hpp`
 include::{sourcedir}/synopses/result.adoc[]
 
-'''
-
-==== `error_code.hpp`
-include::{sourcedir}/synopses/error_code.adoc[]
-
 [.text-right]
 <<get_error_code>> | <<get_error_id-error_code>>
 
@@ -749,33 +744,20 @@ The <<LEAF_ERROR>>, <<LEAF_EXCEPTION>> and <<LEAF_THROW>> macros capture `pass:[
 
 '''
 
-[[error_id]]
-=== `error_id`
+[[error]]
+=== `error`
 
 include::{sourcedir}/synopses/error.adoc[]
 
-Values of type `error_id` identify an error across the entire program. They can be copied, moved, assigned to, and compared to other `error_id` objects. They occupy as much memory, and are as efficient as an `int`.
+The `error` type derives publicly from `std::error_code`.  It does not add any data members, so objects of type `error` are as efficient as objects of type `std::error_code`.
 
-The function <<success>> returns a special `error_id` value that does not represent any error.
+Values of type `error` identify an error across the entire program. They can be copied, moved, assigned to, and compared to other `error` or `std::error_code` objects.
 
-To report an error, call the <<new_error>> function to obtain a new unique ID for the error.
+A default-initialized `error` object does not represent an error condition. It compares equal to any other default-initialized `error` object.
 
-'''
+All other `error` objects use an `error_category` of unspecified type. Such errors should be handled using <<handle_all>> / <<handle_some>> or <<try_>>, which are able to recognize their special semantics, yet are able to deal with any other `std::error_code`.
 
-[[success]]
-==== `success`
-
-.#include <boost/leaf/error.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  error_id success() noexcept;
-
-} }
-----
-
-Returns: :: An `error_id` value that indicates success. This value is guaranteed to be different from any value returned by <<new_error>>, <<next_error>> or <<last_error>>.
+To report an error, call the <<new_error>> function to obtain a new unique `error` value for the error.
 
 '''
 

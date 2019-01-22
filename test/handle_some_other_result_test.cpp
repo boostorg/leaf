@@ -62,7 +62,7 @@ result<int,std::error_code> g( bool succeed )
 	if( auto r = f(succeed) )
 		return r;
 	else
-		return leaf::error(r.error(), info<42>{42});
+		return leaf::error_id(r.error(), info<42>{42});
 }
 
 int main()

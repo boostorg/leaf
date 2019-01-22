@@ -17,20 +17,20 @@ struct info
 	int value;
 };
 
-leaf::error f0()
+leaf::error_id f0()
 {
 	auto propagate = leaf::preload( info<0>{-1} );
 	return leaf::new_error( info<1>{-1} );
 }
 
-leaf::error f1()
+leaf::error_id f1()
 {
 	auto propagate = leaf::preload( info<0>{0}, info<1>{1}, info<2>{2} );
 	(void) f0();
 	return leaf::new_error();
 }
 
-leaf::error f2()
+leaf::error_id f2()
 {
 	return f1().propagate( info<3>{3} );
 }

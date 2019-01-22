@@ -25,7 +25,7 @@ namespace boost { namespace leaf {
 
 		public:
 
-			virtual int error_id() const noexcept = 0;
+			virtual int err_id() const noexcept = 0;
 			virtual int unload() noexcept = 0;
 			virtual int unload( int error_code ) noexcept = 0;
 		};

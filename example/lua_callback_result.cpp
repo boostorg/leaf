@@ -47,7 +47,7 @@ int do_work( lua_State * L ) noexcept
 	}
 	else
 	{
-		// Associate an do_work_error_code object with the *next* leaf::error object we will
+		// Associate an do_work_error_code object with the *next* leaf::error_id object we will
 		// definitely return from the call_lua function...
 		leaf::next_error().propagate(ec1);
 
@@ -92,7 +92,7 @@ leaf::result<int> call_lua( lua_State * L )
 	{
 		// Something went wrong with the call, so we'll return a new_error.
 		// If this is a do_work failure, the do_work_error_code object prepared in
-		// do_work will become associated with this leaf::error value. If not,
+		// do_work will become associated with this leaf::error_id value. If not,
 		// we will still need to communicate that the lua_pcall failed with an
 		// error code and an error message.
 		auto propagate = leaf::preload( e_lua_error_message{lua_tostring(L,1)} );

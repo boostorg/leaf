@@ -31,7 +31,7 @@ namespace boost { namespace leaf {
 		union
 		{
 			T value_;
-			mutable int error_id_;
+			mutable int err_id_;
 			dynamic_store_ptr cap_;
 		};
 
@@ -44,7 +44,7 @@ namespace boost { namespace leaf {
 			case leaf_detail::result_variant::value:
 				value_.~T();
 				break;
-			case leaf_detail::result_variant::error_id:
+			case leaf_detail::result_variant::err_id:
 				break;
 			default:
 				assert(which_==leaf_detail::result_variant::cap);
@@ -61,8 +61,8 @@ namespace boost { namespace leaf {
 			case leaf_detail::result_variant::value:
 				(void) new(&value_) T(x.value_);
 				break;
-			case leaf_detail::result_variant::error_id:
-				error_id_ = x.error_id_;
+			case leaf_detail::result_variant::err_id:
+				err_id_ = x.err_id_;
 				break;
 			default:
 				assert(x.which_==leaf_detail::result_variant::cap);
@@ -80,8 +80,8 @@ namespace boost { namespace leaf {
 				(void) new(&value_) T(std::move(x.value_));
 				which_ = x.which_;
 				break;
-			case leaf_detail::result_variant::error_id:
-				error_id_ = x.error_id_;
+			case leaf_detail::result_variant::err_id:
+				err_id_ = x.err_id_;
 				which_ = x.which_;
 				break;
 			default:
@@ -89,8 +89,8 @@ namespace boost { namespace leaf {
 				if( dynamic_store_ptr cap = std::move(x.cap_) )
 				{
 					x.destroy();
-					x.error_id_ = cap->error_id();
-					x.which_ = leaf_detail::result_variant::error_id;
+					x.err_id_ = cap->err_id();
+					x.which_ = leaf_detail::result_variant::err_id;
 					(void) new(&cap_) dynamic_store_ptr(std::move(cap));
 				}
 				else
@@ -148,9 +148,9 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		result( leaf::error const & err ) noexcept:
-			error_id_(err.value()),
-			which_(leaf_detail::result_variant::error_id)
+		result( error_id const & err ) noexcept:
+			err_id_(err.value()),
+			which_(leaf_detail::result_variant::err_id)
 		{
 		}
 
@@ -218,7 +218,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class... E>
-		leaf::error error( E && ... e ) const noexcept
+		error_id error( E && ... e ) const noexcept
 		{
 			switch( which_ )
 			{
@@ -228,12 +228,12 @@ namespace boost { namespace leaf {
 				{
 					dynamic_store_ptr cap = cap_;
 					destroy();
-					error_id_ = cap->unload();
-					which_ = leaf_detail::result_variant::error_id;
+					err_id_ = cap->unload();
+					which_ = leaf_detail::result_variant::err_id;
 				}
 			default:
-				assert(which_==leaf_detail::result_variant::error_id);
-				return leaf_detail::make_error(error_id_);
+				assert(which_==leaf_detail::result_variant::err_id);
+				return leaf_detail::make_error(err_id_);
 			}
 		}
 	};
@@ -264,7 +264,7 @@ namespace boost { namespace leaf {
 
 		result() = default;
 
-		result( leaf::error const & err ) noexcept:
+		result( error_id const & err ) noexcept:
 			base(err)
 		{
 		}

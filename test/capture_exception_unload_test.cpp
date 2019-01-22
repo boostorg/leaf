@@ -157,14 +157,14 @@ int main()
 	test(
 		[ ]
 		{
-			throw leaf::exception( std::exception(), info<1>{1}, info<3>{3} ); // Derives from leaf::error
+			throw leaf::exception( std::exception(), info<1>{1}, info<3>{3} ); // Derives from leaf::leaf::error_id
 		} );
 
 	test(
 		[ ]
 		{
 			auto propagate = leaf::preload( info<1>{1}, info<3>{3} );
-			throw std::exception(); // Does not derive from leaf::error
+			throw std::exception(); // Does not derive from leaf::leaf::error_id
 		} );
 
 	return boost::report_errors();

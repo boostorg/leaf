@@ -55,7 +55,7 @@ namespace boost { namespace leaf {
 
 	struct e_original_ec { std::error_code value; };
 
-	class error: public std::error_code
+	class error_id: public std::error_code
 	{
 		template <class ErrorCode>
 		static std::error_code import( ErrorCode && ec ) noexcept
@@ -63,9 +63,9 @@ namespace boost { namespace leaf {
 			std::error_category const & cat = leaf_detail::get_error_category();
 			if( ec && &ec.category()!=&cat )
 			{
-				int error_id = leaf_detail::new_id();
-				leaf_detail::put_slot(error_id, e_original_ec{ec});
-				return std::error_code(error_id, cat);
+				int err_id = leaf_detail::new_id();
+				leaf_detail::put_slot(err_id, e_original_ec{ec});
+				return std::error_code(err_id, cat);
 			}
 			else
 				return ec;
@@ -73,30 +73,30 @@ namespace boost { namespace leaf {
 
 	public:
 
-		error() noexcept = default;
+		error_id() noexcept = default;
 
 		template <class... E>
-		error( std::error_code const & ec, E && ... e ) noexcept:
+		error_id( std::error_code const & ec, E && ... e ) noexcept:
 			error_code(import(ec))
 		{
 			(void) propagate(std::forward<E>(e)...);
 		}
 
 		template <class... E>
-		error( std::error_code && ec, E && ... e ) noexcept:
+		error_id( std::error_code && ec, E && ... e ) noexcept:
 			error_code(import(std::move(ec)))
 		{
 			(void) propagate(std::forward<E>(e)...);
 		}
 
-		error propagate() const noexcept
+		error_id propagate() const noexcept
 		{
 			assert(is_leaf_error(*this));
 			return *this;
 		}
 
 		template <class... E>
-		error propagate( E && ... e ) const noexcept
+		error_id propagate( E && ... e ) const noexcept
 		{
 			assert(is_leaf_error(*this));
 			auto _ = { leaf_detail::put_slot(value(), std::forward<E>(e))... };
@@ -107,31 +107,31 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		inline error make_error( int error_id )
+		inline error_id make_error( int err_id )
 		{
-			assert(error_id);
-			return error(std::error_code(error_id, get_error_category()));
+			assert(err_id);
+			return error_id(std::error_code(err_id, get_error_category()));
 		}
 	}
 
 	template <class... E>
-	error new_error( E && ... e ) noexcept
+	error_id new_error( E && ... e ) noexcept
 	{
 		return leaf_detail::make_error(leaf_detail::new_id()).propagate(std::forward<E>(e)...);
 	}
 
-	inline error next_error() noexcept
+	inline error_id next_error() noexcept
 	{
 		return leaf_detail::make_error(leaf_detail::next_id());
 	}
 
-	inline error error_info::error() const noexcept
+	inline error_id error_info::error() const noexcept
 	{
 		assert(has_error());
-		return leaf_detail::make_error(error_id_);
+		return leaf_detail::make_error(err_id_);
 	}
 
-	inline error leaf_detail::monitor_base::error() const noexcept
+	inline error_id leaf_detail::monitor_base::error() const noexcept
 	{
 		assert(ei_!=0);
 		return ei_->error();
@@ -156,7 +156,7 @@ namespace boost { namespace leaf {
 		template <> struct is_error_type_default<e_source_location>: std::true_type { };
 
 		template <class... E>
-		error new_error_at( char const * file, int line, char const * function, E && ... e ) noexcept
+		error_id new_error_at( char const * file, int line, char const * function, E && ... e ) noexcept
 		{
 			assert(file&&*file);
 			assert(line>0);

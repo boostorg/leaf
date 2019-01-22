@@ -29,11 +29,11 @@ using namespace leaf::leaf_detail;
 
 static_assert(is_result_type<leaf::result<int>>::value, "");
 static_assert(std::is_same<int &, typename result_traits<leaf::result<int>>::value_type>::value, "");
-static_assert(std::is_same<leaf::error, typename result_traits<leaf::result<int>>::error_type>::value, "");
+static_assert(std::is_same<leaf::error_id, typename result_traits<leaf::result<int>>::error_type>::value, "");
 
 static_assert(is_result_type<leaf::result<void>>::value, "");
 static_assert(std::is_same<void, typename result_traits<leaf::result<void>>::value_type>::value, "");
-static_assert(std::is_same<leaf::error, typename result_traits<leaf::result<void>>::error_type>::value, "");
+static_assert(std::is_same<leaf::error_id, typename result_traits<leaf::result<void>>::error_type>::value, "");
 
 static_assert(is_result_type<result_type<int,float>>::value, "");
 static_assert(std::is_same<int, typename result_traits<result_type<int,float>>::value_type>::value, "");
