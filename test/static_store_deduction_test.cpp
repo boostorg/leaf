@@ -90,6 +90,10 @@ void not_called_on_purpose()
 
 	test< static_store<info<1>,info<2>,info<3>> >( expd([ ]( info<1> const *, info<2> ){ }, [ ]( info<1>, info<3> const * ){ }) );
 	test< static_store<info<1>,info<2>,info<3>> >( expd([ ]( info<1> const, info<2> ){ }, [ ]( info<1> const *, info<3> ){ }) );
+
+	test< static_store<info<1>,info<2>,leaf::leaf_detail::e_unexpected_count> >( expd([ ]( info<1>, info<2>, leaf::diagnostic_info const & ){ }, [ ]( info<1>, info<2> ){ }) );
+	test< static_store<info<1>,info<2>,leaf::leaf_detail::e_unexpected_info> >( expd([ ]( info<1>, info<2> ){ }, [ ]( info<1>, leaf::verbose_diagnostic_info const &, info<2> ){ }) );
+	test< static_store<info<1>,info<2>,leaf::leaf_detail::e_unexpected_count,leaf::leaf_detail::e_unexpected_info> >( expd([ ]( info<1>, info<2>, leaf::diagnostic_info const & ){ }, [ ]( info<1>, leaf::verbose_diagnostic_info const &, info<2> ){ }) );
 }
 
 int main()

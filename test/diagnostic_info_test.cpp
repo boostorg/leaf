@@ -96,6 +96,7 @@ int main()
 			std::ostringstream st;
 			st << unmatched;
 			std::string s = st.str();
+			BOOST_TEST(s.find("leaf::error_info:")!=s.npos);
 			BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
 			BOOST_TEST(s.find(": N/A")!=s.npos);
 			BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
@@ -132,6 +133,7 @@ int main()
 			std::ostringstream st;
 			st << unmatched;
 			std::string s = st.str();
+			BOOST_TEST(s.find("leaf::diagnostic_info:")!=s.npos);
 			BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
 			BOOST_TEST(s.find(": N/A")!=s.npos);
 			BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
@@ -170,6 +172,7 @@ int main()
 			std::ostringstream st;
 			st << di;
 			std::string s = st.str();
+			BOOST_TEST(s.find("leaf::verbose_diagnostic_info:")!=s.npos);
 			BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
 			BOOST_TEST(s.find(": N/A")!=s.npos);
 			BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
@@ -178,6 +181,38 @@ int main()
 			BOOST_TEST(s.find(") in function")!=s.npos);
 			BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
 			BOOST_TEST(s.find("unexpected_test<2>")!=s.npos);
+			std::cout << s;
+		} );
+
+	std::cout << std::endl;
+
+	leaf::try_(
+		[ ]
+		{
+			LEAF_THROW( my_error(), leaf::e_errno{ENOENT} );
+		},
+		[ ]( leaf::e_source_location, leaf::e_errno, leaf::diagnostic_info const & di )
+		{
+			std::ostringstream st;
+			st << di;
+			std::string s = st.str();
+			BOOST_TEST(s.find("leaf::diagnostic_info:")!=s.npos);
+			std::cout << s;
+		} );
+
+	std::cout << std::endl;
+
+	leaf::try_(
+		[ ]
+		{
+			LEAF_THROW( my_error(), leaf::e_errno{ENOENT} );
+		},
+		[ ]( leaf::e_source_location, leaf::e_errno, leaf::verbose_diagnostic_info const & vdi )
+		{
+			std::ostringstream st;
+			st << vdi;
+			std::string s = st.str();
+			BOOST_TEST(s.find("leaf::verbose_diagnostic_info:")!=s.npos);
 			std::cout << s;
 		} );
 

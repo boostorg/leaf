@@ -136,12 +136,6 @@ namespace boost { namespace leaf {
 		return leaf_detail::make_error(err_id_);
 	}
 
-	inline error_id leaf_detail::monitor_base::error() const noexcept
-	{
-		assert(ei_!=0);
-		return ei_->error();
-	}
-
 	////////////////////////////////////////
 
 	struct e_source_location

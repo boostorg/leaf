@@ -186,15 +186,15 @@ namespace boost { namespace leaf {
 			};
 
 			template <>
-			class static_store_slot<diagnostic_info>:
-				public slot<diagnostic_info>,
+			class static_store_slot<e_unexpected_count>:
+				public slot<e_unexpected_count>,
 				enable_any
 			{
 			};
 
 			template <>
-			class static_store_slot<verbose_diagnostic_info>:
-				public slot<verbose_diagnostic_info>,
+			class static_store_slot<e_unexpected_info>:
+				public slot<e_unexpected_info>,
 				enable_any
 			{
 			};
@@ -239,6 +239,24 @@ namespace boost { namespace leaf {
 
 			template <class SlotsTuple,class T>
 			struct check_one_argument<SlotsTuple,T *>
+			{
+				static bool check( SlotsTuple const &, error_info const & ) noexcept
+				{
+					return true;
+				}
+			};
+
+			template <class SlotsTuple>
+			struct check_one_argument<SlotsTuple,diagnostic_info>
+			{
+				static bool check( SlotsTuple const &, error_info const & ) noexcept
+				{
+					return true;
+				}
+			};
+
+			template <class SlotsTuple>
+			struct check_one_argument<SlotsTuple,verbose_diagnostic_info>
 			{
 				static bool check( SlotsTuple const &, error_info const & ) noexcept
 				{
@@ -387,12 +405,9 @@ namespace boost { namespace leaf {
 			struct get_one_argument<diagnostic_info>
 			{
 				template <class StaticStore, class R>
-				static diagnostic_info const & get( StaticStore const & ss, error_info const & ei, R * ) noexcept
+				static diagnostic_info get( StaticStore const & ss, error_info const & ei, R * ) noexcept
 				{
-					diagnostic_info const * di = ss.template peek<diagnostic_info>(ei.err_id());
-					assert(di!=0);
-					di->set_error_info(ei);
-					return *di;
+					return diagnostic_info(ei, ss.template peek<e_unexpected_count>(ei.err_id()));
 				}
 			};
 
@@ -400,12 +415,9 @@ namespace boost { namespace leaf {
 			struct get_one_argument<verbose_diagnostic_info>
 			{
 				template <class StaticStore, class R>
-				static verbose_diagnostic_info const & get( StaticStore const & ss, error_info const & ei, R * ) noexcept
+				static verbose_diagnostic_info get( StaticStore const & ss, error_info const & ei, R * ) noexcept
 				{
-					verbose_diagnostic_info const * vdi = ss.template peek<verbose_diagnostic_info>(ei.err_id());
-					assert(vdi!=0);
-					vdi->set_error_info(ei);
-					return *vdi;
+					return verbose_diagnostic_info(ei, ss.template peek<e_unexpected_info>(ei.err_id()));
 				}
 			};
 
@@ -522,6 +534,14 @@ namespace boost { namespace leaf {
 		template <class T> struct translate_expect_deduction<T const> { using type = T; };
 		template <class T> struct translate_expect_deduction<T const &> {using type = T; };
 		template <class T> struct translate_expect_deduction<T const *> { using type = T; };
+		template <> struct translate_expect_deduction<diagnostic_info>;
+		template <> struct translate_expect_deduction<diagnostic_info const>;
+		template <> struct translate_expect_deduction<diagnostic_info const *>;
+		template <> struct translate_expect_deduction<diagnostic_info const &> { using type = e_unexpected_count; };
+		template <> struct translate_expect_deduction<verbose_diagnostic_info>;
+		template <> struct translate_expect_deduction<verbose_diagnostic_info const>;
+		template <> struct translate_expect_deduction<verbose_diagnostic_info const *>;
+		template <> struct translate_expect_deduction<verbose_diagnostic_info const &> { using type = e_unexpected_info; };
 		template <class R> struct translate_expect_deduction<failed<R> const> { using type = failed<R>; };
 		template <class R> struct translate_expect_deduction<failed<R> const &> { using type = failed<R>; };
 		template <class R> struct translate_expect_deduction<failed<R> &&> { using type =failed<R>; };

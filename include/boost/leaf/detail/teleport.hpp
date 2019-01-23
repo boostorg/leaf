@@ -137,13 +137,24 @@ namespace boost { namespace leaf {
 
 	class error_info
 	{
-		error_info( error_info const & ) = delete;
 		error_info & operator=( error_info const & ) = delete;
 
 		int const err_id_;
 		std::exception const * const ex_;
 		leaf_detail::captured_exception const * const cap_;
 		void (* const print_ex_)( std::ostream &, std::exception const *, leaf_detail::captured_exception const * );
+
+	protected:
+
+		error_info( error_info const & x ) noexcept = default;
+
+		void print( std::ostream & os ) const
+		{
+			os << "Error ID: " << err_id_ << std::endl;
+			if( print_ex_ )
+				print_ex_(os,ex_,cap_);
+			leaf_detail::slot_base::print(os,err_id_);
+		}
 
 	public:
 
@@ -198,10 +209,8 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, error_info const & x )
 		{
-			os << "LEAF Error ID: " << x.err_id_ << std::endl;
-			if( x.print_ex_ )
-				x.print_ex_(os,x.ex_,x.cap_);
-			leaf_detail::slot_base::print(os,x.err_id_);
+			os << "leaf::error_info:" << std::endl;
+			x.print(os);
 			return os;
 		}
 	};
@@ -243,162 +252,138 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		class monitor_base
+		class e_unexpected_count
 		{
-			monitor_base( monitor_base const & ) = delete;
-			monitor_base & operator=( monitor_base const & ) = delete;
+		public:
 
-			mutable error_info const * ei_;
+			char const * (*first_type)();
+			int count;
 
-		protected:
-
-			monitor_base() noexcept:
-				ei_(0)
+			explicit e_unexpected_count( char const * (*first_type)() ) noexcept:
+				first_type(first_type),
+				count(1)
 			{
 			}
 
-			monitor_base( monitor_base && x ) noexcept:
-				ei_(0)
+			void print( std::ostream & os ) const
 			{
-				x.ei_ = 0;
+				assert(first_type!=0);
+				assert(count>0);
+				os << "Detected ";
+				if( count==1 )
+					os << "1 attempt to communicate an E-object";
+				else
+					os << count << " attempts to communicate unexpected E-objects, the first one";
+				os << " of type " << first_type() << std::endl;
 			}
+		};
 
-			void set_error_info( error_info const & ei ) const noexcept
-			{
-				ei_ = &ei;
-			}
+		template <>
+		struct is_error_type_default<e_unexpected_count>: std::true_type
+		{
+		};
 
-			error_info const & get_error_info() const noexcept
+		template <>
+		struct diagnostic<e_unexpected_count,false,false>
+		{
+			static bool print( std::ostream & os, e_unexpected_count const & ) noexcept
 			{
-				assert(ei_!=0);
-				return *ei_;
+				return false;
 			}
+		};
+
+		class e_unexpected_info
+		{
+			std::string s_;
+			std::set<char const *(*)()> already_;
 
 		public:
 
-			bool has_error() const noexcept
+			e_unexpected_info() noexcept
 			{
-				assert(ei_!=0);
-				return ei_->has_error();
 			}
 
-			error_id error() const noexcept;
-
-			bool has_exception() const noexcept
+			void reset() noexcept
 			{
-				assert(ei_!=0);
-				return ei_->has_exception();
+				s_.clear();
+				already_.clear();
 			}
 
-			std::exception const * exception() const noexcept
+			template <class E>
+			void add( E const & e )
 			{
-				assert(ei_!=0);
-				return ei_->exception();
+				std::stringstream s;
+				if( leaf_detail::diagnostic<E>::print(s,e) && already_.insert(&type<E>).second  )
+				{
+					s << std::endl;
+					s_ += s.str();
+				}
+			}
+
+			void print( std::ostream & os ) const
+			{
+				os << s_;
 			}
 		};
-	}
 
-	class diagnostic_info: leaf_detail::monitor_base
-	{
-	public:
-
-		char const * (*first_type)();
-		int count;
-
-		explicit diagnostic_info( char const * (*first_type)() ) noexcept:
-			first_type(first_type),
-			count(1)
-		{
-		}
-
-		using monitor_base::set_error_info;
-
-		friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
-		{
-			assert(x.first_type!=0);
-			assert(x.count>0);
-			os << x.get_error_info() << "diagnostic_info: Detected ";
-			if( x.count==1 )
-				os << "1 attempt to communicate an E-object";
-			else
-				os << x.count << " attempts to communicate unexpected E-objects, the first one";
-			return os << " of type " << x.first_type() << std::endl;
-		}
-	};
-
-	namespace leaf_detail
-	{
 		template <>
-		struct is_error_type_default<diagnostic_info>: std::true_type
+		struct is_error_type_default<e_unexpected_info>: std::true_type
 		{
 		};
 
 		template <>
-		struct diagnostic<diagnostic_info,true,false>
+		struct diagnostic<e_unexpected_info,false,false>
 		{
-			static bool print( std::ostream & os, diagnostic_info const & ) noexcept
+			static bool print( std::ostream & os, e_unexpected_info const & ) noexcept
 			{
 				return false;
 			}
 		};
 	}
 
-	class verbose_diagnostic_info: leaf_detail::monitor_base
+	class diagnostic_info: public error_info
 	{
-		std::string s_;
-		std::set<char const *(*)()> already_;
+		leaf_detail::e_unexpected_count const * e_uc_;
 
 	public:
 
-		verbose_diagnostic_info() noexcept
+		diagnostic_info( error_info const & ei, leaf_detail::e_unexpected_count const * e_uc ) noexcept:
+			error_info(ei),
+			e_uc_(e_uc)
 		{
 		}
 
-		using monitor_base::set_error_info;
-
-		void reset() noexcept
+		friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
 		{
-			s_.clear();
-			already_.clear();
-		}
-
-		template <class E>
-		void add( E const & e )
-		{
-			std::stringstream s;
-			if( leaf_detail::diagnostic<E>::print(s,e) && already_.insert(&type<E>).second  )
-			{
-				s << std::endl;
-				s_ += s.str();
-			}
-		}
-
-		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
-		{
-			os <<
-				x.get_error_info() <<
-				"verbose_diagnostic_info:" << std::endl <<
-				x.s_;
+			os << "leaf::diagnostic_info:" << std::endl;
+			x.print(os);
+			if( x.e_uc_  )
+				x.e_uc_->print(os);
 			return os;
 		}
 	};
 
-	namespace leaf_detail
+	class verbose_diagnostic_info: public error_info
 	{
-		template <>
-		struct is_error_type_default<verbose_diagnostic_info>: std::true_type
-		{
-		};
+		leaf_detail::e_unexpected_info const * e_ui_;
 
-		template <>
-		struct diagnostic<verbose_diagnostic_info,true,false>
+	public:
+
+		verbose_diagnostic_info( error_info const & ei, leaf_detail::e_unexpected_info const * e_ui ) noexcept:
+			error_info(ei),
+			e_ui_(e_ui)
 		{
-			static bool print( std::ostream & os, verbose_diagnostic_info const & ) noexcept
-			{
-				return false;
-			}
-		};
-	}
+		}
+
+		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
+		{
+			os << "leaf::verbose_diagnostic_info:" << std::endl;
+			x.print(os);
+			if( x.e_ui_ )
+				x.e_ui_->print(os);
+			return os;
+		}
+	};
 
 	////////////////////////////////////////
 
@@ -477,9 +462,9 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		void put_unexpected( id_e_pair<E> const & id_e ) noexcept
+		void put_unexpected_count( id_e_pair<E> const & id_e ) noexcept
 		{
-			if( slot<diagnostic_info> * p = tl_slot_ptr<diagnostic_info>() )
+			if( slot<e_unexpected_count> * p = tl_slot_ptr<e_unexpected_count>() )
 			{
 				if( p->has_value() )
 				{
@@ -490,14 +475,14 @@ namespace boost { namespace leaf {
 						return;
 					}
 				}
-				(void) p->put( id_e_pair<diagnostic_info>(id_e.err_id,diagnostic_info(&type<E>)) );
+				(void) p->put( id_e_pair<e_unexpected_count>(id_e.err_id,e_unexpected_count(&type<E>)) );
 			}
 		}
 
 		template <class E>
-		void put_verbose_diagnostic_info( id_e_pair<E> const & id_e ) noexcept
+		void put_unexpected_info( id_e_pair<E> const & id_e ) noexcept
 		{
-			if( slot<verbose_diagnostic_info> * sl = tl_slot_ptr<verbose_diagnostic_info>() )
+			if( slot<e_unexpected_info> * sl = tl_slot_ptr<e_unexpected_info>() )
 			{
 				if( auto * pv = sl->has_value() )
 				{
@@ -516,8 +501,8 @@ namespace boost { namespace leaf {
 		template <class E>
 		void no_expect_slot( id_e_pair<E> const & id_e ) noexcept
 		{
-			put_unexpected(id_e);
-			put_verbose_diagnostic_info(id_e);
+			put_unexpected_count(id_e);
+			put_unexpected_info(id_e);
 		}
 
 		template <class E>
