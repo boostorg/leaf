@@ -48,7 +48,7 @@ run exception_to_result_test.cpp ;
 run function_traits_test.cpp ;
 run handle_all_other_result_test.cpp ;
 run handle_all_test.cpp ;
-run handle_some_basic_test.cpp ;
+run handle_basic_test.cpp ;
 run handle_some_other_result_test.cpp ;
 run handle_some_test.cpp ;
 run is_error_type_test.cpp ;

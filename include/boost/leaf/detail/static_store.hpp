@@ -275,10 +275,10 @@ namespace boost { namespace leaf {
 			{
 				static bool check( SlotsTuple const &, error_info const & ei ) noexcept
 				{
-					if( std::exception const * ex = ei.exception() )
-						return catch_<Ex...>(*ex)();
-					else
-						return false;
+					if( ei.has_exception() )
+						if( std::exception const * ex = ei.exception() )
+							return catch_<Ex...>(*ex)();
+					return false;
 				}
 			};
 

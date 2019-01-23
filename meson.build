@@ -55,7 +55,7 @@ tests = [
 	'function_traits_test',
 	'handle_all_other_result_test',
 	'handle_all_test',
-	'handle_some_basic_test',
+	'handle_basic_test',
 	'handle_some_other_result_test',
 	'handle_some_test',
 	'is_error_type_test',

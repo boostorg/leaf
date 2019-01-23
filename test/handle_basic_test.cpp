@@ -145,5 +145,25 @@ int main()
 		BOOST_TEST(r==1);
 	}
 
+	///////////////////////////
+
+	{
+		int r = leaf::handle_all(
+			[ ]() -> leaf::result<int>
+			{
+				LEAF_CHECK(handle_some_errors_void(2));
+				return 0;
+			},
+			[ ]( leaf::catch_<std::exception> )
+			{
+				return 1;
+			},
+			[ ]
+			{
+				return 2;
+			} );
+		BOOST_TEST(r==2);
+	}
+
 	return boost::report_errors();
 }
