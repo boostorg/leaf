@@ -744,20 +744,65 @@ The <<LEAF_ERROR>>, <<LEAF_EXCEPTION>> and <<LEAF_THROW>> macros capture `pass:[
 
 '''
 
-[[error]]
-=== `error`
+[[error_id]]
+=== `error_id`
 
 include::{sourcedir}/synopses/error.adoc[]
 
-The `error` type derives publicly from `std::error_code`.  It does not add any data members, so objects of type `error` are as efficient as objects of type `std::error_code`.
+The `error_id` type derives publicly from `std::error_code`.  It does not add any data members, so objects of type `error_id` are as efficient as objects of type `std::error_code`.
 
-Values of type `error` identify an error across the entire program. They can be copied, moved, assigned to, and compared to other `error` or `std::error_code` objects.
+Values of type `error_id` identify an error across the entire program. They can be copied, moved, assigned to, and compared to other `error_id` or `std::error_code` objects.
 
-A default-initialized `error` object does not represent an error condition. It compares equal to any other default-initialized `error` object.
+All `error_id` values use a `std::error_category` of unspecified type. All such objects -- as well as their `std::error_code` slice -- have special semantics  recognized by <<handle_all>>, <<handle_some>> or <<try_>>. Of course, these functions are able to deal with any other `std::error_code`.
 
-All other `error` objects use an `error_category` of unspecified type. Such errors should be handled using <<handle_all>> / <<handle_some>> or <<try_>>, which are able to recognize their special semantics, yet are able to deal with any other `std::error_code`.
+[TIP]
+--
+The special `error_id` semantics are encoded in the `std::error_code` value. To check if a given `std::error_code` has these semantics, use <<is_error_id>>.
 
-To report an error, call the <<new_error>> function to obtain a new unique `error` value for the error.
+The purpose of the `error_id` type is to reflect these semantics in the {CPP} type system; that is, we can say:
+
+[source,c++]
+----
+void f( leaf::error_id const & ec )
+{
+  assert(is_error_id(ec));
+}
+----
+--
+
+'''
+
+[[error_id::error_id]]
+==== Constructors
+
+.#include <boost/leaf/error.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+    error_id::error_id() noexcept = default;
+
+    template <class... E>
+    error_id::error_id( std::error_code const & ec, E && ... e ) noexcept;
+
+    template <class... E>
+    error_id::error_id( std::error_code && ec, E && ... e ) noexcept;
+
+} }
+----
+
+A default-initialized `error_id` object does not represent an error condition. It compares equal to any other default-initialized `error_id` or default-initialized `std::error_code` object.
+
+All other `error_id` objects use a `std::error_category` of unspecified type. All such objects -- as well as their `std::error_code` slice -- have special semantics  recognized by <<handle_all>>, <<handle_some>> or <<try_>>. Of course, these functions are able to deal with any other `std::error_code`.
+
+
+Requirements: :: `<<is_error_type,is_error_type>><E>::value` must be `true` for each `E`.
+
+Effects: :: Each of the `e...` objects is <<propagation,propagated>> and uniquely associated with the returned value.
+
+Returns: :: A new `error_id` value, which is unique across the entire program.
+
+Postcondition: :: `ec.value()!=0`, where `ec` is the returned `error_id`.
 
 '''
 
@@ -780,6 +825,8 @@ Requirements: :: `<<is_error_type,is_error_type>><E>::value` must be `true` for 
 Effects: :: Each of the `e...` objects is <<propagation,propagated>> and uniquely associated with the returned value.
 
 Returns: :: A new `error_id` value, which is unique across the entire program.
+
+Postcondition: :: `ec.value()!=0`, where `ec` is the returned `error_id`.
 
 '''
 
@@ -819,23 +866,6 @@ Returns: :: The `error_id` value returned the last time <<new_error>> was invoke
 
 '''
 
-[[error::operator_bool]]
-==== Conversion to `bool`
-
-.#include <boost/leaf/error.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  bool error_id::operator bool() const noexcept;
-
-} }
-----
-
-Returns: :: If the `error_id` value was obtained by a call to <<success>>, returns false. Otherwise returns `true`.
-
-'''
-
 [[propagate]]
 ==== `propagate`
 
@@ -853,57 +883,6 @@ namespace boost { namespace leaf {
 Effects: :: Each of the `e...` objects is <<propagation,propagated>> and uniquely associated with `*this`.
 
 Returns: :: `*this`.
-
-'''
-
-[[operator_eq-error_id]]
-==== `operator==`
-
-.#include <boost/leaf/error.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  bool operator==( error_id const & e1, error_id const & e2 ) noexcept;
-
-} }
-----
-
-Returns: :: `true` if the two values `e1` and `e2` are equal, `false` otherwise.
-
-'''
-
-[[operator_neq-error_id]]
-==== `operator!=`
-
-.#include <boost/leaf/error.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  bool operator!=( error_id const & e1, error_id const & e2 ) noexcept;
-
-} }
-----
-
-Returns: :: `!(e1==e2)`.
-
-'''
-
-[[operator_shl-error_id]]
-==== `operator<<`
-
-.#include <boost/leaf/error.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  std::ostream & operator<<( std::ostream & os, error_id const & id )
-
-} }
-----
-
-Effects: :: Prints an `unsigned int` value that uniquely identifies the value `id`.
 
 '''
 

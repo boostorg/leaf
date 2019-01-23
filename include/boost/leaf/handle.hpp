@@ -19,7 +19,7 @@ namespace boost { namespace leaf {
 		}
 		inline int handle_get_err_id( std::error_code const & ec ) noexcept
 		{
-			return is_leaf_error(ec) ? ec.value() : 0;
+			return is_error_id(ec) ? ec.value() : 0;
 		}
 	}
 

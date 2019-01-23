@@ -46,7 +46,7 @@ namespace boost { namespace leaf {
 		}
 	}
 
-	inline bool is_leaf_error( std::error_code const & ec )
+	inline bool is_error_id( std::error_code const & ec )
 	{
 		return &ec.category() == &leaf_detail::get_error_category();
 	}
@@ -73,8 +73,6 @@ namespace boost { namespace leaf {
 
 	public:
 
-		error_id() noexcept = default;
-
 		template <class... E>
 		error_id( std::error_code const & ec, E && ... e ) noexcept:
 			error_code(import(ec))
@@ -91,14 +89,14 @@ namespace boost { namespace leaf {
 
 		error_id propagate() const noexcept
 		{
-			assert(is_leaf_error(*this));
+			assert(is_error_id(*this));
 			return *this;
 		}
 
 		template <class... E>
 		error_id propagate( E && ... e ) const noexcept
 		{
-			assert(is_leaf_error(*this));
+			assert(is_error_id(*this));
 			auto _ = { leaf_detail::put_slot(value(), std::forward<E>(e))... };
 			(void) _;
 			return *this;

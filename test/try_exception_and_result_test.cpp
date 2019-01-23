@@ -24,7 +24,7 @@ int main()
 			},
 			[ ]() -> leaf::result<int>
 			{
-				return leaf::error_id();
+				return { };
 			} );
 		BOOST_TEST(r && r.value()==42);
 	}
