@@ -10,6 +10,7 @@
 #include <boost/leaf/detail/teleport.hpp>
 #include <boost/leaf/detail/function_traits.hpp>
 #include <boost/leaf/detail/mp11.hpp>
+#include <boost/leaf/error.hpp>
 #include <system_error>
 #include <tuple>
 
@@ -528,7 +529,7 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		// Static store deduction
+		// Static store deduction / handle_error support
 
 		template <class T> struct translate_expect_deduction { using type = T; };
 		template <class T> struct translate_expect_deduction<T const> { using type = T; };
@@ -588,8 +589,54 @@ namespace boost { namespace leaf {
 		{
 			typedef static_store<T...> type;
 		};
+
+		template <class TryReturn, class F, class HandlerReturn=typename function_traits<F>::return_type, class=typename function_traits<F>::mp_args>
+		struct handler_wrapper;
+
+		template <class TryReturn, class F, class HandlerReturn, template<class...> class L, class... A>
+		struct handler_wrapper<TryReturn, F, HandlerReturn, L<A...>>
+		{
+			F f_;
+			explicit handler_wrapper( F && f ) noexcept:
+				f_(std::forward<F>(f))
+			{
+			}
+			TryReturn operator()( A... a ) const
+			{
+				return f_(std::forward<A>(a)...);
+			}
+		};
+
+		template <class TryReturn, class F, template<class...> class L, class... A>
+		struct handler_wrapper<TryReturn, F, void, L<A...>>
+		{
+			F f_;
+			explicit handler_wrapper( F && f ) noexcept:
+				f_(std::forward<F>(f))
+			{
+			}
+			TryReturn operator()( A... a ) const
+			{
+				f_(std::forward<A>(a)...);
+				return { };
+			}
+		};
+
+		inline int handle_get_err_id( error_id const & err ) noexcept
+		{
+			return err.value();
+		}
+
+		inline int handle_get_err_id( std::error_code const & ec ) noexcept
+		{
+			return is_error_id(ec) ? ec.value() : 0;
+		}
 	} // leaf_detail
 
+	template <class R>
+	struct is_result_type: std::false_type
+	{
+	};
 } }
 
 #endif

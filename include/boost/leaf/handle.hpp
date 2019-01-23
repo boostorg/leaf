@@ -8,25 +8,15 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/detail/static_store.hpp>
-#include <boost/leaf/error.hpp>
 
 namespace boost { namespace leaf {
-
-	namespace leaf_detail {
-		inline int handle_get_err_id( error_id const & err ) noexcept
-		{
-			return err.value();
-		}
-		inline int handle_get_err_id( std::error_code const & ec ) noexcept
-		{
-			return is_error_id(ec) ? ec.value() : 0;
-		}
-	}
 
 	template <class TryBlock, class... Handler>
 	typename std::remove_reference<decltype(std::declval<TryBlock>()().value())>::type handle_all( TryBlock && try_block, Handler && ... handler )
 	{
 		using namespace leaf_detail;
+		using R = decltype(std::declval<TryBlock>()());
+		static_assert(is_result_type<R>::value, "The try_block passed to handle_all must be registered with leaf::is_result_type.");
 		typename deduce_static_store<typename handler_args_set<Handler...>::type>::type ss;
 		ss.set_reset(true);
 		if( auto r = std::forward<TryBlock>(try_block)() )
@@ -35,46 +25,12 @@ namespace boost { namespace leaf {
 			return ss.handle_error(error_info(handle_get_err_id(r.error())), &r, std::forward<Handler>(handler)...);
 	}
 
-	namespace leaf_detail
-	{
-		template <class TryReturn, class F, class HandlerReturn=typename function_traits<F>::return_type, class=typename function_traits<F>::mp_args>
-		struct handler_wrapper;
-
-		template <class TryReturn, class F, class HandlerReturn, template<class...> class L, class... A>
-		struct handler_wrapper<TryReturn, F, HandlerReturn, L<A...>>
-		{
-			F f_;
-			explicit handler_wrapper( F && f ) noexcept:
-				f_(std::forward<F>(f))
-			{
-			}
-			TryReturn operator()( A... a ) const
-			{
-				return f_(std::forward<A>(a)...);
-			}
-		};
-
-		template <class TryReturn, class F, template<class...> class L, class... A>
-		struct handler_wrapper<TryReturn, F, void, L<A...>>
-		{
-			F f_;
-			explicit handler_wrapper( F && f ) noexcept:
-				f_(std::forward<F>(f))
-			{
-			}
-			TryReturn operator()( A... a ) const
-			{
-				f_(std::forward<A>(a)...);
-				return { };
-			}
-		};
-	}
-
 	template <class TryBlock, class... Handler>
 	decltype(std::declval<TryBlock>()()) handle_some( TryBlock && try_block, Handler && ... handler )
 	{
 		using namespace leaf_detail;
 		using R = decltype(std::declval<TryBlock>()());
+		static_assert(is_result_type<R>::value, "The try_block passed to handle_some must be registered with leaf::is_result_type.");
 		typename deduce_static_store<typename handler_args_set<Handler...>::type>::type ss;
 		if( auto r = std::forward<TryBlock>(try_block)() )
 		{

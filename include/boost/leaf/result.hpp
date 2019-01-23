@@ -285,6 +285,13 @@ namespace boost { namespace leaf {
 		using base::error;
 	};
 
+	template <class R>
+	struct is_result_type;
+
+	template <class T>
+	struct is_result_type<result<T>>: std::true_type
+	{
+	};
 } }
 
 #endif

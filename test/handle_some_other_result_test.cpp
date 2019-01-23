@@ -49,6 +49,13 @@ public:
 	}
 };
 
+namespace boost { namespace leaf {
+	template <class T, class E>
+	struct is_result_type<result<T, E>>: std::true_type
+	{
+	};
+} }
+
 result<int,std::error_code> f( bool succeed )
 {
 	if( succeed )
