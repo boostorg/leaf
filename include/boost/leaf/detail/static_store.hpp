@@ -10,6 +10,7 @@
 #include <boost/leaf/detail/teleport.hpp>
 #include <boost/leaf/detail/function_traits.hpp>
 #include <boost/leaf/detail/mp11.hpp>
+#include <system_error>
 #include <tuple>
 
 namespace boost { namespace leaf {
@@ -388,10 +389,10 @@ namespace boost { namespace leaf {
 				template <class StaticStore, class R>
 				static diagnostic_info const & get( StaticStore const & ss, error_info const & ei, R * ) noexcept
 				{
-					diagnostic_info const * uei = ss.template peek<diagnostic_info>(ei.err_id());
-					assert(uei!=0);
-					uei->set_error_info(ei);
-					return *uei;
+					diagnostic_info const * di = ss.template peek<diagnostic_info>(ei.err_id());
+					assert(di!=0);
+					di->set_error_info(ei);
+					return *di;
 				}
 			};
 
