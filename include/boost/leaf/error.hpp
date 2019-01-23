@@ -14,7 +14,12 @@
 
 namespace boost { namespace leaf {
 
-	namespace leaf_detail {
+	namespace leaf_detail
+	{
+		template <>
+		struct is_error_type_default<std::error_code>: std::true_type
+		{
+		};
 
 		class error_category: public std::error_category
 		{
@@ -72,6 +77,8 @@ namespace boost { namespace leaf {
 		}
 
 	public:
+
+		error_id() noexcept = default;
 
 		template <class... E>
 		error_id( std::error_code const & ec, E && ... e ) noexcept:

@@ -222,6 +222,8 @@ namespace boost { namespace leaf {
 		{
 			switch( which_ )
 			{
+			case leaf_detail::result_variant::value:
+				return { };
 			case leaf_detail::result_variant::cap:
 				{
 					dynamic_store_ptr cap = cap_;

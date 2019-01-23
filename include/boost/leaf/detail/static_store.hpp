@@ -30,39 +30,56 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class E,bool HasValue = has_data_member_value<E>::value>
-		struct match_type;
+		template <class T, bool HasValue = has_data_member_value<T>::value, bool IsErrorCodeOrErrorCondition = std::is_error_code_enum<T>::value | std::is_error_condition_enum<T>::value>
+		struct match_traits;
 
-		template <class E>
-		struct match_type<E,true>
+		template <class T>
+		struct match_traits<T,false, false>
 		{
-			using type = decltype(E::value);
+			using enumerator = T;
+			using e_type = enumerator;
+			using match_type = enumerator;
 
-			static type const & get( E const & e ) noexcept
-			{
-				return e.value;
-			}
-		};
-
-		template <class E>
-		struct match_type<E,false>
-		{
-			using type = E;
-
-			static type const & get( E const & e ) noexcept
+			static match_type const & get( e_type const & e ) noexcept
 			{
 				return e;
 			}
 		};
 
 		template <class T>
-		bool check_value_pack( T const & x, T const & v ) noexcept
+		struct match_traits<T, true, false>
+		{
+			using enumerator = decltype(T::value);
+			using e_type = T;
+			using match_type = enumerator;
+
+			static match_type const & get( e_type const & e ) noexcept
+			{
+				return e.value;
+			}
+		};
+
+		template <class T>
+		struct match_traits<T, false, true>
+		{
+			using enumerator = T;
+			using e_type = std::error_code;
+			using match_type = e_type;
+
+			static match_type const & get( e_type const & e ) noexcept
+			{
+				return e;
+			}
+		};
+
+		template <class MatchType, class Enumerator>
+		bool check_value_pack( MatchType const & x, Enumerator v ) noexcept
 		{
 			return x==v;
 		}
 
-		template <class T, class... VRest>
-		bool check_value_pack( T const & x, T const & v1, VRest const & ... v_rest ) noexcept
+		template <class MatchType, class Enumerator, class... EnumeratorRest>
+		bool check_value_pack( MatchType const & x, Enumerator v1, EnumeratorRest ... v_rest ) noexcept
 		{
 			return x==v1 || check_value_pack(x,v_rest...);
 		}
@@ -80,14 +97,15 @@ namespace boost { namespace leaf {
 		}
 	}
 
-	template <class E, typename leaf_detail::match_type<E>::type... V>
+	template <class T, typename leaf_detail::match_traits<T>::enumerator... V>
 	struct match
 	{
-		using type = typename leaf_detail::match_type<E>::type;
-		type const & value;
+		using e_type = typename leaf_detail::match_traits<T>::e_type;
+		using match_type = typename leaf_detail::match_traits<T>::match_type;
+		match_type const & value;
 
-		explicit match( E const & e ):
-			value(leaf_detail::match_type<E>::get(e))
+		explicit match( e_type const & e ):
+			value(leaf_detail::match_traits<T>::get(e))
 		{
 		}
 
@@ -236,16 +254,16 @@ namespace boost { namespace leaf {
 				}
 			};
 
-			template <class SlotsTuple, class E, typename match_type<E>::type... V>
-			struct check_one_argument<SlotsTuple,match<E,V...>>
+			template <class SlotsTuple, class T, typename match_traits<T>::enumerator... V>
+			struct check_one_argument<SlotsTuple,match<T,V...>>
 			{
 				static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
 				{
-					auto & sl = std::get<tuple_type_index<static_store_slot<E>,SlotsTuple>::value>(tup);
+					auto & sl = std::get<tuple_type_index<static_store_slot<typename match_traits<T>::e_type>,SlotsTuple>::value>(tup);
 					if( sl.has_value() )
 					{
 						auto const & v = sl.value();
-						return v.err_id==ei.err_id() && match<E,V...>(v.e)();
+						return v.err_id==ei.err_id() && match<T,V...>(v.e)();
 					}
 					else
 						return false;
@@ -329,15 +347,16 @@ namespace boost { namespace leaf {
 				}
 			};
 
-			template <class E, typename match_type<E>::type... V>
-			struct get_one_argument<match<E,V...>>
+			template <class T, typename match_traits<T>::enumerator... V>
+			struct get_one_argument<match<T,V...>>
 			{
 				template <class StaticStore, class R>
-				static match<E,V...> get( StaticStore const & ss, error_info const & ei, R * ) noexcept
+				static match<T,V...> get( StaticStore const & ss, error_info const & ei, R * ) noexcept
 				{
-					E const * arg = ss.template peek<E>(ei.err_id());
+					using e_type = typename match_traits<T>::e_type;
+					e_type const * arg = ss.template peek<e_type>(ei.err_id());
 					assert(arg!=0);
-					return match<E,V...>(*arg);
+					return match<T,V...>(*arg);
 				}
 			};
 
@@ -466,6 +485,7 @@ namespace boost { namespace leaf {
 			template <class P>
 			P const * peek( int err_id ) const noexcept
 			{
+				assert(err_id);
 				auto & opt = std::get<static_store_internal::type_index<P,E...>::value>(s_);
 				if( err_id && opt.has_value() )
 				{
@@ -497,15 +517,15 @@ namespace boost { namespace leaf {
 
 		// Static store deduction
 
-		template <class T> struct translate_expect_deduction { typedef T type; };
-		template <class T> struct translate_expect_deduction<T const> { typedef T type; };
-		template <class T> struct translate_expect_deduction<T const &> { typedef T type; };
-		template <class T> struct translate_expect_deduction<T const *> { typedef T type; };
-		template <class R> struct translate_expect_deduction<failed<R> const> { typedef failed<R> type; };
-		template <class R> struct translate_expect_deduction<failed<R> const &> { typedef failed<R> type; };
-		template <class R> struct translate_expect_deduction<failed<R> &&> { typedef failed<R> type; };
-		template <class E,typename match_type<E>::type... V> struct translate_expect_deduction<match<E,V...>> { typedef E type; };
-		template <class... Exceptions> struct translate_expect_deduction<catch_<Exceptions...>> { typedef void type; };
+		template <class T> struct translate_expect_deduction { using type = T; };
+		template <class T> struct translate_expect_deduction<T const> { using type = T; };
+		template <class T> struct translate_expect_deduction<T const &> {using type = T; };
+		template <class T> struct translate_expect_deduction<T const *> { using type = T; };
+		template <class R> struct translate_expect_deduction<failed<R> const> { using type = failed<R>; };
+		template <class R> struct translate_expect_deduction<failed<R> const &> { using type = failed<R>; };
+		template <class R> struct translate_expect_deduction<failed<R> &&> { using type =failed<R>; };
+		template <class T, typename match_traits<T>::enumerator... V> struct translate_expect_deduction<match<T,V...>> { using type = typename match_traits<T>::e_type; };
+		template <class... Exceptions> struct translate_expect_deduction<catch_<Exceptions...>> { using type = void; };
 
 		template <class... T>
 		struct translate_list_impl;

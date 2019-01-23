@@ -23,7 +23,7 @@ namespace boost { namespace leaf {
 	template <> struct is_error_type<error_code>: std::true_type { };
 } }
 
-struct error_codes_ { error_code value; };
+struct e_error_code { error_code value; };
 
 template <class R>
 leaf::result<R> f( error_code ec )
@@ -31,7 +31,16 @@ leaf::result<R> f( error_code ec )
 	if( ec==error_code::ok )
 		return R(42);
 	else
-		return leaf::new_error(ec,error_codes_{ec},info<1>{1},info<2>{2},info<3>{3});
+		return leaf::new_error(ec,e_error_code{ec},info<1>{1},info<2>{2},info<3>{3});
+}
+
+template <class R>
+leaf::result<R> f_errc( int ec )
+{
+	if( ec==0 )
+		return R(42);
+	else
+		return leaf::new_error(std::error_code(ec, std::system_category()), info<1>{1}, info<2>{2}, info<3>{3});
 }
 
 int main()
@@ -78,6 +87,37 @@ int main()
 				c = 2;
 			} );
 		BOOST_TEST(c==1);
+	}
+
+	// void, handle_all (failure), match errc (single enum value)
+	{
+		int c=0;
+		leaf::handle_all(
+			[&c]() -> leaf::result<void>
+			{
+				LEAF_AUTO(answer, f_errc<int>(ENOENT));
+				c = answer;
+				return { };
+			},
+			[&c]( leaf::match<std::errc, std::errc::no_such_process> )
+			{
+				BOOST_TEST(c==0);
+				c = 1;
+			},
+			[&c]( leaf::match<std::errc, std::errc::no_such_file_or_directory> ec, info<1> const & x, info<2> y )
+			{
+				BOOST_TEST(ec.value==std::error_code(ENOENT, std::system_category()));
+				BOOST_TEST(x.value==1);
+				BOOST_TEST(y.value==2);
+				BOOST_TEST(c==0);
+				c = 2;
+			},
+			[&c]()
+			{
+				BOOST_TEST(c==0);
+				c = 3;
+			} );
+		BOOST_TEST(c==2);
 	}
 
 	// void, handle_all (failure), match enum (single enum value)
@@ -152,12 +192,12 @@ int main()
 				c = answer;
 				return { };
 			},
-			[&c]( leaf::match<error_codes_,error_code::error2> )
+			[&c]( leaf::match<e_error_code,error_code::error2> )
 			{
 				BOOST_TEST(c==0);
 				c = 1;
 			},
-			[&c]( leaf::match<error_codes_,error_code::error1> ec, info<1> const & x, info<2> y )
+			[&c]( leaf::match<e_error_code,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value==error_code::error1);
 				BOOST_TEST(x.value==1);
@@ -183,12 +223,12 @@ int main()
 				c = answer;
 				return { };
 			},
-			[&c]( leaf::match<error_codes_,error_code::error2> )
+			[&c]( leaf::match<e_error_code,error_code::error2> )
 			{
 				BOOST_TEST(c==0);
 				c = 1;
 			},
-			[&c]( leaf::match<error_codes_,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
+			[&c]( leaf::match<e_error_code,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value==error_code::error1);
 				BOOST_TEST(x.value==1);
@@ -241,6 +281,32 @@ int main()
 				return 2;
 			} );
 		BOOST_TEST(r==1);
+	}
+
+	// int, handle_all (failure), match std::errc (single enum value)
+	{
+		int r = leaf::handle_all(
+			[ ]() -> leaf::result<int>
+			{
+				LEAF_AUTO(answer, f_errc<int>(ENOENT));
+				return answer;
+			},
+			[ ]( leaf::match<std::errc, std::errc::no_such_process> )
+			{
+				return 1;
+			},
+			[ ]( leaf::match<std::errc, std::errc::no_such_file_or_directory> ec, info<1> const & x, info<2> y )
+			{
+				BOOST_TEST(ec.value==std::error_code(ENOENT, std::system_category()));
+				BOOST_TEST(x.value==1);
+				BOOST_TEST(y.value==2);
+				return 2;
+			},
+			[ ]
+			{
+				return 3;
+			} );
+		BOOST_TEST(r==2);
 	}
 
 	// int, handle_all (failure), match enum (single enum value)
@@ -303,11 +369,11 @@ int main()
 				LEAF_AUTO(answer, f<int>(error_code::error1));
 				return answer;
 			},
-			[ ]( leaf::match<error_codes_,error_code::error2> )
+			[ ]( leaf::match<e_error_code,error_code::error2> )
 			{
 				return 1;
 			},
-			[ ]( leaf::match<error_codes_,error_code::error1> ec, info<1> const & x, info<2> y )
+			[ ]( leaf::match<e_error_code,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value==error_code::error1);
 				BOOST_TEST(x.value==1);
@@ -329,11 +395,11 @@ int main()
 				LEAF_AUTO(answer, f<int>(error_code::error1));
 				return answer;
 			},
-			[ ]( leaf::match<error_codes_,error_code::error2> )
+			[ ]( leaf::match<e_error_code,error_code::error2> )
 			{
 				return 1;
 			},
-			[ ]( leaf::match<error_codes_,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
+			[ ]( leaf::match<e_error_code,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value==error_code::error1);
 				BOOST_TEST(x.value==1);

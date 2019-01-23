@@ -27,8 +27,13 @@ namespace boost { namespace leaf {
 		{
 			if( auto err = dynamic_cast<error_id const *>(&ex) )
 				return err->value();
-			else
-				return next_id();
+			else if( auto err = dynamic_cast<std::system_error const *>(&ex) )
+			{
+				std::error_code const & ec = err->code();
+				if( is_error_id(ec) )
+					return ec.value();
+			}
+			return next_id();
 		}
 
 		template <class TryBlock, class R = decltype(std::declval<TryBlock>()()), bool ReturnsResultType = is_result_type<R>::value>

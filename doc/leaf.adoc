@@ -753,7 +753,32 @@ The `error_id` type derives publicly from `std::error_code`.  It does not add an
 
 Values of type `error_id` identify an error across the entire program. They can be copied, moved, assigned to, and compared to other `error_id` or `std::error_code` objects.
 
-All `error_id` values use a `std::error_category` of unspecified type. All such objects -- as well as their `std::error_code` slice -- have special semantics  recognized by <<handle_all>>, <<handle_some>> or <<try_>>. Of course, these functions are able to deal with any other `std::error_code`.
+'''
+
+[[error_id::error_id]]
+==== Constructors
+
+.#include <boost/leaf/error.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  error_id::error_id() noexcept = default;
+
+  template <class... E>
+  error_id::error_id( std::error_code const & ec, E && ... e ) noexcept;
+
+  template <class... E>
+  error_id::error_id( std::error_code && ec, E && ... e ) noexcept;
+
+  struct e_original_ec { std::error_code value; };
+
+} }
+----
+
+A default-initialized `error_id` object does not represent an error condition. It compares equal to any other default-initialized `error_id` or default-initialized `std::error_code` object.
+
+All other `error_id` objects use a `std::error_category` of unspecified type. All such objects -- as well as their `std::error_code` slice -- have special semantics  recognized by <<handle_all>>, <<handle_some>> or <<try_>>. Of course, these functions are able to deal with any other `std::error_code`.
 
 [TIP]
 --
@@ -765,44 +790,20 @@ The purpose of the `error_id` type is to reflect these semantics in the {CPP} ty
 ----
 void f( leaf::error_id const & ec )
 {
-  assert(is_error_id(ec));
+  assert(is_error_id(ec) || !ec);
 }
 ----
 --
 
-'''
+Typically, users create new `error_id` objects by invoking <<new_error>>. The constructors that take `std::error_code` have the following effects:
 
-[[error_id::error_id]]
-==== Constructors
+* If `ec.value()` is `0`, the `std::error_code` subobject of `*this` is default-initialized;
+* Otherwise, if `<<is_error_id,is_error_id>>(ec)` is `true`, the `std::error_code` subobject of `*this` is initialized by copying or moving from `ec`;
+* Otherwise:
+** `*this` is initialized by the value returned by <<new_error>>, followed by `propagate(e_original_ec{ec}, std::forward<E>(e)...)`;
+** `ec` is discarded.
 
-.#include <boost/leaf/error.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-    error_id::error_id() noexcept = default;
-
-    template <class... E>
-    error_id::error_id( std::error_code const & ec, E && ... e ) noexcept;
-
-    template <class... E>
-    error_id::error_id( std::error_code && ec, E && ... e ) noexcept;
-
-} }
-----
-
-A default-initialized `error_id` object does not represent an error condition. It compares equal to any other default-initialized `error_id` or default-initialized `std::error_code` object.
-
-All other `error_id` objects use a `std::error_category` of unspecified type. All such objects -- as well as their `std::error_code` slice -- have special semantics  recognized by <<handle_all>>, <<handle_some>> or <<try_>>. Of course, these functions are able to deal with any other `std::error_code`.
-
-
-Requirements: :: `<<is_error_type,is_error_type>><E>::value` must be `true` for each `E`.
-
-Effects: :: Each of the `e...` objects is <<propagation,propagated>> and uniquely associated with the returned value.
-
-Returns: :: A new `error_id` value, which is unique across the entire program.
-
-Postcondition: :: `ec.value()!=0`, where `ec` is the returned `error_id`.
+TIP: In a handler passed to <<handle_some>>, <<handle_all>> or <<try_>>, the original `ec` value passed to the `error_id` `std::error_code` constructors can be recovered by taking an argument of type `e_original_ec`.
 
 '''
 
@@ -1049,6 +1050,21 @@ Handlers passed to <<handle_some>> or <<handle_all>> may take an argument of typ
 
 == Noexcept API
 
+[[result_requirements]]
+
+=== "`result<T>`" Requirements
+
+The error-handling functionality provided by <<handle_some>>, <<handle_all>> and <<try_>> -- including the ability to <<propagation,propagate>> error objects of arbitrary types -- is compatible with any external  "`result<T>`"  type R, as long as it satisfies the following requirements:
+
+* An object `r` of type `R` can be initialized with a value "`T`" to indicate success, or with a `std::error_code` to indicate a failure;
+* `bool(r)` is `true` if `r` indicates success, which means that it is valid to call `r.value()` to recover the "`T`" value, and `false` otherwise, in which case it is valid to call `r.error()` to recover the `std::error_code`.
+
+If possible, the `std::error_code` should be of type <<error_id>> (which derives publicly from `std::error_code`), however this is not a requirement.
+
+Naturally, the provided <<result>> class template satisfies these requirements. In addition, it allows error objects to be transported across thread boundaries.
+
+'''
+
 [[result]]
 === `result`
 
@@ -1235,78 +1251,6 @@ This exception is thrown by `<<result::value,value>>()`/`<<result::value,operato
 
 '''
 
-[[get_error_id-result]]
-==== `get_error_id`
-
-.#include <boost/leaf/result.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class T>
-  error_id get_error_id( result<T> const & r );
-
-} }
-----
-
-Returns: :: `r.error()`.
-
-'''
-
-[[error_code]]
-=== `error_code`
-
-include::{sourcedir}/synopses/error_code.adoc[]
-
-This header supports interoperability between LEAF and APIs which communicate errors using `std::error_code`.
-
-Typically, the `try_block` passed to <<handle_some>> or <<handle_all>> returns an instance of the <<result>> template, which holds an <<error_id>> necessary to match error handlers to available error objects.
-
-The <<get_error_code>> function returns a special `std::error_code` value which can be passed to `handle_some` or `handle_all` as well to access available error objects. This enables users to communicate LEAF errors through any `std::error_code` interface.
-
-'''
-
-[[get_error_code]]
-
-==== `get_error_code`
-
-.#include <boost/leaf/error_code.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  std::error_code get_error_code( error_id id ) noexcept;
-
-} }
-----
-
-Returns: :: If `id` represents success, returns a default-initialized `std::error_code`. Otherwise, the returned `std::error_code` will have an unspecified non-zero `.value()` and an unspecified `.category()`.
-+
-If the returned `std::error_code` is returned by a `try_handler` passed to <<handle_some>> or <<handle_all>>, the original `id` is recovered and handler matching proceeds as usual.
-
-'''
-
-[[get_error_id-error_code]]
-
-==== `get_error_id`
-
-.#include <boost/leaf/error_code.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  error_id get_error_id( std::error_code ec ) noexcept;
-
-} }
-----
-
-Returns: ::
-* If `ec` represents success, returns the value returned by <<success>>;
-* Otherwise, if `ec` was not constructed using <<get_error_code>>, returns the value returned by <<next_error>>;
-* Otherwise, returns the `id` originally passed to <<get_error_code>>.
-
-'''
-
 [[handle_some]]
 === `handle_some`
 
@@ -1321,22 +1265,19 @@ namespace boost { namespace leaf {
 } }
 ----
 
-When errors are communicated by `<<result,result>><T>`, the `handle_some` function template can be used to recognize and handle some errors, forwarding any unrecognized errors to the caller.
-
-In addition, `handle_some` is compatible with any other type for which an unqualified call to `get_error_id` can be bound. For example, LEAF provides <<error_code,helper functions>> that enable `handle_some` or <<handle_all>> to be used with `std::error_code` objects.
+The `handle_some` function template can be used to recognize and handle some errors, forwarding any unrecognized errors to the caller.
 
 Requirements: ::
 
-* The `try_block` must be a function callable with no arguments that returns a value `r` for which the expression `<<get_error_id-result,get_error_id>>(r)` is well  defined and returns an <<error_id>> object (note: `<<result,result>><T>` and `std::error_code` satisfy this requirement).
-* All `handler...` arguments must be functions that return the same type as the `try_block`, or types that convert implicitly to it (note: a `result<T>` object can be initialized by an <<error_id>> object, regardless of `T`);
-
+* The `try_block` must be a function callable with no arguments that returns a type `R` that satisfies the <<result_requirements>>;
+* All `handler...` arguments must return (possibly different) types that can be used to initialize an object of the type `R`;
 * Each of the `handler...` functions:
 ** may take arguments of <<e_objects,E-types>>, either by value or by `const &`, or as a `const *`;
 ** may take arguments, either by value or by `const &`, of the predicate type `<<match,match>><E>`, where `E` is an E-type;
 ** may take an <<error_info>> argument by `const &`;
 ** may take a <<diagnostic_info>> argument by `const &`;
 ** may take a <<verbose_diagnostic_info>> argument by `const &`;
-** may take a `<<failed,failed>><R>` argument, where `R` is the type returned by `try_block`;
+** may take a `<<failed,failed>><R>` argument;
 ** may not take any other types of arguments.
 
 Effects: ::
@@ -1352,7 +1293,7 @@ The list of E-types that `handle_some` needs to store internally is deduced auto
 * Any duplicate types are removed.
 --
 +
-Next, `handle_some` calls the `try_block` function, which generally would call other functions as needed. When any function needs to report an error, it passes one or more E-objects to LEAF. For example, a function that returns a `<<result,result>><T>` can report an error with a call to <<new_error>> in a `return` expression:
+Next, `handle_some` calls the `try_block` function, which generally would call other functions as needed. When any function needs to report an error, it passes one or more E-objects to LEAF. For example, a function that returns R can report an error with a call to <<new_error>> in a `return` expression:
 +
 [source,c++]
 ----
@@ -1363,9 +1304,9 @@ if( file-open-fails )
 As each E-type object is passed to LEAF, it is immediately moved to the `handle_some` (or <<handle_all>>, or <<try_>>) scope highest in the call stack that has available storage for that type, where it is uniquely associated with a specific <<error_id>> (in this case, the value returned by `new_error`). Objects of E-types for which none of these scopes have available storage are discarded.
 
 Return Value: ::
-If `<<get_error_id-result,get_error_id>>(r)`, where `r` is the object returned by the `try_block` function, indicates success, `handle_some` returns `r`.
+If `bool(r)` is `true`, where `r` is the object returned by the `try_block` function, `handle_some` returns `r`.
 +
-Otherwise, `handle_some` considers each of the `handler...` functions, in order, until it finds one that matches the reported error. The first matching handler is invoked and its return value is forwarded to the caller of `handle_some`; if no match is found, `handle_some` returns `r`.
+Otherwise, `handle_some` considers each of the `handler...` functions, in order, until it finds one that matches the reported `r.error()`. The first matching handler is invoked and its return value is used to initialize the return value of `handle_some`, which can indicate success if the handler was able to handle the error, or failure if it was not.
 +
 If the value `handle_some` is returning indicates success, all stored E-objects are discarded. Otherwise, each stored E-object is moved to appropriate storage available in `handle_some` (or <<handle_all>>, or <<try_>>) scopes higher up the call stack (each moved object retains its unique association with its specific `error_id` value). E-objects for which such storage is not available are discarded.
 
@@ -1373,7 +1314,14 @@ Handler Matching Procedure: ::
 +
 A `handler` matches the reported failure iff `handle_some` is able to produce values to pass as its arguments. As soon as it is determined that an argument value can not be produced, the current `handler` is dropped and the matching procedure continues with the next `handler`, if any.
 +
-If `err` is the specific <<error_id>> obtained by `<<get_error_id-result,get_error_id>>(r)`, where `r` is the object returned by the `try_block`, each argument value `a`~i~ to be passed to the `handler` currently under consideration is produced as follows:
+Because each error object stored in the `handle_some` scope is associated with a specific unique <<error_id>> value, the first thing `handle_some` must do is call `r.error()` to obtain an error ID key to match error objects with:
++
+--
+* If `<<is_error_id,is_error_id>>(e)` is true, where `e` is the return value of `r.error()`, the error ID is encoded dynamically in `e` and is readily available,
+* Otherwise, `handle_some` proceeds in a mode where only the following types of handler arguments can match: `error_info`, `diagnostic_info`, `verbose_diagnostic_info`, or `failed<R>`, where `R` is the return type of the `try_block`.
+--
++
+If `err` is the obtained error ID, each argument value `a`~i~ to be passed to the `handler` currently under consideration is produced as follows:
 +
 --
 * If `a`~i~ is taken as `A`~i~ `const &` or by value:
@@ -1512,25 +1460,31 @@ return leaf::handle_some(
 ....
 return leaf::handle_some(
 
-  [ ]() -> std::error_code <1>
+  [ ]() -> result<void> <1>
   {
     ....
   },
 
-  [ ]( leaf::failed<std::error_code> && r ) <2>
+  [ ]( leaf::match<my_errors,ec1> ) -> result<void>
   {
-    std::cerr << "std::error_code says \"" << r.value.message() << '"' << std::endl; <2>
-    return r.value; <3>
+    ....
+  },
+
+  [ ]( leaf::failed<result<void>> && r ) -> result<void> <2>
+  {
+    assert(!r);
+    ....
+    return { }; <3>
   } );
 ----
-<1> The `try_block` returns `std::error_code`, which...
-<2> ...in case of failure will be passed to this handler, and then...
-<3> ...it will be returned out of `handle_some`.
+<1> The `try_block` returns some `result<void>` (see <<result_requirements>>), which...
+<2> ...presumably didn't match other handlers, so it is passed to this last handler for inspection/logging, and then...
+<3> ...we return success out of `handle_some`.
 +
 * It is illegal to pass to `handle_some` a `handler` that takes any other argument types.
 --
 
-TIP: Because `handle_some` can always produce arguments of type `error_info const &`, `diagnostic_info const &` and `verbose_diagnostic_info const &`, a handler that only takes arguments of these types will match any error.
+TIP: Because `handle_some` can always produce arguments of type `error_info const &`, `diagnostic_info const &`, `verbose_diagnostic_info const &` and `failed<R>`, a handler that only takes arguments of these types will match any error.
 
 '''
 
@@ -1553,14 +1507,14 @@ Requirements: ::
 `handle_all` has the same requirements as <<handle_some>>, with the following change:
 +
 --
-* If `T` is the type returned by the `TryBlock`, all `handler...` arguments must be functions that return `T` or a type that converts implicitly to `T` (note: `handle_some` handlers are required to return `result<T>`).
+* If `r` is the object returned by the `try_block` and `T` is the type returned by `r.value()` (see <<result_requirements>>), all `handler...` arguments must be functions that return objects of (possibly different) types that can be used to initialize an object of type `T`.
 --
 And the following addition:
 * At least one `handler` function (usually the last) must match any error. This is enforced at compile-time.
 
-Effects: ::
-
-The `handle_all` function works the same as <<handle_some>>, but because it is guaranteed to be able to match any error communicated by the `try_block` with a `handler`, it doesn't need to return a `result<T>`.
+Return Value: ::
+* If `bool(r)` is `true`, where `r` is the result object returned by the `try_block`, returns `r.value()`;
+* Otherwise the value returned by the first matched (using the same matching procedure as <<handle_some>>) handler is used to initialize the return value (of type `T`) of `handle_all`.
 
 .Example:
 [source,c++]
@@ -1857,13 +1811,14 @@ And the following addition:
 
 Effects: ::
 
-`try_` works similarly to <<handle_some>> -- the difference is that `try_` catches exceptions thrown by the `try_block` function with a `catch(std::exception const &)` or, if that fails, `catch(...)`.
+`try_` works similarly to <<handle_some>> -- the difference is that `try_` catches exceptions thrown by the `try_block` function:
 
-Return Value: ::
-
-* If the `try_block` succeeds, `try_` forwards the return value to the caller;
-* Otherwise, it attempts to match the <<error_id>> communicated with the caught exception with a `handler`. If that succeeds, `try_` forwards the return value from the matched `handler` to the caller;
-* Otherwise, `try_` re-throws the caught exception.
+* If the `try_block` throws:
+** `try_` attempts to match the <<error_id>> communicated with the caught exception with a `handler`. If that succeeds, `try_` forwards the return value from the matched `handler` to the caller;
+** Otherwise, `try_` re-throws the caught exception.
+* If the `try_block` returns a value `r`:
+** if `r` is of a `result<T>` type (see <<result_requirements>>), `try_` proceeds the same as `handle_some`;
+** otherwise it returns `r`.
 
 Handler Matching Procedure: ::
 

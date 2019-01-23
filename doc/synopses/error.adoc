@@ -16,6 +16,8 @@ namespace boost { namespace leaf {
   {
   public:
 
+    error_id() noexcept = default;
+
     template <class... E>
     error_id( std::error_code const & ec, E && ... e ) noexcept;
 
@@ -25,6 +27,8 @@ namespace boost { namespace leaf {
     template <class... E>
     error_id propagate( E && ... e ) const noexcept;
   };
+
+  struct e_original_ec { std::error_code value; };
 
   template <class T>
   struct is_error_type
