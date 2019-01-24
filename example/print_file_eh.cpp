@@ -7,7 +7,7 @@
 // This is a short but complete program that reads a text file in a buffer and prints it to std::cout,
 // using LEAF to handle errors. It uses exception handling.
 
-#include <boost/leaf/throw.hpp>
+#include <boost/leaf/exception.hpp>
 #include <boost/leaf/try.hpp>
 #include <boost/leaf/preload.hpp>
 #include <boost/leaf/common.hpp>

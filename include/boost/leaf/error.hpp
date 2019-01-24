@@ -362,18 +362,15 @@ namespace boost { namespace leaf {
 		template <class E>
 		void put_unexpected_count( id_e_pair<E> const & id_e ) noexcept
 		{
-			if( slot<e_unexpected_count> * p = tl_slot_ptr<e_unexpected_count>() )
+			if( slot<e_unexpected_count> * sl = tl_slot_ptr<e_unexpected_count>() )
 			{
-				if( p->has_value() )
-				{
-					auto & p_id_e = p->value();
-					if( p_id_e.err_id==id_e.err_id )
+				if( auto pv = sl->has_value() )
+					if( pv->err_id == id_e.err_id )
 					{
-						++p_id_e.e.count;
+						++pv->e.count;
 						return;
 					}
-				}
-				(void) p->put( id_e_pair<e_unexpected_count>(id_e.err_id,e_unexpected_count(&type<E>)) );
+				(void) sl->put( id_e_pair<e_unexpected_count>(id_e.err_id,e_unexpected_count(&type<E>)) );
 			}
 		}
 
@@ -381,8 +378,7 @@ namespace boost { namespace leaf {
 		void put_unexpected_info( id_e_pair<E> const & id_e ) noexcept
 		{
 			if( slot<e_unexpected_info> * sl = tl_slot_ptr<e_unexpected_info>() )
-			{
-				if( auto * pv = sl->has_value() )
+				if( auto pv = sl->has_value() )
 				{
 					if( pv->err_id!=id_e.err_id )
 					{
@@ -393,7 +389,6 @@ namespace boost { namespace leaf {
 				}
 				else
 					sl->emplace(id_e.err_id).e.add(id_e.e);
-			}
 		}
 
 		template <class E>
@@ -440,8 +435,9 @@ namespace boost { namespace leaf {
 			{
 				int c = tl_unexpected_enabled_counter();
 				assert(c>=0);
-				if( c && has_value() )
-					no_expect_slot(value());
+				if( c )
+					if( auto v = has_value() )
+						no_expect_slot(*v);
 			}
 			tl_slot_ptr<E>() = prev_;
 		}

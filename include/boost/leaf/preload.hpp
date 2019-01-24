@@ -55,8 +55,10 @@ namespace boost { namespace leaf {
 				assert(err_id);
 				if( s_ )
 				{
-					if( !s_->has_value() || s_->value().err_id!=err_id )
-						s_->put( leaf_detail::id_e_pair<E>(err_id,std::move(e_)) );
+					if( auto pv = s_->has_value() )
+						if( pv->err_id==err_id )
+							return;
+					s_->put( leaf_detail::id_e_pair<E>(err_id,std::move(e_)) );
 				}
 				else
 				{
@@ -144,8 +146,10 @@ namespace boost { namespace leaf {
 				assert(err_id);
 				if( s_ )
 				{
-					if( !s_->has_value() || s_->value().err_id!=err_id )
-						s_->put( leaf_detail::id_e_pair<E>(err_id,f_()) );
+					if( auto pv = s_->has_value() )
+						if( pv->err_id==err_id )
+							return;
+					s_->put( leaf_detail::id_e_pair<E>(err_id,f_()) );
 				}
 				else
 				{

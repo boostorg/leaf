@@ -6,7 +6,7 @@
 
 #include <boost/leaf/capture_exception.hpp>
 #include <boost/leaf/try.hpp>
-#include <boost/leaf/throw.hpp>
+#include <boost/leaf/exception.hpp>
 #include <boost/leaf/preload.hpp>
 #include "boost/core/lightweight_test.hpp"
 

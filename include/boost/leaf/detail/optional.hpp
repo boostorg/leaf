@@ -62,8 +62,8 @@ namespace boost { namespace leaf {
 			optional & operator=( optional const & x )
 			{
 				reset();
-				if( x.has_value() )
-					put(x.value());
+				if( auto pv = x.has_value() )
+					put(*pv);
 				return *this;
 			}
 

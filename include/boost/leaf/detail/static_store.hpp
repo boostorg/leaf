@@ -8,7 +8,6 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/detail/function_traits.hpp>
-#include <boost/leaf/detail/mp11.hpp>
 #include <boost/leaf/error.hpp>
 #include <tuple>
 
@@ -195,10 +194,10 @@ namespace boost { namespace leaf {
 			{
 				assert(err_id);
 				slot<E> const & s = *this;
-				if( s.has_value() && s.value().err_id==err_id )
-					return optional<E>(std::move(*this).value().e);
-				else
-					return optional<E>();
+				if( auto pv = s.has_value() )
+					if( pv->err_id==err_id )
+						return optional<E>(std::move(*this).value().e);
+				return optional<E>();
 			}
 		};
 
@@ -248,10 +247,9 @@ namespace boost { namespace leaf {
 		template <class E, class SlotsTuple>
 		E const * peek( SlotsTuple const & tup, int err_id ) noexcept
 		{
-			auto & opt = std::get<tuple_type_index<static_store_slot<E>,SlotsTuple>::value>(tup);
-			if( auto const * v = opt.has_value() )
-				if( v->err_id==err_id )
-					return &v->e;
+			if( auto pv = std::get<tuple_type_index<static_store_slot<E>,SlotsTuple>::value>(tup).has_value() )
+				if( pv->err_id==err_id )
+					return &pv->e;
 			return 0;
 		}
 	}
@@ -273,10 +271,7 @@ namespace boost { namespace leaf {
 			template <class SlotsTuple>
 			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				if( auto const * v = std::get<tuple_type_index<static_store_slot<e_type>,SlotsTuple>::value>(tup).has_value() )
-					if( v->err_id==ei.err_id() )
-						return &v->e;
-				return 0;
+				return peek<e_type>(tup, ei.err_id());
 			}
 		};
 
@@ -290,10 +285,10 @@ namespace boost { namespace leaf {
 			template <class SlotsTuple>
 			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				if( auto const * v = std::get<tuple_type_index<static_store_slot<e_type>,SlotsTuple>::value>(tup).has_value() )
-					if( v->err_id==ei.err_id() )
-						return &v->e.value;
-				return 0;
+				if( auto pv = peek<e_type>(tup, ei.err_id()) )
+					return &pv->value;
+				else
+					return 0;
 			}
 		};
 
@@ -324,10 +319,10 @@ namespace boost { namespace leaf {
 			template <class SlotsTuple>
 			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				if( auto const * v = std::get<tuple_type_index<static_store_slot<e_type>,SlotsTuple>::value>(tup).has_value() )
-					if( v->err_id==ei.err_id() )
-						return &v->e.value;
-				return 0;
+				if( auto pv = peek<e_type>(tup, ei.err_id()) )
+					return &pv->value;
+				else
+					return 0;
 			}
 		};
 

@@ -12,11 +12,11 @@
 #include <boost/leaf/common.hpp>
 #include <boost/leaf/error.hpp>
 #include <boost/leaf/exception_to_result.hpp>
+#include <boost/leaf/exception.hpp>
 #include <boost/leaf/handle.hpp>
 #include <boost/leaf/preload.hpp>
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/throw_exception.hpp>
-#include <boost/leaf/throw.hpp>
 #include <boost/leaf/try.hpp>
 
 #endif

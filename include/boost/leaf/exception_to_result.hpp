@@ -7,12 +7,13 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/throw.hpp>
-#include <boost/leaf/result.hpp>
-#include <boost/leaf/detail/static_store.hpp>
-#include <boost/leaf/detail/demangle.hpp>
+#include <boost/leaf/error.hpp>
+#include <boost/leaf/detail/function_traits.hpp>
 
 namespace boost { namespace leaf {
+
+	template <class T>
+	class result;
 
 	namespace leaf_detail
 	{

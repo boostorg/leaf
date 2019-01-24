@@ -8,7 +8,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/detail/dynamic_store.hpp>
-#include <boost/leaf/throw.hpp>
+#include <boost/leaf/exception.hpp>
 #include <memory>
 
 #define LEAF_AUTO(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
