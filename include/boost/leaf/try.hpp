@@ -22,17 +22,17 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		inline int get_err_id( std::exception const & ex ) noexcept
+		inline std::error_code get_error_code( std::exception const & ex ) noexcept
 		{
 			if( auto err = dynamic_cast<error_id const *>(&ex) )
-				return err->value();
+				return *err;
 			else if( auto err = dynamic_cast<std::system_error const *>(&ex) )
 			{
 				std::error_code const & ec = err->code();
 				if( is_error_id(ec) )
-					return ec.value();
+					return ec;
 			}
-			return next_id();
+			return make_error_id(next_id());
 		}
 
 		template <class TryBlock, class R = decltype(std::declval<TryBlock>()()), bool ReturnsResultType = is_result_type<R>::value>
@@ -62,7 +62,7 @@ namespace boost { namespace leaf {
 				}
 				else
 				{
-					auto rr = ss.handle_error(error_info(handle_get_err_id(r.error())), &r, handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
+					auto rr = ss.handle_error(error_info(r.error()), &r, handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
 					if( rr )
 						ss.set_reset(true);
 					return rr;
@@ -78,7 +78,7 @@ namespace boost { namespace leaf {
 		typename deduce_static_store<typename handler_args_set<Handler...>::type>::type ss;
 		try
 		{
-			return leaf_detail::call_try_block<TryBlock>::call(ss, std::forward<TryBlock>(try_block), std::forward<Handler>(handler)...);
+			return call_try_block<TryBlock>::call(ss, std::forward<TryBlock>(try_block), std::forward<Handler>(handler)...);
 		}
 		catch( captured_exception & cap )
 		{
@@ -90,20 +90,20 @@ namespace boost { namespace leaf {
 			}
 			catch( std::exception const & ex )
 			{
-				return ss.handle_error(error_info(leaf_detail::get_err_id(ex), &ex, &cap, &print_exception_info), (void *)0, std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
+				return ss.handle_error(error_info(get_error_code(ex), &ex, &cap, &print_exception_info), (void *)0, std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
 			}
 			catch( ... )
 			{
-				return ss.handle_error(error_info(leaf_detail::next_id(), 0, &cap, &print_exception_info), (void *)0, std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
+				return ss.handle_error(error_info(make_error_id(next_id()), 0, &cap, &print_exception_info), (void *)0, std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
 			}
 		}
 		catch( std::exception const & ex )
 		{
-			return ss.handle_error(error_info(leaf_detail::get_err_id(ex), &ex, 0, &print_exception_info), (void *)0, std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
+			return ss.handle_error(error_info(get_error_code(ex), &ex, 0, &print_exception_info), (void *)0, std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
 		}
 		catch( ...  )
 		{
-			return ss.handle_error(error_info(leaf_detail::next_id(), 0, 0, &print_exception_info), (void *)0, std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
+			return ss.handle_error(error_info(make_error_id(next_id()), 0, 0, &print_exception_info), (void *)0, std::forward<Handler>(handler)..., [ ]() -> typename function_traits<TryBlock>::return_type { throw; });
 		}
 	}
 

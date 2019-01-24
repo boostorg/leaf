@@ -9,6 +9,7 @@
 
 #include <boost/leaf/detail/optional.hpp>
 #include <boost/leaf/detail/print.hpp>
+#include <system_error>
 #include <type_traits>
 #include <ostream>
 #include <sstream>
@@ -16,6 +17,31 @@
 #include <set>
 
 namespace boost { namespace leaf {
+
+	namespace leaf_detail
+	{
+		struct e_original_ec { std::error_code value; };
+
+		inline std::error_category const & get_error_category() noexcept
+		{
+			class cat: public std::error_category
+			{
+				bool equivalent( int,  std::error_condition const & ) const noexcept { return false; }
+				bool equivalent( std::error_code const &, int ) const noexcept { return false; }
+				char const * name() const noexcept { return "LEAF error, use with leaf::handle_some or leaf::handle_all."; }
+				std::string message( int condition ) const { return name(); }
+			};
+			static cat c;
+			return c;
+		}
+	}
+
+	inline bool is_error_id( std::error_code const & ec )
+	{
+		return &ec.category() == &leaf_detail::get_error_category();
+	}
+
+	////////////////////////////////////////
 
 	namespace leaf_detail
 	{
@@ -139,10 +165,16 @@ namespace boost { namespace leaf {
 	{
 		error_info & operator=( error_info const & ) = delete;
 
+		std::error_code const & ec_;
 		int const err_id_;
 		std::exception const * const ex_;
 		leaf_detail::captured_exception const * const cap_;
 		void (* const print_ex_)( std::ostream &, std::exception const *, leaf_detail::captured_exception const * );
+
+		static int get_err_id( std::error_code const & ec ) noexcept
+		{
+			return is_error_id(ec) ? ec.value() : 0;
+		}
 
 	protected:
 
@@ -158,16 +190,18 @@ namespace boost { namespace leaf {
 
 	public:
 
-		explicit error_info( int err_id ) noexcept:
-			err_id_(err_id),
+		explicit error_info( std::error_code const & ec ) noexcept:
+			ec_(ec),
+			err_id_(get_err_id(ec)),
 			ex_(0),
 			cap_(0),
 			print_ex_(0)
 		{
 		}
 
-		error_info( int err_id, std::exception const * ex, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::captured_exception const *) ) noexcept:
-			err_id_(err_id),
+		error_info( std::error_code const & ec, std::exception const * ex, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::captured_exception const *) ) noexcept:
+			ec_(ec),
+			err_id_(get_err_id(ec)),
 			ex_(ex),
 			cap_(0),
 			print_ex_(print_ex)
@@ -175,8 +209,9 @@ namespace boost { namespace leaf {
 			assert(print_ex_!=0);
 		}
 
-		error_info( int err_id, std::exception const * ex, leaf_detail::captured_exception const * cap, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::captured_exception const *) ) noexcept:
-			err_id_(err_id),
+		error_info( std::error_code const & ec, std::exception const * ex, leaf_detail::captured_exception const * cap, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::captured_exception const *) ) noexcept:
+			ec_(ec),
+			err_id_(get_err_id(ec)),
 			ex_(ex),
 			cap_(cap),
 			print_ex_(print_ex)
@@ -192,6 +227,11 @@ namespace boost { namespace leaf {
 		bool has_error() const noexcept
 		{
 			return err_id_!=0;
+		}
+
+		std::error_code const & error_code() const noexcept
+		{
+			return ec_;
 		}
 
 		error_id error() const noexcept;

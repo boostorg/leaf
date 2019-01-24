@@ -97,10 +97,10 @@ int main()
 				BOOST_TEST(!std::strcmp(ec.category().name(),"LEAF error, use with leaf::handle_some or leaf::handle_all."));
 				return r;
 			},
-			[ ]( info<42> const & x, leaf::e_original_ec const & ec )
+			[ ]( info<42> const & x, std::error_code const & ec )
 			{
 				BOOST_TEST(x.value==42);
-				BOOST_TEST(ec.value==std::error_code(ENOENT, std::system_category()));
+				BOOST_TEST(ec==std::error_code(ENOENT, std::system_category()));
 				return 1;
 			},
 			[ ]

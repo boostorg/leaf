@@ -8,57 +8,10 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/detail/teleport.hpp>
-#include <system_error>
 
 #define LEAF_ERROR(...) ::boost::leaf::leaf_detail::new_error_at(__FILE__,__LINE__,__FUNCTION__,__VA_ARGS__)
 
 namespace boost { namespace leaf {
-
-	namespace leaf_detail
-	{
-		template <>
-		struct is_error_type_default<std::error_code>: std::true_type
-		{
-		};
-
-		class error_category: public std::error_category
-		{
-			bool equivalent( int,  std::error_condition const & ) const noexcept
-			{
-				return false;
-			}
-
-			bool equivalent( std::error_code const &, int ) const noexcept
-			{
-				return false;
-			}
-
-			char const * name() const noexcept
-			{
-				return "LEAF error, use with leaf::handle_some or leaf::handle_all.";
-			}
-
-			std::string message( int condition ) const
-			{
-				return name();
-			}
-		};
-
-		inline error_category const & get_error_category() noexcept
-		{
-			static error_category cat;
-			return cat;
-		}
-	}
-
-	inline bool is_error_id( std::error_code const & ec )
-	{
-		return &ec.category() == &leaf_detail::get_error_category();
-	}
-
-	////////////////////////////////////////
-
-	struct e_original_ec { std::error_code value; };
 
 	class error_id: public std::error_code
 	{
@@ -69,7 +22,7 @@ namespace boost { namespace leaf {
 			if( ec && &ec.category()!=&cat )
 			{
 				int err_id = leaf_detail::new_id();
-				leaf_detail::put_slot(err_id, e_original_ec{ec});
+				leaf_detail::put_slot(err_id, leaf_detail::e_original_ec{ec});
 				return std::error_code(err_id, cat);
 			}
 			else
@@ -112,28 +65,28 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		inline error_id make_error( int err_id )
+		inline error_id make_error_id( int err_id )
 		{
 			assert(err_id);
-			return error_id(std::error_code(err_id, get_error_category()));
+			return std::error_code(err_id, get_error_category());
 		}
 	}
 
 	template <class... E>
 	error_id new_error( E && ... e ) noexcept
 	{
-		return leaf_detail::make_error(leaf_detail::new_id()).propagate(std::forward<E>(e)...);
+		return leaf_detail::make_error_id(leaf_detail::new_id()).propagate(std::forward<E>(e)...);
 	}
 
 	inline error_id next_error() noexcept
 	{
-		return leaf_detail::make_error(leaf_detail::next_id());
+		return leaf_detail::make_error_id(leaf_detail::next_id());
 	}
 
 	inline error_id error_info::error() const noexcept
 	{
 		assert(has_error());
-		return leaf_detail::make_error(err_id_);
+		return leaf_detail::make_error_id(err_id_);
 	}
 
 	////////////////////////////////////////

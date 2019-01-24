@@ -86,7 +86,7 @@ leaf::result<R> f_errc( int ec )
 	if( ec==0 )
 		return R(42);
 	else
-		return leaf::new_error(std::error_code(ec, std::system_category()), info<1>{1}, info<2>{2}, info<3>{3});
+		return leaf::error_id(std::error_code(ec, std::system_category()), info<1>{1}, info<2>{2}, info<3>{3});
 }
 
 int main()
@@ -152,7 +152,7 @@ int main()
 			},
 			[&c]( leaf::match<api_error, api_error::no_such_file_or_directory> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value==std::error_code(ENOENT, std::system_category()));
+				BOOST_TEST(ec.value()==std::error_code(ENOENT, std::system_category()));
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				BOOST_TEST(c==0);
@@ -183,7 +183,7 @@ int main()
 			},
 			[&c]( leaf::match<error_code,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value==error_code::error1);
+				BOOST_TEST(ec.value()==error_code::error1);
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				BOOST_TEST(c==0);
@@ -214,7 +214,7 @@ int main()
 			},
 			[&c]( leaf::match<error_code,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value==error_code::error1);
+				BOOST_TEST(ec.value()==error_code::error1);
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				BOOST_TEST(c==0);
@@ -245,7 +245,7 @@ int main()
 			},
 			[&c]( leaf::match<e_error_code,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value==error_code::error1);
+				BOOST_TEST(ec.value()==error_code::error1);
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				BOOST_TEST(c==0);
@@ -276,7 +276,7 @@ int main()
 			},
 			[&c]( leaf::match<e_error_code,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value==error_code::error1);
+				BOOST_TEST(ec.value()==error_code::error1);
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				BOOST_TEST(c==0);
@@ -343,7 +343,7 @@ int main()
 			},
 			[ ]( leaf::match<api_error, api_error::no_such_file_or_directory> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value==std::error_code(ENOENT, std::system_category()));
+				BOOST_TEST(ec.value()==std::error_code(ENOENT, std::system_category()));
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				return 2;
@@ -369,7 +369,7 @@ int main()
 			},
 			[ ]( leaf::match<error_code,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value==error_code::error1);
+				BOOST_TEST(ec.value()==error_code::error1);
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				return 2;
@@ -395,7 +395,7 @@ int main()
 			},
 			[ ]( leaf::match<error_code,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value==error_code::error1);
+				BOOST_TEST(ec.value()==error_code::error1);
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				return 2;
@@ -421,7 +421,7 @@ int main()
 			},
 			[ ]( leaf::match<e_error_code,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value==error_code::error1);
+				BOOST_TEST(ec.value()==error_code::error1);
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				return 2;
@@ -447,7 +447,7 @@ int main()
 			},
 			[ ]( leaf::match<e_error_code,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value==error_code::error1);
+				BOOST_TEST(ec.value()==error_code::error1);
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				return 2;

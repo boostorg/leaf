@@ -29,7 +29,7 @@ namespace boost { namespace leaf {
 		public:
 
 			captured_exception_impl( std::exception_ptr && ex, std::shared_ptr<dynamic_store> && ds, bool had_error, void (*print_captured_types)(std::ostream &) ) noexcept:
-				error_id(leaf_detail::make_error(ds->err_id())),
+				error_id(leaf_detail::make_error_id(ds->err_id())),
 				ex_(std::move(ex)),
 				ds_(std::move(ds)),
 				had_error_(had_error),

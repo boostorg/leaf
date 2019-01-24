@@ -11,7 +11,6 @@
 #include <boost/leaf/detail/function_traits.hpp>
 #include <boost/leaf/detail/mp11.hpp>
 #include <boost/leaf/error.hpp>
-#include <system_error>
 #include <tuple>
 
 namespace boost { namespace leaf {
@@ -30,6 +29,97 @@ namespace boost { namespace leaf {
 		};
 	}
 
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		class enable_any
+		{
+		protected:
+
+			enable_any() noexcept
+			{
+				++tl_unexpected_enabled_counter();
+			}
+
+			~enable_any() noexcept
+			{
+				--tl_unexpected_enabled_counter();
+			}
+		};
+
+		template <class E>
+		class static_store_slot:
+			public slot<E>
+		{
+		public:
+			optional<E> extract_optional( int err_id ) && noexcept
+			{
+				assert(err_id);
+				slot<E> const & s = *this;
+				if( s.has_value() && s.value().err_id==err_id )
+					return optional<E>(std::move(*this).value().e);
+				else
+					return optional<E>();
+			}
+		};
+
+		template <>
+		class static_store_slot<e_unexpected_count>:
+			public slot<e_unexpected_count>,
+			enable_any
+		{
+		};
+
+		template <>
+		class static_store_slot<e_unexpected_info>:
+			public slot<e_unexpected_info>,
+			enable_any
+		{
+		};
+	}
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		template <class T, class... List>
+		struct type_index;
+
+		template <class T, class... Cdr>
+		struct type_index<T, T, Cdr...>
+		{
+			static const int value = 0;
+		};
+
+		template <class T, class Car, class... Cdr>
+		struct type_index<T, Car, Cdr...>
+		{
+			static const int value = 1 + type_index<T,Cdr...>::value;
+		};
+
+		template <class T, class Tuple>
+		struct tuple_type_index;
+
+		template <class T, class... TupleTypes>
+		struct tuple_type_index<T,std::tuple<TupleTypes...>>
+		{
+			static const int value = type_index<T,TupleTypes...>::value;
+		};
+
+		template <class E, class SlotsTuple>
+		E const * peek( SlotsTuple const & tup, int err_id ) noexcept
+		{
+			auto & opt = std::get<tuple_type_index<static_store_slot<E>,SlotsTuple>::value>(tup);
+			if( auto const * v = opt.has_value() )
+				if( v->err_id==err_id )
+					return &v->e;
+			return 0;
+		}
+	}
+
+	////////////////////////////////////////
+
 	namespace leaf_detail
 	{
 		template <class T, bool HasValue = has_data_member_value<T>::value, bool IsErrorCodeOrErrorCondition = std::is_error_code_enum<T>::value | std::is_error_condition_enum<T>::value>
@@ -42,9 +132,13 @@ namespace boost { namespace leaf {
 			using e_type = enumerator;
 			using match_type = enumerator;
 
-			static match_type const & get( e_type const & e ) noexcept
+			template <class SlotsTuple>
+			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				return e;
+				if( auto const * v = std::get<tuple_type_index<static_store_slot<e_type>,SlotsTuple>::value>(tup).has_value() )
+					if( v->err_id==ei.err_id() )
+						return &v->e;
+				return 0;
 			}
 		};
 
@@ -55,9 +149,13 @@ namespace boost { namespace leaf {
 			using e_type = T;
 			using match_type = enumerator;
 
-			static match_type const & get( e_type const & e ) noexcept
+			template <class SlotsTuple>
+			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				return e.value;
+				if( auto const * v = std::get<tuple_type_index<static_store_slot<e_type>,SlotsTuple>::value>(tup).has_value() )
+					if( v->err_id==ei.err_id() )
+						return &v->e.value;
+				return 0;
 			}
 		};
 
@@ -65,12 +163,33 @@ namespace boost { namespace leaf {
 		struct match_traits<T, false, true>
 		{
 			using enumerator = T;
-			using e_type = std::error_code;
-			using match_type = e_type;
+			using e_type = e_original_ec;
+			using match_type = std::error_code;
 
-			static match_type const & get( e_type const & e ) noexcept
+			template <class SlotsTuple>
+			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				return e;
+				if( e_type const * ec = peek<e_type>(tup, ei.err_id()) )
+					return &ec->value;
+				else
+					return &ei.error_code();
+			}
+		};
+
+		template <class T>
+		struct match_traits<T, true, true>
+		{
+			using enumerator = decltype(T::value);
+			using e_type = T;
+			using match_type = std::error_code;
+
+			template <class SlotsTuple>
+			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
+			{
+				if( auto const * v = std::get<tuple_type_index<static_store_slot<e_type>,SlotsTuple>::value>(tup).has_value() )
+					if( v->err_id==ei.err_id() )
+						return &v->e.value;
+				return 0;
 			}
 		};
 
@@ -100,36 +219,51 @@ namespace boost { namespace leaf {
 	}
 
 	template <class T, typename leaf_detail::match_traits<T>::enumerator... V>
-	struct match
+	class match
 	{
-		using e_type = typename leaf_detail::match_traits<T>::e_type;
 		using match_type = typename leaf_detail::match_traits<T>::match_type;
-		match_type const & value;
+		match_type const * const value_;
 
-		explicit match( e_type const & e ):
-			value(leaf_detail::match_traits<T>::get(e))
+	public:
+
+		explicit match( match_type const * value ):
+			value_(value)
 		{
 		}
 
 		bool operator()() const noexcept
 		{
-			return leaf_detail::check_value_pack(value,V...);
+			return value_ && leaf_detail::check_value_pack(*value_,V...);
+		}
+
+		match_type const & value() const noexcept
+		{
+			assert(value_!=0);
+			return *value_;
 		}
 	};
 
 	template <class... Ex>
-	struct catch_
+	class catch_
 	{
-		std::exception const & value;
+		std::exception const * const value_;
 
-		explicit catch_( std::exception const & ex ):
-			value(ex)
+	public:
+
+		explicit catch_( std::exception const * value ):
+			value_(value)
 		{
 		}
 
 		bool operator()() const noexcept
 		{
-			return leaf_detail::check_exception_pack(&value,static_cast<Ex const *>(0)...);
+			return value_ && leaf_detail::check_exception_pack(value_,static_cast<Ex const *>(0)...);
+		}
+
+		std::exception const & value() const noexcept
+		{
+			assert(value_!=0);
+			return *value_;
 		}
 	};
 
@@ -151,79 +285,6 @@ namespace boost { namespace leaf {
 			struct tuple_for_each<0, Tuple>
 			{
 				static void reset( Tuple & ) noexcept { }
-			};
-
-			////////////////////////////////////////
-
-			class enable_any
-			{
-			protected:
-
-				enable_any() noexcept
-				{
-					++tl_unexpected_enabled_counter();
-				}
-
-				~enable_any() noexcept
-				{
-					--tl_unexpected_enabled_counter();
-				}
-			};
-
-			template <class E>
-			class static_store_slot:
-				public slot<E>
-			{
-			public:
-				optional<E> extract_optional( int err_id ) && noexcept
-				{
-					assert(err_id);
-					slot<E> const & s = *this;
-					if( s.has_value() && s.value().err_id==err_id )
-						return optional<E>(std::move(*this).value().e);
-					else
-						return optional<E>();
-				}
-			};
-
-			template <>
-			class static_store_slot<e_unexpected_count>:
-				public slot<e_unexpected_count>,
-				enable_any
-			{
-			};
-
-			template <>
-			class static_store_slot<e_unexpected_info>:
-				public slot<e_unexpected_info>,
-				enable_any
-			{
-			};
-
-			////////////////////////////////////////
-
-			template <class T, class... List>
-			struct type_index;
-
-			template <class T, class... Cdr>
-			struct type_index<T, T, Cdr...>
-			{
-				static const int value = 0;
-			};
-
-			template <class T, class Car, class... Cdr>
-			struct type_index<T, Car, Cdr...>
-			{
-				static const int value = 1 + type_index<T,Cdr...>::value;
-			};
-
-			template <class T, class Tuple>
-			struct tuple_type_index;
-
-			template <class T, class... TupleTypes>
-			struct tuple_type_index<T,std::tuple<TupleTypes...>>
-			{
-				static const int value = type_index<T,TupleTypes...>::value;
 			};
 
 			////////////////////////////////////////
@@ -265,6 +326,15 @@ namespace boost { namespace leaf {
 				}
 			};
 
+			template <class SlotsTuple>
+			struct check_one_argument<SlotsTuple,std::error_code>
+			{
+				static bool check( SlotsTuple const &, error_info const & ) noexcept
+				{
+					return true;
+				}
+			};
+
 			template <class SlotsTuple,class R>
 			struct check_one_argument<SlotsTuple,failed<R>>
 			{
@@ -279,14 +349,7 @@ namespace boost { namespace leaf {
 			{
 				static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
 				{
-					auto & sl = std::get<tuple_type_index<static_store_slot<typename match_traits<T>::e_type>,SlotsTuple>::value>(tup);
-					if( sl.has_value() )
-					{
-						auto const & v = sl.value();
-						return v.err_id==ei.err_id() && match<T,V...>(v.e)();
-					}
-					else
-						return false;
+					return match<T,V...>(match_traits<T>::read(tup,ei))();
 				}
 			};
 
@@ -296,9 +359,9 @@ namespace boost { namespace leaf {
 				static bool check( SlotsTuple const &, error_info const & ei ) noexcept
 				{
 					if( ei.has_exception() )
-						if( std::exception const * ex = ei.exception() )
-							return catch_<Ex...>(*ex)();
-					return false;
+						return catch_<Ex...>(ei.exception())();
+					else
+						return false;
 				}
 			};
 
@@ -337,10 +400,10 @@ namespace boost { namespace leaf {
 			template <class T>
 			struct get_one_argument
 			{
-				template <class StaticStore, class R>
-				static T const & get( StaticStore const & ss, error_info const & ei, R * ) noexcept
+				template <class SlotsTuple, class R>
+				static T const & get( SlotsTuple const & tup, error_info const & ei, R * ) noexcept
 				{
-					T const * arg = ss.template peek<T>(ei.err_id());
+					T const * arg = peek<T>(tup, ei.err_id());
 					assert(arg!=0);
 					return *arg;
 				}
@@ -349,18 +412,31 @@ namespace boost { namespace leaf {
 			template <class T>
 			struct get_one_argument<T const *>
 			{
-				template <class StaticStore, class R>
-				static T const * get( StaticStore const & ss, error_info const & ei, R * ) noexcept
+				template <class SlotsTuple, class R>
+				static T const * get( SlotsTuple const & tup, error_info const & ei, R * ) noexcept
 				{
-					return ss.template peek<T>(ei.err_id());
+					return peek<T>(tup, ei.err_id());
+				}
+			};
+
+			template <>
+			struct get_one_argument<std::error_code>
+			{
+				template <class SlotsTuple, class R>
+				static std::error_code const & get( SlotsTuple const & tup, error_info const & ei, R * ) noexcept
+				{
+					if( leaf_detail::e_original_ec const * org = peek<e_original_ec>(tup, ei.err_id()) )
+						return org->value;
+					else
+						return ei.error_code();
 				}
 			};
 
 			template <class R>
 			struct get_one_argument<failed<R>>
 			{
-				template <class StaticStore>
-				static failed<R> get( StaticStore const & ss, error_info const & ei, R * r ) noexcept
+				template <class SlotsTuple>
+				static failed<R> get( SlotsTuple const &, error_info const & ei, R * r ) noexcept
 				{
 					assert(r!=0);
 					return failed<R>{ std::forward<R>(*r) };
@@ -370,33 +446,32 @@ namespace boost { namespace leaf {
 			template <class T, typename match_traits<T>::enumerator... V>
 			struct get_one_argument<match<T,V...>>
 			{
-				template <class StaticStore, class R>
-				static match<T,V...> get( StaticStore const & ss, error_info const & ei, R * ) noexcept
+				template <class SlotsTuple, class R>
+				static match<T,V...> get( SlotsTuple const & tup, error_info const & ei, R * ) noexcept
 				{
-					using e_type = typename match_traits<T>::e_type;
-					e_type const * arg = ss.template peek<e_type>(ei.err_id());
+					auto const * arg = match_traits<T>::read(tup, ei);
 					assert(arg!=0);
-					return match<T,V...>(*arg);
+					return match<T,V...>(arg);
 				}
 			};
 
 			template <class... Ex>
 			struct get_one_argument<catch_<Ex...>>
 			{
-				template <class StaticStore, class R>
-				static catch_<Ex...> get( StaticStore const &, error_info const & ei, R * ) noexcept
+				template <class SlotsTuple, class R>
+				static catch_<Ex...> get( SlotsTuple const &, error_info const & ei, R * ) noexcept
 				{
 					std::exception const * ex = ei.exception();
 					assert(ex!=0);
-					return catch_<Ex...>(*ex);
+					return catch_<Ex...>(ex);
 				}
 			};
 
 			template <>
 			struct get_one_argument<error_info>
 			{
-				template <class StaticStore, class R>
-				static error_info const & get( StaticStore const &, error_info const & ei, R * ) noexcept
+				template <class SlotsTuple, class R>
+				static error_info const & get( SlotsTuple const &, error_info const & ei, R * ) noexcept
 				{
 					return ei;
 				}
@@ -405,20 +480,20 @@ namespace boost { namespace leaf {
 			template <>
 			struct get_one_argument<diagnostic_info>
 			{
-				template <class StaticStore, class R>
-				static diagnostic_info get( StaticStore const & ss, error_info const & ei, R * ) noexcept
+				template <class SlotsTuple, class R>
+				static diagnostic_info get( SlotsTuple const & tup, error_info const & ei, R * ) noexcept
 				{
-					return diagnostic_info(ei, ss.template peek<e_unexpected_count>(ei.err_id()));
+					return diagnostic_info(ei, peek<e_unexpected_count>(tup, ei.err_id()));
 				}
 			};
 
 			template <>
 			struct get_one_argument<verbose_diagnostic_info>
 			{
-				template <class StaticStore, class R>
-				static verbose_diagnostic_info get( StaticStore const & ss, error_info const & ei, R * ) noexcept
+				template <class SlotsTuple, class R>
+				static verbose_diagnostic_info get( SlotsTuple const & tup, error_info const & ei, R * ) noexcept
 				{
-					return verbose_diagnostic_info(ei, ss.template peek<e_unexpected_info>(ei.err_id()));
+					return verbose_diagnostic_info(ei, peek<e_unexpected_info>(tup, ei.err_id()));
 				}
 			};
 
@@ -428,6 +503,8 @@ namespace boost { namespace leaf {
 			template <class T> struct argument_matches_any_error<T const *>: is_error_type<T> { };
 			template <class R> struct argument_matches_any_error<failed<R> const &>: std::true_type { };
 			template <class R> struct argument_matches_any_error<failed<R> &&>: std::true_type { };
+			template <> struct argument_matches_any_error<std::error_code const &>: std::true_type { };
+			template <> struct argument_matches_any_error<std::error_code &&>: std::true_type { };
 			template <> struct argument_matches_any_error<error_info const &>: std::true_type { };
 			template <> struct argument_matches_any_error<diagnostic_info const &>: std::true_type { };
 			template <> struct argument_matches_any_error<verbose_diagnostic_info const &>: std::true_type { };
@@ -461,7 +538,7 @@ namespace boost { namespace leaf {
 			static_store( static_store const & ) = delete;
 			static_store & operator=( static_store const & ) = delete;
 
-			std::tuple<static_store_internal::static_store_slot<E>...>  s_;
+			std::tuple<static_store_slot<E>...>  s_;
 			bool reset_;
 
 			template <class... T>
@@ -475,7 +552,7 @@ namespace boost { namespace leaf {
 			typename function_traits<F>::return_type call_handler( error_info const & ei, R * r, F && f, leaf_detail_mp11::mp_list<T...> ) const
 			{
 				using namespace static_store_internal;
-				return std::forward<F>(f)( get_one_argument<typename std::remove_cv<typename std::remove_reference<T>::type>::type>::get(*this, ei, r)... );
+				return std::forward<F>(f)( get_one_argument<typename std::remove_cv<typename std::remove_reference<T>::type>::type>::get(s_, ei, r)... );
 			}
 
 		public:
@@ -494,20 +571,6 @@ namespace boost { namespace leaf {
 			void set_reset( bool r ) noexcept
 			{
 				reset_ = r;
-			}
-
-			template <class P>
-			P const * peek( int err_id ) const noexcept
-			{
-				assert(err_id);
-				auto & opt = std::get<static_store_internal::type_index<P,E...>::value>(s_);
-				if( err_id && opt.has_value() )
-				{
-					auto & v = opt.value();
-					if( v.err_id==err_id )
-						return &v.e;
-				}
-				return 0;
 			}
 
 			template <class R, class F>
@@ -535,6 +598,9 @@ namespace boost { namespace leaf {
 		template <class T> struct translate_expect_deduction<T const> { using type = T; };
 		template <class T> struct translate_expect_deduction<T const &> {using type = T; };
 		template <class T> struct translate_expect_deduction<T const *> { using type = T; };
+		template <> struct translate_expect_deduction<std::error_code> { using type = leaf_detail::e_original_ec; };
+		template <> struct translate_expect_deduction<std::error_code const> { using type = leaf_detail::e_original_ec; };
+		template <> struct translate_expect_deduction<std::error_code const &> { using type = leaf_detail::e_original_ec; };
 		template <> struct translate_expect_deduction<diagnostic_info>;
 		template <> struct translate_expect_deduction<diagnostic_info const>;
 		template <> struct translate_expect_deduction<diagnostic_info const *>;
@@ -563,6 +629,7 @@ namespace boost { namespace leaf {
 		template <class T> struct does_not_participate_in_expect_deduction: std::false_type { };
 		template <class R> struct does_not_participate_in_expect_deduction<failed<R>>: std::true_type { };
 		template <> struct does_not_participate_in_expect_deduction<error_info>: std::true_type { };
+		template <> struct does_not_participate_in_expect_deduction<std::error_code>: std::true_type { };
 		template <> struct does_not_participate_in_expect_deduction<void>: std::true_type { };
 
 		template <class... Handler>
@@ -621,16 +688,6 @@ namespace boost { namespace leaf {
 				return { };
 			}
 		};
-
-		inline int handle_get_err_id( error_id const & err ) noexcept
-		{
-			return err.value();
-		}
-
-		inline int handle_get_err_id( std::error_code const & ec ) noexcept
-		{
-			return is_error_id(ec) ? ec.value() : 0;
-		}
 	} // leaf_detail
 
 	template <class R>

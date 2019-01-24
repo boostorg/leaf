@@ -65,7 +65,6 @@ run print_test.cpp ;
 run result_bad_result_test.cpp ;
 run result_state_test.cpp ;
 run static_store_deduction_test.cpp ;
-run static_store_test.cpp ;
 run try_exception_and_result_test.cpp ;
 run try_exception_test.cpp ;
 run try_test.cpp ;

@@ -72,7 +72,7 @@ namespace boost { namespace leaf {
 
 			dynamic_store_impl( int err_id, static_store<E...> && ss ) noexcept:
 				err_id_(err_id),
-				s_(std::make_tuple( std::get<static_store_internal::tuple_type_index<static_store_internal::static_store_slot<E>,decltype(ss.s_)>::value>(std::move(ss.s_)).extract_optional(err_id)... ))
+				s_(std::make_tuple( std::get<tuple_type_index<static_store_slot<E>,decltype(ss.s_)>::value>(std::move(ss.s_)).extract_optional(err_id)... ))
 			{
 			}
 		};

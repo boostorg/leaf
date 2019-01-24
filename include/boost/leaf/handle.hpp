@@ -22,7 +22,10 @@ namespace boost { namespace leaf {
 		if( auto r = std::forward<TryBlock>(try_block)() )
 			return r.value();
 		else
-			return ss.handle_error(error_info(handle_get_err_id(r.error())), &r, std::forward<Handler>(handler)...);
+		{
+			std::error_code const & ec = r.error();
+			return ss.handle_error(error_info(ec), &r, std::forward<Handler>(handler)...);
+		}
 	}
 
 	template <class TryBlock, class... Handler>
@@ -39,7 +42,8 @@ namespace boost { namespace leaf {
 		}
 		else
 		{
-			auto rr = ss.handle_error(error_info(handle_get_err_id(r.error())), &r, handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
+			std::error_code const & ec = r.error();
+			auto rr = ss.handle_error(error_info(ec), &r, handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
 			if( rr )
 				ss.set_reset(true);
 			return rr;

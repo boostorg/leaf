@@ -233,7 +233,7 @@ namespace boost { namespace leaf {
 				}
 			default:
 				assert(which_==leaf_detail::result_variant::err_id);
-				return leaf_detail::make_error(err_id_);
+				return leaf_detail::make_error_id(err_id_);
 			}
 		}
 	};
