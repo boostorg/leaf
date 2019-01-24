@@ -3292,7 +3292,7 @@ The analysis above is clear and precise, but LEAF and Boost Outcome tackle the i
 
 The source code is https://github.com/zajo/leaf[available] on GitHub.
 
-Copyright (c) 2018 Emil Dotchevski. Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
+Copyright (c) 2018-2019 Emil Dotchevski. Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
 
 Please post questions and feedback on the Boost Developers Mailing List (LEAF is not part of Boost).
 

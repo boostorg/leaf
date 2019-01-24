@@ -1,8 +1,8 @@
 #ifndef BOOST_LEAF_14440B9CF07011E88377FD4B0ABE8030
 #define BOOST_LEAF_14440B9CF07011E88377FD4B0ABE8030
 
-// Copyright (c) 2018 Emil Dotchevski
-// Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018-2019 Emil Dotchevski
+// Copyright (c) 2018-2019 Second Spectrum, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
