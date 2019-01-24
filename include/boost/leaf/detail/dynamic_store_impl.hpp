@@ -26,22 +26,12 @@ namespace boost { namespace leaf {
 					if( opt.has_value() )
 						put_slot(err_id, std::move(opt).value());
 				}
-
-				static void print( std::ostream & os, Tuple const & tup )
-				{
-					typedef typename std::tuple_element<I-1,Tuple>::type ith_type;
-					tuple_for_each<I-1,Tuple>::print(os,tup);
-					auto & opt = std::get<I-1>(tup);
-					if( opt.has_value() && diagnostic<typename ith_type::value_type>::print(os,opt.value()) )
-						os << std::endl;
-				}
 			};
 
 			template <class Tuple>
 			struct tuple_for_each<0, Tuple>
 			{
 				static void unload( int, Tuple && ) noexcept { }
-				static void print( std::ostream &, Tuple const & ) noexcept { }
 			};
 		}
 

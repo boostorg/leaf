@@ -99,6 +99,25 @@ namespace boost { namespace leaf {
 			};
 		}
 
+		int get_err_id() const noexcept
+		{
+			switch( which_ )
+			{
+			case leaf_detail::result_variant::value:
+				return 0;
+			case leaf_detail::result_variant::cap:
+				{
+					dynamic_store_ptr cap = cap_;
+					destroy();
+					err_id_ = cap->unload();
+					which_ = leaf_detail::result_variant::err_id;
+				}
+			default:
+				assert(which_==leaf_detail::result_variant::err_id);
+				return err_id_;
+			}
+		}
+
 	public:
 
 		typedef T value_type;
@@ -220,21 +239,7 @@ namespace boost { namespace leaf {
 		template <class... E>
 		error_id error( E && ... e ) const noexcept
 		{
-			switch( which_ )
-			{
-			case leaf_detail::result_variant::value:
-				return { };
-			case leaf_detail::result_variant::cap:
-				{
-					dynamic_store_ptr cap = cap_;
-					destroy();
-					err_id_ = cap->unload();
-					which_ = leaf_detail::result_variant::err_id;
-				}
-			default:
-				assert(which_==leaf_detail::result_variant::err_id);
-				return leaf_detail::make_error_id(err_id_);
-			}
+			return leaf_detail::make_error_id(get_err_id()).propagate(std::forward<E>(e)...);
 		}
 	};
 

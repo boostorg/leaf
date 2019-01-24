@@ -10,7 +10,6 @@
 #include <boost/leaf/detail/captured_exception.hpp>
 #include <boost/leaf/detail/dynamic_store_impl.hpp>
 #include <boost/leaf/throw_exception.hpp>
-#include <boost/leaf/error.hpp>
 #include <memory>
 
 namespace boost { namespace leaf {
