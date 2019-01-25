@@ -257,7 +257,7 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////
 
 	template <class T, class Enum=T, bool HasValue = leaf_detail::has_data_member_value<T>::value>
-	struct error_condition;
+	struct condition;
 
 	namespace leaf_detail
 	{
@@ -296,7 +296,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class T>
-		struct match_traits<error_condition<T, T, false>, false>
+		struct match_traits<condition<T, T, false>, false>
 		{
 			using enumerator = T;
 			using e_type = e_original_ec;
@@ -313,7 +313,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class T, class Enum>
-		struct match_traits<error_condition<T, Enum, true>, false>
+		struct match_traits<condition<T, Enum, true>, false>
 		{
 			using enumerator = Enum;
 			using e_type = T;

@@ -145,12 +145,12 @@ int main()
 				c = answer;
 				return { };
 			},
-			[&c]( leaf::match<leaf::error_condition<api_error>, api_error::no_such_process> )
+			[&c]( leaf::match<leaf::condition<api_error>, api_error::no_such_process> )
 			{
 				BOOST_TEST(c==0);
 				c = 1;
 			},
-			[&c]( leaf::match<leaf::error_condition<api_error>, api_error::no_such_file_or_directory> ec, info<1> const & x, info<2> y )
+			[&c]( leaf::match<leaf::condition<api_error>, api_error::no_such_file_or_directory> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==std::error_code(ENOENT, std::system_category()));
 				BOOST_TEST(x.value==1);
@@ -337,11 +337,11 @@ int main()
 				LEAF_AUTO(answer, f_errc<int>(ENOENT));
 				return answer;
 			},
-			[ ]( leaf::match<leaf::error_condition<api_error>, api_error::no_such_process> )
+			[ ]( leaf::match<leaf::condition<api_error>, api_error::no_such_process> )
 			{
 				return 1;
 			},
-			[ ]( leaf::match<leaf::error_condition<api_error>, api_error::no_such_file_or_directory> ec, info<1> const & x, info<2> y )
+			[ ]( leaf::match<leaf::condition<api_error>, api_error::no_such_file_or_directory> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==std::error_code(ENOENT, std::system_category()));
 				BOOST_TEST(x.value==1);

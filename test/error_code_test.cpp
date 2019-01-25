@@ -5,126 +5,33 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/handle.hpp>
+#include "_test_res.hpp"
 #include "boost/core/lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
-
-////////////////////////////////
-
-enum class api_error
-{
-	no_such_device = 1,
-	no_such_file_or_directory,
-	no_such_process
-};
-
-namespace std { template<> struct is_error_condition_enum<api_error>: std::true_type { }; }
-
-std::error_category const & api_category()
-{
-	class cat : public std::error_category
-	{
-		char const * name() const noexcept
-		{
-			return "api";
-		}
-		std::string message(int ev) const
-		{
-			return "API error";
-		}
-		bool equivalent(std::error_code const & code, int condition) const noexcept
-		{
-			switch( api_error(condition) )
-			{
-			case api_error::no_such_device:
-				return code==std::error_code(ENODEV, std::system_category());
-			case api_error::no_such_file_or_directory:
-				return code==std::error_code(ENOENT, std::system_category());
-			case api_error::no_such_process:
-				return code==std::error_code(ESRCH, std::system_category());
-			default:
-				return false;
-			}
-		}
-	};
-	static cat c;
-	return c;
-}
-
-std::error_condition make_error_condition(api_error e)
-{
-	return std::error_condition(int(e), api_category());
-}
-
-template <class T, class E>
-class result
-{
-	enum class variant
-	{
-		value,
-		error
-	};
-	T value_;
-	E error_;
-	variant which_;
-public:
-	result( T const & value ) noexcept:
-		value_(value),
-		which_(variant::value)
-	{
-	}
-	result( E const & error ) noexcept:
-		error_(error),
-		which_(variant::error)
-	{
-	}
-	explicit operator bool() const noexcept
-	{
-		return which_==variant::value;
-	}
-	T const & value() const
-	{
-		assert(which_==variant::value);
-		return value_;
-	}
-	E const & error() const
-	{
-		assert(which_==variant::error);
-		return error_;
-	}
-};
-
-namespace boost { namespace leaf {
-	template <class T, class E>
-	struct is_result_type<result<T, E>>: std::true_type
-	{
-	};
-} }
-
-struct e_ec { std::error_code value; };
 
 int main()
 {
 	{
 		int r = leaf::handle_all(
-			[ ]() -> result<int,std::error_code>
+			[ ]() -> res<int,std::error_code>
 			{
-				return std::error_code(ENOENT, std::system_category());
+				return make_error_code(errc_a::a0);
 			},
 			[ ]( std::error_code const & ec )
 			{
-				BOOST_TEST(ec==std::error_code(ENOENT, std::system_category()));
+				BOOST_TEST_EQ(ec, make_error_code(errc_a::a0));
 				return 42;
 			} );
-		BOOST_TEST(r==42);
+		BOOST_TEST_EQ(r, 42);
 	}
 	{
 		int r = leaf::handle_all(
-			[ ]() -> result<int,std::error_code>
+			[ ]() -> res<int, std::error_code>
 			{
-				return std::error_code(ENOENT, std::system_category());
+				return make_error_code(errc_a::a0);
 			},
-			[ ]( leaf::match<leaf::error_condition<api_error>, api_error::no_such_file_or_directory> )
+			[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x00> )
 			{
 				return 42;
 			},
@@ -132,26 +39,26 @@ int main()
 			{
 				return -42;
 			} );
-		BOOST_TEST(r==42);
+		BOOST_TEST_EQ(r, 42);
 	}
 	{
 		int r = leaf::handle_all(
-			[ ]() -> result<int, std::error_code>
+			[ ]() -> res<int, std::error_code>
 			{
 				auto r1 = leaf::handle_some(
-					[ ]() -> result<int, std::error_code>
+					[ ]() -> res<int, std::error_code>
 					{
-						return std::error_code(ENOENT, std::system_category());
+						return make_error_code(errc_a::a0);
 					} );
 				auto r2 = leaf::handle_some(
-					[ ]() -> result<int, std::error_code>
+					[ ]() -> res<int, std::error_code>
 					{
-						return std::error_code(ESRCH, std::system_category());
+						return make_error_code(errc_b::b0);
 					} );
 				(void) r2;
 				return r1;
 			},
-			[ ]( leaf::match<leaf::error_condition<api_error>, api_error::no_such_file_or_directory> )
+			[ ]( leaf::match<leaf::condition<cond_y>, cond_y::y03> )
 			{
 				return 42;
 			},
@@ -159,17 +66,17 @@ int main()
 			{
 				return -42;
 			} );
-		BOOST_TEST(r==42);
+		BOOST_TEST_EQ(r, 42);
 	}
 	{
 		int r = leaf::handle_all(
-			[ ]() -> result<int, std::error_code>
+			[ ]() -> res<int, std::error_code>
 			{
 				return leaf::error_id(
-					std::error_code(ENOENT, std::system_category()),
-					e_ec{std::error_code(ESRCH, std::system_category())});
+					make_error_code(errc_a::a0),
+					e_errc_a<1>{make_error_code(errc_a::a1)} );
 			},
-			[ ]( leaf::match<leaf::error_condition<api_error>, api_error::no_such_file_or_directory>, leaf::match<leaf::error_condition<e_ec, api_error>, api_error::no_such_process, api_error::no_such_device> )
+			[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x00>, leaf::match<leaf::condition<e_errc_a<1>, cond_y>, cond_y::y12, cond_y::y03> )
 			{
 				return 42;
 			},
@@ -177,17 +84,17 @@ int main()
 			{
 				return -42;
 			} );
-		BOOST_TEST(r==42);
+		BOOST_TEST_EQ(r, 42);
 	}
 	{
 		int r = leaf::handle_all(
-			[ ]() -> result<int, std::error_code>
+			[ ]() -> res<int, std::error_code>
 			{
 				return leaf::error_id(
-					std::error_code(ENOENT, std::system_category()),
-					e_ec{std::error_code(ENODEV, std::system_category())});
+					make_error_code(errc_a::a1),
+					e_errc_a<1>{make_error_code(errc_a::a0)} );
 			},
-			[ ]( leaf::match<leaf::error_condition<api_error>, api_error::no_such_file_or_directory>, leaf::match<leaf::error_condition<e_ec, api_error>, api_error::no_such_process, api_error::no_such_device> )
+			[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x11>, leaf::match<leaf::condition<e_errc_a<1>, cond_y>, cond_y::y12, cond_y::y03> )
 			{
 				return 42;
 			},
@@ -195,7 +102,7 @@ int main()
 			{
 				return -42;
 			} );
-		BOOST_TEST(r==42);
+		BOOST_TEST_EQ(r, 42);
 	}
 	return boost::report_errors();
 }
