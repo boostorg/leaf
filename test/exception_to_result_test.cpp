@@ -25,8 +25,15 @@ int main()
 						throw my_exception<1>();
 					} );
 			},
-			[ ]( my_exception<1> const & )
+			[ ]( my_exception<1> const &, std::exception_ptr const & ep )
 			{
+				try
+				{
+					std::rethrow_exception(ep);
+				}
+				catch( my_exception<1> const & )
+				{
+				}
 				return 1;
 			},
 			[ ]( my_exception<2> const & )
@@ -53,8 +60,15 @@ int main()
 			{
 				return 1;
 			},
-			[ ]( my_exception<2> const & )
+			[ ]( my_exception<2> const &, std::exception_ptr const & ep )
 			{
+				try
+				{
+					std::rethrow_exception(ep);
+				}
+				catch( my_exception<2> const & )
+				{
+				}
 				return 2;
 			},
 			[ ]
@@ -73,8 +87,15 @@ int main()
 						throw my_exception<1>();
 					} );
 			},
-			[ ]( std::exception const & )
+			[ ]( std::exception const &, std::exception_ptr const & ep )
 			{
+				try
+				{
+					std::rethrow_exception(ep);
+				}
+				catch( my_exception<1> const & )
+				{
+				}
 				return 1;
 			},
 			[ ]( my_exception<1> const & )

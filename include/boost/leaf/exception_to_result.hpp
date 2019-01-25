@@ -19,14 +19,14 @@ namespace boost { namespace leaf {
 	{
 		inline error_id catch_exceptions_helper( std::exception const & ex, leaf_detail_mp11::mp_list<> )
 		{
-			return leaf::new_error(ex);
+			return leaf::new_error(std::current_exception());
 		}
 
 		template <class Ex1, class... Ex>
 		error_id catch_exceptions_helper( std::exception const & ex, leaf_detail_mp11::mp_list<Ex1,Ex...> )
 		{
 			if( Ex1 const * p = dynamic_cast<Ex1 const *>(&ex) )
-				return leaf::new_error(*p);
+				return leaf::new_error(std::current_exception(), *p);
 			else
 				return catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>{ });
 		}
