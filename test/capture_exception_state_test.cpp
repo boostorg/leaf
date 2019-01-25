@@ -46,14 +46,14 @@ int main()
 	leaf::try_(
 		[&f]
 		{
-			BOOST_TEST(count==0);
+			BOOST_TEST_EQ(count, 0);
 			try { f(); }
-			catch(...) { BOOST_TEST(count==2); throw; }
+			catch(...) { BOOST_TEST_EQ(count, 2); throw; }
 
 		},
 		[ ]
 		{
 		} );
-	BOOST_TEST(count==0);
+	BOOST_TEST_EQ(count, 0);
 	return boost::report_errors();
 }

@@ -46,14 +46,14 @@ int main()
 	leaf::handle_all(
 		[&f]
 		{
-			BOOST_TEST(count==0);
+			BOOST_TEST_EQ(count, 0);
 			auto r = f();
-			BOOST_TEST(count==2);
+			BOOST_TEST_EQ(count, 2);
 			return r;
 		},
 		[ ]
 		{
 		} );
-	BOOST_TEST(count==0);
+	BOOST_TEST_EQ(count, 0);
 	return boost::report_errors();
 }

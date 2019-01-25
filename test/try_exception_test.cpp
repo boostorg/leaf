@@ -47,16 +47,16 @@ int test( F && f )
 
 int main()
 {
-	BOOST_TEST( 5==test( [ ] { throw my_error(); } ) );
+	BOOST_TEST_EQ( 5, test( [ ] { throw my_error(); } ) );
 
-	BOOST_TEST( 5==test( [ ] { throw leaf::exception(my_error()); } ) );
-	BOOST_TEST( 3==test( [ ] { throw leaf::exception(my_error(),info{42}); } ) );
+	BOOST_TEST_EQ( 5, test( [ ] { throw leaf::exception(my_error()); } ) );
+	BOOST_TEST_EQ( 3, test( [ ] { throw leaf::exception(my_error(),info{42}); } ) );
 
-	BOOST_TEST( 4==test( [ ] { throw LEAF_EXCEPTION(my_error()); } ) );
-	BOOST_TEST( 2==test( [ ] { throw LEAF_EXCEPTION(my_error(),info{42}); } ) );
+	BOOST_TEST_EQ( 4, test( [ ] { throw LEAF_EXCEPTION(my_error()); } ) );
+	BOOST_TEST_EQ( 2, test( [ ] { throw LEAF_EXCEPTION(my_error(),info{42}); } ) );
 
-	BOOST_TEST( 4==test( [ ] { LEAF_THROW(my_error()); } ) );
-	BOOST_TEST( 2==test( [ ] { LEAF_THROW(my_error(),info{42}); } ) );
+	BOOST_TEST_EQ( 4, test( [ ] { LEAF_THROW(my_error()); } ) );
+	BOOST_TEST_EQ( 2, test( [ ] { LEAF_THROW(my_error(),info{42}); } ) );
 
 	return boost::report_errors();
 }

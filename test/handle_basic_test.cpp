@@ -79,8 +79,8 @@ leaf::result<void> handle_some_errors_void( int what_to_do )
 
 int main()
 {
-	BOOST_TEST(handle_some_errors(0).value()==42);
-	BOOST_TEST(handle_some_errors(1).value()==-42);
+	BOOST_TEST_EQ(handle_some_errors(0).value(), 42);
+	BOOST_TEST_EQ(handle_some_errors(1).value(), -42);
 	{
 		int r = leaf::handle_all(
 			[ ]() -> leaf::result<int>
@@ -97,13 +97,13 @@ int main()
 			{
 				return 2;
 			} );
-		BOOST_TEST(r==1);
+		BOOST_TEST_EQ(r, 1);
 	}
 
 	///////////////////////////
 
-	BOOST_TEST(handle_some_errors_float(0).value()==42.0f);
-	BOOST_TEST(handle_some_errors_float(2).value()==-42.0f);
+	BOOST_TEST_EQ(handle_some_errors_float(0).value(), 42.0f);
+	BOOST_TEST_EQ(handle_some_errors_float(2).value(), -42.0f);
 	{
 		int r = leaf::handle_all(
 			[ ]() -> leaf::result<int>
@@ -120,7 +120,7 @@ int main()
 			{
 				return 2;
 			} );
-		BOOST_TEST(r==1);
+		BOOST_TEST_EQ(r, 1);
 	}
 
 	///////////////////////////
@@ -142,7 +142,7 @@ int main()
 			{
 				return 2;
 			} );
-		BOOST_TEST(r==1);
+		BOOST_TEST_EQ(r, 1);
 	}
 
 	///////////////////////////
@@ -162,7 +162,7 @@ int main()
 			{
 				return 2;
 			} );
-		BOOST_TEST(r==2);
+		BOOST_TEST_EQ(r, 2);
 	}
 
 	return boost::report_errors();

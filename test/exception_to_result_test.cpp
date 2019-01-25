@@ -37,7 +37,7 @@ int main()
 			{
 				return 3;
 			} );
-		BOOST_TEST(r==1);
+		BOOST_TEST_EQ(r, 1);
 	}
 	{
 		int r = leaf::handle_all(
@@ -61,7 +61,7 @@ int main()
 			{
 				return 3;
 			} );
-		BOOST_TEST(r==2);
+		BOOST_TEST_EQ(r, 2);
 	}
 	{
 		int r = leaf::handle_all(
@@ -85,7 +85,7 @@ int main()
 			{
 				return 3;
 			} );
-		BOOST_TEST(r==1);
+		BOOST_TEST_EQ(r, 1);
 	}
 	return boost::report_errors();
 }

@@ -26,7 +26,8 @@ int main()
 			{
 				return { };
 			} );
-		BOOST_TEST(r && r.value()==42);
+		BOOST_TEST(r);
+		BOOST_TEST_EQ(r.value(), 42);
 	}
 	{
 		leaf::result<int> r = leaf::try_(
@@ -36,10 +37,11 @@ int main()
 			},
 			[ ]( leaf::catch_<my_exception>, info<1> const & x ) -> leaf::result<int>
 			{
-				BOOST_TEST(x.value==1);
+				BOOST_TEST_EQ(x.value, 1);
 				return 42;
 			} );
-		BOOST_TEST(r && r.value()==42);
+		BOOST_TEST(r);
+		BOOST_TEST_EQ(r.value(), 42);
 	}
 	{
 		leaf::result<int> r = leaf::try_(
@@ -49,10 +51,11 @@ int main()
 			},
 			[ ]( info<1> const & x ) -> leaf::result<int>
 			{
-				BOOST_TEST(x.value==1);
+				BOOST_TEST_EQ(x.value, 1);
 				return 42;
 			} );
-		BOOST_TEST(r && r.value()==42);
+		BOOST_TEST(r);
+		BOOST_TEST_EQ(r.value(), 42);
 	}
 	return boost::report_errors();
 }

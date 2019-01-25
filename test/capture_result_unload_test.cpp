@@ -28,16 +28,16 @@ void test( F f_ )
 			},
 			[&c]( info<1> const & x )
 			{
-				BOOST_TEST(x.value==1);
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_TEST_EQ(c, 0);
 				c = 1;
 			},
 			[&c]
 			{
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(c, 0);
 				c = 2;
 			} );
-		BOOST_TEST(c==1);
+		BOOST_TEST_EQ(c, 1);
 	}
 
 	{
@@ -49,16 +49,16 @@ void test( F f_ )
 			},
 			[&c]( info<2> const & x )
 			{
-				BOOST_TEST(x.value==2);
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(x.value, 2);
+				BOOST_TEST_EQ(c, 0);
 				c = 1;
 			},
 			[&c]
 			{
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(c, 0);
 				c = 2;
 			} );
-		BOOST_TEST(c==2);
+		BOOST_TEST_EQ(c, 2);
 	}
 
 	{
@@ -69,14 +69,14 @@ void test( F f_ )
 			},
 			[ ]( info<1> const & x )
 			{
-				BOOST_TEST(x.value==1);
+				BOOST_TEST_EQ(x.value, 1);
 				return 1;
 			},
 			[ ]
 			{
 				return 2;
 			} );
-		BOOST_TEST(r==1);
+		BOOST_TEST_EQ(r, 1);
 	}
 
 	{
@@ -87,14 +87,14 @@ void test( F f_ )
 			},
 			[ ]( info<2> const & x )
 			{
-				BOOST_TEST(x.value==2);
+				BOOST_TEST_EQ(x.value, 2);
 				return 1;
 			},
 			[ ]
 			{
 				return 2;
 			} );
-		BOOST_TEST(r==2);
+		BOOST_TEST_EQ(r, 2);
 	}
 
 	{
@@ -109,8 +109,8 @@ void test( F f_ )
 			},
 			[ ]( info<1> const & x, info<3> const & y )
 			{
-				BOOST_TEST(x.value==1);
-				BOOST_TEST(y.value==3);
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_TEST_EQ(y.value, 3);
 				return false;
 			},
 			[ ]( info<1> const & x )
@@ -136,8 +136,8 @@ void test( F f_ )
 			},
 			[ ]( info<1> const & x, info<3> const & y )
 			{
-				BOOST_TEST(x.value==1);
-				BOOST_TEST(y.value==3);
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_TEST_EQ(y.value, 3);
 				return true;
 			},
 			[ ]( info<1> const & x )

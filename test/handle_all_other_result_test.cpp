@@ -84,7 +84,7 @@ int main()
 			{
 				return -1;
 			} );
-		BOOST_TEST(r==42);
+		BOOST_TEST_EQ(r, 42);
 	}
 	{
 		int r = leaf::handle_all(
@@ -93,21 +93,21 @@ int main()
 				auto r = g(false);
 				BOOST_TEST(!r);
 				auto ec = r.error();
-				BOOST_TEST(ec.message()=="LEAF error, use with leaf::handle_some or leaf::handle_all.");
+				BOOST_TEST_EQ(ec.message(), "LEAF error, use with leaf::handle_some or leaf::handle_all.");
 				BOOST_TEST(!std::strcmp(ec.category().name(),"LEAF error, use with leaf::handle_some or leaf::handle_all."));
 				return r;
 			},
 			[ ]( info<42> const & x, std::error_code const & ec )
 			{
-				BOOST_TEST(x.value==42);
-				BOOST_TEST(ec==make_error_code(std::errc::no_such_file_or_directory));
+				BOOST_TEST_EQ(x.value, 42);
+				BOOST_TEST_EQ(ec, make_error_code(std::errc::no_such_file_or_directory));
 				return 1;
 			},
 			[ ]
 			{
 				return 2;
 			} );
-		BOOST_TEST(r==1);
+		BOOST_TEST_EQ(r, 1);
 	}
 	return boost::report_errors();
 }

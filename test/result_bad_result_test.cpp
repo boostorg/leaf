@@ -29,7 +29,7 @@ int main()
 				return 0;
 			},
 			check );
-		BOOST_TEST(r==1);
+		BOOST_TEST_EQ(r, 1);
 	}
 	{
 		int r = leaf::try_(
@@ -40,7 +40,7 @@ int main()
 				return 0;
 			},
 			check );
-		BOOST_TEST(r==1);
+		BOOST_TEST_EQ(r, 1);
 	}
 	{
 		int r = leaf::try_(
@@ -51,7 +51,7 @@ int main()
 				return 0;
 			},
 			check );
-		BOOST_TEST(r==1);
+		BOOST_TEST_EQ(r, 1);
 	}
 	{
 		int r = leaf::try_(
@@ -62,7 +62,7 @@ int main()
 				return 0;
 			},
 			check );
-		BOOST_TEST(r==1);
+		BOOST_TEST_EQ(r, 1);
 	}
 	return boost::report_errors();
 }

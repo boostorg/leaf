@@ -43,17 +43,17 @@ int main()
 		},
 		[ ]( info<0> i0, info<1> i1, info<2> i2, info<3> i3 )
 		{
-			BOOST_TEST(i0.value==0);
-			BOOST_TEST(i1.value==1);
-			BOOST_TEST(i2.value==2);
-			BOOST_TEST(i3.value==3);
+			BOOST_TEST_EQ(i0.value, 0);
+			BOOST_TEST_EQ(i1.value, 1);
+			BOOST_TEST_EQ(i2.value, 2);
+			BOOST_TEST_EQ(i3.value, 3);
 			return 1;
 		},
 		[ ]
 		{
 			return 2;
 		} );
-	BOOST_TEST(r==1);
+	BOOST_TEST_EQ(r, 1);
 
 	return boost::report_errors();
 }

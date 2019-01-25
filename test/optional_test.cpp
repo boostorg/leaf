@@ -88,19 +88,19 @@ void run_tests()
 	BOOST_TEST(!value_count);
 	{
 		my_info a(42);
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		optional<my_info> x(a);
-		BOOST_TEST(object_count==2);
-		BOOST_TEST(value_count==2);
+		BOOST_TEST_EQ(object_count, 2);
+		BOOST_TEST_EQ(value_count, 2);
 		BOOST_TEST(x.has_value());
-		BOOST_TEST(x.value().value==42);
+		BOOST_TEST_EQ(x.value().value, 42);
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
 	{
 		throws_on_copy a;
-		BOOST_TEST(object_count==1);
+		BOOST_TEST_EQ(object_count, 1);
 		try
 		{
 			optional<throws_on_copy> x(a);
@@ -114,86 +114,86 @@ void run_tests()
 	BOOST_TEST(!value_count);
 	{
 		my_info a(42);
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		optional<my_info> x(std::move(a));
-		BOOST_TEST(object_count==2);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 2);
+		BOOST_TEST_EQ(value_count, 1);
 		BOOST_TEST(x.has_value());
-		BOOST_TEST(x.value().value==42);
+		BOOST_TEST_EQ(x.value().value, 42);
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
 	{
 		optional<my_info> x(my_info(42));
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		BOOST_TEST(x.has_value());
-		BOOST_TEST(x.value().value==42);
+		BOOST_TEST_EQ(x.value().value, 42);
 		optional<my_info> y(x);
-		BOOST_TEST(object_count==2);
-		BOOST_TEST(value_count==2);
+		BOOST_TEST_EQ(object_count, 2);
+		BOOST_TEST_EQ(value_count, 2);
 		BOOST_TEST(x.has_value());
-		BOOST_TEST(x.value().value==42);
+		BOOST_TEST_EQ(x.value().value, 42);
 		BOOST_TEST(y.has_value());
-		BOOST_TEST(y.value().value==42);
+		BOOST_TEST_EQ(y.value().value, 42);
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
 	{
 		optional<my_info> x(my_info(42));
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		BOOST_TEST(x.has_value());
-		BOOST_TEST(x.value().value==42);
+		BOOST_TEST_EQ(x.value().value, 42);
 		optional<my_info> y(std::move(x));
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		BOOST_TEST(!x.has_value());
 		BOOST_TEST(y.has_value());
-		BOOST_TEST(y.value().value==42);
+		BOOST_TEST_EQ(y.value().value, 42);
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
 	{
 		optional<my_info> x(my_info(42));
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		BOOST_TEST(x.has_value());
-		BOOST_TEST(x.value().value==42);
+		BOOST_TEST_EQ(x.value().value, 42);
 		optional<my_info> y;
-		BOOST_TEST(&(y=x)==&y);
-		BOOST_TEST(object_count==2);
-		BOOST_TEST(value_count==2);
+		BOOST_TEST_EQ(&(y=x), &y);
+		BOOST_TEST_EQ(object_count, 2);
+		BOOST_TEST_EQ(value_count, 2);
 		BOOST_TEST(x.has_value());
-		BOOST_TEST(x.value().value==42);
+		BOOST_TEST_EQ(x.value().value, 42);
 		BOOST_TEST(y.has_value());
-		BOOST_TEST(y.value().value==42);
+		BOOST_TEST_EQ(y.value().value, 42);
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
 	{
 		optional<my_info> x(my_info(42));
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		BOOST_TEST(x.has_value());
-		BOOST_TEST(x.value().value==42);
+		BOOST_TEST_EQ(x.value().value, 42);
 		optional<my_info> y(my_info(43));
-		BOOST_TEST(object_count==2);
-		BOOST_TEST(value_count==2);
-		BOOST_TEST(&(y=x)==&y);
-		BOOST_TEST(object_count==2);
-		BOOST_TEST(value_count==2);
+		BOOST_TEST_EQ(object_count, 2);
+		BOOST_TEST_EQ(value_count, 2);
+		BOOST_TEST_EQ(&(y=x), &y);
+		BOOST_TEST_EQ(object_count, 2);
+		BOOST_TEST_EQ(value_count, 2);
 		BOOST_TEST(x.has_value());
-		BOOST_TEST(x.value().value==42);
+		BOOST_TEST_EQ(x.value().value, 42);
 		BOOST_TEST(y.has_value());
-		BOOST_TEST(y.value().value==42);
+		BOOST_TEST_EQ(y.value().value, 42);
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
 	{
 		optional<throws_on_copy> x((throws_on_copy()));
-		BOOST_TEST(object_count==1);
+		BOOST_TEST_EQ(object_count, 1);
 		BOOST_TEST(x.has_value());
 		optional<throws_on_copy> y;
 		try
@@ -203,7 +203,7 @@ void run_tests()
 		catch( std::exception & )
 		{
 		}
-		BOOST_TEST(object_count==1);
+		BOOST_TEST_EQ(object_count, 1);
 		BOOST_TEST(x.has_value());
 		BOOST_TEST(!y.has_value());
 	}
@@ -211,35 +211,35 @@ void run_tests()
 	BOOST_TEST(!value_count);
 	{
 		optional<my_info> x(my_info(42));
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		BOOST_TEST(x.has_value());
-		BOOST_TEST(x.value().value==42);
+		BOOST_TEST_EQ(x.value().value, 42);
 		optional<my_info> y;
-		BOOST_TEST(&(y=std::move(x))==&y);
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(&(y=std::move(x)), &y);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		BOOST_TEST(!x.has_value());
 		BOOST_TEST(y.has_value());
-		BOOST_TEST(y.value().value==42);
+		BOOST_TEST_EQ(y.value().value, 42);
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
 	{
 		optional<my_info> x(my_info(42));
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		BOOST_TEST(x.has_value());
-		BOOST_TEST(x.value().value==42);
+		BOOST_TEST_EQ(x.value().value, 42);
 		optional<my_info> y(my_info(43));
-		BOOST_TEST(object_count==2);
-		BOOST_TEST(value_count==2);
-		BOOST_TEST(&(y=std::move(x))==&y);
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 2);
+		BOOST_TEST_EQ(value_count, 2);
+		BOOST_TEST_EQ(&(y=std::move(x)), &y);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		BOOST_TEST(!x.has_value());
 		BOOST_TEST(y.has_value());
-		BOOST_TEST(y.value().value==42);
+		BOOST_TEST_EQ(y.value().value, 42);
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
@@ -247,64 +247,64 @@ void run_tests()
 		optional<my_info> x;
 		my_info a(42);
 		x.put(a);
-		BOOST_TEST(object_count==2);
-		BOOST_TEST(value_count==2);
+		BOOST_TEST_EQ(object_count, 2);
+		BOOST_TEST_EQ(value_count, 2);
 		BOOST_TEST(x.has_value());
-		BOOST_TEST(x.value().value==42);
+		BOOST_TEST_EQ(x.value().value, 42);
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
 	{
 		optional<my_info> x(my_info(43));
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		my_info a(42);
 		x.put(a);
-		BOOST_TEST(object_count==2);
-		BOOST_TEST(value_count==2);
+		BOOST_TEST_EQ(object_count, 2);
+		BOOST_TEST_EQ(value_count, 2);
 		BOOST_TEST(x.has_value());
-		BOOST_TEST(x.value().value==42);
+		BOOST_TEST_EQ(x.value().value, 42);
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
 	{
 		optional<my_info> x;
 		x.put(my_info(42));
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		BOOST_TEST(x.has_value());
-		BOOST_TEST(x.value().value==42);
+		BOOST_TEST_EQ(x.value().value, 42);
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
 	{
 		optional<my_info> x(my_info(43));
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		x.put(my_info(42));
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		BOOST_TEST(x.has_value());
-		BOOST_TEST(x.value().value==42);
+		BOOST_TEST_EQ(x.value().value, 42);
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
 	{
 		optional<my_info> x(my_info(42));
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		my_info a = std::move(x).value();
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		BOOST_TEST(!x.has_value());
-		BOOST_TEST(a.value==42);
+		BOOST_TEST_EQ(a.value, 42);
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
 	{
 		optional<my_info> x(my_info(42));
-		BOOST_TEST(object_count==1);
-		BOOST_TEST(value_count==1);
+		BOOST_TEST_EQ(object_count, 1);
+		BOOST_TEST_EQ(value_count, 1);
 		BOOST_TEST(x.has_value());
 		x.reset();
 		BOOST_TEST(!x.has_value());

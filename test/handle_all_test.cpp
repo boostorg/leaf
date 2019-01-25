@@ -55,10 +55,10 @@ int main()
 			},
 			[&c]
 			{
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(c, 0);
 				c = 1;
 			} );
-		BOOST_TEST(c==42);
+		BOOST_TEST_EQ(c, 42);
 	}
 
 	// void, handle_all (failure)
@@ -74,17 +74,17 @@ int main()
 			[&c]( error_code ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec==error_code::error1);
-				BOOST_TEST(x.value==1);
-				BOOST_TEST(y.value==2);
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_TEST_EQ(y.value, 2);
+				BOOST_TEST_EQ(c, 0);
 				c = 1;
 			},
 			[&c]()
 			{
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(c, 0);
 				c = 2;
 			} );
-		BOOST_TEST(c==1);
+		BOOST_TEST_EQ(c, 1);
 	}
 
 	// void, handle_all (failure), match cond_x (single enum value)
@@ -99,23 +99,23 @@ int main()
 			},
 			[&c]( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
 			{
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(c, 0);
 				c = 1;
 			},
 			[&c]( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value()==make_error_code(errc_a::a0));
-				BOOST_TEST(x.value==1);
-				BOOST_TEST(y.value==2);
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(ec.value(), make_error_code(errc_a::a0));
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_TEST_EQ(y.value, 2);
+				BOOST_TEST_EQ(c, 0);
 				c = 2;
 			},
 			[&c]()
 			{
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(c, 0);
 				c = 3;
 			} );
-		BOOST_TEST(c==2);
+		BOOST_TEST_EQ(c, 2);
 	}
 
 	// void, handle_all (failure), match enum (single enum value)
@@ -130,23 +130,23 @@ int main()
 			},
 			[&c]( leaf::match<error_code,error_code::error2> )
 			{
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(c, 0);
 				c = 1;
 			},
 			[&c]( leaf::match<error_code,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==error_code::error1);
-				BOOST_TEST(x.value==1);
-				BOOST_TEST(y.value==2);
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_TEST_EQ(y.value, 2);
+				BOOST_TEST_EQ(c, 0);
 				c = 2;
 			},
 			[&c]()
 			{
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(c, 0);
 				c = 3;
 			} );
-		BOOST_TEST(c==2);
+		BOOST_TEST_EQ(c, 2);
 	}
 
 	// void, handle_all (failure), match enum (multiple enum values)
@@ -161,23 +161,23 @@ int main()
 			},
 			[&c]( leaf::match<error_code,error_code::error2> )
 			{
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(c, 0);
 				c = 1;
 			},
 			[&c]( leaf::match<error_code,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==error_code::error1);
-				BOOST_TEST(x.value==1);
-				BOOST_TEST(y.value==2);
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_TEST_EQ(y.value, 2);
+				BOOST_TEST_EQ(c, 0);
 				c = 2;
 			},
 			[&c]()
 			{
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(c, 0);
 				c = 3;
 			} );
-		BOOST_TEST(c==2);
+		BOOST_TEST_EQ(c, 2);
 	}
 
 	// void, handle_all (failure), match value (single value)
@@ -192,23 +192,23 @@ int main()
 			},
 			[&c]( leaf::match<e_error_code,error_code::error2> )
 			{
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(c, 0);
 				c = 1;
 			},
 			[&c]( leaf::match<e_error_code,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==error_code::error1);
-				BOOST_TEST(x.value==1);
-				BOOST_TEST(y.value==2);
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_TEST_EQ(y.value, 2);
+				BOOST_TEST_EQ(c, 0);
 				c = 2;
 			},
 			[&c]()
 			{
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(c, 0);
 				c = 3;
 			} );
-		BOOST_TEST(c==2);
+		BOOST_TEST_EQ(c, 2);
 	}
 
 	// void, handle_all (failure), match value (multiple values)
@@ -223,23 +223,23 @@ int main()
 			},
 			[&c]( leaf::match<e_error_code,error_code::error2> )
 			{
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(c, 0);
 				c = 1;
 			},
 			[&c]( leaf::match<e_error_code,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==error_code::error1);
-				BOOST_TEST(x.value==1);
-				BOOST_TEST(y.value==2);
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_TEST_EQ(y.value, 2);
+				BOOST_TEST_EQ(c, 0);
 				c = 2;
 			},
 			[&c]()
 			{
-				BOOST_TEST(c==0);
+				BOOST_TEST_EQ(c, 0);
 				c = 3;
 			} );
-		BOOST_TEST(c==2);
+		BOOST_TEST_EQ(c, 2);
 	}
 
 	//////////////////////////////////////
@@ -256,7 +256,7 @@ int main()
 			{
 				return 1;
 			} );
-		BOOST_TEST(r==42);
+		BOOST_TEST_EQ(r, 42);
 	}
 
 	// int, handle_all (failure)
@@ -270,15 +270,15 @@ int main()
 			[ ]( error_code ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec==error_code::error1);
-				BOOST_TEST(x.value==1);
-				BOOST_TEST(y.value==2);
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_TEST_EQ(y.value, 2);
 				return 1;
 			},
 			[ ]
 			{
 				return 2;
 			} );
-		BOOST_TEST(r==1);
+		BOOST_TEST_EQ(r, 1);
 	}
 
 	// int, handle_all (failure), match cond_x (single enum value)
@@ -295,16 +295,16 @@ int main()
 			},
 			[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value()==make_error_code(errc_a::a0));
-				BOOST_TEST(x.value==1);
-				BOOST_TEST(y.value==2);
+				BOOST_TEST_EQ(ec.value(), make_error_code(errc_a::a0));
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
 			[ ]
 			{
 				return 3;
 			} );
-		BOOST_TEST(r==2);
+		BOOST_TEST_EQ(r, 2);
 	}
 
 	// int, handle_all (failure), match enum (single enum value)
@@ -322,15 +322,15 @@ int main()
 			[ ]( leaf::match<error_code,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==error_code::error1);
-				BOOST_TEST(x.value==1);
-				BOOST_TEST(y.value==2);
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
 			[ ]
 			{
 				return 3;
 			} );
-		BOOST_TEST(r==2);
+		BOOST_TEST_EQ(r, 2);
 	}
 
 	// int, handle_all (failure), match enum (multiple enum values)
@@ -348,15 +348,15 @@ int main()
 			[ ]( leaf::match<error_code,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==error_code::error1);
-				BOOST_TEST(x.value==1);
-				BOOST_TEST(y.value==2);
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
 			[ ]
 			{
 				return 3;
 			} );
-		BOOST_TEST(r==2);
+		BOOST_TEST_EQ(r, 2);
 	}
 
 	// int, handle_all (failure), match value (single value)
@@ -374,15 +374,15 @@ int main()
 			[ ]( leaf::match<e_error_code,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==error_code::error1);
-				BOOST_TEST(x.value==1);
-				BOOST_TEST(y.value==2);
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
 			[ ]
 			{
 				return 3;
 			} );
-		BOOST_TEST(r==2);
+		BOOST_TEST_EQ(r, 2);
 	}
 
 	// int, handle_all (failure), match value (multiple values)
@@ -400,15 +400,15 @@ int main()
 			[ ]( leaf::match<e_error_code,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==error_code::error1);
-				BOOST_TEST(x.value==1);
-				BOOST_TEST(y.value==2);
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
 			[ ]
 			{
 				return 3;
 			} );
-		BOOST_TEST(r==2);
+		BOOST_TEST_EQ(r, 2);
 	}
 
 	return boost::report_errors();

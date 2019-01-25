@@ -45,13 +45,13 @@ int main()
 		},
 		[ ]( info const & i42 )
 		{
-			BOOST_TEST(i42.value==42);
+			BOOST_TEST_EQ(i42.value, 42);
 			return 1;
 		},
 		[ ]
 		{
 			return 2;
 		} );
-	BOOST_TEST(r==1);
+	BOOST_TEST_EQ(r, 1);
 	return boost::report_errors();
 }

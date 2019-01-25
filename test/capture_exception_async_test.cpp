@@ -67,8 +67,8 @@ int main()
 			},
 			[&]( info<1> const & x1, info<2> const & x2 )
 			{
-				BOOST_TEST(x1.value==f.a);
-				BOOST_TEST(x2.value==f.b);
+				BOOST_TEST_EQ(x1.value, f.a);
+				BOOST_TEST_EQ(x2.value, f.b);
 				return -1;
 			},
 			[ ]
@@ -76,9 +76,9 @@ int main()
 				return -2;
 			} );
 		if( f.result>=0 )
-			BOOST_TEST(r==f.result);
+			BOOST_TEST_EQ(r, f.result);
 		else
-			BOOST_TEST(r==-1);
+			BOOST_TEST_EQ(r, -1);
 	}
 
 	return boost::report_errors();

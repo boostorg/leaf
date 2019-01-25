@@ -37,7 +37,7 @@ int main()
 				return g(true);
 			} );
 		BOOST_TEST(r);
-		BOOST_TEST(r.value()==42);
+		BOOST_TEST_EQ(r.value(), 42);
 	}
 	{
 		int called = 0;
@@ -47,18 +47,18 @@ int main()
 				auto r = g(false);
 				BOOST_TEST(!r);
 				auto ec = r.error();
-				BOOST_TEST(ec.message()=="LEAF error, use with leaf::handle_some or leaf::handle_all.");
+				BOOST_TEST_EQ(ec.message(), "LEAF error, use with leaf::handle_some or leaf::handle_all.");
 				BOOST_TEST(!std::strcmp(ec.category().name(),"LEAF error, use with leaf::handle_some or leaf::handle_all."));
 				return r;
 			},
 			[&]( info<42> const & x, leaf::match<leaf::condition<cond_x>, cond_x::x00> ec )
 			{
 				called = 1;
-				BOOST_TEST(x.value==42);
+				BOOST_TEST_EQ(x.value, 42);
 				return ec.value();
 			} );
 		BOOST_TEST(!r);
-		BOOST_TEST(r.error() == make_error_code(errc_a::a0));
+		BOOST_TEST_EQ(r.error(), make_error_code(errc_a::a0));
 		BOOST_TEST(called);
 	}
 	return boost::report_errors();

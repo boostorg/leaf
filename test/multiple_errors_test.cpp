@@ -42,14 +42,14 @@ int main()
 		},
 		[ ]( info<2> const & x, info<3> const & y )
 		{
-			BOOST_TEST(x.value==2);
-			BOOST_TEST(y.value==3);
+			BOOST_TEST_EQ(x.value, 2);
+			BOOST_TEST_EQ(y.value, 3);
 			return 2;
 		},
 		[ ]
 		{
 			return 3;
 		} );
-	BOOST_TEST(r==2);
+	BOOST_TEST_EQ(r, 2);
 	return boost::report_errors();
 }

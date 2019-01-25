@@ -39,14 +39,14 @@ int main()
 		},
 		[ ]( info x )
 		{
-			BOOST_TEST(x.value==2);
+			BOOST_TEST_EQ(x.value, 2);
 			return 1;
 		},
 		[ ]
 		{
 			return 2;
 		 } );
-	BOOST_TEST(r==1);
+	BOOST_TEST_EQ(r, 1);
 
 	return boost::report_errors();
 }
