@@ -85,25 +85,43 @@ namespace boost { namespace leaf {
 		////////////////////////////////////////
 
 		template <class F, class mp_args, class... E>
-		struct exception_trap;
+		class exception_trap;
 
 		template <class F, template<class...> class L, class... A, class... E>
-		struct exception_trap<F, L<A...>,E...>
+		class exception_trap<F, L<A...>,E...>
 		{
 			F f_;
+
+			using this_type = exception_trap<F, L<A...>,E...>;
+			using R = decltype(std::declval<F>()(std::declval<A>()...));
+
+			R call_f( result_tag<R, false>, static_store<E...> &&, A... a ) const
+			{
+				return f_(std::forward<A>(a)...);
+			}
+
+			R call_f( result_tag<R, true>, static_store<E...> && ss, A... a ) const
+			{
+				if( auto r = f_(std::forward<A>(a)...) )
+					return r;
+				else
+					return decltype(r)( std::make_shared<dynamic_store_impl<E...>>(r.error().value(),std::move(ss)) );
+			}
+
+		public:
 
 			explicit exception_trap( F && f ) noexcept:
 				f_(std::forward<F>(f))
 			{
 			}
 
-			decltype(std::declval<F>()(std::declval<A>()...)) operator()( A... a ) const
+			R operator()( A... a ) const
 			{
 				static_store<E...> ss;
 				ss.set_reset(true);
 				try
 				{
-					return f_(std::forward<A>(a)...);
+					return call_f( result_tag<R>(), std::move(ss), std::forward<A>(a)...); //Note, ss will not be actually moved if exception thrown.
 				}
 				catch( captured_exception const & )
 				{

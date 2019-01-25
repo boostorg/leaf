@@ -22,40 +22,29 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class TryBlock, class R = decltype(std::declval<TryBlock>()()), bool ReturnsResultType = is_result_type<R>::value>
-		struct call_try_block;
-
-		template <class TryBlock, class R>
-		struct call_try_block<TryBlock, R, false>
+		template <class StaticStore, class TryBlock, class... Handler>
+		decltype(std::declval<TryBlock>()()) call_try_block( result_tag<decltype(std::declval<TryBlock>()()), false>, StaticStore & ss, TryBlock && try_block, Handler && ... )
 		{
-			template <class StaticStore, class... Handler>
-			static R call( StaticStore & ss, TryBlock && try_block, Handler && ... )
+			ss.set_reset(true);
+			return std::forward<TryBlock>(try_block)();
+		}
+
+		template <class StaticStore, class TryBlock, class... Handler>
+		decltype(std::declval<TryBlock>()()) call_try_block( result_tag<decltype(std::declval<TryBlock>()()), true>, StaticStore & ss, TryBlock && try_block, Handler && ... handler )
+		{
+			if( auto r = std::forward<TryBlock>(try_block)() )
 			{
 				ss.set_reset(true);
-				return std::forward<TryBlock>(try_block)();
+				return r;
 			}
-		};
-
-		template <class TryBlock, class R>
-		struct call_try_block<TryBlock, R, true>
-		{
-			template <class StaticStore, class... Handler>
-			static R call( StaticStore & ss, TryBlock && try_block, Handler && ... handler )
+			else
 			{
-				if( auto r = std::forward<TryBlock>(try_block)() )
-				{
+				auto rr = ss.handle_error(error_info(r.error()), handler_wrapper<decltype(std::declval<TryBlock>()()), Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
+				if( rr )
 					ss.set_reset(true);
-					return r;
-				}
-				else
-				{
-					auto rr = ss.handle_error(error_info(r.error()), handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
-					if( rr )
-						ss.set_reset(true);
-					return rr;
-				}
+				return rr;
 			}
-		};
+		}
 	}
 
 	template <class TryBlock, class... Handler>
@@ -66,7 +55,7 @@ namespace boost { namespace leaf {
 		auto throw_ = [ ]() -> typename function_traits<TryBlock>::return_type { throw; };
 		try
 		{
-			return call_try_block<TryBlock>::call(ss, std::forward<TryBlock>(try_block), std::forward<Handler>(handler)...);
+			return call_try_block( result_tag<decltype(std::declval<TryBlock>()())>(), ss, std::forward<TryBlock>(try_block), std::forward<Handler>(handler)...);
 		}
 		catch( captured_exception & cap )
 		{

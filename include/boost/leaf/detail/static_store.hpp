@@ -13,6 +13,30 @@
 
 namespace boost { namespace leaf {
 
+	template <class R>
+	struct is_result_type: std::false_type
+	{
+		using type = R;
+	};
+
+	namespace leaf_detail
+	{
+		template <class R, bool IsResult = is_result_type<R>::value>
+		struct result_tag;
+
+		template <class R>
+		struct result_tag<R, false>
+		{
+		};
+
+		template <class R>
+		struct result_tag<R, true>
+		{
+		};
+	}
+
+	////////////////////////////////////////
+
 	namespace leaf_detail { class captured_exception; }
 
 	class error_info
@@ -821,10 +845,6 @@ namespace boost { namespace leaf {
 		};
 	} // leaf_detail
 
-	template <class R>
-	struct is_result_type: std::false_type
-	{
-	};
 } }
 
 #endif

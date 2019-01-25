@@ -37,6 +37,7 @@ tests = [
 	'_hpp_preload_test',
 	'_hpp_result_test',
 	'_hpp_try_test',
+	'capture_exception_result_async_test',
 	'capture_exception_async_test',
 	'capture_exception_state_test',
 	'capture_exception_unload_test',

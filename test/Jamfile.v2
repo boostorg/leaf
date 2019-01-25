@@ -28,6 +28,7 @@ compile _hpp_preload_test.cpp ;
 compile _hpp_result_test.cpp ;
 compile _hpp_try_test.cpp ;
 
+run capture_exception_result_async_test.cpp ;
 run capture_exception_async_test.cpp ;
 run capture_exception_state_test.cpp ;
 run capture_exception_unload_test.cpp ;
