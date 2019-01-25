@@ -150,6 +150,15 @@
 			}
 		},
 		{
+			"label": "error_code_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test error_code_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test error_code_test"
+			}
+		},
+		{
 			"label": "exception_to_result_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test exception_to_result_test",

@@ -28,8 +28,6 @@ compile _hpp_preload_test.cpp ;
 compile _hpp_result_test.cpp ;
 compile _hpp_try_test.cpp ;
 
-compile-fail is_error_type_fail_test.cpp ;
-
 run capture_exception_async_test.cpp ;
 run capture_exception_state_test.cpp ;
 run capture_exception_unload_test.cpp ;
@@ -44,6 +42,7 @@ run defer_nested_new_error_result_test.cpp ;
 run defer_nested_success_exception_test.cpp ;
 run defer_nested_success_result_test.cpp ;
 run diagnostic_info_test.cpp ;
+run error_code_test.cpp ;
 run exception_to_result_test.cpp ;
 run function_traits_test.cpp ;
 run handle_all_other_result_test.cpp ;
@@ -68,6 +67,8 @@ run static_store_deduction_test.cpp ;
 run try_exception_and_result_test.cpp ;
 run try_exception_test.cpp ;
 run try_test.cpp ;
+
+compile-fail is_error_type_fail_test.cpp ;
 
 exe capture_eh : ../example/capture_eh.cpp : <threading>multi ;
 exe capture_result : ../example/capture_result.cpp : <threading>multi ;

@@ -51,6 +51,7 @@ tests = [
 	'defer_nested_success_exception_test',
 	'defer_nested_success_result_test',
 	'diagnostic_info_test',
+	'error_code_test',
 	'exception_to_result_test',
 	'function_traits_test',
 	'handle_all_other_result_test',

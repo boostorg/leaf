@@ -256,13 +256,16 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
+	template <class T, class Enum=T, bool HasValue = leaf_detail::has_data_member_value<T>::value>
+	struct error_condition;
+
 	namespace leaf_detail
 	{
-		template <class T, bool HasValue = has_data_member_value<T>::value, bool IsErrorCodeOrErrorCondition = std::is_error_code_enum<T>::value | std::is_error_condition_enum<T>::value>
+		template <class T, bool HasValue = has_data_member_value<T>::value>
 		struct match_traits;
 
 		template <class T>
-		struct match_traits<T,false, false>
+		struct match_traits<T, false>
 		{
 			using enumerator = T;
 			using e_type = enumerator;
@@ -276,7 +279,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class T>
-		struct match_traits<T, true, false>
+		struct match_traits<T, true>
 		{
 			using enumerator = decltype(T::value);
 			using e_type = T;
@@ -293,7 +296,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class T>
-		struct match_traits<T, false, true>
+		struct match_traits<error_condition<T, T, false>, false>
 		{
 			using enumerator = T;
 			using e_type = e_original_ec;
@@ -309,10 +312,10 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		template <class T>
-		struct match_traits<T, true, true>
+		template <class T, class Enum>
+		struct match_traits<error_condition<T, Enum, true>, false>
 		{
-			using enumerator = decltype(T::value);
+			using enumerator = Enum;
 			using e_type = T;
 			using match_type = std::error_code;
 
