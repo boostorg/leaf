@@ -27,8 +27,8 @@ leaf = declare_dependency( include_directories: includes )
 
 tests = [
 	'_hpp_all_test',
-	'_hpp_capture_exception_test',
-	'_hpp_capture_result_test',
+	'_hpp_capture_in_exception_test',
+	'_hpp_capture_in_result_test',
 	'_hpp_common_test',
 	'_hpp_error_test',
 	'_hpp_exception_test',
@@ -37,13 +37,13 @@ tests = [
 	'_hpp_preload_test',
 	'_hpp_result_test',
 	'_hpp_try_test',
-	'capture_exception_result_async_test',
-	'capture_exception_async_test',
-	'capture_exception_state_test',
-	'capture_exception_unload_test',
-	'capture_result_async_test',
-	'capture_result_state_test',
-	'capture_result_unload_test',
+	'capture_in_exception_result_async_test',
+	'capture_in_exception_async_test',
+	'capture_in_exception_state_test',
+	'capture_in_exception_unload_test',
+	'capture_in_result_async_test',
+	'capture_in_result_state_test',
+	'capture_in_result_unload_test',
 	'defer_basic_test',
 	'defer_nested_error_exception_test',
 	'defer_nested_error_result_test',
@@ -83,8 +83,8 @@ foreach t : tests
 endforeach
 
 examples = [
-	'capture_result',
-	'capture_eh',
+	'capture_in_exception',
+	'capture_in_result',
 	'exception_to_result',
 	'print_file_result',
 	'print_file_eh',

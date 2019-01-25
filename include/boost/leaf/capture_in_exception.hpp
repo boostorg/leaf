@@ -7,7 +7,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/detail/captured_exception.hpp>
+#include <boost/leaf/detail/capturing_exception.hpp>
 #include <boost/leaf/detail/dynamic_store_impl.hpp>
 #include <boost/leaf/throw_exception.hpp>
 #include <memory>
@@ -16,8 +16,8 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		class captured_exception_impl:
-			public captured_exception,
+		class capturing_exception_impl:
+			public capturing_exception,
 			public error_id
 		{
 			std::exception_ptr ex_;
@@ -27,7 +27,7 @@ namespace boost { namespace leaf {
 
 		public:
 
-			captured_exception_impl( std::exception_ptr && ex, std::shared_ptr<dynamic_store> && ds, bool had_error, void (*print_captured_types)(std::ostream &) ) noexcept:
+			capturing_exception_impl( std::exception_ptr && ex, std::shared_ptr<dynamic_store> && ds, bool had_error, void (*print_captured_types)(std::ostream &) ) noexcept:
 				error_id(leaf_detail::make_error_id(ds->err_id())),
 				ex_(std::move(ex)),
 				ds_(std::move(ds)),
@@ -123,17 +123,17 @@ namespace boost { namespace leaf {
 				{
 					return call_f( result_tag<R>(), std::move(ss), std::forward<A>(a)...); //Note, ss will not be actually moved if exception thrown.
 				}
-				catch( captured_exception const & )
+				catch( capturing_exception const & )
 				{
 					throw;
 				}
 				catch( error_id const & err )
 				{
-					throw_exception(captured_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(err.value(),std::move(ss)), true, &print_types<E...>::print ));
+					throw_exception(capturing_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(err.value(),std::move(ss)), true, &print_types<E...>::print ));
 				}
 				catch(...)
 				{
-					throw_exception(captured_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(leaf_detail::new_id(),std::move(ss)), false, &print_types<E...>::print ));
+					throw_exception(capturing_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(leaf_detail::new_id(),std::move(ss)), false, &print_types<E...>::print ));
 				}
 			}
 		};
@@ -141,7 +141,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... E, class F>
-	leaf_detail::exception_trap<F,typename leaf_detail::function_traits<F>::mp_args,E...> capture_exception( F && f ) noexcept
+	leaf_detail::exception_trap<F,typename leaf_detail::function_traits<F>::mp_args,E...> capture_in_exception( F && f ) noexcept
 	{
 		using namespace leaf_detail;
 		return exception_trap<F,typename function_traits<F>::mp_args,E...>(std::move(f));

@@ -54,7 +54,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class... E, class F>
-	leaf_detail::result_trap<F,typename leaf_detail::function_traits<F>::mp_args,E...> capture_result( F && f ) noexcept
+	leaf_detail::result_trap<F,typename leaf_detail::function_traits<F>::mp_args,E...> capture_in_result( F && f ) noexcept
 	{
 		using namespace leaf_detail;
 		return result_trap<F,typename function_traits<F>::mp_args,E...>(std::move(f));

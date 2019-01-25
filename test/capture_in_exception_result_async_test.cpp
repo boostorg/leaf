@@ -4,7 +4,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/capture_result.hpp>
+#include <boost/leaf/capture_in_exception.hpp>
+#include <boost/leaf/capture_in_result.hpp>
 #include <boost/leaf/handle.hpp>
 
 #include "boost/core/lightweight_test.hpp"
@@ -48,7 +49,7 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
 int main()
 {
 	std::vector<fut_info> fut = launch_tasks<info<1>, info<2>>( 42,
-		leaf::capture_result<info<1>,info<2>,info<3>>(
+		leaf::capture_in_exception<info<1>,info<2>,info<3>>(
 			[ ]( int a, int b, int res ) -> leaf::result<int>
 			{
 				if( res>=0 )

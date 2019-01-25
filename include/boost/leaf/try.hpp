@@ -57,7 +57,7 @@ namespace boost { namespace leaf {
 		{
 			return call_try_block( result_tag<decltype(std::declval<TryBlock>()())>(), ss, std::forward<TryBlock>(try_block), std::forward<Handler>(handler)...);
 		}
-		catch( captured_exception & cap )
+		catch( capturing_exception & cap )
 		{
 			try
 			{

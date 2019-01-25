@@ -14,16 +14,16 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		class captured_exception:
+		class capturing_exception:
 			public std::exception
 		{
 		protected:
 
-			captured_exception() noexcept
+			capturing_exception() noexcept
 			{
 			}
 
-			~captured_exception() noexcept
+			~capturing_exception() noexcept
 			{
 			}
 

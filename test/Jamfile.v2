@@ -17,8 +17,8 @@ project
     ;
 
 compile _hpp_all_test.cpp ;
-compile _hpp_capture_exception_test.cpp ;
-compile _hpp_capture_result_test.cpp ;
+compile _hpp_capture_in_exception_test.cpp ;
+compile _hpp_capture_in_result_test.cpp ;
 compile _hpp_common_test.cpp ;
 compile _hpp_error_test.cpp ;
 compile _hpp_exception_test.cpp ;
@@ -28,13 +28,13 @@ compile _hpp_preload_test.cpp ;
 compile _hpp_result_test.cpp ;
 compile _hpp_try_test.cpp ;
 
-run capture_exception_result_async_test.cpp ;
-run capture_exception_async_test.cpp ;
-run capture_exception_state_test.cpp ;
-run capture_exception_unload_test.cpp ;
-run capture_result_async_test.cpp ;
-run capture_result_state_test.cpp ;
-run capture_result_unload_test.cpp ;
+run capture_in_exception_result_async_test.cpp ;
+run capture_in_exception_async_test.cpp ;
+run capture_in_exception_state_test.cpp ;
+run capture_in_exception_unload_test.cpp ;
+run capture_in_result_async_test.cpp ;
+run capture_in_result_state_test.cpp ;
+run capture_in_result_unload_test.cpp ;
 run defer_basic_test.cpp ;
 run defer_nested_error_exception_test.cpp ;
 run defer_nested_error_result_test.cpp ;
@@ -71,8 +71,8 @@ run try_test.cpp ;
 
 compile-fail is_error_type_fail_test.cpp ;
 
-exe capture_eh : ../example/capture_eh.cpp : <threading>multi ;
-exe capture_result : ../example/capture_result.cpp : <threading>multi ;
+exe capture_in_result : ../example/capture_in_result.cpp : <threading>multi ;
+exe capture_in_exception : ../example/capture_in_exception.cpp : <threading>multi ;
 exe exception_to_result : ../example/exception_to_result.cpp ;
 #exe lua_callback_result : ../example/exception_to_result.cpp ;
 #exe lua_callback_eh : ../example/lua_callback_eh.cpp ;

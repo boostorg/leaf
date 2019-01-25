@@ -7,9 +7,9 @@
 // This is a simple program that demonstrates the use of LEAF to transport e-objects between threads,
 // without using exception handling. See capture_eh.cpp for the exception-handling variant.
 
-#include <boost/leaf/capture_result.hpp>
-#include <boost/leaf/handle.hpp>
-
+#include <boost/leaf/capture_in_exception.hpp>
+#include <boost/leaf/try.hpp>
+#include <boost/leaf/exception.hpp>
 #include <vector>
 #include <string>
 #include <future>
@@ -28,13 +28,13 @@ struct e_failure_info2 { int value; };
 struct task_result { };
 
  // This is our task function. It produces objects of type task_result, but it may fail...
-leaf::result<task_result> task()
+task_result task()
 {
 	bool succeed = (rand()%4) !=0; //...at random.
 	if( succeed )
 		return task_result { };
 	else
-		return leaf::new_error(
+		throw leaf::exception( std::exception(),
 			e_thread_id{std::this_thread::get_id()},
 			e_failure_info1{"info"},
 			e_failure_info2{42} );
@@ -45,17 +45,17 @@ int main()
 	int const task_count = 42;
 
 	// Container to collect the generated std::future objects.
-	std::vector<std::future<leaf::result<task_result>>> fut;
+	std::vector<std::future<task_result>> fut;
 
 	// Launch the tasks, but rather than launching the task function directly, we launch the
-	// wrapper function returned by leaf::capture_result. It captures the specified error object
+	// wrapper function returned by leaf::capture_in_result. It captures the specified error object
 	// types and automatically transports them in the leaf::result<task_result> it returns.
 	std::generate_n( std::inserter(fut,fut.end()), task_count,
 		[ ]
 		{
 			return std::async(
 				std::launch::async,
-				leaf::capture_result<e_thread_id, e_failure_info1, e_failure_info2>(&task) );
+				leaf::capture_in_exception<e_thread_id, e_failure_info1, e_failure_info2>(&task) );
 		} );
 
 	// Wait on the futures, get the task results, handle errors.
@@ -63,15 +63,15 @@ int main()
 	{
 		f.wait();
 
-		leaf::handle_all(
-			[&]() -> leaf::result<void>
+		leaf::try_(
+			[&]
 			{
-				LEAF_AUTO(r,f.get());
+				task_result r = f.get();
 
 				// Success! Use r to access task_result.
 				std::cout << "Success!" << std::endl;
 				(void) r;
-				return { };
+
 			},
 
 			[ ]( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )

@@ -7,8 +7,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/capture_exception.hpp>
-#include <boost/leaf/capture_result.hpp>
+#include <boost/leaf/capture_in_exception.hpp>
+#include <boost/leaf/capture_in_result.hpp>
 #include <boost/leaf/common.hpp>
 #include <boost/leaf/error.hpp>
 #include <boost/leaf/exception_to_result.hpp>

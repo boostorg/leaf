@@ -7,14 +7,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/detail/captured_exception.hpp>
+#include <boost/leaf/detail/capturing_exception.hpp>
 #include <boost/leaf/detail/demangle.hpp>
 
 namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		inline void print_exception_info( std::ostream & os, std::exception const * ex, captured_exception const * cap )
+		inline void print_exception_info( std::ostream & os, std::exception const * ex, capturing_exception const * cap )
 		{
 			if( cap )
 			{
@@ -24,7 +24,7 @@ namespace boost { namespace leaf {
 			}
 			if( ex )
 			{
-				assert(!dynamic_cast<leaf_detail::captured_exception const *>(ex));
+				assert(!dynamic_cast<leaf_detail::capturing_exception const *>(ex));
 				os <<
 					"Exception dynamic type: " << leaf_detail::demangle(typeid(*ex).name()) << std::endl <<
 					"std::exception::what(): " << ex->what() << std::endl;

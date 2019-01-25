@@ -4,9 +4,9 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/capture_exception.hpp>
-#include <boost/leaf/try.hpp>
-#include <boost/leaf/exception.hpp>
+#include <boost/leaf/capture_in_result.hpp>
+#include <boost/leaf/handle.hpp>
+
 #include "boost/core/lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
@@ -38,18 +38,18 @@ namespace boost { namespace leaf {
 
 int main()
 {
-	auto f = leaf::capture_exception<info<1>, info<2>, info<3>>(
-		[ ]
+	auto f = leaf::capture_in_result<info<1>, info<2>, info<3>>(
+		[ ]() -> leaf::result<void>
 		{
-			throw leaf::exception( std::exception(), info<1>{}, info<3>{} );
+			return leaf::new_error( info<1>{}, info<3>{} );
 		} );
-	leaf::try_(
+	leaf::handle_all(
 		[&f]
 		{
 			BOOST_TEST_EQ(count, 0);
-			try { f(); }
-			catch(...) { BOOST_TEST_EQ(count, 2); throw; }
-
+			auto r = f();
+			BOOST_TEST_EQ(count, 2);
+			return r;
 		},
 		[ ]
 		{

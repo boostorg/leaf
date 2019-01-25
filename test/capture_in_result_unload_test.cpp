@@ -4,11 +4,11 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/capture_exception.hpp>
-#include <boost/leaf/try.hpp>
-#include <boost/leaf/exception.hpp>
-#include <boost/leaf/preload.hpp>
+#include <boost/leaf/capture_in_result.hpp>
+#include <boost/leaf/handle.hpp>
 #include "boost/core/lightweight_test.hpp"
+
+
 
 namespace leaf = boost::leaf;
 
@@ -17,11 +17,11 @@ template <int> struct info { int value; };
 template <class F>
 void test( F f_ )
 {
-	auto f = leaf::capture_exception<info<1>, info<2>, info<3>>( [=] { return f_(); } );
+	auto f = leaf::capture_in_result<info<1>, info<2>, info<3>>( [=] { return f_(); } );
 
 	{
 		int c=0;
-		leaf::try_(
+		leaf::handle_all(
 			[&f]
 			{
 				return f();
@@ -42,7 +42,7 @@ void test( F f_ )
 
 	{
 		int c=0;
-		leaf::try_(
+		leaf::handle_all(
 			[&f]
 			{
 				return f();
@@ -62,10 +62,10 @@ void test( F f_ )
 	}
 
 	{
-		int r = leaf::try_(
-			[&f]
+		int r = leaf::handle_all(
+			[&f]() -> leaf::result<int>
 			{
-				(void) f(); return 0;
+				return f().error();
 			},
 			[ ]( info<1> const & x )
 			{
@@ -80,10 +80,10 @@ void test( F f_ )
 	}
 
 	{
-		int r = leaf::try_(
-			[&f]
+		int r = leaf::handle_all(
+			[&f]() -> leaf::result<int>
 			{
-				(void) f(); return 0;
+				return f().error();
 			},
 			[ ]( info<2> const & x )
 			{
@@ -98,10 +98,10 @@ void test( F f_ )
 	}
 
 	{
-		bool r = leaf::try_(
-			[&f]
+		bool r = leaf::handle_all(
+			[&f]() -> leaf::result<bool>
 			{
-				(void) f(); return true;
+				return f().error();
 			},
 			[ ]( info<1> const & x, info<2> const & )
 			{
@@ -125,10 +125,10 @@ void test( F f_ )
 	}
 
 	{
-		bool r = leaf::try_(
-			[&f]
+		bool r = leaf::handle_all(
+			[&f]() -> leaf::result<bool>
 			{
-				(void) f(); return false;
+				return f().error();
 			},
 			[ ]( info<1> const & x, info<2> const & )
 			{
@@ -155,17 +155,9 @@ void test( F f_ )
 int main()
 {
 	test(
-		[ ]
+		[ ]() -> leaf::result<void>
 		{
-			throw leaf::exception( std::exception(), info<1>{1}, info<3>{3} ); // Derives from leaf::leaf::error_id
+			return leaf::new_error( info<1>{1}, info<3>{3} );
 		} );
-
-	test(
-		[ ]
-		{
-			auto propagate = leaf::preload( info<1>{1}, info<3>{3} );
-			throw std::exception(); // Does not derive from leaf::leaf::error_id
-		} );
-
 	return boost::report_errors();
 }

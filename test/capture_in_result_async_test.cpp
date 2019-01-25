@@ -4,9 +4,9 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/capture_exception.hpp>
-#include <boost/leaf/try.hpp>
-#include <boost/leaf/exception.hpp>
+#include <boost/leaf/capture_in_result.hpp>
+#include <boost/leaf/handle.hpp>
+
 #include "boost/core/lightweight_test.hpp"
 #include <vector>
 #include <future>
@@ -22,7 +22,7 @@ struct fut_info
 	int a;
 	int b;
 	int result;
-	std::future<int> fut;
+	std::future<leaf::result<int>> fut;
 };
 
 template <class... E, class F>
@@ -48,19 +48,19 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
 int main()
 {
 	std::vector<fut_info> fut = launch_tasks<info<1>, info<2>>( 42,
-		leaf::capture_exception<info<1>,info<2>,info<3>>(
-			[ ]( int a, int b, int res )
+		leaf::capture_in_result<info<1>,info<2>,info<3>>(
+			[ ]( int a, int b, int res ) -> leaf::result<int>
 			{
 				if( res>=0 )
 					return res;
 				else
-					throw leaf::exception( std::exception(), info<1>{a}, info<2>{b}, info<3>{} );
+					return leaf::new_error( info<1>{a}, info<2>{b}, info<3>{} );
 			} ) );
 
 	for( auto & f : fut )
 	{
 		f.fut.wait();
-		int r = leaf::try_(
+		int r = leaf::handle_all(
 			[&]
 			{
 				return f.fut.get();
