@@ -46,15 +46,11 @@ namespace boost { namespace leaf {
 		};
 	}
 
-	template <class T>
-	struct is_error_type: leaf_detail::is_error_type_default<T>
-	{
-	};
-
-	template <>
-	struct is_error_type<std::error_code>: std::false_type
-	{
-	};
+	template <class T> struct is_error_type: leaf_detail::is_error_type_default<T> { };
+	template <class T> struct is_error_type<T const>: is_error_type<T> { };
+	template <class T> struct is_error_type<T const &>: is_error_type<T> { };
+	template <class T> struct is_error_type<T &>: is_error_type<T> { };
+	template <> struct is_error_type<std::error_code>: std::false_type { };
 
 	////////////////////////////////////////
 
@@ -506,18 +502,14 @@ namespace boost { namespace leaf {
 
 		error_id() noexcept = default;
 
-		template <class... E>
-		error_id( std::error_code const & ec, E && ... e ) noexcept:
+		error_id( std::error_code const & ec ) noexcept:
 			error_code(import(ec))
 		{
-			(void) propagate(std::forward<E>(e)...);
 		}
 
-		template <class... E>
-		error_id( std::error_code && ec, E && ... e ) noexcept:
+		error_id( std::error_code && ec ) noexcept:
 			error_code(import(std::move(ec)))
 		{
-			(void) propagate(std::forward<E>(e)...);
 		}
 
 		error_id const & propagate() const noexcept
@@ -546,10 +538,21 @@ namespace boost { namespace leaf {
 		}
 	}
 
-	template <class... E>
-	error_id new_error( E && ... e ) noexcept
+	inline error_id new_error() noexcept
 	{
-		return leaf_detail::make_error_id(leaf_detail::new_id()).propagate(std::forward<E>(e)...);
+		return leaf_detail::make_error_id(leaf_detail::new_id());
+	}
+
+	template <class E1, class... E>
+	typename std::enable_if<is_error_type<E1>::value, error_id>::type new_error( E1 && e1, E && ... e ) noexcept
+	{
+		return leaf_detail::make_error_id(leaf_detail::new_id()).propagate(std::forward<E1>(e1), std::forward<E>(e)...);
+	}
+
+	template <class E1, class... E>
+	typename std::enable_if<std::is_same<std::error_code, decltype(make_error_code(std::declval<E1>()))>::value, error_id>::type new_error( E1 e1, E && ... e ) noexcept
+	{
+		return error_id(make_error_code(e1)).propagate(std::forward<E>(e)...);
 	}
 
 	inline error_id next_error() noexcept

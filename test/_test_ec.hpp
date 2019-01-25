@@ -13,8 +13,6 @@ enum class errc_a { a0 = 10, a1, a2, a3 };
 
 namespace std { template <> struct is_error_code_enum<errc_a>: true_type { }; }
 
-namespace boost { namespace leaf { template <> struct is_error_type<errc_a>: std::true_type { }; } }
-
 inline std::error_category const & cat_errc_a()
 {
 	class cat : public std::error_category
@@ -51,8 +49,6 @@ template <int> struct e_errc_a { std::error_code value; };
 enum class errc_b { b0 = 20, b1, b2, b3 };
 
 namespace std { template <> struct is_error_code_enum<errc_b>: true_type { }; };
-
-namespace boost { namespace leaf { template <> struct is_error_type<errc_b>: std::true_type { }; } }
 
 inline std::error_category const & cat_errc_b()
 {

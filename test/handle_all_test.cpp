@@ -37,9 +37,9 @@ std::error_category const & api_category()
 			switch( api_error(condition) )
 			{
 			case api_error::no_such_file_or_directory:
-				return code==std::error_code(ENOENT, std::system_category());
+				return code==make_error_code(std::errc::no_such_file_or_directory);
 			case api_error::no_such_process:
-				return code==std::error_code(ESRCH, std::system_category());
+				return code==make_error_code(std::errc::no_such_process);
 			default:
 				return false;
 			}
@@ -80,13 +80,10 @@ leaf::result<R> f( error_code ec )
 		return leaf::new_error(ec,e_error_code{ec},info<1>{1},info<2>{2},info<3>{3});
 }
 
-template <class R>
-leaf::result<R> f_errc( int ec )
+template <class R, class Errc>
+leaf::result<R> f_errc( Errc ec )
 {
-	if( ec==0 )
-		return R(42);
-	else
-		return leaf::error_id(std::error_code(ec, std::system_category()), info<1>{1}, info<2>{2}, info<3>{3});
+	return leaf::new_error(ec, info<1>{1}, info<2>{2}, info<3>{3});
 }
 
 int main()
@@ -141,7 +138,7 @@ int main()
 		leaf::handle_all(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f_errc<int>(ENOENT));
+				LEAF_AUTO(answer, f_errc<int>(std::errc::no_such_file_or_directory));
 				c = answer;
 				return { };
 			},
@@ -152,7 +149,7 @@ int main()
 			},
 			[&c]( leaf::match<leaf::condition<api_error>, api_error::no_such_file_or_directory> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value()==std::error_code(ENOENT, std::system_category()));
+				BOOST_TEST(ec.value()==make_error_code(std::errc::no_such_file_or_directory));
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				BOOST_TEST(c==0);
@@ -334,7 +331,7 @@ int main()
 		int r = leaf::handle_all(
 			[ ]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f_errc<int>(ENOENT));
+				LEAF_AUTO(answer, f_errc<int>(std::errc::no_such_file_or_directory));
 				return answer;
 			},
 			[ ]( leaf::match<leaf::condition<api_error>, api_error::no_such_process> )
@@ -343,7 +340,7 @@ int main()
 			},
 			[ ]( leaf::match<leaf::condition<api_error>, api_error::no_such_file_or_directory> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value()==std::error_code(ENOENT, std::system_category()));
+				BOOST_TEST(ec.value()==make_error_code(std::errc::no_such_file_or_directory));
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				return 2;

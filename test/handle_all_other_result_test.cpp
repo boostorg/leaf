@@ -61,7 +61,7 @@ result<int,std::error_code> f( bool succeed )
 	if( succeed )
 		return 42;
 	else
-		return std::error_code(ENOENT, std::system_category());
+		return make_error_code(std::errc::no_such_file_or_directory);
 }
 
 result<int,std::error_code> g( bool succeed )
@@ -69,7 +69,7 @@ result<int,std::error_code> g( bool succeed )
 	if( auto r = f(succeed) )
 		return r;
 	else
-		return leaf::error_id(r.error(), info<42>{42});
+		return leaf::error_id(r.error()).propagate(info<42>{42});
 }
 
 int main()
@@ -100,7 +100,7 @@ int main()
 			[ ]( info<42> const & x, std::error_code const & ec )
 			{
 				BOOST_TEST(x.value==42);
-				BOOST_TEST(ec==std::error_code(ENOENT, std::system_category()));
+				BOOST_TEST(ec==make_error_code(std::errc::no_such_file_or_directory));
 				return 1;
 			},
 			[ ]
