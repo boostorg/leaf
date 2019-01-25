@@ -6,55 +6,10 @@
 
 #include <boost/leaf/handle.hpp>
 #include <boost/leaf/result.hpp>
+#include "_test_ec.hpp"
 #include "boost/core/lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
-
-////////////////////////////////
-
-enum class api_error
-{
-	no_such_file_or_directory = 1,
-	no_such_process = 2
-};
-
-namespace std { template<> struct is_error_condition_enum<api_error>: std::true_type { }; }
-
-std::error_category const & api_category()
-{
-	class cat : public std::error_category
-	{
-		char const * name() const noexcept
-		{
-			return "api";
-		}
-		std::string message(int ev) const
-		{
-			return "API error";
-		}
-		bool equivalent(std::error_code const & code, int condition) const noexcept
-		{
-			switch( api_error(condition) )
-			{
-			case api_error::no_such_file_or_directory:
-				return code==make_error_code(std::errc::no_such_file_or_directory);
-			case api_error::no_such_process:
-				return code==make_error_code(std::errc::no_such_process);
-			default:
-				return false;
-			}
-		}
-	};
-	static cat c;
-	return c;
-}
-
-std::error_condition make_error_condition(api_error e)
-{
-	return std::error_condition(int(e), api_category());
-}
-
-////////////////////////////////
 
 template <int> struct info { int value; };
 
@@ -131,19 +86,19 @@ int main()
 		BOOST_TEST(r);
 	}
 
-	// void, handle_some (failure, matched), match api_error (single enum value)
+	// void, handle_some (failure, matched), match cond_x (single enum value)
 	{
 		int c=0;
 		leaf::result<void> r = leaf::handle_some(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f_errc<int>(std::errc::no_such_file_or_directory));
+				LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
 				c = answer;
 				return { };
 			},
-			[&c]( leaf::match<leaf::condition<api_error>,api_error::no_such_file_or_directory> ec, info<1> const & x, info<2> const & y )
+			[&c]( leaf::match<leaf::condition<cond_x>,cond_x::x00> ec, info<1> const & x, info<2> const & y )
 			{
-				BOOST_TEST(ec.value()==make_error_code(std::errc::no_such_file_or_directory));
+				BOOST_TEST(ec.value()==make_error_code(errc_a::a0));
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				BOOST_TEST(c==0);
@@ -299,7 +254,7 @@ int main()
 		BOOST_TEST(c==2);
 	}
 
-	// void, handle_some (failure, initially not matched), match api_error (single enum value)
+	// void, handle_some (failure, initially not matched), match cond_x (single enum value)
 	{
 		int c=0;
 		leaf::handle_all(
@@ -308,11 +263,11 @@ int main()
 				leaf::result<void> r = leaf::handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f_errc<int>(std::errc::no_such_file_or_directory));
+						LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
 						c = answer;
 						return { };
 					},
-					[&c]( leaf::match<leaf::condition<api_error>, api_error::no_such_process> )
+					[&c]( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
 					{
 						BOOST_TEST(c==0);
 						c = 1;
@@ -321,9 +276,9 @@ int main()
 				BOOST_TEST(c==0);
 				return r;
 			},
-			[&c]( leaf::match<leaf::condition<api_error>, api_error::no_such_file_or_directory> ec, info<1> const & x, info<2> y )
+			[&c]( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value()==make_error_code(std::errc::no_such_file_or_directory));
+				BOOST_TEST(ec.value()==make_error_code(errc_a::a0));
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				BOOST_TEST(c==0);
@@ -527,7 +482,7 @@ int main()
 		BOOST_TEST(c==1);
 	}
 
-	// void, handle_some (failure, initially matched), match api_error (single enum value)
+	// void, handle_some (failure, initially matched), match cond_x (single enum value)
 	{
 		int c=0;
 		leaf::handle_all(
@@ -536,13 +491,13 @@ int main()
 				leaf::result<void> r = leaf::handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f_errc<int>(std::errc::no_such_file_or_directory));
+						LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
 						c = answer;
 						return { };
 					},
-					[&c]( leaf::match<leaf::condition<api_error>, api_error::no_such_file_or_directory> ec, info<1> const & x, info<2> y )
+					[&c]( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
 					{
-						BOOST_TEST(ec.value()==make_error_code(std::errc::no_such_file_or_directory));
+						BOOST_TEST(ec.value()==make_error_code(errc_a::a0));
 						BOOST_TEST(x.value==1);
 						BOOST_TEST(y.value==2);
 						BOOST_TEST(c==0);
@@ -552,7 +507,7 @@ int main()
 				BOOST_TEST(c==1);
 				return r;
 			},
-			[&c]( leaf::match<leaf::condition<api_error>, api_error::no_such_process> )
+			[&c]( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
 			{
 				BOOST_TEST(c==0);
 				c = 2;
@@ -752,21 +707,21 @@ int main()
 		BOOST_TEST(r && *r==1);
 	}
 
-	// int, handle_some (failure, matched), match api_error (single enum value)
+	// int, handle_some (failure, matched), match cond_x (single enum value)
 	{
 		leaf::result<int> r = leaf::handle_some(
 			[ ]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f_errc<int>(std::errc::no_such_file_or_directory));
+				LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
 				return answer;
 			},
-			[ ]( leaf::match<leaf::condition<api_error>, api_error::no_such_process> )
+			[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
 			{
 				return 1;
 			},
-			[ ]( leaf::match<leaf::condition<api_error>, api_error::no_such_file_or_directory> ec, info<1> const & x, info<2> y )
+			[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value()==make_error_code(std::errc::no_such_file_or_directory));
+				BOOST_TEST(ec.value()==make_error_code(errc_a::a0));
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				return 2;
@@ -894,7 +849,7 @@ int main()
 		BOOST_TEST(r==2);
 	}
 
-	// int, handle_some (failure, initially not matched), match api_error (single enum value)
+	// int, handle_some (failure, initially not matched), match cond_x (single enum value)
 	{
 		int r = leaf::handle_all(
 			[ ]
@@ -902,19 +857,19 @@ int main()
 				leaf::result<int> r = leaf::handle_some(
 					[ ]() -> leaf::result<int>
 					{
-						LEAF_AUTO(answer, f_errc<int>(std::errc::no_such_file_or_directory));
+						LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
 						return answer;
 					},
-					[ ]( leaf::match<leaf::condition<api_error>, api_error::no_such_process> )
+					[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
 					{
 						return 1;
 					} );
 				BOOST_TEST(!r);
 				return r;
 			},
-			[ ]( leaf::match<leaf::condition<api_error>, api_error::no_such_file_or_directory> ec, info<1> const & x, info<2> y )
+			[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.value()==make_error_code(std::errc::no_such_file_or_directory));
+				BOOST_TEST(ec.value()==make_error_code(errc_a::a0));
 				BOOST_TEST(x.value==1);
 				BOOST_TEST(y.value==2);
 				return 2;
