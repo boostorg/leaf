@@ -173,6 +173,12 @@ namespace boost { namespace leaf {
 		{
 		}
 
+		result( std::error_code const & ec ) noexcept:
+			err_id_(error_id(ec).value()),
+			which_(leaf_detail::result_variant::err_id)
+		{
+		}
+
 		result( std::shared_ptr<leaf_detail::dynamic_store> && ) noexcept;
 
 		result & operator=( result && x ) noexcept
@@ -271,6 +277,11 @@ namespace boost { namespace leaf {
 
 		result( error_id const & err ) noexcept:
 			base(err)
+		{
+		}
+
+		result( std::error_code const & ec ) noexcept:
+			base(ec)
 		{
 		}
 

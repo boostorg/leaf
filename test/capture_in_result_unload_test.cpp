@@ -6,9 +6,8 @@
 
 #include <boost/leaf/capture_in_result.hpp>
 #include <boost/leaf/handle.hpp>
+#include "_test_ec.hpp"
 #include "boost/core/lightweight_test.hpp"
-
-
 
 namespace leaf = boost::leaf;
 
@@ -21,10 +20,11 @@ void test( F f_ )
 
 	{
 		int c=0;
+		auto r = f();
 		leaf::handle_all(
-			[&f]
+			[&r]
 			{
-				return f();
+				return r;
 			},
 			[&c]( info<1> const & x )
 			{
@@ -42,10 +42,11 @@ void test( F f_ )
 
 	{
 		int c=0;
+		auto r = f();
 		leaf::handle_all(
-			[&f]
+			[&r]
 			{
-				return f();
+				return r;
 			},
 			[&c]( info<2> const & x )
 			{
@@ -62,10 +63,11 @@ void test( F f_ )
 	}
 
 	{
-		int r = leaf::handle_all(
-			[&f]() -> leaf::result<int>
+		auto r = f();
+		int what = leaf::handle_all(
+			[&r]() -> leaf::result<int>
 			{
-				return f().error();
+				return r.error();
 			},
 			[ ]( info<1> const & x )
 			{
@@ -76,14 +78,15 @@ void test( F f_ )
 			{
 				return 2;
 			} );
-		BOOST_TEST_EQ(r, 1);
+		BOOST_TEST_EQ(what, 1);
 	}
 
 	{
-		int r = leaf::handle_all(
-			[&f]() -> leaf::result<int>
+		auto r = f();
+		int what = leaf::handle_all(
+			[&r]() -> leaf::result<int>
 			{
-				return f().error();
+				return r.error();
 			},
 			[ ]( info<2> const & x )
 			{
@@ -94,14 +97,15 @@ void test( F f_ )
 			{
 				return 2;
 			} );
-		BOOST_TEST_EQ(r, 2);
+		BOOST_TEST_EQ(what, 2);
 	}
 
 	{
-		bool r = leaf::handle_all(
-			[&f]() -> leaf::result<bool>
+		auto r = f();
+		bool what = leaf::handle_all(
+			[&r]() -> leaf::result<bool>
 			{
-				return f().error();
+				return r.error();
 			},
 			[ ]( info<1> const & x, info<2> const & )
 			{
@@ -121,20 +125,21 @@ void test( F f_ )
 			{
 				return true;
 			} );
-		BOOST_TEST(!r);
+		BOOST_TEST(!what);
 	}
 
 	{
-		bool r = leaf::handle_all(
-			[&f]() -> leaf::result<bool>
+		auto r = f();
+		bool what = leaf::handle_all(
+			[&r]() -> leaf::result<bool>
 			{
-				return f().error();
+				return r.error();
 			},
 			[ ]( info<1> const & x, info<2> const & )
 			{
 				return false;
 			},
-			[ ]( info<1> const & x, info<3> const & y )
+			[ ]( info<1> const & x, info<3> const & y, leaf::match<leaf::condition<cond_x>, cond_x::x00> )
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 3);
@@ -148,7 +153,7 @@ void test( F f_ )
 			{
 				return false;
 			} );
-		BOOST_TEST(r);
+		BOOST_TEST(what);
 	}
 }
 
@@ -157,7 +162,7 @@ int main()
 	test(
 		[ ]() -> leaf::result<void>
 		{
-			return leaf::new_error( info<1>{1}, info<3>{3} );
+			return leaf::new_error(errc_a::a0, info<1>{1}, info<3>{3} );
 		} );
 	return boost::report_errors();
 }

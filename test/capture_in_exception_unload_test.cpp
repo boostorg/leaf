@@ -17,14 +17,28 @@ template <int> struct info { int value; };
 template <class F>
 void test( F f_ )
 {
-	auto f = leaf::capture_in_exception<info<1>, info<2>, info<3>>( [=] { return f_(); } );
+	auto f =
+		[=]
+		{
+			try
+			{
+				(void) leaf::capture_in_exception<info<1>, info<2>, info<3>>( [=] { return f_(); } )();
+				BOOST_TEST(false);
+				return std::exception_ptr();
+			}
+			catch(...)
+			{
+				return std::current_exception();
+			}
+		};
 
 	{
 		int c=0;
+		auto ep = f();
 		leaf::try_(
-			[&f]
+			[&ep]
 			{
-				return f();
+				return std::rethrow_exception(ep);
 			},
 			[&c]( info<1> const & x )
 			{
@@ -42,10 +56,11 @@ void test( F f_ )
 
 	{
 		int c=0;
+		auto ep = f();
 		leaf::try_(
-			[&f]
+			[&ep]
 			{
-				return f();
+				return std::rethrow_exception(ep);
 			},
 			[&c]( info<2> const & x )
 			{
@@ -62,10 +77,11 @@ void test( F f_ )
 	}
 
 	{
-		int r = leaf::try_(
-			[&f]
+		auto ep = f();
+		int what = leaf::try_(
+			[&ep]
 			{
-				(void) f(); return 0;
+				std::rethrow_exception(ep); return 0;
 			},
 			[ ]( info<1> const & x )
 			{
@@ -76,14 +92,15 @@ void test( F f_ )
 			{
 				return 2;
 			} );
-		BOOST_TEST_EQ(r, 1);
+		BOOST_TEST_EQ(what, 1);
 	}
 
 	{
-		int r = leaf::try_(
-			[&f]
+		auto ep = f();
+		int what = leaf::try_(
+			[&ep]
 			{
-				(void) f(); return 0;
+				std::rethrow_exception(ep); return 0;
 			},
 			[ ]( info<2> const & x )
 			{
@@ -94,14 +111,15 @@ void test( F f_ )
 			{
 				return 2;
 			} );
-		BOOST_TEST_EQ(r, 2);
+		BOOST_TEST_EQ(what, 2);
 	}
 
 	{
-		bool r = leaf::try_(
-			[&f]
+		auto ep = f();
+		bool what = leaf::try_(
+			[&ep]
 			{
-				(void) f(); return true;
+				std::rethrow_exception(ep); return true;
 			},
 			[ ]( info<1> const & x, info<2> const & )
 			{
@@ -121,14 +139,15 @@ void test( F f_ )
 			{
 				return true;
 			} );
-		BOOST_TEST(!r);
+		BOOST_TEST(!what);
 	}
 
 	{
-		bool r = leaf::try_(
-			[&f]
+		auto ep = f();
+		bool what = leaf::try_(
+			[&ep]
 			{
-				(void) f(); return false;
+				std::rethrow_exception(ep); return false;
 			},
 			[ ]( info<1> const & x, info<2> const & )
 			{
@@ -148,7 +167,7 @@ void test( F f_ )
 			{
 				return false;
 			} );
-		BOOST_TEST(r);
+		BOOST_TEST(what);
 	}
 }
 

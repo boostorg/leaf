@@ -92,7 +92,6 @@ namespace boost { namespace leaf {
 		{
 			F f_;
 
-			using this_type = exception_trap<F, L<A...>,E...>;
 			using R = decltype(std::declval<F>()(std::declval<A>()...));
 
 			R call_f( result_tag<R, false>, static_store<E...> &&, A... a ) const
@@ -117,7 +116,7 @@ namespace boost { namespace leaf {
 
 			R operator()( A... a ) const
 			{
-				static_store<E...> ss;
+				typename deduce_static_store<typename error_type_set<E...>::type>::type ss;
 				ss.set_reset(true);
 				try
 				{

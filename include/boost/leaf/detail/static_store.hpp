@@ -776,7 +776,7 @@ namespace boost { namespace leaf {
 			using type = leaf_detail_mp11::mp_list<typename translate_type<T>::type...>;
 		};
 
-		template <class... T> using translate_list = typename translate_list_impl<T...>::type;
+		template <class L> using translate_list = typename translate_list_impl<L>::type;
 
 		////////////////////////////////////////
 
@@ -785,20 +785,36 @@ namespace boost { namespace leaf {
 		template <> struct does_not_participate_in_expect_deduction<std::error_code>: std::true_type { };
 		template <> struct does_not_participate_in_expect_deduction<void>: std::true_type { };
 
-		template <class... Handler>
-		struct handler_args_set
+		template <class L>
+		struct transform_error_type_list_impl;
+
+		template <template<class...> class L, class... T>
+		struct transform_error_type_list_impl<L<T...>>
 		{
 			using type =
 				leaf_detail_mp11::mp_remove_if<
 					leaf_detail_mp11::mp_unique<
-						translate_list<
-							leaf_detail_mp11::mp_append<
-								typename function_traits<Handler>::mp_args...
-							>
-						>
+						translate_list<L<T...>>
 					>,
 					does_not_participate_in_expect_deduction
 				>;
+		};
+
+		template <class L> using transform_error_type_list = typename transform_error_type_list_impl<L>::type;
+
+		template <class... Handler>
+		struct handler_args_set
+		{
+			using type = transform_error_type_list<
+				leaf_detail_mp11::mp_append<
+					typename function_traits<Handler>::mp_args...>>;
+		};
+
+		template <class... E>
+		struct error_type_set
+		{
+			using type = transform_error_type_list<
+				leaf_detail_mp11::mp_list<E...>>;
 		};
 
 		template <class L>
@@ -807,7 +823,7 @@ namespace boost { namespace leaf {
 		template <template<class...> class L, class... T>
 		struct deduce_static_store<L<T...>>
 		{
-			typedef static_store<T...> type;
+			using type = static_store<T...>;
 		};
 
 		////////////////////////////////////////

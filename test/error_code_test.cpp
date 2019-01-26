@@ -5,16 +5,18 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/handle.hpp>
+#include <boost/leaf/result.hpp>
 #include "_test_res.hpp"
 #include "boost/core/lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
 
-int main()
+template <class R>
+void test()
 {
 	{
 		int r = leaf::handle_all(
-			[ ]() -> res<int,std::error_code>
+			[ ]() -> R
 			{
 				return make_error_code(errc_a::a0);
 			},
@@ -27,7 +29,7 @@ int main()
 	}
 	{
 		int r = leaf::handle_all(
-			[ ]() -> res<int, std::error_code>
+			[ ]() -> R
 			{
 				return make_error_code(errc_a::a0);
 			},
@@ -43,20 +45,20 @@ int main()
 	}
 	{
 		int r = leaf::handle_all(
-			[ ]() -> res<int, std::error_code>
+			[ ]() -> R
 			{
 				auto r1 = leaf::handle_some(
-					[ ]() -> res<int, std::error_code>
+					[ ]() -> R
 					{
 						return make_error_code(errc_a::a0);
 					} );
 				auto r2 = leaf::handle_some(
-					[ ]() -> res<int, std::error_code>
+					[ ]() -> R
 					{
 						return make_error_code(errc_b::b0);
 					} );
-				(void) r2;
-				return r1;
+				(void) r1;
+				return r2;
 			},
 			[ ]( leaf::match<leaf::condition<cond_y>, cond_y::y03> )
 			{
@@ -70,7 +72,7 @@ int main()
 	}
 	{
 		int r = leaf::handle_all(
-			[ ]() -> res<int, std::error_code>
+			[ ]() -> R
 			{
 				return leaf::new_error(errc_a::a0, e_errc_a<1>{make_error_code(errc_a::a1)});
 			},
@@ -86,7 +88,7 @@ int main()
 	}
 	{
 		int r = leaf::handle_all(
-			[ ]() -> res<int, std::error_code>
+			[ ]() -> R
 			{
 				return leaf::new_error(errc_a::a1, e_errc_a<1>{make_error_code(errc_a::a0)});
 			},
@@ -100,5 +102,11 @@ int main()
 			} );
 		BOOST_TEST_EQ(r, 42);
 	}
+}
+
+int main()
+{
+	test<leaf::result<int>>();
+	test<res<int, std::error_code>>();
 	return boost::report_errors();
 }

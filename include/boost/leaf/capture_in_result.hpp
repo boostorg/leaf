@@ -30,7 +30,7 @@ namespace boost { namespace leaf {
 		struct result_trap;
 
 		template <class F, template<class...> class L, class... A, class... E>
-		struct result_trap<F, L<A...>,E...>
+		struct result_trap<F, L<A...>, E...>
 		{
 			F f_;
 
@@ -43,12 +43,12 @@ namespace boost { namespace leaf {
 
 			decltype(std::declval<F>()(std::declval<A>()...)) operator()( A ... a ) const
 			{
-				static_store<E...> ss;
+				typename deduce_static_store<typename error_type_set<e_original_ec, E...>::type>::type ss;
 				ss.set_reset(true);
 				if( auto r = f_(std::forward<A>(a)...) )
 					return r;
 				else
-					return decltype(r)( std::make_shared<dynamic_store_impl<E...>>(r.error().value(),std::move(ss)) );
+					return decltype(r)( std::make_shared<dynamic_store_impl<e_original_ec, E...>>(r.error().value(),std::move(ss)) );
 			}
 		};
 	}
