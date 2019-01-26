@@ -28,6 +28,13 @@ compile _hpp_preload_test.cpp ;
 compile _hpp_result_test.cpp ;
 compile _hpp_try_test.cpp ;
 
+run accumulate_basic_test.cpp ;
+run accumulate_nested_error_exception_test.cpp ;
+run accumulate_nested_error_result_test.cpp ;
+run accumulate_nested_new_error_exception_test.cpp ;
+run accumulate_nested_new_error_result_test.cpp ;
+run accumulate_nested_success_exception_test.cpp ;
+run accumulate_nested_success_result_test.cpp ;
 run capture_in_exception_result_async_test.cpp ;
 run capture_in_exception_async_test.cpp ;
 run capture_in_exception_state_test.cpp ;

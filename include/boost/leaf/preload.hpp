@@ -8,6 +8,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/error.hpp>
+#include <boost/leaf/detail/function_traits.hpp>
 #include <tuple>
 
 namespace boost { namespace leaf {
@@ -77,38 +78,35 @@ namespace boost { namespace leaf {
 			preloaded & operator=( preloaded const & ) = delete;
 
 			std::tuple<preloaded_item<E>...> p_;
-			leaf_detail::id_factory & ids_;
+			leaf_detail::id_factory * ids_;
 			int err_id_;
-			bool moved_;
 
 		public:
 
 			explicit preloaded( E && ... e ) noexcept:
 				p_(preloaded_item<E>(std::forward<E>(e))...),
-				ids_(id_factory::tl_instance()),
-				err_id_(ids_.last_id()),
-				moved_(false)
+				ids_(&id_factory::tl_instance()),
+				err_id_(ids_->last_id())
 			{
 			}
 
 			preloaded( preloaded && x ) noexcept:
 				p_(std::move(x.p_)),
 				ids_(x.ids_),
-				err_id_(std::move(x.err_id_)),
-				moved_(false)
+				err_id_(std::move(x.err_id_))
 			{
-				x.moved_ = true;
+				x.ids_ = 0;
 			}
 
 			~preloaded() noexcept
 			{
-				if( moved_ )
+				if( !ids_ )
 					return;
-				int const err_id = ids_.last_id();
+				int const err_id = ids_->last_id();
 				if( err_id==err_id_ )
 				{
 					if( std::uncaught_exception() )
-						leaf_detail::tuple_for_each_preload<sizeof...(E),decltype(p_)>::trigger(p_,ids_.next_id());
+						leaf_detail::tuple_for_each_preload<sizeof...(E),decltype(p_)>::trigger(p_,ids_->next_id());
 				}
 				else
 					leaf_detail::tuple_for_each_preload<sizeof...(E),decltype(p_)>::trigger(p_,err_id);
@@ -167,38 +165,35 @@ namespace boost { namespace leaf {
 		{
 			deferred & operator=( deferred const & ) = delete;
 			std::tuple<deferred_item<F>...> d_;
-			leaf_detail::id_factory & ids_;
+			leaf_detail::id_factory * ids_;
 			int err_id_;
-			bool moved_;
 
 		public:
 
 			explicit deferred( F && ... f ) noexcept:
 				d_(deferred_item<F>(std::forward<F>(f))...),
-				ids_(id_factory::tl_instance()),
-				err_id_(ids_.last_id()),
-				moved_(false)
+				ids_(&id_factory::tl_instance()),
+				err_id_(ids_->last_id())
 			{
 			}
 
 			deferred( deferred && x ) noexcept:
 				d_(std::move(x.d_)),
 				ids_(x.ids_),
-				err_id_(std::move(x.err_id_)),
-				moved_(false)
+				err_id_(std::move(x.err_id_))
 			{
-				x.moved_ = true;
+				x.ids_ = 0;
 			}
 
 			~deferred() noexcept
 			{
-				if( moved_ )
+				if( !ids_ )
 					return;
-				int const err_id = ids_.last_id();
+				int const err_id = ids_->last_id();
 				if( err_id==err_id_ )
 				{
 					if( std::uncaught_exception() )
-						leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(d_)>::trigger(d_,ids_.next_id());
+						leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(d_)>::trigger(d_,ids_->next_id());
 				}
 				else
 					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(d_)>::trigger(d_,err_id);
@@ -210,6 +205,91 @@ namespace boost { namespace leaf {
 	leaf_detail::deferred<F...> defer( F && ... f ) noexcept
 	{
 		return leaf_detail::deferred<F...>(std::forward<F>(f)...);
+	}
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		template <class F, class A0 = typename function_traits<F>::template arg<0>::type, int arity = function_traits<F>::arity>
+		class accumulating_item;
+
+		template <class F, class A0>
+		class accumulating_item<F, A0 &, 1>
+		{
+			using E = A0;
+			slot<E> * s_;
+			F f_;
+
+		public:
+
+			explicit accumulating_item( F && f ) noexcept:
+				s_(tl_slot_ptr<E>()),
+				f_(std::forward<F>(f))
+			{
+			}
+
+			void trigger( int err_id ) noexcept
+			{
+				assert(err_id);
+				if( s_ )
+				{
+					if( auto pv = s_->has_value() )
+						if( pv->err_id==err_id )
+						{
+							(void) f_(pv->e);
+							return;
+						}
+					(void) f_(s_->put(leaf_detail::id_e_pair<E>(err_id,E{})).e);
+				}
+			}
+		};
+
+		template <class... F>
+		class accumulating
+		{
+			accumulating & operator=( accumulating const & ) = delete;
+			std::tuple<accumulating_item<F>...> a_;
+			leaf_detail::id_factory * ids_;
+			int err_id_;
+
+		public:
+
+			explicit accumulating( F && ... f ) noexcept:
+				a_(accumulating_item<F>(std::forward<F>(f))...),
+				ids_(&id_factory::tl_instance()),
+				err_id_(ids_->last_id())
+			{
+			}
+
+			accumulating( accumulating && x ) noexcept:
+				a_(std::move(x.a_)),
+				ids_(x.ids_),
+				err_id_(std::move(x.err_id_))
+			{
+				x.ids_ = 0;
+			}
+
+			~accumulating() noexcept
+			{
+				if( !ids_ )
+					return;
+				int const err_id = ids_->last_id();
+				if( err_id==err_id_ )
+				{
+					if( std::uncaught_exception() )
+						leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(a_)>::trigger(a_,ids_->next_id());
+				}
+				else
+					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(a_)>::trigger(a_,err_id);
+			}
+		};
+	} // leaf_detail
+
+	template <class... F>
+	leaf_detail::accumulating<F...> accumulate( F && ... f ) noexcept
+	{
+		return leaf_detail::accumulating<F...>(std::forward<F>(f)...);
 	}
 
 } }
