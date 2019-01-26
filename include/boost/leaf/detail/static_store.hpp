@@ -281,7 +281,9 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////
 
 	template <class T, class Enum=T, bool HasValue = leaf_detail::has_data_member_value<T>::value>
-	struct condition;
+	struct condition
+	{
+	};
 
 	namespace leaf_detail
 	{
