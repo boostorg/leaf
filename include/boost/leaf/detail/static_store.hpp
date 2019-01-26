@@ -16,7 +16,6 @@ namespace boost { namespace leaf {
 	template <class R>
 	struct is_result_type: std::false_type
 	{
-		using type = R;
 	};
 
 	namespace leaf_detail
@@ -280,20 +279,20 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	template <class T, class Enum=T, bool HasValue = leaf_detail::has_data_member_value<T>::value>
+	template <class E, class ErrorConditionEnum = E>
 	struct condition
 	{
 	};
 
 	namespace leaf_detail
 	{
-		template <class T, bool HasValue = has_data_member_value<T>::value>
+		template <class E, bool HasValue = has_data_member_value<E>::value>
 		struct match_traits;
 
-		template <class T>
-		struct match_traits<T, false>
+		template <class Enum>
+		struct match_traits<Enum, false>
 		{
-			using enumerator = T;
+			using enumerator = Enum;
 			using e_type = enumerator;
 			using match_type = enumerator;
 
@@ -304,11 +303,11 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		template <class T>
-		struct match_traits<T, true>
+		template <class E>
+		struct match_traits<E, true>
 		{
-			using enumerator = decltype(T::value);
-			using e_type = T;
+			using enumerator = decltype(E::value);
+			using e_type = E;
 			using match_type = enumerator;
 
 			template <class SlotsTuple>
@@ -321,10 +320,12 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		template <class T>
-		struct match_traits<condition<T, T, false>, false>
+		template <class ErrorConditionEnum>
+		struct match_traits<condition<ErrorConditionEnum, ErrorConditionEnum>, false>
 		{
-			using enumerator = T;
+			static_assert(std::is_error_condition_enum<ErrorConditionEnum>::value, "If leaf::condition is instantiated with one type, that type must be a std::error_condition_enum");
+
+			using enumerator = ErrorConditionEnum;
 			using e_type = e_original_ec;
 			using match_type = std::error_code;
 
@@ -338,11 +339,14 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		template <class T, class Enum>
-		struct match_traits<condition<T, Enum, true>, false>
+		template <class E, class ErrorConditionEnum>
+		struct match_traits<condition<E, ErrorConditionEnum>, false>
 		{
-			using enumerator = Enum;
-			using e_type = T;
+			static_assert(leaf_detail::has_data_member_value<E>::value, "If leaf::condition is instantiated with two types, the first one must have a member std::error_code value");
+			static_assert(std::is_error_condition_enum<ErrorConditionEnum>::value, "If leaf::condition is instantiated with two types, the second one must be a std::error_condition_enum");
+
+			using enumerator = ErrorConditionEnum;
+			using e_type = E;
 			using match_type = std::error_code;
 
 			template <class SlotsTuple>
@@ -368,10 +372,10 @@ namespace boost { namespace leaf {
 		}
 	}
 
-	template <class T, typename leaf_detail::match_traits<T>::enumerator... V>
+	template <class E, typename leaf_detail::match_traits<E>::enumerator... V>
 	class match
 	{
-		using match_type = typename leaf_detail::match_traits<T>::match_type;
+		using match_type = typename leaf_detail::match_traits<E>::match_type;
 		match_type const * const value_;
 
 	public:
