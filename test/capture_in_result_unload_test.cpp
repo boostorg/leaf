@@ -14,10 +14,8 @@ namespace leaf = boost::leaf;
 template <int> struct info { int value; };
 
 template <class F>
-void test( F f_ )
+void test( F f )
 {
-	auto f = leaf::capture_in_result<info<1>, info<2>, info<3>>( [=] { return f_(); } );
-
 	{
 		int c=0;
 		auto r = f();
@@ -160,9 +158,17 @@ void test( F f_ )
 int main()
 {
 	test(
-		[ ]() -> leaf::result<void>
-		{
-			return leaf::new_error(errc_a::a0, info<1>{1}, info<3>{3} );
-		} );
+		leaf::capture_in_result<info<1>, info<2>, info<3>>(
+			[ ]() -> leaf::result<void>
+			{
+				return leaf::new_error(errc_a::a0, info<1>{1}, info<3>{3} );
+			} ) );
+	test(
+		leaf::capture_in_result<info<1>, info<2>, info<3>>(
+			std::allocator<int>(),
+			[ ]() -> leaf::result<void>
+			{
+				return leaf::new_error(errc_a::a0, info<1>{1}, info<3>{3} );
+			} ) );
 	return boost::report_errors();
 }

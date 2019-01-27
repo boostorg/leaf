@@ -84,11 +84,43 @@ namespace boost { namespace leaf {
 
 		////////////////////////////////////////
 
-		template <class F, class mp_args, class mp_e_types>
+		class ex_make
+		{
+		protected:
+
+			template <class... E>
+			[[noreturn]] static std::shared_ptr<dynamic_store> throw_(int err_id, static_store<E...> && ss, bool had_error)
+			{
+				assert(err_id!=0);
+				throw_exception(capturing_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(err_id,std::move(ss)), had_error, &print_types<E...>::print ));
+			}
+		};
+
+		template <class Alloc>
+		class ex_alloc
+		{
+			Alloc a_;
+
+			protected:
+
+			explicit ex_alloc( Alloc const & a ):
+				a_(a)
+			{
+			}
+
+			template <class... E>
+			[[noreturn]] std::shared_ptr<dynamic_store> throw_(int err_id, static_store<E...> && ss, bool had_error) const
+			{
+				assert(err_id!=0);
+				throw_exception(capturing_exception_impl( std::current_exception(), std::allocate_shared<dynamic_store_impl<E...>>(a_, err_id,std::move(ss)), had_error, &print_types<E...>::print ));
+			}
+		};
+
+		template <class AllocHelper, class F, class mp_args, class mp_e_types>
 		class exception_trap;
 
-		template <class F, template <class...> class L1, template <class...> class L2, class... A, class... E>
-		class exception_trap<F, L1<A...>, L2<E...>>
+		template <class AllocHelper, class F, template <class...> class L1, template <class...> class L2, class... A, class... E>
+		class exception_trap<AllocHelper, F, L1<A...>, L2<E...>>: AllocHelper
 		{
 			using R = decltype(std::declval<F>()(std::declval<A>()...));
 
@@ -105,9 +137,21 @@ namespace boost { namespace leaf {
 					return decltype(r)( std::make_shared<dynamic_store_impl<E...>>(r.error().value(),std::move(ss)) );
 			}
 
+			F f_;
+
 		public:
 
-			F f_;
+			exception_trap( F f ):
+				f_(f)
+			{
+			}
+
+			template <class Alloc>
+			exception_trap( F f, Alloc const & a ):
+				AllocHelper(a),
+				f_(f)
+			{
+			}
 
 			R operator()( A... a ) const
 			{
@@ -123,11 +167,11 @@ namespace boost { namespace leaf {
 				}
 				catch( error_id const & err )
 				{
-					throw_exception(capturing_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(err.value(),std::move(ss)), true, &print_types<E...>::print ));
+					this->throw_(err.value(), std::move(ss), true);
 				}
 				catch(...)
 				{
-					throw_exception(capturing_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(leaf_detail::new_id(),std::move(ss)), false, &print_types<E...>::print ));
+					this->throw_(leaf_detail::new_id(), std::move(ss), false);
 				}
 			}
 		};
@@ -135,17 +179,33 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... E, class F>
-	leaf_detail::exception_trap<F, typename leaf_detail::function_traits<F>::mp_args, leaf_detail_mp11::mp_list<E...>>
+	leaf_detail::exception_trap<leaf_detail::ex_make, F, typename leaf_detail::function_traits<F>::mp_args, leaf_detail_mp11::mp_list<E...>>
 	capture_in_exception( F && f ) noexcept
 	{
-		return {std::forward<F>(f)};
+		return f;
 	}
 
 	template <template <class...> class Tup, class... Handler, class F>
-	leaf_detail::exception_trap<F, typename leaf_detail::function_traits<F>::mp_args, typename leaf_detail::handler_args_set<Handler...>::type>
+	leaf_detail::exception_trap<leaf_detail::ex_make, F, typename leaf_detail::function_traits<F>::mp_args, typename leaf_detail::handler_args_set<Handler...>::type>
 	capture_in_exception( F && f, Tup<Handler...> const & ) noexcept
 	{
-		return {std::move(f)};
+		return f;
+	}
+
+	template <class... E, class F, class Alloc>
+	leaf_detail::exception_trap<leaf_detail::ex_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, leaf_detail_mp11::mp_list<E...>>
+	capture_in_exception( Alloc const & a, F && f ) noexcept
+	{
+		return leaf_detail::exception_trap<leaf_detail::ex_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, leaf_detail_mp11::mp_list<E...>>(
+			std::forward<F>(f), a);
+	}
+
+	template <template <class...> class Tup, class... Handler, class F, class Alloc>
+	leaf_detail::exception_trap<leaf_detail::ex_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, typename leaf_detail::handler_args_set<Handler...>::type>
+	capture_in_exception( Alloc const & a, F && f, Tup<Handler...> const & ) noexcept
+	{
+		return leaf_detail::exception_trap<leaf_detail::ex_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, typename leaf_detail::handler_args_set<Handler...>::type>(
+			std::forward<F>(f), a);
 	}
 
 } }

@@ -26,13 +26,59 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class F, class mp_args, class mp_e_types>
-		struct result_trap;
+		class res_make
+		{
+		protected:
 
-		template <class F, template <class...> class L1, template <class...> class L2, class... A, class... E>
-		struct result_trap<F, L1<A...>, L2<E...>>
+			template <class... E>
+			static std::shared_ptr<dynamic_store> alloc(int err_id, static_store<E...> && ss)
+			{
+				assert(err_id!=0);
+				return std::make_shared<dynamic_store_impl<E...>>(err_id, std::move(ss));
+			}
+		};
+
+		template <class Alloc>
+		class res_alloc
+		{
+			Alloc a_;
+
+			protected:
+
+			explicit res_alloc( Alloc const & a ):
+				a_(a)
+			{
+			}
+
+			template <class... E>
+			std::shared_ptr<dynamic_store> alloc(int err_id, static_store<E...> && ss) const
+			{
+				assert(err_id!=0);
+				return std::allocate_shared<dynamic_store_impl<E...>>(a_, err_id, std::move(ss));
+			}
+		};
+
+		template <class AllocHelper, class F, class mp_args, class mp_e_types>
+		class result_trap;
+
+		template <class AllocHelper, class F, template <class...> class L1, template <class...> class L2, class... A, class... E>
+		class result_trap<AllocHelper, F, L1<A...>, L2<E...>>: AllocHelper
 		{
 			F f_;
+
+		public:
+
+			result_trap( F f ):
+				f_(f)
+			{
+			}
+
+			template <class Alloc>
+			result_trap( F f, Alloc const & a ):
+				AllocHelper(a),
+				f_(f)
+			{
+			}
 
 			decltype(std::declval<F>()(std::declval<A>()...)) operator()( A ... a ) const
 			{
@@ -41,23 +87,39 @@ namespace boost { namespace leaf {
 				if( auto r = f_(std::forward<A>(a)...) )
 					return r;
 				else
-					return decltype(r)( std::make_shared<dynamic_store_impl<e_original_ec, E...>>(r.error().value(),std::move(ss)) );
+					return decltype(r)( this->alloc(r.error().value(), std::move(ss)) );
 			}
 		};
 	}
 
 	template <class... E, class F>
-	leaf_detail::result_trap<F, typename leaf_detail::function_traits<F>::mp_args, leaf_detail_mp11::mp_list<E...>>
+	leaf_detail::result_trap<leaf_detail::res_make, F, typename leaf_detail::function_traits<F>::mp_args, leaf_detail_mp11::mp_list<E...>>
 	capture_in_result( F && f ) noexcept
 	{
-		return {std::move(f)};
+		return f;
 	}
 
 	template <template <class...> class Tup, class... Handler, class F>
-	leaf_detail::result_trap<F, typename leaf_detail::function_traits<F>::mp_args, typename leaf_detail::handler_args_set<Handler...>::type>
+	leaf_detail::result_trap<leaf_detail::res_make, F, typename leaf_detail::function_traits<F>::mp_args, typename leaf_detail::handler_args_set<Handler...>::type>
 	capture_in_result( F && f, Tup<Handler...> const & ) noexcept
 	{
-		return {std::move(f)};
+		return f;
+	}
+
+	template <class... E, class F, class Alloc>
+	leaf_detail::result_trap<leaf_detail::res_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, leaf_detail_mp11::mp_list<E...>>
+	capture_in_result( Alloc const & a, F && f ) noexcept
+	{
+		return leaf_detail::result_trap<leaf_detail::res_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, leaf_detail_mp11::mp_list<E...>>(
+			std::forward<F>(f), a);
+	}
+
+	template <template <class...> class Tup, class... Handler, class F, class Alloc>
+	leaf_detail::result_trap<leaf_detail::res_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, typename leaf_detail::handler_args_set<Handler...>::type>
+	capture_in_result( Alloc const & a, F && f, Tup<Handler...> const & ) noexcept
+	{
+		return leaf_detail::result_trap<leaf_detail::res_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, typename leaf_detail::handler_args_set<Handler...>::type>(
+			std::forward<F>(f), a);
 	}
 
 } }

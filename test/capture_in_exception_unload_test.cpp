@@ -22,7 +22,7 @@ void test( F f_ )
 		{
 			try
 			{
-				(void) leaf::capture_in_exception<info<1>, info<2>, info<3>>( [=] { return f_(); } )();
+				f_();
 				BOOST_TEST(false);
 				return std::exception_ptr();
 			}
@@ -174,17 +174,32 @@ void test( F f_ )
 int main()
 {
 	test(
-		[ ]
-		{
-			throw leaf::exception( std::exception(), info<1>{1}, info<3>{3} ); // Derives from leaf::leaf::error_id
-		} );
-
+		leaf::capture_in_exception<info<1>, info<2>, info<3>>(
+			[ ]
+			{
+				throw leaf::exception( std::exception(), info<1>{1}, info<3>{3} ); // Derives from leaf::leaf::error_id
+			} ) );
 	test(
-		[ ]
-		{
-			auto propagate = leaf::preload( info<1>{1}, info<3>{3} );
-			throw std::exception(); // Does not derive from leaf::leaf::error_id
-		} );
-
+		leaf::capture_in_exception<info<1>, info<2>, info<3>>(
+			[ ]
+			{
+				auto propagate = leaf::preload( info<1>{1}, info<3>{3} );
+				throw std::exception(); // Does not derive from leaf::leaf::error_id
+			} ) );
+	test(
+		leaf::capture_in_exception<info<1>, info<2>, info<3>>(
+			std::allocator<int>(),
+			[ ]
+			{
+				throw leaf::exception( std::exception(), info<1>{1}, info<3>{3} ); // Derives from leaf::leaf::error_id
+			} ) );
+	test(
+		leaf::capture_in_exception<info<1>, info<2>, info<3>>(
+			std::allocator<int>(),
+			[ ]
+			{
+				auto propagate = leaf::preload( info<1>{1}, info<3>{3} );
+				throw std::exception(); // Does not derive from leaf::leaf::error_id
+			} ) );
 	return boost::report_errors();
 }
