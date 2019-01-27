@@ -54,7 +54,7 @@ int main()
 				std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
 			},
 
-			[ ]( leaf::error_info const & unmatched )
+			[ ]( leaf::diagnostic_info const & unmatched )
 			{
 				std::cerr <<
 					"Unknown failure detected" << std::endl <<

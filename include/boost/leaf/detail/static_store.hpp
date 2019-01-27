@@ -212,16 +212,6 @@ namespace boost { namespace leaf {
 		class static_store_slot:
 			public slot<E>
 		{
-		public:
-			optional<E> extract_optional( int err_id ) && noexcept
-			{
-				assert(err_id);
-				slot<E> const & s = *this;
-				if( auto pv = s.has_value() )
-					if( pv->err_id==err_id )
-						return optional<E>(std::move(*this).value().e);
-				return optional<E>();
-			}
 		};
 
 		template <>

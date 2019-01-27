@@ -346,6 +346,15 @@ namespace boost { namespace leaf {
 			using base::value;
 			using base::reset;
 			using base::emplace;
+
+			optional<E> extract_optional( int err_id ) && noexcept
+			{
+				assert(err_id);
+				if( auto pv = has_value() )
+					if( pv->err_id==err_id )
+						return optional<E>(std::move(*this).value().e);
+				return optional<E>();
+			}
 		};
 
 		template <class E>
