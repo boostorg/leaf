@@ -6,7 +6,7 @@
 
 #include <boost/leaf/capture_in_exception.hpp>
 #include <boost/leaf/capture_in_result.hpp>
-#include <boost/leaf/handle.hpp>
+#include <boost/leaf/handle_all.hpp>
 
 #include "boost/core/lightweight_test.hpp"
 #include <vector>

@@ -8,7 +8,7 @@
 // without using exception handling. See capture_eh.cpp for the exception-handling variant.
 
 #include <boost/leaf/capture_in_result.hpp>
-#include <boost/leaf/handle.hpp>
+#include <boost/leaf/handle_all.hpp>
 
 #include <vector>
 #include <string>

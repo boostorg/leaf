@@ -6,7 +6,7 @@
 
 #include <boost/leaf/exception_to_result.hpp>
 #include <boost/leaf/result.hpp>
-#include <boost/leaf/handle.hpp>
+#include <boost/leaf/handle_all.hpp>
 #include "boost/core/lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
