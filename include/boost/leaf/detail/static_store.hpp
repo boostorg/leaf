@@ -730,14 +730,14 @@ namespace boost { namespace leaf {
 				return call_handler( ei, std::forward<F>(f), typename function_traits<F>::mp_args{ } );
 			}
 
-			template <class CarF, class CdarF, class... CddrF>
-			typename function_traits<CarF>::return_type handle_error( error_info const & ei, CarF && car_f, CdarF && cdar_f, CddrF && ... cddr_f ) const
+			template <class CarF, class... CdrF>
+			typename function_traits<CarF>::return_type handle_error( error_info const & ei, CarF && car_f, CdrF && ... cdr_f ) const
 			{
 				using namespace static_store_internal;
 				if( handler_matches_any_error<typename function_traits<CarF>::mp_args>::value || check_handler( ei, typename function_traits<CarF>::mp_args{ } ) )
 					return call_handler( ei, std::forward<CarF>(car_f), typename function_traits<CarF>::mp_args{ } );
 				else
-					return handle_error( ei, std::forward<CdarF>(cdar_f), std::forward<CddrF>(cddr_f)...);
+					return handle_error( ei, std::forward<CdrF>(cdr_f)...);
 			}
 		};
 
