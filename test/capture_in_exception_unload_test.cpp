@@ -187,14 +187,14 @@ int main()
 				throw std::exception(); // Does not derive from leaf::leaf::error_id
 			} ) );
 	test(
-		leaf::capture_in_exception<info<1>, info<2>, info<3>>(
+		leaf::capture_in_exception_alloc<info<1>, info<2>, info<3>>(
 			std::allocator<int>(),
 			[ ]
 			{
 				throw leaf::exception( std::exception(), info<1>{1}, info<3>{3} ); // Derives from leaf::leaf::error_id
 			} ) );
 	test(
-		leaf::capture_in_exception<info<1>, info<2>, info<3>>(
+		leaf::capture_in_exception_alloc<info<1>, info<2>, info<3>>(
 			std::allocator<int>(),
 			[ ]
 			{

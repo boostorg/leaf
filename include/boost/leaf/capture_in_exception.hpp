@@ -194,7 +194,7 @@ namespace boost { namespace leaf {
 
 	template <class... E, class F, class Alloc>
 	leaf_detail::exception_trap<leaf_detail::ex_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, leaf_detail_mp11::mp_list<E...>>
-	capture_in_exception( Alloc const & a, F && f ) noexcept
+	capture_in_exception_alloc( Alloc const & a, F && f ) noexcept
 	{
 		return leaf_detail::exception_trap<leaf_detail::ex_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, leaf_detail_mp11::mp_list<E...>>(
 			std::forward<F>(f), a);
@@ -202,7 +202,7 @@ namespace boost { namespace leaf {
 
 	template <template <class...> class Tup, class... Handler, class F, class Alloc>
 	leaf_detail::exception_trap<leaf_detail::ex_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, typename leaf_detail::handler_args_set<Handler...>::type>
-	capture_in_exception( Alloc const & a, F && f, Tup<Handler...> const & ) noexcept
+	capture_in_exception_alloc( Alloc const & a, F && f, Tup<Handler...> const & ) noexcept
 	{
 		return leaf_detail::exception_trap<leaf_detail::ex_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, typename leaf_detail::handler_args_set<Handler...>::type>(
 			std::forward<F>(f), a);
