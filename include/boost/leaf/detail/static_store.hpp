@@ -834,34 +834,34 @@ namespace boost { namespace leaf {
 
 		////////////////////////////////////////
 
-		template <class TryReturn, class F, class HandlerReturn=typename function_traits<F>::return_type, class=typename function_traits<F>::mp_args>
+		template <class TryReturn, class Handler, class HandlerReturn = typename function_traits<Handler>::return_type, class HandlerArgs = typename function_traits<Handler>::mp_args>
 		struct handler_wrapper;
 
-		template <class TryReturn, class F, class HandlerReturn, template<class...> class L, class... A>
-		struct handler_wrapper<TryReturn, F, HandlerReturn, L<A...>>
+		template <class TryReturn, class Handler, class HandlerReturn, template<class...> class L, class... A>
+		struct handler_wrapper<TryReturn, Handler, HandlerReturn, L<A...>>
 		{
-			F f_;
-			explicit handler_wrapper( F && f ) noexcept:
-				f_(std::forward<F>(f))
+			Handler h_;
+			explicit handler_wrapper( Handler && h ) noexcept:
+				h_(std::forward<Handler>(h))
 			{
 			}
 			TryReturn operator()( A... a ) const
 			{
-				return f_(std::forward<A>(a)...);
+				return h_(std::forward<A>(a)...);
 			}
 		};
 
-		template <class TryReturn, class F, template<class...> class L, class... A>
-		struct handler_wrapper<TryReturn, F, void, L<A...>>
+		template <class TryReturn, class Handler, template<class...> class L, class... A>
+		struct handler_wrapper<TryReturn, Handler, void, L<A...>>
 		{
-			F f_;
-			explicit handler_wrapper( F && f ) noexcept:
-				f_(std::forward<F>(f))
+			Handler h_;
+			explicit handler_wrapper( Handler && h ) noexcept:
+				h_(std::forward<Handler>(h))
 			{
 			}
 			TryReturn operator()( A... a ) const
 			{
-				f_(std::forward<A>(a)...);
+				h_(std::forward<A>(a)...);
 				return { };
 			}
 		};
