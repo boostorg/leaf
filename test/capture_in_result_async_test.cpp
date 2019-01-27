@@ -5,7 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/capture_in_result.hpp>
-#include <boost/leaf/handle.hpp>
+#include <boost/leaf/handle_all.hpp>
 
 #include "boost/core/lightweight_test.hpp"
 #include <vector>

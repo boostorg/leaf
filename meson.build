@@ -4,7 +4,7 @@
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-project('leaf', 'cpp', default_options : ['cpp_std=c++11','b_pch=false'], license : 'boost')
+project('leaf', 'cpp', default_options : ['cpp_std=c++14','b_pch=false'], license : 'boost')
 
 compiler = meson.get_compiler('cpp')
 compiler_id = compiler.get_id()
@@ -33,7 +33,8 @@ tests = [
 	'_hpp_error_test',
 	'_hpp_exception_test',
 	'_hpp_exception_to_result_test',
-	'_hpp_handle_test',
+	'_hpp_handle_all_test',
+	'_hpp_handle_some_test',
 	'_hpp_preload_test',
 	'_hpp_result_test',
 	'_hpp_try_test',

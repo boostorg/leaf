@@ -13,7 +13,8 @@
 #include <boost/leaf/error.hpp>
 #include <boost/leaf/exception_to_result.hpp>
 #include <boost/leaf/exception.hpp>
-#include <boost/leaf/handle.hpp>
+#include <boost/leaf/handle_all.hpp>
+#include <boost/leaf/handle_some.hpp>
 #include <boost/leaf/preload.hpp>
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/throw_exception.hpp>

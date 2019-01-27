@@ -730,14 +730,14 @@ namespace boost { namespace leaf {
 				return call_handler( ei, std::forward<F>(f), typename function_traits<F>::mp_args{ } );
 			}
 
-			template <class CarF, class CdarF, class... CddrF>
-			typename function_traits<CarF>::return_type handle_error( error_info const & ei, CarF && car_f, CdarF && cdar_f, CddrF && ... cddr_f ) const
+			template <class CarF, class... CdrF>
+			typename function_traits<CarF>::return_type handle_error( error_info const & ei, CarF && car_f, CdrF && ... cdr_f ) const
 			{
 				using namespace static_store_internal;
 				if( handler_matches_any_error<typename function_traits<CarF>::mp_args>::value || check_handler( ei, typename function_traits<CarF>::mp_args{ } ) )
 					return call_handler( ei, std::forward<CarF>(car_f), typename function_traits<CarF>::mp_args{ } );
 				else
-					return handle_error( ei, std::forward<CdarF>(cdar_f), std::forward<CddrF>(cddr_f)...);
+					return handle_error( ei, std::forward<CdrF>(cdr_f)...);
 			}
 		};
 
@@ -834,34 +834,34 @@ namespace boost { namespace leaf {
 
 		////////////////////////////////////////
 
-		template <class TryReturn, class F, class HandlerReturn=typename function_traits<F>::return_type, class=typename function_traits<F>::mp_args>
+		template <class TryReturn, class Handler, class HandlerReturn = typename function_traits<Handler>::return_type, class HandlerArgs = typename function_traits<Handler>::mp_args>
 		struct handler_wrapper;
 
-		template <class TryReturn, class F, class HandlerReturn, template<class...> class L, class... A>
-		struct handler_wrapper<TryReturn, F, HandlerReturn, L<A...>>
+		template <class TryReturn, class Handler, class HandlerReturn, template<class...> class L, class... A>
+		struct handler_wrapper<TryReturn, Handler, HandlerReturn, L<A...>>
 		{
-			F f_;
-			explicit handler_wrapper( F && f ) noexcept:
-				f_(std::forward<F>(f))
+			Handler h_;
+			explicit handler_wrapper( Handler && h ) noexcept:
+				h_(std::forward<Handler>(h))
 			{
 			}
 			TryReturn operator()( A... a ) const
 			{
-				return f_(std::forward<A>(a)...);
+				return h_(std::forward<A>(a)...);
 			}
 		};
 
-		template <class TryReturn, class F, template<class...> class L, class... A>
-		struct handler_wrapper<TryReturn, F, void, L<A...>>
+		template <class TryReturn, class Handler, template<class...> class L, class... A>
+		struct handler_wrapper<TryReturn, Handler, void, L<A...>>
 		{
-			F f_;
-			explicit handler_wrapper( F && f ) noexcept:
-				f_(std::forward<F>(f))
+			Handler h_;
+			explicit handler_wrapper( Handler && h ) noexcept:
+				h_(std::forward<Handler>(h))
 			{
 			}
 			TryReturn operator()( A... a ) const
 			{
-				f_(std::forward<A>(a)...);
+				h_(std::forward<A>(a)...);
 				return { };
 			}
 		};

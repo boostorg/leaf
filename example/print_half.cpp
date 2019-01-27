@@ -7,7 +7,8 @@
 // This program is an adaptation of the following Boost Outcome example:
 // https://github.com/ned14/outcome/blob/master/doc/src/snippets/using_result.cpp
 
-#include <boost/leaf/handle.hpp>
+#include <boost/leaf/handle_some.hpp>
+#include <boost/leaf/handle_all.hpp>
 #include <boost/leaf/result.hpp>
 #include <algorithm>
 #include <ctype.h>

@@ -26,20 +26,13 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class F, class mp_args, class... E>
+		template <class F, class mp_args, class mp_e_types>
 		struct result_trap;
 
-		template <class F, template<class...> class L, class... A, class... E>
-		struct result_trap<F, L<A...>, E...>
+		template <class F, template <class...> class L1, template <class...> class L2, class... A, class... E>
+		struct result_trap<F, L1<A...>, L2<E...>>
 		{
 			F f_;
-
-		public:
-
-			explicit result_trap( F && f ) noexcept:
-				f_(std::move(f))
-			{
-			}
 
 			decltype(std::declval<F>()(std::declval<A>()...)) operator()( A ... a ) const
 			{
@@ -54,10 +47,17 @@ namespace boost { namespace leaf {
 	}
 
 	template <class... E, class F>
-	leaf_detail::result_trap<F,typename leaf_detail::function_traits<F>::mp_args,E...> capture_in_result( F && f ) noexcept
+	leaf_detail::result_trap<F, typename leaf_detail::function_traits<F>::mp_args, leaf_detail_mp11::mp_list<E...>>
+	capture_in_result( F && f ) noexcept
 	{
-		using namespace leaf_detail;
-		return result_trap<F,typename function_traits<F>::mp_args,E...>(std::move(f));
+		return {std::move(f)};
+	}
+
+	template <template <class...> class Tup, class... Handler, class F>
+	leaf_detail::result_trap<F, typename leaf_detail::function_traits<F>::mp_args, typename leaf_detail::handler_args_set<Handler...>::type>
+	capture_in_result( F && f, Tup<Handler...> const & ) noexcept
+	{
+		return {std::move(f)};
 	}
 
 } }
