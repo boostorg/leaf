@@ -84,14 +84,12 @@ namespace boost { namespace leaf {
 
 		////////////////////////////////////////
 
-		template <class F, class mp_args, class... E>
+		template <class F, class mp_args, class mp_e_types>
 		class exception_trap;
 
-		template <class F, template<class...> class L, class... A, class... E>
-		class exception_trap<F, L<A...>,E...>
+		template <class F, template <class...> class L1, template <class...> class L2, class... A, class... E>
+		class exception_trap<F, L1<A...>, L2<E...>>
 		{
-			F f_;
-
 			using R = decltype(std::declval<F>()(std::declval<A>()...));
 
 			R call_f( result_tag<R, false>, static_store<E...> &&, A... a ) const
@@ -109,10 +107,7 @@ namespace boost { namespace leaf {
 
 		public:
 
-			explicit exception_trap( F && f ) noexcept:
-				f_(std::forward<F>(f))
-			{
-			}
+			F f_;
 
 			R operator()( A... a ) const
 			{
@@ -140,10 +135,17 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... E, class F>
-	leaf_detail::exception_trap<F,typename leaf_detail::function_traits<F>::mp_args,E...> capture_in_exception( F && f ) noexcept
+	leaf_detail::exception_trap<F, typename leaf_detail::function_traits<F>::mp_args, leaf_detail_mp11::mp_list<E...>>
+	capture_in_exception( F && f ) noexcept
 	{
-		using namespace leaf_detail;
-		return exception_trap<F,typename function_traits<F>::mp_args,E...>(std::move(f));
+		return {std::forward<F>(f)};
+	}
+
+	template <template <class...> class Tup, class... Handler, class F>
+	leaf_detail::exception_trap<F, typename leaf_detail::function_traits<F>::mp_args, typename leaf_detail::handler_args_set<Handler...>::type>
+	capture_in_exception( F && f, Tup<Handler...> const & ) noexcept
+	{
+		return {std::move(f)};
 	}
 
 } }

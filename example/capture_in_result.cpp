@@ -47,15 +47,32 @@ int main()
 	// Container to collect the generated std::future objects.
 	std::vector<std::future<leaf::result<task_result>>> fut;
 
+	auto handlers = std::make_tuple(
+
+		[ ]( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
+		{
+			std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
+		},
+
+		[ ]( leaf::error_info const & unmatched )
+		{
+			std::cerr <<
+				"Unknown failure detected" << std::endl <<
+				"Cryptic diagnostic information follows" << std::endl <<
+				unmatched;
+		}
+
+	);
+
 	// Launch the tasks, but rather than launching the task function directly, we launch the
 	// wrapper function returned by leaf::capture_in_result. It captures the specified error object
 	// types and automatically transports them in the leaf::result<task_result> it returns.
 	std::generate_n( std::inserter(fut,fut.end()), task_count,
-		[ ]
+		[&]
 		{
 			return std::async(
 				std::launch::async,
-				leaf::capture_in_result<e_thread_id, e_failure_info1, e_failure_info2>(&task) );
+				leaf::capture_in_result(&task, handlers) );
 		} );
 
 	// Wait on the futures, get the task results, handle errors.
@@ -73,18 +90,6 @@ int main()
 				(void) r;
 				return { };
 			},
-
-			[ ]( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
-			{
-				std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
-			},
-
-			[ ]( leaf::error_info const & unmatched )
-			{
-				std::cerr <<
-					"Unknown failure detected" << std::endl <<
-					"Cryptic diagnostic information follows" << std::endl <<
-					unmatched;
-			} );
+			handlers );
 	}
 }

@@ -32,6 +32,21 @@ namespace boost { namespace leaf {
 		}
 	}
 
+	namespace leaf_detail
+	{
+		template <class TryBlock, class HandlersTuple, std::size_t ... I>
+		decltype(std::declval<TryBlock>()()) handle_some_tuple( std::index_sequence<I...>, TryBlock && try_block, HandlersTuple & handlers )
+		{
+			return handle_some( std::forward<TryBlock>(try_block), std::get<I>(handlers)... );
+		}
+	}
+
+	template <class TryBlock, class... Handler>
+	decltype(std::declval<TryBlock>()()) handle_some( TryBlock && try_block, std::tuple<Handler...> & handlers )
+	{
+		return leaf_detail::handle_some_tuple( std::make_index_sequence<std::tuple_size<std::tuple<Handler...>>::value>(), std::forward<TryBlock>(try_block), handlers );
+	}
+
 } }
 
 #endif
