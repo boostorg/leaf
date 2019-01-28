@@ -20,6 +20,7 @@ namespace boost { namespace leaf {
 		template<class F,class V=void>
 		struct function_traits
 		{
+			constexpr static int arity = -1;
 		};
 
 		template<class F>
