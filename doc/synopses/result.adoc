@@ -9,44 +9,51 @@ namespace boost { namespace leaf {
   public:
 
     result() noexcept;
-    result( T const & v );
     result( T && v ) noexcept;
-    result( leaf::error const & e ) noexcept;
-    result( leaf::error_capture const & ec ) noexcept;
+    result( T const & v );
+    result( error_id const & err ) noexcept;
+
+    result( result && r ) noexcept;
+    result( result const & r );
+
+    template <class U>
+    result( result<U> && r ) noexcept
+
+    template <class U>
+    result( result<U> const & r )
+
+    result & operator=( result && r ) noexcept;
+    result & operator=( result const & r );
+
+    template <class U>
+    result & operator=( result<U> && r ) noexcept
+
+    template <class U>
+    result & operator=( result<U> const & r )
 
     explicit operator bool() const noexcept;
 
     T const & value() const;
     T & value();
+
     T const & operator*() const;
     T & operator*();
 
     template <class... E>
-    leaf::error error( E && ... e ) noexcept;
+    error_id error( E && ... e ) noexcept;
  };
-
-  template <class... E, class T>
-  result<T> capture( expect<E...> & exp, result<T> const & r );
-
-  template <class... E, class T, class... F>
-  <<deduced_return_type>> handle_error( expect<E...> const & exp, result<T> const & r, F && ... f ) noexcept;
-
-  template <class P, class... E, class T>
-  P const * peek( expect<E...> const &, result<T> const & ) noexcept;
-
-  template <class... E, class T>
-  void diagnostic_output( std::ostream & os, expect<E...> const & exp, result<T> const & r );
 
   struct bad_result: std::exception { };
 
+  template <class T>
+  error_id get_error_id( result<T> const & r ) noexcept;
+
 } }
 
-#define LEAF_ERROR(...) <<unspecified>>
-
-#define LEAF_AUTO(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
-
-#define LEAF_CHECK(r) {auto _r = r; if( !_r ) return _r.error();}
+#define LEAF_ERROR(...) ....
+#define LEAF_AUTO(v,r) ....
+#define LEAF_CHECK(r) ....
 ----
 
 [.text-right]
-`<<result,result>>` | <<result::result>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<capture-result>> | <<handle_error-result>> | <<peek-result>> | <<diagnostic_output-result>> | <<bad_result>> | <<LEAF_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
+<<result>> | <<result::result>> | <<result::operator_eq>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<bad_result>> | <<succeeded-result>> | <<get_error_id-result>> | <<LEAF_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>

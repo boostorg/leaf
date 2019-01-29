@@ -24,192 +24,219 @@
 			}
 		},
 		{
-			"label": "basic_test",
+			"label": "accumulate_basic_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test basic_test",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test accumulate_basic_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test basic_test"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test accumulate_basic_test"
 			}
 		},
 		{
-			"label": "defer_test.1",
+			"label": "accumulate_nested_error_exception_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.1",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test accumulate_nested_error_exception_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test defer_test.1"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test accumulate_nested_error_exception_test"
 			}
 		},
 		{
-			"label": "defer_test.2",
+			"label": "accumulate_nested_error_result_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.2",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test accumulate_nested_error_result_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test defer_test.2"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test accumulate_nested_error_result_test"
 			}
 		},
 		{
-			"label": "defer_test.3",
+			"label": "accumulate_nested_new_error_exception_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.3",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test accumulate_nested_new_error_exception_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test defer_test.3"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test accumulate_nested_new_error_exception_test"
 			}
 		},
 		{
-			"label": "defer_test.4",
+			"label": "accumulate_nested_new_error_result_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.4",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test accumulate_nested_new_error_result_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test defer_test.4"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test accumulate_nested_new_error_result_test"
 			}
 		},
 		{
-			"label": "defer_test.5",
+			"label": "accumulate_nested_success_exception_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.5",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test accumulate_nested_success_exception_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test defer_test.5"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test accumulate_nested_success_exception_test"
 			}
 		},
 		{
-			"label": "defer_test.6",
+			"label": "accumulate_nested_success_result_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.6",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test accumulate_nested_success_result_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test defer_test.6"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test accumulate_nested_success_result_test"
 			}
 		},
 		{
-			"label": "defer_test.7",
+			"label": "capture_in_exception_async_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.7",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test capture_in_exception_async_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test defer_test.7"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test capture_in_exception_async_test"
 			}
 		},
 		{
-			"label": "defer_test.8",
+			"label": "capture_in_exception_result_async_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_test.8",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test capture_in_exception_result_async_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test defer_test.8"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test capture_in_exception_result_async_test"
 			}
 		},
 		{
-			"label": "diagnostic_output_test",
+			"label": "capture_in_exception_state_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test diagnostic_output_test",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test capture_in_exception_state_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test diagnostic_output_test"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test capture_in_exception_state_test"
 			}
 		},
 		{
-			"label": "error_capture_test.1",
+			"label": "capture_in_exception_unload_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test error_capture_test.1",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test capture_in_exception_unload_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test error_capture_test.1"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test capture_in_exception_unload_test"
 			}
 		},
 		{
-			"label": "error_capture_test.2",
+			"label": "capture_in_result_async_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test error_capture_test.2",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test capture_in_result_async_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test error_capture_test.2"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test capture_in_result_async_test"
 			}
 		},
 		{
-			"label": "error_test",
+			"label": "capture_in_result_state_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test error_test",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test capture_in_result_state_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test error_test"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test capture_in_result_state_test"
 			}
 		},
 		{
-			"label": "exception_capture_test",
+			"label": "capture_in_result_unload_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test exception_capture_test",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test capture_in_result_unload_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test exception_capture_test"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test capture_in_result_unload_test"
 			}
 		},
 		{
-			"label": "exception_test.1",
+			"label": "defer_basic_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test exception_test.1",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_basic_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test exception_test.1"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test defer_basic_test"
 			}
 		},
 		{
-			"label": "exception_test.2",
+			"label": "defer_nested_error_exception_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test exception_test.2",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_nested_error_exception_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test exception_test.2"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test defer_nested_error_exception_test"
 			}
 		},
 		{
-			"label": "expect_test.1",
+			"label": "defer_nested_error_result_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test expect_test.1",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_nested_error_result_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test expect_test.1"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test defer_nested_error_result_test"
 			}
 		},
 		{
-			"label": "expect_test.2",
+			"label": "defer_nested_new_error_exception_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test expect_test.2",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_nested_new_error_exception_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test expect_test.2"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test defer_nested_new_error_exception_test"
 			}
 		},
 		{
-			"label": "expect_test.3",
+			"label": "defer_nested_new_error_result_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test expect_test.3",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_nested_new_error_result_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test expect_test.3"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test defer_nested_new_error_result_test"
 			}
 		},
 		{
-			"label": "expect_test.4",
+			"label": "defer_nested_success_exception_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test expect_test.4",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_nested_success_exception_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test expect_test.4"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test defer_nested_success_exception_test"
 			}
 		},
 		{
-			"label": "expect_test.5",
+			"label": "defer_nested_success_result_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test expect_test.5",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_nested_success_result_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test expect_test.5"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test defer_nested_success_result_test"
+			}
+		},
+		{
+			"label": "diagnostic_info_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test diagnostic_info_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test diagnostic_info_test"
+			}
+		},
+		{
+			"label": "error_code_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test error_code_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test error_code_test"
+			}
+		},
+		{
+			"label": "exception_to_result_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test exception_to_result_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test exception_to_result_test"
 			}
 		},
 		{
@@ -219,6 +246,51 @@
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
 				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test function_traits_test"
+			}
+		},
+		{
+			"label": "handle_all_other_result_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test handle_all_other_result_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test handle_all_other_result_test"
+			}
+		},
+		{
+			"label": "handle_all_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test handle_all_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test handle_all_test"
+			}
+		},
+		{
+			"label": "handle_exception_and_result_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test handle_exception_and_result_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test handle_exception_and_result_test"
+			}
+		},
+		{
+			"label": "handle_some_other_result_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test handle_some_other_result_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test handle_some_other_result_test"
+			}
+		},
+		{
+			"label": "handle_some_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test handle_some_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test handle_some_test"
 			}
 		},
 		{
@@ -243,69 +315,72 @@
 			"label": "optional_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test optional_test",
-            		"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] }
-		},
-		{
-			"label": "preload_test.1",
-			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.1",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
 				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test optional_test"
 			}
 		},
 		{
-			"label": "preload_test.2",
+			"label": "preload_basic_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.2",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_basic_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test preload_test.2"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test preload_basic_test"
 			}
 		},
 		{
-			"label": "preload_test.3",
+			"label": "preload_nested_error_exception_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.3",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_nested_error_exception_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test preload_test.3"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test preload_nested_error_exception_test"
 			}
 		},
 		{
-			"label": "preload_test.4",
+			"label": "preload_nested_error_result_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.4",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_nested_error_result_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test preload_test.4"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test preload_nested_error_result_test"
 			}
 		},
 		{
-			"label": "preload_test.5",
+			"label": "preload_nested_new_error_exception_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.5",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_nested_new_error_exception_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test preload_test.5"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test preload_nested_new_error_exception_test"
 			}
 		},
 		{
-			"label": "preload_test.6",
+			"label": "preload_nested_new_error_result_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.6",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_nested_new_error_result_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test preload_test.6"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test preload_nested_new_error_result_test"
 			}
 		},
 		{
-			"label": "preload_test.7",
+			"label": "preload_nested_success_exception_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_test.7",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_nested_success_exception_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test preload_test.7"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test preload_nested_success_exception_test"
+			}
+		},
+		{
+			"label": "preload_nested_success_result_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_nested_success_result_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test preload_nested_success_result_test"
 			}
 		},
 		{
@@ -318,75 +393,57 @@
 			}
 		},
 		{
-			"label": "result_capture_test",
+			"label": "result_bad_result_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test result_capture_test",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test result_bad_result_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test result_capture_test"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test result_bad_result_test"
 			}
 		},
 		{
-			"label": "result_test.1",
+			"label": "result_state_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test result_test.1",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test result_state_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test result_test.1"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test result_state_test"
 			}
 		},
 		{
-			"label": "result_test.2",
+			"label": "result_traits_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test result_test.2",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test result_traits_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test result_test.2"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test result_traits_test"
 			}
 		},
 		{
-			"label": "result_test.3",
+			"label": "static_store_deduction_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test result_test.3",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test static_store_deduction_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test result_test.3"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test static_store_deduction_test"
 			}
 		},
 		{
-			"label": "result_test.4",
+			"label": "try_exception_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test result_test.4",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test try_exception_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test result_test.4"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test try_exception_test"
 			}
 		},
 		{
-			"label": "result_test.5",
+			"label": "try_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test result_test.5",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test try_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test result_test.5"
-			}
-		},
-		{
-			"label": "result_test.6",
-			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test result_test.6",
-			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
-			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test result_test.6"
-			}
-		},
-		{
-			"label": "result_void_capture_test",
-			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test result_void_capture_test",
-			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
-			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test result_void_capture_test"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test try_test"
 			}
 		}
 	]

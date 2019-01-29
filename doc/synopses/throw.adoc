@@ -1,0 +1,17 @@
+.#include <boost/leaf/throw.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class Ex, class... E>
+  <<unspecified>> exception( Ex && ex, E && ... e ) noexcept;
+
+} }
+
+#define LEAF_EXCEPTION(...) ....
+
+#define LEAF_THROW(...) ....
+----
+
+[.text-right]
+<<exception>> | <<LEAF_EXCEPTION>> | <<LEAF_THROW>>

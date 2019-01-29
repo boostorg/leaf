@@ -3,25 +3,32 @@
 ----
 namespace boost { namespace leaf {
 
-  class error
+  class error_id;
+
+  template <class... E>
+  error_id new_error( E && ... e ) noexcept;
+
+  error_id next_error() noexcept;
+
+  error_id last_error() noexcept;
+
+  class error_id: public std::error_code
   {
   public:
 
-    template <class... E>
-    explicit error( E && ... e ) noexcept:
+    error_id() noexcept = default;
 
     template <class... E>
-    error propagate( E && ... e ) const noexcept;
+    error_id( std::error_code const & ec, E && ... e ) noexcept;
 
-    friend bool operator==( error const & e1, error const & e2 ) noexcept;
-    friend bool operator!=( error const & e1, error const & e2 ) noexcept;
+    template <class... E>
+    error_id( std::error_code && ec, E && ... e ) noexcept;
 
-    friend std::ostream & operator<<( std::ostream & os, error const & e )
+    template <class... E>
+    error_id propagate( E && ... e ) const noexcept;
   };
 
-  error next_error_value() noexcept;
-
-  error last_error_value() noexcept;
+  struct e_original_ec { std::error_code value; };
 
   template <class T>
   struct is_error_type
@@ -33,4 +40,4 @@ namespace boost { namespace leaf {
 ----
 
 [.text-right]
-`<<error,error>>` | <<error::error>> | <<error::propagate>> | <<operator_eq-error>> | <<operator_neq-error>> | <<operator_shl-error>> | <<next_error_value>> | <<last_error_value>>
+<<error_id>> | <<error_id::error_id>> | <<new_error>> | <<next_error>> | <<last_error>> | <<propagate>> | <<is_error_type>>

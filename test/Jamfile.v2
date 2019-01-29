@@ -1,5 +1,5 @@
-# Copyright (c) 2018 Emil Dotchevski
-# Copyright (c) 2018 Second Spectrum, Inc.
+# Copyright (c) 2018-2019 Emil Dotchevski
+# Copyright (c) 2018-2019 Second Spectrum, Inc.
 
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -8,70 +8,82 @@ import testing ;
 
 project
     : requirements
-        <toolset>gcc:<cxxflags>"-std=c++11"
+        <toolset>gcc:<cxxflags>"-std=c++11 -Wno-delete-non-virtual-dtor -Wno-parentheses"
         <toolset>gcc:<linkflags>"-pthread"
-        <toolset>darwin:<cxxflags>"-std=c++11 -Wno-unused-variable -Wno-non-virtual-dtor -Wno-dangling-else"
+        <toolset>clang:<cxxflags>"-Wno-dangling-else"
+        <toolset>darwin:<cxxflags>"-std=c++11 -Wno-unused-variable -Wno-delete-non-virtual-dtor -Wno-non-virtual-dtor -Wno-dangling-else"
 		<toolset>msvc:<cxxflags>"-wd 4267 -wd 4996 -wd 4244"
 		<include>../../..
     ;
 
-run _hpp_all_test.cpp ;
-run _hpp_common_test.cpp ;
-run _hpp_error_capture_test.cpp ;
-run _hpp_error_test.cpp ;
-run _hpp_exception_capture_test.cpp ;
-run _hpp_exception_test.cpp ;
-run _hpp_expect_test.cpp ;
-run _hpp_preload_test.cpp ;
-run _hpp_result_test.cpp ;
-run basic_test.cpp ;
-run defer_test.1.cpp ;
-run defer_test.2.cpp ;
-run defer_test.3.cpp ;
-run defer_test.4.cpp ;
-run defer_test.5.cpp ;
-run defer_test.6.cpp ;
-run defer_test.7.cpp ;
-run diagnostic_output_test.cpp ;
-run error_capture_test.1.cpp ;
-run error_capture_test.2.cpp ;
-run error_test.cpp ;
-run exception_capture_test.cpp : : : <threading>multi ;
-run exception_test.2.cpp ;
-run exception_test.1.cpp ;
-run expect_test.1.cpp ;
-run expect_test.2.cpp ;
-run expect_test.3.cpp ;
-run expect_test.4.cpp ;
-run expect_test.5.cpp ;
-run multiple_errors_test.cpp ;
-run function_traits_test.cpp ;
-run is_error_type_test.cpp ;
-run optional_test.cpp ;
-run preload_test.1.cpp ;
-run preload_test.2.cpp ;
-run preload_test.3.cpp ;
-run preload_test.4.cpp ;
-run preload_test.5.cpp ;
-run preload_test.6.cpp ;
-run print_test.cpp ;
-run result_capture_test.cpp : : : <threading>multi ;
-run result_test.1.cpp ;
-run result_test.2.cpp ;
-run result_test.3.cpp ;
-run result_test.4.cpp ;
-run result_test.5.cpp ;
-run result_test.6.cpp ;
-run result_void_capture_test.cpp : : : <threading>multi ;
-compile-fail expect_fail_test.1.cpp ;
-compile-fail expect_fail_test.2.cpp ;
-compile-fail error_fail_test.cpp ;
+compile _hpp_all_test.cpp ;
+compile _hpp_capture_in_exception_test.cpp ;
+compile _hpp_capture_in_result_test.cpp ;
+compile _hpp_common_test.cpp ;
+compile _hpp_error_test.cpp ;
+compile _hpp_exception_test.cpp ;
+compile _hpp_exception_to_result_test.cpp ;
+compile _hpp_handle_all_test.cpp ;
+compile _hpp_handle_some_test.cpp ;
+compile _hpp_preload_test.cpp ;
+compile _hpp_result_test.cpp ;
+compile _hpp_try_test.cpp ;
 
-exe print_file_result : ../example/print_file_result.cpp ;
-exe print_file_eh : ../example/print_file_eh.cpp ;
-#exe lua_callback_result : ../example/lua_callback_result.cpp ;
+run accumulate_basic_test.cpp ;
+run accumulate_nested_error_exception_test.cpp ;
+run accumulate_nested_error_result_test.cpp ;
+run accumulate_nested_new_error_exception_test.cpp ;
+run accumulate_nested_new_error_result_test.cpp ;
+run accumulate_nested_success_exception_test.cpp ;
+run accumulate_nested_success_result_test.cpp ;
+run capture_in_exception_result_async_test.cpp ;
+run capture_in_exception_async_test.cpp ;
+run capture_in_exception_state_test.cpp ;
+run capture_in_exception_unload_test.cpp ;
+run capture_in_result_async_test.cpp ;
+run capture_in_result_state_test.cpp ;
+run capture_in_result_unload_test.cpp ;
+run defer_basic_test.cpp ;
+run defer_nested_error_exception_test.cpp ;
+run defer_nested_error_result_test.cpp ;
+run defer_nested_new_error_exception_test.cpp ;
+run defer_nested_new_error_result_test.cpp ;
+run defer_nested_success_exception_test.cpp ;
+run defer_nested_success_result_test.cpp ;
+run diagnostic_info_test.cpp ;
+run error_code_test.cpp ;
+run exception_to_result_test.cpp ;
+run function_traits_test.cpp ;
+run handle_all_other_result_test.cpp ;
+run handle_all_test.cpp ;
+run handle_basic_test.cpp ;
+run handle_some_other_result_test.cpp ;
+run handle_some_test.cpp ;
+run is_error_type_test.cpp ;
+run multiple_errors_test.cpp ;
+run optional_test.cpp ;
+run preload_basic_test.cpp ;
+run preload_nested_error_exception_test.cpp ;
+run preload_nested_error_result_test.cpp ;
+run preload_nested_new_error_exception_test.cpp ;
+run preload_nested_new_error_result_test.cpp ;
+run preload_nested_success_exception_test.cpp ;
+run preload_nested_success_result_test.cpp ;
+run print_test.cpp ;
+run result_bad_result_test.cpp ;
+run result_state_test.cpp ;
+run static_store_deduction_test.cpp ;
+run try_exception_and_result_test.cpp ;
+run try_exception_test.cpp ;
+run try_test.cpp ;
+
+compile-fail is_error_type_fail_test.cpp ;
+
+exe capture_in_result : ../example/capture_in_result.cpp : <threading>multi ;
+exe capture_in_exception : ../example/capture_in_exception.cpp : <threading>multi ;
+exe exception_to_result : ../example/exception_to_result.cpp ;
+#exe lua_callback_result : ../example/exception_to_result.cpp ;
 #exe lua_callback_eh : ../example/lua_callback_eh.cpp ;
-exe capture_result : ../example/capture_result.cpp : <threading>multi ;
-exe capture_eh : ../example/capture_eh.cpp : <threading>multi ;
+exe print_file_eh : ../example/print_file_eh.cpp ;
+exe print_file_result : ../example/print_file_result.cpp ;
 exe print_half : ../example/print_half.cpp ;
-exe return_exception : ../example/return_exception.cpp ;

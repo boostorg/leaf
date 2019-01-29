@@ -1,48 +1,58 @@
-#ifndef BOOST_LEAF_87F274C4D4BA11E89928D55AC82C3C47
-#define BOOST_LEAF_87F274C4D4BA11E89928D55AC82C3C47
+#ifndef BOOST_LEAF_75F38740D98D11E881DDB244C82C3C47
+#define BOOST_LEAF_75F38740D98D11E881DDB244C82C3C47
 
-//Copyright (c) 2018 Emil Dotchevski
-//Copyright (c) 2018 Second Spectrum, Inc.
+// Copyright (c) 2018-2019 Emil Dotchevski
+// Copyright (c) 2018-2019 Second Spectrum, Inc.
 
-//Distributed under the Boost Software License, Version 1.0. (See accompanying
-//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/expect.hpp>
-#include <boost/leaf/detail/throw.hpp>
-#include <boost/leaf/detail/demangle.hpp>
+#include <boost/leaf/error.hpp>
+#include <boost/leaf/throw_exception.hpp>
+#include <exception>
+
+#define LEAF_EXCEPTION(...) ::boost::leaf::leaf_detail::exception_at(__FILE__,__LINE__,__FUNCTION__,__VA_ARGS__)
+#define LEAF_THROW(...) ::boost::leaf::throw_exception(LEAF_EXCEPTION(__VA_ARGS__))
 
 namespace boost { namespace leaf {
 
-	inline error get_error( std::exception const & ex ) noexcept
+	namespace leaf_detail
 	{
-		if( auto e = dynamic_cast<error const *>(&ex) )
-			return *e;
-		else
-			return next_error_value();
+		inline void enforce_std_exception( std::exception const & ) noexcept { }
+
+		template <class Ex>
+		class exception:
+			public Ex,
+			public error_id
+		{
+		public:
+
+			exception( exception const & ) = default;
+			exception( exception && ) = default;
+
+			template <class... E>
+			exception( Ex && ex, E && ... e ) noexcept:
+				Ex(std::move(ex)),
+				error_id(new_error(std::forward<E>(e)...))
+			{
+				leaf_detail::enforce_std_exception(*this);
+			}
+		};
+
+		template <class Ex, class... E>
+		exception<Ex> exception_at( char const * file, int line, char const * function, Ex && ex, E && ... e ) noexcept
+		{
+			assert(file&&*file);
+			assert(line>0);
+			assert(function&&*function);
+			return exception<Ex>( std::forward<Ex>(ex), e_source_location{file,line,function}, std::forward<E>(e)... );
+		}
 	}
 
-	template <class P, class... E>
-	P const * peek( expect<E...> const & exp, std::exception const & ex ) noexcept
+	template <class Ex, class... E>
+	leaf_detail::exception<Ex> exception( Ex && ex, E && ... e ) noexcept
 	{
-		return peek<P>(exp,get_error(ex));
-	}
-
-	template <class... E, class... F>
-	void handle_exception( expect<E...> & exp, std::exception const & ex, F && ... f )
-	{
-		if( handle_error(exp,get_error(ex),f...) )
-			(void) error();
-		else
-			throw;
-	}
-
-	template <class... E>
-	void diagnostic_output( std::ostream & os, expect<E...> const & exp, std::exception const & ex )
-	{
-		os <<
-			"Exception dynamic type: " << leaf_detail::demangle(typeid(ex).name()) << std::endl <<
-			"std::exception::what(): " << ex.what() << std::endl;
-		diagnostic_output(os,exp,get_error(ex));
+		return leaf_detail::exception<Ex>( std::forward<Ex>(ex), std::forward<E>(e)... );
 	}
 
 } }

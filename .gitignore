@@ -8,4 +8,5 @@
 *.db
 *.opendb
 bld/*
+snippets/*
 subprojects/*/
