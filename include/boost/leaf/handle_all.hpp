@@ -25,19 +25,18 @@ namespace boost { namespace leaf {
 			return ss.handle_error(error_info(r.error()), std::forward<Handler>(handler)...);
 	}
 
-	namespace leaf_detail
+	template <class TryBlock, class Handler>
+	typename std::remove_reference<decltype(std::declval<TryBlock>()().value())>::type  bound_handle_all( TryBlock && try_block, Handler && handler )
 	{
-		template <class TryBlock, class HandlersTuple, std::size_t ... I>
-		typename std::remove_reference<decltype(std::declval<TryBlock>()().value())>::type handle_all_tuple( leaf_detail_mp11::index_sequence<I...>, TryBlock && try_block, HandlersTuple & handlers )
-		{
-			return handle_all( std::forward<TryBlock>(try_block), std::get<I>(handlers)... );
-		}
-	}
-
-	template <class TryBlock, class... Handler>
-	typename std::remove_reference<decltype(std::declval<TryBlock>()().value())>::type handle_all( TryBlock && try_block, std::tuple<Handler...> & handlers )
-	{
-		return leaf_detail::handle_all_tuple( leaf_detail_mp11::make_index_sequence<std::tuple_size<std::tuple<Handler...>>::value>(), std::forward<TryBlock>(try_block), handlers );
+		using namespace leaf_detail;
+		using R = decltype(std::declval<TryBlock>()());
+		static_assert(is_result_type<R>::value, "The try_block passed to handle_all must be registered with leaf::is_result_type.");
+		typename deduce_static_store<typename handler_args_list<typename function_traits<Handler>::return_type>::type>::type ss;
+		ss.set_reset(true);
+		if( auto r = std::forward<TryBlock>(try_block)() )
+			return r.value();
+		else
+			return std::forward<Handler>(handler)(error(&ss, r.error())).get();
 	}
 
 } }

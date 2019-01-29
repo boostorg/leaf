@@ -147,9 +147,9 @@ namespace boost { namespace leaf {
 			}
 
 			template <class Alloc>
-			exception_trap( F f, Alloc const & a ):
-				AllocHelper(a),
-				f_(f)
+			exception_trap( std::pair<F, Alloc> fa ):
+				AllocHelper(fa.second),
+				f_(fa.first)
 			{
 			}
 
@@ -179,33 +179,47 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... E, class F>
-	leaf_detail::exception_trap<leaf_detail::ex_make, F, typename leaf_detail::function_traits<F>::mp_args, leaf_detail_mp11::mp_list<E...>>
+	leaf_detail::exception_trap<
+		leaf_detail::ex_make,
+		F,
+		typename leaf_detail::function_traits<F>::mp_args,
+		leaf_detail_mp11::mp_list<E...>>
 	capture_in_exception_explicit( F && f ) noexcept
 	{
 		return f;
 	}
 
 	template <class... E, class F, class Alloc>
-	leaf_detail::exception_trap<leaf_detail::ex_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, leaf_detail_mp11::mp_list<E...>>
+	leaf_detail::exception_trap<
+		leaf_detail::ex_alloc<Alloc>,
+		F,
+		typename leaf_detail::function_traits<F>::mp_args,
+		leaf_detail_mp11::mp_list<E...>>
 	capture_in_exception_explicit_alloc( Alloc const & a, F && f ) noexcept
 	{
-		return leaf_detail::exception_trap<leaf_detail::ex_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, leaf_detail_mp11::mp_list<E...>>(
-			std::forward<F>(f), a);
+		return std::pair<F,Alloc>(std::forward<F>(f), a);
 	}
 
-	template <class HandlerTypeList, class F>
-	leaf_detail::exception_trap<leaf_detail::ex_make, F, typename leaf_detail::function_traits<F>::mp_args, typename leaf_detail::handler_args_list<HandlerTypeList>::type>
-	capture_in_exception( F && f, HandlerTypeList const * = 0 ) noexcept
+	template <class Handler, class F>
+	leaf_detail::exception_trap<
+		leaf_detail::ex_make,
+		F,
+		typename leaf_detail::function_traits<F>::mp_args,
+		typename leaf_detail::handler_args_list<typename leaf_detail::function_traits<Handler>::return_type>::type>
+	capture_in_exception( F && f, Handler const * = 0 ) noexcept
 	{
 		return f;
 	}
 
-	template <class HandlerTypeList, class F, class Alloc>
-	leaf_detail::exception_trap<leaf_detail::ex_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, typename leaf_detail::handler_args_list<HandlerTypeList>::type>
-	capture_in_exception_alloc( Alloc const & a, F && f, HandlerTypeList const * = 0 ) noexcept
+	template <class Handler, class F, class Alloc>
+	leaf_detail::exception_trap<
+		leaf_detail::ex_alloc<Alloc>,
+		F,
+		typename leaf_detail::function_traits<F>::mp_args,
+		typename leaf_detail::handler_args_list<typename leaf_detail::function_traits<Handler>::return_type>::type>
+	capture_in_exception_alloc( Alloc const & a, F && f, Handler const * = 0 ) noexcept
 	{
-		return leaf_detail::exception_trap<leaf_detail::ex_alloc<Alloc>, F, typename leaf_detail::function_traits<F>::mp_args, typename leaf_detail::handler_args_list<HandlerTypeList>::type>(
-			std::forward<F>(f), a);
+		return std::pair<F,Alloc>(std::forward<F>(f), a);
 	}
 
 } }

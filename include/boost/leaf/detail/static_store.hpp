@@ -36,7 +36,40 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	namespace leaf_detail { class capturing_exception; }
+	namespace leaf_detail
+	{
+		class capturing_exception;
+
+		class exception_info
+		{
+			exception_info( exception_info const & ) = delete;
+			exception_info & operator=( exception_info const & ) = delete;
+
+			std::exception const * const ex_;
+			leaf_detail::capturing_exception const * const cap_;
+			void (* const print_ex_)( std::ostream &, std::exception const *, leaf_detail::capturing_exception const * );
+
+		public:
+
+			exception_info( std::exception const * ex, leaf_detail::capturing_exception const * cap, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::capturing_exception const *) ) noexcept:
+				ex_(ex),
+				cap_(cap),
+				print_ex_(print_ex)
+			{
+				assert(print_ex_!=0);
+			}
+
+			std::exception const * exception() const noexcept
+			{
+				return ex_;
+			}
+
+			void print( std::ostream & os ) const
+			{
+				print_ex_(os,ex_,cap_);
+			}
+		};
+	}
 
 	class error_info
 	{
@@ -44,9 +77,6 @@ namespace boost { namespace leaf {
 
 		int const err_id_;
 		std::error_code const & ec_;
-		std::exception const * const ex_;
-		leaf_detail::capturing_exception const * const cap_;
-		void (* const print_ex_)( std::ostream &, std::exception const *, leaf_detail::capturing_exception const * );
 
 		static int get_err_id( std::error_code const & ec ) noexcept
 		{
@@ -60,49 +90,41 @@ namespace boost { namespace leaf {
 		void print( std::ostream & os ) const
 		{
 			os << "Error ID: " << err_id_ << std::endl;
-			if( print_ex_ )
-				print_ex_(os,ex_,cap_);
+			if( ex_ )
+				ex_->print(os);
 			leaf_detail::slot_base::print(os,err_id_);
 		}
 
 	public:
 
+		leaf_detail::exception_info const * const ex_;
+
 		explicit error_info( error_id const & id ) noexcept:
 			err_id_(id.value()),
 			ec_(id),
-			ex_(0),
-			cap_(0),
-			print_ex_(0)
+			ex_(0)
 		{
 		}
 
 		explicit error_info( std::error_code const & ec ) noexcept:
 			err_id_(get_err_id(ec)),
 			ec_(ec),
-			ex_(0),
-			cap_(0),
-			print_ex_(0)
+			ex_(0)
 		{
 		}
 
-		error_info( error_id const & id, std::exception const * ex, leaf_detail::capturing_exception const * cap, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::capturing_exception const *) ) noexcept:
+		error_info( error_id const & id, leaf_detail::exception_info const & ex ) noexcept:
 			err_id_(id.value()),
 			ec_(id),
-			ex_(ex),
-			cap_(cap),
-			print_ex_(print_ex)
+			ex_(&ex)
 		{
-			assert(print_ex_!=0);
 		}
 
-		error_info( std::error_code const & ec, std::exception const * ex, leaf_detail::capturing_exception const * cap, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::capturing_exception const *) ) noexcept:
+		error_info( std::error_code const & ec, leaf_detail::exception_info const & ex ) noexcept:
 			err_id_(get_err_id(ec)),
 			ec_(ec),
-			ex_(ex),
-			cap_(cap),
-			print_ex_(print_ex)
+			ex_(&ex)
 		{
-			assert(print_ex_!=0);
 		}
 
 		int err_id() const noexcept
@@ -128,13 +150,13 @@ namespace boost { namespace leaf {
 
 		bool has_exception() const noexcept
 		{
-			return print_ex_!=0;
+			return ex_!=0;
 		}
 
 		std::exception const * exception() const noexcept
 		{
 			assert(has_exception());
-			return ex_;
+			return ex_->exception();
 		}
 
 		friend std::ostream & operator<<( std::ostream & os, error_info const & x )
@@ -142,6 +164,39 @@ namespace boost { namespace leaf {
 			os << "leaf::error_info:" << std::endl;
 			x.print(os);
 			return os;
+		}
+	};
+
+	struct error: error_info
+	{
+		void const * const ss_;
+
+		error( void const * ss, error_id const & id ) noexcept:
+			error_info(id),
+			ss_(ss)
+		{
+			assert(ss_!=0);
+		}
+
+		error( void const * ss, std::error_code const & ec ) noexcept:
+			error_info(ec),
+			ss_(ss)
+		{
+			assert(ss_!=0);
+		}
+
+		error( void const * ss, error_id const & id, leaf_detail::exception_info const & ex ) noexcept:
+			error_info(id, ex),
+			ss_(ss)
+		{
+			assert(ss_!=0);
+		}
+
+		error( void const * ss, std::error_code const & ec, leaf_detail::exception_info const & ex ) noexcept:
+			error_info(ec, ex),
+			ss_(ss)
+		{
+			assert(ss_!=0);
 		}
 	};
 
@@ -866,8 +921,74 @@ namespace boost { namespace leaf {
 				return { };
 			}
 		};
+
+		////////////////////////////////////////
+
+		template <class... Handler>
+		struct handler_pack_return;
+
+		template <class CarH, class... CdrH>
+		struct handler_pack_return<CarH, CdrH...>
+		{
+			using type = typename function_traits<CarH>::return_type;
+		};
+
+		template <class... Handler>
+		struct handler_result
+		{
+			using R = typename handler_pack_return<Handler...>::type;
+
+			R r;
+
+			R get()
+			{
+				return r;
+			}
+		};
+
+		template <class... Handler>
+		struct handler_result_void
+		{
+			void get()
+			{
+			}
+		};
+
+		template <class R, class... Handler>
+		struct handle_error_dispatch
+		{
+			using result_type = handler_result<Handler...>;
+			static result_type handle( error const & err, Handler && ... handler )
+			{
+				using namespace leaf_detail;
+				if( exception_info const * ex = err.ex_ )
+					return { reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error(err, std::forward<Handler>(handler)..., [ ]()->R const & {throw;}) };
+				else
+					return { reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error(err, std::forward<Handler>(handler)...) };
+			}
+		};
+
+		template <class... Handler>
+		struct handle_error_dispatch<void, Handler...>
+		{
+			using result_type = handler_result_void<Handler...>;
+			static result_type handle( error const & err, Handler && ... handler )
+			{
+				using namespace leaf_detail;
+				if( exception_info const * ex = err.ex_ )
+					reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error(err, std::forward<Handler>(handler)..., [ ] {throw;});
+				else
+					reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error(err, std::forward<Handler>(handler)...);
+				return { };
+			}
+		};
 	} // leaf_detail
 
+	template <class... Handler>
+	typename leaf_detail::handle_error_dispatch<typename leaf_detail::handler_pack_return<Handler...>::type, Handler...>::result_type handle_error( error const & err, Handler && ... handler )
+	{
+		return leaf_detail::handle_error_dispatch<typename leaf_detail::handler_pack_return<Handler...>::type, Handler...>::handle(err, std::forward<Handler>(handler)...);
+	}
 } }
 
 #endif

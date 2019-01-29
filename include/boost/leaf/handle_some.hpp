@@ -32,19 +32,25 @@ namespace boost { namespace leaf {
 		}
 	}
 
-	namespace leaf_detail
+	template <class TryBlock, class Handler>
+	decltype(std::declval<TryBlock>()()) bound_handle_some( TryBlock && try_block, Handler && handler )
 	{
-		template <class TryBlock, class HandlersTuple, std::size_t ... I>
-		decltype(std::declval<TryBlock>()()) handle_some_tuple( leaf_detail_mp11::index_sequence<I...>, TryBlock && try_block, HandlersTuple & handlers )
+		using namespace leaf_detail;
+		using R = decltype(std::declval<TryBlock>()());
+		static_assert(is_result_type<R>::value, "The try_block passed to handle_some must be registered with leaf::is_result_type.");
+		typename deduce_static_store<typename handler_args_list<typename function_traits<Handler>::return_type>::type>::type ss;
+		if( auto r = std::forward<TryBlock>(try_block)() )
 		{
-			return handle_some( std::forward<TryBlock>(try_block), std::get<I>(handlers)... );
+			ss.set_reset(true);
+			return r;
 		}
-	}
-
-	template <class TryBlock, class... Handler>
-	decltype(std::declval<TryBlock>()()) handle_some( TryBlock && try_block, std::tuple<Handler...> & handlers )
-	{
-		return leaf_detail::handle_some_tuple( leaf_detail_mp11::make_index_sequence<std::tuple_size<std::tuple<Handler...>>::value>(), std::forward<TryBlock>(try_block), handlers );
+		else
+		{
+			auto rr = std::forward<Handler>(handler)(error(&ss, r.error())).get();
+			if( rr )
+				ss.set_reset(true);
+			return rr;
+		}
 	}
 
 } }

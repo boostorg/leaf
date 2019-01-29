@@ -63,6 +63,8 @@ namespace boost { namespace leaf {
 		template<class F> struct function_traits<F&> : function_traits<F> { };
 		template<class F> struct function_traits<F&&> : function_traits<F> { };
 		template<class R, class... A> struct function_traits<R(*)(A...)> : function_traits<R(A...)> { };
+		template<class R, class... A> struct function_traits<R(* &)(A...)> : function_traits<R(A...)> { };
+		template<class R, class... A> struct function_traits<R(* const &)(A...)> : function_traits<R(A...)> { };
 		template<class C, class R, class... A> struct function_traits<R(C::*)(A...)> : function_traits<R(C&,A...)> { };
 		template<class C, class R, class... A> struct function_traits<R(C::*)(A...) const> : function_traits<R(C const &,A...)> { };
 		template<class C, class R> struct function_traits<R(C::*)> : function_traits<R(C&)> { };

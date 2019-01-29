@@ -47,22 +47,21 @@ int main()
 	// Container to collect the generated std::future objects.
 	std::vector<std::future<leaf::result<task_result>>> fut;
 
-	auto handlers = std::make_tuple(
-
-		[ ]( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
-		{
-			std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
-		},
-
-		[ ]( leaf::diagnostic_info const & unmatched )
-		{
-			std::cerr <<
-				"Unknown failure detected" << std::endl <<
-				"Cryptic diagnostic information follows" << std::endl <<
-				unmatched;
-		}
-
-	);
+	auto handler = [ ]( leaf::error const & err )
+	{
+		return leaf::handle_error( err,
+			[ ]( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
+			{
+				std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
+			},
+			[ ]( leaf::diagnostic_info const & unmatched )
+			{
+				std::cerr <<
+					"Unknown failure detected" << std::endl <<
+					"Cryptic diagnostic information follows" << std::endl <<
+					unmatched;
+			} );
+	};
 
 	// Launch the tasks, but rather than launching the task function directly, we launch the
 	// wrapper function returned by leaf::capture_in_result. It captures the specified error object
@@ -72,7 +71,7 @@ int main()
 		{
 			return std::async(
 				std::launch::async,
-				leaf::capture_in_result<decltype(handlers)>(&task) );
+				leaf::capture_in_result<decltype(handler)>(&task) );
 		} );
 
 	// Wait on the futures, get the task results, handle errors.
@@ -80,7 +79,7 @@ int main()
 	{
 		f.wait();
 
-		leaf::handle_all(
+		leaf::bound_handle_all(
 			[&]() -> leaf::result<void>
 			{
 				LEAF_AUTO(r,f.get());
@@ -90,6 +89,9 @@ int main()
 				(void) r;
 				return { };
 			},
-			handlers );
+			[&]( leaf::error const & err )
+			{
+				return handler(err);
+			} );
 	}
 }

@@ -47,8 +47,23 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
 
 int main()
 {
+	auto handler = [ ]( leaf::error const & err, int a, int b )
+	{
+		return leaf::handle_error( err,
+			[&]( info<1> const & x1, info<2> const & x2 )
+			{
+				BOOST_TEST_EQ(x1.value, a);
+				BOOST_TEST_EQ(x2.value, b);
+				return -1;
+			},
+			[ ]
+			{
+				return -2;
+			} );
+	};
+
 	std::vector<fut_info> fut = launch_tasks<info<1>, info<2>>( 42,
-		leaf::capture_in_result_explicit<info<1>,info<2>,info<3>>(
+		leaf::capture_in_result<decltype(handler)>(
 			[ ]( int a, int b, int res ) -> leaf::result<int>
 			{
 				if( res>=0 )
@@ -60,20 +75,14 @@ int main()
 	for( auto & f : fut )
 	{
 		f.fut.wait();
-		int r = leaf::handle_all(
+		int r = leaf::bound_handle_all(
 			[&]
 			{
 				return f.fut.get();
 			},
-			[&]( info<1> const & x1, info<2> const & x2 )
+			[&]( leaf::error const & err )
 			{
-				BOOST_TEST_EQ(x1.value, f.a);
-				BOOST_TEST_EQ(x2.value, f.b);
-				return -1;
-			},
-			[ ]
-			{
-				return -2;
+				return handler(err, f.a, f.b);
 			} );
 		if( f.result>=0 )
 			BOOST_TEST_EQ(r, f.result);
