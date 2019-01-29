@@ -46,11 +46,11 @@ namespace boost { namespace leaf {
 		};
 	}
 
-	template <class T> struct is_error_type: leaf_detail::is_error_type_default<T> { };
-	template <class T> struct is_error_type<T const>: is_error_type<T> { };
-	template <class T> struct is_error_type<T const &>: is_error_type<T> { };
-	template <class T> struct is_error_type<T &>: is_error_type<T> { };
-	template <> struct is_error_type<std::error_code>: std::false_type { };
+	template <class T> struct is_e_type: leaf_detail::is_error_type_default<T> { };
+	template <class T> struct is_e_type<T const>: is_e_type<T> { };
+	template <class T> struct is_e_type<T const &>: is_e_type<T> { };
+	template <class T> struct is_e_type<T &>: is_e_type<T> { };
+	template <> struct is_e_type<std::error_code>: std::false_type { };
 
 	////////////////////////////////////////
 
@@ -67,7 +67,7 @@ namespace boost { namespace leaf {
 	};
 
 	template <>
-	struct is_error_type<e_source_location>: std::true_type
+	struct is_e_type<e_source_location>: std::true_type
 	{
 	};
 
@@ -330,7 +330,7 @@ namespace boost { namespace leaf {
 			slot & operator=( slot const & ) = delete;
 			typedef optional<id_e_pair<E>> base;
 			slot<E> * prev_;
-			static_assert(is_error_type<E>::value,"Not an error type");
+			static_assert(is_e_type<E>::value,"Not an error type");
 
 			bool slot_print( std::ostream &, int err_id ) const;
 
@@ -553,7 +553,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class E1, class... E>
-	typename std::enable_if<is_error_type<E1>::value, error_id>::type new_error( E1 && e1, E && ... e ) noexcept
+	typename std::enable_if<is_e_type<E1>::value, error_id>::type new_error( E1 && e1, E && ... e ) noexcept
 	{
 		return leaf_detail::make_error_id(leaf_detail::new_id()).propagate(std::forward<E1>(e1), std::forward<E>(e)...);
 	}

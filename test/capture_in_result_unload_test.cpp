@@ -158,13 +158,13 @@ void test( F f )
 int main()
 {
 	test(
-		leaf::capture_in_result<info<1>, info<2>, info<3>>(
+		leaf::capture_in_result_explicit<info<1>, info<2>, info<3>>(
 			[ ]() -> leaf::result<void>
 			{
 				return leaf::new_error(errc_a::a0, info<1>{1}, info<3>{3} );
 			} ) );
 	test(
-		leaf::capture_in_result_alloc<info<1>, info<2>, info<3>>(
+		leaf::capture_in_result_explicit_alloc<info<1>, info<2>, info<3>>(
 			std::allocator<int>(),
 			[ ]() -> leaf::result<void>
 			{

@@ -72,7 +72,7 @@ int main()
 		{
 			return std::async(
 				std::launch::async,
-				leaf::capture_in_result(&task, handlers) );
+				leaf::capture_in_result<decltype(handlers)>(&task) );
 		} );
 
 	// Wait on the futures, get the task results, handle errors.

@@ -642,7 +642,7 @@ namespace boost { namespace leaf {
 			////////////////////////////////////////
 
 			template <class T> struct argument_matches_any_error: std::false_type { };
-			template <class T> struct argument_matches_any_error<T const *>: is_error_type<T> { };
+			template <class T> struct argument_matches_any_error<T const *>: is_e_type<T> { };
 			template <> struct argument_matches_any_error<error_info const &>: std::true_type { };
 			template <> struct argument_matches_any_error<diagnostic_info const &>: std::true_type { };
 			template <> struct argument_matches_any_error<verbose_diagnostic_info const &>: std::true_type { };
@@ -800,6 +800,17 @@ namespace boost { namespace leaf {
 
 		template <class... Handler>
 		struct handler_args_set
+		{
+			using type = transform_error_type_list<
+				leaf_detail_mp11::mp_append<
+					typename function_traits<Handler>::mp_args...>>;
+		};
+
+		template <class HandlerList>
+		struct handler_args_list;
+
+		template <template <class...> class L, class... Handler>
+		struct handler_args_list<L<Handler...>>
 		{
 			using type = transform_error_type_list<
 				leaf_detail_mp11::mp_append<

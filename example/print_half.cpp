@@ -25,7 +25,7 @@ enum class ConversionErrc
 };
 
 namespace boost { namespace leaf {
-	template <> struct is_error_type<ConversionErrc>: public std::true_type { };
+	template <> struct is_e_type<ConversionErrc>: public std::true_type { };
 } }
 
 leaf::result<int> convert(const std::string& str) noexcept

@@ -33,12 +33,12 @@ struct info
 };
 
 namespace boost { namespace leaf {
-	template <int I> struct is_error_type<info<I>>: public std::true_type { };
+	template <int I> struct is_e_type<info<I>>: public std::true_type { };
 } }
 
 int main()
 {
-	auto f = leaf::capture_in_exception<info<1>, info<2>, info<3>>(
+	auto f = leaf::capture_in_exception_explicit<info<1>, info<2>, info<3>>(
 		[ ]
 		{
 			throw leaf::exception( std::exception(), info<1>{}, info<3>{} );

@@ -48,7 +48,7 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
 int main()
 {
 	std::vector<fut_info> fut = launch_tasks<info<1>, info<2>>( 42,
-		leaf::capture_in_result<info<1>,info<2>,info<3>>(
+		leaf::capture_in_result_explicit<info<1>,info<2>,info<3>>(
 			[ ]( int a, int b, int res ) -> leaf::result<int>
 			{
 				if( res>=0 )

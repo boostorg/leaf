@@ -30,7 +30,7 @@ enum class my_error_code
 	error3
 };
 namespace boost { namespace leaf {
-	template <> struct is_error_type<my_error_code>: std::true_type { };
+	template <> struct is_e_type<my_error_code>: std::true_type { };
 } }
 
 void not_called_on_purpose()

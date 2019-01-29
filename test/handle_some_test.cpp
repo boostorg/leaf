@@ -22,7 +22,7 @@ enum class not_error_code_enum
 	error3
 };
 namespace boost { namespace leaf {
-	template <> struct is_error_type<not_error_code_enum>: std::true_type { };
+	template <> struct is_e_type<not_error_code_enum>: std::true_type { };
 } }
 
 struct e_error_code { not_error_code_enum value; };
