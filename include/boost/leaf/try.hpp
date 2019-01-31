@@ -25,14 +25,14 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class TryBlock, class... Handler, class StaticStore>
-		decltype(std::declval<TryBlock>()()) call_try_block( result_tag<decltype(std::declval<TryBlock>()()), false>, StaticStore & ss, TryBlock && try_block, Handler && ... )
+		decltype(std::declval<TryBlock>()()) call_try_block( is_result_tag<decltype(std::declval<TryBlock>()()), false>, StaticStore & ss, TryBlock && try_block, Handler && ... )
 		{
 			ss.set_reset(true);
 			return std::forward<TryBlock>(try_block)();
 		}
 
 		template <class TryBlock, class... Handler, class StaticStore>
-		decltype(std::declval<TryBlock>()()) call_try_block( result_tag<decltype(std::declval<TryBlock>()()), true>, StaticStore & ss, TryBlock && try_block, Handler && ... handler )
+		decltype(std::declval<TryBlock>()()) call_try_block( is_result_tag<decltype(std::declval<TryBlock>()()), true>, StaticStore & ss, TryBlock && try_block, Handler && ... handler )
 		{
 			if( auto r = std::forward<TryBlock>(try_block)() )
 			{
@@ -57,7 +57,7 @@ namespace boost { namespace leaf {
 		auto throw_ = [ ]() -> fn_return_type<TryBlock> { throw; };
 		try
 		{
-			return call_try_block( result_tag<decltype(std::declval<TryBlock>()())>(), ss, std::forward<TryBlock>(try_block), std::forward<Handler>(handler)...);
+			return call_try_block( is_result_tag<decltype(std::declval<TryBlock>()())>(), ss, std::forward<TryBlock>(try_block), std::forward<Handler>(handler)...);
 		}
 		catch( capturing_exception & cap )
 		{
@@ -104,14 +104,14 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class TryBlock, class Handler, class StaticStore>
-		decltype(std::declval<TryBlock>()()) error_call_try_block( result_tag<decltype(std::declval<TryBlock>()()), false>, StaticStore & ss, TryBlock && try_block, Handler && )
+		decltype(std::declval<TryBlock>()()) error_call_try_block( is_result_tag<decltype(std::declval<TryBlock>()()), false>, StaticStore & ss, TryBlock && try_block, Handler && )
 		{
 			ss.set_reset(true);
 			return std::forward<TryBlock>(try_block)();
 		}
 
 		template <class TryBlock, class Handler, class StaticStore>
-		decltype(std::declval<TryBlock>()()) error_call_try_block( result_tag<decltype(std::declval<TryBlock>()()), true>, StaticStore & ss, TryBlock && try_block, Handler && handler )
+		decltype(std::declval<TryBlock>()()) error_call_try_block( is_result_tag<decltype(std::declval<TryBlock>()()), true>, StaticStore & ss, TryBlock && try_block, Handler && handler )
 		{
 			if( auto r = std::forward<TryBlock>(try_block)() )
 			{
@@ -154,7 +154,7 @@ namespace boost { namespace leaf {
 		deduce_static_store<handler_args_list<fn_return_type<Handler>>> ss;
 		try
 		{
-			return error_call_try_block( result_tag<decltype(std::declval<TryBlock>()())>(), ss, std::forward<TryBlock>(try_block), std::forward<Handler>(handler));
+			return error_call_try_block( is_result_tag<decltype(std::declval<TryBlock>()())>(), ss, std::forward<TryBlock>(try_block), std::forward<Handler>(handler));
 		}
 		catch( capturing_exception & cap )
 		{

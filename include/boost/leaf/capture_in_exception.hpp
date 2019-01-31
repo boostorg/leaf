@@ -77,7 +77,7 @@ namespace boost { namespace leaf {
 		template <>
 		struct print_types<>
 		{
-			static void print( std::ostream & )
+			static void print( std::ostream & ) noexcept
 			{
 			}
 		};
@@ -99,7 +99,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class R, class... E, class F, class... A>
-		R capture_in_exception_impl( result_tag<R, false>, static_store<E...> && ss, F && f, A... a )
+		R capture_in_exception_impl( is_result_tag<R, false>, static_store<E...> && ss, F && f, A... a )
 		{
 			ss.set_reset(true);
 			try
@@ -121,7 +121,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class R, class... E, class F, class... A>
-		R capture_in_exception_impl( result_tag<R, true>, static_store<E...> && ss, F && f, A... a )
+		R capture_in_exception_impl( is_result_tag<R, true>, static_store<E...> && ss, F && f, A... a )
 		{
 			ss.set_reset(true);
 			try
@@ -146,7 +146,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class Alloc, class R, class... E, class F, class... A>
-		R capture_in_exception_impl( Alloc alloc, result_tag<R, false>, static_store<E...> && ss, F && f, A... a )
+		R capture_in_exception_impl( Alloc alloc, is_result_tag<R, false>, static_store<E...> && ss, F && f, A... a )
 		{
 			ss.set_reset(true);
 			try
@@ -168,7 +168,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class Alloc, class R, class... E, class F, class... A>
-		R capture_in_exception_impl( Alloc alloc, result_tag<R, true>, static_store<E...> && ss, F && f, A... a )
+		R capture_in_exception_impl( Alloc alloc, is_result_tag<R, true>, static_store<E...> && ss, F && f, A... a )
 		{
 			ss.set_reset(true);
 			try
@@ -201,7 +201,7 @@ namespace boost { namespace leaf {
 		using R = decltype(std::declval<F>()(std::forward<A>(a)...));
 		using StaticStore = deduce_static_store<error_type_set<e_original_ec, E...>>;
 		StaticStore ss;
-		return capture_in_exception_impl( result_tag<R>(), std::move(ss), std::forward<F>(f), std::forward<A>(a)...);
+		return capture_in_exception_impl( is_result_tag<R>(), std::move(ss), std::forward<F>(f), std::forward<A>(a)...);
 	}
 
 	template <class... E, class Alloc, class F, class... A>
@@ -211,7 +211,7 @@ namespace boost { namespace leaf {
 		using R = decltype(std::declval<F>()(std::forward<A>(a)...));
 		using StaticStore = deduce_static_store<error_type_set<e_original_ec, E...>>;
 		StaticStore ss;
-		return capture_in_exception_impl( alloc, result_tag<R>(), std::move(ss), std::forward<F>(f), std::forward<A>(a)...);
+		return capture_in_exception_impl( alloc, is_result_tag<R>(), std::move(ss), std::forward<F>(f), std::forward<A>(a)...);
 	}
 
 	template <class Handler, class F, class... A>
@@ -221,7 +221,7 @@ namespace boost { namespace leaf {
 		using R = decltype(std::declval<F>()(std::forward<A>(a)...));
 		using StaticStore = deduce_static_store<leaf_detail::handler_args_list<fn_return_type<Handler>>>;
 		StaticStore ss;
-		return capture_in_exception_impl( result_tag<R>(), std::move(ss), std::forward<F>(f), std::forward<A>(a)...);
+		return capture_in_exception_impl( is_result_tag<R>(), std::move(ss), std::forward<F>(f), std::forward<A>(a)...);
 	}
 
 	template <class Handler, class Alloc, class F, class... A>
@@ -231,7 +231,7 @@ namespace boost { namespace leaf {
 		using R = decltype(std::declval<F>()(std::forward<A>(a)...));
 		using StaticStore = deduce_static_store<leaf_detail::handler_args_list<fn_return_type<Handler>>>;
 		StaticStore ss;
-		return capture_in_exception_impl( alloc, result_tag<R>(), std::move(ss), std::forward<F>(f), std::forward<A>(a)...);
+		return capture_in_exception_impl( alloc, is_result_tag<R>(), std::move(ss), std::forward<F>(f), std::forward<A>(a)...);
 	}
 
 } }

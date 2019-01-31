@@ -12,7 +12,7 @@
 namespace boost { namespace leaf {
 
 	template <class TryBlock, class... Handler>
-	typename std::remove_reference<decltype(std::declval<TryBlock>()().value())>::type handle_all( TryBlock && try_block, Handler && ... handler )
+	typename std::remove_reference<decltype(std::declval<TryBlock>()().value())>::type handle_all( TryBlock && try_block, Handler && ... handler ) noexcept
 	{
 		using namespace leaf_detail;
 		using R = decltype(std::declval<TryBlock>()());
@@ -47,7 +47,7 @@ namespace boost { namespace leaf {
 	};
 
 	template <class TryBlock, class Handler>
-	typename std::remove_reference<decltype(std::declval<TryBlock>()().value())>::type  remote_handle_all( TryBlock && try_block, Handler && handler )
+	typename std::remove_reference<decltype(std::declval<TryBlock>()().value())>::type  remote_handle_all( TryBlock && try_block, Handler && handler ) noexcept
 	{
 		using namespace leaf_detail;
 		using R = decltype(std::declval<TryBlock>()());
@@ -61,7 +61,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class... Handler>
-	typename leaf_detail::handle_error_dispatch<Handler...>::result_type handle_error( error_in_remote_handle_all const & error, Handler && ... handler )
+	typename leaf_detail::handle_error_dispatch<Handler...>::result_type handle_error( error_in_remote_handle_all const & error, Handler && ... handler ) noexcept
 	{
 		using namespace leaf_detail;
 		return handle_error_dispatch<Handler...>::handle(error, std::forward<Handler>(handler)... );

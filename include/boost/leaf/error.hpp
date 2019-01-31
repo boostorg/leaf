@@ -486,7 +486,7 @@ namespace boost { namespace leaf {
 		}
 	}
 
-	inline bool is_error_id( std::error_code const & ec )
+	inline bool is_error_id( std::error_code const & ec ) noexcept
 	{
 		return &ec.category() == &leaf_detail::get_error_category();
 	}
@@ -540,7 +540,7 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		inline error_id make_error_id( int err_id )
+		inline error_id make_error_id( int err_id ) noexcept
 		{
 			assert(err_id);
 			return std::error_code(err_id, get_error_category());

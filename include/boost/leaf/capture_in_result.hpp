@@ -25,7 +25,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class... E, class F, class... A>
-	decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_in_result_explicit(F && f, A... a)
+	decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_in_result_explicit(F && f, A... a) noexcept
 	{
 		using namespace leaf_detail;
 		using R = decltype(std::declval<F>()(std::forward<A>(a)...));
@@ -38,7 +38,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class... E, class Alloc, class F, class... A>
-	decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_in_result_explicit(Alloc alloc, F && f, A... a)
+	decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_in_result_explicit(Alloc alloc, F && f, A... a) noexcept
 	{
 		using namespace leaf_detail;
 		using R = decltype(std::declval<F>()(std::forward<A>(a)...));
@@ -51,7 +51,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class Handler, class F, class... A>
-	decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_in_result(F && f, A... a)
+	decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_in_result(F && f, A... a) noexcept
 	{
 		using namespace leaf_detail;
 		using R = decltype(std::declval<F>()(std::forward<A>(a)...));
@@ -64,7 +64,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class Handler, class Alloc, class F, class... A>
-	decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_in_result(Alloc alloc, F && f, A... a)
+	decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_in_result(Alloc alloc, F && f, A... a) noexcept
 	{
 		using namespace leaf_detail;
 		using R = decltype(std::declval<F>()(std::forward<A>(a)...));

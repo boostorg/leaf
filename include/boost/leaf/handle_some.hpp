@@ -12,7 +12,7 @@
 namespace boost { namespace leaf {
 
 	template <class TryBlock, class... Handler>
-	decltype(std::declval<TryBlock>()()) handle_some( TryBlock && try_block, Handler && ... handler )
+	decltype(std::declval<TryBlock>()()) handle_some( TryBlock && try_block, Handler && ... handler ) noexcept
 	{
 		using namespace leaf_detail;
 		using R = decltype(std::declval<TryBlock>()());
@@ -54,7 +54,7 @@ namespace boost { namespace leaf {
 	};
 
 	template <class TryBlock, class Handler>
-	decltype(std::declval<TryBlock>()()) remote_handle_some( TryBlock && try_block, Handler && handler )
+	decltype(std::declval<TryBlock>()()) remote_handle_some( TryBlock && try_block, Handler && handler ) noexcept
 	{
 		using namespace leaf_detail;
 		using R = decltype(std::declval<TryBlock>()());
@@ -75,7 +75,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class... Handler>
-	typename leaf_detail::handle_error_dispatch<Handler...>::result_type handle_error( error_in_remote_handle_some const & error, Handler && ... handler )
+	typename leaf_detail::handle_error_dispatch<Handler...>::result_type handle_error( error_in_remote_handle_some const & error, Handler && ... handler ) noexcept
 	{
 		using namespace leaf_detail;
 		return handle_error_dispatch<Handler...>::handle(error, std::forward<Handler>(handler)... );

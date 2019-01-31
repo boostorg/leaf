@@ -21,15 +21,15 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class R, bool IsResult = is_result_type<R>::value>
-		struct result_tag;
+		struct is_result_tag;
 
 		template <class R>
-		struct result_tag<R, false>
+		struct is_result_tag<R, false>
 		{
 		};
 
 		template <class R>
-		struct result_tag<R, true>
+		struct is_result_tag<R, true>
 		{
 		};
 	}
@@ -394,7 +394,7 @@ namespace boost { namespace leaf {
 
 	public:
 
-		explicit match( match_type const * value ):
+		explicit match( match_type const * value ) noexcept:
 			value_(value)
 		{
 		}
@@ -435,7 +435,7 @@ namespace boost { namespace leaf {
 
 	public:
 
-		explicit catch_( std::exception const * value ):
+		explicit catch_( std::exception const * value ) noexcept:
 			value_(value)
 		{
 		}
@@ -929,7 +929,7 @@ namespace boost { namespace leaf {
 
 			R r;
 
-			R get()
+			R get() noexcept
 			{
 				return r;
 			}
@@ -938,7 +938,7 @@ namespace boost { namespace leaf {
 		template <class... Handler>
 		struct handler_result_void
 		{
-			void get()
+			void get() noexcept
 			{
 			}
 		};
@@ -949,7 +949,7 @@ namespace boost { namespace leaf {
 			using result_type = handler_result<Handler...>;
 
 			template <class Error>
-			static result_type handle( Error const & err, Handler && ... handler )
+			static result_type handle( Error const & err, Handler && ... handler ) noexcept
 			{
 				using namespace leaf_detail;
 				return { reinterpret_cast<deduce_static_store<handler_args_set<Handler...>> const *>(err.ss_)->handle_error_(err, std::forward<Handler>(handler)...) };
@@ -969,7 +969,7 @@ namespace boost { namespace leaf {
 			using result_type = handler_result_void<Handler...>;
 
 			template <class Error>
-			static result_type handle( Error const & err, Handler && ... handler )
+			static result_type handle( Error const & err, Handler && ... handler ) noexcept
 			{
 				using namespace leaf_detail;
 				reinterpret_cast<deduce_static_store<handler_args_set<Handler...>> const *>(err.ss_)->handle_error_(err, std::forward<Handler>(handler)...);
