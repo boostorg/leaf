@@ -9,7 +9,7 @@
 namespace leaf = boost::leaf;
 
 template <class... Handler>
-typename leaf::leaf_detail::deduce_static_store<typename leaf::leaf_detail::handler_args_set<Handler...>::type>::type * expd( Handler && ... )
+leaf::leaf_detail::deduce_static_store<leaf::leaf_detail::handler_args_set<Handler...>> * expd( Handler && ... )
 {
 	return 0;
 }

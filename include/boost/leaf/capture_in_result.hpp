@@ -29,7 +29,7 @@ namespace boost { namespace leaf {
 	{
 		using namespace leaf_detail;
 		using R = decltype(std::declval<F>()(std::forward<A>(a)...));
-		using StaticStore = typename deduce_static_store<typename error_type_set<e_original_ec, E...>::type>::type;
+		using StaticStore = deduce_static_store<error_type_set<e_original_ec, E...>>;
 		StaticStore ss;
 		if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
 			return r;
@@ -42,7 +42,7 @@ namespace boost { namespace leaf {
 	{
 		using namespace leaf_detail;
 		using R = decltype(std::declval<F>()(std::forward<A>(a)...));
-		using StaticStore = typename deduce_static_store<typename error_type_set<e_original_ec, E...>::type>::type;
+		using StaticStore = deduce_static_store<error_type_set<e_original_ec, E...>>;
 		StaticStore ss;
 		if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
 			return r;
@@ -55,7 +55,7 @@ namespace boost { namespace leaf {
 	{
 		using namespace leaf_detail;
 		using R = decltype(std::declval<F>()(std::forward<A>(a)...));
-		using StaticStore = typename deduce_static_store<typename leaf_detail::handler_args_list<typename leaf_detail::function_traits<Handler>::return_type>::type>::type;
+		using StaticStore = deduce_static_store<leaf_detail::handler_args_list<typename leaf_detail::function_traits<Handler>::return_type>>;
 		StaticStore ss;
 		if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
 			return r;
@@ -68,7 +68,7 @@ namespace boost { namespace leaf {
 	{
 		using namespace leaf_detail;
 		using R = decltype(std::declval<F>()(std::forward<A>(a)...));
-		using StaticStore = typename deduce_static_store<typename leaf_detail::handler_args_list<typename leaf_detail::function_traits<Handler>::return_type>::type>::type;
+		using StaticStore = deduce_static_store<leaf_detail::handler_args_list<typename leaf_detail::function_traits<Handler>::return_type>>;
 		StaticStore ss;
 		if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
 			return r;

@@ -34,20 +34,23 @@ namespace boost { namespace leaf {
 		////////////////////////////////////////
 
 		template <class T>
-		struct deduce_exception_to_result_return_type
+		struct deduce_exception_to_result_return_type_impl
 		{
 			using type = result<T>;
 		};
 
 		template <class T>
-		struct deduce_exception_to_result_return_type<result<T>>
+		struct deduce_exception_to_result_return_type_impl<result<T>>
 		{
 			using type = result<T>;
 		};
+
+		template <class T>
+		using deduce_exception_to_result_return_type = typename deduce_exception_to_result_return_type_impl<T>::type;
 	}
 
 	template <class... Ex, class F>
-	typename leaf_detail::deduce_exception_to_result_return_type<typename leaf_detail::function_traits<F>::return_type>::type exception_to_result( F && f ) noexcept
+	leaf_detail::deduce_exception_to_result_return_type<typename leaf_detail::function_traits<F>::return_type> exception_to_result( F && f ) noexcept
 	{
 		try
 		{

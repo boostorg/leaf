@@ -53,7 +53,7 @@ namespace boost { namespace leaf {
 	decltype(std::declval<TryBlock>()()) try_( TryBlock && try_block, Handler && ... handler )
 	{
 		using namespace leaf_detail;
-		typename deduce_static_store<typename handler_args_set<Handler...>::type>::type ss;
+		deduce_static_store<handler_args_set<Handler...>> ss;
 		auto throw_ = [ ]() -> typename function_traits<TryBlock>::return_type { throw; };
 		try
 		{
@@ -151,7 +151,7 @@ namespace boost { namespace leaf {
 	decltype(std::declval<TryBlock>()()) capture_try_( TryBlock && try_block, Handler && handler )
 	{
 		using namespace leaf_detail;
-		typename deduce_static_store<typename handler_args_list<typename function_traits<Handler>::return_type>::type>::type ss;
+		deduce_static_store<handler_args_list<typename function_traits<Handler>::return_type>> ss;
 		try
 		{
 			return error_call_try_block( result_tag<decltype(std::declval<TryBlock>()())>(), ss, std::forward<TryBlock>(try_block), std::forward<Handler>(handler));

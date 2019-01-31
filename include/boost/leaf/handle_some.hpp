@@ -17,7 +17,7 @@ namespace boost { namespace leaf {
 		using namespace leaf_detail;
 		using R = decltype(std::declval<TryBlock>()());
 		static_assert(is_result_type<R>::value, "The try_block passed to handle_some must be registered with leaf::is_result_type.");
-		typename deduce_static_store<typename handler_args_set<Handler...>::type>::type ss;
+		deduce_static_store<handler_args_set<Handler...>> ss;
 		if( auto r = std::forward<TryBlock>(try_block)() )
 		{
 			ss.set_reset(true);
@@ -59,7 +59,7 @@ namespace boost { namespace leaf {
 		using namespace leaf_detail;
 		using R = decltype(std::declval<TryBlock>()());
 		static_assert(is_result_type<R>::value, "The try_block passed to handle_some must be registered with leaf::is_result_type.");
-		typename deduce_static_store<typename handler_args_list<typename function_traits<Handler>::return_type>::type>::type ss;
+		deduce_static_store<handler_args_list<typename function_traits<Handler>::return_type>> ss;
 		if( auto r = std::forward<TryBlock>(try_block)() )
 		{
 			ss.set_reset(true);

@@ -759,35 +759,38 @@ namespace boost { namespace leaf {
 
 		// Static store deduction / handle support
 
-		template <class T> struct translate_type { using type = T; };
-		template <class T> struct translate_type<T const> { using type = T; };
-		template <class T> struct translate_type<T const *> { using type = T; };
-		template <class T> struct translate_type<T const &> {using type = T; };
+		template <class T> struct translate_type_impl { using type = T; };
+		template <class T> struct translate_type_impl<T const> { using type = T; };
+		template <class T> struct translate_type_impl<T const *> { using type = T; };
+		template <class T> struct translate_type_impl<T const &> {using type = T; };
 
-		template <> struct translate_type<diagnostic_info>;
-		template <> struct translate_type<diagnostic_info const>;
-		template <> struct translate_type<diagnostic_info const *>;
-		template <> struct translate_type<diagnostic_info const &> { using type = e_unexpected_count; };
+		template <> struct translate_type_impl<diagnostic_info>;
+		template <> struct translate_type_impl<diagnostic_info const>;
+		template <> struct translate_type_impl<diagnostic_info const *>;
+		template <> struct translate_type_impl<diagnostic_info const &> { using type = e_unexpected_count; };
 
-		template <> struct translate_type<verbose_diagnostic_info>;
-		template <> struct translate_type<verbose_diagnostic_info const>;
-		template <> struct translate_type<verbose_diagnostic_info const *>;
-		template <> struct translate_type<verbose_diagnostic_info const &> { using type = e_unexpected_info; };
+		template <> struct translate_type_impl<verbose_diagnostic_info>;
+		template <> struct translate_type_impl<verbose_diagnostic_info const>;
+		template <> struct translate_type_impl<verbose_diagnostic_info const *>;
+		template <> struct translate_type_impl<verbose_diagnostic_info const &> { using type = e_unexpected_info; };
 
-		template <> struct translate_type<std::error_code>;
-		template <> struct translate_type<std::error_code const>;
-		template <> struct translate_type<std::error_code const *>;
-		template <> struct translate_type<std::error_code const &> { using type = leaf_detail::e_original_ec; };
+		template <> struct translate_type_impl<std::error_code>;
+		template <> struct translate_type_impl<std::error_code const>;
+		template <> struct translate_type_impl<std::error_code const *>;
+		template <> struct translate_type_impl<std::error_code const &> { using type = leaf_detail::e_original_ec; };
 
-		template <class T, typename match_traits<T>::enumerator... V> struct translate_type<match<T,V...>> { using type = typename match_traits<T>::e_type; };
-		template <class T, typename match_traits<T>::enumerator... V> struct translate_type<match<T,V...> const>;
-		template <class T, typename match_traits<T>::enumerator... V> struct translate_type<match<T,V...> const *>;
-		template <class T, typename match_traits<T>::enumerator... V> struct translate_type<match<T,V...> const &>;
+		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...>> { using type = typename match_traits<T>::e_type; };
+		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const>;
+		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const *>;
+		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const &>;
 
-		template <class... Exceptions> struct translate_type<catch_<Exceptions...>> { using type = void; };
-		template <class... Exceptions> struct translate_type<catch_<Exceptions...> const>;
-		template <class... Exceptions> struct translate_type<catch_<Exceptions...> const *>;
-		template <class... Exceptions> struct translate_type<catch_<Exceptions...> const &>;
+		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...>> { using type = void; };
+		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const>;
+		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const *>;
+		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const &>;
+
+		template <class T>
+		using translate_type = typename translate_type_impl<T>::type;
 
 		template <class... T>
 		struct translate_list_impl;
@@ -795,7 +798,7 @@ namespace boost { namespace leaf {
 		template <template<class...> class L, class... T>
 		struct translate_list_impl<L<T...>>
 		{
-			using type = leaf_detail_mp11::mp_list<typename translate_type<T>::type...>;
+			using type = leaf_detail_mp11::mp_list<translate_type<T>...>;
 		};
 
 		template <class L> using translate_list = typename translate_list_impl<L>::type;
@@ -825,7 +828,21 @@ namespace boost { namespace leaf {
 		template <class L> using transform_error_type_list = typename transform_error_type_list_impl<L>::type;
 
 		template <class... Handler>
-		struct handler_args_set
+		struct handler_args_set_impl
+		{
+			using type = transform_error_type_list<
+				leaf_detail_mp11::mp_append<
+					typename function_traits<Handler>::mp_args...>>;
+		};
+
+		template <class... Handler>
+		using handler_args_set = typename handler_args_set_impl<Handler...>::type;
+
+		template <class HandlerList>
+		struct handler_args_list_impl;
+
+		template <template <class...> class L, class... Handler>
+		struct handler_args_list_impl<L<Handler...>>
 		{
 			using type = transform_error_type_list<
 				leaf_detail_mp11::mp_append<
@@ -833,31 +850,29 @@ namespace boost { namespace leaf {
 		};
 
 		template <class HandlerList>
-		struct handler_args_list;
-
-		template <template <class...> class L, class... Handler>
-		struct handler_args_list<L<Handler...>>
-		{
-			using type = transform_error_type_list<
-				leaf_detail_mp11::mp_append<
-					typename function_traits<Handler>::mp_args...>>;
-		};
+		using handler_args_list = typename handler_args_list_impl<HandlerList>::type;
 
 		template <class... E>
-		struct error_type_set
+		struct error_type_set_impl
 		{
 			using type = transform_error_type_list<
 				leaf_detail_mp11::mp_list<E...>>;
 		};
 
+		template <class... E>
+		using error_type_set = typename error_type_set_impl<E...>::type;
+
 		template <class L>
-		struct deduce_static_store;
+		struct deduce_static_store_impl;
 
 		template <template<class...> class L, class... T>
-		struct deduce_static_store<L<T...>>
+		struct deduce_static_store_impl<L<T...>>
 		{
 			using type = static_store<T...>;
 		};
+
+		template <class L>
+		using deduce_static_store = typename deduce_static_store_impl<L>::type;
 
 		////////////////////////////////////////
 
@@ -937,14 +952,14 @@ namespace boost { namespace leaf {
 			static result_type handle( Error const & err, Handler && ... handler )
 			{
 				using namespace leaf_detail;
-				return { reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error_(err, std::forward<Handler>(handler)...) };
+				return { reinterpret_cast<deduce_static_store<handler_args_set<Handler...>> const *>(err.ss_)->handle_error_(err, std::forward<Handler>(handler)...) };
 			}
 
 			template <class Error>
 			static result_type handle_try_( Error const & err, Handler && ... handler )
 			{
 				using namespace leaf_detail;
-				return { reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error_(err, std::forward<Handler>(handler)..., [ ]() -> R {throw;}) };
+				return { reinterpret_cast<deduce_static_store<handler_args_set<Handler...>> const *>(err.ss_)->handle_error_(err, std::forward<Handler>(handler)..., [ ]() -> R {throw;}) };
 			}
 		};
 
@@ -957,7 +972,7 @@ namespace boost { namespace leaf {
 			static result_type handle( Error const & err, Handler && ... handler )
 			{
 				using namespace leaf_detail;
-				reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error_(err, std::forward<Handler>(handler)...);
+				reinterpret_cast<deduce_static_store<handler_args_set<Handler...>> const *>(err.ss_)->handle_error_(err, std::forward<Handler>(handler)...);
 				return { };
 			}
 
@@ -965,7 +980,7 @@ namespace boost { namespace leaf {
 			static result_type handle_try_( Error const & err, Handler && ... handler )
 			{
 				using namespace leaf_detail;
-				reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error_(err, std::forward<Handler>(handler)..., [ ] {throw;});
+				reinterpret_cast<deduce_static_store<handler_args_set<Handler...>> const *>(err.ss_)->handle_error_(err, std::forward<Handler>(handler)..., [ ] {throw;});
 				return { };
 			}
 		};
