@@ -329,15 +329,41 @@ namespace boost { namespace leaf {
 			slot( slot const & ) = delete;
 			slot & operator=( slot const & ) = delete;
 			typedef optional<id_e_pair<E>> base;
+			slot<E> * & top_;
 			slot<E> * prev_;
 			static_assert(is_e_type<E>::value,"Not an error type");
 
-			bool slot_print( std::ostream &, int err_id ) const;
+			bool slot_print( std::ostream & os, int err_id ) const
+			{
+				assert(err_id);
+				if( top_==this )
+					if( id_e_pair<E> const * id_e = has_value() )
+						if( id_e->err_id==err_id )
+							return diagnostic<decltype(id_e->e)>::print(os,id_e->e);
+				return false;
+			}
 
 		protected:
 
 			slot() noexcept;
-			~slot() noexcept;
+
+			~slot() noexcept
+			{
+				if( prev_ )
+				{
+					optional<id_e_pair<E>> & p = *prev_;
+					p = std::move(*this);
+				}
+				else
+				{
+					int c = tl_unexpected_enabled_counter();
+					assert(c>=0);
+					if( c )
+						if( auto v = has_value() )
+							no_expect_slot(*v);
+				}
+				top_ = prev_;
+			}
 
 		public:
 
@@ -421,41 +447,11 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		slot<E>::slot() noexcept
+		slot<E>::slot() noexcept:
+			top_(tl_slot_ptr<E>())
 		{
-			slot * & p = tl_slot_ptr<E>();
-			prev_ = p;
-			p = this;
-		}
-
-		template <class E>
-		slot<E>::~slot() noexcept
-		{
-			if( prev_ )
-			{
-				optional<id_e_pair<E>> & p = *prev_;
-				p = std::move(*this);
-			}
-			else
-			{
-				int c = tl_unexpected_enabled_counter();
-				assert(c>=0);
-				if( c )
-					if( auto v = has_value() )
-						no_expect_slot(*v);
-			}
-			tl_slot_ptr<E>() = prev_;
-		}
-
-		template <class E>
-		bool slot<E>::slot_print( std::ostream & os, int err_id ) const
-		{
-			assert(err_id);
-			if( tl_slot_ptr<E>()==this )
-				if( id_e_pair<E> const * id_e = has_value() )
-					if( id_e->err_id==err_id )
-						return diagnostic<decltype(id_e->e)>::print(os,id_e->e);
-			return false;
+			prev_ = top_;
+			top_ = this;
 		}
 
 		enum class result_variant
