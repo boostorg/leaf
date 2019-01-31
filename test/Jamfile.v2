@@ -81,6 +81,7 @@ compile-fail is_error_type_fail_test.cpp ;
 
 exe capture_in_result : ../example/capture_in_result.cpp : <threading>multi ;
 exe capture_in_exception : ../example/capture_in_exception.cpp : <threading>multi ;
+exe error_trace : ../example/error_trace.cpp ;
 exe exception_to_result : ../example/exception_to_result.cpp ;
 #exe lua_callback_result : ../example/exception_to_result.cpp ;
 #exe lua_callback_eh : ../example/lua_callback_eh.cpp ;
