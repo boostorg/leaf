@@ -84,142 +84,154 @@ namespace boost { namespace leaf {
 
 		////////////////////////////////////////
 
-		class ex_make
+		template <class... E>
+		[[noreturn]] static std::shared_ptr<dynamic_store> capture_in_exception_throw(int err_id, static_store<E...> && ss, bool had_error)
 		{
-		protected:
+			assert(err_id!=0);
+			throw_exception(capturing_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(err_id,std::move(ss)), had_error, &print_types<E...>::print ));
+		}
 
-			template <class... E>
-			[[noreturn]] static std::shared_ptr<dynamic_store> throw_(int err_id, static_store<E...> && ss, bool had_error)
-			{
-				assert(err_id!=0);
-				throw_exception(capturing_exception_impl( std::current_exception(), std::make_shared<dynamic_store_impl<E...>>(err_id,std::move(ss)), had_error, &print_types<E...>::print ));
-			}
-		};
-
-		template <class Alloc>
-		class ex_alloc
+		template <class Alloc, class... E>
+		[[noreturn]] static std::shared_ptr<dynamic_store> capture_in_exception_throw(Alloc alloc, int err_id, static_store<E...> && ss, bool had_error)
 		{
-			Alloc a_;
+			assert(err_id!=0);
+			throw_exception(capturing_exception_impl( std::current_exception(), std::allocate_shared<dynamic_store_impl<E...>>(alloc, err_id, std::move(ss)), had_error, &print_types<E...>::print));
+		}
 
-			protected:
-
-			explicit ex_alloc( Alloc const & a ):
-				a_(a)
-			{
-			}
-
-			template <class... E>
-			[[noreturn]] std::shared_ptr<dynamic_store> throw_(int err_id, static_store<E...> && ss, bool had_error) const
-			{
-				assert(err_id!=0);
-				throw_exception(capturing_exception_impl( std::current_exception(), std::allocate_shared<dynamic_store_impl<E...>>(a_, err_id,std::move(ss)), had_error, &print_types<E...>::print ));
-			}
-		};
-
-		template <class AllocHelper, class F, class mp_args, class mp_e_types>
-		class exception_trap;
-
-		template <class AllocHelper, class F, template <class...> class L1, template <class...> class L2, class... A, class... E>
-		class exception_trap<AllocHelper, F, L1<A...>, L2<E...>>: AllocHelper
+		template <class R, class... E, class F, class... A>
+		R capture_in_exception_impl( result_tag<R, false>, static_store<E...> && ss, F && f, A... a )
 		{
-			using R = decltype(std::declval<F>()(std::declval<A>()...));
-
-			R call_f( result_tag<R, false>, static_store<E...> &&, A... a ) const
+			ss.set_reset(true);
+			try
 			{
-				return f_(std::forward<A>(a)...);
+				return std::forward<F>(f)(std::forward<A>(a)...);
 			}
-
-			R call_f( result_tag<R, true>, static_store<E...> && ss, A... a ) const
+			catch( capturing_exception const & )
 			{
-				if( auto r = f_(std::forward<A>(a)...) )
+				throw;
+			}
+			catch( error_id const & err )
+			{
+				capture_in_exception_throw(err.value(), std::move(ss), true);
+			}
+			catch(...)
+			{
+				capture_in_exception_throw(leaf_detail::new_id(), std::move(ss), false);
+			}
+		}
+
+		template <class R, class... E, class F, class... A>
+		R capture_in_exception_impl( result_tag<R, true>, static_store<E...> && ss, F && f, A... a )
+		{
+			ss.set_reset(true);
+			try
+			{
+				if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
 					return r;
 				else
-					return decltype(r)( std::make_shared<dynamic_store_impl<E...>>(r.error().value(),std::move(ss)) );
+					return R( std::make_shared<dynamic_store_impl<E...>>(r.error().value(),std::move(ss)) );
 			}
-
-			F f_;
-
-		public:
-
-			exception_trap( F f ):
-				f_(f)
+			catch( capturing_exception const & )
 			{
+				throw;
 			}
-
-			template <class Alloc>
-			exception_trap( std::pair<F, Alloc> fa ):
-				AllocHelper(fa.second),
-				f_(fa.first)
+			catch( error_id const & err )
 			{
+				capture_in_exception_throw(err.value(), std::move(ss), true);
 			}
-
-			R operator()( A... a ) const
+			catch(...)
 			{
-				typename deduce_static_store<typename error_type_set<E...>::type>::type ss;
-				ss.set_reset(true);
-				try
-				{
-					return call_f( result_tag<R>(), std::move(ss), std::forward<A>(a)...); //Note, ss will not be actually moved if exception thrown.
-				}
-				catch( capturing_exception const & )
-				{
-					throw;
-				}
-				catch( error_id const & err )
-				{
-					this->throw_(err.value(), std::move(ss), true);
-				}
-				catch(...)
-				{
-					this->throw_(leaf_detail::new_id(), std::move(ss), false);
-				}
+				capture_in_exception_throw(leaf_detail::new_id(), std::move(ss), false);
 			}
-		};
+		}
+
+		template <class Alloc, class R, class... E, class F, class... A>
+		R capture_in_exception_impl( Alloc alloc, result_tag<R, false>, static_store<E...> && ss, F && f, A... a )
+		{
+			ss.set_reset(true);
+			try
+			{
+				return std::forward<F>(f)(std::forward<A>(a)...);
+			}
+			catch( capturing_exception const & )
+			{
+				throw;
+			}
+			catch( error_id const & err )
+			{
+				capture_in_exception_throw(alloc, err.value(), std::move(ss), true);
+			}
+			catch(...)
+			{
+				capture_in_exception_throw(alloc, leaf_detail::new_id(), std::move(ss), false);
+			}
+		}
+
+		template <class Alloc, class R, class... E, class F, class... A>
+		R capture_in_exception_impl( Alloc alloc, result_tag<R, true>, static_store<E...> && ss, F && f, A... a )
+		{
+			ss.set_reset(true);
+			try
+			{
+				if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
+					return r;
+				else
+					return R( std::allocate_shared<dynamic_store_impl<E...>>(alloc, r.error().value(),std::move(ss)) );
+			}
+			catch( capturing_exception const & )
+			{
+				throw;
+			}
+			catch( error_id const & err )
+			{
+				capture_in_exception_throw(alloc, err.value(), std::move(ss), true);
+			}
+			catch(...)
+			{
+				capture_in_exception_throw(alloc, leaf_detail::new_id(), std::move(ss), false);
+			}
+		}
 
 	} // leaf_detail
 
-	template <class... E, class F>
-	leaf_detail::exception_trap<
-		leaf_detail::ex_make,
-		F,
-		typename leaf_detail::function_traits<F>::mp_args,
-		leaf_detail_mp11::mp_list<E...>>
-	capture_in_exception_explicit( F && f ) noexcept
+	template <class... E, class F, class... A>
+	decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_in_exception_explicit(F && f, A... a)
 	{
-		return f;
+		using namespace leaf_detail;
+		using R = decltype(std::declval<F>()(std::forward<A>(a)...));
+		using StaticStore = typename deduce_static_store<typename error_type_set<e_original_ec, E...>::type>::type;
+		StaticStore ss;
+		return capture_in_exception_impl( result_tag<R>(), std::move(ss), std::forward<F>(f), std::forward<A>(a)...);
 	}
 
-	template <class... E, class F, class Alloc>
-	leaf_detail::exception_trap<
-		leaf_detail::ex_alloc<Alloc>,
-		F,
-		typename leaf_detail::function_traits<F>::mp_args,
-		leaf_detail_mp11::mp_list<E...>>
-	capture_in_exception_explicit_alloc( Alloc const & a, F && f ) noexcept
+	template <class... E, class Alloc, class F, class... A>
+	decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_in_exception_explicit(Alloc alloc, F && f, A... a)
 	{
-		return std::pair<F,Alloc>(std::forward<F>(f), a);
+		using namespace leaf_detail;
+		using R = decltype(std::declval<F>()(std::forward<A>(a)...));
+		using StaticStore = typename deduce_static_store<typename error_type_set<e_original_ec, E...>::type>::type;
+		StaticStore ss;
+		return capture_in_exception_impl( alloc, result_tag<R>(), std::move(ss), std::forward<F>(f), std::forward<A>(a)...);
 	}
 
-	template <class Handler, class F>
-	leaf_detail::exception_trap<
-		leaf_detail::ex_make,
-		F,
-		typename leaf_detail::function_traits<F>::mp_args,
-		typename leaf_detail::handler_args_list<typename leaf_detail::function_traits<Handler>::return_type>::type>
-	capture_in_exception( F && f, Handler const * = 0 ) noexcept
+	template <class Handler, class F, class... A>
+	decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_in_exception(F && f, A... a)
 	{
-		return f;
+		using namespace leaf_detail;
+		using R = decltype(std::declval<F>()(std::forward<A>(a)...));
+		using StaticStore = typename deduce_static_store<typename leaf_detail::handler_args_list<typename leaf_detail::function_traits<Handler>::return_type>::type>::type;
+		StaticStore ss;
+		return capture_in_exception_impl( result_tag<R>(), std::move(ss), std::forward<F>(f), std::forward<A>(a)...);
 	}
 
-	template <class Handler, class F, class Alloc>
-	leaf_detail::exception_trap<
-		leaf_detail::ex_alloc<Alloc>,
-		F,
-		typename leaf_detail::function_traits<F>::mp_args,
-		typename leaf_detail::handler_args_list<typename leaf_detail::function_traits<Handler>::return_type>::type>
-	capture_in_exception_alloc( Alloc const & a, F && f, Handler const * = 0 ) noexcept
+	template <class Handler, class Alloc, class F, class... A>
+	decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_in_exception(Alloc alloc, F && f, A... a)
 	{
-		return std::pair<F,Alloc>(std::forward<F>(f), a);
+		using namespace leaf_detail;
+		using R = decltype(std::declval<F>()(std::forward<A>(a)...));
+		using StaticStore = typename deduce_static_store<typename leaf_detail::handler_args_list<typename leaf_detail::function_traits<Handler>::return_type>::type>::type;
+		StaticStore ss;
+		return capture_in_exception_impl( alloc, result_tag<R>(), std::move(ss), std::forward<F>(f), std::forward<A>(a)...);
 	}
 
 } }

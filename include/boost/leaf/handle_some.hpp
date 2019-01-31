@@ -25,15 +25,36 @@ namespace boost { namespace leaf {
 		}
 		else
 		{
-			auto rr = ss.handle_error(error_info(r.error()), handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
+			auto rr = ss.handle_error_(error_info(r.error()), handler_wrapper<R,Handler>(std::forward<Handler>(handler))..., [&r] { return r; } );
 			if( rr )
 				ss.set_reset(true);
 			return rr;
 		}
 	}
 
+	////////////////////////////////////////
+
+	struct error_in_capture_handle_some: error_info
+	{
+		void const * const ss_;
+
+		error_in_capture_handle_some( void const * ss, error_id const & id ) noexcept:
+			error_info(id),
+			ss_(ss)
+		{
+			assert(ss_!=0);
+		}
+
+		error_in_capture_handle_some( void const * ss, std::error_code const & ec ) noexcept:
+			error_info(ec),
+			ss_(ss)
+		{
+			assert(ss_!=0);
+		}
+	};
+
 	template <class TryBlock, class Handler>
-	decltype(std::declval<TryBlock>()()) bound_handle_some( TryBlock && try_block, Handler && handler )
+	decltype(std::declval<TryBlock>()()) capture_handle_some( TryBlock && try_block, Handler && handler )
 	{
 		using namespace leaf_detail;
 		using R = decltype(std::declval<TryBlock>()());
@@ -46,11 +67,18 @@ namespace boost { namespace leaf {
 		}
 		else
 		{
-			auto rr = std::forward<Handler>(handler)(error(&ss, r.error())).get();
+			auto rr = std::forward<Handler>(handler)(error_in_capture_handle_some(&ss, r.error())).get();
 			if( rr )
 				ss.set_reset(true);
 			return rr;
 		}
+	}
+
+	template <class... Handler>
+	typename leaf_detail::handle_error_dispatch<Handler...>::result_type handle_error( error_in_capture_handle_some const & err, Handler && ... handler )
+	{
+		using namespace leaf_detail;
+		return handle_error_dispatch<Handler...>::handle(err, std::forward<Handler>(handler)... );
 	}
 
 } }

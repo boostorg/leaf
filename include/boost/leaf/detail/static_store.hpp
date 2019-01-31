@@ -167,38 +167,7 @@ namespace boost { namespace leaf {
 		}
 	};
 
-	struct error: error_info
-	{
-		void const * const ss_;
-
-		error( void const * ss, error_id const & id ) noexcept:
-			error_info(id),
-			ss_(ss)
-		{
-			assert(ss_!=0);
-		}
-
-		error( void const * ss, std::error_code const & ec ) noexcept:
-			error_info(ec),
-			ss_(ss)
-		{
-			assert(ss_!=0);
-		}
-
-		error( void const * ss, error_id const & id, leaf_detail::exception_info const & ex ) noexcept:
-			error_info(id, ex),
-			ss_(ss)
-		{
-			assert(ss_!=0);
-		}
-
-		error( void const * ss, std::error_code const & ec, leaf_detail::exception_info const & ex ) noexcept:
-			error_info(ec, ex),
-			ss_(ss)
-		{
-			assert(ss_!=0);
-		}
-	};
+	////////////////////////////////////////
 
 	class diagnostic_info: public error_info
 	{
@@ -751,6 +720,8 @@ namespace boost { namespace leaf {
 
 		public:
 
+			using dynamic_store_impl_type = dynamic_store_impl<E...>;
+
 			constexpr explicit static_store() noexcept:
 				reset_(false)
 			{
@@ -768,7 +739,7 @@ namespace boost { namespace leaf {
 			}
 
 			template <class F>
-			typename function_traits<F>::return_type handle_error( error_info const & ei, F && f ) const
+			typename function_traits<F>::return_type handle_error_( error_info const & ei, F && f ) const
 			{
 				using namespace static_store_internal;
 				static_assert( handler_matches_any_error<typename function_traits<F>::mp_args>::value, "The last handler passed to handle_all must match any error." );
@@ -776,13 +747,13 @@ namespace boost { namespace leaf {
 			}
 
 			template <class CarF, class... CdrF>
-			typename function_traits<CarF>::return_type handle_error( error_info const & ei, CarF && car_f, CdrF && ... cdr_f ) const
+			typename function_traits<CarF>::return_type handle_error_( error_info const & ei, CarF && car_f, CdrF && ... cdr_f ) const
 			{
 				using namespace static_store_internal;
 				if( handler_matches_any_error<typename function_traits<CarF>::mp_args>::value || check_handler( ei, typename function_traits<CarF>::mp_args{ } ) )
 					return call_handler( ei, std::forward<CarF>(car_f), typename function_traits<CarF>::mp_args{ } );
 				else
-					return handle_error( ei, std::forward<CdrF>(cdr_f)...);
+					return handle_error_( ei, std::forward<CdrF>(cdr_f)...);
 			}
 		};
 
@@ -925,18 +896,21 @@ namespace boost { namespace leaf {
 		////////////////////////////////////////
 
 		template <class... Handler>
-		struct handler_pack_return;
+		struct handler_pack_return_impl;
 
 		template <class CarH, class... CdrH>
-		struct handler_pack_return<CarH, CdrH...>
+		struct handler_pack_return_impl<CarH, CdrH...>
 		{
 			using type = typename function_traits<CarH>::return_type;
 		};
 
 		template <class... Handler>
+		using handler_pack_return = typename handler_pack_return_impl<Handler...>::type;
+
+		template <class... Handler>
 		struct handler_result
 		{
-			using R = typename handler_pack_return<Handler...>::type;
+			using R = handler_pack_return<Handler...>;
 
 			R r;
 
@@ -955,40 +929,52 @@ namespace boost { namespace leaf {
 		};
 
 		template <class R, class... Handler>
-		struct handle_error_dispatch
+		struct handle_error_dispatch_impl
 		{
 			using result_type = handler_result<Handler...>;
-			static result_type handle( error const & err, Handler && ... handler )
+
+			template <class Error>
+			static result_type handle( Error const & err, Handler && ... handler )
 			{
 				using namespace leaf_detail;
-				if( exception_info const * ex = err.ex_ )
-					return { reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error(err, std::forward<Handler>(handler)..., [ ]()->R const & {throw;}) };
-				else
-					return { reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error(err, std::forward<Handler>(handler)...) };
+				return { reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error_(err, std::forward<Handler>(handler)...) };
+			}
+
+			template <class Error>
+			static result_type handle_try_( Error const & err, Handler && ... handler )
+			{
+				using namespace leaf_detail;
+				return { reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error_(err, std::forward<Handler>(handler)..., [ ]() -> R {throw;}) };
 			}
 		};
 
 		template <class... Handler>
-		struct handle_error_dispatch<void, Handler...>
+		struct handle_error_dispatch_impl<void, Handler...>
 		{
 			using result_type = handler_result_void<Handler...>;
-			static result_type handle( error const & err, Handler && ... handler )
+
+			template <class Error>
+			static result_type handle( Error const & err, Handler && ... handler )
 			{
 				using namespace leaf_detail;
-				if( exception_info const * ex = err.ex_ )
-					reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error(err, std::forward<Handler>(handler)..., [ ] {throw;});
-				else
-					reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error(err, std::forward<Handler>(handler)...);
+				reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error_(err, std::forward<Handler>(handler)...);
+				return { };
+			}
+
+			template <class Error>
+			static result_type handle_try_( Error const & err, Handler && ... handler )
+			{
+				using namespace leaf_detail;
+				reinterpret_cast<typename deduce_static_store<typename handler_args_set<Handler...>::type>::type const *>(err.ss_)->handle_error_(err, std::forward<Handler>(handler)..., [ ] {throw;});
 				return { };
 			}
 		};
+
+		template <class... Handler>
+		using handle_error_dispatch = handle_error_dispatch_impl<handler_pack_return<Handler...>, Handler...>;
+
 	} // leaf_detail
 
-	template <class... Handler>
-	typename leaf_detail::handle_error_dispatch<typename leaf_detail::handler_pack_return<Handler...>::type, Handler...>::result_type handle_error( error const & err, Handler && ... handler )
-	{
-		return leaf_detail::handle_error_dispatch<typename leaf_detail::handler_pack_return<Handler...>::type, Handler...>::handle(err, std::forward<Handler>(handler)...);
-	}
 } }
 
 #endif

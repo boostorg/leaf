@@ -14,7 +14,7 @@ namespace leaf = boost::leaf;
 
 template <int> struct info { int value; };
 
-template <class F>
+template <class... E, class F>
 void test( F f_ )
 {
 	auto f =
@@ -22,7 +22,7 @@ void test( F f_ )
 		{
 			try
 			{
-				f_();
+				leaf::capture_in_exception_explicit<E...>(f_);
 				BOOST_TEST(false);
 				return std::exception_ptr();
 			}
@@ -173,33 +173,16 @@ void test( F f_ )
 
 int main()
 {
-	test(
-		leaf::capture_in_exception_explicit<info<1>, info<2>, info<3>>(
-			[ ]
-			{
-				throw leaf::exception( std::exception(), info<1>{1}, info<3>{3} ); // Derives from leaf::leaf::error_id
-			} ) );
-	test(
-		leaf::capture_in_exception_explicit<info<1>, info<2>, info<3>>(
-			[ ]
-			{
-				auto propagate = leaf::preload( info<1>{1}, info<3>{3} );
-				throw std::exception(); // Does not derive from leaf::leaf::error_id
-			} ) );
-	test(
-		leaf::capture_in_exception_explicit_alloc<info<1>, info<2>, info<3>>(
-			std::allocator<int>(),
-			[ ]
-			{
-				throw leaf::exception( std::exception(), info<1>{1}, info<3>{3} ); // Derives from leaf::leaf::error_id
-			} ) );
-	test(
-		leaf::capture_in_exception_explicit_alloc<info<1>, info<2>, info<3>>(
-			std::allocator<int>(),
-			[ ]
-			{
-				auto propagate = leaf::preload( info<1>{1}, info<3>{3} );
-				throw std::exception(); // Does not derive from leaf::leaf::error_id
-			} ) );
+	test<info<1>, info<2>, info<3>>(
+		[ ]
+		{
+			throw leaf::exception( std::exception(), info<1>{1}, info<3>{3} ); // Derives from leaf::leaf::error_id
+		} );
+	test<info<1>, info<2>, info<3>>(
+		[ ]
+		{
+			auto propagate = leaf::preload( info<1>{1}, info<3>{3} );
+			throw std::exception(); // Does not derive from leaf::leaf::error_id
+		} );
 	return boost::report_errors();
 }

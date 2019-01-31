@@ -25,7 +25,7 @@ struct fut_info
 	std::future<leaf::result<int>> fut;
 };
 
-template <class... E, class F>
+template <class Handler, class F>
 std::vector<fut_info> launch_tasks( int task_count, F f )
 {
 	assert(task_count>0);
@@ -39,7 +39,7 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
 			return fut_info { a, b, res, std::async( std::launch::async,
 				[=]
 				{
-					return f(a,b,res);
+					return leaf::capture_in_result<Handler>(f, a, b, res);
 				} ) };
 		} );
 	return fut;
@@ -47,7 +47,7 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
 
 int main()
 {
-	auto handler = [ ]( leaf::error const & err, int a, int b )
+	auto error_handler = [ ]( leaf::error_in_capture_handle_all const & err, int a, int b )
 	{
 		return leaf::handle_error( err,
 			[&]( info<1> const & x1, info<2> const & x2 )
@@ -62,27 +62,27 @@ int main()
 			} );
 	};
 
-	std::vector<fut_info> fut = launch_tasks<info<1>, info<2>>( 42,
-		leaf::capture_in_result<decltype(handler)>(
-			[ ]( int a, int b, int res ) -> leaf::result<int>
-			{
-				if( res>=0 )
-					return res;
-				else
-					return leaf::new_error( info<1>{a}, info<2>{b}, info<3>{} );
-			} ) );
+	std::vector<fut_info> fut = launch_tasks<decltype(error_handler)>(
+		42,
+		[ ]( int a, int b, int res ) -> leaf::result<int>
+		{
+			if( res>=0 )
+				return res;
+			else
+				return leaf::new_error( info<1>{a}, info<2>{b}, info<3>{} );
+		} );
 
 	for( auto & f : fut )
 	{
 		f.fut.wait();
-		int r = leaf::bound_handle_all(
+		int r = leaf::capture_handle_all(
 			[&]
 			{
 				return f.fut.get();
 			},
-			[&]( leaf::error const & err )
+			[&]( leaf::error_in_capture_handle_all const & err )
 			{
-				return handler(err, f.a, f.b);
+				return error_handler(err, f.a, f.b);
 			} );
 		if( f.result>=0 )
 			BOOST_TEST_EQ(r, f.result);

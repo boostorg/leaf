@@ -38,22 +38,33 @@ namespace boost { namespace leaf {
 
 int main()
 {
-	auto f = leaf::capture_in_result_explicit<info<1>, info<2>, info<3>>(
-		[ ]() -> leaf::result<void>
-		{
-			return leaf::new_error( info<1>{}, info<3>{} );
-		} );
-	leaf::handle_all(
-		[&f]
-		{
-			BOOST_TEST_EQ(count, 0);
-			auto r = f();
-			BOOST_TEST_EQ(count, 2);
-			return r;
-		},
-		[ ]
-		{
-		} );
+	auto handler = [ ]( leaf::error_in_capture_handle_all const & err )
+	{
+		return leaf::handle_error( err,
+			[ ]( info<1>, info<3> )
+			{
+			},
+			[ ]
+			{
+			} );
+	};
+	{
+		auto r = leaf::capture_in_result<decltype(handler)>(
+			[ ]() -> leaf::result<void>
+			{
+				return leaf::new_error( info<1>{}, info<3>{} );
+			} );
+		BOOST_TEST_EQ(count, 2);
+		leaf::capture_handle_all(
+			[&r]
+			{
+				return r;
+			},
+			[&]( leaf::error_in_capture_handle_all const & err )
+			{
+				return handler(err);
+			} );
+	}
 	BOOST_TEST_EQ(count, 0);
 	return boost::report_errors();
 }

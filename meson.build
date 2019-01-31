@@ -16,6 +16,11 @@ if not meson.is_subproject()
 			'-Wno-dangling-else',
 			'-Wno-delete-non-virtual-dtor',
 			language:'cpp' )
+	elif compiler_id=='gcc'
+		add_global_arguments(
+			'-Wno-non-virtual-dtor',
+			'-Wno-dangling-else',
+			language:'cpp' )
 	endif
 endif
 

@@ -44,10 +44,10 @@ int main()
 {
 	int const task_count = 42;
 
-	// Container to collect the generated std::future objects.
-	std::vector<std::future<task_result>> fut;
-
-	auto handler = [ ]( leaf::error const & err )
+	// The error_handler is called in this thread (see leaf::error_try_ below), eath time we get a future
+	// from a worker that failed. The arguments passed to individual lambdas are transported from
+	// the worker thread to the main thread automatically.
+	auto error_handler = [ ]( leaf::error_in_capture_try_ const & err )
 	{
 		return leaf::handle_error( err,
 			[ ]( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
@@ -63,15 +63,21 @@ int main()
 			} );
 	};
 
+	// Container to collect the generated std::future objects.
+	std::vector<std::future<task_result>> fut;
+
 	// Launch the tasks, but rather than launching the task function directly, we launch the
-	// wrapper function returned by leaf::capture_in_result. It captures the specified error object
-	// types and automatically transports them in the leaf::result<task_result> it returns.
+	// wrapper function returned by leaf::capture_in_result. It inspects the type of the
+	// error_handler function in order to deduce what e-types need to be transported.
 	std::generate_n( std::inserter(fut,fut.end()), task_count,
 		[&]
 		{
 			return std::async(
 				std::launch::async,
-				leaf::capture_in_exception<decltype(handler)>(&task) );
+				[&]
+				{
+					return leaf::capture_in_exception<decltype(error_handler)>(&task);
+				} );
 		} );
 
 	// Wait on the futures, get the task results, handle errors.
@@ -79,7 +85,7 @@ int main()
 	{
 		f.wait();
 
-		leaf::bound_try_(
+		leaf::capture_try_(
 			[&]
 			{
 				task_result r = f.get();
@@ -88,9 +94,9 @@ int main()
 				std::cout << "Success!" << std::endl;
 				(void) r;
 			},
-			[&]( leaf::error const & err )
+			[&]( leaf::error_in_capture_try_ const & err )
 			{
-				return handler(err);
+				return error_handler(err);
 			} );
 	}
 }

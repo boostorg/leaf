@@ -38,22 +38,39 @@ namespace boost { namespace leaf {
 
 int main()
 {
-	auto f = leaf::capture_in_exception_explicit<info<1>, info<2>, info<3>>(
-		[ ]
+	auto error_handler = [ ]( leaf::error_in_capture_try_ const & err )
+	{
+		return leaf::handle_error( err,
+			[ ]( info<1>, info<3> )
+			{
+			} );
+	};
+	BOOST_TEST_EQ(count, 0);
+	std::exception_ptr ep;
+	try
+	{
+		leaf::capture_in_exception<decltype(error_handler)>(
+			[ ]
+			{
+				throw leaf::exception( std::exception(), info<1>{}, info<3>{} );
+			} );
+		BOOST_TEST(false);
+	}
+	catch(...)
+	{
+		ep = std::current_exception();
+	}
+	BOOST_TEST_EQ(count, 2);
+	leaf::capture_try_(
+		[&]
 		{
-			throw leaf::exception( std::exception(), info<1>{}, info<3>{} );
-		} );
-	leaf::try_(
-		[&f]
-		{
-			BOOST_TEST_EQ(count, 0);
-			try { f(); }
-			catch(...) { BOOST_TEST_EQ(count, 2); throw; }
-
+			std::rethrow_exception(ep);
 		},
-		[ ]
+		[&]( leaf::error_in_capture_try_ const & err )
 		{
+			return error_handler(err);
 		} );
+	ep = std::exception_ptr();
 	BOOST_TEST_EQ(count, 0);
 	return boost::report_errors();
 }
