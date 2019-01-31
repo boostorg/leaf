@@ -13,12 +13,12 @@ void check_traits( F )
 	using namespace boost::leaf::leaf_detail;
 	using boost::leaf::leaf_detail_mp11::mp_list;
 	static_assert(function_traits<F>::arity==4,"arity");
-	static_assert(std::is_same<typename function_traits<F>::return_type,double>::value,"return_type");
-	static_assert(std::is_same<typename function_traits<F>::template arg<0>::type,int>::value,"arg<0>");
-	static_assert(std::is_same<typename function_traits<F>::template arg<1>::type,float>::value,"arg<1>");
-	static_assert(std::is_same<typename function_traits<F>::template arg<2>::type,int const &>::value,"arg<2>");
-	static_assert(std::is_same<typename function_traits<F>::template arg<3>::type,float &&>::value,"arg<3>");
-	static_assert(std::is_same<typename function_traits<F>::mp_args,mp_list<int,float,int const &,float &&>>::value,"mp_args");
+	static_assert(std::is_same<fn_return_type<F>,double>::value,"return_type");
+	static_assert(std::is_same<fn_arg_type<F,0>,int>::value,"arg<0>");
+	static_assert(std::is_same<fn_arg_type<F,1>,float>::value,"arg<1>");
+	static_assert(std::is_same<fn_arg_type<F,2>,int const &>::value,"arg<2>");
+	static_assert(std::is_same<fn_arg_type<F,3>,float &&>::value,"arg<3>");
+	static_assert(std::is_same<fn_mp_args<F>,mp_list<int,float,int const &,float &&>>::value,"mp_args");
 }
 
 double f1( int, float, int const &, float && )

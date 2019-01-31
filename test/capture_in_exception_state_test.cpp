@@ -38,9 +38,9 @@ namespace boost { namespace leaf {
 
 int main()
 {
-	auto error_handler = [ ]( leaf::error_in_capture_try_ const & err )
+	auto error_handler = [ ]( leaf::error_in_remote_try_ const & error )
 	{
-		return leaf::handle_error( err,
+		return leaf::handle_error( error,
 			[ ]( info<1>, info<3> )
 			{
 			} );
@@ -61,14 +61,14 @@ int main()
 		ep = std::current_exception();
 	}
 	BOOST_TEST_EQ(count, 2);
-	leaf::capture_try_(
+	leaf::remote_try_(
 		[&]
 		{
 			std::rethrow_exception(ep);
 		},
-		[&]( leaf::error_in_capture_try_ const & err )
+		[&]( leaf::error_in_remote_try_ const & error )
 		{
-			return error_handler(err);
+			return error_handler(error);
 		} );
 	ep = std::exception_ptr();
 	BOOST_TEST_EQ(count, 0);

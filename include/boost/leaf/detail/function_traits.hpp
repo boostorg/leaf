@@ -68,6 +68,15 @@ namespace boost { namespace leaf {
 		template<class C, class R, class... A> struct function_traits<R(C::*)(A...)> : function_traits<R(C&,A...)> { };
 		template<class C, class R, class... A> struct function_traits<R(C::*)(A...) const> : function_traits<R(C const &,A...)> { };
 		template<class C, class R> struct function_traits<R(C::*)> : function_traits<R(C&)> { };
+
+		template <class F>
+		using fn_return_type = typename function_traits<F>::return_type;
+
+		template <class F, int I>
+		using fn_arg_type = typename function_traits<F>::template arg<I>::type;
+
+		template <class F>
+		using fn_mp_args = typename function_traits<F>::mp_args;
 	} // namespace leaf_detail
 
 } }

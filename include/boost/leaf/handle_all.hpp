@@ -27,18 +27,18 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	struct error_in_capture_handle_all: error_info
+	struct error_in_remote_handle_all: error_info
 	{
 		void const * const ss_;
 
-		error_in_capture_handle_all( void const * ss, error_id const & id ) noexcept:
+		error_in_remote_handle_all( void const * ss, error_id const & id ) noexcept:
 			error_info(id),
 			ss_(ss)
 		{
 			assert(ss_!=0);
 		}
 
-		error_in_capture_handle_all( void const * ss, std::error_code const & ec ) noexcept:
+		error_in_remote_handle_all( void const * ss, std::error_code const & ec ) noexcept:
 			error_info(ec),
 			ss_(ss)
 		{
@@ -47,24 +47,24 @@ namespace boost { namespace leaf {
 	};
 
 	template <class TryBlock, class Handler>
-	typename std::remove_reference<decltype(std::declval<TryBlock>()().value())>::type  capture_handle_all( TryBlock && try_block, Handler && handler )
+	typename std::remove_reference<decltype(std::declval<TryBlock>()().value())>::type  remote_handle_all( TryBlock && try_block, Handler && handler )
 	{
 		using namespace leaf_detail;
 		using R = decltype(std::declval<TryBlock>()());
 		static_assert(is_result_type<R>::value, "The try_block passed to handle_all must be registered with leaf::is_result_type.");
-		deduce_static_store<handler_args_list<typename function_traits<Handler>::return_type>> ss;
+		deduce_static_store<handler_args_list<fn_return_type<Handler>>> ss;
 		ss.set_reset(true);
 		if( auto r = std::forward<TryBlock>(try_block)() )
 			return r.value();
 		else
-			return std::forward<Handler>(handler)(error_in_capture_handle_all(&ss, r.error())).get();
+			return std::forward<Handler>(handler)(error_in_remote_handle_all(&ss, r.error())).get();
 	}
 
 	template <class... Handler>
-	typename leaf_detail::handle_error_dispatch<Handler...>::result_type handle_error( error_in_capture_handle_all const & err, Handler && ... handler )
+	typename leaf_detail::handle_error_dispatch<Handler...>::result_type handle_error( error_in_remote_handle_all const & error, Handler && ... handler )
 	{
 		using namespace leaf_detail;
-		return handle_error_dispatch<Handler...>::handle(err, std::forward<Handler>(handler)... );
+		return handle_error_dispatch<Handler...>::handle(error, std::forward<Handler>(handler)... );
 	}
 
 } }

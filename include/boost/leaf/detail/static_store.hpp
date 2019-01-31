@@ -712,7 +712,7 @@ namespace boost { namespace leaf {
 			}
 
 			template <class F,class... T>
-			typename function_traits<F>::return_type call_handler( error_info const & ei, F && f, leaf_detail_mp11::mp_list<T...> ) const
+			fn_return_type<F> call_handler( error_info const & ei, F && f, leaf_detail_mp11::mp_list<T...> ) const
 			{
 				using namespace static_store_internal;
 				return std::forward<F>(f)( get_one_argument<typename std::remove_cv<typename std::remove_reference<T>::type>::type>::get(s_, ei)... );
@@ -739,19 +739,19 @@ namespace boost { namespace leaf {
 			}
 
 			template <class F>
-			typename function_traits<F>::return_type handle_error_( error_info const & ei, F && f ) const
+			fn_return_type<F> handle_error_( error_info const & ei, F && f ) const
 			{
 				using namespace static_store_internal;
-				static_assert( handler_matches_any_error<typename function_traits<F>::mp_args>::value, "The last handler passed to handle_all must match any error." );
-				return call_handler( ei, std::forward<F>(f), typename function_traits<F>::mp_args{ } );
+				static_assert( handler_matches_any_error<fn_mp_args<F>>::value, "The last handler passed to handle_all must match any error." );
+				return call_handler( ei, std::forward<F>(f), fn_mp_args<F>{ } );
 			}
 
 			template <class CarF, class... CdrF>
-			typename function_traits<CarF>::return_type handle_error_( error_info const & ei, CarF && car_f, CdrF && ... cdr_f ) const
+			fn_return_type<CarF> handle_error_( error_info const & ei, CarF && car_f, CdrF && ... cdr_f ) const
 			{
 				using namespace static_store_internal;
-				if( handler_matches_any_error<typename function_traits<CarF>::mp_args>::value || check_handler( ei, typename function_traits<CarF>::mp_args{ } ) )
-					return call_handler( ei, std::forward<CarF>(car_f), typename function_traits<CarF>::mp_args{ } );
+				if( handler_matches_any_error<fn_mp_args<CarF>>::value || check_handler( ei, fn_mp_args<CarF>{ } ) )
+					return call_handler( ei, std::forward<CarF>(car_f), fn_mp_args<CarF>{ } );
 				else
 					return handle_error_( ei, std::forward<CdrF>(cdr_f)...);
 			}
@@ -832,7 +832,7 @@ namespace boost { namespace leaf {
 		{
 			using type = transform_error_type_list<
 				leaf_detail_mp11::mp_append<
-					typename function_traits<Handler>::mp_args...>>;
+					fn_mp_args<Handler>...>>;
 		};
 
 		template <class... Handler>
@@ -846,7 +846,7 @@ namespace boost { namespace leaf {
 		{
 			using type = transform_error_type_list<
 				leaf_detail_mp11::mp_append<
-					typename function_traits<Handler>::mp_args...>>;
+					fn_mp_args<Handler>...>>;
 		};
 
 		template <class HandlerList>
@@ -876,7 +876,7 @@ namespace boost { namespace leaf {
 
 		////////////////////////////////////////
 
-		template <class TryReturn, class Handler, class HandlerReturn = typename function_traits<Handler>::return_type, class HandlerArgs = typename function_traits<Handler>::mp_args>
+		template <class TryReturn, class Handler, class HandlerReturn = fn_return_type<Handler>, class HandlerArgs = fn_mp_args<Handler>>
 		struct handler_wrapper;
 
 		template <class TryReturn, class Handler, class HandlerReturn, template<class...> class L, class... A>
@@ -916,7 +916,7 @@ namespace boost { namespace leaf {
 		template <class CarH, class... CdrH>
 		struct handler_pack_return_impl<CarH, CdrH...>
 		{
-			using type = typename function_traits<CarH>::return_type;
+			using type = fn_return_type<CarH>;
 		};
 
 		template <class... Handler>

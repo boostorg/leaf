@@ -38,9 +38,9 @@ namespace boost { namespace leaf {
 
 int main()
 {
-	auto handler = [ ]( leaf::error_in_capture_handle_all const & err )
+	auto handler = [ ]( leaf::error_in_remote_handle_all const & error )
 	{
-		return leaf::handle_error( err,
+		return leaf::handle_error( error,
 			[ ]( info<1>, info<3> )
 			{
 			},
@@ -55,14 +55,14 @@ int main()
 				return leaf::new_error( info<1>{}, info<3>{} );
 			} );
 		BOOST_TEST_EQ(count, 2);
-		leaf::capture_handle_all(
+		leaf::remote_handle_all(
 			[&r]
 			{
 				return r;
 			},
-			[&]( leaf::error_in_capture_handle_all const & err )
+			[&]( leaf::error_in_remote_handle_all const & error )
 			{
-				return handler(err);
+				return handler(error);
 			} );
 	}
 	BOOST_TEST_EQ(count, 0);

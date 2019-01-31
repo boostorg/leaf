@@ -50,7 +50,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class... Ex, class F>
-	leaf_detail::deduce_exception_to_result_return_type<typename leaf_detail::function_traits<F>::return_type> exception_to_result( F && f ) noexcept
+	leaf_detail::deduce_exception_to_result_return_type<leaf_detail::fn_return_type<F>> exception_to_result( F && f ) noexcept
 	{
 		try
 		{

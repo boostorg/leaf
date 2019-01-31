@@ -211,7 +211,7 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class F, class A0 = typename function_traits<F>::template arg<0>::type, int arity = function_traits<F>::arity>
+		template <class F, class A0 = fn_arg_type<F,0>, int arity = function_traits<F>::arity>
 		class accumulating_item;
 
 		template <class F, class A0>

@@ -54,7 +54,7 @@ namespace boost { namespace leaf {
 	{
 		using namespace leaf_detail;
 		deduce_static_store<handler_args_set<Handler...>> ss;
-		auto throw_ = [ ]() -> typename function_traits<TryBlock>::return_type { throw; };
+		auto throw_ = [ ]() -> fn_return_type<TryBlock> { throw; };
 		try
 		{
 			return call_try_block( result_tag<decltype(std::declval<TryBlock>()())>(), ss, std::forward<TryBlock>(try_block), std::forward<Handler>(handler)...);
@@ -128,18 +128,18 @@ namespace boost { namespace leaf {
 		}
 	}
 
-	struct error_in_capture_try_: error_info
+	struct error_in_remote_try_: error_info
 	{
 		void const * const ss_;
 
-		error_in_capture_try_( void const * ss, error_id const & id, leaf_detail::exception_info_ const & ex ) noexcept:
+		error_in_remote_try_( void const * ss, error_id const & id, leaf_detail::exception_info_ const & ex ) noexcept:
 			error_info(id, ex),
 			ss_(ss)
 		{
 			assert(ss_!=0);
 		}
 
-		error_in_capture_try_( void const * ss, std::error_code const & ec, leaf_detail::exception_info_ const & ex ) noexcept:
+		error_in_remote_try_( void const * ss, std::error_code const & ec, leaf_detail::exception_info_ const & ex ) noexcept:
 			error_info(ec, ex),
 			ss_(ss)
 		{
@@ -148,10 +148,10 @@ namespace boost { namespace leaf {
 	};
 
 	template <class TryBlock, class Handler>
-	decltype(std::declval<TryBlock>()()) capture_try_( TryBlock && try_block, Handler && handler )
+	decltype(std::declval<TryBlock>()()) remote_try_( TryBlock && try_block, Handler && handler )
 	{
 		using namespace leaf_detail;
-		deduce_static_store<handler_args_list<typename function_traits<Handler>::return_type>> ss;
+		deduce_static_store<handler_args_list<fn_return_type<Handler>>> ss;
 		try
 		{
 			return error_call_try_block( result_tag<decltype(std::declval<TryBlock>()())>(), ss, std::forward<TryBlock>(try_block), std::forward<Handler>(handler));
@@ -165,42 +165,42 @@ namespace boost { namespace leaf {
 			}
 			catch( std::system_error const & ex )
 			{
-				return std::forward<Handler>(handler)(error_in_capture_try_(&ss, ex.code(), exception_info_(&ex, &cap, &print_exception_info))).get();
+				return std::forward<Handler>(handler)(error_in_remote_try_(&ss, ex.code(), exception_info_(&ex, &cap, &print_exception_info))).get();
 			}
 			catch( std::exception const & ex )
 			{
 				if( error_id const * id = dynamic_cast<error_id const *>(&ex) )
-					return std::forward<Handler>(handler)(error_in_capture_try_(&ss, *id, exception_info_(&ex, &cap, &print_exception_info))).get();
+					return std::forward<Handler>(handler)(error_in_remote_try_(&ss, *id, exception_info_(&ex, &cap, &print_exception_info))).get();
 				else
-					return std::forward<Handler>(handler)(error_in_capture_try_(&ss, make_error_id(next_id()), exception_info_(&ex, &cap, &print_exception_info))).get();
+					return std::forward<Handler>(handler)(error_in_remote_try_(&ss, make_error_id(next_id()), exception_info_(&ex, &cap, &print_exception_info))).get();
 			}
 			catch(...)
 			{
-				return std::forward<Handler>(handler)(error_in_capture_try_(&ss, make_error_id(next_id()), exception_info_(0, &cap, &print_exception_info))).get();
+				return std::forward<Handler>(handler)(error_in_remote_try_(&ss, make_error_id(next_id()), exception_info_(0, &cap, &print_exception_info))).get();
 			}
 		}
 		catch( std::system_error const & ex )
 		{
-			return std::forward<Handler>(handler)(error_in_capture_try_(&ss, ex.code(), exception_info_(&ex, 0, &print_exception_info))).get();
+			return std::forward<Handler>(handler)(error_in_remote_try_(&ss, ex.code(), exception_info_(&ex, 0, &print_exception_info))).get();
 		}
 		catch( std::exception const & ex )
 		{
 			if( error_id const * id = dynamic_cast<error_id const *>(&ex) )
-				return std::forward<Handler>(handler)(error_in_capture_try_(&ss, *id, exception_info_(&ex, 0, &print_exception_info))).get();
+				return std::forward<Handler>(handler)(error_in_remote_try_(&ss, *id, exception_info_(&ex, 0, &print_exception_info))).get();
 			else
-				return std::forward<Handler>(handler)(error_in_capture_try_(&ss, make_error_id(next_id()), exception_info_(&ex, 0, &print_exception_info))).get();
+				return std::forward<Handler>(handler)(error_in_remote_try_(&ss, make_error_id(next_id()), exception_info_(&ex, 0, &print_exception_info))).get();
 		}
 		catch(...)
 		{
-			return std::forward<Handler>(handler)(error_in_capture_try_(&ss, make_error_id(next_id()), exception_info_(0, 0, &print_exception_info))).get();
+			return std::forward<Handler>(handler)(error_in_remote_try_(&ss, make_error_id(next_id()), exception_info_(0, 0, &print_exception_info))).get();
 		}
 	}
 
 	template <class... Handler>
-	typename leaf_detail::handle_error_dispatch<Handler...>::result_type handle_error( error_in_capture_try_ const & err, Handler && ... handler )
+	typename leaf_detail::handle_error_dispatch<Handler...>::result_type handle_error( error_in_remote_try_ const & error, Handler && ... handler )
 	{
 		using namespace leaf_detail;
-		return handle_error_dispatch<Handler...>::handle_try_(err, std::forward<Handler>(handler)... );
+		return handle_error_dispatch<Handler...>::handle_try_(error, std::forward<Handler>(handler)... );
 	}
 
 } }
