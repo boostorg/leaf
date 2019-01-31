@@ -322,6 +322,16 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class E>
+		class slot;
+
+		template <class E>
+		slot<E> * & tl_slot_ptr() noexcept
+		{
+			static thread_local slot<E> * s;
+			return s;
+		}
+
+		template <class E>
 		class slot:
 			slot_base,
 			optional<id_e_pair<E>>
@@ -345,7 +355,12 @@ namespace boost { namespace leaf {
 
 		protected:
 
-			slot() noexcept;
+			slot() noexcept:
+				top_(tl_slot_ptr<E>())
+			{
+				prev_ = top_;
+				top_ = this;
+			}
 
 			~slot() noexcept
 			{
@@ -382,13 +397,6 @@ namespace boost { namespace leaf {
 				return optional<E>();
 			}
 		};
-
-		template <class E>
-		slot<E> * & tl_slot_ptr() noexcept
-		{
-			static thread_local slot<E> * s;
-			return s;
-		}
 
 		template <class E>
 		void put_unexpected_count( id_e_pair<E> const & id_e ) noexcept
@@ -444,14 +452,6 @@ namespace boost { namespace leaf {
 					no_expect_slot( id_e_pair<T>(err_id,std::forward<E>(e)) );
 			}
 			return 0;
-		}
-
-		template <class E>
-		slot<E>::slot() noexcept:
-			top_(tl_slot_ptr<E>())
-		{
-			prev_ = top_;
-			top_ = this;
 		}
 
 		enum class result_variant
