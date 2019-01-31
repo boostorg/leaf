@@ -40,10 +40,10 @@ namespace boost { namespace leaf {
 	{
 		class capturing_exception;
 
-		class exception_info
+		class exception_info_
 		{
-			exception_info( exception_info const & ) = delete;
-			exception_info & operator=( exception_info const & ) = delete;
+			exception_info_( exception_info_ const & ) = delete;
+			exception_info_ & operator=( exception_info_ const & ) = delete;
 
 			std::exception const * const ex_;
 			leaf_detail::capturing_exception const * const cap_;
@@ -51,7 +51,7 @@ namespace boost { namespace leaf {
 
 		public:
 
-			exception_info( std::exception const * ex, leaf_detail::capturing_exception const * cap, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::capturing_exception const *) ) noexcept:
+			exception_info_( std::exception const * ex, leaf_detail::capturing_exception const * cap, void (*print_ex)(std::ostream &, std::exception const *, leaf_detail::capturing_exception const *) ) noexcept:
 				ex_(ex),
 				cap_(cap),
 				print_ex_(print_ex)
@@ -97,7 +97,7 @@ namespace boost { namespace leaf {
 
 	public:
 
-		leaf_detail::exception_info const * const ex_;
+		leaf_detail::exception_info_ const * const ex_;
 
 		explicit error_info( error_id const & id ) noexcept:
 			err_id_(id.value()),
@@ -113,14 +113,14 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		error_info( error_id const & id, leaf_detail::exception_info const & ex ) noexcept:
+		error_info( error_id const & id, leaf_detail::exception_info_ const & ex ) noexcept:
 			err_id_(id.value()),
 			ec_(id),
 			ex_(&ex)
 		{
 		}
 
-		error_info( std::error_code const & ec, leaf_detail::exception_info const & ex ) noexcept:
+		error_info( std::error_code const & ec, leaf_detail::exception_info_ const & ex ) noexcept:
 			err_id_(get_err_id(ec)),
 			ec_(ec),
 			ex_(&ex)

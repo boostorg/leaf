@@ -68,34 +68,34 @@ namespace boost { namespace leaf {
 			}
 			catch( std::system_error const & ex )
 			{
-				return ss.handle_error_(error_info(ex.code(), exception_info(&ex, &cap, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
+				return ss.handle_error_(error_info(ex.code(), exception_info_(&ex, &cap, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
 			}
 			catch( std::exception const & ex )
 			{
 				if( error_id const * id = dynamic_cast<error_id const *>(&ex) )
-					return ss.handle_error_(error_info(*id, exception_info(&ex, &cap, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
+					return ss.handle_error_(error_info(*id, exception_info_(&ex, &cap, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
 				else
-					return ss.handle_error_(error_info(make_error_id(next_id()), exception_info(&ex, &cap, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
+					return ss.handle_error_(error_info(make_error_id(next_id()), exception_info_(&ex, &cap, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
 			}
 			catch(...)
 			{
-				return ss.handle_error_(error_info(make_error_id(next_id()), exception_info(0, &cap, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
+				return ss.handle_error_(error_info(make_error_id(next_id()), exception_info_(0, &cap, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
 			}
 		}
 		catch( std::system_error const & ex )
 		{
-			return ss.handle_error_(error_info(ex.code(), exception_info(&ex, 0, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
+			return ss.handle_error_(error_info(ex.code(), exception_info_(&ex, 0, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
 		}
 		catch( std::exception const & ex )
 		{
 			if( error_id const * id = dynamic_cast<error_id const *>(&ex) )
-				return ss.handle_error_(error_info(*id, exception_info(&ex, 0, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
+				return ss.handle_error_(error_info(*id, exception_info_(&ex, 0, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
 			else
-				return ss.handle_error_(error_info(make_error_id(next_id()), exception_info(&ex, 0, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
+				return ss.handle_error_(error_info(make_error_id(next_id()), exception_info_(&ex, 0, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
 		}
 		catch(...)
 		{
-			return ss.handle_error_(error_info(make_error_id(next_id()), exception_info(0, 0, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
+			return ss.handle_error_(error_info(make_error_id(next_id()), exception_info_(0, 0, &print_exception_info)), std::forward<Handler>(handler)..., std::move(throw_));
 		}
 	}
 
@@ -132,14 +132,14 @@ namespace boost { namespace leaf {
 	{
 		void const * const ss_;
 
-		error_in_capture_try_( void const * ss, error_id const & id, leaf_detail::exception_info const & ex ) noexcept:
+		error_in_capture_try_( void const * ss, error_id const & id, leaf_detail::exception_info_ const & ex ) noexcept:
 			error_info(id, ex),
 			ss_(ss)
 		{
 			assert(ss_!=0);
 		}
 
-		error_in_capture_try_( void const * ss, std::error_code const & ec, leaf_detail::exception_info const & ex ) noexcept:
+		error_in_capture_try_( void const * ss, std::error_code const & ec, leaf_detail::exception_info_ const & ex ) noexcept:
 			error_info(ec, ex),
 			ss_(ss)
 		{
@@ -165,34 +165,34 @@ namespace boost { namespace leaf {
 			}
 			catch( std::system_error const & ex )
 			{
-				return std::forward<Handler>(handler)(error_in_capture_try_(&ss, ex.code(), exception_info(&ex, &cap, &print_exception_info))).get();
+				return std::forward<Handler>(handler)(error_in_capture_try_(&ss, ex.code(), exception_info_(&ex, &cap, &print_exception_info))).get();
 			}
 			catch( std::exception const & ex )
 			{
 				if( error_id const * id = dynamic_cast<error_id const *>(&ex) )
-					return std::forward<Handler>(handler)(error_in_capture_try_(&ss, *id, exception_info(&ex, &cap, &print_exception_info))).get();
+					return std::forward<Handler>(handler)(error_in_capture_try_(&ss, *id, exception_info_(&ex, &cap, &print_exception_info))).get();
 				else
-					return std::forward<Handler>(handler)(error_in_capture_try_(&ss, make_error_id(next_id()), exception_info(&ex, &cap, &print_exception_info))).get();
+					return std::forward<Handler>(handler)(error_in_capture_try_(&ss, make_error_id(next_id()), exception_info_(&ex, &cap, &print_exception_info))).get();
 			}
 			catch(...)
 			{
-				return std::forward<Handler>(handler)(error_in_capture_try_(&ss, make_error_id(next_id()), exception_info(0, &cap, &print_exception_info))).get();
+				return std::forward<Handler>(handler)(error_in_capture_try_(&ss, make_error_id(next_id()), exception_info_(0, &cap, &print_exception_info))).get();
 			}
 		}
 		catch( std::system_error const & ex )
 		{
-			return std::forward<Handler>(handler)(error_in_capture_try_(&ss, ex.code(), exception_info(&ex, 0, &print_exception_info))).get();
+			return std::forward<Handler>(handler)(error_in_capture_try_(&ss, ex.code(), exception_info_(&ex, 0, &print_exception_info))).get();
 		}
 		catch( std::exception const & ex )
 		{
 			if( error_id const * id = dynamic_cast<error_id const *>(&ex) )
-				return std::forward<Handler>(handler)(error_in_capture_try_(&ss, *id, exception_info(&ex, 0, &print_exception_info))).get();
+				return std::forward<Handler>(handler)(error_in_capture_try_(&ss, *id, exception_info_(&ex, 0, &print_exception_info))).get();
 			else
-				return std::forward<Handler>(handler)(error_in_capture_try_(&ss, make_error_id(next_id()), exception_info(&ex, 0, &print_exception_info))).get();
+				return std::forward<Handler>(handler)(error_in_capture_try_(&ss, make_error_id(next_id()), exception_info_(&ex, 0, &print_exception_info))).get();
 		}
 		catch(...)
 		{
-			return std::forward<Handler>(handler)(error_in_capture_try_(&ss, make_error_id(next_id()), exception_info(0, 0, &print_exception_info))).get();
+			return std::forward<Handler>(handler)(error_in_capture_try_(&ss, make_error_id(next_id()), exception_info_(0, 0, &print_exception_info))).get();
 		}
 	}
 
