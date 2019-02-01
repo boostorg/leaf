@@ -18,6 +18,7 @@ int get_global() noexcept
 	return global;
 }
 
+template <int>
 struct info
 {
 	int value;
@@ -26,7 +27,7 @@ struct info
 leaf::error_id g()
 {
 	global = 0;
-	auto propagate = leaf::defer( [ ] { return info{get_global()}; } );
+	auto propagate = leaf::defer( [ ]{ return info<42>{get_global()}; }, [ ]{ return info<-42>{-42}; } );
 	global = 42;
 	return leaf::new_error();
 }
@@ -43,9 +44,13 @@ int main()
 		{
 			return f();
 		},
-		[ ]( info const & i42 )
+		[ ]( info<42> const & i42, leaf::diagnostic_info const & di )
 		{
 			BOOST_TEST_EQ(i42.value, 42);
+			std::stringstream ss; ss << di;
+			std::string s = ss.str();
+			std::cout << s;
+			BOOST_TEST(s.find("info<-42>")!=s.npos);
 			return 1;
 		},
 		[ ]

@@ -11,7 +11,8 @@
 
 namespace leaf = boost::leaf;
 
-template <int> struct info
+template <int>
+struct info
 {
 	int value;
 };
