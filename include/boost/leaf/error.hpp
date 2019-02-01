@@ -353,7 +353,7 @@ namespace boost { namespace leaf {
 				return false;
 			}
 
-		protected:
+		public:
 
 			slot() noexcept:
 				top_(tl_slot_ptr<E>())
@@ -379,8 +379,6 @@ namespace boost { namespace leaf {
 				}
 				top_ = prev_;
 			}
-
-		public:
 
 			using base::put;
 			using base::has_value;

@@ -217,46 +217,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		class enable_any
-		{
-		protected:
-
-			enable_any() noexcept
-			{
-				++tl_unexpected_enabled_counter();
-			}
-
-			~enable_any() noexcept
-			{
-				--tl_unexpected_enabled_counter();
-			}
-		};
-
-		template <class E>
-		class static_store_slot:
-			public slot<E>
-		{
-		};
-
-		template <>
-		class static_store_slot<e_unexpected_count>:
-			public slot<e_unexpected_count>,
-			enable_any
-		{
-		};
-
-		template <>
-		class static_store_slot<e_unexpected_info>:
-			public slot<e_unexpected_info>,
-			enable_any
-		{
-		};
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
 		template <class T, class... List>
 		struct type_index;
 
@@ -284,7 +244,7 @@ namespace boost { namespace leaf {
 		template <class E, class SlotsTuple>
 		E const * peek( SlotsTuple const & tup, int err_id ) noexcept
 		{
-			if( auto pv = std::get<tuple_type_index<static_store_slot<E>,SlotsTuple>::value>(tup).has_value() )
+			if( auto pv = std::get<tuple_type_index<slot<E>,SlotsTuple>::value>(tup).has_value() )
 				if( pv->err_id==err_id )
 					return &pv->e;
 			return 0;
@@ -689,6 +649,58 @@ namespace boost { namespace leaf {
 			};
 		}
 
+		////////////////////////////////////////
+
+		template <class... E>
+		struct unexpected_requested;
+
+		template <>
+		struct unexpected_requested<>
+		{
+			constexpr static bool value = false;
+		};
+
+		template <>
+		struct unexpected_requested<e_unexpected_count>
+		{
+			constexpr static bool value = true;
+		};
+
+		template <>
+		struct unexpected_requested<e_unexpected_info>
+		{
+			constexpr static bool value = true;
+		};
+
+		template <class Car, class... Cdr>
+		struct unexpected_requested<Car, Cdr...>
+		{
+			constexpr static bool value = unexpected_requested<Cdr...>::value;
+		};
+
+		class enable_unexpected
+		{
+			enable_unexpected( enable_unexpected const * );
+			enable_unexpected & operator=( enable_unexpected const * );
+
+			bool const enable_;
+
+		public:
+
+			explicit enable_unexpected( bool enable ) noexcept:
+				enable_(enable)
+			{
+				if( enable_ )
+					++tl_unexpected_enabled_counter();
+			}
+
+			~enable_unexpected() noexcept
+			{
+				if( enable_ )
+					--tl_unexpected_enabled_counter();
+			}
+		};
+
 		template <class... T>
 		class dynamic_store_impl;
 
@@ -701,7 +713,8 @@ namespace boost { namespace leaf {
 			static_store( static_store const & ) = delete;
 			static_store & operator=( static_store const & ) = delete;
 
-			std::tuple<static_store_slot<E>...>  s_;
+			std::tuple<slot<E>...>  s_;
+			enable_unexpected const unexpected_enabler_;
 			bool reset_;
 
 			template <class... T>
@@ -723,6 +736,7 @@ namespace boost { namespace leaf {
 			using dynamic_store_impl_type = dynamic_store_impl<E...>;
 
 			constexpr explicit static_store() noexcept:
+				unexpected_enabler_(unexpected_requested<E...>::value),
 				reset_(false)
 			{
 			}
