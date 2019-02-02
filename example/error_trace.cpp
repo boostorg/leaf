@@ -4,7 +4,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// Program demonstrates the use of leaf::accumulate to capture the path an error takes
+// This program demonstrates the use of leaf::accumulate to capture the path an error takes
 // as is bubbles up the call stack. The path is only captured if:
 // - An error occurrs, and
 // - A handler that takes e_error_trace argument is present.

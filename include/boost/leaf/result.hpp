@@ -308,6 +308,19 @@ namespace boost { namespace leaf {
 	struct is_result_type<result<T>>: std::true_type
 	{
 	};
+
+	template <class T>
+	result<T> continuation_result( result<T> && r ) noexcept
+	{
+		if( r )
+			return r;
+		else
+		{
+			error_id ne = new_error();
+			leaf_detail::slot_base::reassign(r.error().value(), ne.value());
+			return ne;
+		}
+	}
 } }
 
 #endif

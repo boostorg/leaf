@@ -159,6 +159,15 @@
 			}
 		},
 		{
+			"label": "continuation_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test continuation_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test continuation_test"
+			}
+		},
+		{
 			"label": "defer_nested_error_exception_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test defer_nested_error_exception_test",

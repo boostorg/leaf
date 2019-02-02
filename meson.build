@@ -57,6 +57,7 @@ tests = [
 	'capture_in_result_async_test',
 	'capture_in_result_state_test',
 	'capture_in_result_unload_test',
+	'continuation_test',
 	'defer_basic_test',
 	'defer_nested_error_exception_test',
 	'defer_nested_error_result_test',
@@ -96,6 +97,7 @@ foreach t : tests
 endforeach
 
 examples = [
+	'asio',
 	'capture_in_exception',
 	'capture_in_result',
 	'error_log',

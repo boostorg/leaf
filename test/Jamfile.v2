@@ -43,6 +43,7 @@ run capture_in_exception_unload_test.cpp ;
 run capture_in_result_async_test.cpp ;
 run capture_in_result_state_test.cpp ;
 run capture_in_result_unload_test.cpp ;
+run continuation_test.cpp ;
 run defer_basic_test.cpp ;
 run defer_nested_error_exception_test.cpp ;
 run defer_nested_error_result_test.cpp ;
@@ -79,6 +80,7 @@ run try_test.cpp ;
 
 compile-fail is_error_type_fail_test.cpp ;
 
+exe error_asio : ../example/asio.cpp ;
 exe capture_in_result : ../example/capture_in_result.cpp : <threading>multi ;
 exe capture_in_exception : ../example/capture_in_exception.cpp : <threading>multi ;
 exe error_trace : ../example/error_trace.cpp ;

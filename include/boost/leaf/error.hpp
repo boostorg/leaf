@@ -161,16 +161,25 @@ namespace boost { namespace leaf {
 						os << std::endl;
 			}
 
+			static void reassign( int from_err_id, int to_err_id ) noexcept
+			{
+				assert(from_err_id);
+				assert(to_err_id);
+				for( slot_base * p = first(); p; p=p->next_ )
+					if( p->err_id_==from_err_id )
+						p->err_id_ = to_err_id;
+			}
+
 		protected:
 
-			static slot_base const * & first() noexcept
+			static slot_base * & first() noexcept
 			{
-				static thread_local slot_base const * p = 0;
+				static thread_local slot_base * p = 0;
 				return p;
 			}
 
 			int err_id_;
-			slot_base const * const next_;
+			slot_base * const next_;
 
 			slot_base() noexcept:
 				err_id_(0),
@@ -181,7 +190,7 @@ namespace boost { namespace leaf {
 
 			~slot_base() noexcept
 			{
-				slot_base const * & p = first();
+				slot_base * & p = first();
 				assert(p==this);
 				p = next_;
 			}
