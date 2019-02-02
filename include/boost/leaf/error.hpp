@@ -16,7 +16,7 @@
 #include <atomic>
 #include <set>
 
-#define LEAF_ERROR(...) ::boost::leaf::leaf_detail::new_error_at(__FILE__,__LINE__,__FUNCTION__,__VA_ARGS__)
+#define LEAF_NEW_ERROR(...) ::boost::leaf::leaf_detail::new_error_at(__FILE__,__LINE__,__FUNCTION__).propagate(__VA_ARGS__)
 
 namespace boost { namespace leaf {
 
@@ -566,13 +566,13 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class... E>
-		error_id new_error_at( char const * file, int line, char const * function, E && ... e ) noexcept
+		error_id new_error_at( char const * file, int line, char const * function ) noexcept
 		{
 			assert(file&&*file);
 			assert(line>0);
 			assert(function&&*function);
 			e_source_location sl { file, line, function }; // Temp object MSVC workaround
-			return new_error( std::move(sl), std::forward<E>(e)... );
+			return new_error(std::move(sl));
 		}
 	}
 
