@@ -169,9 +169,11 @@ namespace boost { namespace leaf {
 				return p;
 			}
 
+			int err_id_;
 			slot_base const * const next_;
 
 			slot_base() noexcept:
+				err_id_(0),
 				next_(first())
 			{
 				first() = this;
@@ -283,33 +285,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class E>
-		struct id_e_pair
-		{
-			int err_id;
-			E e;
-
-			explicit id_e_pair( int err_id ) noexcept:
-				err_id(err_id)
-			{
-				assert(err_id);
-			}
-
-			id_e_pair( int err_id, E const & e ):
-				err_id(err_id),
-				e(e)
-			{
-				assert(err_id);
-			}
-
-			id_e_pair( int err_id, E && e ) noexcept:
-				err_id(err_id),
-				e(std::forward<E>(e))
-			{
-				assert(err_id);
-			}
-		};
-
 		inline int & tl_unexpected_enabled_counter() noexcept
 		{
 			static thread_local int c;
@@ -334,11 +309,11 @@ namespace boost { namespace leaf {
 		template <class E>
 		class slot:
 			slot_base,
-			optional<id_e_pair<E>>
+			optional<E>
 		{
 			slot( slot const & ) = delete;
 			slot & operator=( slot const & ) = delete;
-			typedef optional<id_e_pair<E>> base;
+			typedef optional<E> impl;
 			slot<E> * & top_;
 			slot<E> * prev_;
 			static_assert(is_e_type<E>::value,"Not an error type");
@@ -347,9 +322,8 @@ namespace boost { namespace leaf {
 			{
 				assert(err_id);
 				if( top_==this )
-					if( id_e_pair<E> const * id_e = has_value() )
-						if( id_e->err_id==err_id )
-							return diagnostic<decltype(id_e->e)>::print(os,id_e->e);
+					if( E const * e = has_value(err_id) )
+						return diagnostic<decltype(*e)>::print(os,*e);
 				return false;
 			}
 
@@ -362,77 +336,105 @@ namespace boost { namespace leaf {
 				top_ = this;
 			}
 
-			~slot() noexcept
+			~slot() noexcept;
+
+			E & put( int err_id, E const & e ) noexcept
 			{
-				if( prev_ )
-				{
-					optional<id_e_pair<E>> & p = *prev_;
-					p = std::move(*this);
-				}
-				else
-				{
-					int c = tl_unexpected_enabled_counter();
-					assert(c>=0);
-					if( c )
-						if( auto v = has_value() )
-							no_expect_slot(*v);
-				}
-				top_ = prev_;
+				assert(err_id);
+				E & ret = impl::put(e);
+				err_id_ = err_id;
+				return ret;
 			}
 
-			using base::put;
-			using base::has_value;
-			using base::value;
-			using base::reset;
-			using base::emplace;
+			E & put( int err_id, E && e ) noexcept
+			{
+				assert(err_id);
+				E & ret = impl::put(std::forward<E>(e));
+				err_id_ = err_id;
+				return ret;
+			}
+
+			E const * has_value( int err_id ) const noexcept
+			{
+				assert(err_id);
+				if( err_id == err_id_ )
+					if( E const * e = impl::has_value() )
+						return e;
+				return 0;
+			}
+
+			E * has_value( int err_id ) noexcept
+			{
+				assert(err_id);
+				if( err_id == err_id_ )
+					if( E * e = impl::has_value() )
+						return e;
+				return 0;
+			}
 
 			optional<E> extract_optional( int err_id ) && noexcept
 			{
 				assert(err_id);
-				if( auto pv = has_value() )
-					if( pv->err_id==err_id )
-						return optional<E>(std::move(*this).value().e);
-				return optional<E>();
+				if( err_id_ != err_id )
+					return optional<E>();
+				else
+				{
+					err_id_ = 0;
+					return std::move(*static_cast<optional<E> *>(this));
+				}
 			}
+
+			using impl::reset;
 		};
 
 		template <class E>
-		void put_unexpected_count( id_e_pair<E> const & id_e ) noexcept
+		void put_unexpected_count( int err_id, E const & e ) noexcept
 		{
 			if( slot<e_unexpected_count> * sl = tl_slot_ptr<e_unexpected_count>() )
-			{
-				if( auto pv = sl->has_value() )
-					if( pv->err_id == id_e.err_id )
-					{
-						++pv->e.count;
-						return;
-					}
-				(void) sl->put( id_e_pair<e_unexpected_count>(id_e.err_id,e_unexpected_count(&type<E>)) );
-			}
+				if( e_unexpected_count * unx = sl->has_value(err_id) )
+					++unx->count;
+				else
+					sl->put(err_id, e_unexpected_count(&type<E>));
 		}
 
 		template <class E>
-		void put_unexpected_info( id_e_pair<E> const & id_e ) noexcept
+		void put_unexpected_info( int err_id, E const & e ) noexcept
 		{
 			if( slot<e_unexpected_info> * sl = tl_slot_ptr<e_unexpected_info>() )
-				if( auto pv = sl->has_value() )
-				{
-					if( pv->err_id!=id_e.err_id )
-					{
-						pv->err_id = id_e.err_id;
-						pv->e.reset();
-					}
-					pv->e.add(id_e.e);
-				}
+				if( e_unexpected_info * unx = sl->has_value(err_id) )
+					unx->add(e);
 				else
-					sl->emplace(id_e.err_id).e.add(id_e.e);
+					sl->put(err_id, e_unexpected_info()).add(e);
 		}
 
 		template <class E>
-		void no_expect_slot( id_e_pair<E> const & id_e ) noexcept
+		void no_expect_slot( int err_id, E const & e  ) noexcept
 		{
-			put_unexpected_count(id_e);
-			put_unexpected_info(id_e);
+			put_unexpected_count(err_id, e);
+			put_unexpected_info(err_id, e);
+		}
+
+		template <class E>
+		slot<E>::~slot() noexcept
+		{
+			if( prev_ )
+			{
+				if( err_id_ )
+				{
+					optional<E> & p = *prev_;
+					p = std::move(*this);
+					prev_->err_id_ = err_id_;
+				}
+			}
+			else
+			{
+				int c = tl_unexpected_enabled_counter();
+				assert(c>=0);
+				if( c )
+					if( E const * e = impl::has_value() )
+						no_expect_slot(err_id_, *e);
+			}
+			top_ = prev_;
 		}
 
 		template <class E>
@@ -441,13 +443,13 @@ namespace boost { namespace leaf {
 			using T = typename std::remove_cv<typename std::remove_reference<E>::type>::type;
 			assert(err_id);
 			if( slot<T> * p = tl_slot_ptr<T>() )
-				(void) p->put( id_e_pair<T>(err_id,std::forward<E>(e)) );
+				(void) p->put(err_id, std::forward<E>(e));
 			else
 			{
 				int c = tl_unexpected_enabled_counter();
 				assert(c>=0);
 				if( c )
-					no_expect_slot( id_e_pair<T>(err_id,std::forward<E>(e)) );
+					no_expect_slot(err_id, std::forward<E>(e));
 			}
 			return 0;
 		}

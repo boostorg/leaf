@@ -104,6 +104,7 @@ namespace boost { namespace leaf {
 			ec_(id),
 			ex_(0)
 		{
+			assert(err_id_);
 		}
 
 		explicit error_info( std::error_code const & ec ) noexcept:
@@ -118,6 +119,7 @@ namespace boost { namespace leaf {
 			ec_(id),
 			ex_(&ex)
 		{
+			assert(err_id_);
 		}
 
 		error_info( std::error_code const & ec, leaf_detail::exception_info_ const & ex ) noexcept:
@@ -244,10 +246,7 @@ namespace boost { namespace leaf {
 		template <class E, class SlotsTuple>
 		E const * peek( SlotsTuple const & tup, int err_id ) noexcept
 		{
-			if( auto pv = std::get<tuple_type_index<slot<E>,SlotsTuple>::value>(tup).has_value() )
-				if( pv->err_id==err_id )
-					return &pv->e;
-			return 0;
+			return err_id ? std::get<tuple_type_index<slot<E>,SlotsTuple>::value>(tup).has_value(err_id) : 0;
 		}
 	}
 

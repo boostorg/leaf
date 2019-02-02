@@ -56,18 +56,15 @@ namespace boost { namespace leaf {
 				assert(err_id);
 				if( s_ )
 				{
-					if( auto pv = s_->has_value() )
-						if( pv->err_id==err_id )
-							return;
-					s_->put( leaf_detail::id_e_pair<E>(err_id,std::move(e_)) );
+					if( !s_->has_value(err_id) )
+						s_->put(err_id, std::move(e_));
 				}
 				else
 				{
-					using T = typename std::remove_cv<typename std::remove_reference<E>::type>::type;
 					int c = tl_unexpected_enabled_counter();
 					assert(c>=0);
 					if( c )
-						no_expect_slot( id_e_pair<T>(err_id,std::forward<E>(e_)) );
+						no_expect_slot(err_id, std::forward<E>(e_));
 				}
 			}
 		};
@@ -144,18 +141,15 @@ namespace boost { namespace leaf {
 				assert(err_id);
 				if( s_ )
 				{
-					if( auto pv = s_->has_value() )
-						if( pv->err_id==err_id )
-							return;
-					s_->put( leaf_detail::id_e_pair<E>(err_id,f_()) );
+					if( !s_->has_value(err_id) )
+						s_->put(err_id, f_());
 				}
 				else
 				{
-					using T = typename std::remove_cv<typename std::remove_reference<E>::type>::type;
 					int c = tl_unexpected_enabled_counter();
 					assert(c>=0);
 					if( c )
-						no_expect_slot( id_e_pair<T>(err_id,std::forward<E>(f_())) );
+						no_expect_slot(err_id, std::forward<E>(f_()));
 				}
 			}
 		};
@@ -233,15 +227,10 @@ namespace boost { namespace leaf {
 			{
 				assert(err_id);
 				if( s_ )
-				{
-					if( auto pv = s_->has_value() )
-						if( pv->err_id==err_id )
-						{
-							(void) f_(pv->e);
-							return;
-						}
-					(void) f_(s_->put(leaf_detail::id_e_pair<E>(err_id,E{})).e);
-				}
+					if( E * e = s_->has_value(err_id) )
+						(void) f_(*e);
+					else
+						(void) f_(s_->put(err_id, E()));
 			}
 		};
 
