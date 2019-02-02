@@ -161,7 +161,7 @@ int main()
 			op_b::start( ioc, fw,
 				[&]( leaf::result<int> && answer ) mutable
 				{
-					res = continuation_result(std::move(answer));
+					res = make_continuation_result(std::move(answer));
 				} );
 			if( res )
 				ioc.run();

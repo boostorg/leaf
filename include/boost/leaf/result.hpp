@@ -310,7 +310,7 @@ namespace boost { namespace leaf {
 	};
 
 	template <class T>
-	result<T> continuation_result( result<T> && r ) noexcept
+	result<T> make_continuation_result( result<T> && r ) noexcept
 	{
 		if( r )
 			return r;

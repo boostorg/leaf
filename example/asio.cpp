@@ -202,7 +202,7 @@ int main()
 				op_c::start( ioc,
 					[&]( leaf::result<int> && answer ) mutable
 					{
-						res = continuation_result(std::move(answer));
+						res = make_continuation_result(std::move(answer));
 					} );
 				ioc.run();
 				LEAF_AUTO(r, res);
