@@ -18,7 +18,9 @@ namespace asio_simulator
 		io_context( io_context const & ) = delete;
 		io_context & operator=( io_context const & ) = delete;
 
-		io_context() noexcept = default;
+		io_context() noexcept
+		{
+		}
 
 		void run() noexcept
 		{
