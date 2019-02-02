@@ -4,24 +4,23 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// Program demonstrates the use of leaf::accumulate to capture the path an error takes
-// as is bubbles up the call stack. The path is only captured if:
+// Program demonstrates the use of leaf::accumulate to print the path an error takes
+// as is bubbles up the call stack. The path is only printed if:
 // - An error occurrs, and
-// - A handler that takes e_error_trace argument is present.
-// Otherwse none of the error trace machinery will be invoked by LEAF.
+// - A handler that takes e_error_log argument is present.
+// Otherwse none of the error log machinery will be invoked by LEAF.
 
 #include <boost/leaf/preload.hpp>
 #include <boost/leaf/handle_all.hpp>
 #include <boost/leaf/result.hpp>
 #include <iostream>
-#include <deque>
 #include <cstdlib>
 
-#define ENABLE_ERROR_TRACE 1
+#define ENABLE_ERROR_LOG 1
 
 namespace leaf = boost::leaf;
 
-struct e_error_trace
+struct e_error_log
 {
 	struct rec
 	{
@@ -29,27 +28,33 @@ struct e_error_trace
 		int line;
 		friend std::ostream & operator<<( std::ostream & os, rec const & x )
 		{
-			return os << x.file << '(' << x.line << ')' << std::endl;
+			return os << x.file << '(' << x.line << ')';
 		}
 	};
 
-	std::deque<rec> value;
-
-	friend std::ostream & operator<<( std::ostream & os, e_error_trace const & tr )
+	e_error_log()
 	{
-		for( auto & i : tr.value )
-			os << i;
-		return os;
+		std::cerr << "Error! Log:" << std::endl;
+	}
+
+	template <class T>
+	friend std::ostream & operator<<( e_error_log const &, T const & x )
+	{
+		return std::cerr << x << std::endl;
 	}
 };
 
-#define ERROR_TRACE auto _trace = leaf::accumulate( [ ]( e_error_trace & tr ) { tr.value.emplace_front(e_error_trace::rec{__FILE__, __LINE__}); } )
+namespace boost { namespace leaf {
+	template <> struct is_e_type<e_error_log>: std::true_type { };
+} }
+
+#define ERROR_LOG auto _trace = leaf::accumulate( [ ]( e_error_log & log ) { log << e_error_log::rec{__FILE__, __LINE__}; } )
 
 int const failure_percent = 25;
 
 leaf::result<void> f1()
 {
-	ERROR_TRACE;
+	ERROR_LOG;
 	if( (std::rand()%100) > failure_percent )
 		return { };
 	else
@@ -58,7 +63,7 @@ leaf::result<void> f1()
 
 leaf::result<void> f2()
 {
-	ERROR_TRACE;
+	ERROR_LOG;
 	if( (std::rand()%100) > failure_percent )
 		return f1();
 	else
@@ -67,7 +72,7 @@ leaf::result<void> f2()
 
 leaf::result<void> f3()
 {
-	ERROR_TRACE;
+	ERROR_LOG;
 	if( (std::rand()%100) > failure_percent )
 		return f2();
 	else
@@ -76,7 +81,7 @@ leaf::result<void> f3()
 
 leaf::result<void> f4()
 {
-	ERROR_TRACE;
+	ERROR_LOG;
 	if( (std::rand()%100) > failure_percent )
 		return f3();
 	else
@@ -85,7 +90,7 @@ leaf::result<void> f4()
 
 leaf::result<void> f5()
 {
-	ERROR_TRACE;
+	ERROR_LOG;
 	if( (std::rand()%100) > failure_percent )
 		return f4();
 	else
@@ -103,10 +108,9 @@ int main()
 				std::cout << "Success!" << std::endl;
 				return { };
 			},
-#if ENABLE_ERROR_TRACE
-			[ ]( e_error_trace const & tr )
+#if ENABLE_ERROR_LOG
+			[ ]( e_error_log const & )
 			{
-				std::cerr << "Error! Trace:" << std::endl << tr;
 			},
 #endif
 			[ ]

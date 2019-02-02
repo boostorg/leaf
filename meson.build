@@ -98,6 +98,7 @@ endforeach
 examples = [
 	'capture_in_exception',
 	'capture_in_result',
+	'error_log',
 	'error_trace',
 	'exception_to_result',
 	'print_file_result',
