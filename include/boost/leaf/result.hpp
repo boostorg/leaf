@@ -8,7 +8,6 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/detail/dynamic_store.hpp>
-#include <boost/leaf/detail/function_traits.hpp>
 #include <boost/leaf/exception.hpp>
 #include <memory>
 
@@ -20,28 +19,6 @@ namespace boost { namespace leaf {
 	class bad_result: public std::exception { };
 
 	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		inline void result_accumulate(int)
-		{
-		}
-
-		template <class CarF, class... CdrF>
-		void result_accumulate(int err_id, CarF && car_f, CdrF && ... cdr_f)
-		{
-			static_assert(function_traits<CarF>::arity==1, "Lambdas passed to result<T>::accumulate must take a single e-type argument by reference");
-			using E = typename std::decay<fn_arg_type<CarF,0>>::type;
-			static_assert(is_e_type<E>::value, "Lambdas passed to result<T>::accumulate must take a single e-type argument by reference");
-			assert(err_id);
-			if( auto sl = tl_slot_ptr<E>() )
-				if( auto v = sl->has_value(err_id) )
-					(void) std::forward<CarF>(car_f)(*v);
-				else
-					(void) std::forward<CarF>(car_f)(sl->put(err_id,E()));
-			result_accumulate(err_id, std::forward<CdrF>(cdr_f)...);
-		}
-	}
 
 	template <class T>
 	class result
@@ -281,8 +258,7 @@ namespace boost { namespace leaf {
 		template <class... F>
 		result & accumulate( F && ... f ) noexcept
 		{
-			if( int err_id = get_err_id() )
-				leaf_detail::result_accumulate(err_id, std::forward<F>(f)...);
+			(void) leaf_detail::make_error_id(get_err_id()).accumulate(std::forward<F>(f)...);
 			return *this;
 		}
 	};

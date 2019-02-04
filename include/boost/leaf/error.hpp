@@ -9,6 +9,7 @@
 
 #include <boost/leaf/detail/optional.hpp>
 #include <boost/leaf/detail/print.hpp>
+#include <boost/leaf/detail/function_traits.hpp>
 #include <system_error>
 #include <type_traits>
 #include <ostream>
@@ -447,9 +448,9 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		int put_slot( int err_id, E && e ) noexcept
+		int load_slot( int err_id, E && e ) noexcept
 		{
-			using T = typename std::remove_cv<typename std::remove_reference<E>::type>::type;
+			using T = typename std::decay<E>::type;
 			assert(err_id);
 			if( slot<T> * p = tl_slot_ptr<T>() )
 				(void) p->put(err_id, std::forward<E>(e));
@@ -460,6 +461,21 @@ namespace boost { namespace leaf {
 				if( c )
 					no_expect_slot(err_id, std::forward<E>(e));
 			}
+			return 0;
+		}
+
+		template <class F>
+		int accumulate_slot( int err_id, F && f ) noexcept
+		{
+			static_assert(function_traits<F>::arity==1, "Lambdas passed to accumulate must take a single e-type argument by reference");
+			using E = typename std::decay<fn_arg_type<F,0>>::type;
+			static_assert(is_e_type<E>::value, "Lambdas passed to accumulate must take a single e-type argument by reference");
+			assert(err_id);
+			if( auto sl = tl_slot_ptr<E>() )
+				if( auto v = sl->has_value(err_id) )
+					(void) std::forward<F>(f)(*v);
+				else
+					(void) std::forward<F>(f)(sl->put(err_id,E()));
 			return 0;
 		}
 
@@ -505,7 +521,7 @@ namespace boost { namespace leaf {
 			if( ec && &ec.category()!=&cat )
 			{
 				int err_id = leaf_detail::new_id();
-				leaf_detail::put_slot(err_id, leaf_detail::e_original_ec{ec});
+				leaf_detail::load_slot(err_id, leaf_detail::e_original_ec{ec});
 				return std::error_code(err_id, cat);
 			}
 			else
@@ -536,7 +552,23 @@ namespace boost { namespace leaf {
 		{
 			if( int err_id = value() )
 			{
-				auto _ = { leaf_detail::put_slot(err_id, std::forward<E>(e))... };
+				auto _ = { leaf_detail::load_slot(err_id, std::forward<E>(e))... };
+				(void) _;
+			}
+			return *this;
+		}
+
+		error_id const & accumulate() const noexcept
+		{
+			return *this;
+		}
+
+		template <class... F>
+		error_id const & accumulate( F && ... f ) const noexcept
+		{
+			if( int err_id = value() )
+			{
+				auto _ = { leaf_detail::accumulate_slot(err_id, std::forward<F>(f))... };
 				(void) _;
 			}
 			return *this;

@@ -24,7 +24,7 @@ namespace boost { namespace leaf {
 					tuple_for_each<I-1,Tuple>::unload(err_id,std::move(tup));
 					auto && opt = std::get<I-1>(std::move(tup));
 					if( opt.has_value() )
-						put_slot(err_id, std::move(opt).value());
+						load_slot(err_id, std::move(opt).value());
 				}
 			};
 
