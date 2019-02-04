@@ -4,7 +4,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// This is a simple program that shows how to propagate error objects out
+// This is a simple program that shows how to load error objects out
 // of a C-callback, and converting them to leaf::result<T> as soon as control
 // reaches C++.
 
@@ -51,7 +51,7 @@ int do_work( lua_State * L ) noexcept
 	{
 		// Associate an do_work_error_code object with the *next* leaf::error_id object we will
 		// definitely return from the call_lua function...
-		leaf::next_error().propagate(ec1);
+		leaf::next_error().load(ec1);
 
 		//...once control reaches it, after we tell the Lua interpreter to abort the program.
 		return luaL_error(L,"do_work_error");
@@ -97,7 +97,7 @@ leaf::result<int> call_lua( lua_State * L )
 		// do_work will become associated with this leaf::error_id value. If not,
 		// we will still need to communicate that the lua_pcall failed with an
 		// error code and an error message.
-		auto propagate = leaf::preload( e_lua_error_message{lua_tostring(L,1)} );
+		auto load = leaf::preload( e_lua_error_message{lua_tostring(L,1)} );
 		lua_pop(L,1);
 		return leaf::new_error( e_lua_pcall_error{err} );
 	}

@@ -19,7 +19,7 @@ struct info
 
 leaf::error_id f0()
 {
-	auto propagate = leaf::accumulate( [ ]( info<0> & ) { } );
+	auto load = leaf::accumulate( [ ]( info<0> & ) { } );
 	return leaf::new_error( info<2>{2} );
 }
 
@@ -32,7 +32,7 @@ leaf::error_id f1()
 
 leaf::error_id f2()
 {
-	return f1().propagate( info<3>{3} );
+	return f1().load( info<3>{3} );
 }
 
 int main()

@@ -71,6 +71,7 @@ run preload_nested_new_error_result_test.cpp ;
 run preload_nested_success_exception_test.cpp ;
 run preload_nested_success_result_test.cpp ;
 run print_test.cpp ;
+run result_load_accumulate_test.cpp ;
 run result_bad_result_test.cpp ;
 run result_state_test.cpp ;
 run static_store_deduction_test.cpp ;

@@ -79,7 +79,7 @@ leaf::result<int> f( fail_where fw )
 
 leaf::result<int> g( fail_where fw )
 {
-	auto propagate = leaf::preload( info<1>{} );
+	auto load = leaf::preload( info<1>{} );
 	if( fw == fail_where::g )
 		return leaf::new_error( loc<fail_where::g>{} );
 
@@ -91,14 +91,14 @@ struct op_a
 	template <class H>
 	static void start( asio::io_context & ioc, fail_where fw, H h )
 	{
-		auto propagate = leaf::preload( info<2>{} );
+		auto load = leaf::preload( info<2>{} );
 		if( fw == fail_where::op_a_start )
 			return h( leaf::new_error(loc<fail_where::op_a_start>{}) );
 
 		asio::post( ioc,
 			[=]() mutable
 			{
-				auto propagate = leaf::preload( info<3>{} );
+				auto load = leaf::preload( info<3>{} );
 				h(g(fw));
 			} );
 	}
@@ -109,7 +109,7 @@ struct op_b
 	template <class H>
 	static void start( asio::io_context & ioc, fail_where fw, H h )
 	{
-		auto propagate = leaf::preload( info<4>{} );
+		auto load = leaf::preload( info<4>{} );
 		if( fw == fail_where::op_b_start_before_op_a_start )
 			return h( leaf::new_error(loc<fail_where::op_b_start_before_op_a_start>{}) );
 
@@ -119,7 +119,7 @@ struct op_b
 				if( !a1 )
 					return h(std::forward<leaf::result<int>>(a1));
 
-				auto propagate = leaf::preload( info<5>{} );
+				auto load = leaf::preload( info<5>{} );
 				if( fw == fail_where::op_b_start_after_successful_op_a )
 					return h( leaf::new_error(loc<fail_where::op_b_start_after_successful_op_a>{}) );
 
@@ -130,7 +130,7 @@ struct op_b
 	template <class H>
 	static void cont( asio::io_context & ioc, fail_where fw, int a1, H h )
 	{
-		auto propagate = leaf::preload( info<6>{} );
+		auto load = leaf::preload( info<6>{} );
 		if( fw == fail_where::op_b_cont_before_op_a_start )
 			return h( leaf::new_error(loc<fail_where::op_b_cont_before_op_a_start>{}) );
 
@@ -140,7 +140,7 @@ struct op_b
 				if( !a2 )
 					return h(std::forward<leaf::result<int>>(a2));
 
-				auto propagate = leaf::preload( info<7>{} );
+				auto load = leaf::preload( info<7>{} );
 				if( fw == fail_where::op_b_cont_after_successful_op_a )
 					return h( leaf::new_error(loc<fail_where::op_b_cont_after_successful_op_a>{}) );
 

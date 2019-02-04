@@ -19,7 +19,7 @@ struct info
 
 void f0()
 {
-	auto propagate = leaf::accumulate( [ ]( info<0> & ) { } );
+	auto load = leaf::accumulate( [ ]( info<0> & ) { } );
 	throw leaf::exception(std::exception(), info<2>{2} );
 }
 
@@ -38,7 +38,7 @@ void f2()
 	}
 	catch( leaf::error_id const & err )
 	{
-		err.propagate( info<3>{3} );
+		err.load( info<3>{3} );
 		throw;
 	}
 }

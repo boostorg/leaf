@@ -85,6 +85,7 @@ tests = [
 	'preload_nested_success_exception_test',
 	'preload_nested_success_result_test',
 	'print_test',
+	'result_load_accumulate_test',
 	'result_bad_result_test',
 	'result_state_test',
 	'static_store_deduction_test',

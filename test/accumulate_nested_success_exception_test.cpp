@@ -14,7 +14,7 @@ struct info { int value; };
 
 void g1()
 {
-	auto propagate = leaf::accumulate( [ ]( info & x ) { ++x.value; } );
+	auto load = leaf::accumulate( [ ]( info & x ) { ++x.value; } );
 }
 
 void g2()
@@ -24,7 +24,7 @@ void g2()
 
 void f()
 {
-	auto propagate = leaf::preload( info{42} );
+	auto load = leaf::preload( info{42} );
 	g1();
 	g2();
 }

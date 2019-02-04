@@ -56,7 +56,7 @@ int main( int argc, char const * argv[ ] )
 		{
 			char const * file_name = parse_command_line(argc,argv);
 
-			auto propagate = leaf::preload( leaf::e_file_name{file_name} );
+			auto load = leaf::preload( leaf::e_file_name{file_name} );
 
 			std::shared_ptr<FILE> f = file_open( file_name );
 
@@ -161,8 +161,8 @@ std::shared_ptr<FILE> file_open( char const * file_name )
 // Return the size of the file.
 int file_size( FILE & f )
 {
-	// All exceptions escaping this function will automatically propagate errno.
-	auto propagate = leaf::defer( [ ] { return leaf::e_errno{errno}; } );
+	// All exceptions escaping this function will automatically load errno.
+	auto load = leaf::defer( [ ] { return leaf::e_errno{errno}; } );
 
 	if( fseek(&f,0,SEEK_END) )
 		throw leaf::exception(input_file_size_error());

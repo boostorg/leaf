@@ -19,13 +19,13 @@ struct info
 
 leaf::error_id g()
 {
-	auto propagate = leaf::accumulate( [ ](info<1> & x) {++x.value;} );
+	auto load = leaf::accumulate( [ ](info<1> & x) {++x.value;} );
 	return leaf::new_error();
 }
 
 leaf::error_id f()
 {
-	auto propagate = leaf::accumulate( [ ](info<1> & x) {++x.value;}, [ ](info<2> & x) {++x.value;} );
+	auto load = leaf::accumulate( [ ](info<1> & x) {++x.value;}, [ ](info<2> & x) {++x.value;} );
 	return g();
 }
 

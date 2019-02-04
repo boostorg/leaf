@@ -19,13 +19,13 @@ struct info
 
 void f0()
 {
-	auto propagate = leaf::defer( [ ] { return info<0>{0}; } );
+	auto load = leaf::defer( [ ] { return info<0>{0}; } );
 	throw leaf::exception(std::exception(), info<2>{2} );
 }
 
 void f1()
 {
-	auto propagate = leaf::defer( [ ] { return info<0>{-1}; }, [ ] { return info<1>{1}; }, [ ] { return info<2>{-1}; } );
+	auto load = leaf::defer( [ ] { return info<0>{-1}; }, [ ] { return info<1>{1}; }, [ ] { return info<2>{-1}; } );
 	f0();
 }
 
@@ -37,7 +37,7 @@ void f2()
 	}
 	catch( leaf::error_id const & err )
 	{
-		err.propagate( info<3>{3} );
+		err.load( info<3>{3} );
 		throw;
 	}
 }

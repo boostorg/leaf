@@ -19,19 +19,19 @@ struct info
 
 leaf::error_id f0()
 {
-	auto propagate = leaf::preload( info<0>{0} );
+	auto load = leaf::preload( info<0>{0} );
 	return leaf::new_error( info<2>{2} );
 }
 
 leaf::error_id f1()
 {
-	auto propagate = leaf::preload( info<0>{-1}, info<1>{1}, info<2>{-1} );
+	auto load = leaf::preload( info<0>{-1}, info<1>{1}, info<2>{-1} );
 	return f0();
 }
 
 leaf::error_id f2()
 {
-	return f1().propagate( info<3>{3} );
+	return f1().load( info<3>{3} );
 }
 
 int main()

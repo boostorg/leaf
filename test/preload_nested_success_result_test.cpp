@@ -15,7 +15,7 @@ struct info { int value; };
 
 leaf::result<void> g1()
 {
-	auto propagate = leaf::preload( info{1} );
+	auto load = leaf::preload( info{1} );
 	return { };
 }
 
@@ -26,7 +26,7 @@ leaf::result<void> g2()
 
 leaf::result<void> f()
 {
-	auto propagate = leaf::preload( info{2} );
+	auto load = leaf::preload( info{2} );
 	LEAF_CHECK(g1());
 	return g2();
 }

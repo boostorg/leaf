@@ -19,7 +19,7 @@ struct info
 
 leaf::error_id g()
 {
-	auto propagate = leaf::preload( info<42>{42}, info<-42>{-42} );
+	auto load = leaf::preload( info<42>{42}, info<-42>{-42} );
 	return leaf::new_error();
 }
 

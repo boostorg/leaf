@@ -16,7 +16,7 @@
 #include <atomic>
 #include <set>
 
-#define LEAF_NEW_ERROR(...) ::boost::leaf::leaf_detail::new_error_at(__FILE__,__LINE__,__FUNCTION__).propagate(__VA_ARGS__)
+#define LEAF_NEW_ERROR(...) ::boost::leaf::leaf_detail::new_error_at(__FILE__,__LINE__,__FUNCTION__).load(__VA_ARGS__)
 
 namespace boost { namespace leaf {
 
@@ -526,13 +526,13 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		error_id const & propagate() const noexcept
+		error_id const & load() const noexcept
 		{
 			return *this;
 		}
 
 		template <class... E>
-		error_id const & propagate( E && ... e ) const noexcept
+		error_id const & load( E && ... e ) const noexcept
 		{
 			if( int err_id = value() )
 			{
@@ -560,13 +560,13 @@ namespace boost { namespace leaf {
 	template <class E1, class... E>
 	typename std::enable_if<is_e_type<E1>::value, error_id>::type new_error( E1 && e1, E && ... e ) noexcept
 	{
-		return leaf_detail::make_error_id(leaf_detail::new_id()).propagate(std::forward<E1>(e1), std::forward<E>(e)...);
+		return leaf_detail::make_error_id(leaf_detail::new_id()).load(std::forward<E1>(e1), std::forward<E>(e)...);
 	}
 
 	template <class E1, class... E>
 	typename std::enable_if<std::is_same<std::error_code, decltype(make_error_code(std::declval<E1>()))>::value, error_id>::type new_error( E1 e1, E && ... e ) noexcept
 	{
-		return error_id(make_error_code(e1)).propagate(std::forward<E>(e)...);
+		return error_id(make_error_code(e1)).load(std::forward<E>(e)...);
 	}
 
 	inline error_id next_error() noexcept

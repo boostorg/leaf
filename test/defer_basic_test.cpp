@@ -27,7 +27,7 @@ struct info
 leaf::error_id g()
 {
 	global = 0;
-	auto propagate = leaf::defer( [ ]{ return info<42>{get_global()}; }, [ ]{ return info<-42>{-42}; } );
+	auto load = leaf::defer( [ ]{ return info<42>{get_global()}; }, [ ]{ return info<-42>{-42}; } );
 	global = 42;
 	return leaf::new_error();
 }

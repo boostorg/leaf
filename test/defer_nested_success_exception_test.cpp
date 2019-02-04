@@ -14,7 +14,7 @@ struct info { int value; };
 
 void g1()
 {
-	auto propagate = leaf::defer( [ ] { return info{1}; } );
+	auto load = leaf::defer( [ ] { return info{1}; } );
 }
 
 void g2()
@@ -24,7 +24,7 @@ void g2()
 
 void f()
 {
-	auto propagate = leaf::defer( [ ] { return info{2}; } );
+	auto load = leaf::defer( [ ] { return info{2}; } );
 	g1();
 	g2();
 }
