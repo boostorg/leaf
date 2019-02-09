@@ -4,7 +4,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/handle_all.hpp>
+#include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/result.hpp>
 #include "_test_ec.hpp"
 #include "boost/core/lightweight_test.hpp"
@@ -43,10 +43,10 @@ leaf::result<R> f_errc( Errc ec )
 
 int main()
 {
-	// void, handle_all (success)
+	// void, try_handle_all (success)
 	{
 		int c=0;
-		leaf::handle_all(
+		leaf::try_handle_all(
 			[&c]() -> leaf::result<void>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::ok));
@@ -61,10 +61,10 @@ int main()
 		BOOST_TEST_EQ(c, 42);
 	}
 
-	// void, handle_all (failure)
+	// void, try_handle_all (failure)
 	{
 		int c=0;
-		leaf::handle_all(
+		leaf::try_handle_all(
 			[&c]() -> leaf::result<void>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::error1));
@@ -87,10 +87,10 @@ int main()
 		BOOST_TEST_EQ(c, 1);
 	}
 
-	// void, handle_all (failure), match cond_x (single enum value)
+	// void, try_handle_all (failure), match cond_x (single enum value)
 	{
 		int c=0;
-		leaf::handle_all(
+		leaf::try_handle_all(
 			[&c]() -> leaf::result<void>
 			{
 				LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
@@ -118,10 +118,10 @@ int main()
 		BOOST_TEST_EQ(c, 2);
 	}
 
-	// void, handle_all (failure), match enum (single enum value)
+	// void, try_handle_all (failure), match enum (single enum value)
 	{
 		int c=0;
-		leaf::handle_all(
+		leaf::try_handle_all(
 			[&c]() -> leaf::result<void>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::error1));
@@ -149,10 +149,10 @@ int main()
 		BOOST_TEST_EQ(c, 2);
 	}
 
-	// void, handle_all (failure), match enum (multiple enum values)
+	// void, try_handle_all (failure), match enum (multiple enum values)
 	{
 		int c=0;
-		leaf::handle_all(
+		leaf::try_handle_all(
 			[&c]() -> leaf::result<void>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::error1));
@@ -180,10 +180,10 @@ int main()
 		BOOST_TEST_EQ(c, 2);
 	}
 
-	// void, handle_all (failure), match value (single value)
+	// void, try_handle_all (failure), match value (single value)
 	{
 		int c=0;
-		leaf::handle_all(
+		leaf::try_handle_all(
 			[&c]() -> leaf::result<void>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::error1));
@@ -211,10 +211,10 @@ int main()
 		BOOST_TEST_EQ(c, 2);
 	}
 
-	// void, handle_all (failure), match value (multiple values)
+	// void, try_handle_all (failure), match value (multiple values)
 	{
 		int c=0;
-		leaf::handle_all(
+		leaf::try_handle_all(
 			[&c]() -> leaf::result<void>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::error1));
@@ -244,9 +244,9 @@ int main()
 
 	//////////////////////////////////////
 
-	// int, handle_all (success)
+	// int, try_handle_all (success)
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::ok));
@@ -259,9 +259,9 @@ int main()
 		BOOST_TEST_EQ(r, 42);
 	}
 
-	// int, handle_all (failure)
+	// int, try_handle_all (failure)
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::error1));
@@ -281,9 +281,9 @@ int main()
 		BOOST_TEST_EQ(r, 1);
 	}
 
-	// int, handle_all (failure), match cond_x (single enum value)
+	// int, try_handle_all (failure), match cond_x (single enum value)
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
@@ -307,9 +307,9 @@ int main()
 		BOOST_TEST_EQ(r, 2);
 	}
 
-	// int, handle_all (failure), match enum (single enum value)
+	// int, try_handle_all (failure), match enum (single enum value)
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::error1));
@@ -333,9 +333,9 @@ int main()
 		BOOST_TEST_EQ(r, 2);
 	}
 
-	// int, handle_all (failure), match enum (multiple enum values)
+	// int, try_handle_all (failure), match enum (multiple enum values)
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::error1));
@@ -359,9 +359,9 @@ int main()
 		BOOST_TEST_EQ(r, 2);
 	}
 
-	// int, handle_all (failure), match value (single value)
+	// int, try_handle_all (failure), match value (single value)
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::error1));
@@ -385,9 +385,9 @@ int main()
 		BOOST_TEST_EQ(r, 2);
 	}
 
-	// int, handle_all (failure), match value (multiple values)
+	// int, try_handle_all (failure), match value (multiple values)
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::error1));

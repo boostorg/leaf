@@ -4,8 +4,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/capture_in_exception.hpp>
-#include <boost/leaf/try.hpp>
+#include <boost/leaf/capture.hpp>
+#include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/preload.hpp>
 #include "boost/core/lightweight_test.hpp"
@@ -22,7 +22,7 @@ void test( F f_ )
 		{
 			try
 			{
-				leaf::capture_in_exception_explicit<E...>(f_);
+				leaf::capture( std::make_shared<leaf::context<info<1>, info<2>, info<3>>>(), f_);
 				BOOST_TEST(false);
 				return std::exception_ptr();
 			}
@@ -35,7 +35,7 @@ void test( F f_ )
 	{
 		int c=0;
 		auto ep = f();
-		leaf::try_(
+		leaf::try_catch(
 			[&ep]
 			{
 				return std::rethrow_exception(ep);
@@ -57,7 +57,7 @@ void test( F f_ )
 	{
 		int c=0;
 		auto ep = f();
-		leaf::try_(
+		leaf::try_catch(
 			[&ep]
 			{
 				return std::rethrow_exception(ep);
@@ -78,7 +78,7 @@ void test( F f_ )
 
 	{
 		auto ep = f();
-		int what = leaf::try_(
+		int what = leaf::try_catch(
 			[&ep]
 			{
 				std::rethrow_exception(ep); return 0;
@@ -97,7 +97,7 @@ void test( F f_ )
 
 	{
 		auto ep = f();
-		int what = leaf::try_(
+		int what = leaf::try_catch(
 			[&ep]
 			{
 				std::rethrow_exception(ep); return 0;
@@ -116,7 +116,7 @@ void test( F f_ )
 
 	{
 		auto ep = f();
-		bool what = leaf::try_(
+		bool what = leaf::try_catch(
 			[&ep]
 			{
 				std::rethrow_exception(ep); return true;
@@ -144,7 +144,7 @@ void test( F f_ )
 
 	{
 		auto ep = f();
-		bool what = leaf::try_(
+		bool what = leaf::try_catch(
 			[&ep]
 			{
 				std::rethrow_exception(ep); return false;

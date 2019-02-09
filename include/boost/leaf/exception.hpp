@@ -8,11 +8,43 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/error.hpp>
-#include <boost/leaf/throw_exception.hpp>
 #include <exception>
 
 #define LEAF_EXCEPTION(...) ::boost::leaf::leaf_detail::exception_at(__FILE__,__LINE__,__FUNCTION__,__VA_ARGS__)
 #define LEAF_THROW(...) ::boost::leaf::throw_exception(LEAF_EXCEPTION(__VA_ARGS__))
+
+#if defined(LEAF_NO_EXCEPTIONS) || defined(BOOST_NO_EXCEPTIONS)
+
+namespace boost
+{
+	[[noreturn]] void throw_exception( std::exception const & ); // user defined
+}
+
+namespace boost { namespace leaf {
+
+	template <class T>
+	[[noreturn]] void throw_exception( T const & e )
+	{
+		::boost::throw_exception(e);
+	}
+
+} }
+
+#else
+
+namespace boost { namespace leaf {
+
+	template <class T>
+	[[noreturn]] void throw_exception( T const & e )
+	{
+		throw e;
+	}
+
+} }
+
+#endif
+
+////////////////////////////////////////
 
 namespace boost { namespace leaf {
 

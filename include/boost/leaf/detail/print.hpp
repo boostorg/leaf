@@ -80,39 +80,43 @@ namespace boost { namespace leaf {
 		template <class Wrapper, bool ValuePrintable>
 		struct diagnostic<Wrapper, true, ValuePrintable>
 		{
+			static constexpr bool is_printable = true;
 			static bool print( std::ostream & os, Wrapper const & x )
 			{
 				os << x;
-				return true;
+				return is_printable;
 			}
 		};
 
 		template <class Wrapper>
 		struct diagnostic<Wrapper, false, true>
 		{
+			static constexpr bool is_printable = true;
 			static bool print( std::ostream & os, Wrapper const & x )
 			{
 				os << type<Wrapper>() << ": " << x.value;
-				return true;
+				return is_printable;
 			}
 		};
 
 		template <class Wrapper>
 		struct diagnostic<Wrapper, false, false>
 		{
+			static constexpr bool is_printable = true;
 			static bool print( std::ostream & os, Wrapper const & )
 			{
 				os << type<Wrapper>() << ": N/A";
-				return true;
+				return is_printable;
 			}
 		};
 
 		template <>
 		struct diagnostic<std::exception_ptr, false, false>
 		{
+			static constexpr bool is_printable = false;
 			static bool print( std::ostream & os, std::exception_ptr const & )
 			{
-				return false;
+				return is_printable;
 			}
 		};
 	} // leaf_detail

@@ -4,8 +4,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/capture_in_exception.hpp>
-#include <boost/leaf/try.hpp>
+#include <boost/leaf/capture.hpp>
+#include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
 #include "boost/core/lightweight_test.hpp"
 
@@ -38,9 +38,9 @@ namespace boost { namespace leaf {
 
 int main()
 {
-	auto error_handler = [ ]( leaf::error_in_remote_try_ const & error )
+	auto error_handler = [ ]( leaf::error const & err )
 	{
-		return leaf::handle_error( error,
+		return leaf::remote_catch( err,
 			[ ]( info<1>, info<3> )
 			{
 			} );
@@ -49,7 +49,8 @@ int main()
 	std::exception_ptr ep;
 	try
 	{
-		leaf::capture_in_exception<decltype(error_handler)>(
+		leaf::capture(
+			leaf::make_shared_context(&error_handler),
 			[ ]
 			{
 				throw leaf::exception( std::exception(), info<1>{}, info<3>{} );
@@ -61,14 +62,14 @@ int main()
 		ep = std::current_exception();
 	}
 	BOOST_TEST_EQ(count, 2);
-	leaf::remote_try_(
+	leaf::remote_try_catch(
 		[&]
 		{
 			std::rethrow_exception(ep);
 		},
-		[&]( leaf::error_in_remote_try_ const & error )
+		[&]( leaf::error const & err )
 		{
-			return error_handler(error);
+			return error_handler(err);
 		} );
 	ep = std::exception_ptr();
 	BOOST_TEST_EQ(count, 0);

@@ -4,10 +4,9 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/capture_in_exception.hpp>
-#include <boost/leaf/capture_in_result.hpp>
-#include <boost/leaf/handle_all.hpp>
-
+#include <boost/leaf/capture.hpp>
+#include <boost/leaf/result.hpp>
+#include <boost/leaf/handle_error.hpp>
 #include "boost/core/lightweight_test.hpp"
 #include <vector>
 #include <future>
@@ -40,7 +39,7 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
 			return fut_info { a, b, res, std::async( std::launch::async,
 				[=]
 				{
-					return leaf::capture_in_exception<Handler>(f, a, b, res);
+					return leaf::capture(leaf::make_shared_context<Handler>(), f, a, b, res);
 				} ) };
 		} );
 	return fut;
@@ -48,9 +47,9 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
 
 int main()
 {
-	auto error_handler = [ ]( leaf::error_in_remote_handle_all const & error, int a, int b )
+	auto error_handler = [ ]( leaf::error const & err, int a, int b )
 	{
-		return leaf::handle_error( error,
+		return leaf::remote_handle_all( err,
 			[&]( info<1> const & x1, info<2> const & x2 )
 			{
 				BOOST_TEST_EQ(x1.value, a);
@@ -63,7 +62,8 @@ int main()
 			} );
 	};
 
-	std::vector<fut_info> fut = launch_tasks<decltype(error_handler)>( 42,
+	std::vector<fut_info> fut = launch_tasks<decltype(error_handler)>(
+		42,
 		[ ]( int a, int b, int res ) -> leaf::result<int>
 		{
 			if( res>=0 )
@@ -75,14 +75,14 @@ int main()
 	for( auto & f : fut )
 	{
 		f.fut.wait();
-		int r = leaf::remote_handle_all(
+		int r = leaf::remote_try_handle_all(
 			[&]
 			{
 				return f.fut.get();
 			},
-			[&]( leaf::error_in_remote_handle_all const & error )
+			[&]( leaf::error const & err )
 			{
-				return error_handler(error, f.a, f.b);
+				return error_handler(err, f.a, f.b);
 			} );
 		if( f.result>=0 )
 			BOOST_TEST_EQ(r, f.result);

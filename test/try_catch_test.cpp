@@ -4,8 +4,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/try.hpp>
-#include <boost/leaf/exception.hpp>
+#include <boost/leaf/handle_exception.hpp>
 #include "boost/core/lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
@@ -33,7 +32,7 @@ int main()
 	// void, handle_all (success)
 	{
 		int c=0;
-		leaf::try_(
+		leaf::try_catch(
 			[&c]
 			{
 				c = f<int>();
@@ -49,7 +48,7 @@ int main()
 	// void, handle_all (failure), match_enum (single enum value)
 	{
 		int c=0;
-		leaf::try_(
+		leaf::try_catch(
 			[&c]
 			{
 				c = f<int>(error1());
@@ -77,7 +76,7 @@ int main()
 	// void, handle_all (failure), match_enum (multiple enum values)
 	{
 		int c=0;
-		leaf::try_(
+		leaf::try_catch(
 			[&c]
 			{
 				c = f<int>(error1());
@@ -105,7 +104,7 @@ int main()
 	// void, handle_all (failure), match_value (single value)
 	{
 		int c=0;
-		leaf::try_(
+		leaf::try_catch(
 			[&c]
 			{
 				c = f<int>(error1());
@@ -133,7 +132,7 @@ int main()
 	// void, handle_all (failure), match_value (multiple values)
 	{
 		int c=0;
-		leaf::try_(
+		leaf::try_catch(
 			[&c]
 			{
 				c = f<int>(error1());
@@ -163,10 +162,10 @@ int main()
 	// void, handle_some (failure, initially not matched), match_enum (single enum value)
 	{
 		int c=0;
-		leaf::try_(
+		leaf::try_catch(
 			[&c]
 			{
-				leaf::try_(
+				leaf::try_catch(
 					[&c]
 					{
 						c = f<int>(error1());
@@ -196,10 +195,10 @@ int main()
 	// void, handle_some (failure, initially not matched), match_enum (multiple enum values)
 	{
 		int c=0;
-		leaf::try_(
+		leaf::try_catch(
 			[&c]
 			{
-				leaf::try_(
+				leaf::try_catch(
 					[&c]
 					{
 						c = f<int>(error1());
@@ -229,10 +228,10 @@ int main()
 	// void, handle_some (failure, initially matched), match_enum (single enum value)
 	{
 		int c=0;
-		leaf::try_(
+		leaf::try_catch(
 			[&c]
 			{
-				leaf::try_(
+				leaf::try_catch(
 					[&c]
 					{
 						c = f<int>(error1());
@@ -261,10 +260,10 @@ int main()
 	// void, handle_some (failure, initially matched), match_enum (multiple enum values)
 	{
 		int c=0;
-		leaf::try_(
+		leaf::try_catch(
 			[&c]
 			{
-				leaf::try_(
+				leaf::try_catch(
 					[&c]
 					{
 						c = f<int>(error1());
@@ -294,7 +293,7 @@ int main()
 
 	// int, handle_all (success)
 	{
-		int r = leaf::try_(
+		int r = leaf::try_catch(
 			[ ]
 			{
 				return f<int>();
@@ -308,7 +307,7 @@ int main()
 
 	// int, handle_all (failure), match_enum (single enum value)
 	{
-		int r = leaf::try_(
+		int r = leaf::try_catch(
 			[ ]
 			{
 				return f<int>(error1());
@@ -332,7 +331,7 @@ int main()
 
 	// int, handle_all (failure), match_enum (multiple enum values)
 	{
-		int r = leaf::try_(
+		int r = leaf::try_catch(
 			[ ]
 			{
 				return f<int>(error1());
@@ -358,7 +357,7 @@ int main()
 
 	// int, handle_some (failure, matched), match_enum (single enum value)
 	{
-		int r = leaf::try_(
+		int r = leaf::try_catch(
 			[ ]
 			{
 				return f<int>(error1());
@@ -378,7 +377,7 @@ int main()
 
 	// int, handle_some (failure, matched), match_enum (multiple enum values)
 	{
-		int r = leaf::try_(
+		int r = leaf::try_catch(
 			[ ]
 			{
 				return f<int>(error1());
@@ -398,10 +397,10 @@ int main()
 
 	// int, handle_some (failure, initially not matched), match_enum (single enum value)
 	{
-		int r = leaf::try_(
+		int r = leaf::try_catch(
 			[ ]
 			{
-				int r = leaf::try_(
+				int r = leaf::try_catch(
 					[ ]
 					{
 						return f<int>(error1());
@@ -428,10 +427,10 @@ int main()
 
 	// int, handle_some (failure, initially not matched), match_enum (multiple enum values)
 	{
-		int r = leaf::try_(
+		int r = leaf::try_catch(
 			[ ]
 			{
-				int r = leaf::try_(
+				int r = leaf::try_catch(
 					[ ]
 					{
 						return f<int>(error1());
@@ -458,10 +457,10 @@ int main()
 
 	// int, handle_some (failure, initially matched), match_enum (single enum value)
 	{
-		int r = leaf::try_(
+		int r = leaf::try_catch(
 			[ ]
 			{
-				int r = leaf::try_(
+				int r = leaf::try_catch(
 					[ ]
 					{
 						return f<int>(error1());
@@ -488,10 +487,10 @@ int main()
 
 	// int, handle_some (failure, initially matched), match_enum (multiple enum values)
 	{
-		int r = leaf::try_(
+		int r = leaf::try_catch(
 			[ ]
 			{
-				int r = leaf::try_(
+				int r = leaf::try_catch(
 					[ ]
 					{
 						return f<int>(error1());

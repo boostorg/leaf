@@ -12,9 +12,9 @@
 // using a C++ library that throws exceptions. As demonstrated below, these exception objects are
 // intercepted and reported by leaf::result<>.
 
-#include <boost/leaf/exception_to_result.hpp>
+#include <boost/leaf/capture.hpp>
 #include <boost/leaf/result.hpp>
-#include <boost/leaf/handle_all.hpp>
+#include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/try.hpp>
 #include <iostream>
 

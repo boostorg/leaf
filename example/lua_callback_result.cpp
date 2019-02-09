@@ -12,7 +12,7 @@ extern "C" {
 	#include "lua.h"
 	#include "lauxlib.h"
 }
-#include <boost/leaf/handle_all.hpp>
+#include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/preload.hpp>
 #include <iostream>

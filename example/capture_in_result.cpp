@@ -7,8 +7,8 @@
 // This is a simple program that demonstrates the use of LEAF to transport e-objects between threads,
 // without using exception handling. See capture_eh.cpp for the exception-handling variant.
 
-#include <boost/leaf/capture_in_result.hpp>
-#include <boost/leaf/handle_all.hpp>
+#include <boost/leaf/capture.hpp>
+#include <boost/leaf/handle_error.hpp>
 
 #include <vector>
 #include <string>

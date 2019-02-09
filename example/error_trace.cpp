@@ -11,7 +11,7 @@
 // Otherwse none of the error trace machinery will be invoked by LEAF.
 
 #include <boost/leaf/preload.hpp>
-#include <boost/leaf/handle_all.hpp>
+#include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/result.hpp>
 #include <iostream>
 #include <deque>

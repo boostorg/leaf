@@ -7,7 +7,6 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/detail/dynamic_store.hpp>
 #include <boost/leaf/exception.hpp>
 #include <memory>
 
@@ -23,7 +22,7 @@ namespace boost { namespace leaf {
 	template <class T>
 	class result
 	{
-		using dynamic_store_ptr = std::shared_ptr<leaf_detail::dynamic_store>;
+		using context_ptr = std::shared_ptr<polymorphic_context>;
 
 		template <class U>
 		friend class result;
@@ -32,7 +31,7 @@ namespace boost { namespace leaf {
 		{
 			T value_;
 			mutable int err_id_;
-			dynamic_store_ptr cap_;
+			context_ptr ctx_;
 		};
 
 		mutable leaf_detail::result_variant which_;
@@ -47,8 +46,8 @@ namespace boost { namespace leaf {
 			case leaf_detail::result_variant::err_id:
 				break;
 			default:
-				assert(which_==leaf_detail::result_variant::cap);
-				cap_.~dynamic_store_ptr();
+				assert(which_==leaf_detail::result_variant::ctx);
+				ctx_.~context_ptr();
 			}
 			which_= (leaf_detail::result_variant)-1;
 		}
@@ -65,8 +64,8 @@ namespace boost { namespace leaf {
 				err_id_ = x.err_id_;
 				break;
 			default:
-				assert(x.which_==leaf_detail::result_variant::cap);
-				(void) new(&cap_) dynamic_store_ptr(x.cap_);
+				assert(x.which_==leaf_detail::result_variant::ctx);
+				(void) new(&ctx_) context_ptr(x.ctx_);
 			};
 			which_ = x.which_;
 		}
@@ -85,17 +84,17 @@ namespace boost { namespace leaf {
 				which_ = x.which_;
 				break;
 			default:
-				assert(x.which_==leaf_detail::result_variant::cap);
-				if( dynamic_store_ptr cap = std::move(x.cap_) )
+				assert(x.which_==leaf_detail::result_variant::ctx);
+				if( context_ptr ctx = std::move(x.ctx_) )
 				{
 					x.destroy();
-					x.err_id_ = cap->err_id();
+					x.err_id_ = leaf_detail::import_error_code(ctx->ec).value();
 					x.which_ = leaf_detail::result_variant::err_id;
-					(void) new(&cap_) dynamic_store_ptr(std::move(cap));
+					(void) new(&ctx_) context_ptr(std::move(ctx));
 				}
 				else
-					(void) new(&cap_) dynamic_store_ptr(std::move(x.cap_));
-				which_ = leaf_detail::result_variant::cap;
+					(void) new(&ctx_) context_ptr(std::move(x.ctx_));
+				which_ = leaf_detail::result_variant::ctx;
 			};
 		}
 
@@ -105,12 +104,14 @@ namespace boost { namespace leaf {
 			{
 			case leaf_detail::result_variant::value:
 				return 0;
-			case leaf_detail::result_variant::cap:
+			case leaf_detail::result_variant::ctx:
 				{
-					dynamic_store_ptr cap = cap_;
+					context_ptr ctx = std::move(ctx_);
 					destroy();
-					err_id_ = cap->unload();
+					err_id_ = leaf_detail::import_error_code(ctx->ec).value();
+					assert(err_id_!=0);
 					which_ = leaf_detail::result_variant::err_id;
+					context_activator active_context(*ctx, true);
 				}
 			default:
 				assert(which_==leaf_detail::result_variant::err_id);
@@ -179,7 +180,12 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		result( std::shared_ptr<leaf_detail::dynamic_store> && ) noexcept;
+		result( context_ptr const & ctx ) noexcept:
+			ctx_(ctx),
+			which_(leaf_detail::result_variant::ctx)
+		{
+			assert(ctx_->ec);
+		}
 
 		result & operator=( result && x ) noexcept
 		{
@@ -301,7 +307,10 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		result( std::shared_ptr<leaf_detail::dynamic_store> && ) noexcept;
+		result( context_ptr const & ctx ) noexcept:
+			base(ctx)
+		{
+		}
 
 		void value() const
 		{

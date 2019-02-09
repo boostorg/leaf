@@ -4,9 +4,9 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/capture_in_result.hpp>
-#include <boost/leaf/handle_all.hpp>
-
+#include <boost/leaf/capture.hpp>
+#include <boost/leaf/result.hpp>
+#include <boost/leaf/handle_error.hpp>
 #include "boost/core/lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
@@ -38,32 +38,36 @@ namespace boost { namespace leaf {
 
 int main()
 {
-	auto handler = [ ]( leaf::error_in_remote_handle_all const & error )
+	auto error_handler = [ ]( leaf::error const & err )
 	{
-		return leaf::handle_error( error,
+		return leaf::remote_handle_all( err,
 			[ ]( info<1>, info<3> )
 			{
+				return 42;
 			},
 			[ ]
 			{
+				return -42;
 			} );
 	};
 	{
-		auto r = leaf::capture_in_result<decltype(handler)>(
-			[ ]() -> leaf::result<void>
+		auto r = leaf::capture(
+			leaf::make_shared_context(&error_handler),
+			[ ]() -> leaf::result<int>
 			{
 				return leaf::new_error( info<1>{}, info<3>{} );
 			} );
 		BOOST_TEST_EQ(count, 2);
-		leaf::remote_handle_all(
+		int answer = leaf::remote_try_handle_all(
 			[&r]
 			{
 				return r;
 			},
-			[&]( leaf::error_in_remote_handle_all const & error )
+			[&]( leaf::error const & err )
 			{
-				return handler(error);
+				return error_handler(err);
 			} );
+		BOOST_TEST_EQ(answer, 42);
 	}
 	BOOST_TEST_EQ(count, 0);
 	return boost::report_errors();

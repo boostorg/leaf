@@ -4,8 +4,9 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/capture_in_result.hpp>
-#include <boost/leaf/handle_all.hpp>
+#include <boost/leaf/capture.hpp>
+#include <boost/leaf/result.hpp>
+#include <boost/leaf/handle_error.hpp>
 #include "_test_ec.hpp"
 #include "boost/core/lightweight_test.hpp"
 
@@ -19,7 +20,7 @@ void test( F f )
 	{
 		int c=0;
 		auto r = f();
-		leaf::handle_all(
+		leaf::try_handle_all(
 			[&r]
 			{
 				return r;
@@ -41,7 +42,7 @@ void test( F f )
 	{
 		int c=0;
 		auto r = f();
-		leaf::handle_all(
+		leaf::try_handle_all(
 			[&r]
 			{
 				return r;
@@ -62,7 +63,7 @@ void test( F f )
 
 	{
 		auto r = f();
-		int what = leaf::handle_all(
+		int what = leaf::try_handle_all(
 			[&r]() -> leaf::result<int>
 			{
 				return r.error();
@@ -81,7 +82,7 @@ void test( F f )
 
 	{
 		auto r = f();
-		int what = leaf::handle_all(
+		int what = leaf::try_handle_all(
 			[&r]() -> leaf::result<int>
 			{
 				return r.error();
@@ -100,7 +101,7 @@ void test( F f )
 
 	{
 		auto r = f();
-		bool what = leaf::handle_all(
+		bool what = leaf::try_handle_all(
 			[&r]() -> leaf::result<bool>
 			{
 				return r.error();
@@ -128,7 +129,7 @@ void test( F f )
 
 	{
 		auto r = f();
-		bool what = leaf::handle_all(
+		bool what = leaf::try_handle_all(
 			[&r]() -> leaf::result<bool>
 			{
 				return r.error();
@@ -159,16 +160,8 @@ int main()
 {
 	test( [ ]
 	{
-		return leaf::capture_in_result_explicit<info<1>, info<2>, info<3>>(
-			[ ]() -> leaf::result<void>
-			{
-				return leaf::new_error(errc_a::a0, info<1>{1}, info<3>{3} );
-			} );
-	 } );
-	test( [ ]
-	{
-		return leaf::capture_in_result_explicit<info<1>, info<2>, info<3>>(
-			std::allocator<int>(),
+		return leaf::capture(
+			std::make_shared<leaf::context<std::error_code, info<1>, info<2>, info<3>>>(),
 			[ ]() -> leaf::result<void>
 			{
 				return leaf::new_error(errc_a::a0, info<1>{1}, info<3>{3} );
