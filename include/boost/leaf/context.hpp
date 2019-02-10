@@ -52,6 +52,13 @@ namespace boost { namespace leaf {
 		class e_unexpected_count;
 		class e_unexpected_info;
 
+		template <class T> struct requires_unexpected { constexpr static bool value = false; };
+		template <class T> struct requires_unexpected<T const> { constexpr static bool value = requires_unexpected<T>::value; };
+		template <class T> struct requires_unexpected<T const &> { constexpr static bool value = requires_unexpected<T>::value; };
+		template <class T> struct requires_unexpected<T const *> { constexpr static bool value = requires_unexpected<T>::value; };
+		template <> struct requires_unexpected<e_unexpected_count> { constexpr static bool value = true; };
+		template <> struct requires_unexpected<e_unexpected_info> { constexpr static bool value = true; };
+
 		template <class L>
 		struct unexpected_requested;
 
@@ -61,22 +68,10 @@ namespace boost { namespace leaf {
 			constexpr static bool value = false;
 		};
 
-		template <template <class...> class L>
-		struct unexpected_requested<L<e_unexpected_count>>
+		template <template <class...> class L, template <class> class S, class Car, class... Cdr>
+		struct unexpected_requested<L<S<Car>, S<Cdr>...>>
 		{
-			constexpr static bool value = true;
-		};
-
-		template <template <class...> class L>
-		struct unexpected_requested<L<e_unexpected_info>>
-		{
-			constexpr static bool value = true;
-		};
-
-		template <template <class...> class L, class Car, class... Cdr>
-		struct unexpected_requested<L<Car,Cdr...>>
-		{
-			constexpr static bool value = unexpected_requested<L<Cdr...>>::value;
+			constexpr static bool value = requires_unexpected<Car>::value || unexpected_requested<L<S<Cdr>...>>::value;
 		};
 	}
 
@@ -88,7 +83,10 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class T> struct translate_type_impl { using type = typename std::decay<T>::type; };
+		template <class T> struct translate_type_impl { using type = T; };
+		template <class T> struct translate_type_impl<T const> { using type = T; };
+		template <class T> struct translate_type_impl<T const *> { using type = T; };
+		template <class T> struct translate_type_impl<T const &> { using type = T; };
 
 		template <> struct translate_type_impl<diagnostic_info>;
 		template <> struct translate_type_impl<diagnostic_info const>;
@@ -145,14 +143,14 @@ namespace boost { namespace leaf {
 		template <class L>
 		struct deduce_e_tuple_impl;
 
-		template <template<class...> class L, class... E>
+		template <template <class...> class L, class... E>
 		struct deduce_e_tuple_impl<L<E...>>
 		{
 			using type = std::tuple<slot<E>...>;
 		};
 
-		template <class L>
-		using deduce_e_tuple = typename deduce_e_tuple_impl<L>::type;
+		template <class... E>
+		using deduce_e_tuple = typename deduce_e_tuple_impl<leaf_detail::transform_e_type_list<leaf_detail_mp11::mp_list<E...>>>::type;
 	}
 
 	////////////////////////////////////////////
@@ -162,9 +160,14 @@ namespace boost { namespace leaf {
 	{
 		context( context const & ) = delete;
 		context & operator=( context const & ) = delete;
-		using Tup = leaf_detail::deduce_e_tuple<leaf_detail::transform_e_type_list<leaf_detail_mp11::mp_list<E...>>>;
-		Tup tup_;
 
+	public:
+
+		using Tup = leaf_detail::deduce_e_tuple<E...>;
+
+	private:
+
+		Tup tup_;
 		std::thread::id thread_id_;
 
 	public:
@@ -214,7 +217,7 @@ namespace boost { namespace leaf {
 			tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_, propagate_errors);
 		}
 
-		void print( std::ostream & os ) final override
+		void print( std::ostream & os ) const final override
 		{
 			leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, tup_);
 		}

@@ -26,7 +26,7 @@ leaf::result<T> test()
 int main()
 {
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]
 			{
 				return test<int>();
@@ -42,7 +42,7 @@ int main()
 		BOOST_TEST_EQ(r, 1);
 	}
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> leaf::result<int>
 			{
 				LEAF_CHECK(test<void>());

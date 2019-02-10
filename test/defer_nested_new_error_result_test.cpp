@@ -37,7 +37,7 @@ leaf::error_id f2()
 
 int main()
 {
-	int r = leaf::handle_all(
+	int r = leaf::try_handle_all(
 		[ ]() -> leaf::result<int>
 		{
 			return f2();

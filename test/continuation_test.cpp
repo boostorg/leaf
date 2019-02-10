@@ -169,7 +169,7 @@ int main()
 		};
 
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[&]
 			{
 				return try_block(fail_where::f);
@@ -193,7 +193,7 @@ int main()
 	}
 
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[&]
 			{
 				return try_block(fail_where::op_a_start);
@@ -217,7 +217,7 @@ int main()
 	}
 
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[&]
 			{
 				return try_block(fail_where::op_b_start_before_op_a_start);
@@ -241,7 +241,7 @@ int main()
 	}
 
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[&]
 			{
 				return try_block(fail_where::op_b_start_after_successful_op_a);
@@ -265,7 +265,7 @@ int main()
 	}
 
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[&]
 			{
 				return try_block(fail_where::op_b_cont_before_op_a_start);
@@ -289,7 +289,7 @@ int main()
 	}
 
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[&]
 			{
 				return try_block(fail_where::op_b_cont_after_successful_op_a);

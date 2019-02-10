@@ -4,7 +4,6 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/handle_some.hpp>
 #include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/result.hpp>
 #include "boost/core/lightweight_test.hpp"
@@ -40,7 +39,7 @@ leaf::result<int> compute_answer( int what_to_do ) noexcept
 
 leaf::result<int> handle_some_errors( int what_to_do )
 {
-	return leaf::handle_some(
+	return leaf::try_handle_some(
 		[=]
 		{
 			return compute_answer(what_to_do);
@@ -53,7 +52,7 @@ leaf::result<int> handle_some_errors( int what_to_do )
 
 leaf::result<float> handle_some_errors_float( int what_to_do )
 {
-	return leaf::handle_some(
+	return leaf::try_handle_some(
 		[=]() -> leaf::result<float>
 		{
 			return compute_answer(what_to_do);
@@ -66,7 +65,7 @@ leaf::result<float> handle_some_errors_float( int what_to_do )
 
 leaf::result<void> handle_some_errors_void( int what_to_do )
 {
-	return leaf::handle_some(
+	return leaf::try_handle_some(
 		[=]() -> leaf::result<void>
 		{
 			LEAF_AUTO(answer, compute_answer(what_to_do));
@@ -83,7 +82,7 @@ int main()
 	BOOST_TEST_EQ(handle_some_errors(0).value(), 42);
 	BOOST_TEST_EQ(handle_some_errors(1).value(), -42);
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer,handle_some_errors(3));
@@ -106,7 +105,7 @@ int main()
 	BOOST_TEST_EQ(handle_some_errors_float(0).value(), 42.0f);
 	BOOST_TEST_EQ(handle_some_errors_float(2).value(), -42.0f);
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer,handle_some_errors_float(1));
@@ -129,7 +128,7 @@ int main()
 	BOOST_TEST(handle_some_errors_void(0));
 	BOOST_TEST(handle_some_errors_void(3));
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> leaf::result<int>
 			{
 				LEAF_CHECK(handle_some_errors_void(2));
@@ -149,7 +148,7 @@ int main()
 	///////////////////////////
 
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> leaf::result<int>
 			{
 				LEAF_CHECK(handle_some_errors_void(2));

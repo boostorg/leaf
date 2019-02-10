@@ -4,7 +4,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/try.hpp>
+#include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
 #include "boost/core/lightweight_test.hpp"
 
@@ -17,7 +17,7 @@ struct my_error: std::exception { };
 template <class F>
 int test( F && f )
 {
-	return leaf::try_(
+	return leaf::try_catch(
 		[&]() -> int
 		{
 			f();

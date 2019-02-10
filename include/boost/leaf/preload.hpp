@@ -228,7 +228,7 @@ namespace boost { namespace leaf {
 					if( E * e = s_->has_value(err_id) )
 						(void) f_(*e);
 					else
-						(void) f_(s_->load˛(err_id, E()));
+						(void) f_(s_->load(err_id, E()));
 			}
 		};
 

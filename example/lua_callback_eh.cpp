@@ -12,7 +12,7 @@ extern "C" {
 	#include "lua.h"
 	#include "lauxlib.h"
 }
-#include <boost/leaf/try.hpp>
+#include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/preload.hpp>
 #include <iostream>
@@ -109,7 +109,7 @@ int main() noexcept
 
 	for( int i=0; i!=10; ++i )
 	{
-		leaf::try_(
+		leaf::try_catch(
 
 			[&]
 			{

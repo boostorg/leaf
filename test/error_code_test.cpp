@@ -4,7 +4,6 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/handle_some.hpp>
 #include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/result.hpp>
 #include "_test_res.hpp"
@@ -16,7 +15,7 @@ template <class R>
 void test()
 {
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> R
 			{
 				return make_error_code(errc_a::a0);
@@ -29,7 +28,7 @@ void test()
 		BOOST_TEST_EQ(r, 42);
 	}
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> R
 			{
 				return make_error_code(errc_a::a0);
@@ -45,15 +44,15 @@ void test()
 		BOOST_TEST_EQ(r, 42);
 	}
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> R
 			{
-				auto r1 = leaf::handle_some(
+				auto r1 = leaf::try_handle_some(
 					[ ]() -> R
 					{
 						return make_error_code(errc_a::a0);
 					} );
-				auto r2 = leaf::handle_some(
+				auto r2 = leaf::try_handle_some(
 					[ ]() -> R
 					{
 						return make_error_code(errc_b::b0);
@@ -72,7 +71,7 @@ void test()
 		BOOST_TEST_EQ(r, 42);
 	}
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> R
 			{
 				return leaf::new_error(errc_a::a0, e_errc_a<1>{make_error_code(errc_a::a1)});
@@ -88,7 +87,7 @@ void test()
 		BOOST_TEST_EQ(r, 42);
 	}
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]() -> R
 			{
 				return leaf::new_error(errc_a::a1, e_errc_a<1>{make_error_code(errc_a::a0)});

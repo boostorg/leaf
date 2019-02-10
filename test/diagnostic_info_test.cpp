@@ -4,9 +4,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/try.hpp>
+#include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
-#include <boost/leaf/capture_in_exception.hpp>
 #include <boost/leaf/common.hpp>
 #include "boost/core/lightweight_test.hpp"
 #include <sstream>
@@ -72,7 +71,7 @@ struct non_printable_info_non_printable_payload
 
 int main()
 {
-	leaf::try_(
+	leaf::try_catch(
 		[ ]
 		{
 			LEAF_THROW( my_error(),
@@ -93,23 +92,32 @@ int main()
 			leaf::e_errno,
 			leaf::error_info const & unmatched )
 		{
-			std::ostringstream st;
-			st << unmatched;
-			std::string s = st.str();
-			BOOST_TEST(s.find("leaf::error_info:")!=s.npos);
-			BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
-			BOOST_TEST(s.find(": N/A")!=s.npos);
-			BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
-			BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
-			BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
-			BOOST_TEST(s.find(") in function")!=s.npos);
-			BOOST_TEST_EQ(s.find("unexpected"), s.npos);
-			std::cout << s;
+			{
+				std::ostringstream st;
+				st << unmatched;
+				std::string s = st.str();
+				BOOST_TEST(s.find("leaf::error_info:")!=s.npos);
+				BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
+				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
+				BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
+				BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
+				BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
+				BOOST_TEST(s.find(") in function")!=s.npos);
+				BOOST_TEST_EQ(s.find("unexpected"), s.npos);
+				std::cout << s;
+			}
+			std::cout << "polymorphic_context::print():" << std::endl;
+			{
+				std::ostringstream st;
+				unmatched.ctx_.print(st);
+				std::string s = st.str();
+				std::cout << s;
+			}
 		} );
 
 	std::cout << std::endl;
 
-	leaf::try_(
+	leaf::try_catch(
 		[ ]
 		{
 			LEAF_THROW( my_error(),
@@ -130,25 +138,34 @@ int main()
 			leaf::e_errno,
 			leaf::diagnostic_info const & unmatched )
 		{
-			std::ostringstream st;
-			st << unmatched;
-			std::string s = st.str();
-			BOOST_TEST(s.find("leaf::diagnostic_info:")!=s.npos);
-			BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
-			BOOST_TEST(s.find(": N/A")!=s.npos);
-			BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
-			BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
-			BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
-			BOOST_TEST(s.find(") in function")!=s.npos);
-			BOOST_TEST(s.find("Detected 2 attempts")!=s.npos);
-			BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
-			BOOST_TEST_EQ(s.find("unexpected_test<2>"), s.npos);
-			std::cout << s;
+			{
+				std::ostringstream st;
+				st << unmatched;
+				std::string s = st.str();
+				BOOST_TEST(s.find("leaf::diagnostic_info:")!=s.npos);
+				BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
+				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
+				BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
+				BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
+				BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
+				BOOST_TEST(s.find(") in function")!=s.npos);
+				BOOST_TEST(s.find("Detected 2 attempts")!=s.npos);
+				BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
+				BOOST_TEST_EQ(s.find("unexpected_test<2>"), s.npos);
+				std::cout << s;
+			}
+			std::cout << "polymorphic_context::print():" << std::endl;
+			{
+				std::ostringstream st;
+				unmatched.ctx_.print(st);
+				std::string s = st.str();
+				std::cout << s;
+			}
 		} );
 
 	std::cout << std::endl;
 
-	leaf::try_(
+	leaf::try_catch(
 		[ ]
 		{
 			LEAF_THROW( my_error(),
@@ -169,51 +186,78 @@ int main()
 			leaf::e_errno,
 			leaf::verbose_diagnostic_info const & di )
 		{
-			std::ostringstream st;
-			st << di;
-			std::string s = st.str();
-			BOOST_TEST(s.find("leaf::verbose_diagnostic_info:")!=s.npos);
-			BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
-			BOOST_TEST(s.find(": N/A")!=s.npos);
-			BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
-			BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
-			BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
-			BOOST_TEST(s.find(") in function")!=s.npos);
-			BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
-			BOOST_TEST(s.find("unexpected_test<2>")!=s.npos);
-			std::cout << s;
+			{
+				std::ostringstream st;
+				st << di;
+				std::string s = st.str();
+				BOOST_TEST(s.find("leaf::verbose_diagnostic_info:")!=s.npos);
+				BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
+				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
+				BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
+				BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
+				BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
+				BOOST_TEST(s.find(") in function")!=s.npos);
+				BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
+				BOOST_TEST(s.find("unexpected_test<2>")!=s.npos);
+				std::cout << s;
+			}
+			std::cout << "polymorphic_context::print():" << std::endl;
+			{
+				std::ostringstream st;
+				di.ctx_.print(st);
+				std::string s = st.str();
+				std::cout << s;
+			}
 		} );
 
 	std::cout << std::endl;
 
-	leaf::try_(
+	leaf::try_catch(
 		[ ]
 		{
 			LEAF_THROW( my_error(), leaf::e_errno{ENOENT} );
 		},
 		[ ]( leaf::e_source_location, leaf::e_errno, leaf::diagnostic_info const & di )
 		{
-			std::ostringstream st;
-			st << di;
-			std::string s = st.str();
-			BOOST_TEST(s.find("leaf::diagnostic_info:")!=s.npos);
-			std::cout << s;
+			{
+				std::ostringstream st;
+				st << di;
+				std::string s = st.str();
+				BOOST_TEST(s.find("leaf::diagnostic_info:")!=s.npos);
+				std::cout << s;
+			}
+			std::cout << "polymorphic_context::print():" << std::endl;
+			{
+				std::ostringstream st;
+				di.ctx_.print(st);
+				std::string s = st.str();
+				std::cout << s;
+			}
 		} );
 
 	std::cout << std::endl;
 
-	leaf::try_(
+	leaf::try_catch(
 		[ ]
 		{
 			LEAF_THROW( my_error(), leaf::e_errno{ENOENT} );
 		},
 		[ ]( leaf::e_source_location, leaf::e_errno, leaf::verbose_diagnostic_info const & vdi )
 		{
-			std::ostringstream st;
-			st << vdi;
-			std::string s = st.str();
-			BOOST_TEST(s.find("leaf::verbose_diagnostic_info:")!=s.npos);
-			std::cout << s;
+			{
+				std::ostringstream st;
+				st << vdi;
+				std::string s = st.str();
+				BOOST_TEST(s.find("leaf::verbose_diagnostic_info:")!=s.npos);
+				std::cout << s;
+			}
+			std::cout << "polymorphic_context::print():" << std::endl;
+			{
+				std::ostringstream st;
+				vdi.ctx_.print(st);
+				std::string s = st.str();
+				std::cout << s;
+			}
 		} );
 
 	std::cout << std::endl;

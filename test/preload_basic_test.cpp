@@ -30,7 +30,7 @@ leaf::error_id f()
 
 int main()
 {
-	int r = leaf::handle_all(
+	int r = leaf::try_handle_all(
 		[ ]() -> leaf::result<int>
 		{
 			return f();

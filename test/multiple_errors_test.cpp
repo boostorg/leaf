@@ -28,7 +28,7 @@ leaf::result<void> f23()
 
 int main()
 {
-	int r = leaf::handle_all(
+	int r = leaf::try_handle_all(
 		[ ]() -> leaf::result<int>
 		{
 			leaf::result<void> r1 = f12();

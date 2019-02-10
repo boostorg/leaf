@@ -100,7 +100,7 @@ leaf::result<void> f5()
 int main()
 {
 	for( int i=0; i!=10; ++i )
-		leaf::handle_all(
+		leaf::try_handle_all(
 			[&]() -> leaf::result<void>
 			{
 				std::cout << "Run # " << i << ": ";

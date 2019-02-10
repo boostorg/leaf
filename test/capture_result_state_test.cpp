@@ -38,7 +38,7 @@ namespace boost { namespace leaf {
 
 int main()
 {
-	auto error_handler = [ ]( leaf::error const & err )
+	auto error_handler = [ ]( leaf::error_info const & err )
 	{
 		return leaf::remote_handle_all( err,
 			[ ]( info<1>, info<3> )
@@ -63,7 +63,7 @@ int main()
 			{
 				return r;
 			},
-			[&]( leaf::error const & err )
+			[&]( leaf::error_info const & err )
 			{
 				return error_handler(err);
 			} );

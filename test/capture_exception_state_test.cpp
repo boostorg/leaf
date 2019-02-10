@@ -38,7 +38,7 @@ namespace boost { namespace leaf {
 
 int main()
 {
-	auto error_handler = [ ]( leaf::error const & err )
+	auto error_handler = [ ]( leaf::error_info const & err )
 	{
 		return leaf::remote_catch( err,
 			[ ]( info<1>, info<3> )
@@ -67,7 +67,7 @@ int main()
 		{
 			std::rethrow_exception(ep);
 		},
-		[&]( leaf::error const & err )
+		[&]( leaf::error_info const & err )
 		{
 			return error_handler(err);
 		} );

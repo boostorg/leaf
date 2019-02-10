@@ -15,7 +15,7 @@
 #include <boost/leaf/capture.hpp>
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/handle_error.hpp>
-#include <boost/leaf/try.hpp>
+#include <boost/leaf/handle_exception.hpp>
 #include <iostream>
 
 namespace leaf = boost::leaf;
@@ -68,7 +68,7 @@ int main()
 	// compute_answer_throws throws are handled as regular LEAF error objects...
 	for( int i=0; i!=42; ++i )
 	{
-		leaf::handle_all(
+		leaf::try_handle_all(
 			[ ]() -> leaf::result<void>
 			{
 				LEAF_CHECK(print_answer());
@@ -99,14 +99,14 @@ int main()
 				//(with 0 passed for ep). Had we taken it by value or by const &, the program
 				// would not compile.
 				if( ep )
-					leaf::try_(
+					leaf::try_catch(
 						[&]
 						{
 							std::rethrow_exception(*ep);
 						},
 						[ ]( leaf::error_info const & unmatched )
 						{
-							std::cerr << unmatched << std::endl;
+							std::cerr << unmatched;
 						} );
 			} );
 	}

@@ -11,62 +11,23 @@
 
 namespace boost { namespace leaf {
 
-	////////////////////////////////////////
-
 	namespace leaf_detail
 	{
-		class current_error
+		class exception_info_base
 		{
-			current_error( current_error const & ) = delete;
-			current_error & operator=( current_error const & ) = delete;
-
-			static int get_err_id( std::error_code const & ec ) noexcept
-			{
-				return is_error_id(ec) ? ec.value() : 0;
-			}
-
 		protected:
 
-			explicit current_error( std::exception const * ex ) noexcept;
+			explicit exception_info_base( std::exception const * ) noexcept;
+			~exception_info_base() noexcept;
 
 		public:
 
-			std::exception const * ex_;
-			std::error_code const * ec_;
-			int const err_id_;
-
-			current_error( error_id const & id ) noexcept:
-				ex_(0),
-				ec_(&id),
-				err_id_(id.value())
-			{
-				assert(err_id_);
-			}
-
-			current_error( std::error_code const & ec ) noexcept:
-				ex_(0),
-				ec_(&ec),
-				err_id_(get_err_id(ec))
-			{
-			}
-		};
-
-		class current_exception: public current_error
-		{
-			current_exception( current_exception const & ) = delete;
-			current_exception & operator=( current_exception const & ) = delete;
-
-		protected:
-
-			explicit current_exception( std::exception const * ) noexcept;
-			~current_exception() noexcept;
-
-		public:
+			std::exception const * const ex_;
 
 			virtual void print( std::ostream & os ) const = 0;
 		};
 
-		class current_exception_impl;
+		class exception_info_;
 	}
 
 	class error_info
@@ -75,70 +36,90 @@ namespace boost { namespace leaf {
 
 	protected:
 
-		leaf_detail::current_error const & err_;
-
 		void print( std::ostream & os ) const
 		{
-			os << "Error ID: " << err_.err_id_ << std::endl;
-			if( ex_ )
-				ex_->print(os);
-			leaf_detail::slot_base::print(os,err_.err_id_);
+			os << "Error ID: " << err_id_.value() << std::endl;
+			if( xi_ )
+				xi_->print(os);
+			leaf_detail::slot_base::print(os,err_id_.value());
 		}
 
 	public:
 
-		leaf_detail::current_exception const * const ex_;
+		polymorphic_context const & ctx_;
+		leaf_detail::exception_info_base const * const xi_;
+		std::error_code const * const ec_;
+		error_id const err_id_;
 
-		error_info( error_info const & x ) noexcept:
-			err_(x.err_),
-			ex_(x.ex_)
+		explicit error_info( polymorphic_context const & ctx, error_id const & id ) noexcept:
+			ctx_(ctx),
+			xi_(0),
+			ec_(&id),
+			err_id_(id)
+		{
+			assert(err_id_);
+		}
+
+		explicit error_info( polymorphic_context const & ctx, std::error_code const & ec ) noexcept:
+			ctx_(ctx),
+			xi_(0),
+			ec_(&ec),
+			err_id_(ec)
 		{
 		}
 
-		explicit error_info( leaf_detail::current_error const & err ) noexcept:
-			err_(err),
-			ex_(0)
+		explicit error_info( polymorphic_context const & ctx, leaf_detail::exception_info_ const & ) noexcept;
+
+		explicit error_info( error_info const & x ) noexcept:
+			ctx_(x.ctx_),
+			xi_(x.xi_),
+			ec_(x.ec_),
+			err_id_(x.err_id_)
 		{
 		}
-
-		explicit error_info( leaf_detail::current_exception_impl const & ex ) noexcept;
 
 		int err_id() const noexcept
 		{
-			return err_.err_id_;
+			return err_id_.value();
 		}
 
 		bool has_error() const noexcept
 		{
-			return err_.err_id_!=0;
+			return bool(err_id_);
 		}
 
-		error_id get_error() const noexcept
+		error_id const & error() const noexcept
 		{
 			assert(has_error());
-			return leaf_detail::make_error_id(err_.err_id_);
+			return err_id_;
 		}
 
 		bool has_code() const noexcept
 		{
-			return err_.ec_!=0;
+			return ec_!=0;
 		}
 
-		std::error_code const & get_code() const noexcept
+		std::error_code const & code() const noexcept
 		{
 			assert(has_error());
-			return *err_.ec_;
+			return ec_ ? *ec_ : err_id_;
 		}
 
 		bool has_exception() const noexcept
 		{
-			return err_.ex_!=0;
+			return xi_!=0;
 		}
 
 		std::exception const * exception() const noexcept
 		{
 			assert(has_exception());
-			return err_.ex_;
+			return xi_->ex_;
+		}
+
+		std::error_code get_error_code() const noexcept
+		{
+			assert(has_error());
+			return has_code() ? code() : error();
 		}
 
 		friend std::ostream & operator<<( std::ostream & os, error_info const & x )
@@ -285,7 +266,7 @@ namespace boost { namespace leaf {
 				if( e_type const * ec = peek<e_type>(tup, ei.err_id()) )
 					return &ec->value;
 				else
-					return &ei.get_code();
+					return &ei.code();
 			}
 		};
 
@@ -570,7 +551,7 @@ namespace boost { namespace leaf {
 				if( leaf_detail::e_original_ec const * org = peek<e_original_ec>(tup, ei.err_id()) )
 					return org->value;
 				else
-					return ei.get_code();
+					return ei.code();
 			}
 		};
 
@@ -637,26 +618,43 @@ namespace boost { namespace leaf {
 			return check_arguments<Tup,typename std::remove_cv<typename std::remove_reference<T>::type>::type...>::check(e_objects, ei);
 		}
 
-		template <class Tup, class F,class... T>
-		fn_return_type<F> call_handler_( Tup const & e_objects, error_info const & ei, F && f, leaf_detail_mp11::mp_list<T...> )
+		template <class R, class F, bool IsResult = is_result_type<R>::value, class FReturnType = fn_return_type<F>>
+		struct handler_caller
 		{
-			return std::forward<F>(f)( get_one_argument<typename std::remove_cv<typename std::remove_reference<T>::type>::type>::get(e_objects, ei)... );
-		}
+			template <class Tup, class... T>
+			static R call( Tup const & e_objects, error_info const & ei, F && f, leaf_detail_mp11::mp_list<T...> )
+			{
+				return std::forward<F>(f)( get_one_argument<typename std::remove_cv<typename std::remove_reference<T>::type>::type>::get(e_objects, ei)... );
+			}
+		};
 
-		template <class Tup, class F>
-		fn_return_type<F> handle_error_( Tup const & e_objects, error_info const & ei, F && f )
+		template <template <class...> class Result, class... E, class F>
+		struct handler_caller<Result<void, E...>, F, true, void>
+		{
+			using R = Result<void, E...>;
+
+			template <class Tup,class... T>
+			static R call( Tup const & e_objects, error_info const & ei, F && f, leaf_detail_mp11::mp_list<T...> )
+			{
+				std::forward<F>(f)( get_one_argument<typename std::remove_cv<typename std::remove_reference<T>::type>::type>::get(e_objects, ei)... );
+				return { };
+			}
+		};
+
+		template <class R, class Tup, class F>
+		static R handle_error_( Tup const & e_objects, error_info const & ei, F && f )
 		{
 			static_assert( handler_matches_any_error<fn_mp_args<F>>::value, "The last handler passed to handle_all must match any error." );
-			return call_handler_( e_objects, ei, std::forward<F>(f), fn_mp_args<F>{ } );
+			return handler_caller<R, F>::call( e_objects, ei, std::forward<F>(f), fn_mp_args<F>{ } );
 		}
 
-		template <class Tup, class CarF, class... CdrF>
-		fn_return_type<CarF> handle_error_( Tup const & e_objects, error_info const & ei, CarF && car_f, CdrF && ... cdr_f )
+		template <class R, class Tup, class CarF, class... CdrF>
+		static R handle_error_( Tup const & e_objects, error_info const & ei, CarF && car_f, CdrF && ... cdr_f )
 		{
 			if( handler_matches_any_error<fn_mp_args<CarF>>::value || check_handler_( e_objects, ei, fn_mp_args<CarF>{ } ) )
-				return call_handler_( e_objects, ei, std::forward<CarF>(car_f), fn_mp_args<CarF>{ } );
+				return handler_caller<R, CarF>::call( e_objects, ei, std::forward<CarF>(car_f), fn_mp_args<CarF>{ } );
 			else
-				return handle_error_( e_objects, ei, std::forward<CdrF>(cdr_f)...);
+				return handle_error_<R>( e_objects, ei, std::forward<CdrF>(cdr_f)...);
 		}
 	}
 
@@ -667,10 +665,10 @@ namespace boost { namespace leaf {
 		template <class HandlerL>
 		struct handler_args_impl;
 
-		template <template <class...> class L, class... Handler>
-		struct handler_args_impl<L<Handler...>>
+		template <template <class...> class L, class... H>
+		struct handler_args_impl<L<H...>>
 		{
-			using type = leaf_detail_mp11::mp_append<fn_mp_args<Handler>...>;
+			using type = leaf_detail_mp11::mp_append<fn_mp_args<H>...>;
 		};
 
 		template <class HandlerL>
@@ -688,87 +686,50 @@ namespace boost { namespace leaf {
 		template <class TypeList>
 		using deduce_context = typename deduce_context_impl<TypeList>::type;
 
-		template <class RemoteHandler>
+		template <class RemoteH>
 		struct context_type_from_remote_handler_impl;
 
-		template <template <class...> class L, class... Handler>
-		struct context_type_from_remote_handler_impl<L<Handler...>>
+		template <template <class...> class L, class... H>
+		struct context_type_from_remote_handler_impl<L<H...>>
 		{
-			using type = deduce_context<leaf_detail_mp11::mp_append<fn_mp_args<Handler>...>>;
+			using type = deduce_context<leaf_detail_mp11::mp_append<fn_mp_args<H>...>>;
 		};
 
-		template <class... Handler>
+		template <class... H>
 		struct context_type_from_handlers_impl
 		{
-			using type = deduce_context<leaf_detail_mp11::mp_append<fn_mp_args<Handler>...>>;
+			using type = deduce_context<leaf_detail_mp11::mp_append<fn_mp_args<H>...>>;
 		};
 	}
 
-	template <class... Handler>
-	using context_type_from_handlers = typename leaf_detail::context_type_from_handlers_impl<Handler...>::type;
+	template <class... H>
+	using context_type_from_handlers = typename leaf_detail::context_type_from_handlers_impl<H...>::type;
 
-	template <class RemoteHandler>
-	using context_type_from_remote_handler = typename leaf_detail::context_type_from_remote_handler_impl<leaf_detail::fn_return_type<RemoteHandler>>::type;
+	template <class RemoteH>
+	using context_type_from_remote_handler = typename leaf_detail::context_type_from_remote_handler_impl<leaf_detail::fn_return_type<RemoteH>>::type;
 
-	template <class...  Handler>
-	context_type_from_handlers<Handler...> make_context()
+	template <class...  H>
+	context_type_from_handlers<H...> make_context()
 	{
 		return { };
 	}
 
-	template <class RemoteHandler>
-	context_type_from_remote_handler<RemoteHandler> make_context( RemoteHandler const & )
+	template <class RemoteH>
+	context_type_from_remote_handler<RemoteH> make_context( RemoteH const & )
 	{
 		return { };
 	}
 
-	template <class RemoteHandler>
-	std::shared_ptr<polymorphic_context> make_shared_context( RemoteHandler const * = 0 )
+	template <class RemoteH>
+	std::shared_ptr<polymorphic_context> make_shared_context( RemoteH const * = 0 )
 	{
-		return std::make_shared<context_type_from_remote_handler<RemoteHandler>>();
+		return std::make_shared<context_type_from_remote_handler<RemoteH>>();
 	}
 
-	template <class RemoteHandler, class Alloc>
-	std::shared_ptr<polymorphic_context> allocate_shared_context( Alloc alloc, RemoteHandler const * = 0 )
+	template <class RemoteH, class Alloc>
+	std::shared_ptr<polymorphic_context> allocate_shared_context( Alloc alloc, RemoteH const * = 0 )
 	{
-		return std::allocate_shared<context_type_from_remote_handler<RemoteHandler>>(alloc);
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		template <class TryReturn, class Handler, class HandlerReturn = fn_return_type<Handler>, class HandlerArgs = fn_mp_args<Handler>>
-		struct handler_wrapper;
-
-		template <class TryReturn, class Handler, class HandlerReturn, template<class...> class L, class... A>
-		struct handler_wrapper<TryReturn, Handler, HandlerReturn, L<A...>>
-		{
-			Handler h_;
-			explicit handler_wrapper( Handler && h ) noexcept:
-				h_(std::forward<Handler>(h))
-			{
-			}
-			TryReturn operator()( A... a ) const
-			{
-				return h_(std::forward<A>(a)...);
-			}
-		};
-
-		template <class TryReturn, class Handler, template<class...> class L, class... A>
-		struct handler_wrapper<TryReturn, Handler, void, L<A...>>
-		{
-			Handler h_;
-			explicit handler_wrapper( Handler && h ) noexcept:
-				h_(std::forward<Handler>(h))
-			{
-			}
-			TryReturn operator()( A... a ) const
-			{
-				h_(std::forward<A>(a)...);
-				return { };
-			}
-		};
+		return std::allocate_shared<context_type_from_remote_handler<RemoteH>>(alloc);
 	}
 
 	////////////////////////////////////////
@@ -790,13 +751,13 @@ namespace boost { namespace leaf {
 			using type = typename handler_pack_return_impl<Car, Cdr...>::type;
 		};
 
-		template <class... Handler>
-		using handler_pack_return = typename handler_pack_return_impl<typename std::decay<fn_return_type<Handler>>::type...>::type;
+		template <class... H>
+		using handler_pack_return = typename handler_pack_return_impl<typename std::decay<fn_return_type<H>>::type...>::type;
 
-		template <class... Handler>
+		template <class... H>
 		struct handler_result
 		{
-			using R = handler_pack_return<Handler...>;
+			using R = handler_pack_return<H...>;
 
 			R r;
 
@@ -806,7 +767,7 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		template <class... Handler>
+		template <class... H>
 		struct handler_result_void
 		{
 			void get() noexcept
@@ -814,25 +775,6 @@ namespace boost { namespace leaf {
 			}
 		};
 	}
-
-	class error: public error_info
-	{
-		error( error const & ) = delete;
-		error & operator=( error const & ) = delete;
-
-	public:
-
-		void const * const ctx_;
-
-		error( void const * ctx, leaf_detail::current_error const & err ) noexcept:
-			error_info(err),
-			ctx_(ctx)
-		{
-			assert(ctx_!=0);
-		}
-
-		error( void const * ctx, leaf_detail::current_exception_impl const & ) noexcept;
-	};
 
 } }
 

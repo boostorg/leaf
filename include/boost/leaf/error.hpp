@@ -358,8 +358,6 @@ namespace boost { namespace leaf {
 
 			bool print( std::ostream & os ) const
 			{
-				if( !diagnostic<E>::is_printable )
-					return false;
 				os << '[' << err_id_ << "]: ";
 				if( E const * e = impl::has_value() )
 				{
@@ -367,7 +365,7 @@ namespace boost { namespace leaf {
 					os << std::endl;
 				}
 				else
-					os << "{Empty}" << std::endl;
+					os << type<E>() << ": {Empty}" << std::endl;
 				return true;
 			}
 		};
@@ -547,7 +545,7 @@ namespace boost { namespace leaf {
 			{
 				bool equivalent( int,  std::error_condition const & ) const noexcept { return false; }
 				bool equivalent( std::error_code const &, int ) const noexcept { return false; }
-				char const * name() const noexcept { return "LEAF error, use with leaf::handle_some or leaf::handle_all."; }
+				char const * name() const noexcept { return "LEAF error"; }
 				std::string message( int condition ) const { return name(); }
 			};
 			static cat c;
@@ -684,7 +682,7 @@ namespace boost { namespace leaf {
 		virtual ~polymorphic_context() noexcept { }
 		virtual void activate() noexcept = 0;
 		virtual void deactivate( bool propagate_errors ) noexcept = 0;
-		virtual void print( std::ostream & ) = 0;
+		virtual void print( std::ostream & ) const = 0;
 
 		std::error_code ec;
 	};

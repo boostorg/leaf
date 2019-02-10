@@ -16,7 +16,7 @@ template <int> struct my_exception: std::exception { };
 int main()
 {
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]
 			{
 				return leaf::exception_to_result<my_exception<1>,my_exception<2>>(
@@ -47,7 +47,7 @@ int main()
 		BOOST_TEST_EQ(r, 1);
 	}
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]
 			{
 				return leaf::exception_to_result<my_exception<1>,my_exception<2>>(
@@ -78,7 +78,7 @@ int main()
 		BOOST_TEST_EQ(r, 2);
 	}
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]
 			{
 				return leaf::exception_to_result<std::exception,my_exception<1>>(

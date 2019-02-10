@@ -7,7 +7,6 @@
 // This program is an adaptation of the following Boost Outcome example:
 // https://github.com/ned14/outcome/blob/master/doc/src/snippets/using_result.cpp
 
-#include <boost/leaf/handle_some.hpp>
 #include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/result.hpp>
 #include <algorithm>
@@ -54,7 +53,7 @@ struct BigInt
 // This function handles ConversionErrc::TooLong errors, forwards any other error to the caller.
 leaf::result<void> print_half(const std::string& text)
 {
-	return leaf::handle_some(
+	return leaf::try_handle_some(
 		[&]() -> leaf::result<void>
 		{
 			LEAF_AUTO(r,convert(text));
@@ -71,7 +70,7 @@ leaf::result<void> print_half(const std::string& text)
 
 int main( int argc, char const * argv[ ] )
 {
-	return leaf::handle_all(
+	return leaf::try_handle_all(
 		[&]() -> leaf::result<int>
 		{
 			LEAF_CHECK( print_half(argc<2 ? "" : argv[1]) );

@@ -5,7 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/preload.hpp>
-#include <boost/leaf/try.hpp>
+#include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
 #include "boost/core/lightweight_test.hpp"
 
@@ -45,7 +45,7 @@ void f2()
 
 int main()
 {
-	int r = leaf::try_(
+	int r = leaf::try_catch(
 		[ ]
 		{
 			f2();

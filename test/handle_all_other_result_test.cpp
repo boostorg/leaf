@@ -75,7 +75,7 @@ result<int,std::error_code> g( bool succeed )
 int main()
 {
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[ ]
 			{
 				return g(true);
@@ -87,14 +87,14 @@ int main()
 		BOOST_TEST_EQ(r, 42);
 	}
 	{
-		int r = leaf::handle_all(
+		int r = leaf::try_handle_all(
 			[&]
 			{
 				auto r = g(false);
 				BOOST_TEST(!r);
 				auto ec = r.error();
-				BOOST_TEST_EQ(ec.message(), "LEAF error, use with leaf::handle_some or leaf::handle_all.");
-				BOOST_TEST(!std::strcmp(ec.category().name(),"LEAF error, use with leaf::handle_some or leaf::handle_all."));
+				BOOST_TEST_EQ(ec.message(), "LEAF error");
+				BOOST_TEST(!std::strcmp(ec.category().name(),"LEAF error"));
 				return r;
 			},
 			[ ]( info<42> const & x, std::error_code const & ec )

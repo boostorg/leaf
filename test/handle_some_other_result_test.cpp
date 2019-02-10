@@ -4,7 +4,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/handle_some.hpp>
+#include <boost/leaf/handle_error.hpp>
 #include "_test_res.hpp"
 #include "boost/core/lightweight_test.hpp"
 
@@ -31,7 +31,7 @@ res<int,std::error_code> g( bool succeed )
 int main()
 {
 	{
-		res<int,std::error_code> r = leaf::handle_some(
+		res<int,std::error_code> r = leaf::try_handle_some(
 			[ ]
 			{
 				return g(true);
@@ -41,14 +41,14 @@ int main()
 	}
 	{
 		int called = 0;
-		res<int,std::error_code> r = leaf::handle_some(
+		res<int,std::error_code> r = leaf::try_handle_some(
 			[&]
 			{
 				auto r = g(false);
 				BOOST_TEST(!r);
 				auto ec = r.error();
-				BOOST_TEST_EQ(ec.message(), "LEAF error, use with leaf::handle_some or leaf::handle_all.");
-				BOOST_TEST(!std::strcmp(ec.category().name(),"LEAF error, use with leaf::handle_some or leaf::handle_all."));
+				BOOST_TEST_EQ(ec.message(), "LEAF error");
+				BOOST_TEST(!std::strcmp(ec.category().name(),"LEAF error"));
 				return r;
 			},
 			[&]( info<42> const & x, leaf::match<leaf::condition<cond_x>, cond_x::x00> ec )

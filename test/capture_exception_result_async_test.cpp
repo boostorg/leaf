@@ -26,7 +26,7 @@ struct fut_info
 	std::future<leaf::result<int>> fut;
 };
 
-template <class Handler, class F>
+template <class H, class F>
 std::vector<fut_info> launch_tasks( int task_count, F f )
 {
 	assert(task_count>0);
@@ -40,7 +40,7 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
 			return fut_info { a, b, res, std::async( std::launch::async,
 				[=]
 				{
-					return leaf::capture(leaf::make_shared_context<Handler>(), f, a, b, res);
+					return leaf::capture(leaf::make_shared_context<H>(), f, a, b, res);
 				} ) };
 		} );
 	return fut;
@@ -48,7 +48,7 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
 
 int main()
 {
-	auto error_handler = [ ]( leaf::error const & err, int a, int b )
+	auto error_handler = [ ]( leaf::error_info const & err, int a, int b )
 	{
 		return leaf::remote_catch( err,
 			[&]( info<1> const & x1, info<2> const & x2 )
@@ -80,7 +80,7 @@ int main()
 			{
 				return f.fut.get();
 			},
-			[&]( leaf::error const & err )
+			[&]( leaf::error_info const & err )
 			{
 				return error_handler(err, f.a, f.b);
 			} );

@@ -9,7 +9,7 @@
 
 #include <boost/leaf/capture.hpp>
 #include <boost/leaf/handle_error.hpp>
-
+#include <boost/leaf/result.hpp>
 #include <vector>
 #include <string>
 #include <future>
@@ -47,9 +47,9 @@ int main()
 	// The error_handler is called in this thread (see leaf::error_handle_all below), eath time we get a
 	// future from a worker that failed. The arguments passed to individual lambdas are transported
 	// from the worker thread to the main thread automatically.
-	auto error_handler = [ ]( leaf::error_in_remote_handle_all const & error )
+	auto error_handler = [ ]( leaf::error_info const & error )
 	{
-		return leaf::handle_error( error,
+		return leaf::remote_handle_all( error,
 			[ ]( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
 			{
 				std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
@@ -74,7 +74,10 @@ int main()
 		{
 			return std::async(
 				std::launch::async,
-				[&] { return leaf::capture_in_result<decltype(error_handler)>(&task); } );
+				[&]
+				{
+					return leaf::capture(leaf::make_shared_context(&error_handler), &task);
+				} );
 		} );
 
 	// Wait on the futures, get the task results, handle errors.
@@ -82,7 +85,7 @@ int main()
 	{
 		f.wait();
 
-		leaf::remote_handle_all(
+		leaf::remote_try_handle_all(
 			[&]() -> leaf::result<void>
 			{
 				LEAF_AUTO(r,f.get());
@@ -92,7 +95,7 @@ int main()
 				(void) r;
 				return { };
 			},
-			[&]( leaf::error_in_remote_handle_all const & error )
+			[&]( leaf::error_info const & error )
 			{
 				return error_handler(error);
 			} );

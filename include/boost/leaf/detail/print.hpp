@@ -105,7 +105,7 @@ namespace boost { namespace leaf {
 			static constexpr bool is_printable = true;
 			static bool print( std::ostream & os, Wrapper const & )
 			{
-				os << type<Wrapper>() << ": N/A";
+				os << type<Wrapper>() << ": {Non-Printable}";
 				return is_printable;
 			}
 		};

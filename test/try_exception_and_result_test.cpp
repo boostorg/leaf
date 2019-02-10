@@ -4,7 +4,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/try.hpp>
+#include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/result.hpp>
 #include "boost/core/lightweight_test.hpp"
 
@@ -17,7 +17,7 @@ struct my_exception: std::exception { };
 int main()
 {
 	{
-		leaf::result<int> r = leaf::try_(
+		leaf::result<int> r = leaf::try_catch(
 			[ ]() -> leaf::result<int>
 			{
 				return 42;
@@ -30,7 +30,7 @@ int main()
 		BOOST_TEST_EQ(r.value(), 42);
 	}
 	{
-		leaf::result<int> r = leaf::try_(
+		leaf::result<int> r = leaf::try_catch(
 			[ ]() -> leaf::result<int>
 			{
 				throw leaf::exception( my_exception(), info<1>{1} );
@@ -44,7 +44,7 @@ int main()
 		BOOST_TEST_EQ(r.value(), 42);
 	}
 	{
-		leaf::result<int> r = leaf::try_(
+		leaf::result<int> r = leaf::try_catch(
 			[ ]() -> leaf::result<int>
 			{
 				return leaf::new_error( info<1>{1} );

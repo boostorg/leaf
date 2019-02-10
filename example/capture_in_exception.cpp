@@ -7,8 +7,8 @@
 // This is a simple program that demonstrates the use of LEAF to transport e-objects between threads,
 // without using exception handling. See capture_eh.cpp for the exception-handling variant.
 
-#include <boost/leaf/capture_in_exception.hpp>
-#include <boost/leaf/try.hpp>
+#include <boost/leaf/capture.hpp>
+#include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
 #include <vector>
 #include <string>
@@ -47,9 +47,9 @@ int main()
 	// The error_handler is called in this thread (see leaf::error_try_ below), eath time we get a future
 	// from a worker that failed. The arguments passed to individual lambdas are transported from
 	// the worker thread to the main thread automatically.
-	auto error_handler = [ ]( leaf::error_in_remote_try_ const & error )
+	auto error_handler = [ ]( leaf::error_info const & error )
 	{
-		return leaf::handle_error( error,
+		return leaf::remote_catch( error,
 			[ ]( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
 			{
 				std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
@@ -76,7 +76,7 @@ int main()
 				std::launch::async,
 				[&]
 				{
-					return leaf::capture_in_exception<decltype(error_handler)>(&task);
+					return leaf::capture(leaf::make_shared_context(&error_handler), &task);
 				} );
 		} );
 
@@ -85,7 +85,7 @@ int main()
 	{
 		f.wait();
 
-		leaf::remote_try_(
+		leaf::remote_try_catch(
 			[&]
 			{
 				task_result r = f.get();
@@ -94,7 +94,7 @@ int main()
 				std::cout << "Success!" << std::endl;
 				(void) r;
 			},
-			[&]( leaf::error_in_remote_try_ const & error )
+			[&]( leaf::error_info const & error )
 			{
 				return error_handler(error);
 			} );

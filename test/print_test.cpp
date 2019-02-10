@@ -87,14 +87,14 @@ int main()
 		BOOST_TEST(check(y,"42"));
 	}
 	BOOST_TEST(check(c4(),"c4"));
-	BOOST_TEST(check(c4(),"N/A"));
+	BOOST_TEST(check(c4(),"{Non-Printable}"));
 	{
 		c4 x;
 		c4 & y = x;
 		BOOST_TEST(check(x,"c4"));
-		BOOST_TEST(check(x,"N/A"));
+		BOOST_TEST(check(x,"{Non-Printable}"));
 		BOOST_TEST(check(y,"c4"));
-		BOOST_TEST(check(y,"N/A"));
+		BOOST_TEST(check(y,"{Non-Printable}"));
 	}
 	return boost::report_errors();
 }

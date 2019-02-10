@@ -194,7 +194,7 @@ struct op_c
 int main()
 {
 	for( int i=0; i!=10; ++i )
-		leaf::handle_all(
+		leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
 				asio::io_context ioc;

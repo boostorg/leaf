@@ -9,13 +9,12 @@
 
 #include <boost/leaf/capture.hpp>
 #include <boost/leaf/common.hpp>
+#include <boost/leaf/context.hpp>
 #include <boost/leaf/error.hpp>
-#include <boost/leaf/capture.hpp>
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/handle_error.hpp>
-#include <boost/leaf/handle_some.hpp>
+#include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/preload.hpp>
 #include <boost/leaf/result.hpp>
-#include <boost/leaf/try.hpp>
 
 #endif

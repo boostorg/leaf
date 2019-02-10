@@ -53,7 +53,7 @@ leaf::result<void> file_read( FILE & f, void * buf, int size );
 // The main function, which handles all errors.
 int main( int argc, char const * argv[ ] )
 {
-	return leaf::handle_all(
+	return leaf::try_handle_all(
 
 		[&]() -> leaf::result<int>
 		{

@@ -33,7 +33,7 @@ leaf::result<void> f()
 
 int main()
 {
-	int r = leaf::handle_all(
+	int r = leaf::try_handle_all(
 		[ ]() -> leaf::result<int>
 		{
 			LEAF_CHECK(f());

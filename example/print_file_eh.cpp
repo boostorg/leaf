@@ -8,7 +8,7 @@
 // using LEAF to handle errors. It uses exception handling.
 
 #include <boost/leaf/exception.hpp>
-#include <boost/leaf/try.hpp>
+#include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/preload.hpp>
 #include <boost/leaf/common.hpp>
 #include <iostream>
@@ -51,7 +51,7 @@ int main( int argc, char const * argv[ ] )
 	// Configure std::cout to throw on error.
 	std::cout.exceptions(std::ostream::failbit | std::ostream::badbit);
 
-	return leaf::try_(
+	return leaf::try_catch(
 		[&]
 		{
 			char const * file_name = parse_command_line(argc,argv);
