@@ -405,7 +405,7 @@ int main()
 
 	{ // error move -> copy
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate_if_current_exception);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate_if_current_exception);
 		leaf::result<val> r1 = leaf::new_error( e_err { } );
 		BOOST_TEST(!r1);
 		BOOST_TEST_EQ(err::count, 1);
@@ -418,7 +418,7 @@ int main()
 	BOOST_TEST_EQ(val::count, 0);
 	{ // error copy -> copy
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate_if_current_exception);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate_if_current_exception);
 		leaf::error_id err = leaf::new_error( e_err{ } );
 		leaf::result<val> r1 = err;
 		BOOST_TEST(!r1);
@@ -433,7 +433,7 @@ int main()
 
 	{ // error move -> move
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate_if_current_exception);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate_if_current_exception);
 		leaf::result<val> r1 = leaf::new_error( e_err { } );
 		BOOST_TEST(!r1);
 		BOOST_TEST_EQ(err::count, 1);
@@ -446,7 +446,7 @@ int main()
 	BOOST_TEST_EQ(val::count, 0);
 	{ // error copy -> move
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate);
 		leaf::error_id err = leaf::new_error( e_err{ } );
 		leaf::result<val> r1 = err;
 		BOOST_TEST(!r1);
@@ -461,7 +461,7 @@ int main()
 
 	{ // error move -> assign copy
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate);
 		leaf::result<val> r1 = leaf::new_error( e_err { } );
 		BOOST_TEST(!r1);
 		BOOST_TEST_EQ(err::count, 1);
@@ -474,7 +474,7 @@ int main()
 	BOOST_TEST_EQ(val::count, 0);
 	{ // error copy -> assign copy
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate);
 		leaf::error_id err = leaf::new_error( e_err{ } );
 		leaf::result<val> r1 = err;
 		BOOST_TEST(!r1);
@@ -489,7 +489,7 @@ int main()
 
 	{ // error move -> assign move
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate);
 		leaf::result<val> r1 = leaf::new_error( e_err { } );
 		BOOST_TEST(!r1);
 		BOOST_TEST_EQ(err::count, 1);
@@ -507,7 +507,7 @@ int main()
 	BOOST_TEST_EQ(val::count, 0);
 	{ // error copy -> assign move
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate);
 		leaf::error_id err = leaf::new_error( e_err{ } );
 		leaf::result<val> r1 = err;
 		BOOST_TEST(!r1);
@@ -679,7 +679,7 @@ int main()
 
 	{ // void error move -> copy
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate_if_current_exception);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate_if_current_exception);
 		leaf::result<void> r1 = leaf::new_error( e_err { } );
 		BOOST_TEST(!r1);
 		BOOST_TEST_EQ(err::count, 1);
@@ -690,7 +690,7 @@ int main()
 	BOOST_TEST_EQ(err::count, 0);
 	{ // void error copy -> copy
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate_if_current_exception);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate_if_current_exception);
 		leaf::error_id err = leaf::new_error( e_err{ } );
 		leaf::result<void> r1 = err;
 		BOOST_TEST(!r1);
@@ -703,7 +703,7 @@ int main()
 
 	{ // void error move -> move
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate_if_current_exception);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate_if_current_exception);
 		leaf::result<void> r1 = leaf::new_error( e_err { } );
 		BOOST_TEST(!r1);
 		BOOST_TEST_EQ(err::count, 1);
@@ -714,7 +714,7 @@ int main()
 	BOOST_TEST_EQ(err::count, 0);
 	{ // void error copy -> move
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate);
 		leaf::error_id err = leaf::new_error( e_err{ } );
 		leaf::result<void> r1 = err;
 		BOOST_TEST(!r1);
@@ -727,7 +727,7 @@ int main()
 
 	{ // void error move -> assign copy
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate);
 		leaf::result<void> r1 = leaf::new_error( e_err { } );
 		BOOST_TEST(!r1);
 		BOOST_TEST_EQ(err::count, 1);
@@ -738,7 +738,7 @@ int main()
 	BOOST_TEST_EQ(err::count, 0);
 	{ // void error copy -> assign copy
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate);
 		leaf::error_id err = leaf::new_error( e_err{ } );
 		leaf::result<void> r1 = err;
 		BOOST_TEST(!r1);
@@ -751,7 +751,7 @@ int main()
 
 	{ // void error move -> assign move
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate);
 		leaf::result<void> r1 = leaf::new_error( e_err { } );
 		BOOST_TEST(!r1);
 		BOOST_TEST_EQ(err::count, 1);
@@ -763,7 +763,7 @@ int main()
 	BOOST_TEST_EQ(err::count, 0);
 	{ // void error copy -> assign move
 		leaf::context<e_err> ctx;
-		leaf::context_activator active_context(ctx, leaf::context_activator::deactivation_behavior::propagate);
+		leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::propagate);
 		leaf::error_id err = leaf::new_error( e_err{ } );
 		leaf::result<void> r1 = err;
 		BOOST_TEST(!r1);

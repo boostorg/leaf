@@ -105,7 +105,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			context_type_from_handlers<H...> ctx;
-			context_activator active_context(ctx, context_activator::deactivation_behavior::propagate_if_current_exception);
+			context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_current_exception);
 			return handle_exceptions(
 				[&]
 				{
@@ -115,7 +115,7 @@ namespace boost { namespace leaf {
 					{
 						auto rr = handle_some(ctx, r, std::forward<H>(h)...);
 						if( !rr )
-							active_context.set_propagate_errors(context_activator::deactivation_behavior::propagate);
+							active_context.set_propagate_errors(context_activator::on_deactivation::propagate);
 						return rr;
 					}
 				},
@@ -127,7 +127,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			context_type_from_handlers<H...> ctx;
-			context_activator active_context(ctx, context_activator::deactivation_behavior::propagate_if_current_exception);
+			context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_current_exception);
 			return handle_exceptions(
 				[&]
 				{
@@ -154,7 +154,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			context_type_from_remote_handler<RemoteH> ctx;
-			context_activator active_context(ctx, context_activator::deactivation_behavior::propagate_if_current_exception);
+			context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_current_exception);
 			return remote_handle_exceptions(
 				[&]
 				{
@@ -164,7 +164,7 @@ namespace boost { namespace leaf {
 					{
 						auto rr = std::forward<RemoteH>(h)(error_info(ctx, r.error())).get();
 						if( !rr )
-							active_context.set_propagate_errors(context_activator::deactivation_behavior::propagate);
+							active_context.set_propagate_errors(context_activator::on_deactivation::propagate);
 						return rr;
 					}
 				},
@@ -176,7 +176,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			context_type_from_remote_handler<RemoteH> ctx;
-			context_activator active_context(ctx, context_activator::deactivation_behavior::propagate_if_current_exception);
+			context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_current_exception);
 			return remote_handle_exceptions(
 				[&]
 				{
