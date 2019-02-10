@@ -694,26 +694,43 @@ namespace boost { namespace leaf {
 		context_activator( context_activator const & ) = delete;
 		context_activator & operator=( context_activator const & ) = delete;
 
+	public:
+
+		enum class deactivation_behavior
+		{
+			propagate,
+			propagate_if_current_exception,
+			capture_do_not_propagate
+		};
+
+	private:
+
 		polymorphic_context & ctx_;
-		bool propagate_errors_;
+		deactivation_behavior on_deactivate_;
 
 	public:
 
-		context_activator( polymorphic_context & ctx, bool propagate_errors ) noexcept:
+		context_activator( polymorphic_context & ctx, deactivation_behavior on_deactivate ) noexcept:
 			ctx_(ctx),
-			propagate_errors_(propagate_errors)
+			on_deactivate_(on_deactivate)
 		{
 			ctx_.activate();
 		}
 
 		~context_activator() noexcept
 		{
-			ctx_.deactivate(propagate_errors_ || std::uncaught_exception());
+			assert(
+				on_deactivate_==deactivation_behavior::propagate ||
+				on_deactivate_==deactivation_behavior::propagate_if_current_exception ||
+				on_deactivate_==deactivation_behavior::capture_do_not_propagate);
+			ctx_.deactivate(
+				on_deactivate_==deactivation_behavior::propagate ||
+				(on_deactivate_==deactivation_behavior::propagate_if_current_exception && std::uncaught_exception()));
 		}
 
-		void set_propagate_errors( bool propagate_errors ) noexcept
+		void set_propagate_errors( deactivation_behavior on_deactivate ) noexcept
 		{
-			propagate_errors_ = propagate_errors;
+			on_deactivate_ = on_deactivate;
 		}
 	};
 

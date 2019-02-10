@@ -35,7 +35,7 @@ namespace boost { namespace leaf {
 		using namespace leaf_detail;
 		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The try_block passed to try_handle_all must be registered with leaf::is_result_type");
 		context_type_from_handlers<H...> ctx;
-		context_activator active_context(ctx, false);
+		context_activator active_context(ctx, context_activator::deactivation_behavior::propagate_if_current_exception);
 		if( auto r = std::forward<TryBlock>(try_block)() )
 			return r.value();
 		else
@@ -48,14 +48,14 @@ namespace boost { namespace leaf {
 		using namespace leaf_detail;
 		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The try_block passed to try_handle_some must be registered with leaf::is_result_type");
 		context_type_from_handlers<H...> ctx;
-		context_activator active_context(ctx, false);
+		context_activator active_context(ctx, context_activator::deactivation_behavior::propagate_if_current_exception);
 		if( auto r = std::forward<TryBlock>(try_block)() )
 			return r;
 		else
 		{
 			auto rr = handle_some(ctx, r, std::forward<H>(h)...);
 			if( !rr )
-				active_context.set_propagate_errors(true);
+				active_context.set_propagate_errors(context_activator::deactivation_behavior::propagate);
 			return rr;
 		}
 	}
@@ -68,7 +68,7 @@ namespace boost { namespace leaf {
 		using namespace leaf_detail;
 		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The try_block passed to remote_try_handle_all must be registered with leaf::is_result_type.");
 		context_type_from_remote_handler<RemoteH> ctx;
-		context_activator active_context(ctx, false);
+		context_activator active_context(ctx, context_activator::deactivation_behavior::propagate_if_current_exception);
 		if( auto r = std::forward<TryBlock>(try_block)() )
 			return r.value();
 		else
@@ -81,14 +81,14 @@ namespace boost { namespace leaf {
 		using namespace leaf_detail;
 		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The try_block passed to remote_try_handle_some must be registered with leaf::is_result_type.");
 		context_type_from_remote_handler<RemoteH> ctx;
-		context_activator active_context(ctx, false);
+		context_activator active_context(ctx, context_activator::deactivation_behavior::propagate_if_current_exception);
 		if( auto r = std::forward<TryBlock>(try_block)() )
 			return r;
 		else
 		{
 			auto rr = std::forward<RemoteH>(h)(error_info(ctx, r.error())).get();
 			if( !rr )
-				active_context.set_propagate_errors(true);
+				active_context.set_propagate_errors(context_activator::deactivation_behavior::propagate);
 			return rr;
 		}
 	}
