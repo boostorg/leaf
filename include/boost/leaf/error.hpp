@@ -638,13 +638,13 @@ namespace boost { namespace leaf {
 	}
 
 	template <class E1, class... E>
-	typename std::enable_if<is_e_type<E1>::value, error_id>::type new_error( E1 && e1, E && ... e ) noexcept
+	std::enable_if_t<is_e_type<E1>::value, error_id> new_error( E1 && e1, E && ... e ) noexcept
 	{
 		return leaf_detail::make_error_id(leaf_detail::new_id()).load(std::forward<E1>(e1), std::forward<E>(e)...);
 	}
 
 	template <class E1, class... E>
-	typename std::enable_if<std::is_same<std::error_code, decltype(make_error_code(std::declval<E1>()))>::value, error_id>::type new_error( E1 e1, E && ... e ) noexcept
+	std::enable_if_t<std::is_same<std::error_code, decltype(make_error_code(std::declval<E1>()))>::value, error_id> new_error( E1 const & e1, E && ... e ) noexcept
 	{
 		return error_id(make_error_code(e1)).load(std::forward<E>(e)...);
 	}

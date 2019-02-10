@@ -49,6 +49,23 @@ namespace boost { namespace leaf {
 			{
 				return std::forward<Thrower>(thr)();
 			}
+			catch( capturing_exception const & cap )
+			{
+				try
+				{
+					cap.unload_and_rethrow_original_exception();
+				}
+				catch( std::exception const & ex )
+				{
+					return leaf_detail::handle_error_<R>(ctx.tup(), error_info(ctx, exception_info_(&ex)), std::forward<H>(h)...,
+						[ ]() -> R { throw; } );
+				}
+				catch(...)
+				{
+					return leaf_detail::handle_error_<R>(ctx.tup(), error_info(ctx, exception_info_(0)), std::forward<H>(h)...,
+						[ ]() -> R { throw; } );
+				}
+			}
 			catch( std::exception const & ex )
 			{
 				return leaf_detail::handle_error_<R>(ctx.tup(), error_info(ctx, exception_info_(&ex)), std::forward<H>(h)...,
@@ -68,6 +85,21 @@ namespace boost { namespace leaf {
 			try
 			{
 				return std::forward<Thrower>(thr)();
+			}
+			catch( capturing_exception const & cap )
+			{
+				try
+				{
+					cap.unload_and_rethrow_original_exception();
+				}
+				catch( std::exception const & ex )
+				{
+					return std::forward<RemoteH>(h)(error_info(ctx, exception_info_(&ex))).get();
+				}
+				catch(...)
+				{
+					return std::forward<RemoteH>(h)(error_info(ctx, exception_info_(0))).get();
+				}
 			}
 			catch( std::exception const & ex )
 			{
@@ -240,29 +272,12 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		inline std::exception const * unpack_capturing_exception( std::exception const * ex )
-		{
-			if( capturing_exception const * cap = dynamic_cast<capturing_exception const *>(ex) )
-				try
-				{
-					cap->unload_and_rethrow_original_exception();
-				}
-				catch( std::exception const & ex )
-				{
-					return &ex;
-				}
-				catch(...)
-				{
-					return 0;
-				}
-			else
-				return ex;
-		}
-
 		inline std::error_code const * unpack_error_code( std::exception const * ex )
 		{
 			if( std::system_error const * se = dynamic_cast<std::system_error const *>(ex) )
 				return &se->code();
+			else if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
+				return err_id;
 			else if( std::error_code const * ec = dynamic_cast<std::error_code const *>(ex) )
 				return ec;
 			else
@@ -278,8 +293,9 @@ namespace boost { namespace leaf {
 		}
 
 		inline exception_info_base::exception_info_base( std::exception const * ex ) noexcept:
-			ex_(unpack_capturing_exception(ex))
+			ex_(ex)
 		{
+			assert(!dynamic_cast<capturing_exception const *>(ex_));
 		}
 
 		inline exception_info_base::~exception_info_base() noexcept
