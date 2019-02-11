@@ -112,16 +112,16 @@ namespace boost { namespace leaf {
 		}
 	}
 
-	template <class... E, class... H>
-	leaf_detail::handler_pack_return<H...> handle_current_exception( context<E...> const & ctx, H && ... h ) noexcept
+	template <class R, class... E, class... H>
+	R handle_current_exception( context<E...> const & ctx, H && ... h ) noexcept
 	{
 		return leaf_detail::handle_exceptions(
 			[ ]{ throw; },
 			ctx, std::forward<H>(h)...);
 	}
 
-	template <class... E, class... H>
-	leaf_detail::handler_pack_return<H...> handle_exception( context<E...> const & ctx, std::exception_ptr const & ep, H && ... h ) noexcept
+	template <class R, class... E, class... H>
+	R handle_exception( context<E...> const & ctx, std::exception_ptr const & ep, H && ... h ) noexcept
 	{
 		return leaf_detail::handle_exceptions(
 			[&]{ std::rethrow_exception(ep); },

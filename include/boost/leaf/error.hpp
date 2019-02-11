@@ -673,13 +673,11 @@ namespace boost { namespace leaf {
 	{
 	protected:
 
-		polymorphic_context()
-		{
-		}
+		polymorphic_context() noexcept = default;
 
 	public:
 
-		virtual ~polymorphic_context() noexcept { }
+		virtual ~polymorphic_context() noexcept = default;
 		virtual void activate() noexcept = 0;
 		virtual void deactivate( bool propagate_errors ) noexcept = 0;
 		virtual void print( std::ostream & ) const = 0;

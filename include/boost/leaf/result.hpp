@@ -248,7 +248,6 @@ namespace boost { namespace leaf {
 			return value();
 		}
 
-		template <class... E>
 		error_id error() const noexcept
 		{
 			return leaf_detail::make_error_id(get_err_id());

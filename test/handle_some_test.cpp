@@ -58,7 +58,7 @@ int main()
 			{
 				BOOST_TEST_EQ(c, 0);
 				c = 1;
-				return unmatched.error();
+				return unmatched.error_id();
 			} );
 		BOOST_TEST(r);
 		BOOST_TEST_EQ(c, 42);
@@ -684,7 +684,7 @@ int main()
 			},
 			[ ]( leaf::error_info const & unmatched )
 			{
-				return unmatched.error();
+				return unmatched.error_id();
 			} );
 		BOOST_TEST_EQ(*r, 42);
 	}

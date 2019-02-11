@@ -223,6 +223,80 @@ namespace boost { namespace leaf {
 		}
 	};
 
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		template <class HandlerL>
+		struct handler_args_impl;
+
+		template <template <class...> class L, class... H>
+		struct handler_args_impl<L<H...>>
+		{
+			using type = leaf_detail_mp11::mp_append<fn_mp_args<H>...>;
+		};
+
+		template <class HandlerL>
+		using handler_args = typename handler_args_impl<HandlerL>::type;
+
+		template <class TypeList>
+		struct deduce_context_impl;
+
+		template <template <class...> class L, class... E>
+		struct deduce_context_impl<L<E...>>
+		{
+			using type = context<E...>;
+		};
+
+		template <class TypeList>
+		using deduce_context = typename deduce_context_impl<TypeList>::type;
+
+		template <class RemoteH>
+		struct context_type_from_remote_handler_impl;
+
+		template <template <class...> class L, class... H>
+		struct context_type_from_remote_handler_impl<L<H...>>
+		{
+			using type = deduce_context<leaf_detail_mp11::mp_append<fn_mp_args<H>...>>;
+		};
+
+		template <class... H>
+		struct context_type_from_handlers_impl
+		{
+			using type = deduce_context<leaf_detail_mp11::mp_append<fn_mp_args<H>...>>;
+		};
+	}
+
+	template <class... H>
+	using context_type_from_handlers = typename leaf_detail::context_type_from_handlers_impl<H...>::type;
+
+	template <class RemoteH>
+	using context_type_from_remote_handler = typename leaf_detail::context_type_from_remote_handler_impl<leaf_detail::fn_return_type<RemoteH>>::type;
+
+	template <class...  H>
+	context_type_from_handlers<H...> make_context()
+	{
+		return { };
+	}
+
+	template <class RemoteH>
+	context_type_from_remote_handler<RemoteH> make_context( RemoteH const * = 0 )
+	{
+		return { };
+	}
+
+	template <class RemoteH>
+	std::shared_ptr<polymorphic_context> make_shared_context( RemoteH const * = 0 )
+	{
+		return std::make_shared<context_type_from_remote_handler<RemoteH>>();
+	}
+
+	template <class RemoteH, class Alloc>
+	std::shared_ptr<polymorphic_context> allocate_shared_context( Alloc alloc, RemoteH const * = 0 )
+	{
+		return std::allocate_shared<context_type_from_remote_handler<RemoteH>>(alloc);
+	}
+
 } }
 
 #endif

@@ -134,7 +134,7 @@ namespace boost { namespace leaf {
 	typename leaf_detail::remote_error_dispatch<H...>::result_type remote_handle_some( error_info const & err, H && ... h ) noexcept
 	{
 		return leaf_detail::remote_error_dispatch<H...>::handle(err, std::forward<H>(h)...,
-			[&err]{ return err.get_error_code(); } );
+			[&err]{ return err.error_code(); } );
 	}
 
 } }

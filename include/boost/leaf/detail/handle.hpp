@@ -34,6 +34,16 @@ namespace boost { namespace leaf {
 	{
 		error_info & operator=( error_info const & ) = delete;
 
+		bool has_error_id() const noexcept
+		{
+			return bool(err_id_);
+		}
+
+		bool has_error_code() const noexcept
+		{
+			return ec_!=0;
+		}
+
 	protected:
 
 		void print( std::ostream & os ) const
@@ -83,43 +93,27 @@ namespace boost { namespace leaf {
 			return err_id_.value();
 		}
 
-		bool has_error() const noexcept
+		error_id const & error_id() const noexcept
 		{
-			return bool(err_id_);
-		}
-
-		error_id const & error() const noexcept
-		{
-			assert(has_error());
+			assert(has_error_id());
 			return err_id_;
 		}
 
-		bool has_code() const noexcept
+		std::error_code const & error_code() const noexcept
 		{
-			return ec_!=0;
-		}
-
-		std::error_code const & code() const noexcept
-		{
-			assert(has_error());
+			assert(has_error_id());
 			return ec_ ? *ec_ : err_id_;
 		}
 
-		bool has_exception() const noexcept
+		bool exception_caught() const noexcept
 		{
 			return xi_!=0;
 		}
 
 		std::exception const * exception() const noexcept
 		{
-			assert(has_exception());
+			assert(exception_caught());
 			return xi_->ex_;
-		}
-
-		std::error_code get_error_code() const noexcept
-		{
-			assert(has_error());
-			return has_code() ? code() : error();
 		}
 
 		friend std::ostream & operator<<( std::ostream & os, error_info const & x )
@@ -266,7 +260,7 @@ namespace boost { namespace leaf {
 				if( e_type const * ec = peek<e_type>(tup, ei.err_id()) )
 					return &ec->value;
 				else
-					return &ei.code();
+					return &ei.error_code();
 			}
 		};
 
@@ -457,7 +451,7 @@ namespace boost { namespace leaf {
 		{
 			static bool check( SlotsTuple const &, error_info const & ei ) noexcept
 			{
-				if( ei.has_exception() )
+				if( ei.exception_caught() )
 					return catch_<Ex...>(ei.exception())();
 				else
 					return false;
@@ -551,7 +545,7 @@ namespace boost { namespace leaf {
 				if( leaf_detail::e_original_ec const * org = peek<e_original_ec>(tup, ei.err_id()) )
 					return org->value;
 				else
-					return ei.code();
+					return ei.error_code();
 			}
 		};
 
@@ -656,80 +650,6 @@ namespace boost { namespace leaf {
 			else
 				return handle_error_<R>( e_objects, ei, std::forward<CdrF>(cdr_f)...);
 		}
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		template <class HandlerL>
-		struct handler_args_impl;
-
-		template <template <class...> class L, class... H>
-		struct handler_args_impl<L<H...>>
-		{
-			using type = leaf_detail_mp11::mp_append<fn_mp_args<H>...>;
-		};
-
-		template <class HandlerL>
-		using handler_args = typename handler_args_impl<HandlerL>::type;
-
-		template <class TypeList>
-		struct deduce_context_impl;
-
-		template <template <class...> class L, class... E>
-		struct deduce_context_impl<L<E...>>
-		{
-			using type = context<E...>;
-		};
-
-		template <class TypeList>
-		using deduce_context = typename deduce_context_impl<TypeList>::type;
-
-		template <class RemoteH>
-		struct context_type_from_remote_handler_impl;
-
-		template <template <class...> class L, class... H>
-		struct context_type_from_remote_handler_impl<L<H...>>
-		{
-			using type = deduce_context<leaf_detail_mp11::mp_append<fn_mp_args<H>...>>;
-		};
-
-		template <class... H>
-		struct context_type_from_handlers_impl
-		{
-			using type = deduce_context<leaf_detail_mp11::mp_append<fn_mp_args<H>...>>;
-		};
-	}
-
-	template <class... H>
-	using context_type_from_handlers = typename leaf_detail::context_type_from_handlers_impl<H...>::type;
-
-	template <class RemoteH>
-	using context_type_from_remote_handler = typename leaf_detail::context_type_from_remote_handler_impl<leaf_detail::fn_return_type<RemoteH>>::type;
-
-	template <class...  H>
-	context_type_from_handlers<H...> make_context()
-	{
-		return { };
-	}
-
-	template <class RemoteH>
-	context_type_from_remote_handler<RemoteH> make_context( RemoteH const & )
-	{
-		return { };
-	}
-
-	template <class RemoteH>
-	std::shared_ptr<polymorphic_context> make_shared_context( RemoteH const * = 0 )
-	{
-		return std::make_shared<context_type_from_remote_handler<RemoteH>>();
-	}
-
-	template <class RemoteH, class Alloc>
-	std::shared_ptr<polymorphic_context> allocate_shared_context( Alloc alloc, RemoteH const * = 0 )
-	{
-		return std::allocate_shared<context_type_from_remote_handler<RemoteH>>(alloc);
 	}
 
 	////////////////////////////////////////
