@@ -34,7 +34,7 @@ namespace boost { namespace leaf {
 	{
 		error_info & operator=( error_info const & ) = delete;
 
-		bool has_error_id() const noexcept
+		bool has_error() const noexcept
 		{
 			return bool(err_id_);
 		}
@@ -93,15 +93,15 @@ namespace boost { namespace leaf {
 			return err_id_.value();
 		}
 
-		error_id const & error_id() const noexcept
+		error_id const & error() const noexcept
 		{
-			assert(has_error_id());
+			assert(has_error());
 			return err_id_;
 		}
 
 		std::error_code const & error_code() const noexcept
 		{
-			assert(has_error_id());
+			assert(has_error());
 			return ec_ ? *ec_ : err_id_;
 		}
 

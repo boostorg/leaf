@@ -829,7 +829,7 @@ namespace boost { namespace leaf {
 
   public:
 
-    error_id const & error_id() const noexcept;
+    error_id const & error() const noexcept;
 
     bool exception_caught() const noexcept;
     std::exception const * exception() const noexcept;
@@ -1565,7 +1565,7 @@ namespace boost { namespace leaf {
 
   public:
 
-    error_id const & error_id() const noexcept;
+    error_id const & error() const noexcept;
 
     bool exception_caught() const noexcept;
     std::exception const * exception() const noexcept;
@@ -1578,13 +1578,13 @@ namespace boost { namespace leaf {
 
 Handlers passed to <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> may take an argument of type `error_info const &` to receive information about the error.
 
-The `error_id` member function returns the program-wide unique <<error_id>> of the error.
+The `error` member function returns the program-wide unique <<error_id>> of the error.
 
 The `exception_caught` member function returns `true` if the handler that received `*this` is being invoked by a <<try_catch>> which caught a {CPP} exception, `false` otherwise.
 
 The `exception` member function returns a pointer to the `std::exception` subobject of the exception caught by `try_catch`, or `0` if that exception could not be converted to `std::exception`. It is illegal to call `exception` unless `exception_caught()` is `true`.
 
-The `operator<<` overload prints diagnostic information about each E-object currently stored in the <<context>> local to the <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> scope that invoked the handler, but only if it is associated with the <<error_id>> returned by `error_id()`.
+The `operator<<` overload prints diagnostic information about each E-object currently stored in the <<context>> local to the <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> scope that invoked the handler, but only if it is associated with the <<error_id>> returned by `error()`.
 
 '''
 
@@ -2558,7 +2558,7 @@ else
     [ ]( leaf::error_info const & info ) <1>
     {
       std::cerr << "leaf::error_info:" << std::endl << info; <2>
-      return info.error_id(); <3>
+      return info.error(); <3>
     } );
 }
 ----
