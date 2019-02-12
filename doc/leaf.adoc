@@ -471,7 +471,7 @@ E-types: :: Value types that describe or pertain to a failure. Objects of these 
 
 error_id: :: A program-wide unique identifier of a particular occurrence of a failure. The actual identifier is a simple `int`, but the `error_id` type derives from `std::error_code`. This enables LEAF error IDs to be communicated through any compatible API in plain `std::error_code` objects (sliced from an `error_id`), which LEAF recognizes by its own specific `std::error_category`.
 
-Error-reprorting function: :: A function that detects and reports a new failure. Usually such functions call `new_error` to generate a new unique identifier for each error condition they encounter; typically. at least one E-object is associated with the new `error_id` at this point.
+Error-reporting function: :: A function that detects and reports a new failure. Usually such functions call `new_error` to generate a new unique identifier for each error condition they encounter; typically, at least one E-object is associated with the new `error_id` at this point.
 
 Error-neutral function: :: A function which, in case a lower level function fails, forwards the reported error to its caller, possibly associating additional E-objects with it.
 
@@ -519,7 +519,7 @@ TIP: In addition to the `error_id` being transported in the returned exception o
 
 ==== Interoperability
 
-Ideally, when an error is detected, a program using LEAF would always call `new_error`, ensuring that each encountered error is definitely assigned a unique `error_id`, which then is reliably delivered, by an exception or by a `result<T>` object, to the appropriate error-handling scope.
+Ideally, when an error is detected, a program using LEAF would always call <<new_error>>, ensuring that each encountered error is definitely assigned a unique <<error_id>>, which then is reliably delivered, by an exception or by a `result<T>` object, to the appropriate error-handling scope.
 
 Alas, except in trivial programs, this is not always possible.
 
@@ -527,7 +527,16 @@ For starters, the error may need to be communicated through uncooperative 3rd-pa
 
 Further, it is sometimes necessary to communicate errors through an interface that does not even use `std::error_code`. An example of this is when a lower-level library throws an exception, which is unlikely to be able to carry an `error_id`.
 
-To support this tricky use case, various LEAF functions that require an `error_id` are able to work with the error ID returned by the `next_error` function, which offers a preview of the `error_id` value that will be returned by the next call (from this thread) to `new_error`. For example, this is the case when E-objects need to be associated with exceptions thrown by the {CPP} standard library, which obviously are unable to carry `error_id` values. In a way, we can pretend that we have called `new_error`, even though we could not do it at the point of the `throw`; it is usually okay to do it later, when the exception is handled.
+To support this tricky use case, various LEAF functions that require an `error_id` are able to work with the error ID returned by the <<next_error>> function, which offers a preview of the `error_id` value that will be returned by the next call (from this thread) to `new_error`. For example, this is the case when E-objects need to be associated with exceptions thrown by the {CPP} standard library, which obviously are unable to carry `error_id` values. In a way, we can pretend that we have called `new_error`, even though we could not do it at the point of the `throw`; it is usually okay to do it later, when the exception is handled.
+
+[WARNING]
+--
+The implication of working with exceptions that do not carry `error_id` is that if some E-objects get associated with the `error_id` returned by `next_error`, then the exception object is caught in third-party code, then (possibly much later) a new exception reaches a scope where it is handled with <<try_catch>>, LEAF will erroneously assume that the E-objects belong to the new exception.
+
+A possible workaround is to call <<new_error>> some time after the original exception was handled, if possible (LEAF does call `new_error` when it is handling an exception that does not carry an `error_id`).
+--
+
+TIP: To avoid this ambiguity, whenever possible, use the <<exception>> function template when throwing exceptions to ensure that the exception object transports a unique `error_id`; better yet, use the <<LEAF_THROW>> macro, which in addition will capture `pass:[__FILE__]` and `pass:[__LINE__]`.
 
 '''
 
