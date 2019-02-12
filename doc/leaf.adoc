@@ -3109,13 +3109,13 @@ namespace boost { namespace leaf {
 } }
 ----
 
-This function works similarly to <<remote_try_handle_some>>. The only difference is that, like <<try_catch>>, `remote_try_catch` does not require that the `try_block` return a `result<T>`.  Of course, since the captured handlers are to be used with `remote_try_catch`, when capturing the handlers we call the helper function `remote_try_catch` rather than `remote_handle_some`:
+This function works similarly to <<remote_try_handle_some>>. The only difference is that, like <<try_catch>>, `remote_try_catch` does not require that the `try_block` return a `result<T>` because, presumably, errors are communicated by throwing exceptions.  Of course, since the captured handlers are to be used with `remote_try_catch` rather than `remote_try_handle_some`, when capturing the handlers we call the helper function `remote_catch` rather than `remote_handle_some`:
 
 [source,c++]
 ----
 auto remote_handlers = [ ]( leaf::error_info const & error )
 {
-  return leaf::remote_handle_all( error,
+  return leaf::remote_catch( error,
 
     [ ]( my_error_code ec, leaf::e_file_name const & fn )
     {
@@ -3129,7 +3129,7 @@ auto remote_handlers = [ ]( leaf::error_info const & error )
 };
 ----
 
-To use the captured `remote_handlers`, we call `remote_try_catch` rather than `try_catch` (which requires the handlers to be provided in a handler pack):
+To use the captured `remote_handlers`, we call `remote_try_catch` rather than `try_catch` (the former requires the handlers to be provided in a handler pack):
 
 [source,c++]
 ----
