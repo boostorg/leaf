@@ -2430,7 +2430,7 @@ auto remote_handlers = [ ]( leaf::error_info const & error )
 };
 ----
 
-Above, the `remote_handlers` object captures  the two handlers passed to the helper function `remote_handle_all`. Note that the function itself or the handlers are *not* called at this point; the only effect is that we now have a function, which we can later invoke to handle errors, using `remot_try_handle_some`:
+Above, the `remote_handlers` object captures  the two handlers passed to the helper function `remote_handle_some`. Note that the function itself or the handlers are *not* called at this point; the only effect is that we now have a function, which we can later invoke to handle errors, using `remot_try_handle_some`:
 
 [source,c++]
 ----
