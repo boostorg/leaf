@@ -46,7 +46,7 @@ Let's jump ahead and start with the `main` function: it will try several operati
 [source,c++]
 ----
 template <class TryBlock, class... Handler>
-<<deduced-type>> try_catch'try_handle_all( TryBlock && try_block, Handler && ... handler );
+<<deduced-type>> try_handle_all( TryBlock && try_block, Handler && ... handler );
 ----
 
 `TryBlock` is a function type, almost always a lambda. It is required to return a `result<T>` type -- for example, `leaf::result<T>` -- that holds a value of type `T` or else it communicates a failure.
