@@ -8,8 +8,6 @@ Low-latency Error Augmentation Framework for C++11
 :toclevels: 3
 :toc: left
 :toc-title:
-:sourcedir: .
-:imagesdir: .
 
 [abstract]
 == Abstract
