@@ -862,7 +862,7 @@ namespace boost { namespace leaf {
 ----
 
 [.text-right]
-<<handle_all>> | <<handle_some>> | <<try_handle_all>> | <<try_handle_some>> | <<remote_try_handle_all>> | <<remote_try_handle_some>> | <<remote_handle_all>> | <<remote_handle_some>> | <<match>> | <<condition>> | <<error_info>> | <<diagnostic_info>> | <<verbose_diagnostic_info>>
+<<handle_all>> | <<handle_some>> | <<try_handle_all>> | <<try_handle_some>> | <<remote_try_handle_all>> | <<remote_try_handle_some>> | <<match>> | <<condition>> | <<error_info>> | <<diagnostic_info>> | <<verbose_diagnostic_info>>
 
 '''
 
@@ -2395,6 +2395,142 @@ try_handle_all( TryBlock && try_block, H && ... h ) noexcept
 
 '''
 
+[[remote_try_handle_some]]
+=== `remote_try_handle_some`
+
+.#include <boost/leaf/handle_error.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class TryBlock, class RemoteH>
+  typename std::decay<decltype(std::declval<TryBlock>()())>::type
+  remote_try_handle_some( TryBlock && try_block, RemoteH && h ) noexcept;
+
+} }
+----
+
+This function works the same way as <<try_handle_some>>, but rather than taking a parameter pack with handlers, it takes a single lambda that captures the handlers:
+
+[source,c++]
+----
+auto remote_handlers = [ ]( leaf::error_info const & error )
+{
+  return leaf::remote_handle_some( error,
+
+    [ ]( my_error_code ec, leaf::e_file_name const & fn )
+    {
+      ....
+    },
+
+    [ ]( my_error_code ec )
+    {
+      ....
+    } );
+};
+----
+
+Above, the `remote_handlers` object captures  the two handlers passed to the helper function `remote_handle_all`. Note that the function itself or the handlers are *not* called at this point; the only effect is that we now have a function, which we can later invoke to handle errors, using `remot_try_handle_some`:
+
+[source,c++]
+----
+return leaf::remote_try_handle_some(
+  [ ]
+  {
+    // Code which may fail
+  },
+  [&]( leaf::error_info const & error )
+  {
+    return remote_handlers(error);
+  } );
+----
+
+Like <<try_handle_some>>, the first thing `remote_try_handle_some` does is call the passed `try_block`. If it succeeds, the returned `result<T>` is forwared to the caller. Otherwise, it calls `h` with the `leaf::error_info` object that represents the error being handled, where we call the `remote_handlers` function we captured earlier, which will attempt to find a matching handler, as usual.
+
+Note that it is possible for `remote_handlers` to take additional arguments that it needs in order to handle errors:
+
+[source,c++]
+----
+auto remote_handlers = [ ]( leaf::error_info const & error, int a )
+{
+  return leaf::remote_handle_some( error,
+
+    [&]( my_error_code ec, leaf::e_file_name const & fn )
+    {
+      use(a);
+      ....
+    },
+
+    [ ]( my_error_code ec )
+    {
+      ....
+    } );
+};
+----
+
+Of course, later it is our responsibility to pass the extra arguments:
+
+[source,c++]
+----
+return leaf::remote_try_handle_some(
+  [ ]
+  {
+    // Code which may fail
+  },
+  [&]( leaf::error_info const & error )
+  {
+    return remote_handlers(error, 42); //Pass 42 for a
+  } );
+----
+
+TIP: While `try_remote_handle_some` is useful just for being able to capture a set of handlers to be used at a later time, its main purpose is to allow for automatic `context` deduction when errors are transported to a different thread; see <<capture>>.
+
+'''
+
+[[remote_try_handle_all]]
+=== `remote_try_handle_all`
+
+.#include <boost/leaf/handle_error.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class TryBlock, class RemoteH>
+  typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+  remote_try_handle_all( TryBlock && try_block, RemoteH && h ) noexcept;
+
+} }
+----
+
+This function works similarly to <<remote_try_handle_some>>. The only difference is that, like <<try_handle_all>>, it is required (enforced at compile time) to be able to find a matching handler for an error. Therefore, the handlers captured in `remote_handler` must include a handler that matches any error:
+
+[source,c++]
+----
+auto remote_handlers = [ ]( leaf::error_info const & error )
+{
+  return leaf::remote_handle_all( error,
+
+    [ ]( my_error_code ec, leaf::e_file_name const & fn )
+    {
+      ....
+    },
+
+    [ ]( my_error_code ec )
+    {
+      ....
+    },
+
+    [ ] //Matches any error
+    {
+      ....
+    } );
+};
+----
+
+The other difference is that since the captured handlers are to be used with `remote_try_handle_all`, above we call the helper function `remote_handle_all` rather than `remote_handle_some`.
+
+'''
+
 [[handle_some]]
 === `handle_some`
 
@@ -2955,6 +3091,60 @@ The `try_catch` function automates several aspects of the typical use of <<handl
 
 * It does not require the `try_block` function to return `result<T>`;
 * It catches any exception thrown by the `try_block` and then calls the equivalent of <<handle_current_exception>>.
+
+'''
+
+[[remote_try_catch]]
+=== `remote_try_catch`
+
+.#include <boost/leaf/handle_exception.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class TryBlock, class RemoteH>
+  typename std::decay<decltype(std::declval<TryBlock>()())>::type
+  remote_try_catch( TryBlock && try_block, RemoteH && h );
+
+} }
+----
+
+This function works similarly to <<remote_try_handle_some>>. The only difference is that, like <<try_catch>>, `remote_try_catch` does not require that the `try_block` return a `result<T>`.  Of course, since the captured handlers are to be used with `remote_try_catch`, when capturing the handlers we call the helper function `remote_try_catch` rather than `remote_handle_some`:
+
+[source,c++]
+----
+auto remote_handlers = [ ]( leaf::error_info const & error )
+{
+  return leaf::remote_handle_all( error,
+
+    [ ]( my_error_code ec, leaf::e_file_name const & fn )
+    {
+      ....
+    },
+
+    [ ]( my_error_code ec )
+    {
+      ....
+    } );
+};
+----
+
+To use the captured `remote_handlers`, we call `remote_try_catch` rather than `try_catch` (which requires the handlers to be provided in a handler pack):
+
+[source,c++]
+----
+return leaf::remote_try_catch(
+  [ ]
+  {
+    // Code which may throw
+  },
+  [&]( leaf::error_info const & error )
+  {
+    return remote_handlers(error);
+  } );
+----
+
+Like <<try_catch>>, the first thing `remote_try_catch` does is call the passed `try_block`. If it succeeds, the return value is forwared to the caller. Otherwise, it calls `h` with the `leaf::error_info` object that represents the exception (or error) being handled, where we call the `remote_handlers` function we captured earlier, which will attempt to find a matching handler, as usual.
 
 '''
 
