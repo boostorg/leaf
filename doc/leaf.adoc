@@ -580,7 +580,7 @@ leaf::try_handle_all(
 * https://github.com/zajo/leaf/blob/master/examples/print_file_result.cpp?ts=4[print_file_result.cpp]: The complete example from the <<introduction>>.
 * https://github.com/zajo/leaf/blob/master/examples/print_file_eh.cpp?ts=4[print_file_eh.cpp]: The complete example from the <<introduction>>.
 * https://github.com/zajo/leaf/blob/master/examples/capture_in_result.cpp?ts=4[capture_in_result.cpp]: Shows how to transport E-objects between threads in a `<<result,result>><T>` object.
-* https://github.com/zajo/leaf/blob/master/examples/capture_in_exceptions.cpp?ts=4[capture_in_exception.cpp]: Shows how to transport E-objects between threads in an exception object.
+* https://github.com/zajo/leaf/blob/master/examples/capture_in_exception.cpp?ts=4[capture_in_exception.cpp]: Shows how to transport E-objects between threads in an exception object.
 * https://github.com/zajo/leaf/blob/master/examples/lua_callback_result.cpp?ts=4[lua_callback_result.cpp]: Transporting arbitrary E-objects through an uncooperative C API.
 * https://github.com/zajo/leaf/blob/master/examples/lua_callback_exception.cpp?ts=4[lua_callback_exception.cpp]: Transporting arbitrary E-objects through an uncooperative exception-safe API.
 * https://github.com/zajo/leaf/blob/master/examples/exception_to_result.cpp?ts=4[exception_to_result.cpp]: Demonstrates how to transport exceptions through a `noexcept` layer in the program.

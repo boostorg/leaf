@@ -66,9 +66,10 @@ int main()
 	// Container to collect the generated std::future objects.
 	std::vector<std::future<leaf::result<task_result>>> fut;
 
-	// Launch the tasks, but rather than launching the task function directly, we launch the
-	// wrapper function returned by leaf::capture_in_result. It inspects the type of the
-	// error_handler function in order to deduce what e-types need to be transported.
+	// Launch the tasks, but rather than launching the task function directly, we launch a
+	// wrapper function which calls leaf::capture, passing a context object that will hold
+	// the E-objects loaded from the task in case of an error. The E-types the context is
+	// able to hold are automatically deduced from the type of the error_handler function.
 	std::generate_n( std::inserter(fut,fut.end()), task_count,
 		[&]
 		{
