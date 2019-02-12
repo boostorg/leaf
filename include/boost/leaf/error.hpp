@@ -15,6 +15,7 @@
 #include <ostream>
 #include <sstream>
 #include <atomic>
+#include <thread>
 #include <set>
 
 #define LEAF_NEW_ERROR(...) ::boost::leaf::leaf_detail::new_error_at(__FILE__,__LINE__,__FUNCTION__).load(__VA_ARGS__)
@@ -681,6 +682,7 @@ namespace boost { namespace leaf {
 		virtual void activate() noexcept = 0;
 		virtual void deactivate( bool propagate_errors ) noexcept = 0;
 		virtual void print( std::ostream & ) const = 0;
+		virtual std::thread::id const & thread_id() const noexcept = 0;
 
 		std::error_code ec;
 	};
@@ -697,7 +699,7 @@ namespace boost { namespace leaf {
 		enum class on_deactivation
 		{
 			propagate,
-			propagate_if_current_exception,
+			propagate_if_uncaught_exception,
 			capture_do_not_propagate
 		};
 
@@ -719,14 +721,14 @@ namespace boost { namespace leaf {
 		{
 			assert(
 				on_deactivate_==on_deactivation::propagate ||
-				on_deactivate_==on_deactivation::propagate_if_current_exception ||
+				on_deactivate_==on_deactivation::propagate_if_uncaught_exception ||
 				on_deactivate_==on_deactivation::capture_do_not_propagate);
 			ctx_.deactivate(
 				on_deactivate_==on_deactivation::propagate ||
-				(on_deactivate_==on_deactivation::propagate_if_current_exception && std::uncaught_exception()));
+				(on_deactivate_==on_deactivation::propagate_if_uncaught_exception && std::uncaught_exception()));
 		}
 
-		void set_propagate_errors( on_deactivation on_deactivate ) noexcept
+		void set_on_deactivate( on_deactivation on_deactivate ) noexcept
 		{
 			on_deactivate_ = on_deactivate;
 		}

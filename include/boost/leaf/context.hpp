@@ -8,7 +8,6 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/error.hpp>
-#include <thread>
 
 namespace boost { namespace leaf {
 
@@ -187,11 +186,6 @@ namespace boost { namespace leaf {
 			assert(thread_id_ == std::thread::id());
 		}
 
-		std::thread::id const & thread_id() const noexcept
-		{
-			return thread_id_;
-		}
-
 		Tup const & tup() const noexcept
 		{
 			return tup_;
@@ -220,6 +214,11 @@ namespace boost { namespace leaf {
 		void print( std::ostream & os ) const final override
 		{
 			leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, tup_);
+		}
+
+		std::thread::id const & thread_id() const noexcept final override
+		{
+			return thread_id_;
 		}
 	};
 

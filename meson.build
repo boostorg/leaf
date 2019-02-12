@@ -96,7 +96,6 @@ foreach t : tests
 endforeach
 
 examples = [
-	'asio',
 	'capture_in_exception',
 	'capture_in_result',
 	'error_log',
@@ -107,11 +106,11 @@ examples = [
 	'print_half'
 ]
 foreach e : examples
-	executable(e, 'example/'+e+'.cpp', dependencies: [leaf,thread_dep] )
+	executable(e, 'examples/'+e+'.cpp', dependencies: [leaf,thread_dep] )
 endforeach
 
 if get_option('build_lua_examples')
 	lua=subproject('lua').get_variable('all')
-	executable('lua_callback_result', 'example/lua_callback_result.cpp', dependencies: [ leaf, lua ] )
-	executable('lua_callback_eh', 'example/lua_callback_eh.cpp', dependencies: [ leaf, lua ] )
+	executable('lua_callback_result', 'examples/lua_callback_result.cpp', dependencies: [ leaf, lua ] )
+	executable('lua_callback_eh', 'examples/lua_callback_eh.cpp', dependencies: [ leaf, lua ] )
 endif

@@ -113,7 +113,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class R, class... E, class... H>
-	R handle_current_exception( context<E...> const & ctx, H && ... h ) noexcept
+	R handle_current_exception( context<E...> const & ctx, H && ... h )
 	{
 		return leaf_detail::handle_exceptions(
 			[ ]{ throw; },
@@ -121,7 +121,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class R, class... E, class... H>
-	R handle_exception( context<E...> const & ctx, std::exception_ptr const & ep, H && ... h ) noexcept
+	R handle_exception( context<E...> const & ctx, std::exception_ptr const & ep, H && ... h )
 	{
 		return leaf_detail::handle_exceptions(
 			[&]{ std::rethrow_exception(ep); },
@@ -137,7 +137,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			context_type_from_handlers<H...> ctx;
-			context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_current_exception);
+			context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_uncaught_exception);
 			return handle_exceptions(
 				[&]
 				{
@@ -147,7 +147,7 @@ namespace boost { namespace leaf {
 					{
 						auto rr = handle_some(ctx, r, std::forward<H>(h)...);
 						if( !rr )
-							active_context.set_propagate_errors(context_activator::on_deactivation::propagate);
+							active_context.set_on_deactivate(context_activator::on_deactivation::propagate);
 						return rr;
 					}
 				},
@@ -159,7 +159,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			context_type_from_handlers<H...> ctx;
-			context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_current_exception);
+			context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_uncaught_exception);
 			return handle_exceptions(
 				[&]
 				{
@@ -170,7 +170,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class TryBlock, class... H>
-	typename std::decay<decltype(std::declval<TryBlock>()())>::type try_catch( TryBlock && try_block, H && ... h )
+	decltype(std::declval<TryBlock>()()) try_catch( TryBlock && try_block, H && ... h )
 	{
 		using namespace leaf_detail;
 		using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
@@ -186,7 +186,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			context_type_from_remote_handler<RemoteH> ctx;
-			context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_current_exception);
+			context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_uncaught_exception);
 			return remote_handle_exceptions(
 				[&]
 				{
@@ -196,7 +196,7 @@ namespace boost { namespace leaf {
 					{
 						auto rr = std::forward<RemoteH>(h)(error_info(ctx, r.error())).get();
 						if( !rr )
-							active_context.set_propagate_errors(context_activator::on_deactivation::propagate);
+							active_context.set_on_deactivate(context_activator::on_deactivation::propagate);
 						return rr;
 					}
 				},
@@ -208,7 +208,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			context_type_from_remote_handler<RemoteH> ctx;
-			context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_current_exception);
+			context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_uncaught_exception);
 			return remote_handle_exceptions(
 				[&]
 				{
@@ -309,16 +309,6 @@ namespace boost { namespace leaf {
 		ec_(leaf_detail::unpack_error_code(xi_->ex_)),
 		err_id_(leaf_detail::unpack_error_id(ec_))
 	{
-	}
-
-	////////////////////////////////////////
-
-	inline error_id get_error( std::exception const & ex ) noexcept
-	{
-		if( auto err = dynamic_cast<error_id const *>(&ex) )
-			return *err;
-		else
-			return next_error();
 	}
 
 } }
