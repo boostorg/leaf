@@ -6,6 +6,7 @@
 
 #include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
+#include <boost/leaf/preload.hpp>
 #include "boost/core/lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
@@ -23,11 +24,11 @@ int test( F && f )
 			f();
 			return 1;
 		},
-		[ ]( leaf::catch_<my_error>, info, leaf::e_source_location )
+		[ ]( leaf::catch_<my_error>, leaf::match<info,42>, leaf::e_source_location )
 		{
 			return 2;
 		},
-		[ ]( leaf::catch_<my_error>, info x )
+		[ ]( leaf::catch_<my_error>, leaf::match<info,42>, info x )
 		{
 			return 3;
 		},
@@ -47,7 +48,16 @@ int test( F && f )
 
 int main()
 {
-	BOOST_TEST_EQ( 5, test( [ ] { throw my_error(); } ) );
+	{
+		int const id = leaf::leaf_detail::next_id();
+		BOOST_TEST_EQ( 3, test( [ ] { auto load = leaf::preload(info{42}); throw my_error(); } ) );
+		BOOST_TEST(id!=leaf::leaf_detail::next_id());
+	}
+	{
+		int const id = leaf::leaf_detail::next_id();
+		BOOST_TEST_EQ( 5, test( [ ] { throw my_error(); } ) );
+		BOOST_TEST(id!=leaf::leaf_detail::next_id());
+	}
 
 	BOOST_TEST_EQ( 5, test( [ ] { throw leaf::exception(my_error()); } ) );
 	BOOST_TEST_EQ( 3, test( [ ] { throw leaf::exception(my_error(),info{42}); } ) );

@@ -51,6 +51,7 @@ run defer_nested_success_exception_test.cpp ;
 run defer_nested_success_result_test.cpp ;
 run diagnostic_info_test.cpp ;
 run error_code_test.cpp ;
+run exception_test.cpp ;
 run exception_to_result_test.cpp ;
 run function_traits_test.cpp ;
 run handle_all_other_result_test.cpp ;
@@ -75,7 +76,6 @@ run result_state_test.cpp ;
 run context_deduction_test.cpp ;
 run try_catch_test.cpp ;
 run try_exception_and_result_test.cpp ;
-run try_exception_test.cpp ;
 
 compile-fail is_error_type_fail_test.cpp ;
 

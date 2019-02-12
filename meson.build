@@ -65,6 +65,7 @@ tests = [
 	'defer_nested_success_result_test',
 	'diagnostic_info_test',
 	'error_code_test',
+	'exception_test',
 	'exception_to_result_test',
 	'function_traits_test',
 	'handle_all_other_result_test',
@@ -89,7 +90,6 @@ tests = [
 	'context_deduction_test',
 	'try_catch_test',
 	'try_exception_and_result_test',
-	'try_exception_test',
 ]
 foreach t : tests
 	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf,thread_dep] ) )

@@ -289,7 +289,7 @@ namespace boost { namespace leaf {
 			if( ec )
 				return error_id(*ec);
 			else
-				return next_error();
+				return new_error();
 		}
 
 		inline exception_info_base::exception_info_base( std::exception const * ex ) noexcept:
