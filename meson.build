@@ -88,6 +88,7 @@ tests = [
 	'result_load_accumulate_test',
 	'result_state_test',
 	'context_deduction_test',
+	'try_catch_error_id_test',
 	'try_catch_test',
 	'try_exception_and_result_test',
 ]

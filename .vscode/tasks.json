@@ -447,6 +447,15 @@
 			}
 		},
 		{
+			"label": "try_catch_error_id_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test try_catch_error_id_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test try_catch_error_id_test"
+			}
+		},
+		{
 			"label": "try_catch_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test try_catch_test",

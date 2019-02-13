@@ -220,9 +220,6 @@ namespace boost { namespace leaf {
 		{
 			return x==v1 || check_value_pack(x,v_rest...);
 		}
-
-		template <class E, bool HasValue = has_value<E>::value>
-		struct match_traits;
 	}
 
 	template <class E, class ErrorConditionEnum = E>
@@ -230,43 +227,11 @@ namespace boost { namespace leaf {
 	{
 	};
 
-	template <class E, typename leaf_detail::match_traits<E>::enumerator... V>
-	class match
-	{
-		using match_type = typename leaf_detail::match_traits<E>::match_type;
-		match_type const * const value_;
-
-	public:
-
-		explicit match( match_type const * value ) noexcept:
-			value_(value)
-		{
-		}
-
-		bool operator()() const noexcept
-		{
-			return value_ && leaf_detail::check_value_pack(*value_,V...);
-		}
-
-		match_type const & value() const noexcept
-		{
-			assert(value_!=0);
-			return *value_;
-		}
-	};
-
 	namespace leaf_detail
 	{
-		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...>> { using type = typename match_traits<T>::e_type; };
-		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const>;
-		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const *>;
-		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const &>;
-	}
+		template <class E, bool HasValue = has_value<E>::value>
+		struct match_traits;
 
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
 		template <class Enum>
 		struct match_traits<Enum, false>
 		{
@@ -297,10 +262,7 @@ namespace boost { namespace leaf {
 					return 0;
 			}
 		};
-	}
 
-	namespace leaf_detail
-	{
 		template <class ErrorConditionEnum>
 		struct match_traits<condition<ErrorConditionEnum, ErrorConditionEnum>, false>
 		{
@@ -339,6 +301,41 @@ namespace boost { namespace leaf {
 					return 0;
 			}
 		};
+	}
+
+	////////////////////////////////////////
+
+	template <class E, typename leaf_detail::match_traits<E>::enumerator... V>
+	class match
+	{
+		using match_type = typename leaf_detail::match_traits<E>::match_type;
+		match_type const * const value_;
+
+	public:
+
+		explicit match( match_type const * value ) noexcept:
+			value_(value)
+		{
+		}
+
+		bool operator()() const noexcept
+		{
+			return value_ && leaf_detail::check_value_pack(*value_,V...);
+		}
+
+		match_type const & value() const noexcept
+		{
+			assert(value_!=0);
+			return *value_;
+		}
+	};
+
+	namespace leaf_detail
+	{
+		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...>> { using type = typename match_traits<T>::e_type; };
+		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const>;
+		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const *>;
+		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const &>;
 	}
 
 	////////////////////////////////////////
