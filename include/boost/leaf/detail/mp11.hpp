@@ -282,6 +282,21 @@ template<std::size_t N> using make_index_sequence = make_integer_sequence<std::s
 // index_sequence_for
 template<class... T> using index_sequence_for = make_integer_sequence<std::size_t, sizeof...(T)>;
 
+namespace detail
+{
+
+template<class...> using void_t = void;
+
+template<class, template<class...> class F, class... T>
+struct mp_valid_impl: mp_false {};
+
+template<template<class...> class F, class... T>
+struct mp_valid_impl<void_t<F<T...>>, F, T...>: mp_true {};
+
+} // namespace detail
+
+template<template<class...> class F, class... T> using mp_valid = typename detail::mp_valid_impl<void, F, T...>;
+
 } } }
 
 #endif

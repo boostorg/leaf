@@ -35,9 +35,9 @@ namespace boost { namespace leaf {
 	typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock && try_block, H && ... h ) noexcept
 	{
 		using namespace leaf_detail;
-		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The try_block passed to try_handle_all must be registered with leaf::is_result_type");
+		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to try_handle_all must be registered with leaf::is_result_type");
 		context_type_from_handlers<H...> ctx;
-		context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_uncaught_exception);
+		context_activator active_context(ctx, context_activator::on_deactivation::do_not_propagate);
 		if( auto r = std::forward<TryBlock>(try_block)() )
 			return r.value();
 		else
@@ -48,9 +48,9 @@ namespace boost { namespace leaf {
 	typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock && try_block, H && ... h ) noexcept
 	{
 		using namespace leaf_detail;
-		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The try_block passed to try_handle_some must be registered with leaf::is_result_type");
+		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to try_handle_some must be registered with leaf::is_result_type");
 		context_type_from_handlers<H...> ctx;
-		context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_uncaught_exception);
+		context_activator active_context(ctx, context_activator::on_deactivation::do_not_propagate);
 		if( auto r = std::forward<TryBlock>(try_block)() )
 			return r;
 		else
@@ -68,9 +68,9 @@ namespace boost { namespace leaf {
 	typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock && try_block, RemoteH && h ) noexcept
 	{
 		using namespace leaf_detail;
-		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The try_block passed to remote_try_handle_all must be registered with leaf::is_result_type.");
+		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to remote_try_handle_all must be registered with leaf::is_result_type.");
 		context_type_from_remote_handler<RemoteH> ctx;
-		context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_uncaught_exception);
+		context_activator active_context(ctx, context_activator::on_deactivation::do_not_propagate);
 		if( auto r = std::forward<TryBlock>(try_block)() )
 			return r.value();
 		else
@@ -81,9 +81,9 @@ namespace boost { namespace leaf {
 	typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( TryBlock && try_block, RemoteH && h ) noexcept
 	{
 		using namespace leaf_detail;
-		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The try_block passed to remote_try_handle_some must be registered with leaf::is_result_type.");
+		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to remote_try_handle_some must be registered with leaf::is_result_type.");
 		context_type_from_remote_handler<RemoteH> ctx;
-		context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_uncaught_exception);
+		context_activator active_context(ctx, context_activator::on_deactivation::do_not_propagate);
 		if( auto r = std::forward<TryBlock>(try_block)() )
 			return r;
 		else

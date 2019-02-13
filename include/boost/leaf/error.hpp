@@ -24,22 +24,14 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class T, class E = void>
-		struct has_data_member_value
-		{
-			static constexpr bool value=false;
-		};
+		template<class T> using has_value_impl = decltype( std::declval<T>().value );
 
-		template <class T>
-		struct has_data_member_value<T, decltype(std::declval<T const &>().value, void())>
-		{
-			static constexpr bool value=std::is_member_object_pointer<decltype(&T::value)>::value;
-		};
+		template <class T> using has_value = leaf_detail_mp11::mp_valid<has_value_impl, T>;
 
 		template <class T>
 		struct is_error_type_default
 		{
-			static constexpr bool value = has_data_member_value<T>::value || std::is_base_of<std::exception,T>::value;
+			static constexpr bool value = has_value<T>::value || std::is_base_of<std::exception,T>::value;
 		};
 
 		template <>
@@ -699,8 +691,8 @@ namespace boost { namespace leaf {
 		enum class on_deactivation
 		{
 			propagate,
-			propagate_if_uncaught_exception,
-			capture_do_not_propagate
+			do_not_propagate,
+			propagate_if_uncaught_exception
 		};
 
 	private:
@@ -720,12 +712,18 @@ namespace boost { namespace leaf {
 		~context_activator() noexcept
 		{
 			assert(
-				on_deactivate_==on_deactivation::propagate ||
-				on_deactivate_==on_deactivation::propagate_if_uncaught_exception ||
-				on_deactivate_==on_deactivation::capture_do_not_propagate);
-			ctx_.deactivate(
-				on_deactivate_==on_deactivation::propagate ||
-				(on_deactivate_==on_deactivation::propagate_if_uncaught_exception && std::uncaught_exception()));
+				on_deactivate_ == on_deactivation::propagate ||
+				on_deactivate_ == on_deactivation::do_not_propagate ||
+				on_deactivate_ == on_deactivation::propagate_if_uncaught_exception);
+			if( on_deactivate_  == on_deactivation::propagate_if_uncaught_exception )
+			{
+				bool has_exception = std::uncaught_exception();
+				ctx_.deactivate(has_exception);
+				if( !has_exception )
+					(void) leaf_detail::new_id();
+			}
+			else
+				ctx_.deactivate(on_deactivate_ == on_deactivation::propagate);
 		}
 
 		void set_on_deactivate( on_deactivation on_deactivate ) noexcept

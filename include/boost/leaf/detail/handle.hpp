@@ -207,81 +207,8 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	template <class E, class ErrorConditionEnum = E>
-	struct condition;
-
 	namespace leaf_detail
 	{
-		template <class Enum, bool HasValue = has_data_member_value<Enum>::value>
-		struct match_traits
-		{
-			using enumerator = Enum;
-			using e_type = enumerator;
-			using match_type = enumerator;
-
-			template <class SlotsTuple>
-			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
-			{
-				return peek<e_type>(tup, ei.err_id());
-			}
-		};
-
-		template <class E>
-		struct match_traits<E, true>
-		{
-			using enumerator = decltype(E::value);
-			using e_type = E;
-			using match_type = enumerator;
-
-			template <class SlotsTuple>
-			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
-			{
-				if( auto pv = peek<e_type>(tup, ei.err_id()) )
-					return &pv->value;
-				else
-					return 0;
-			}
-		};
-
-		template <class ErrorConditionEnum>
-		struct match_traits<condition<ErrorConditionEnum, ErrorConditionEnum>, false>
-		{
-			static_assert(std::is_error_condition_enum<ErrorConditionEnum>::value, "If leaf::condition is instantiated with one type, that type must be a std::error_condition_enum");
-
-			using enumerator = ErrorConditionEnum;
-			using e_type = e_original_ec;
-			using match_type = std::error_code;
-
-			template <class SlotsTuple>
-			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
-			{
-				if( e_type const * ec = peek<e_type>(tup, ei.err_id()) )
-					return &ec->value;
-				else
-					return &ei.error_code();
-			}
-		};
-
-		template <class E, class ErrorConditionEnum>
-		struct match_traits<condition<E, ErrorConditionEnum>, false>
-		{
-			static_assert(leaf_detail::has_data_member_value<E>::value, "If leaf::condition is instantiated with two types, the first one must have a member std::error_code value");
-			static_assert(std::is_error_condition_enum<ErrorConditionEnum>::value, "If leaf::condition is instantiated with two types, the second one must be a std::error_condition_enum");
-
-			using enumerator = ErrorConditionEnum;
-			using e_type = E;
-			using match_type = std::error_code;
-
-			template <class SlotsTuple>
-			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
-			{
-				if( auto pv = peek<e_type>(tup, ei.err_id()) )
-					return &pv->value;
-				else
-					return 0;
-			}
-		};
-
 		template <class MatchType, class Enumerator>
 		bool check_value_pack( MatchType const & x, Enumerator v ) noexcept
 		{
@@ -293,6 +220,9 @@ namespace boost { namespace leaf {
 		{
 			return x==v1 || check_value_pack(x,v_rest...);
 		}
+
+		template <class E, bool HasValue = has_value<E>::value>
+		struct match_traits;
 	}
 
 	template <class E, typename leaf_detail::match_traits<E>::enumerator... V>
@@ -326,6 +256,87 @@ namespace boost { namespace leaf {
 		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const>;
 		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const *>;
 		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const &>;
+	}
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		template <class Enum>
+		struct match_traits<Enum, false>
+		{
+			using enumerator = Enum;
+			using e_type = enumerator;
+			using match_type = enumerator;
+
+			template <class SlotsTuple>
+			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
+			{
+				return peek<e_type>(tup, ei.err_id());
+			}
+		};
+
+		template <class E>
+		struct match_traits<E, true>
+		{
+			using enumerator = decltype(E::value);
+			using e_type = E;
+			using match_type = enumerator;
+
+			template <class SlotsTuple>
+			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
+			{
+				if( auto pv = peek<e_type>(tup, ei.err_id()) )
+					return &pv->value;
+				else
+					return 0;
+			}
+		};
+	}
+
+	template <class E, class ErrorConditionEnum = E>
+	struct condition;
+
+	namespace leaf_detail
+	{
+		template <class ErrorConditionEnum>
+		struct match_traits<condition<ErrorConditionEnum, ErrorConditionEnum>, false>
+		{
+			static_assert(std::is_error_condition_enum<ErrorConditionEnum>::value, "If leaf::condition is instantiated with one type, that type must be a std::error_condition_enum");
+
+			using enumerator = ErrorConditionEnum;
+			using e_type = e_original_ec;
+			using match_type = std::error_code;
+
+			template <class SlotsTuple>
+			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
+			{
+				if( e_type const * ec = peek<e_type>(tup, ei.err_id()) )
+					return &ec->value;
+				else
+					return &ei.error_code();
+			}
+		};
+
+		template <class E, class ErrorConditionEnum>
+		struct match_traits<condition<E, ErrorConditionEnum>, false>
+		{
+			static_assert(leaf_detail::has_value<E>::value, "If leaf::condition is instantiated with two types, the first one must have a member std::error_code value");
+			static_assert(std::is_error_condition_enum<ErrorConditionEnum>::value, "If leaf::condition is instantiated with two types, the second one must be a std::error_condition_enum");
+
+			using enumerator = ErrorConditionEnum;
+			using e_type = E;
+			using match_type = std::error_code;
+
+			template <class SlotsTuple>
+			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
+			{
+				if( auto pv = peek<e_type>(tup, ei.err_id()) )
+					return &pv->value;
+				else
+					return 0;
+			}
+		};
 	}
 
 	////////////////////////////////////////
