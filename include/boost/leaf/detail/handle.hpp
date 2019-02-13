@@ -207,33 +207,13 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	namespace leaf_detail
-	{
-		template <class MatchType, class Enumerator>
-		bool check_value_pack( MatchType const & x, Enumerator v ) noexcept
-		{
-			return x==v;
-		}
-
-		template <class MatchType, class Enumerator, class... EnumeratorRest>
-		bool check_value_pack( MatchType const & x, Enumerator v1, EnumeratorRest ... v_rest ) noexcept
-		{
-			return x==v1 || check_value_pack(x,v_rest...);
-		}
-	}
-
 	template <class E, class ErrorConditionEnum = E>
-	struct condition
-	{
-	};
+	struct condition;
 
 	namespace leaf_detail
 	{
-		template <class E, bool HasValue = has_value<E>::value>
-		struct match_traits;
-
-		template <class Enum>
-		struct match_traits<Enum, false>
+		template <class Enum, bool HasValue = has_value<Enum>::value>
+		struct match_traits
 		{
 			using enumerator = Enum;
 			using e_type = enumerator;
@@ -301,9 +281,19 @@ namespace boost { namespace leaf {
 					return 0;
 			}
 		};
-	}
 
-	////////////////////////////////////////
+		template <class MatchType, class Enumerator>
+		bool check_value_pack( MatchType const & x, Enumerator v ) noexcept
+		{
+			return x==v;
+		}
+
+		template <class MatchType, class Enumerator, class... EnumeratorRest>
+		bool check_value_pack( MatchType const & x, Enumerator v1, EnumeratorRest ... v_rest ) noexcept
+		{
+			return x==v1 || check_value_pack(x,v_rest...);
+		}
+	}
 
 	template <class E, typename leaf_detail::match_traits<E>::enumerator... V>
 	class match
@@ -376,6 +366,30 @@ namespace boost { namespace leaf {
 		{
 			assert(value_!=0);
 			return *value_;
+		}
+	};
+
+	template <class Ex>
+	class catch_<Ex>
+	{
+		Ex const * const value_;
+
+	public:
+
+		explicit catch_( std::exception const * value ) noexcept:
+			value_(dynamic_cast<Ex const *>(value))
+		{
+		}
+
+		bool operator()() const noexcept
+		{
+			return this->value_!=0;
+		}
+
+		Ex const & value() const noexcept
+		{
+			assert(this->value_!=0);
+			return *this->value_;
 		}
 	};
 
