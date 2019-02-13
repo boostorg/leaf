@@ -225,6 +225,11 @@ namespace boost { namespace leaf {
 		struct match_traits;
 	}
 
+	template <class E, class ErrorConditionEnum = E>
+	struct condition
+	{
+	};
+
 	template <class E, typename leaf_detail::match_traits<E>::enumerator... V>
 	class match
 	{
@@ -293,9 +298,6 @@ namespace boost { namespace leaf {
 			}
 		};
 	}
-
-	template <class E, class ErrorConditionEnum = E>
-	struct condition;
 
 	namespace leaf_detail
 	{
