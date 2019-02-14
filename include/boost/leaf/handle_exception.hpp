@@ -211,7 +211,7 @@ namespace boost { namespace leaf {
 			using namespace leaf_detail;
 			context_type_from_remote_handler<RemoteH> ctx;
 			context_activator active_context(ctx, context_activator::on_deactivation::propagate_if_uncaught_exception);
-			return remote_handle_exceptions(
+			return ctx.remote_handle_exceptions(
 				[&]
 				{
 					if( auto r = std::forward<TryBlock>(try_block)() )
@@ -224,7 +224,7 @@ namespace boost { namespace leaf {
 						return rr;
 					}
 				},
-				ctx, std::forward<RemoteH>(h));
+				std::forward<RemoteH>(h));
 		}
 
 		template <class TryBlock, class RemoteH>
