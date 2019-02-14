@@ -287,6 +287,7 @@ namespace boost { namespace leaf {
 		struct match_traits<condition<ErrorConditionEnum, ErrorConditionEnum>, true>
 		{
 			using enumerator = ErrorConditionEnum;
+			using e_type = e_original_ec;
 			using match_type = std::error_code;
 		};
 
@@ -295,6 +296,7 @@ namespace boost { namespace leaf {
 		struct match_traits<condition<E, ErrorConditionEnum>, true>
 		{
 			using enumerator = ErrorConditionEnum;
+			using e_type = E;
 			using match_type = std::error_code;
 		};
 
