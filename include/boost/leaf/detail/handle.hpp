@@ -243,8 +243,8 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		template <class ErrorConditionEnum>
-		struct match_traits<condition<ErrorConditionEnum, ErrorConditionEnum>, false>
+		template <class ErrorConditionEnum, bool HasValue>
+		struct match_traits<condition<ErrorConditionEnum, ErrorConditionEnum>, HasValue>
 		{
 			static_assert(std::is_error_condition_enum<ErrorConditionEnum>::value, "If leaf::condition is instantiated with one type, that type must be a std::error_condition_enum");
 
@@ -262,8 +262,8 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		template <class E, class ErrorConditionEnum>
-		struct match_traits<condition<E, ErrorConditionEnum>, false>
+		template <class E, class ErrorConditionEnum, bool HasValue>
+		struct match_traits<condition<E, ErrorConditionEnum>, HasValue>
 		{
 			static_assert(leaf_detail::has_value<E>::value, "If leaf::condition is instantiated with two types, the first one must have a member std::error_code value");
 			static_assert(std::is_error_condition_enum<ErrorConditionEnum>::value, "If leaf::condition is instantiated with two types, the second one must be a std::error_condition_enum");
@@ -280,24 +280,6 @@ namespace boost { namespace leaf {
 				else
 					return 0;
 			}
-		};
-
-		//This specialization provided as a workaround for compile errors in g++ 4.9
-		template <class ErrorConditionEnum>
-		struct match_traits<condition<ErrorConditionEnum, ErrorConditionEnum>, true>
-		{
-			using enumerator = ErrorConditionEnum;
-			using e_type = e_original_ec;
-			using match_type = std::error_code;
-		};
-
-		//This specialization provided as a workaround for compile errors in g++ 4.9
-		template <class E, class ErrorConditionEnum>
-		struct match_traits<condition<E, ErrorConditionEnum>, true>
-		{
-			using enumerator = ErrorConditionEnum;
-			using e_type = E;
-			using match_type = std::error_code;
 		};
 
 		template <class MatchType, class Enumerator>
