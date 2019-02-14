@@ -208,9 +208,7 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////
 
 	template <class E, class ErrorConditionEnum = E>
-	struct condition
-	{
-	};
+	struct condition;
 
 	namespace leaf_detail
 	{
@@ -282,6 +280,18 @@ namespace boost { namespace leaf {
 				else
 					return 0;
 			}
+		};
+
+		//This specialization provided as a workaround for compile error in g++ 4.9
+		template <class ErrorConditionEnum>
+		struct match_traits<condition<ErrorConditionEnum, ErrorConditionEnum>, true>
+		{
+		};
+
+		//This specialization provided as a workaround for compile error in g++ 4.9
+		template <class E, class ErrorConditionEnum>
+		struct match_traits<condition<E, ErrorConditionEnum>, true>
+		{
 		};
 
 		template <class MatchType, class Enumerator>
