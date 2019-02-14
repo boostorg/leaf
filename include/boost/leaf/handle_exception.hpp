@@ -188,7 +188,7 @@ namespace boost { namespace leaf {
 	R context<E...>::remote_handle_current_exception( RemoteH && h ) const
 	{
 		return remote_handle_exceptions(
-			[ ]{ throw; },
+			[ ]() -> R { throw; },
 			std::forward<RemoteH>(h));
 	}
 
@@ -197,7 +197,7 @@ namespace boost { namespace leaf {
 	R context<E...>::remote_handle_exception( std::exception_ptr const & ep, RemoteH && h  ) const
 	{
 		return remote_handle_exceptions(
-			[&]{ std::rethrow_exception(ep); },
+			[&]() -> R { std::rethrow_exception(ep); },
 			std::forward<RemoteH>(h));
 	}
 

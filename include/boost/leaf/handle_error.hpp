@@ -120,10 +120,11 @@ namespace boost { namespace leaf {
 		{
 			using result_type = handler_result<H...>;
 
-			static result_type handle( error_info const & err, H && ... h ) noexcept
+			template <class... HH>
+			static result_type handle( error_info const & err, HH && ... h ) noexcept
 			{
-				using Ctx = context_type_from_handlers<H...>;
-				return { handle_error_<R>(static_cast<Ctx const &>(err.ctx_).tup(), err, std::forward<H>(h)...) };
+				using Ctx = context_type_from_handlers<HH...>;
+				return { handle_error_<R>(static_cast<Ctx const &>(err.ctx_).tup(), err, std::forward<HH>(h)...) };
 			}
 		};
 
@@ -132,10 +133,11 @@ namespace boost { namespace leaf {
 		{
 			using result_type = handler_result_void<H...>;
 
-			static result_type handle( error_info const & err, H && ... h ) noexcept
+			template <class... HH>
+			static result_type handle( error_info const & err, HH && ... h ) noexcept
 			{
-				using Ctx = context_type_from_handlers<H...>;
-				handle_error_<void>(static_cast<Ctx const &>(err.ctx_).tup(), err, std::forward<H>(h)...);
+				using Ctx = context_type_from_handlers<HH...>;
+				handle_error_<void>(static_cast<Ctx const &>(err.ctx_).tup(), err, std::forward<HH>(h)...);
 				return { };
 			}
 		};
@@ -153,8 +155,9 @@ namespace boost { namespace leaf {
 	template <class... H>
 	typename leaf_detail::remote_error_dispatch<H...>::result_type remote_handle_some( error_info const & err, H && ... h ) noexcept
 	{
+		using R = decltype(std::declval<typename leaf_detail::remote_error_dispatch<H...>::result_type>().get());
 		return leaf_detail::remote_error_dispatch<H...>::handle(err, std::forward<H>(h)...,
-			[&err]{ return err.error_code(); } );
+			[&err]() -> R { return err.error_code(); } );
 	}
 
 } }
