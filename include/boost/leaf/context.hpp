@@ -220,6 +220,36 @@ namespace boost { namespace leaf {
 		{
 			return thread_id_;
 		}
+
+		template <class R, class... H>
+		typename std::decay<decltype(std::declval<R>().value())>::type handle_all( R const &, H && ... ) const noexcept;
+
+		template <class R, class... H>
+		R handle_some( R const &, H && ... ) const noexcept;
+
+		template <class R, class RemoteH>
+		typename std::decay<decltype(std::declval<R>().value())>::type remote_handle_all( R const &, RemoteH && ) const noexcept;
+
+		template <class R, class RemoteH>
+		R remote_handle_some( R const &, RemoteH && ) const noexcept;
+
+		template <class Thrower, class... H>
+		decltype(std::declval<Thrower>()()) handle_exceptions( Thrower &&, H && ... ) const;
+
+		template <class R, class... H>
+		R handle_current_exception( H && ... ) const;
+
+		template <class R, class... H>
+		R handle_exception( std::exception_ptr const &, H && ... ) const;
+
+		template <class Thrower, class RemoteH>
+		decltype(std::declval<Thrower>()()) remote_handle_exceptions( Thrower &&, RemoteH && ) const;
+
+		template <class R, class RemoteH>
+		R remote_handle_current_exception( RemoteH && ) const;
+
+		template <class R, class RemoteH>
+		R remote_handle_exception( std::exception_ptr const &, RemoteH &&  ) const;
 	};
 
 	////////////////////////////////////////

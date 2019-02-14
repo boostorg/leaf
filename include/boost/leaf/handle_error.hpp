@@ -11,23 +11,25 @@
 
 namespace boost { namespace leaf {
 
-	template <class... E, class R, class... H>
-	typename std::decay<decltype(std::declval<R>().value())>::type handle_all( context<E...> const & ctx, R const & r, H && ... h ) noexcept
+	template <class... E>
+	template <class R, class... H>
+	typename std::decay<decltype(std::declval<R>().value())>::type context<E...>::handle_all( R const & r, H && ... h ) const noexcept
 	{
 		using namespace leaf_detail;
 		using Ret = typename std::decay<decltype(std::declval<R>().value())>::type;
 		static_assert(is_result_type<R>::value, "The R type used with handle_all must be registered with leaf::is_result_type");
 		assert(!r);
-		return handle_error_<Ret>(ctx.tup(), error_info(ctx, r.error()), std::forward<H>(h)...);
+		return handle_error_<Ret>(tup(), error_info(*this, r.error()), std::forward<H>(h)...);
 	}
 
-	template <class... E, class R, class... H>
-	R handle_some( context<E...> const & ctx, R const & r, H && ... h ) noexcept
+	template <class... E>
+	template <class R, class... H>
+	R context<E...>::handle_some( R const & r, H && ... h ) const noexcept
 	{
 		using namespace leaf_detail;
 		static_assert(is_result_type<R>::value, "The R type used with handle_some must be registered with leaf::is_result_type");
 		assert(!r);
-		return handle_error_<R>(ctx.tup(), error_info(ctx, r.error()), std::forward<H>(h)...,
+		return handle_error_<R>(tup(), error_info(*this, r.error()), std::forward<H>(h)...,
 			[&r]{ return r; });
 	}
 
@@ -41,7 +43,7 @@ namespace boost { namespace leaf {
 		if( auto r = std::forward<TryBlock>(try_block)() )
 			return r.value();
 		else
-			return handle_all(ctx, r, std::forward<H>(h)...);
+			return ctx.handle_all(r, std::forward<H>(h)...);
 	}
 
 	template <class TryBlock, class... H>
@@ -55,7 +57,7 @@ namespace boost { namespace leaf {
 			return r;
 		else
 		{
-			auto rr = handle_some(ctx, r, std::forward<H>(h)...);
+			auto rr = ctx.handle_some(r, std::forward<H>(h)...);
 			if( !rr )
 				active_context.set_on_deactivate(context_activator::on_deactivation::propagate);
 			return rr;
@@ -63,6 +65,22 @@ namespace boost { namespace leaf {
 	}
 
 	////////////////////////////////////////
+
+	template <class... E>
+	template <class R, class RemoteH>
+	typename std::decay<decltype(std::declval<R>().value())>::type context<E...>::remote_handle_all( R const & r, RemoteH && h ) const noexcept
+	{
+		assert(!r);
+		return std::forward<RemoteH>(h)(error_info(*this, r.error())).get();
+	}
+
+	template <class... E>
+	template <class R, class RemoteH>
+	R context<E...>::remote_handle_some( R const & r, RemoteH && h ) const noexcept
+	{
+		assert(!r);
+		return std::forward<RemoteH>(h)(error_info(*this, r.error())).get();
+	}
 
 	template <class TryBlock, class RemoteH>
 	typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock && try_block, RemoteH && h ) noexcept
@@ -74,7 +92,7 @@ namespace boost { namespace leaf {
 		if( auto r = std::forward<TryBlock>(try_block)() )
 			return r.value();
 		else
-			return std::forward<RemoteH>(h)(error_info(ctx, r.error())).get();
+			return ctx.remote_handle_all(r, std::forward<RemoteH>(h));
 	}
 
 	template <class TryBlock, class RemoteH>
@@ -88,7 +106,7 @@ namespace boost { namespace leaf {
 			return r;
 		else
 		{
-			auto rr = std::forward<RemoteH>(h)(error_info(ctx, r.error())).get();
+			auto rr = ctx.remote_handle_some(r, std::forward<RemoteH>(h));
 			if( !rr )
 				active_context.set_on_deactivate(context_activator::on_deactivation::propagate);
 			return rr;

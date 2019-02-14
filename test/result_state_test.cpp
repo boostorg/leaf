@@ -498,7 +498,7 @@ int main()
 		BOOST_TEST(!r2);
 		{
 			val x;
-			BOOST_TEST(leaf::handle_all(ctx, r2, [&]{ return x; }) == x);
+			BOOST_TEST(ctx.handle_all(r2, [&]{ return x; }) == x);
 		}
 		BOOST_TEST_EQ(err::count, 1);
 		BOOST_TEST_EQ(val::count, 0);
@@ -757,7 +757,7 @@ int main()
 		BOOST_TEST_EQ(err::count, 1);
 		leaf::result<void> r2; r2=std::move(r1);
 		BOOST_TEST(!r2);
-		leaf::handle_all(ctx, r2, [ ]{ });
+		ctx.handle_all(r2, [ ]{ });
 		BOOST_TEST_EQ(err::count, 1);
 	}
 	BOOST_TEST_EQ(err::count, 0);
