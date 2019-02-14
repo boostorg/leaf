@@ -678,6 +678,18 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
+		template <class T, template <class...> class R, class... E>
+		struct add_result
+		{
+			using type = R<T, E...>;
+		};
+
+		template <class T, template <class...> class R, class... E>
+		struct add_result<R<T, E...>, R, E...>
+		{
+			using type = R<T, E...>;
+		};
+
 		template <class... T>
 		struct handler_pack_return_impl;
 
@@ -691,6 +703,18 @@ namespace boost { namespace leaf {
 		struct handler_pack_return_impl<Car, Car, Cdr...>
 		{
 			using type = typename handler_pack_return_impl<Car, Cdr...>::type;
+		};
+
+		template <template <class...> class R, class... E, class Car, class... Cdr>
+		struct handler_pack_return_impl<R<Car,E...>, Car, Cdr...>
+		{
+			using type = typename handler_pack_return_impl<R<Car,E...>, typename add_result<Cdr,R,E...>::type...>::type;
+		};
+
+		template <template <class...> class R, class... E, class Car, class... Cdr>
+		struct handler_pack_return_impl<Car, R<Car,E...>, Cdr...>
+		{
+			using type = typename handler_pack_return_impl<R<Car,E...>, typename add_result<Cdr,R,E...>::type...>::type;
 		};
 
 		template <class... H>
