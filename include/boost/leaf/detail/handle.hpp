@@ -208,7 +208,9 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////
 
 	template <class E, class ErrorConditionEnum = E>
-	struct condition;
+	struct condition
+	{
+	};
 
 	namespace leaf_detail
 	{
