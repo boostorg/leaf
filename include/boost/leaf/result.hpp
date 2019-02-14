@@ -10,8 +10,20 @@
 #include <boost/leaf/exception.hpp>
 #include <memory>
 
-#define LEAF_AUTO(v,r) auto _r_##v = r; if( !_r_##v ) return _r_##v.error(); auto & v = *_r_##v
-#define LEAF_CHECK(r) {auto _r = r; if( !_r ) return _r.error();}
+#define LEAF_AUTO(v,r)\
+	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "LEAF_AUTO requires a result type");\
+	auto _r_##v = r;\
+	if( !_r_##v )\
+		return _r_##v.error();\
+	auto & v = *_r_##v
+
+#define LEAF_CHECK(r)\
+	{\
+		static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "LEAF_CHECK requires a result type");\
+		auto const & _r = r;\
+		if( !_r )\
+			return _r.error();\
+	}
 
 namespace boost { namespace leaf {
 
@@ -256,16 +268,40 @@ namespace boost { namespace leaf {
 		template <class... E>
 		result & load( E && ... e ) noexcept
 		{
-			if( int err_id = get_err_id() )
-				(void) leaf_detail::make_error_id(err_id).load(std::forward<E>(e)...);
+			switch( which_ )
+			{
+			case leaf_detail::result_variant::ctx:
+				{
+					context_activator active_context(*ctx_, context_activator::on_deactivation::do_not_propagate);
+					assert(ctx_->ec);
+					(void) error_id(ctx_->ec).load(std::forward<E>(e)...);
+				}
+				break;
+			case leaf_detail::result_variant::err_id:
+				(void) leaf_detail::make_error_id(err_id_).load(std::forward<E>(e)...);
+			case leaf_detail::result_variant::value:
+				;
+			}
 			return *this;
 		}
 
 		template <class... F>
 		result & accumulate( F && ... f ) noexcept
 		{
-			if( int err_id = get_err_id() )
-				(void) leaf_detail::make_error_id(err_id).accumulate(std::forward<F>(f)...);
+			switch( which_ )
+			{
+			case leaf_detail::result_variant::ctx:
+				{
+					context_activator active_context(*ctx_, context_activator::on_deactivation::do_not_propagate);
+					assert(ctx_->ec);
+					(void) error_id(ctx_->ec).accumulate(std::forward<F>(f)...);
+				}
+				break;
+			case leaf_detail::result_variant::err_id:
+				(void) leaf_detail::make_error_id(err_id_).accumulate(std::forward<F>(f)...);
+			case leaf_detail::result_variant::value:
+				;
+			}
 			return *this;
 		}
 	};
