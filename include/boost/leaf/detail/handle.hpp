@@ -286,14 +286,14 @@ namespace boost { namespace leaf {
 		template <class ErrorConditionEnum>
 		struct match_traits<condition<ErrorConditionEnum, ErrorConditionEnum>, true>
 		{
-			using enumerator = int;
+			using enumerator = ErrorConditionEnum;
 		};
 
 		//This specialization provided as a workaround for compile errors in g++ 4.9
 		template <class E, class ErrorConditionEnum>
 		struct match_traits<condition<E, ErrorConditionEnum>, true>
 		{
-			using enumerator = int;
+			using enumerator = ErrorConditionEnum;
 		};
 
 		template <class MatchType, class Enumerator>
