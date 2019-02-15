@@ -110,7 +110,7 @@ namespace boost { namespace leaf {
 			};
 		}
 
-		int get_err_id() const noexcept
+		int unload_then_get_err_id() const noexcept
 		{
 			switch( which_ )
 			{
@@ -262,47 +262,19 @@ namespace boost { namespace leaf {
 
 		error_id error() const noexcept
 		{
-			return leaf_detail::make_error_id(get_err_id());
+			return leaf_detail::make_error_id(unload_then_get_err_id());
 		}
 
 		template <class... E>
-		result & load( E && ... e ) noexcept
+		error_id load( E && ... e ) noexcept
 		{
-			switch( which_ )
-			{
-			case leaf_detail::result_variant::ctx:
-				{
-					context_activator active_context(*ctx_, context_activator::on_deactivation::do_not_propagate);
-					assert(ctx_->ec);
-					(void) error_id(ctx_->ec).load(std::forward<E>(e)...);
-				}
-				break;
-			case leaf_detail::result_variant::err_id:
-				(void) leaf_detail::make_error_id(err_id_).load(std::forward<E>(e)...);
-			case leaf_detail::result_variant::value:
-				;
-			}
-			return *this;
+			return error().load(std::forward<E>(e)...);
 		}
 
 		template <class... F>
-		result & accumulate( F && ... f ) noexcept
+		error_id accumulate( F && ... f ) noexcept
 		{
-			switch( which_ )
-			{
-			case leaf_detail::result_variant::ctx:
-				{
-					context_activator active_context(*ctx_, context_activator::on_deactivation::do_not_propagate);
-					assert(ctx_->ec);
-					(void) error_id(ctx_->ec).accumulate(std::forward<F>(f)...);
-				}
-				break;
-			case leaf_detail::result_variant::err_id:
-				(void) leaf_detail::make_error_id(err_id_).accumulate(std::forward<F>(f)...);
-			case leaf_detail::result_variant::value:
-				;
-			}
-			return *this;
+			return error().accumulate(std::forward<F>(f)...);
 		}
 	};
 

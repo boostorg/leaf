@@ -74,8 +74,6 @@ run preload_nested_success_exception_test.cpp ;
 run preload_nested_success_result_test.cpp ;
 run print_test.cpp ;
 run result_bad_result_test.cpp ;
-run result_capture_accumulate_test.cpp ;
-run result_capture_load_test.cpp ;
 run result_load_accumulate_test.cpp ;
 run result_state_test.cpp ;
 run context_deduction_test.cpp ;
