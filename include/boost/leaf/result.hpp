@@ -268,13 +268,19 @@ namespace boost { namespace leaf {
 		template <class... E>
 		error_id load( E && ... e ) noexcept
 		{
-			return error().load(std::forward<E>(e)...);
+			if( *this )
+				return error_id();
+			else
+				return error().load(std::forward<E>(e)...);
 		}
 
 		template <class... F>
 		error_id accumulate( F && ... f ) noexcept
 		{
-			return error().accumulate(std::forward<F>(f)...);
+			if( *this )
+				return error_id();
+			else
+				return error().accumulate(std::forward<F>(f)...);
 		}
 	};
 
