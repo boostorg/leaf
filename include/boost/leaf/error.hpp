@@ -180,10 +180,9 @@ namespace boost { namespace leaf {
 		template <>
 		struct diagnostic<e_unexpected_count,false,false>
 		{
-			static constexpr bool is_printable = false;
-			static bool print( std::ostream & os, e_unexpected_count const & ) noexcept
+			static constexpr bool is_invisible = true;
+			static void print( std::ostream &, e_unexpected_count const & ) noexcept
 			{
-				return is_printable;
 			}
 		};
 
@@ -208,10 +207,14 @@ namespace boost { namespace leaf {
 			void add( E const & e )
 			{
 				std::stringstream s;
-				if( leaf_detail::diagnostic<E>::print(s,e) && already_.insert(&type<E>).second  )
+				if( !leaf_detail::diagnostic<E>::is_invisible )
 				{
-					s << std::endl;
-					s_ += s.str();
+					leaf_detail::diagnostic<E>::print(s,e);
+					if( already_.insert(&type<E>).second  )
+					{
+						s << std::endl;
+						s_ += s.str();
+					}
 				}
 			}
 
@@ -229,10 +232,9 @@ namespace boost { namespace leaf {
 		template <>
 		struct diagnostic<e_unexpected_info,false,false>
 		{
-			static constexpr bool is_printable = false;
-			static bool print( std::ostream & os, e_unexpected_info const & ) noexcept
+			static constexpr bool is_invisible = true;
+			static void print( std::ostream &, e_unexpected_info const & ) noexcept
 			{
-				return is_printable;
 			}
 		};
 	}
@@ -278,9 +280,12 @@ namespace boost { namespace leaf {
 			bool slot_print( std::ostream & os, int err_id ) const
 			{
 				assert(err_id);
-				if( *top_==this )
+				if( !diagnostic<E>::is_invisible && *top_==this )
 					if( E const * e = has_value(err_id) )
-						return diagnostic<decltype(*e)>::print(os, *e);
+					{
+						diagnostic<decltype(*e)>::print(os, *e);
+						return true;
+					}
 				return false;
 			}
 

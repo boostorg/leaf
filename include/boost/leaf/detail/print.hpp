@@ -80,43 +80,39 @@ namespace boost { namespace leaf {
 		template <class Wrapper, bool ValuePrintable>
 		struct diagnostic<Wrapper, true, ValuePrintable>
 		{
-			static constexpr bool is_printable = true;
-			static bool print( std::ostream & os, Wrapper const & x )
+			static constexpr bool is_invisible = false;
+			static void print( std::ostream & os, Wrapper const & x )
 			{
 				os << x;
-				return is_printable;
 			}
 		};
 
 		template <class Wrapper>
 		struct diagnostic<Wrapper, false, true>
 		{
-			static constexpr bool is_printable = true;
-			static bool print( std::ostream & os, Wrapper const & x )
+			static constexpr bool is_invisible = false;
+			static void print( std::ostream & os, Wrapper const & x )
 			{
 				os << type<Wrapper>() << ": " << x.value;
-				return is_printable;
 			}
 		};
 
 		template <class Wrapper>
 		struct diagnostic<Wrapper, false, false>
 		{
-			static constexpr bool is_printable = true;
-			static bool print( std::ostream & os, Wrapper const & )
+			static constexpr bool is_invisible = false;
+			static void print( std::ostream & os, Wrapper const & )
 			{
 				os << type<Wrapper>() << ": {Non-Printable}";
-				return is_printable;
 			}
 		};
 
 		template <>
 		struct diagnostic<std::exception_ptr, false, false>
 		{
-			static constexpr bool is_printable = false;
-			static bool print( std::ostream & os, std::exception_ptr const & )
+			static constexpr bool is_invisible = true;
+			static void print( std::ostream &, std::exception_ptr const & )
 			{
-				return is_printable;
 			}
 		};
 	} // leaf_detail
