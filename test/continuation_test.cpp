@@ -111,7 +111,15 @@ struct op_a
 	{
 		auto load = leaf::preload( info<2>{} );
 		if( fw == fail_where::op_a_start )
-			return h( leaf::new_error(loc{fail_where::op_a_start}) );
+		{
+			auto error = leaf::new_error(loc{fail_where::op_a_start});
+			ioc.post(
+				[=]() mutable
+				{
+					return h(error);
+				} );
+			return;
+		}
 
 		ioc.post(
 			[=]() mutable
@@ -129,7 +137,15 @@ struct op_b
 	{
 		auto load = leaf::preload( info<4>{} );
 		if( fw == fail_where::op_b_start_before_op_a_start )
-			return h( leaf::new_error(loc{fail_where::op_b_start_before_op_a_start}) );
+		{
+			auto error = leaf::new_error(loc{fail_where::op_b_start_before_op_a_start});
+			ioc.post(
+				[=]() mutable
+				{
+					return h(error);
+				} );
+			return;
+		}
 
 		op_a::start( ioc, fw,
 			[=, &ioc]( leaf::result<int> && a1 ) mutable
