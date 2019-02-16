@@ -360,7 +360,7 @@ namespace boost { namespace leaf {
 	};
 
 	template <class T>
-	result<T> make_continuation_result( result<T> && r, context_ptr const & ctx = context_ptr() ) noexcept
+	result<T> make_continuation_result( result<T>  const & r, context_ptr const & ctx = context_ptr() ) noexcept
 	{
 		if( r )
 			return r;
