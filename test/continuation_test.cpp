@@ -29,7 +29,8 @@ namespace asio_simulator
 			{
 				auto e = std::move(execution_queue.front());
 				execution_queue.pop_front();
-				std::async(std::launch::async, e).wait();
+				e();
+				std::async(std::launch::async, [this]{ run(); }).wait(); // Force new thread
 			}
 		}
 
