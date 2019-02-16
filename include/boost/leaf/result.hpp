@@ -265,6 +265,17 @@ namespace boost { namespace leaf {
 			return leaf_detail::make_error_id(unload_then_get_err_id());
 		}
 
+		result capture( context_ptr const & ctx ) const noexcept
+		{
+			if( *this )
+				return *this;
+			else
+			{
+				ctx->ec = error();
+				return ctx;
+			}
+		}
+
 		template <class... E>
 		error_id load( E && ... e ) noexcept
 		{
