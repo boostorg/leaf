@@ -678,13 +678,9 @@ namespace boost { namespace leaf {
 		virtual ~polymorphic_context() noexcept = default;
 		virtual void activate() noexcept = 0;
 		virtual void deactivate( bool propagate_errors ) noexcept = 0;
+		virtual bool is_active() const noexcept = 0;
 		virtual void print( std::ostream & ) const = 0;
 		virtual std::thread::id const & thread_id() const noexcept = 0;
-
-		bool is_active() const noexcept
-		{
-			return thread_id()!=std::thread::id();
-		}
 
 		std::error_code ec;
 	};

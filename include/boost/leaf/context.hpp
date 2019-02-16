@@ -185,22 +185,25 @@ namespace boost { namespace leaf {
 
 			Tup tup_;
 			std::thread::id thread_id_;
+			bool is_active_;
 
 		public:
 
-			context_base() noexcept
+			context_base() noexcept:
+				is_active_(false)
 			{
 			}
 
 			context_base( context_base && x ) noexcept:
-				tup_(std::move(x.tup_))
+				tup_(std::move(x.tup_)),
+				is_active_(false)
 			{
-				assert(thread_id_ == std::thread::id());
+				assert(!x.is_active());
 			}
 
 			~context_base() noexcept
 			{
-				assert(thread_id_ == std::thread::id());
+				assert(!is_active());
 			}
 
 			Tup const & tup() const noexcept
@@ -216,16 +219,23 @@ namespace boost { namespace leaf {
 				if( unexpected_requested<Tup>::value )
 					++tl_unexpected_enabled_counter();
 				thread_id_ = std::this_thread::get_id();
+				is_active_ = true;
 			}
 
 			void deactivate( bool propagate_errors ) noexcept final override
 			{
 				using namespace leaf_detail;
-				assert(thread_id_ == std::this_thread::get_id());
+				assert(is_active());
+				is_active_ = false;
 				thread_id_ = std::thread::id();
 				if( unexpected_requested<Tup>::value )
 					--tl_unexpected_enabled_counter();
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_, propagate_errors);
+			}
+
+			bool is_active() const noexcept final override
+			{
+				return is_active_;
 			}
 
 			void print( std::ostream & os ) const final override
