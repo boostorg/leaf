@@ -250,6 +250,20 @@ namespace boost { namespace leaf {
 
 		protected:
 
+			template <class TryBlock, class... H>
+			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all_( TryBlock &&, H && ... ) const;
+
+			template <class TryBlock, class RemoteH>
+			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all_( TryBlock &&, RemoteH && ) const;
+
+			template <class TryBlock, class... H>
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some_( context_activator &, TryBlock &&, H && ... ) const;
+
+			template <class TryBlock, class RemoteH>
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some_( context_activator &, TryBlock &&, RemoteH && ) const;
+
+		public:
+
 			template <class R, class... H>
 			typename std::decay<decltype(std::declval<R>().value())>::type handle_all( R const &, H && ... ) const noexcept;
 
@@ -263,22 +277,22 @@ namespace boost { namespace leaf {
 			R remote_handle_some( R const &, RemoteH && ) const;
 
 			template <class TryBlock, class... H>
-			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all_( TryBlock &&, H && ... ) const;
-
-			template <class TryBlock, class RemoteH>
-			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all_( TryBlock &&, RemoteH && ) const;
-
-			template <class TryBlock, class... H>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some_( context_activator &, TryBlock &&, H && ... ) const;
-
-			template <class TryBlock, class RemoteH>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some_( context_activator &, TryBlock &&, RemoteH && ) const;
-
-			template <class TryBlock, class... H>
 			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... ) const;
 
 			template <class TryBlock, class RemoteH>
 			decltype(std::declval<TryBlock>()()) remote_try_catch_( TryBlock &&, RemoteH && ) const;
+
+			template <class R, class... H>
+			R handle_current_exception( H && ... ) const;
+
+			template <class R, class RemoteH>
+			R remote_handle_current_exception( RemoteH && ) const;
+
+			template <class R, class... H>
+			R handle_exception( std::exception_ptr const &, H && ... ) const;
+
+			template <class R, class RemoteH>
+			R remote_handle_exception( std::exception_ptr const &, RemoteH &&  ) const;
 		};
 
 		template <class... E>
@@ -287,11 +301,6 @@ namespace boost { namespace leaf {
 			using base = context_base<E...>;
 
 		public:
-
-			using base::handle_all;
-			using base::remote_handle_all;
-			using base::handle_some;
-			using base::remote_handle_some;
 
 			template <class TryBlock, class... H>
 			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock &&, H && ... ) noexcept;
@@ -313,11 +322,6 @@ namespace boost { namespace leaf {
 
 		public:
 
-			using base::handle_all;
-			using base::remote_handle_all;
-			using base::handle_some;
-			using base::remote_handle_some;
-
 			template <class TryBlock, class... H>
 			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock && try_block, H && ... h ) noexcept;
 
@@ -329,20 +333,6 @@ namespace boost { namespace leaf {
 
 			template <class TryBlock, class RemoteH>
 			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( TryBlock && try_block, RemoteH && h );
-
-			////////////////////////////////////////////
-
-			template <class R, class... H>
-			R handle_current_exception( H && ... ) const;
-
-			template <class R, class RemoteH>
-			R remote_handle_current_exception( RemoteH && ) const;
-
-			template <class R, class... H>
-			R handle_exception( std::exception_ptr const &, H && ... ) const;
-
-			template <class R, class RemoteH>
-			R remote_handle_exception( std::exception_ptr const &, RemoteH &&  ) const;
 		};
 
 		template <class T> struct requires_catch { constexpr static bool value = false; };

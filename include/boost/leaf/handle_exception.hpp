@@ -44,6 +44,44 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class... E>
+		template <class R, class... H>
+		R context_base<E...>::handle_current_exception( H && ... h ) const
+		{
+			return this->try_catch_(
+				[ ]{ throw; },
+				std::forward<H>(h)...);
+		}
+
+		template <class... E>
+		template <class R, class RemoteH>
+		R context_base<E...>::remote_handle_current_exception( RemoteH && h ) const
+		{
+			return this->remote_try_catch_(
+				[ ]() -> R { throw; },
+				std::forward<RemoteH>(h));
+		}
+
+		template <class... E>
+		template <class R, class... H>
+		R context_base<E...>::handle_exception( std::exception_ptr const & ep, H && ... h ) const
+		{
+			return this->try_catch_(
+				[&]{ std::rethrow_exception(ep); },
+				std::forward<H>(h)...);
+		}
+
+		template <class... E>
+		template <class R, class RemoteH>
+		R context_base<E...>::remote_handle_exception( std::exception_ptr const & ep, RemoteH && h  ) const
+		{
+			return this->remote_try_catch_(
+				[&]() -> R { std::rethrow_exception(ep); },
+				std::forward<RemoteH>(h));
+		}
+
+		////////////////////////////////////////
+
+		template <class... E>
 		template <class TryBlock, class... H>
 		typename std::decay<decltype(std::declval<TryBlock>()().value())>::type catch_context<E...>::try_handle_all( TryBlock && try_block, H && ... h ) noexcept
 		{
@@ -92,44 +130,6 @@ namespace boost { namespace leaf {
 				{
 					return this->remote_try_handle_some_( active_context, std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
 				},
-				std::forward<RemoteH>(h));
-		}
-
-		////////////////////////////////////////
-
-		template <class... E>
-		template <class R, class... H>
-		R catch_context<E...>::handle_current_exception( H && ... h ) const
-		{
-			return this->try_catch_(
-				[ ]{ throw; },
-				std::forward<H>(h)...);
-		}
-
-		template <class... E>
-		template <class R, class RemoteH>
-		R catch_context<E...>::remote_handle_current_exception( RemoteH && h ) const
-		{
-			return this->remote_try_catch_(
-				[ ]() -> R { throw; },
-				std::forward<RemoteH>(h));
-		}
-
-			template <class... E>
-			template <class R, class... H>
-			R catch_context<E...>::handle_exception( std::exception_ptr const & ep, H && ... h ) const
-			{
-				return this->try_catch_(
-					[&]{ std::rethrow_exception(ep); },
-					std::forward<H>(h)...);
-			}
-
-		template <class... E>
-		template <class R, class RemoteH>
-		R catch_context<E...>::remote_handle_exception( std::exception_ptr const & ep, RemoteH && h  ) const
-		{
-			return this->remote_try_catch_(
-				[&]() -> R { std::rethrow_exception(ep); },
 				std::forward<RemoteH>(h));
 		}
 
