@@ -794,7 +794,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
-			assert(is_active());
+			assert(this->is_active());
 			if( auto r = std::forward<TryBlock>(try_block)() )
 				return r.value();
 			else
@@ -807,7 +807,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a remote_try_handle_all function must be registered with leaf::is_result_type");
-			assert(is_active());
+			assert(this->is_active());
 			if( auto r = std::forward<TryBlock>(try_block)() )
 				return r.value();
 			else
@@ -820,7 +820,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
-			assert(is_active());
+			assert(this->is_active());
 			if( auto r = std::forward<TryBlock>(try_block)() )
 				return r;
 			else
@@ -838,7 +838,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a remote_try_handle_some function must be registered with leaf::is_result_type");
-			assert(is_active());
+			assert(this->is_active());
 			if( auto r = std::forward<TryBlock>(try_block)() )
 				return r;
 			else

@@ -252,10 +252,6 @@ script:
   - ../../b2 variant=release test toolset=$TOOLSET cxxstd=$CXXSTD
 #  - cd bld/debug && meson test
 
-after_failure:
-- COREFILE=$(find . -maxdepth 1 -name "core*" | head -n 1) # find core file
-- if [[ -f "$COREFILE" ]]; then gdb -c "$COREFILE" example -ex "thread apply all bt" -ex "set pagination 0" -batch; fi
-
 notifications:
   email:
     on_success: always

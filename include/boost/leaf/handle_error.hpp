@@ -18,6 +18,7 @@ namespace boost { namespace leaf {
 		typename std::decay<decltype(std::declval<TryBlock>()().value())>::type nocatch_context<E...>::try_handle_all( TryBlock && try_block, H && ... h ) noexcept
 		{
 			context_activator active_context(*this, context_activator::on_deactivation::do_not_propagate);
+			assert(this->is_active());
 			return this->try_handle_all_( std::forward<TryBlock>(try_block), std::forward<H>(h)... );
 		}
 
