@@ -360,7 +360,7 @@ namespace boost { namespace leaf {
 	};
 
 	template <class T>
-	result<T> make_continuation_result( result<T> && r, context_ptr const & ctx ) noexcept
+	result<T> make_continuation_result( result<T> && r, context_ptr const & ctx = context_ptr() ) noexcept
 	{
 		if( r )
 			return r;
@@ -368,8 +368,13 @@ namespace boost { namespace leaf {
 		{
 			error_id ne = new_error();
 			leaf_detail::slot_base::reassign(r.error().value(), ne.value());
-			ctx->ec = ne;
-			return ctx;
+			if( ctx )
+				{
+				ctx->ec = ne;
+				return ctx;
+				}
+			else
+				return ne;
 		}
 	}
 
