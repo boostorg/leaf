@@ -240,12 +240,6 @@ namespace boost { namespace leaf {
 
 		protected:
 
-			template <class TryBlock, class... H>
-			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... ) const;
-
-			template <class TryBlock, class RemoteH>
-			decltype(std::declval<TryBlock>()()) remote_try_catch_( TryBlock &&, RemoteH && ) const;
-
 			template <class R, class... H>
 			typename std::decay<decltype(std::declval<R>().value())>::type handle_all( R const &, H && ... ) const noexcept;
 
@@ -259,16 +253,22 @@ namespace boost { namespace leaf {
 			R remote_handle_some( R const &, RemoteH && ) const;
 
 			template <class TryBlock, class... H>
-			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock &&, H && ... ) const;
+			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all_( TryBlock &&, H && ... ) const;
 
 			template <class TryBlock, class RemoteH>
-			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock &&, RemoteH && ) const;
+			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all_( TryBlock &&, RemoteH && ) const;
 
 			template <class TryBlock, class... H>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( context_activator &, TryBlock &&, H && ... ) const;
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some_( context_activator &, TryBlock &&, H && ... ) const;
 
 			template <class TryBlock, class RemoteH>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( context_activator &, TryBlock &&, RemoteH && ) const;
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some_( context_activator &, TryBlock &&, RemoteH && ) const;
+
+			template <class TryBlock, class... H>
+			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... ) const;
+
+			template <class TryBlock, class RemoteH>
+			decltype(std::declval<TryBlock>()()) remote_try_catch_( TryBlock &&, RemoteH && ) const;
 		};
 
 		template <class... E>

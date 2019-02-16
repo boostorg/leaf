@@ -51,7 +51,7 @@ namespace boost { namespace leaf {
 			return this->try_catch_(
 				[&]
 				{
-					return context_base<E...>::try_handle_all( std::forward<TryBlock>(try_block), std::forward<H>(h)... );
+					return this->try_handle_all_( std::forward<TryBlock>(try_block), std::forward<H>(h)... );
 				},
 				std::forward<H>(h)...);
 		}
@@ -64,7 +64,7 @@ namespace boost { namespace leaf {
 			return this->try_catch_(
 				[&]
 				{
-					return context_base<E...>::remote_try_handle_all( std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
+					return this->remote_try_handle_all_( std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
 				},
 				std::forward<RemoteH>(h));
 		}
@@ -77,7 +77,7 @@ namespace boost { namespace leaf {
 			return this->try_catch_(
 				[&]
 				{
-					return context_base<E...>::try_handle_some( active_context, std::forward<TryBlock>(try_block), std::forward<H>(h)... );
+					return this->try_handle_some_( active_context, std::forward<TryBlock>(try_block), std::forward<H>(h)... );
 				},
 				std::forward<H>(h)...);
 		}
@@ -90,7 +90,7 @@ namespace boost { namespace leaf {
 			return this->try_catch_(
 				[&]
 				{
-					return context_base<E...>::remote_try_handle_some( active_context, std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
+					return this->remote_try_handle_some_( active_context, std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
 				},
 				std::forward<RemoteH>(h));
 		}
