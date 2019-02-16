@@ -685,6 +685,8 @@ namespace boost { namespace leaf {
 		std::error_code ec;
 	};
 
+	using context_ptr = std::shared_ptr<polymorphic_context>;
+
 	////////////////////////////////////////////
 
 	class context_activator

@@ -19,11 +19,11 @@ namespace boost { namespace leaf {
 			public std::exception
 		{
 			std::exception_ptr const ex_;
-			std::shared_ptr<polymorphic_context> const ctx_;
+			context_ptr const ctx_;
 
 		public:
 
-			capturing_exception(std::exception_ptr && ex, std::shared_ptr<polymorphic_context> const & ctx) noexcept:
+			capturing_exception(std::exception_ptr && ex, context_ptr const & ctx) noexcept:
 				ex_(std::move(ex)),
 				ctx_(std::move(ctx))
 			{
@@ -44,7 +44,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class R, class F, class... A>
-		decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, std::shared_ptr<polymorphic_context>  const & ctx, F && f, A... a)
+		decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr  const & ctx, F && f, A... a)
 		{
 			context_activator active_context(*ctx, context_activator::on_deactivation::do_not_propagate);
 			try
@@ -62,7 +62,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class R, class F, class... A>
-		decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, std::shared_ptr<polymorphic_context>  const & ctx, F && f, A... a)
+		decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr  const & ctx, F && f, A... a)
 		{
 			context_activator active_context(*ctx, context_activator::on_deactivation::do_not_propagate);
 			try
@@ -87,7 +87,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class F, class... A>
-	decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture(std::shared_ptr<polymorphic_context> const & ctx, F && f, A... a)
+	decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture(context_ptr const & ctx, F && f, A... a)
 	{
 		using namespace leaf_detail;
 		return capture_impl(is_result_tag<decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))>(), ctx, std::forward<F>(f), std::forward<A>(a)...);

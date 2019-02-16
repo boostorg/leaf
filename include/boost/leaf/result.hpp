@@ -34,8 +34,6 @@ namespace boost { namespace leaf {
 	template <class T>
 	class result
 	{
-		using context_ptr = std::shared_ptr<polymorphic_context>;
-
 		template <class U>
 		friend class result;
 
@@ -265,17 +263,6 @@ namespace boost { namespace leaf {
 			return leaf_detail::make_error_id(unload_then_get_err_id());
 		}
 
-		result capture( context_ptr const & ctx ) const noexcept
-		{
-			if( *this )
-				return *this;
-			else
-			{
-				ctx->ec = error();
-				return ctx;
-			}
-		}
-
 		template <class... E>
 		error_id load( E && ... e ) noexcept
 		{
@@ -373,7 +360,7 @@ namespace boost { namespace leaf {
 	};
 
 	template <class T>
-	result<T> make_continuation_result( result<T> && r ) noexcept
+	result<T> make_continuation_result( result<T> && r, context_ptr const & ctx ) noexcept
 	{
 		if( r )
 			return r;
@@ -381,7 +368,8 @@ namespace boost { namespace leaf {
 		{
 			error_id ne = new_error();
 			leaf_detail::slot_base::reassign(r.error().value(), ne.value());
-			return ne;
+			ctx->ec = ne;
+			return ctx;
 		}
 	}
 

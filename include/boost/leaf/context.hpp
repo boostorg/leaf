@@ -442,13 +442,13 @@ namespace boost { namespace leaf {
 	}
 
 	template <class RemoteH>
-	std::shared_ptr<polymorphic_context> make_shared_context( RemoteH const * = 0 )
+	context_ptr make_shared_context( RemoteH const * = 0 )
 	{
 		return std::make_shared<context_type_from_remote_handler<RemoteH>>();
 	}
 
 	template <class RemoteH, class Alloc>
-	std::shared_ptr<polymorphic_context> allocate_shared_context( Alloc alloc, RemoteH const * = 0 )
+	context_ptr allocate_shared_context( Alloc alloc, RemoteH const * = 0 )
 	{
 		return std::allocate_shared<context_type_from_remote_handler<RemoteH>>(alloc);
 	}
