@@ -154,102 +154,229 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////////
 
-	template <class... E>
-	class context: public polymorphic_context
+	template <class... Ex>
+	class catch_;
+
+	template <class TryBlock, class... H>
+	decltype(std::declval<TryBlock>()()) try_catch( TryBlock &&, H && ... );
+
+	template <class TryBlock, class RemoteH>
+	decltype(std::declval<TryBlock>()()) remote_try_catch( TryBlock &&, RemoteH && );
+
+	namespace leaf_detail
 	{
-		context( context const & ) = delete;
-		context & operator=( context const & ) = delete;
-
-	public:
-
-		using Tup = leaf_detail::deduce_e_tuple<E...>;
-
-	private:
-
-		Tup tup_;
-		std::thread::id thread_id_;
-
-	public:
-
-		context() noexcept
+		template <class... E>
+		class context_base: public polymorphic_context
 		{
-		}
+			context_base( context_base const & ) = delete;
+			context_base & operator=( context_base const & ) = delete;
 
-		context( context && x ) noexcept:
-			tup_(std::move(x.tup_))
+			template <class TryBlock, class... H>
+			friend decltype(std::declval<TryBlock>()()) leaf::try_catch( TryBlock &&, H && ... );
+
+			template <class TryBlock, class RemoteH>
+			friend decltype(std::declval<TryBlock>()()) leaf::remote_try_catch( TryBlock &&, RemoteH && );
+
+		public:
+
+			using Tup = leaf_detail::deduce_e_tuple<E...>;
+
+		private:
+
+			Tup tup_;
+			std::thread::id thread_id_;
+
+		public:
+
+			context_base() noexcept
+			{
+			}
+
+			context_base( context_base && x ) noexcept:
+				tup_(std::move(x.tup_))
+			{
+				assert(thread_id_ == std::thread::id());
+			}
+
+			~context_base() noexcept
+			{
+				assert(thread_id_ == std::thread::id());
+			}
+
+			Tup const & tup() const noexcept
+			{
+				return tup_;
+			}
+
+			void activate() noexcept final override
+			{
+				using namespace leaf_detail;
+				assert(!is_active());
+				tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
+				if( unexpected_requested<Tup>::value )
+					++tl_unexpected_enabled_counter();
+				thread_id_ = std::this_thread::get_id();
+			}
+
+			void deactivate( bool propagate_errors ) noexcept final override
+			{
+				using namespace leaf_detail;
+				assert(thread_id_ == std::this_thread::get_id());
+				thread_id_ = std::thread::id();
+				if( unexpected_requested<Tup>::value )
+					--tl_unexpected_enabled_counter();
+				tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_, propagate_errors);
+			}
+
+			void print( std::ostream & os ) const final override
+			{
+				leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, tup_);
+			}
+
+			std::thread::id const & thread_id() const noexcept final override
+			{
+				return thread_id_;
+			}
+
+		protected:
+
+			template <class TryBlock, class... H>
+			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... ) const;
+
+			template <class TryBlock, class RemoteH>
+			decltype(std::declval<TryBlock>()()) remote_try_catch_( TryBlock &&, RemoteH && ) const;
+
+			template <class R, class... H>
+			typename std::decay<decltype(std::declval<R>().value())>::type handle_all( R const &, H && ... ) const noexcept;
+
+			template <class R, class RemoteH>
+			typename std::decay<decltype(std::declval<R>().value())>::type remote_handle_all( R const &, RemoteH && ) const noexcept;
+
+			template <class R, class... H>
+			R handle_some( R const &, H && ... ) const;
+
+			template <class R, class RemoteH>
+			R remote_handle_some( R const &, RemoteH && ) const;
+
+			template <class TryBlock, class... H>
+			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock &&, H && ... ) const;
+
+			template <class TryBlock, class RemoteH>
+			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock &&, RemoteH && ) const;
+
+			template <class TryBlock, class... H>
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( context_activator &, TryBlock &&, H && ... ) const;
+
+			template <class TryBlock, class RemoteH>
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( context_activator &, TryBlock &&, RemoteH && ) const;
+		};
+
+		template <class... E>
+		class nocatch_context: public context_base<E...>
 		{
-			assert(thread_id_ == std::thread::id());
-		}
+			using base = context_base<E...>;
 
-		~context() noexcept
+		public:
+
+			using base::handle_all;
+			using base::remote_handle_all;
+			using base::handle_some;
+			using base::remote_handle_some;
+
+			template <class TryBlock, class... H>
+			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock &&, H && ... ) noexcept;
+
+			template <class TryBlock, class RemoteH>
+			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock &&, RemoteH && ) noexcept;
+
+			template <class TryBlock, class... H>
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock &&, H && ... );
+
+			template <class TryBlock, class RemoteH>
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( TryBlock &&, RemoteH && );
+		};
+
+		template <class... E>
+		class catch_context: public context_base<E...>
 		{
-			assert(thread_id_ == std::thread::id());
-		}
+			using base = context_base<E...>;
 
-		Tup const & tup() const noexcept
+		public:
+
+			using base::handle_all;
+			using base::remote_handle_all;
+			using base::handle_some;
+			using base::remote_handle_some;
+
+			template <class TryBlock, class... H>
+			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock && try_block, H && ... h ) noexcept;
+
+			template <class TryBlock, class RemoteH>
+			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock && try_block, RemoteH && h ) noexcept;
+
+			template <class TryBlock, class... H>
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock && try_block, H && ... h );
+
+			template <class TryBlock, class RemoteH>
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( TryBlock && try_block, RemoteH && h );
+
+			////////////////////////////////////////////
+
+			template <class R, class... H>
+			R handle_current_exception( H && ... ) const;
+
+			template <class R, class RemoteH>
+			R remote_handle_current_exception( RemoteH && ) const;
+
+			template <class R, class... H>
+			R handle_exception( std::exception_ptr const &, H && ... ) const;
+
+			template <class R, class RemoteH>
+			R remote_handle_exception( std::exception_ptr const &, RemoteH &&  ) const;
+		};
+
+		template <class T> struct requires_catch { constexpr static bool value = false; };
+		template <class T> struct requires_catch<T const> { constexpr static bool value = requires_catch<T>::value; };
+		template <class T> struct requires_catch<T const &> { constexpr static bool value = requires_catch<T>::value; };
+		template <class... Ex> struct requires_catch<catch_<Ex...>> { constexpr static bool value = true; };
+
+		template <class... E>
+		struct catch_requested;
+
+		template <>
+		struct catch_requested<>
 		{
-			return tup_;
-		}
+			constexpr static bool value = false;
+		};
 
-		void activate() noexcept final override
+		template <class Car, class... Cdr>
+		struct catch_requested<Car, Cdr...>
 		{
-			using namespace leaf_detail;
-			assert(thread_id_ == std::thread::id());
-			tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
-			if( unexpected_requested<Tup>::value )
-				++tl_unexpected_enabled_counter();
-			thread_id_ = std::this_thread::get_id();
-		}
+			constexpr static bool value = requires_catch<Car>::value || catch_requested<Cdr...>::value;
+		};
 
-		void deactivate( bool propagate_errors ) noexcept final override
+		template <bool CatchRequested, class... E>
+		struct select_context_base_impl;
+
+		template <class... E>
+		struct select_context_base_impl<false, E...>
 		{
-			using namespace leaf_detail;
-			assert(thread_id_ == std::this_thread::get_id());
-			thread_id_ = std::thread::id();
-			if( unexpected_requested<Tup>::value )
-				--tl_unexpected_enabled_counter();
-			tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_, propagate_errors);
-		}
+			using type = nocatch_context<E...>;
+		};
 
-		void print( std::ostream & os ) const final override
+		template <class... E>
+		struct select_context_base_impl<true, E...>
 		{
-			leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, tup_);
-		}
+			using type = catch_context<E...>;
+		};
 
-		std::thread::id const & thread_id() const noexcept final override
-		{
-			return thread_id_;
-		}
+		template <class... E>
+		using select_context_base = typename select_context_base_impl<catch_requested<E...>::value, E...>::type;
+	}
 
-		template <class R, class... H>
-		typename std::decay<decltype(std::declval<R>().value())>::type handle_all( R const &, H && ... ) const noexcept;
-
-		template <class R, class... H>
-		R handle_some( R const &, H && ... ) const noexcept;
-
-		template <class R, class RemoteH>
-		typename std::decay<decltype(std::declval<R>().value())>::type remote_handle_all( R const &, RemoteH && ) const noexcept;
-
-		template <class R, class RemoteH>
-		R remote_handle_some( R const &, RemoteH && ) const noexcept;
-
-		template <class Thrower, class... H>
-		decltype(std::declval<Thrower>()()) handle_exceptions( Thrower &&, H && ... ) const;
-
-		template <class R, class... H>
-		R handle_current_exception( H && ... ) const;
-
-		template <class R, class... H>
-		R handle_exception( std::exception_ptr const &, H && ... ) const;
-
-		template <class Thrower, class RemoteH>
-		decltype(std::declval<Thrower>()()) remote_handle_exceptions( Thrower &&, RemoteH && ) const;
-
-		template <class R, class RemoteH>
-		R remote_handle_current_exception( RemoteH && ) const;
-
-		template <class R, class RemoteH>
-		R remote_handle_exception( std::exception_ptr const &, RemoteH &&  ) const;
+	template <class... E>
+	class context: public leaf_detail::select_context_base<E...>
+	{
 	};
 
 	////////////////////////////////////////

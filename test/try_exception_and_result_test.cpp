@@ -17,25 +17,25 @@ struct my_exception: std::exception { };
 int main()
 {
 	{
-		leaf::result<int> r = leaf::try_catch(
+		leaf::result<int> r = leaf::try_handle_some(
 			[ ]() -> leaf::result<int>
 			{
 				return 42;
 			},
-			[ ]() -> leaf::result<int>
+			[ ]
 			{
-				return { };
+				return 1;
 			} );
 		BOOST_TEST(r);
 		BOOST_TEST_EQ(r.value(), 42);
 	}
 	{
-		leaf::result<int> r = leaf::try_catch(
+		leaf::result<int> r = leaf::try_handle_some(
 			[ ]() -> leaf::result<int>
 			{
 				throw leaf::exception( my_exception(), info<1>{1} );
 			},
-			[ ]( leaf::catch_<my_exception>, info<1> const & x ) -> leaf::result<int>
+			[ ]( leaf::catch_<my_exception>, info<1> const & x )
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				return 42;
@@ -44,12 +44,12 @@ int main()
 		BOOST_TEST_EQ(r.value(), 42);
 	}
 	{
-		leaf::result<int> r = leaf::try_catch(
+		leaf::result<int> r = leaf::try_handle_some(
 			[ ]() -> leaf::result<int>
 			{
 				return leaf::new_error( info<1>{1} );
 			},
-			[ ]( info<1> const & x ) -> leaf::result<int>
+			[ ]( info<1> const & x )
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				return 42;
@@ -57,5 +57,53 @@ int main()
 		BOOST_TEST(r);
 		BOOST_TEST_EQ(r.value(), 42);
 	}
+
+	{
+		int r = leaf::try_handle_all(
+			[ ]() -> leaf::result<int>
+			{
+				return 42;
+			},
+			[ ]
+			{
+				return 1;
+			} );
+		BOOST_TEST_EQ(r, 42);
+	}
+	{
+		int r = leaf::try_handle_all(
+			[ ]() -> leaf::result<int>
+			{
+				throw leaf::exception( my_exception(), info<1>{1} );
+			},
+			[ ]( leaf::catch_<my_exception>, info<1> const & x )
+			{
+				BOOST_TEST_EQ(x.value, 1);
+				return 42;
+			},
+			[ ]
+			{
+				return 1;
+			} );
+		BOOST_TEST_EQ(r, 42);
+	}
+	{
+		int r = leaf::try_handle_all(
+			[ ]() -> leaf::result<int>
+			{
+				return leaf::new_error( info<1>{1} );
+			},
+			[ ]( info<1> const & x )
+			{
+				BOOST_TEST_EQ(x.value, 1);
+				return 42;
+			},
+			[ ]
+			{
+				return 1;
+			} );
+		BOOST_TEST_EQ(r, 42);
+	}
+
 	return boost::report_errors();
 }

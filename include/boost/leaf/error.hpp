@@ -681,6 +681,11 @@ namespace boost { namespace leaf {
 		virtual void print( std::ostream & ) const = 0;
 		virtual std::thread::id const & thread_id() const noexcept = 0;
 
+		bool is_active() const noexcept
+		{
+			return thread_id()!=std::thread::id();
+		}
+
 		std::error_code ec;
 	};
 
