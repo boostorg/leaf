@@ -99,7 +99,7 @@ namespace boost { namespace leaf {
 		typename std::decay<decltype(std::declval<TryBlock>()().value())>::type catch_context<E...>::remote_try_handle_all( TryBlock && try_block, RemoteH && h ) noexcept
 		{
 			context_activator active_context(*this, context_activator::on_deactivation::do_not_propagate);
-			return this->try_catch_(
+			return this->remote_try_catch_(
 				[&]
 				{
 					return this->remote_try_handle_all_( std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
@@ -125,7 +125,7 @@ namespace boost { namespace leaf {
 		typename std::decay<decltype(std::declval<TryBlock>()())>::type catch_context<E...>::remote_try_handle_some( TryBlock && try_block, RemoteH && h )
 		{
 			context_activator active_context(*this, context_activator::on_deactivation::propagate_if_uncaught_exception);
-			return this->try_catch_(
+			return this->remote_try_catch_(
 				[&]
 				{
 					return this->remote_try_handle_some_( active_context, std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
