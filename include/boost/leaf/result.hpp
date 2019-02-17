@@ -369,10 +369,10 @@ namespace boost { namespace leaf {
 			error_id ne = new_error();
 			leaf_detail::slot_base::reassign(r.error().value(), ne.value());
 			if( ctx )
-				{
+			{
 				ctx->ec = ne;
 				return ctx;
-				}
+			}
 			else
 				return ne;
 		}
