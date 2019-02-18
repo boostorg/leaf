@@ -334,79 +334,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class Ex>
-		bool check_exception_pack( std::exception const * ex, Ex const * ) noexcept
-		{
-			return dynamic_cast<Ex const *>(ex)!=0;
-		}
-
-		template <class Ex, class... ExRest>
-		bool check_exception_pack( std::exception const * ex, Ex const *, ExRest const * ... ex_rest ) noexcept
-		{
-			return dynamic_cast<Ex const *>(ex)!=0 || check_exception_pack(ex, ex_rest...);
-		}
-	}
-
-	template <class... Ex>
-	class catch_
-	{
-		std::exception const * const value_;
-
-	public:
-
-		explicit catch_( std::exception const * value ) noexcept:
-			value_(value)
-		{
-		}
-
-		bool operator()() const noexcept
-		{
-			return value_ && leaf_detail::check_exception_pack(value_,static_cast<Ex const *>(0)...);
-		}
-
-		std::exception const & value() const noexcept
-		{
-			assert(value_!=0);
-			return *value_;
-		}
-	};
-
-	template <class Ex>
-	class catch_<Ex>
-	{
-		Ex const * const value_;
-
-	public:
-
-		explicit catch_( std::exception const * value ) noexcept:
-			value_(dynamic_cast<Ex const *>(value))
-		{
-		}
-
-		bool operator()() const noexcept
-		{
-			return this->value_!=0;
-		}
-
-		Ex const & value() const noexcept
-		{
-			assert(this->value_!=0);
-			return *this->value_;
-		}
-	};
-
-	namespace leaf_detail
-	{
-		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...>> { using type = void; };
-		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const>;
-		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const *>;
-		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const &>;
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
 		template <class SlotsTuple,class T>
 		struct check_one_argument
 		{
@@ -467,18 +394,6 @@ namespace boost { namespace leaf {
 			static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				return match<T,V...>(match_traits<T>::read(tup,ei))();
-			}
-		};
-
-		template <class SlotsTuple, class... Ex>
-		struct check_one_argument<SlotsTuple,catch_<Ex...>>
-		{
-			static bool check( SlotsTuple const &, error_info const & ei ) noexcept
-			{
-				if( ei.exception_caught() )
-					return catch_<Ex...>(ei.exception())();
-				else
-					return false;
 			}
 		};
 
@@ -582,18 +497,6 @@ namespace boost { namespace leaf {
 				auto const * arg = match_traits<T>::read(tup, ei);
 				assert(arg!=0);
 				return match<T,V...>(arg);
-			}
-		};
-
-		template <class... Ex>
-		struct get_one_argument<catch_<Ex...>>
-		{
-			template <class SlotsTuple>
-			static catch_<Ex...> get( SlotsTuple const &, error_info const & ei ) noexcept
-			{
-				std::exception const * ex = ei.exception();
-				assert(ex!=0);
-				return catch_<Ex...>(ex);
 			}
 		};
 	}
