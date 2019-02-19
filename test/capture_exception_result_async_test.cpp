@@ -50,7 +50,7 @@ int main()
 {
 	auto error_handler = [ ]( leaf::error_info const & err, int a, int b )
 	{
-		return leaf::remote_catch( err,
+		return leaf::remote_handle_exception( err,
 			[&]( info<1> const & x1, info<2> const & x2 )
 			{
 				BOOST_TEST_EQ(x1.value, a);

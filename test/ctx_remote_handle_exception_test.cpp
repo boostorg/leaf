@@ -28,7 +28,7 @@ int main()
 	{
 		auto handle_error = [ ]( leaf::error_info const & error )
 		{
-			return leaf::remote_catch( error,
+			return leaf::remote_handle_exception( error,
 				[ ]( leaf::catch_<std::exception>, info<1> x )
 				{
 					BOOST_TEST(x.value==1);
@@ -79,7 +79,7 @@ int main()
 	{
 		auto handle_error = [ ]( leaf::error_info const & error, int & r )
 		{
-			return leaf::remote_catch( error,
+			return leaf::remote_handle_exception( error,
 				[&]( leaf::catch_<std::exception>, info<1> x )
 				{
 					BOOST_TEST(x.value==1);

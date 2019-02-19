@@ -49,7 +49,7 @@ int main()
 	// the worker thread to the main thread automatically.
 	auto error_handler = [ ]( leaf::error_info const & error )
 	{
-		return leaf::remote_catch( error,
+		return leaf::remote_handle_exception( error,
 			[ ]( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
 			{
 				std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;

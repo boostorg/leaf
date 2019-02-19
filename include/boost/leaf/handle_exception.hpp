@@ -336,7 +336,7 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class R, class... H>
-		struct remote_catch_dispatch_impl
+		struct remote_handle_exception_dispatch_impl
 		{
 			using result_type = handler_result<H...>;
 
@@ -349,7 +349,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class... H>
-		struct remote_catch_dispatch_impl<void, H...>
+		struct remote_handle_exception_dispatch_impl<void, H...>
 		{
 			using result_type = handler_result_void<H...>;
 
@@ -363,14 +363,14 @@ namespace boost { namespace leaf {
 		};
 
 		template <class... H>
-		using remote_catch_dispatch = remote_catch_dispatch_impl<handler_pack_return<H...>, H...>;
+		using remote_handle_exception_dispatch = remote_handle_exception_dispatch_impl<handler_pack_return<H...>, H...>;
 	}
 
 	template <class... H>
-	typename leaf_detail::remote_catch_dispatch<H...>::result_type remote_catch( error_info const & err, H && ... h )
+	typename leaf_detail::remote_handle_exception_dispatch<H...>::result_type remote_handle_exception( error_info const & err, H && ... h )
 	{
 		using namespace leaf_detail;
-		return remote_catch_dispatch<H...>::handle(err, std::forward<H>(h)...);
+		return remote_handle_exception_dispatch<H...>::handle(err, std::forward<H>(h)...);
 	}
 
 	////////////////////////////////////////

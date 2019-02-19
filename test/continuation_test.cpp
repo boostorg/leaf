@@ -190,7 +190,7 @@ int main()
 	auto handle_error = [ ]( leaf::error_info const & error )
 	{
 		return leaf::remote_handle_all( error,
-			[ ]( leaf::match<loc,fail_where::f> wh, info<1> const * i1, info<2> const * i2, info<3> const * i3, info<4> const * i4, info<5> const * i5, info<6> const * i6, info<7> const * i7 )
+			[ ]( leaf::match<loc,fail_where::f, fail_where::g> wh, info<1> const * i1, info<2> const * i2, info<3> const * i3, info<4> const * i4, info<5> const * i5, info<6> const * i6, info<7> const * i7 )
 			{
 				BOOST_TEST(i1 != 0);
 				BOOST_TEST(i2 == 0);
@@ -303,6 +303,19 @@ int main()
 				return handle_error(error);
 			} );
 		BOOST_TEST_EQ(r, -int(fail_where::f));
+	}
+
+	{
+		int r = leaf::remote_try_handle_all(
+			[&]
+			{
+				return try_block(fail_where::g);
+			},
+			[&]( leaf::error_info const & error )
+			{
+				return handle_error(error);
+			} );
+		BOOST_TEST_EQ(r, -int(fail_where::g));
 	}
 
 	{

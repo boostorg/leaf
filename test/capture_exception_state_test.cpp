@@ -40,7 +40,7 @@ int main()
 {
 	auto error_handler = [ ]( leaf::error_info const & err )
 	{
-		return leaf::remote_catch( err,
+		return leaf::remote_handle_exception( err,
 			[ ]( info<1>, info<3> )
 			{
 			} );
