@@ -1824,47 +1824,36 @@ Error-handling functions use the following conventions:
 * Functions that *do not* use the `remote_` prefix take a list of error handlers; functions that *do*, take a single error-handling function, which internally captures the list of error handlers. See <<tutorial_remote_handlers>>.
 * Functions that are designed to work with a `result<T>` type (see <<is_result_type>>) use the `_all` or `_some` suffix; the former require (at compile time) the user-supplied set of handlers to definitely handle any reported error, while the latter allow for handlers to recognize and handle some errors, forwarding others to the caller.
 * An `pass:[_all]` or a `pass:[_some]` function does not catch or handle exceptions unless  at least one of the user-supplied handlers uses the <<catch_>> template. All other error-handling functions catch and can handle exceptions.
-* Error-handling functions that are members of the `context` template match handlers with error objects stored in `*this`:
-+
-.Error-handling members of the context template:
-[cols="20%,40%,40%", stripes=none]
+
+.Error-Handling Functions
+[cols="<,^,^,^,^", stripes=none]
 |====
-| | Attempts a set of operations, then handles errors: |  Handles errors from an operation that has already failed:
-| Handles errors communicated by a `result<T>` type:
-| <<try_handle_some>>pass:[*] +
-<<try_handle_all>>pass:[*] +
-<<remote_try_handle_some>>pass:[*] +
-<<remote_try_handle_all>>pass:[*]
-|  <<handle_some>> +
-<<handle_all>> +
-<<remote_handle_some>> +
-<<remote_handle_all>>
-| Handles only exceptions:
-| <<try_catch>> +
-<<remote_try_catch>>
-| <<handle_current_exception>> +
-<<handle_exception>> +
-<<remote_handle_current_exception>> +
-<<remote_handle_exception>>
+|  <| Attempts a set of operations, then handles errors <| Handles errors from a failed operation <| Handles `result<T>` errors <| Handles exceptions
+5+^| Namespace-scope error-handling functions automatically deduce the arguments of the `context` template from the arguments of the supplied handlers:
+| <<try_handle_all>> | ✅ | ❌| ✅ | ✱
+| <<try_handle_some>> | ✅ | ❌| ✅ | ✱
+| <<remote_try_handle_all>> | ✅ | ❌| ✅ | ✱
+| <<remote_try_handle_some>> | ✅ | ❌| ✅ | ✱
+| <<try_catch>> | ✅ | ❌| ❌ | ✅
+| <<remote_try_catch>> | ✅ | ❌| ❌ | ✅
+5+^| Members of the `context` template match handlers with error objects stored in `*this`:
+| <<context::try_handle_all>> | ✅ | ❌| ✅ | ✱
+| <<context::try_handle_some>> | ✅ | ❌| ✅ | ✱
+| <<context::remote_try_handle_all>> | ✅ | ❌| ✅ | ✱
+| <<context::remote_try_handle_some>> | ✅ | ❌| ✅ | ✱
+| <<context::handle_all>> | ❌| ✅| ✅ | ✱
+| <<context::handle_some>> | ❌| ✅| ✅ | ✱
+| <<context::remote_handle_all>> | ❌| ✅| ✅ | ✱
+| <<context::remote_handle_some>> | ❌| ✅| ✅ | ✱
+| <<context::handle_current_exception>> | ❌| ✅| ❌ | ✅
+| <<context::handle_exception>> | ❌| ✅| ❌ | ✅
+| <<context::remote_handle_current_exception>> | ❌| ✅| ❌ | ✅
+| <<context::remote_handle_exception>> | ❌| ✅| ❌ | ✅
 |====
-+
-* Namespace-scope error-handling functions are implemented in terms of a `context` object (created in their scope) of type that is deduced automatically from the user-supplied handlers:
-+
-.Namespace-scope error-handling functions:
-[cols="20%,40%", stripes=none, width=60%]
-|====
-| | Attempts a set of operations, then handles errors:
-| Handles errors communicated by a `result<T>` type:
-| <<try_handle_some>>pass:[*] +
-<<try_handle_all>>pass:[*] +
-<<remote_try_handle_some>>pass:[*] +
-<<remote_try_handle_all>>pass:[*]
-| Handles only exceptions:
-| <<try_catch>> +
-<<remote_try_catch>>
-|====
-+
-NOTE: pass:[*] These functions will catch and handle exceptions iff at least one of the user-supplied handlers uses <<catch_>>; otherwise they will not (dispatched statically).
+
+[.text-right]
+✱ Handles exceptions iff at least one of the supplied handlers uses <<catch_>> +
+(Please `#include <boost/leaf/handle_exception.hpp>`)
 
 .#include <boost/leaf/context.hpp>
 [source,c++]
