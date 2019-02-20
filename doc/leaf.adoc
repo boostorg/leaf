@@ -2152,7 +2152,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-Requirements: :: Each of `f~i~` in `f...` must be a function that does not throw exceptions and takes a single argument type `E~i~` such that:
+Requirements: :: Each of `f~i~` in `f...` must be a function that does not throw exceptions and takes a single argument of type `E~i~` such that:
 +
 * `E~i~` defines an accessible no-throw default constructor, and
 * `<<is_e_type,is_e_type>><E~i~>::value` is `true`.
@@ -2160,8 +2160,8 @@ Requirements: :: Each of `f~i~` in `f...` must be a function that does not throw
 Effects: :: All `f...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
 +
 --
-* If <<new_error>> was invoked (by the calling thread) since the object returned by `accumulate` was created, each of the stored `f...` is called with the corresponding E-object currently uniquely associated with `<<last_error,last_error>>()`, or with a new default-initialized instance of that E-type if no such E-object currently exists;
-* Otherwise, if `std::unhandled_exception()` returns `true`, each of the stored `f...` is called with the corresponding E-object currently uniquely associated with  `<<next_error,next_error>>()`, or with a new default-initialized instance of that E-type if no such E-object currently exists.
+* If <<new_error>> was invoked (by the calling thread) since the object returned by `accumulate` was created, each of the stored `f...` is called with the corresponding E-object currently uniquely associated with <<last_error>>, or with a new default-initialized instance of that E-type if no such E-object currently exists;
+* Otherwise, if `std::unhandled_exception()` returns `true`, each of the stored `f...` is called with the corresponding E-object currently uniquely associated with  <<next_error>>, or with a new default-initialized instance of that E-type if no such E-object currently exists.
 --
 +
 The stored `f...` objects are discarded.
@@ -2189,6 +2189,9 @@ namespace boost { namespace leaf {
 } }
 ----
 
+[.text-right]
+<<context_type_from_remote_handler>>
+
 '''
 
 [[capture]]
@@ -2208,16 +2211,21 @@ namespace boost { namespace leaf {
 
 This function can be used to capture E-objects stored in a <<context>> in one thread and transport them to a different thread for handling, either in a `<<result,result>><T>` object or in an exception.
 
+Returns: :: The same type returned by `F`.
+
 Effects: :: Uses an internal <<context_activator>> to <<context::activate>> `*ctx`, then invokes `std::forward<F>(f)(std::forward<A>(a)...)`. Then:
 +
 --
-* If the returned value `r` is not of type `result<T>`, it is forwarded to the caller.
+* If the returned value `r` is not a `result<T>` type (see <<is_result_type>>), it is forwarded to the caller.
 * Otherwise:
-** If `!r` is `true`, the return value of `capture` is initialized with `ctx`;
+** If `!r`, the return value of `capture` is initialized with `ctx`;
++
+NOTE: An object of type `leaf::<<result,result>><T>` can be initialized with a `std::shared_ptr<leaf::polymorphic_context>`.
++
 ** otherwise, it is initialized with `r`.
 --
 +
-In case `f` throws, `capture` catches the exception in a `std::exception_ptr`, and throws a different exception of unspecified type that transports both the `std::exception_ptr` as well as `ctx`. This exception type is recognized by <<try_catch>>, <<handle_exception>> and <<handle_current_exception>>, which automatically unpack the original exception and propagate the contents of `*ctx` (presumably, in a different thread).
+In case `f` throws, `capture` catches the exception in a `std::exception_ptr`, and throws a different exception of unspecified type that transports both the `std::exception_ptr` as well as `ctx`. This exception type is recognized by <<try_catch>>, <<context::handle_exception>> and <<context::handle_current_exception>>, which automatically unpack the original exception and propagate the contents of `*ctx` (presumably, in a different thread).
 
 Examples: ::
 
@@ -2261,9 +2269,9 @@ auto handle_error = []( leaf::error_info const & error )
 leaf::context_type_from_remote_handler<decltype(handle_error)> ctx;
 ----
 +
-In the example above, `ctx` will be of type `context<E...>`, where the `E...` types are automatically deduced from the handler list in `handle_error`. This guarantees that `ctx` provides storage for all E-types that are required by `handle_error` in order to handle errors.
+In the example above, `ctx` will be of type `context<e_this, e_that, leaf::diagnostic_info>`, deduced automatically from the handler list in `handle_error`. This guarantees that `ctx` provides storage for all E-types that are required by `handle_error` in order to handle errors.
 
-Alternatively, a suitable context may be created by calling <<make_context>>.
+TIP: Alternatively, a suitable context may be created by calling <<make_context>>, or allocated dynamically by calling <<make_shared_context>> or <<allocate_shared_context>>.
 
 '''
 
@@ -2286,13 +2294,15 @@ Requirements: :: Each of `f~i~` in `f...` must be a function that does not throw
 Effects: :: All `f...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
 +
 --
-* If <<new_error>> was invoked (by the calling thread) since the object returned by `defer` was created, each of the stored `f...` is called, and each returned object is <<tutorial-loading,loaded>> and uniquely associated with  `<<last_error,last_error>>()`;
-* Otherwise, if `std::unhandled_exception()` returns `true`, each of the stored `f...` is called, and each returned object is loaded and uniquely associated with  `<<next_error,next_error>>()`.
+* If <<new_error>> was invoked (by the calling thread) since the object returned by `defer` was created, each of the stored `f...` is called, and each returned object is <<tutorial-loading,loaded>> and uniquely associated with  <<last_error>>;
+* Otherwise, if `std::unhandled_exception()` returns `true`, each of the stored `f...` is called, and each returned object is loaded and uniquely associated with  <<next_error>>.
 --
 +
 The stored `f...` objects are discarded.
 
 WARNING: It is critical that the passed functions do not throw exceptions: they are called from within a destructor.
+
+'''
 
 [[exception]]
 === `exception`
@@ -2314,7 +2324,7 @@ Requirements: ::
 
 Returns: :: An object of unspecified type which derives publicly from `Ex` *and* from class <<error_id>> such that:
 * its `Ex` subobject is initialized by `std::forward<Ex>(ex)`;
-* its `error_id` subojbect is initialized by `<<new_error,new_error>>(std::forward<E>(e)...`).
+* its `error_id` subobject is initialized by `<<new_error,new_error>>(std::forward<E>(e)...`).
 
 TIP: If thrown, the returned object can be caught as `Ex &` or as `leaf::<<error_id,error_id>> &` or as `std::error_code &`.
 
@@ -2325,38 +2335,30 @@ NOTE: To automatically capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[_
 [[exception_to_result]]
 === `exception_to_result`
 
-include::{sourcedir}/synopses/exception_to_result.adoc[]
+[source,c++]
+.#include <boost/leaf/exception.hpp>
+----
+namespace boost { namespace leaf {
+
+  template <class... Ex, class F>
+  <<result<T>-deduced>> exception_to_result( F && f ) noexcept;
+
+} }
+----
 
 This function can be used to catch exceptions from a lower-level library and convert them to `<<result,result>><T>`.
 
 Returns: :: If `f` returns `T`, `exception_to_result` returns `result<T>`.
 
-Effects: :: Invokes `f` in a `try` block, catching each individual exception type `Ex`, by value, proceeding as follows:
-+
-[source,c++]
-----
-catch( Ex ex )
-{
-  return leaf::new_error(std::move(ex));
-}
-----
-+
-A final catch-all is added, as follows:
-+
-[source,c++]
-----
-catch(...)
-{
-  return leaf::new_error(std::current_exception());
-}
-----
+Effects: ::
+
+. Catches all exceptions, then captures `std::current_exception` in a `std::exception_ptr` object, which is <<tutorial-loading,loaded>> with the returned `result<T>`.
+. Attempts to convert the caught exception, using `dynamic_cast`, to each type `Ex~i~` in `Ex...`. If the cast to `Ex~i~` succeeds, the `Ex~i~` slice of the caught exception is loaded with the returned `result<T>`.
 
 [WARNING]
 --
-* Catching by value slices each individual exception object.
-* The order of the types in the `Ex...` list is significant.
 * `std::current_exception()` likely allocates memory dynamically.
-* Handlers passed to <<try_handle_some>> / <<try_handle_all>> should take the converted-to-result exception objects by `const &` (whereas, in case exceptions are handled directly by <<try_catch>> handlers, you would use <<catch_>> instead).
+* Handlers passed to <<try_handle_some>> / <<try_handle_all>> should take the converted-to-result exception objects by `const &` (whereas, in case exceptions are handled directly by <<try_catch>> handlers, <<catch_>> should be used instead).
 --
 
 Example:
@@ -2368,13 +2370,11 @@ int compute_answer_throws();
 //Call compute_answer, convert exceptions to result<int>
 leaf::result<int> compute_answer()
 {
-  return leaf::catch_exceptions<
-    ex_type1,
-    ex_type2>( compute_answer_throws() );
+  return leaf::exception_to_result<ex_type1, ex_type2>(compute_answer_throws());
 }
 ----
 
-Later, the `ex_type1` and `ex_type2` exceptions can be processed by <<try_handle_some>> / <<try_handle_all>>:
+Later, what used to be the exception types `ex_type1` and `ex_type2` can be handled by <<try_handle_some>> / <<try_handle_all>>:
 
 [source,c++]
 ----
@@ -2446,6 +2446,9 @@ namespace boost { namespace leaf {
 } }
 ----
 
+[.text-right]
+<<context_type_from_remote_handler>>
+
 '''
 
 [[make_shared_context]]
@@ -2464,6 +2467,9 @@ namespace boost { namespace leaf {
 
 } }
 ----
+
+[.text-right]
+<<context_type_from_remote_handler>>
 
 '''
 
@@ -2489,6 +2495,8 @@ Returns: :: A new `error_id` value, which is unique across the entire program.
 
 Postcondition: :: `id.value()!=0`, where `id` is the returned `error_id`.
 
+TIP: The <<error_id>> type derives from `std::error_code`.
+
 '''
 
 [[next_error]]
@@ -2506,7 +2514,7 @@ namespace boost { namespace leaf {
 
 Returns: :: The `error_id` value which will be returned the next time <<new_error>> is invoked from the calling thread.
 
-This function can be used to associate E-objects with the next `error_id` value to be reported. Use with caution, only when restricted to reporting errors via specific third-party types, incompatible with LEAF -- for example when reporting an error from a C callback. As soon as control exits this critical path, you should create a <<new_error>> (which will be equal to the `error_id` object returned by the earlier call to `next_error`).
+This function can be used to associate E-objects with the next `error_id` value to be reported. Use with caution, only when restricted to reporting errors via specific third-party types, incompatible with LEAF -- for example when reporting an error from a C callback. As soon as control exits this critical path, you should create a <<new_error>> (which will be equal to the `error_id` object returned by the earlier call to `next_error`); see <<tutorial-interoperability>>.
 
 '''
 
@@ -2527,8 +2535,8 @@ namespace boost { namespace leaf {
 Requirements: :: `<<is_e_type,is_e_type>><E>::value` must be `true` for each `E`.
 
 Effects: :: All `e...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
-* If <<new_error>> was invoked (by the calling thread) since the object returned by `preload` was created, the stored `e...` objects are <<tutorial-loading,loaded>> and become uniquely associated with `<<last_error,last_error>>()`;
-* Otherwise, if `std::unhandled_exception()` returns `true`, the stored `e...` objects are loaded and become uniquely associated with `<<next_error,next_error>>()`;
+* If <<new_error>> was invoked (by the calling thread) since the object returned by `preload` was created, the stored `e...` objects are <<tutorial-loading,loaded>> and become uniquely associated with <<last_error>>;
+* Otherwise, if `std::unhandled_exception()` returns `true`, the stored `e...` objects are loaded and become uniquely associated with <<next_error>>;
 * Otherwise, the stored `e...` objects are discarded.
 
 '''
@@ -2548,7 +2556,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-This function works similarly to <<remote_try_handle_some>>, except that the captured handlers are to be used with `remote_try_catch` rather than `remote_try_handle_some`, therefore when capturing the handlers we call the helper function `remote_handle_exception` rather than `remote_handle_some`:
+This function works similarly to <<remote_try_handle_some>>, but handles exceptions rather than a `result<T>` result. Here is an example of how remote handlers should be captured so the captured function is compatible with  `remote_try_handle_some`:
 
 [source,c++]
 ----
@@ -2568,7 +2576,7 @@ auto remote_handlers = []( leaf::error_info const & error )
 };
 ----
 
-To use the captured `remote_handlers`, we call `remote_try_catch` rather than `try_catch` (the former requires the handlers to be provided in a handler pack):
+To use the captured `remote_handlers`, we call `remote_try_catch` rather than `try_catch` (the latter requires the handlers to be passed inline):
 
 [source,c++]
 ----
@@ -2602,7 +2610,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-This function works similarly to <<remote_try_handle_some>>. One difference is that, like <<try_handle_all>>, it is required (enforced at compile time) to be able to find a matching handler for the error. Therefore, the handlers captured in `remote_handler` must include a handler that matches any error, and may not throw:
+This function works similarly to <<remote_try_handle_some>>. One difference is that, like <<try_handle_all>>, it is required (enforced at compile time) to be able to find a matching handler for the error. In the example below, the `remote_handlers` capture must include a handler that matches any error, and may not throw:
 
 [source,c++]
 ----
@@ -2646,7 +2654,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-This function works the same way as <<try_handle_some>>, but rather than taking a parameter pack with handlers, it takes a single lambda that captures the handlers:
+This function works the same way as <<try_handle_some>>, but rather than taking a parameter pack with handlers, it takes a single lambda that captures the handlers, for example:
 
 [source,c++]
 ----
@@ -2750,13 +2758,7 @@ The `try_catch` function works similarly to <<try_handle_some>>, except that it 
 [[try_handle_all]]
 === `try_handle_all`
 
-The `try_handle_all` function automates several aspects of the typical use of <<handle_all>> to handle errors.
-
-Most importantly, it creates a local <<context>> object of type that is automatically deduced from the passed handler list `h`, which guarantees that it is able to store all of the types required to handle errors.
-
-Secondly, `try_handle_all` manages activation and deactivation of the `context` object, as well as the automatic propagation its contents in case `try_handle_all` is unable to handle the error.
-
-`try_handle_all` is implemented as:
+The `try_handle_all` function creates a local <<context>> object of type that is automatically deduced from the passed handler list `h...`, which guarantees that it is able to store all of the types required to handle errors; then it calls the member function <<context::try_handle_all>>:
 
 [source,c++]
 ----
@@ -2766,30 +2768,16 @@ try_handle_all( TryBlock && try_block, H && ... h ) noexcept
 {
   context<E...> ctx; // E... is automatically deduced from `h...`
 
-  context_activator active_context(ctx, on_deactivation::propagate_if_uncaught_exception);
-
-  if( auto r = std::forward<TryBlock>(try_block)() )
-    return r.value();
-  else
-    return handle_all(ctx, r, std::forward<H>(h)...);
+  return ctx.try_handle_all(std::forward<TryBlock>(try_block), std::forward<H>(h)...);
 }
 ----
-
-[.text-right]
-<<context>> | <<context_activator>> | <<handle_all>>
 
 '''
 
 [[try_handle_some]]
 === `try_handle_some`
 
-The `try_handle_some` function automates several aspects of the typical use of <<handle_some>> to handle errors.
-
-Most importantly, it creates a local <<context>> object of type that is automatically deduced from the passed handler list `h`, which guarantees that it is able to store all of the types required to handle errors.
-
-Secondly, `try_handle_some` manages activation and deactivation of the `context` object, as well as the automatic propagation its contents in case `try_handle_some` is unable to handle the error.
-
-`try_handle_some` is implemented as:
+The `try_handle_some` function creates a local <<context>> object of type that is automatically deduced from the passed handler list `h...`, which guarantees that it is able to store all of the types required to handle errors; then it calls the member function <<context::try_handle_some>>:
 
 [source,c++]
 ----
@@ -2799,23 +2787,9 @@ try_handle_some( TryBlock && try_block, H && ... h ) noexcept
 {
   context<E...> ctx; // E... is automatically deduced from `h...`
 
-  context_activator active_context(ctx,
- on_deactivation::propagate_if_uncaught_exception);
-
-  if( auto r = std::forward<TryBlock>(try_block)() )
-    return r;
-  else
-  {
-    auto rr = handle_some(ctx, r, std::forward<H>(h)...);
-    if( !rr )
-      active_context.set_on_deactivate(on_deactivation::propagate);
-    return rr;
-  }
+  return ctx.try_handle_some(std::forward<TryBlock>(try_block), std::forward<H>(h)...);
 }
 ----
-
-[.text-right]
-<<context>> | <<context_activator>> | <<handle_some>>
 
 [[types]]
 

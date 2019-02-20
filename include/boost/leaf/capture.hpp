@@ -109,7 +109,7 @@ namespace boost { namespace leaf {
 		error_id catch_exceptions_helper( std::exception const & ex, leaf_detail_mp11::mp_list<Ex1,Ex...> )
 		{
 			if( Ex1 const * p = dynamic_cast<Ex1 const *>(&ex) )
-				return leaf::new_error(std::current_exception(), *p);
+				return catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>{ }).load(*p);
 			else
 				return catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>{ });
 		}
