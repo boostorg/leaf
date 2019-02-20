@@ -12,7 +12,7 @@ Lightweight Error Augmentation Framework for C++11
 [abstract]
 == Abstract
 
-LEAF is a {CPP}11 error handling library. Features:
+LEAF is a lightweight error handling library for {CPP}11. Features:
 
 ====
 * Header-only, no dependencies.
@@ -26,20 +26,22 @@ LEAF is a {CPP}11 error handling library. Features:
 * Support for multi-thread programming.
 
 * Can be used with or without exception handling.
-
-[.text-right]
-https://github.com/zajo/leaf[GitHub] | <<introduction,Introduction>> | <<tutorial>> | <<rationale,Design Rationale>>
 ====
+
+[grid=none, frame=none]
+|====
+| https://github.com/zajo/leaf[GitHub] \| <<introduction,Introduction>> \| <<tutorial>> \|  <<synopsis>> \| <<rationale,Design Rationale>> >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<traits,Traits>> \| <<macros,Macros>>
+|====
 
 [[introduction]]
 == Five Minute Introduction
 
-For demonstration, we'll implement two versions of the same program: one using error codes to handle errors, and one using exception handling.
+We'll implement two versions of the same simple program: one using error codes to handle errors, and one using exception handling.
 
 [[introduction-result]]
-=== Using `noexcept` Functionality
+=== Using a `result<T>`
 
-We'll write a short but complete program that reads a text file in a buffer and prints it to `std::cout`, using LEAF to handle errors.
+We'll write a short but complete program that reads a text file in a buffer and prints it to `std::cout`, using LEAF to handle errors without exception handling.
 
 Let's jump ahead and start with the `main` function: it will try several operations as needed and handle all the errors that occur. Did I say *all* the errors? I did, so we'll use `leaf::try_handle_all`. It has the following signature:
 
@@ -51,7 +53,7 @@ template <class TryBlock, class... Handler>
 
 `TryBlock` is a function type, almost always a lambda. It is required to return a `result<T>` type -- for example, `leaf::result<T>` -- that holds a value of type `T` or else it communicates a failure.
 
-The first thing `try_handle_all` does is invoke the `try_block`. If the returned object `r` indicates success, `try_handle_all` returns the contained `r.value()`; otherwise it calls a suitable error handling function from the `handler...` list.
+The first thing `try_handle_all` does is invoke the `try_block`. If the returned object `r` indicates success, `try_handle_all` returns the contained `r.value()`; otherwise it calls the first suitable error handling function from the `handler...` list.
 
 We'll see later just what kind of a `TryBlock` will our `main` function pass to `try_handle_all`, but first, let's look at the juicy error-handling part:
 
@@ -250,7 +252,7 @@ int main( int argc, char const * argv[ ] )
 
 <1> Our `TryBlock` returns a `result<int>`. In case of success, it will hold `0`, which will be returned from `main` to the OS.
 <2> If `parse_command_line` returns an error, we forward that error to `try_handle_all` (which invoked us) verbatim. Otherwise, `LEAF_AUTO` gets us a local variable `file_name` to access the `char const *` result.
-<3> From now on, all errors escaping this scope will automatically communicate the (now successfully parsed from the command line) file name (LEAF defines `struct e_file_name {std::string value;}`). It's as if every time one of the following functions reports an error, `preload` says "wait, load this `e_file_name` thing with the error, it's important!"
+<3> From now on, all errors escaping this scope will automatically communicate the (now successfully parsed from the command line) file name (LEAF defines `struct e_file_name {std::string value;}`). It's as if every time one of the following functions wants to report an error, `preload` says "wait, load this `e_file_name` thing with the error, it's important!"
 <4> Call more functions, forward each failure to the caller...
 <5> ...but this is slightly different: we didn't get a failure via `result<T>` from another function, this is our own error we've detected! We return a `new_error`, passing the `cout_error` error code and the system `errno` (LEAF defines `struct e_errno {int value;}`).
 <6> This concludes the `try_handle_all` arguments -- as well as our program!
@@ -970,7 +972,7 @@ leaf::remote_try_handle_all(
 
 TIP: The captured lambda must take at least one argument of type `leaf::error_info const &`, because LEAF invokes the error handling lambda we pass to <<remote_try_handle_all>> with a `leaf::error_info`. Note however that LEAF does not call `handle_error` directly, which means that it can take any arguments it needs in order to deal with failures, as long as they can be supplied when it is invoked.
 
-WARNING: LEAF provides three sets of "remote handler" APIs, "handle_all" (as presented above), "handle_some" and "catch", and it is critical that they are not mixed up. Since in this example the `handle_error` lambda calls the helper function `remote_handle_all`, it can only be used in a call to `remote_try_handle_all`. If we needed a capture that can be used with e.g. `remote_try_catch`, it must be calling the `remote_handle_exception` function instead.
+WARNING: LEAF provides three sets of "remote handler" APIs, "handle_all" (as presented above), "handle_some" and "handle_exception", and it is critical that they are not mixed up. Since in this example the `handle_error` lambda calls the helper function `remote_handle_all`, it can only be used in a call to `remote_try_handle_all`. If we needed a capture that can be used with e.g. `remote_try_catch`, it must be calling the `remote_handle_exception` function instead.
 
 '''
 

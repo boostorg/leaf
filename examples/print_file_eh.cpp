@@ -4,8 +4,11 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// This is a short but complete program that reads a text file in a buffer and prints it to std::cout,
-// using LEAF to handle errors. It uses exception handling.
+// This is the program presented in https://zajo.github.io/leaf/#introduction-eh.
+
+// It reads a text file in a buffer and prints it to std::cout, using LEAF to handle errors.
+// This version uses exception handling. The version that does not use exception
+// handling is in print_file_result.cpp.
 
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/handle_exception.hpp>
