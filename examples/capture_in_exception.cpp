@@ -49,14 +49,14 @@ int main()
 	// The error_handler is called in this thread (see leaf::error_try_ below), eath time we get a future
 	// from a worker that failed. The arguments passed to individual lambdas are transported from
 	// the worker thread to the main thread automatically.
-	auto error_handler = [ ]( leaf::error_info const & error )
+	auto error_handler = []( leaf::error_info const & error )
 	{
 		return leaf::remote_handle_exception( error,
-			[ ]( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
+			[]( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
 			{
 				std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
 			},
-			[ ]( leaf::diagnostic_info const & unmatched )
+			[]( leaf::diagnostic_info const & unmatched )
 			{
 				std::cerr <<
 					"Unknown failure detected" << std::endl <<

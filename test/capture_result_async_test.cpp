@@ -47,7 +47,7 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
 
 int main()
 {
-	auto error_handler = [ ]( leaf::error_info const & err, int a, int b )
+	auto error_handler = []( leaf::error_info const & err, int a, int b )
 	{
 		return leaf::remote_handle_all( err,
 			[&]( info<1> const & x1, info<2> const & x2 )
@@ -56,7 +56,7 @@ int main()
 				BOOST_TEST_EQ(x2.value, b);
 				return -1;
 			},
-			[ ]
+			[]
 			{
 				return -2;
 			} );
@@ -64,7 +64,7 @@ int main()
 
 	std::vector<fut_info> fut = launch_tasks<decltype(error_handler)>(
 		42,
-		[ ]( int a, int b, int res ) -> leaf::result<int>
+		[]( int a, int b, int res ) -> leaf::result<int>
 		{
 			if( res>=0 )
 				return res;

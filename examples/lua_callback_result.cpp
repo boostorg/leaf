@@ -125,17 +125,17 @@ int main() noexcept
 				return { };
 			},
 
-			[ ]( do_work_error_code e )
+			[]( do_work_error_code e )
 			{
 				std::cout << "Got do_work_error_code = " << e <<  "!\n";
 			},
 
-			[ ]( e_lua_pcall_error const & err, e_lua_error_message const & msg )
+			[]( e_lua_pcall_error const & err, e_lua_error_message const & msg )
 			{
 				std::cout << "Got e_lua_pcall_error, Lua error code = " << err.value << ", " << msg.value << "\n";
 			},
 
-			[ ]( leaf::error_info const & unmatched )
+			[]( leaf::error_info const & unmatched )
 			{
 				std::cerr <<
 					"Unknown failure detected" << std::endl <<

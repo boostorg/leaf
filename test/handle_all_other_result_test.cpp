@@ -76,11 +76,11 @@ int main()
 {
 	{
 		int r = leaf::try_handle_all(
-			[ ]
+			[]
 			{
 				return g(true);
 			},
-			[ ]
+			[]
 			{
 				return -1;
 			} );
@@ -97,13 +97,13 @@ int main()
 				BOOST_TEST(!std::strcmp(ec.category().name(),"LEAF error"));
 				return r;
 			},
-			[ ]( info<42> const & x, std::error_code const & ec )
+			[]( info<42> const & x, std::error_code const & ec )
 			{
 				BOOST_TEST_EQ(x.value, 42);
 				BOOST_TEST_EQ(ec, make_error_code(std::errc::no_such_file_or_directory));
 				return 1;
 			},
-			[ ]
+			[]
 			{
 				return 2;
 			} );

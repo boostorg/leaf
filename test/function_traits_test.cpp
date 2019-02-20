@@ -30,7 +30,7 @@ int main()
 {
 	check_traits(&f1);
 	check_traits(std::function<double(int const volatile, float const, int const &, float &&)>(f1));
-	check_traits( [ ]( int const volatile, float const, int const &, float && ) -> double
+	check_traits( []( int const volatile, float const, int const &, float && ) -> double
 		{
 			return 42;
 		} );

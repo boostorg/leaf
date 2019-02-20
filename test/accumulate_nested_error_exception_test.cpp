@@ -19,14 +19,14 @@ struct info
 
 void f0()
 {
-	auto load = leaf::accumulate( [ ]( info<0> & ) { } );
+	auto load = leaf::accumulate( []( info<0> & ) { } );
 	throw leaf::exception(std::exception(), info<2>{2} );
 }
 
 void f1()
 {
 	auto propagate1 = leaf::preload( info<0>{-1}, info<2>{-1} );
-	auto propagate2 = leaf::accumulate( [ ]( info<1> & x ) {++x.value;} );
+	auto propagate2 = leaf::accumulate( []( info<1> & x ) {++x.value;} );
 	f0();
 }
 
@@ -46,12 +46,12 @@ void f2()
 int main()
 {
 	int r = leaf::try_catch(
-		[ ]
+		[]
 		{
 			f2();
 			return 0;
 		},
-		[ ]( info<0> i0, info<1> i1, info<2> i2, info<3> i3 )
+		[]( info<0> i0, info<1> i1, info<2> i2, info<3> i3 )
 		{
 			BOOST_TEST_EQ(i0.value, 0);
 			BOOST_TEST_EQ(i1.value, 1);
@@ -59,7 +59,7 @@ int main()
 			BOOST_TEST_EQ(i3.value, 3);
 			return 1;
 		},
-		[ ]
+		[]
 		{
 			return 2;
 		} );

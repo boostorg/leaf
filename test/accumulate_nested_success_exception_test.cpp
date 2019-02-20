@@ -14,7 +14,7 @@ struct info { int value; };
 
 void g1()
 {
-	auto load = leaf::accumulate( [ ]( info & x ) { ++x.value; } );
+	auto load = leaf::accumulate( []( info & x ) { ++x.value; } );
 }
 
 void g2()
@@ -32,17 +32,17 @@ void f()
 int main()
 {
 	int r = leaf::try_catch(
-		[ ]
+		[]
 		{
 			f();
 			return 0;
 		},
-		[ ]( info x )
+		[]( info x )
 		{
 			BOOST_TEST_EQ(x.value, 42);
 			return 1;
 		},
-		[ ]
+		[]
 		{
 			return 2;
 		 } );

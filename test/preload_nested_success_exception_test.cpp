@@ -32,17 +32,17 @@ void f()
 int main()
 {
 	int r = leaf::try_catch(
-		[ ]
+		[]
 		{
 			f();
 			return 0;
 		},
-		[ ]( info x )
+		[]( info x )
 		{
 			BOOST_TEST_EQ(x.value, 2);
 			return 1;
 		},
-		[ ]
+		[]
 		{
 			return 2;
 		 } );

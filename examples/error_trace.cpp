@@ -43,7 +43,7 @@ struct e_error_trace
 	}
 };
 
-#define ERROR_TRACE auto _trace = leaf::accumulate( [ ]( e_error_trace & tr ) { tr.value.emplace_front(e_error_trace::rec{__FILE__, __LINE__}); } )
+#define ERROR_TRACE auto _trace = leaf::accumulate( []( e_error_trace & tr ) { tr.value.emplace_front(e_error_trace::rec{__FILE__, __LINE__}); } )
 
 int const failure_percent = 25;
 
@@ -104,12 +104,12 @@ int main()
 				return { };
 			},
 #if ENABLE_ERROR_TRACE
-			[ ]( e_error_trace const & tr )
+			[]( e_error_trace const & tr )
 			{
 				std::cerr << "Error! Trace:" << std::endl << tr;
 			},
 #endif
-			[ ]
+			[]
 			{
 				std::cerr << "Error!" << std::endl;
 			} );

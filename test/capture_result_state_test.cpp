@@ -38,14 +38,14 @@ namespace boost { namespace leaf {
 
 int main()
 {
-	auto error_handler = [ ]( leaf::error_info const & err )
+	auto error_handler = []( leaf::error_info const & err )
 	{
 		return leaf::remote_handle_all( err,
-			[ ]( info<1>, info<3> )
+			[]( info<1>, info<3> )
 			{
 				return 42;
 			},
-			[ ]
+			[]
 			{
 				return -42;
 			} );
@@ -53,7 +53,7 @@ int main()
 	{
 		auto r = leaf::capture(
 			leaf::make_shared_context(&error_handler),
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				return leaf::new_error( info<1>{}, info<3>{} );
 			} );

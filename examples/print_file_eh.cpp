@@ -37,7 +37,7 @@ struct input_eof_error : virtual input_file_error { };
 // communicating failures by throwing exceptions
 
 // Parse the command line, return the file name.
-char const * parse_command_line( int argc, char const * argv[ ] );
+char const * parse_command_line( int argc, char const * argv[] );
 
 // Open a file for reading.
 std::shared_ptr<FILE> file_open( char const * file_name );
@@ -49,7 +49,7 @@ int file_size( FILE & f );
 void file_read( FILE & f, void * buf, int size );
 
 
-int main( int argc, char const * argv[ ] )
+int main( int argc, char const * argv[] )
 {
 	// Configure std::cout to throw on error.
 	std::cout.exceptions(std::ostream::failbit | std::ostream::badbit);
@@ -68,7 +68,7 @@ int main( int argc, char const * argv[ ] )
 			std::string buffer( 1 + s, '\0' );
 			file_read(*f,&buffer[0],buffer.size()-1);
 
-			auto propagate2 = leaf::defer([ ] { return leaf::e_errno{errno}; } );
+			auto propagate2 = leaf::defer([] { return leaf::e_errno{errno}; } );
 			std::cout << buffer;
 			std::cout.flush();
 
@@ -76,13 +76,13 @@ int main( int argc, char const * argv[ ] )
 		},
 
 		// Each of the lambdas below is an error handler. LEAF will consider them, in order, and call the first one that matches
-		// the available error information.
+		// the available error objects.
 
 		// This handler will be called if the error includes:
 		// - a caught exception of type input_file_open_error, and
 		// - an object of type leaf::e_errno that has .value equal to ENOENT, and
 		// - an object of type leaf::e_file_name.
-		[ ]( leaf::catch_<input_file_open_error>, leaf::match<leaf::e_errno,ENOENT>, leaf::e_file_name const & fn )
+		[]( leaf::catch_<input_file_open_error>, leaf::match<leaf::e_errno,ENOENT>, leaf::e_file_name const & fn )
 		{
 			std::cerr << "File not found: " << fn.value << std::endl;
 			return 1;
@@ -92,7 +92,7 @@ int main( int argc, char const * argv[ ] )
 		// - a caught exception of type input_file_open_error, and
 		// - an object of type leaf::e_errno (regardless of its .value), and
 		// - an object of type leaf::e_file_name.
-		[ ]( leaf::catch_<input_file_open_error>, leaf::e_errno const & errn, leaf::e_file_name const & fn )
+		[]( leaf::catch_<input_file_open_error>, leaf::e_errno const & errn, leaf::e_file_name const & fn )
 		{
 			std::cerr << "Failed to open " << fn.value << ", errno=" << errn << std::endl;
 			return 2;
@@ -102,7 +102,7 @@ int main( int argc, char const * argv[ ] )
 		// - a caught exception of type input_error, and
 		// - an object of type leaf::e_errno (regardless of its .value), and
 		// - an object of type leaf::e_file_name.
-		[ ]( leaf::catch_<input_error>, leaf::e_errno const & errn, leaf::e_file_name const & fn )
+		[]( leaf::catch_<input_error>, leaf::e_errno const & errn, leaf::e_file_name const & fn )
 		{
 			std::cerr << "Failed to access " << fn.value << ", errno=" << errn << std::endl;
 			return 3;
@@ -111,14 +111,14 @@ int main( int argc, char const * argv[ ] )
 		// This handler will be called if the error includes:
 		// - a caught exception of type std::ostream::failure, and
 		// - an object of type leaf::e_errno (regardless of its .value),
-		[ ]( leaf::catch_<std::ostream::failure>, leaf::e_errno const & errn )
+		[]( leaf::catch_<std::ostream::failure>, leaf::e_errno const & errn )
 		{
 			std::cerr << "Output error, errno=" << errn << std::endl;
 			return 4;
 		},
 
 		// This handler will be called if the error includes a caught exception of type bad_command_line.
-		[ ]( leaf::catch_<bad_command_line> )
+		[]( leaf::catch_<bad_command_line> )
 		{
 			std::cout << "Bad command line argument" << std::endl;
 			return 5;
@@ -127,7 +127,7 @@ int main( int argc, char const * argv[ ] )
 		// This last handler matches any error: it prints diagnostic information to help debug logic errors in the program, since it
 		// failed to match  an appropriate error handler to the error condition it encountered. In this program this handler will
 		// never be called.
-		[ ]( leaf::error_info const & unmatched )
+		[]( leaf::error_info const & unmatched )
 		{
 			std::cerr <<
 				"Unknown failure detected" << std::endl <<
@@ -142,7 +142,7 @@ int main( int argc, char const * argv[ ] )
 
 
 // Parse the command line, return the file name.
-char const * parse_command_line( int argc, char const * argv[ ] )
+char const * parse_command_line( int argc, char const * argv[] )
 {
 	if( argc==2 )
 		return argv[1];
@@ -165,7 +165,7 @@ std::shared_ptr<FILE> file_open( char const * file_name )
 int file_size( FILE & f )
 {
 	// All exceptions escaping this function will automatically load errno.
-	auto load = leaf::defer( [ ] { return leaf::e_errno{errno}; } );
+	auto load = leaf::defer( [] { return leaf::e_errno{errno}; } );
 
 	if( fseek(&f,0,SEEK_END) )
 		throw leaf::exception(input_file_size_error());

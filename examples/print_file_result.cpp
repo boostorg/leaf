@@ -41,7 +41,7 @@ namespace boost { namespace leaf {
 // communicating failures using leaf::result<T>:
 
 // Parse the command line, return the file name.
-leaf::result<char const *> parse_command_line( int argc, char const * argv[ ] );
+leaf::result<char const *> parse_command_line( int argc, char const * argv[] );
 
 // Open a file for reading.
 leaf::result<std::shared_ptr<FILE>> file_open( char const * file_name );
@@ -54,7 +54,7 @@ leaf::result<void> file_read( FILE & f, void * buf, int size );
 
 
 // The main function, which handles all errors.
-int main( int argc, char const * argv[ ] )
+int main( int argc, char const * argv[] )
 {
 	return leaf::try_handle_all(
 
@@ -86,7 +86,7 @@ int main( int argc, char const * argv[ ] )
 		// - an object of type error_code equal to input_file_open_error, and
 		// - an object of type leaf::e_errno that has .value equal to ENOENT, and
 		// - an object of type leaf::e_file_name.
-		[ ]( leaf::match<error_code, input_file_open_error>, leaf::match<leaf::e_errno, ENOENT>, leaf::e_file_name const & fn )
+		[]( leaf::match<error_code, input_file_open_error>, leaf::match<leaf::e_errno, ENOENT>, leaf::e_file_name const & fn )
 		{
 			std::cerr << "File not found: " << fn.value << std::endl;
 			return 1;
@@ -96,7 +96,7 @@ int main( int argc, char const * argv[ ] )
 		// - an object of type error_code equal to input_file_open_error, and
 		// - an object of type leaf::e_errno (regardless of its .value), and
 		// - an object of type leaf::e_file_name.
-		[ ]( leaf::match<error_code, input_file_open_error>, leaf::e_errno const & errn, leaf::e_file_name const & fn )
+		[]( leaf::match<error_code, input_file_open_error>, leaf::e_errno const & errn, leaf::e_file_name const & fn )
 		{
 			std::cerr << "Failed to open " << fn.value << ", errno=" << errn << std::endl;
 			return 2;
@@ -106,7 +106,7 @@ int main( int argc, char const * argv[ ] )
 		// - an object of type error_code equal to any of input_file_size_error, input_file_read_error, input_eof_error, and
 		// - an object of type leaf::e_errno (regardless of its .value), and
 		// - an object of type leaf::e_file_name.
-		[ ]( leaf::match<error_code, input_file_size_error, input_file_read_error, input_eof_error>, leaf::e_errno const & errn, leaf::e_file_name const & fn )
+		[]( leaf::match<error_code, input_file_size_error, input_file_read_error, input_eof_error>, leaf::e_errno const & errn, leaf::e_file_name const & fn )
 		{
 			std::cerr << "Failed to access " << fn.value << ", errno=" << errn << std::endl;
 			return 3;
@@ -115,14 +115,14 @@ int main( int argc, char const * argv[ ] )
 		// This handler will be called if the error includes:
 		// - an object of type error_code equal to cout_error, and
 		// - an object of type leaf::e_errno (regardless of its .value),
-		[ ]( leaf::match<error_code, cout_error>, leaf::e_errno const & errn )
+		[]( leaf::match<error_code, cout_error>, leaf::e_errno const & errn )
 		{
 			std::cerr << "Output error, errno=" << errn << std::endl;
 			return 4;
 		},
 
 		// This handler will be called if the error includes an object of type error_code equal to bad_command_line.
-		[ ]( leaf::match<error_code, bad_command_line> )
+		[]( leaf::match<error_code, bad_command_line> )
 		{
 			std::cout << "Bad command line argument" << std::endl;
 			return 5;
@@ -131,7 +131,7 @@ int main( int argc, char const * argv[ ] )
 		// This last handler matches any error: it prints diagnostic information to help debug logic errors in the program, since it
 		// failed to match  an appropriate error handler to the error condition it encountered. In this program this handler will
 		// never be called.
-		[ ]( leaf::error_info const & unmatched )
+		[]( leaf::error_info const & unmatched )
 		{
 			std::cerr <<
 				"Unknown failure detected" << std::endl <<
@@ -146,7 +146,7 @@ int main( int argc, char const * argv[ ] )
 
 
 // Parse the command line, return the file name.
-leaf::result<char const *> parse_command_line( int argc, char const * argv[ ] )
+leaf::result<char const *> parse_command_line( int argc, char const * argv[] )
 {
 	if( argc==2 )
 		return argv[1];
@@ -169,7 +169,7 @@ leaf::result<std::shared_ptr<FILE>> file_open( char const * file_name )
 leaf::result<int> file_size( FILE & f )
 {
 	// All exceptions escaping this function will automatically load errno.
-	auto load = leaf::defer([ ] { return leaf::e_errno{errno}; });
+	auto load = leaf::defer([] { return leaf::e_errno{errno}; });
 
 	if( fseek(&f,0,SEEK_END) )
 		return leaf::new_error(input_file_size_error);

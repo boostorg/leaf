@@ -14,7 +14,7 @@ struct info { int value; };
 
 void g1()
 {
-	auto load = leaf::defer( [ ] { return info{1}; } );
+	auto load = leaf::defer( [] { return info{1}; } );
 }
 
 void g2()
@@ -24,7 +24,7 @@ void g2()
 
 void f()
 {
-	auto load = leaf::defer( [ ] { return info{2}; } );
+	auto load = leaf::defer( [] { return info{2}; } );
 	g1();
 	g2();
 }
@@ -32,17 +32,17 @@ void f()
 int main()
 {
 	int r = leaf::try_catch(
-		[ ]
+		[]
 		{
 			f();
 			return 0;
 		},
-		[ ]( info x )
+		[]( info x )
 		{
 			BOOST_TEST_EQ(x.value, 2);
 			return 1;
 		},
-		[ ]
+		[]
 		{
 			return 2;
 		 } );

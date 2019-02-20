@@ -689,21 +689,17 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////////
 
+	enum class on_deactivation
+	{
+		propagate,
+		do_not_propagate,
+		propagate_if_uncaught_exception
+	};
+
 	class context_activator
 	{
 		context_activator( context_activator const & ) = delete;
 		context_activator & operator=( context_activator const & ) = delete;
-
-	public:
-
-		enum class on_deactivation
-		{
-			propagate,
-			do_not_propagate,
-			propagate_if_uncaught_exception
-		};
-
-	private:
 
 		polymorphic_context & ctx_;
 		on_deactivation on_deactivate_;

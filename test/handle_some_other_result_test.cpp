@@ -32,7 +32,7 @@ int main()
 {
 	{
 		res<int,std::error_code> r = leaf::try_handle_some(
-			[ ]
+			[]
 			{
 				return g(true);
 			} );

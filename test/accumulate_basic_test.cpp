@@ -19,30 +19,30 @@ struct info
 
 leaf::error_id g()
 {
-	auto load = leaf::accumulate( [ ](info<1> & x) {++x.value;} );
+	auto load = leaf::accumulate( [](info<1> & x) {++x.value;} );
 	return leaf::new_error();
 }
 
 leaf::error_id f()
 {
-	auto load = leaf::accumulate( [ ](info<1> & x) {++x.value;}, [ ](info<2> & x) {++x.value;} );
+	auto load = leaf::accumulate( [](info<1> & x) {++x.value;}, [](info<2> & x) {++x.value;} );
 	return g();
 }
 
 int main()
 {
 	int r = leaf::try_handle_all(
-		[ ]() -> leaf::result<int>
+		[]() -> leaf::result<int>
 		{
 			return f();
 		},
-		[ ]( info<1> const & a, info<2> const & b )
+		[]( info<1> const & a, info<2> const & b )
 		{
 			BOOST_TEST_EQ(a.value, 2);
 			BOOST_TEST_EQ(b.value, 1);
 			return 1;
 		},
-		[ ]
+		[]
 		{
 			return 2;
 		} );

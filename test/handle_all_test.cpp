@@ -247,12 +247,12 @@ int main()
 	// int, try_handle_all (success)
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::ok));
 				return answer;
 			},
-			[ ]
+			[]
 			{
 				return 1;
 			} );
@@ -262,19 +262,19 @@ int main()
 	// int, try_handle_all (failure)
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::error1));
 				return answer;
 			},
-			[ ]( error_code ec, info<1> const & x, info<2> y )
+			[]( error_code ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec==error_code::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 1;
 			},
-			[ ]
+			[]
 			{
 				return 2;
 			} );
@@ -284,23 +284,23 @@ int main()
 	// int, try_handle_all (failure), match cond_x (single enum value)
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
 				return answer;
 			},
-			[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
+			[]( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
 			{
 				return 1;
 			},
-			[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
+			[]( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST_EQ(ec.value(), make_error_code(errc_a::a0));
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -310,23 +310,23 @@ int main()
 	// int, try_handle_all (failure), match enum (single enum value)
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::error1));
 				return answer;
 			},
-			[ ]( leaf::match<error_code,error_code::error2> )
+			[]( leaf::match<error_code,error_code::error2> )
 			{
 				return 1;
 			},
-			[ ]( leaf::match<error_code,error_code::error1> ec, info<1> const & x, info<2> y )
+			[]( leaf::match<error_code,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==error_code::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -336,23 +336,23 @@ int main()
 	// int, try_handle_all (failure), match enum (multiple enum values)
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::error1));
 				return answer;
 			},
-			[ ]( leaf::match<error_code,error_code::error2> )
+			[]( leaf::match<error_code,error_code::error2> )
 			{
 				return 1;
 			},
-			[ ]( leaf::match<error_code,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
+			[]( leaf::match<error_code,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==error_code::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -362,23 +362,23 @@ int main()
 	// int, try_handle_all (failure), match value (single value)
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::error1));
 				return answer;
 			},
-			[ ]( leaf::match<e_error_code,error_code::error2> )
+			[]( leaf::match<e_error_code,error_code::error2> )
 			{
 				return 1;
 			},
-			[ ]( leaf::match<e_error_code,error_code::error1> ec, info<1> const & x, info<2> y )
+			[]( leaf::match<e_error_code,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==error_code::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -388,23 +388,23 @@ int main()
 	// int, try_handle_all (failure), match value (multiple values)
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(error_code::error1));
 				return answer;
 			},
-			[ ]( leaf::match<e_error_code,error_code::error2> )
+			[]( leaf::match<e_error_code,error_code::error2> )
 			{
 				return 1;
 			},
-			[ ]( leaf::match<e_error_code,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
+			[]( leaf::match<e_error_code,error_code::error2,error_code::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==error_code::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );

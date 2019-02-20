@@ -46,7 +46,7 @@ leaf::result<int> compute_answer() noexcept
 	// Convert exceptions of types error_a and error_b to be communicated by leaf::result.
 	// Any other exception will be communicated as a std::exception_ptr.
 	return leaf::exception_to_result<error_a, error_b>(
-		[ ]
+		[]
 		{
 			return compute_answer_throws();
 		} );
@@ -69,18 +69,18 @@ int main()
 	for( int i=0; i!=42; ++i )
 	{
 		leaf::try_handle_all(
-			[ ]() -> leaf::result<void>
+			[]() -> leaf::result<void>
 			{
 				LEAF_CHECK(print_answer());
 				return { };
 			},
 
-			[ ]( error_a const & e )
+			[]( error_a const & e )
 			{
 				std::cerr << "Error A!" << std::endl;
 			},
 
-			[ ]( error_b const & e )
+			[]( error_b const & e )
 			{
 				std::cerr << "Error B!" << std::endl;
 			},
@@ -89,7 +89,7 @@ int main()
 			// into std::exception_ptr as "unknown" exception. Presumably this should not
 			// happen, therefore at this point we treat this situation a logic error: we print
 			// diagnostic information and bail out.
-			[ ]( std::exception_ptr const * ep )
+			[]( std::exception_ptr const * ep )
 			{
 				std::cerr << "Got unknown error!" << std::endl;
 
@@ -104,7 +104,7 @@ int main()
 						{
 							std::rethrow_exception(*ep);
 						},
-						[ ]( leaf::error_info const & unmatched )
+						[]( leaf::error_info const & unmatched )
 						{
 							std::cerr << unmatched;
 						} );

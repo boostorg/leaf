@@ -72,7 +72,7 @@ struct non_printable_info_non_printable_payload
 int main()
 {
 	leaf::try_catch(
-		[ ]
+		[]
 		{
 			LEAF_THROW( my_error(),
 				printable_info_printable_payload(),
@@ -83,7 +83,7 @@ int main()
 				unexpected_test<2>{2},
 				leaf::e_errno{ENOENT} );
 		},
-		[ ](
+		[](
 			leaf::e_source_location,
 			printable_info_printable_payload,
 			printable_info_non_printable_payload,
@@ -118,7 +118,7 @@ int main()
 	std::cout << std::endl;
 
 	leaf::try_catch(
-		[ ]
+		[]
 		{
 			LEAF_THROW( my_error(),
 				printable_info_printable_payload(),
@@ -129,7 +129,7 @@ int main()
 				unexpected_test<2>{2},
 				leaf::e_errno{ENOENT} );
 		},
-		[ ](
+		[](
 			leaf::e_source_location,
 			printable_info_printable_payload,
 			printable_info_non_printable_payload,
@@ -166,7 +166,7 @@ int main()
 	std::cout << std::endl;
 
 	leaf::try_catch(
-		[ ]
+		[]
 		{
 			LEAF_THROW( my_error(),
 				printable_info_printable_payload(),
@@ -177,7 +177,7 @@ int main()
 				unexpected_test<2>{2},
 				leaf::e_errno{ENOENT} );
 		},
-		[ ](
+		[](
 			leaf::e_source_location,
 			printable_info_printable_payload,
 			printable_info_non_printable_payload,
@@ -213,11 +213,11 @@ int main()
 	std::cout << std::endl;
 
 	leaf::try_catch(
-		[ ]
+		[]
 		{
 			LEAF_THROW( my_error(), leaf::e_errno{ENOENT} );
 		},
-		[ ]( leaf::e_source_location, leaf::e_errno, leaf::diagnostic_info const & di )
+		[]( leaf::e_source_location, leaf::e_errno, leaf::diagnostic_info const & di )
 		{
 			{
 				std::ostringstream st;
@@ -238,11 +238,11 @@ int main()
 	std::cout << std::endl;
 
 	leaf::try_catch(
-		[ ]
+		[]
 		{
 			LEAF_THROW( my_error(), leaf::e_errno{ENOENT} );
 		},
-		[ ]( leaf::e_source_location, leaf::e_errno, leaf::verbose_diagnostic_info const & vdi )
+		[]( leaf::e_source_location, leaf::e_errno, leaf::verbose_diagnostic_info const & vdi )
 		{
 			{
 				std::ostringstream st;

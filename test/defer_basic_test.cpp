@@ -27,7 +27,7 @@ struct info
 leaf::error_id g()
 {
 	global = 0;
-	auto load = leaf::defer( [ ]{ return info<42>{get_global()}; }, [ ]{ return info<-42>{-42}; } );
+	auto load = leaf::defer( []{ return info<42>{get_global()}; }, []{ return info<-42>{-42}; } );
 	global = 42;
 	return leaf::new_error();
 }
@@ -40,11 +40,11 @@ leaf::error_id f()
 int main()
 {
 	int r = leaf::try_handle_all(
-		[ ]() -> leaf::result<int>
+		[]() -> leaf::result<int>
 		{
 			return f();
 		},
-		[ ]( info<42> const & i42, leaf::diagnostic_info const & di )
+		[]( info<42> const & i42, leaf::diagnostic_info const & di )
 		{
 			BOOST_TEST_EQ(i42.value, 42);
 			std::stringstream ss; ss << di;
@@ -53,7 +53,7 @@ int main()
 			BOOST_TEST(s.find("info<-42>")!=s.npos);
 			return 1;
 		},
-		[ ]
+		[]
 		{
 			return 2;
 		} );

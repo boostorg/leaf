@@ -52,12 +52,12 @@ leaf::error_id f2()
 int main()
 {
 	int r = leaf::try_catch(
-		[ ]
+		[]
 		{
 			f2();
 			return 0;
 		},
-		[ ]( info<0> i0, info<1> i1, info<2> i2, info<3> i3 )
+		[]( info<0> i0, info<1> i1, info<2> i2, info<3> i3 )
 		{
 			BOOST_TEST_EQ(i0.value, 0);
 			BOOST_TEST_EQ(i1.value, 1);
@@ -65,7 +65,7 @@ int main()
 			BOOST_TEST_EQ(i3.value, 3);
 			return 1;
 		},
-		[ ]
+		[]
 		{
 			return 2;
 		} );

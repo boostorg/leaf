@@ -34,17 +34,17 @@ leaf::result<void> f()
 int main()
 {
 	int r = leaf::try_handle_all(
-		[ ]() -> leaf::result<int>
+		[]() -> leaf::result<int>
 		{
 			LEAF_CHECK(f());
 			return 1;
 		},
-		[ ]( info x )
+		[]( info x )
 		{
 			BOOST_TEST_EQ(x.value, 2);
 			return 2;
 		},
-		[ ]
+		[]
 		{
 			return 3;
 		 } );

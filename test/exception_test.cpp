@@ -24,23 +24,23 @@ int test( F && f )
 			f();
 			return 1;
 		},
-		[ ]( leaf::catch_<my_error>, leaf::match<info,42>, leaf::e_source_location )
+		[]( leaf::catch_<my_error>, leaf::match<info,42>, leaf::e_source_location )
 		{
 			return 2;
 		},
-		[ ]( leaf::catch_<my_error>, leaf::match<info,42>, info x )
+		[]( leaf::catch_<my_error>, leaf::match<info,42>, info x )
 		{
 			return 3;
 		},
-		[ ]( leaf::catch_<my_error>, leaf::e_source_location )
+		[]( leaf::catch_<my_error>, leaf::e_source_location )
 		{
 			return 4;
 		},
-		[ ]( leaf::catch_<my_error> )
+		[]( leaf::catch_<my_error> )
 		{
 			return 5;
 		},
-		[ ]
+		[]
 		{
 			return 6;
 		} );
@@ -50,7 +50,7 @@ int main()
 {
 	{
 		int const id = leaf::leaf_detail::next_id();
-		BOOST_TEST_EQ( 3, test( [ ]
+		BOOST_TEST_EQ( 3, test( []
 		{
 			auto load = leaf::preload(info{42});
 			throw my_error();
@@ -60,7 +60,7 @@ int main()
 
 	{
 		int const id = leaf::leaf_detail::next_id();
-		BOOST_TEST_EQ( 5, test( [ ]
+		BOOST_TEST_EQ( 5, test( []
 		{
 			throw my_error();
 		} ) );
@@ -69,13 +69,13 @@ int main()
 
 	{
 		int const id = leaf::leaf_detail::next_id();
-		BOOST_TEST_EQ( 5, test( [ ]
+		BOOST_TEST_EQ( 5, test( []
 		{
 			int const id = leaf::leaf_detail::next_id();
 			try
 			{
 				leaf::try_catch(
-					[ ]
+					[]
 					{
 						throw my_error();
 					} );
@@ -89,14 +89,14 @@ int main()
 		BOOST_TEST_NE(id, leaf::leaf_detail::next_id());
 	}
 
-	BOOST_TEST_EQ( 5, test( [ ] { throw leaf::exception(my_error()); } ) );
-	BOOST_TEST_EQ( 3, test( [ ] { throw leaf::exception(my_error(),info{42}); } ) );
+	BOOST_TEST_EQ( 5, test( [] { throw leaf::exception(my_error()); } ) );
+	BOOST_TEST_EQ( 3, test( [] { throw leaf::exception(my_error(),info{42}); } ) );
 
-	BOOST_TEST_EQ( 4, test( [ ] { throw LEAF_EXCEPTION(my_error()); } ) );
-	BOOST_TEST_EQ( 2, test( [ ] { throw LEAF_EXCEPTION(my_error(),info{42}); } ) );
+	BOOST_TEST_EQ( 4, test( [] { throw LEAF_EXCEPTION(my_error()); } ) );
+	BOOST_TEST_EQ( 2, test( [] { throw LEAF_EXCEPTION(my_error(),info{42}); } ) );
 
-	BOOST_TEST_EQ( 4, test( [ ] { LEAF_THROW(my_error()); } ) );
-	BOOST_TEST_EQ( 2, test( [ ] { LEAF_THROW(my_error(),info{42}); } ) );
+	BOOST_TEST_EQ( 4, test( [] { LEAF_THROW(my_error()); } ) );
+	BOOST_TEST_EQ( 2, test( [] { LEAF_THROW(my_error(),info{42}); } ) );
 
 	return boost::report_errors();
 }

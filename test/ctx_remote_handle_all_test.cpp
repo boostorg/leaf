@@ -20,21 +20,21 @@ struct info
 template <class Ctx>
 leaf::result<int> f( Ctx & ctx )
 {
-	leaf::context_activator active_context(ctx, leaf::context_activator::on_deactivation::do_not_propagate);
+	leaf::context_activator active_context(ctx, leaf::on_deactivation::do_not_propagate);
 	return leaf::new_error( info<1>{1} );
 }
 
 int main()
 {
-	auto handle_error = [ ]( leaf::error_info const & error )
+	auto handle_error = []( leaf::error_info const & error )
 	{
 		return leaf::remote_handle_all( error,
-			[ ]( info<1> x )
+			[]( info<1> x )
 			{
 				BOOST_TEST(x.value==1);
 				return 1;
 			},
-			[ ]
+			[]
 			{
 				return 2;
 			} );

@@ -16,11 +16,11 @@ void test()
 {
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> R
+			[]() -> R
 			{
 				return make_error_code(errc_a::a0);
 			},
-			[ ]( std::error_code const & ec )
+			[]( std::error_code const & ec )
 			{
 				BOOST_TEST_EQ(ec, make_error_code(errc_a::a0));
 				return 42;
@@ -29,15 +29,15 @@ void test()
 	}
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> R
+			[]() -> R
 			{
 				return make_error_code(errc_a::a0);
 			},
-			[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x00> )
+			[]( leaf::match<leaf::condition<cond_x>, cond_x::x00> )
 			{
 				return 42;
 			},
-			[ ]
+			[]
 			{
 				return -42;
 			} );
@@ -45,26 +45,26 @@ void test()
 	}
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> R
+			[]() -> R
 			{
 				auto r1 = leaf::try_handle_some(
-					[ ]() -> R
+					[]() -> R
 					{
 						return make_error_code(errc_a::a0);
 					} );
 				auto r2 = leaf::try_handle_some(
-					[ ]() -> R
+					[]() -> R
 					{
 						return make_error_code(errc_b::b0);
 					} );
 				(void) r1;
 				return r2;
 			},
-			[ ]( leaf::match<leaf::condition<cond_y>, cond_y::y03> )
+			[]( leaf::match<leaf::condition<cond_y>, cond_y::y03> )
 			{
 				return 42;
 			},
-			[ ]
+			[]
 			{
 				return -42;
 			} );
@@ -72,15 +72,15 @@ void test()
 	}
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> R
+			[]() -> R
 			{
 				return leaf::new_error(errc_a::a0, e_errc_a<1>{make_error_code(errc_a::a1)});
 			},
-			[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x00>, leaf::match<leaf::condition<e_errc_a<1>, cond_y>, cond_y::y12, cond_y::y03> )
+			[]( leaf::match<leaf::condition<cond_x>, cond_x::x00>, leaf::match<leaf::condition<e_errc_a<1>, cond_y>, cond_y::y12, cond_y::y03> )
 			{
 				return 42;
 			},
-			[ ]
+			[]
 			{
 				return -42;
 			} );
@@ -88,15 +88,15 @@ void test()
 	}
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> R
+			[]() -> R
 			{
 				return leaf::new_error(errc_a::a1, e_errc_a<1>{make_error_code(errc_a::a0)});
 			},
-			[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x11>, leaf::match<leaf::condition<e_errc_a<1>, cond_y>, cond_y::y12, cond_y::y03> )
+			[]( leaf::match<leaf::condition<cond_x>, cond_x::x11>, leaf::match<leaf::condition<e_errc_a<1>, cond_y>, cond_y::y12, cond_y::y03> )
 			{
 				return 42;
 			},
-			[ ]
+			[]
 			{
 				return -42;
 			} );

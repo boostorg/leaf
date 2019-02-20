@@ -18,17 +18,17 @@ struct my_error: std::exception { };
 int main()
 {
 	int r = leaf::try_catch(
-		[ ]() -> int
+		[]() -> int
 		{
 			throw leaf::exception( my_error(), info{42} );
 		},
-		[ ]( leaf::catch_<my_error> x, leaf::catch_<leaf::error_id> id )
+		[]( leaf::catch_<my_error> x, leaf::catch_<leaf::error_id> id )
 		{
 			BOOST_TEST(dynamic_cast<my_error const *>(&x.value())!=0);
 			BOOST_TEST(dynamic_cast<leaf::error_id const *>(&id.value())!=0 && dynamic_cast<leaf::error_id const *>(&id.value())->value()==1);
 			return 1;
 		},
-		[ ]
+		[]
 		{
 			return 2;
 		} );

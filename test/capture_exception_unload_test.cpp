@@ -83,12 +83,12 @@ void test( F f_ )
 			{
 				std::rethrow_exception(ep); return 0;
 			},
-			[ ]( info<1> const & x )
+			[]( info<1> const & x )
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				return 1;
 			},
-			[ ]
+			[]
 			{
 				return 2;
 			} );
@@ -102,12 +102,12 @@ void test( F f_ )
 			{
 				std::rethrow_exception(ep); return 0;
 			},
-			[ ]( info<2> const & x )
+			[]( info<2> const & x )
 			{
 				BOOST_TEST_EQ(x.value, 2);
 				return 1;
 			},
-			[ ]
+			[]
 			{
 				return 2;
 			} );
@@ -121,21 +121,21 @@ void test( F f_ )
 			{
 				std::rethrow_exception(ep); return true;
 			},
-			[ ]( info<1> const & x, info<2> const & )
+			[]( info<1> const & x, info<2> const & )
 			{
 				return true;
 			},
-			[ ]( info<1> const & x, info<3> const & y )
+			[]( info<1> const & x, info<3> const & y )
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 3);
 				return false;
 			},
-			[ ]( info<1> const & x )
+			[]( info<1> const & x )
 			{
 				return true;
 			},
-			[ ]
+			[]
 			{
 				return true;
 			} );
@@ -149,21 +149,21 @@ void test( F f_ )
 			{
 				std::rethrow_exception(ep); return false;
 			},
-			[ ]( info<1> const & x, info<2> const & )
+			[]( info<1> const & x, info<2> const & )
 			{
 				return false;
 			},
-			[ ]( info<1> const & x, info<3> const & y )
+			[]( info<1> const & x, info<3> const & y )
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 3);
 				return true;
 			},
-			[ ]( info<1> const & x )
+			[]( info<1> const & x )
 			{
 				return false;
 			},
-			[ ]
+			[]
 			{
 				return false;
 			} );
@@ -174,12 +174,12 @@ void test( F f_ )
 int main()
 {
 	test<info<1>, info<2>, info<3>>(
-		[ ]
+		[]
 		{
 			throw leaf::exception( std::exception(), info<1>{1}, info<3>{3} ); // Derives from leaf::leaf::error_id
 		} );
 	test<info<1>, info<2>, info<3>>(
-		[ ]
+		[]
 		{
 			auto load = leaf::preload( info<1>{1}, info<3>{3} );
 			throw std::exception(); // Does not derive from leaf::leaf::error_id

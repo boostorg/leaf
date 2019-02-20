@@ -48,7 +48,7 @@ namespace boost { namespace leaf {
 	template <> struct is_e_type<e_error_log>: std::true_type { };
 } }
 
-#define ERROR_LOG auto _log = leaf::accumulate( [ ]( e_error_log & log ) { log << e_error_log::rec{__FILE__, __LINE__}; } )
+#define ERROR_LOG auto _log = leaf::accumulate( []( e_error_log & log ) { log << e_error_log::rec{__FILE__, __LINE__}; } )
 
 int const failure_percent = 25;
 
@@ -109,11 +109,11 @@ int main()
 				return { };
 			},
 #if ENABLE_ERROR_LOG
-			[ ]( e_error_log const & )
+			[]( e_error_log const & )
 			{
 			},
 #endif
-			[ ]
+			[]
 			{
 				std::cerr << "Error!" << std::endl;
 			} );

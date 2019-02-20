@@ -22,7 +22,7 @@ int main()
 {
 	{
 		int r = leaf::try_catch(
-			[ ]
+			[]
 			{
 				leaf::result<int> r = leaf::new_error();
 				(void) r.value();
@@ -33,7 +33,7 @@ int main()
 	}
 	{
 		int r = leaf::try_catch(
-			[ ]
+			[]
 			{
 				leaf::result<int> const r = leaf::new_error();
 				(void) r.value();
@@ -44,7 +44,7 @@ int main()
 	}
 	{
 		int r = leaf::try_catch(
-			[ ]
+			[]
 			{
 				leaf::result<int> r = leaf::new_error();
 				(void) *r;
@@ -55,7 +55,7 @@ int main()
 	}
 	{
 		int r = leaf::try_catch(
-			[ ]
+			[]
 			{
 				leaf::result<int> const r = leaf::new_error();
 				(void) *r;

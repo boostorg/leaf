@@ -677,12 +677,12 @@ int main()
 	// int, try_handle_some (success)
 	{
 		leaf::result<int> r = leaf::try_handle_some(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(not_error_code_enum::ok));
 				return answer;
 			},
-			[ ]( leaf::error_info const & unmatched )
+			[]( leaf::error_info const & unmatched )
 			{
 				return unmatched.error();
 			} );
@@ -692,12 +692,12 @@ int main()
 	// int, try_handle_some (failure, matched)
 	{
 		leaf::result<int> r = leaf::try_handle_some(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 				return answer;
 			},
-			[ ]( not_error_code_enum ec, info<1> const & x, info<2> y )
+			[]( not_error_code_enum ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec==not_error_code_enum::error1);
 				BOOST_TEST_EQ(x.value, 1);
@@ -711,16 +711,16 @@ int main()
 	// int, try_handle_some (failure, matched), match cond_x (single enum value)
 	{
 		leaf::result<int> r = leaf::try_handle_some(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
 				return answer;
 			},
-			[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
+			[]( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
 			{
 				return 1;
 			},
-			[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
+			[]( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST_EQ(ec.value(), make_error_code(errc_a::a0));
 				BOOST_TEST_EQ(x.value, 1);
@@ -734,16 +734,16 @@ int main()
 	// int, try_handle_some (failure, matched), match enum (single enum value)
 	{
 		leaf::result<int> r = leaf::try_handle_some(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 				return answer;
 			},
-			[ ]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
+			[]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
 			{
 				return 1;
 			},
-			[ ]( leaf::match<not_error_code_enum,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
+			[]( leaf::match<not_error_code_enum,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==not_error_code_enum::error1);
 				BOOST_TEST_EQ(x.value, 1);
@@ -757,16 +757,16 @@ int main()
 	// int, try_handle_some (failure, matched), match enum (multiple enum values)
 	{
 		leaf::result<int> r = leaf::try_handle_some(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 				return answer;
 			},
-			[ ]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
+			[]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
 			{
 				return 1;
 			},
-			[ ]( leaf::match<not_error_code_enum,not_error_code_enum::error2,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
+			[]( leaf::match<not_error_code_enum,not_error_code_enum::error2,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==not_error_code_enum::error1);
 				BOOST_TEST_EQ(x.value, 1);
@@ -780,16 +780,16 @@ int main()
 	// int, try_handle_some (failure, matched), match value (single value)
 	{
 		leaf::result<int> r = leaf::try_handle_some(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 				return answer;
 			},
-			[ ]( leaf::match<e_error_code,not_error_code_enum::error2> )
+			[]( leaf::match<e_error_code,not_error_code_enum::error2> )
 			{
 				return 1;
 			},
-			[ ]( leaf::match<e_error_code,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
+			[]( leaf::match<e_error_code,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==not_error_code_enum::error1);
 				BOOST_TEST_EQ(x.value, 1);
@@ -803,16 +803,16 @@ int main()
 	// int, try_handle_some (failure, matched), match value (multiple values)
 	{
 		leaf::result<int> r = leaf::try_handle_some(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 				return answer;
 			},
-			[ ]( leaf::match<e_error_code,not_error_code_enum::error2> )
+			[]( leaf::match<e_error_code,not_error_code_enum::error2> )
 			{
 				return 1;
 			},
-			[ ]( leaf::match<e_error_code,not_error_code_enum::error2,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
+			[]( leaf::match<e_error_code,not_error_code_enum::error2,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==not_error_code_enum::error1);
 				BOOST_TEST_EQ(x.value, 1);
@@ -826,29 +826,29 @@ int main()
 	// int, try_handle_some (failure, initially not matched)
 	{
 		int r = leaf::try_handle_all(
-			[ ]
+			[]
 			{
 				leaf::result<int> r = leaf::try_handle_some(
-					[ ]() -> leaf::result<int>
+					[]() -> leaf::result<int>
 					{
 						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
-					[ ]( info<4> )
+					[]( info<4> )
 					{
 						return 1;
 					} );
 				BOOST_TEST(!r);
 				return r;
 			},
-			[ ]( not_error_code_enum ec, info<1> const & x, info<2> y )
+			[]( not_error_code_enum ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec==not_error_code_enum::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -858,29 +858,29 @@ int main()
 	// int, try_handle_some (failure, initially not matched), match cond_x (single enum value)
 	{
 		int r = leaf::try_handle_all(
-			[ ]
+			[]
 			{
 				leaf::result<int> r = leaf::try_handle_some(
-					[ ]() -> leaf::result<int>
+					[]() -> leaf::result<int>
 					{
 						LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
 						return answer;
 					},
-					[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
+					[]( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
 					{
 						return 1;
 					} );
 				BOOST_TEST(!r);
 				return r;
 			},
-			[ ]( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
+			[]( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST_EQ(ec.value(), make_error_code(errc_a::a0));
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -890,29 +890,29 @@ int main()
 	// int, try_handle_some (failure, initially not matched), match enum (single enum value)
 	{
 		int r = leaf::try_handle_all(
-			[ ]
+			[]
 			{
 				leaf::result<int> r = leaf::try_handle_some(
-					[ ]() -> leaf::result<int>
+					[]() -> leaf::result<int>
 					{
 						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
-					[ ]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
+					[]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
 					{
 						return 1;
 					} );
 				BOOST_TEST(!r);
 				return r;
 			},
-			[ ]( leaf::match<not_error_code_enum,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
+			[]( leaf::match<not_error_code_enum,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==not_error_code_enum::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -922,29 +922,29 @@ int main()
 	// int, try_handle_some (failure, initially not matched), match enum (multiple enum values)
 	{
 		int r = leaf::try_handle_all(
-			[ ]
+			[]
 			{
 				leaf::result<int> r = leaf::try_handle_some(
-					[ ]() -> leaf::result<int>
+					[]() -> leaf::result<int>
 					{
 						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
-					[ ]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
+					[]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
 					{
 						return 1;
 					} );
 				BOOST_TEST(!r);
 				return r;
 			},
-			[ ]( leaf::match<not_error_code_enum,not_error_code_enum::error2,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
+			[]( leaf::match<not_error_code_enum,not_error_code_enum::error2,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==not_error_code_enum::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -954,29 +954,29 @@ int main()
 	// int, try_handle_some (failure, initially not matched), match value (single value)
 	{
 		int r = leaf::try_handle_all(
-			[ ]
+			[]
 			{
 				leaf::result<int> r = leaf::try_handle_some(
-					[ ]() -> leaf::result<int>
+					[]() -> leaf::result<int>
 					{
 						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
-					[ ]( leaf::match<e_error_code,not_error_code_enum::error2> )
+					[]( leaf::match<e_error_code,not_error_code_enum::error2> )
 					{
 						return 1;
 					} );
 				BOOST_TEST(!r);
 				return r;
 			},
-			[ ]( leaf::match<e_error_code,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
+			[]( leaf::match<e_error_code,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==not_error_code_enum::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -986,29 +986,29 @@ int main()
 	// int, try_handle_some (failure, initially not matched), match value (multiple values)
 	{
 		int r = leaf::try_handle_all(
-			[ ]
+			[]
 			{
 				leaf::result<int> r = leaf::try_handle_some(
-					[ ]() -> leaf::result<int>
+					[]() -> leaf::result<int>
 					{
 						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
-					[ ]( leaf::match<e_error_code,not_error_code_enum::error2> )
+					[]( leaf::match<e_error_code,not_error_code_enum::error2> )
 					{
 						return 1;
 					} );
 				BOOST_TEST(!r);
 				return r;
 			},
-			[ ]( leaf::match<e_error_code,not_error_code_enum::error2,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
+			[]( leaf::match<e_error_code,not_error_code_enum::error2,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST(ec.value()==not_error_code_enum::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -1018,15 +1018,15 @@ int main()
 	// int, try_handle_some (failure, initially matched)
 	{
 		int r = leaf::try_handle_all(
-			[ ]
+			[]
 			{
 				leaf::result<int> r = leaf::try_handle_some(
-					[ ]() -> leaf::result<int>
+					[]() -> leaf::result<int>
 					{
 						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
-					[ ]( not_error_code_enum ec, info<1> const & x, info<2> y )
+					[]( not_error_code_enum ec, info<1> const & x, info<2> y )
 					{
 						BOOST_TEST(ec==not_error_code_enum::error1);
 						BOOST_TEST_EQ(x.value, 1);
@@ -1036,11 +1036,11 @@ int main()
 				BOOST_TEST(r);
 				return r;
 			},
-			[ ]( info<4> )
+			[]( info<4> )
 			{
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -1050,15 +1050,15 @@ int main()
 	// int, try_handle_some (failure, initially matched), match enum (single enum value)
 	{
 		int r = leaf::try_handle_all(
-			[ ]
+			[]
 			{
 				leaf::result<int> r = leaf::try_handle_some(
-					[ ]() -> leaf::result<int>
+					[]() -> leaf::result<int>
 					{
 						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
-					[ ]( leaf::match<not_error_code_enum,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
+					[]( leaf::match<not_error_code_enum,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
 					{
 						BOOST_TEST(ec.value()==not_error_code_enum::error1);
 						BOOST_TEST_EQ(x.value, 1);
@@ -1068,11 +1068,11 @@ int main()
 				BOOST_TEST(r);
 				return r;
 			},
-			[ ]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
+			[]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
 			{
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -1082,15 +1082,15 @@ int main()
 	// int, try_handle_some (failure, initially matched), match enum (multiple enum values)
 	{
 		int r = leaf::try_handle_all(
-			[ ]
+			[]
 			{
 				leaf::result<int> r = leaf::try_handle_some(
-					[ ]() -> leaf::result<int>
+					[]() -> leaf::result<int>
 					{
 						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
-					[ ]( leaf::match<not_error_code_enum,not_error_code_enum::error2,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
+					[]( leaf::match<not_error_code_enum,not_error_code_enum::error2,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
 					{
 						BOOST_TEST(ec.value()==not_error_code_enum::error1);
 						BOOST_TEST_EQ(x.value, 1);
@@ -1100,11 +1100,11 @@ int main()
 				BOOST_TEST(r);
 				return r;
 			},
-			[ ]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
+			[]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
 			{
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -1114,15 +1114,15 @@ int main()
 	// int, try_handle_some (failure, initially matched), match value (single value)
 	{
 		int r = leaf::try_handle_all(
-			[ ]
+			[]
 			{
 				leaf::result<int> r = leaf::try_handle_some(
-					[ ]() -> leaf::result<int>
+					[]() -> leaf::result<int>
 					{
 						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
-					[ ]( leaf::match<e_error_code,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
+					[]( leaf::match<e_error_code,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
 					{
 						BOOST_TEST(ec.value()==not_error_code_enum::error1);
 						BOOST_TEST_EQ(x.value, 1);
@@ -1132,11 +1132,11 @@ int main()
 				BOOST_TEST(r);
 				return r;
 			},
-			[ ]( leaf::match<e_error_code,not_error_code_enum::error2> )
+			[]( leaf::match<e_error_code,not_error_code_enum::error2> )
 			{
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -1146,15 +1146,15 @@ int main()
 	// int, try_handle_some (failure, initially matched), match value (multiple values)
 	{
 		int r = leaf::try_handle_all(
-			[ ]
+			[]
 			{
 				leaf::result<int> r = leaf::try_handle_some(
-					[ ]() -> leaf::result<int>
+					[]() -> leaf::result<int>
 					{
 						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
-					[ ]( leaf::match<e_error_code,not_error_code_enum::error2,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
+					[]( leaf::match<e_error_code,not_error_code_enum::error2,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
 					{
 						BOOST_TEST(ec.value()==not_error_code_enum::error1);
 						BOOST_TEST_EQ(x.value, 1);
@@ -1164,11 +1164,11 @@ int main()
 				BOOST_TEST(r);
 				return r;
 			},
-			[ ]( leaf::match<e_error_code,not_error_code_enum::error2> )
+			[]( leaf::match<e_error_code,not_error_code_enum::error2> )
 			{
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );

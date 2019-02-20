@@ -58,7 +58,7 @@ struct io_task_context
 		asio::post( io_ctx,
 			[=]() mutable
 			{
-				leaf::context_activator active_context(*err_ctx, leaf::context_activator::on_deactivation::do_not_propagate);
+				leaf::context_activator active_context(*err_ctx, leaf::on_deactivation::do_not_propagate);
 				f();
 			} );
 	}
@@ -187,10 +187,10 @@ struct op_b
 
 int main()
 {
-	auto handle_error = [ ]( leaf::error_info const & error )
+	auto handle_error = []( leaf::error_info const & error )
 	{
 		return leaf::remote_handle_all( error,
-			[ ]( leaf::match<loc,fail_where::f, fail_where::g> wh, info<1> const * i1, info<2> const * i2, info<3> const * i3, info<4> const * i4, info<5> const * i5, info<6> const * i6, info<7> const * i7 )
+			[]( leaf::match<loc,fail_where::f, fail_where::g> wh, info<1> const * i1, info<2> const * i2, info<3> const * i3, info<4> const * i4, info<5> const * i5, info<6> const * i6, info<7> const * i7 )
 			{
 				BOOST_TEST(i1 != 0);
 				BOOST_TEST(i2 == 0);
@@ -201,7 +201,7 @@ int main()
 				BOOST_TEST(i7 == 0);
 				return -int(wh.value());
 			},
-			[ ]( leaf::match<loc,fail_where::op_a_start> wh, info<1> const * i1, info<2> const * i2, info<3> const * i3, info<4> const * i4, info<5> const * i5, info<6> const * i6, info<7> const * i7 )
+			[]( leaf::match<loc,fail_where::op_a_start> wh, info<1> const * i1, info<2> const * i2, info<3> const * i3, info<4> const * i4, info<5> const * i5, info<6> const * i6, info<7> const * i7 )
 			{
 				BOOST_TEST(i1 == 0);
 				BOOST_TEST(i2 != 0);
@@ -212,7 +212,7 @@ int main()
 				BOOST_TEST(i7 == 0);
 				return -int(wh.value());
 			},
-			[ ]( leaf::match<loc,fail_where::op_b_start_before_op_a_start> wh, info<1> const * i1, info<2> const * i2, info<3> const * i3, info<4> const * i4, info<5> const * i5, info<6> const * i6, info<7> const * i7 )
+			[]( leaf::match<loc,fail_where::op_b_start_before_op_a_start> wh, info<1> const * i1, info<2> const * i2, info<3> const * i3, info<4> const * i4, info<5> const * i5, info<6> const * i6, info<7> const * i7 )
 			{
 				BOOST_TEST(i1 == 0);
 				BOOST_TEST(i2 == 0);
@@ -223,7 +223,7 @@ int main()
 				BOOST_TEST(i7 == 0);
 				return -int(wh.value());
 			},
-			[ ]( leaf::match<loc,fail_where::op_b_start_after_successful_op_a> wh, info<1> const * i1, info<2> const * i2, info<3> const * i3, info<4> const * i4, info<5> const * i5, info<6> const * i6, info<7> const * i7 )
+			[]( leaf::match<loc,fail_where::op_b_start_after_successful_op_a> wh, info<1> const * i1, info<2> const * i2, info<3> const * i3, info<4> const * i4, info<5> const * i5, info<6> const * i6, info<7> const * i7 )
 			{
 				BOOST_TEST(i1 == 0);
 				BOOST_TEST(i2 == 0);
@@ -234,7 +234,7 @@ int main()
 				BOOST_TEST(i7 == 0);
 				return -int(wh.value());
 			},
-			[ ]( leaf::match<loc,fail_where::op_b_cont_before_op_a_start> wh, info<1> const * i1, info<2> const * i2, info<3> const * i3, info<4> const * i4, info<5> const * i5, info<6> const * i6, info<7> const * i7 )
+			[]( leaf::match<loc,fail_where::op_b_cont_before_op_a_start> wh, info<1> const * i1, info<2> const * i2, info<3> const * i3, info<4> const * i4, info<5> const * i5, info<6> const * i6, info<7> const * i7 )
 			{
 				BOOST_TEST(i1 == 0);
 				BOOST_TEST(i2 == 0);
@@ -245,7 +245,7 @@ int main()
 				BOOST_TEST(i7 == 0);
 				return -int(wh.value());
 			},
-			[ ]( leaf::match<loc,fail_where::op_b_cont_after_successful_op_a> wh, info<1> const * i1, info<2> const * i2, info<3> const * i3, info<4> const * i4, info<5> const * i5, info<6> const * i6, info<7> const * i7 )
+			[]( leaf::match<loc,fail_where::op_b_cont_after_successful_op_a> wh, info<1> const * i1, info<2> const * i2, info<3> const * i3, info<4> const * i4, info<5> const * i5, info<6> const * i6, info<7> const * i7 )
 			{
 				BOOST_TEST(i1 == 0);
 				BOOST_TEST(i2 == 0);
@@ -256,7 +256,7 @@ int main()
 				BOOST_TEST(i7 != 0);
 				return -int(wh.value());
 			},
-			[ ]
+			[]
 			{
 				return 0;
 			} );

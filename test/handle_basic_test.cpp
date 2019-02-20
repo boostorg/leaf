@@ -44,7 +44,7 @@ leaf::result<int> handle_some_errors( int what_to_do )
 		{
 			return compute_answer(what_to_do);
 		},
-		[ ]( leaf::match<error_code,error_code::error1> )
+		[]( leaf::match<error_code,error_code::error1> )
 		{
 			return -42;
 		} );
@@ -57,7 +57,7 @@ leaf::result<float> handle_some_errors_float( int what_to_do )
 		{
 			return compute_answer(what_to_do);
 		},
-		[ ]( leaf::match<error_code,error_code::error2>  )
+		[]( leaf::match<error_code,error_code::error2>  )
 		{
 			return -42.0f;
 		} );
@@ -72,7 +72,7 @@ leaf::result<void> handle_some_errors_void( int what_to_do )
 			(void) answer;
 			return { };
 		},
-		[ ]( leaf::match<error_code,error_code::error3>  )
+		[]( leaf::match<error_code,error_code::error3>  )
 		{
 		} );
 }
@@ -83,17 +83,17 @@ int main()
 	BOOST_TEST_EQ(handle_some_errors(1).value(), -42);
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer,handle_some_errors(3));
 				(void) answer;
 				return 0;
 			},
-			[ ]( leaf::match<error_code,error_code::error3> )
+			[]( leaf::match<error_code,error_code::error3> )
 			{
 				return 1;
 			},
-			[ ]
+			[]
 			{
 				return 2;
 			} );
@@ -106,17 +106,17 @@ int main()
 	BOOST_TEST_EQ(handle_some_errors_float(2).value(), -42.0f);
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_AUTO(answer,handle_some_errors_float(1));
 				(void) answer;
 				return 0;
 			},
-			[ ]( leaf::match<error_code,error_code::error1> )
+			[]( leaf::match<error_code,error_code::error1> )
 			{
 				return 1;
 			},
-			[ ]
+			[]
 			{
 				return 2;
 			} );
@@ -129,16 +129,16 @@ int main()
 	BOOST_TEST(handle_some_errors_void(3));
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_CHECK(handle_some_errors_void(2));
 				return 0;
 			},
-			[ ]( leaf::match<error_code,error_code::error2> )
+			[]( leaf::match<error_code,error_code::error2> )
 			{
 				return 1;
 			},
-			[ ]
+			[]
 			{
 				return 2;
 			} );
@@ -149,16 +149,16 @@ int main()
 
 	{
 		int r = leaf::try_handle_all(
-			[ ]() -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				LEAF_CHECK(handle_some_errors_void(2));
 				return 0;
 			},
-			[ ]( leaf::catch_<std::exception> )
+			[]( leaf::catch_<std::exception> )
 			{
 				return 1;
 			},
-			[ ]
+			[]
 			{
 				return 2;
 			} );

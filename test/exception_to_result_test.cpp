@@ -17,15 +17,15 @@ int main()
 {
 	{
 		int r = leaf::try_handle_all(
-			[ ]
+			[]
 			{
 				return leaf::exception_to_result<my_exception<1>,my_exception<2>>(
-					[ ]() -> int
+					[]() -> int
 					{
 						throw my_exception<1>();
 					} );
 			},
-			[ ]( my_exception<1> const &, std::exception_ptr const & ep )
+			[]( my_exception<1> const &, std::exception_ptr const & ep )
 			{
 				try
 				{
@@ -36,11 +36,11 @@ int main()
 				}
 				return 1;
 			},
-			[ ]( my_exception<2> const & )
+			[]( my_exception<2> const & )
 			{
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -48,19 +48,19 @@ int main()
 	}
 	{
 		int r = leaf::try_handle_all(
-			[ ]
+			[]
 			{
 				return leaf::exception_to_result<my_exception<1>,my_exception<2>>(
-					[ ]() -> int
+					[]() -> int
 					{
 						throw my_exception<2>();
 					} );
 			},
-			[ ]( my_exception<1> const & )
+			[]( my_exception<1> const & )
 			{
 				return 1;
 			},
-			[ ]( my_exception<2> const &, std::exception_ptr const & ep )
+			[]( my_exception<2> const &, std::exception_ptr const & ep )
 			{
 				try
 				{
@@ -71,7 +71,7 @@ int main()
 				}
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );
@@ -79,15 +79,15 @@ int main()
 	}
 	{
 		int r = leaf::try_handle_all(
-			[ ]
+			[]
 			{
 				return leaf::exception_to_result<std::exception,my_exception<1>>(
-					[ ]() -> int
+					[]() -> int
 					{
 						throw my_exception<1>();
 					} );
 			},
-			[ ]( std::exception const &, std::exception_ptr const & ep )
+			[]( std::exception const &, std::exception_ptr const & ep )
 			{
 				try
 				{
@@ -98,11 +98,11 @@ int main()
 				}
 				return 1;
 			},
-			[ ]( my_exception<1> const & )
+			[]( my_exception<1> const & )
 			{
 				return 2;
 			},
-			[ ]
+			[]
 			{
 				return 3;
 			} );

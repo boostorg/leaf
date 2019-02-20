@@ -15,7 +15,7 @@ struct info { int value; };
 
 leaf::result<void> g1()
 {
-	auto load = leaf::defer( [ ] { return info{1}; } );
+	auto load = leaf::defer( [] { return info{1}; } );
 	return { };
 }
 
@@ -26,7 +26,7 @@ leaf::result<void> g2()
 
 leaf::result<void> f()
 {
-	auto load = leaf::defer( [ ] { return info{2}; } );
+	auto load = leaf::defer( [] { return info{2}; } );
 	LEAF_CHECK(g1());
 	return g2();
 }
@@ -34,17 +34,17 @@ leaf::result<void> f()
 int main()
 {
 	int r = leaf::try_handle_all(
-		[ ]() -> leaf::result<int>
+		[]() -> leaf::result<int>
 		{
 			LEAF_CHECK(f());
 			return 1;
 		},
-		[ ]( info x )
+		[]( info x )
 		{
 			BOOST_TEST_EQ(x.value, 2);
 			return 2;
 		},
-		[ ]
+		[]
 		{
 			return 3;
 		 } );

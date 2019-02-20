@@ -68,7 +68,7 @@ leaf::result<void> print_half(const std::string& text)
 		} );
 }
 
-int main( int argc, char const * argv[ ] )
+int main( int argc, char const * argv[] )
 {
 	return leaf::try_handle_all(
 		[&]() -> leaf::result<int>
@@ -78,19 +78,19 @@ int main( int argc, char const * argv[ ] )
 			return 0;
 		},
 
-		[ ]( leaf::match<ConversionErrc,ConversionErrc::EmptyString> )
+		[]( leaf::match<ConversionErrc,ConversionErrc::EmptyString> )
 		{
 			std::cerr << "Empty string!" << std::endl;
 			return 1;
 		},
 
-		[ ]( leaf::match<ConversionErrc,ConversionErrc::IllegalChar> )
+		[]( leaf::match<ConversionErrc,ConversionErrc::IllegalChar> )
 		{
 			std::cerr << "Illegal char!" << std::endl;
 			return 2;
 		},
 
-		[ ]( leaf::error_info const & unmatched )
+		[]( leaf::error_info const & unmatched )
 		{
 			// This will never execute in this program, but it would detect logic errors where an unknown error reaches main.
 			// In this case, we print diagnostic information.
