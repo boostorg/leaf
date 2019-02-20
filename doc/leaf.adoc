@@ -1511,7 +1511,7 @@ TIP: These automatically-generated diagnostic messages are developer-friendly, b
 * https://github.com/zajo/leaf/blob/master/examples/capture_in_result.cpp?ts=4[capture_in_result.cpp]: Shows how to transport E-objects between threads in a `<<result,result>><T>` object.
 * https://github.com/zajo/leaf/blob/master/examples/capture_in_exception.cpp?ts=4[capture_in_exception.cpp]: Shows how to transport E-objects between threads in an exception object.
 * https://github.com/zajo/leaf/blob/master/examples/lua_callback_result.cpp?ts=4[lua_callback_result.cpp]: Transporting arbitrary E-objects through an uncooperative C API.
-* https://github.com/zajo/leaf/blob/master/examples/lua_callback_exception.cpp?ts=4[lua_callback_exception.cpp]: Transporting arbitrary E-objects through an uncooperative exception-safe API.
+* https://github.com/zajo/leaf/blob/master/examples/lua_callback_eh.cpp?ts=4[lua_callback_eh.cpp]: Transporting arbitrary E-objects through an uncooperative exception-safe API.
 * https://github.com/zajo/leaf/blob/master/examples/exception_to_result.cpp?ts=4[exception_to_result.cpp]: Demonstrates how to transport exceptions through a `noexcept` layer in the program.
 * https://github.com/zajo/leaf/blob/master/examples/error_log.cpp?ts=4[exception_error_log.cpp]: Using `accumulate` to produce an error log.
 * https://github.com/zajo/leaf/blob/master/examples/error_trace.cpp?ts=4[exception_error_trace.cpp]: Using `accumulate` to produce an error trace.
@@ -2133,6 +2133,10 @@ Naturally, the provided `leaf::<<result,result>><T>` class template satisfies th
 [[functions]]
 
 == Reference: Functions
+
+TIP: The contents of each Reference section are organized alphabetically.
+
+'''
 
 [[accumulate]]
 === `accumulate`
@@ -5218,7 +5222,7 @@ The `leaf::result<>` template deletes both `EC` and `EP`, which decouples it fro
 * Authors of lower-level library functions lack context to determine which of the information that is both relevant to the error _and_ naturally available to them needs to be communicated in order for a particular client program to recover from that error;
 * Authors of higher-level error-handling functions easily and confidently make this determination, which they communicate naturally to LEAF, by simply writing the necessary error handlers. LEAF automatically and efficiently transports the needed E-objects while discarding the ones handlers don't use, saving resources.
 
-TIP: The LEAF examples include an adaptation of the program from the https://ned14.github.io/outcome/tutorial/result/[Boost Outcome `result<>` tutorial]. You can https://github.com/zajo/leaf/blob/master/examples/print_half.cpp?ts=4[view it on GitHub].
+TIP: The LEAF examples include an adaptation of the program from the https://ned14.github.io/outcome/tutorial/essential/result/[Boost Outcome `result<>` tutorial]. You can https://github.com/zajo/leaf/blob/master/examples/print_half.cpp?ts=4[view it on GitHub].
 
 ==== The Interoperability Problem
 
