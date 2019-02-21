@@ -504,11 +504,11 @@ The black arrows indicate the call stack order: higher level functions calling l
 
 Note the call to `preload` in `f3`: it caches the passed E-objects of types `E1` and `E3` in the returned object `load`, where they stay ready to be communicated in case any function downstream from `f3` reports an error. Presumably these objects are relevant to any such failure, but are conveniently accessible only in this scope.
 
-_Figure 1_ depicts the condition where `f5` has detected an error. It calls `leaf::new_error` to create a new, unique `error_id`. The passed argument of type `E2` is immediately loaded in the first active `context` object that provides static storage for it, found in any calling scope (in this case `f1`), and associates it with the newly-generated `error_id` (purple arrow);
+_Figure 1_ depicts the condition where `f5` has detected an error. It calls `leaf::new_error` to create a new, unique `error_id`. The passed argument of type `E2` is immediately loaded in the first active `context` object that provides static storage for it, found in any calling scope (in this case `f1`), and is associated with the newly-generated `error_id` (purple arrow);
 
 The `error_id` itself is returned to the immediate caller `f4`, usually stored in a `result<T>` object `r`. That object takes the path shown in orange, as each error-neutral function, unable to handle the error, forwards it to its immediate caller -- until an error-handling scope is reached.
 
-When the destructor of the `load` object in `f3` executes, it detects that `new_error` was invoked after its initialization, and loads the cached objects of types `E1` and `E3` in the first active `context` object that provides static storage for them, found in any calling scope (in this case `f1`), and associates them with the last generated `error_id` (purple arrow).
+When the destructor of the `load` object in `f3` executes, it detects that `new_error` was invoked after its initialization, loads the cached objects of types `E1` and `E3` in the first active `context` object that provides static storage for them, found in any calling scope (in this case `f1`), and associates them with the last generated `error_id` (purple arrow).
 
 When the error-handling scope `f1` is reached, it probes `ctx` for any E-objects associated with the `error_id` it received from `f2`, and processes a list of user-provided error handlers (almost always lambda functions), in order, until it finds a handler with arguments that match the available E-objects. That handler is called to deal with the failure.
 
@@ -540,7 +540,7 @@ To support this tricky use case, various LEAF functions that require an `error_i
 --
 The implication of working with exceptions that do not carry `error_id` is that if some E-objects get associated with the `error_id` returned by `next_error`, then the exception object is caught in third-party code, then (possibly much later) a new exception reaches a scope where it is handled with <<try_catch>>, LEAF will erroneously assume that the E-objects belong to the new exception.
 
-A possible workaround is to call <<new_error>> some time after the original exception was handled, if possible (LEAF does call `new_error` when it handles an exception that does not carry an `error_id`).
+A possible workaround is to call <<new_error>> some time after the original exception was handled, if appropriate (LEAF does call `new_error` when it handles an exception that does not carry an `error_id`).
 --
 
 TIP: To avoid this ambiguity, whenever possible, use the <<exception>> function template when throwing exceptions to ensure that the exception object transports a unique `error_id`; better yet, use the <<LEAF_THROW>> macro, which in addition will capture `pass:[__FILE__]` and `pass:[__LINE__]`.
@@ -693,7 +693,7 @@ leaf::result<void> operation( char const * file_name )
 <1> Indicate success to the caller.
 <2> `try_something` failed -- add `file_name` to the `e_relevant_file_names` object, associated with the `error_id` communicated in `r`.
 
-As is always the case with LEAF, the accumulation (or loading) only takes place if a handler passed to <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> takes an argument of type `e_relevant_file_names`; otherwise the active `context` would not provide storage for this type and the corresponding accumulation code would not execute.
+As is always the case with LEAF, the accumulation (or loading) only takes place if a handler passed to <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> takes an argument of type `e_relevant_file_names`; otherwise the active `context` would not provide storage for this type and the corresponding accumulation code would not be executed.
 
 In other words, the accumulation of `e_relevant_file_names` will only occur if an error-handling caller actually uses that information.
 
@@ -1555,8 +1555,6 @@ There is also a reference section split in four parts, the contents of each part
 
 LEAF supports reporting errors via a `result<T>` type or by throwing exceptions. Functions that throw exceptions or use exception handling are defined in separate headers, so that client code that does not use exceptions is not coupled with them.
 
-This section of the synopsis lists header files needed to report errors or to throw exceptions.
-
 [[error.hpp]]
 ==== `error.hpp`
 
@@ -1849,7 +1847,7 @@ Error-handling functions use the following conventions:
 
 * Functions that *do not* use the `remote_` prefix take a list of error handlers; functions that *do*, take a single error-handling function, which internally captures the list of error handlers. See <<tutorial-remote_handlers>>.
 * Functions that are designed to work with a `result<T>` type (see <<is_result_type>>) use the `_all` or `_some` suffix; the former require (at compile time) the user-supplied set of handlers to definitely handle any reported error, while the latter allow for handlers to recognize and handle some errors, forwarding others to the caller.
-* An `pass:[_all]` or a `pass:[_some]` function does not catch or handle exceptions unless at least one of the user-supplied handlers uses the <<catch_>> template. All other error-handling functions catch and can handle exceptions.
+* An `pass:[_all]` or a `pass:[_some]` function does not catch or handle exceptions unless at least one of the user-supplied handlers uses the <<catch_>> template. All other error-handling functions catch or can handle exceptions.
 
 Error-handling members of the `context` template match the error objects currently stored in `*this`, to one of the specified handlers:
 
