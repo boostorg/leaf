@@ -581,9 +581,9 @@ By convention, the enclosing C-`struct` names use the `e_` prefix.
 
 In LEAF, E-objects are always stored in `<<context,context>><E...>` objects, typically created in the local scope of an error handling function.
 
-While it is possible to instantiate the `context` class template directly with a list of E-types, this is prone to errors, because when a function attempts to report an E-object, unless a scope up the call chain contains a local `context` instantiated with that E-type, the E-object is discarded.
+While it is possible to instantiate the `context` class template directly with a list of E-types, this is prone to errors. Consider that attempts to communicate an E-object of a type for which no active `context` provides storage lead to that object being discarded; therefore, it is critical that any E-type required by a handler in order to deal with a given failure participates in the instantiation of the `context` template.
 
-This behavior is made perfectly safe by automatically deducing the `E...` types used to instantiate the `context` template, from the list of handlers that actually recognize and recover from various error conditions. Example:
+The possibility of this mismatch can be eliminated by automatically deducing the `E...` types used to instantiate the `context` template from the list of handlers that actually recognize and recover from various error conditions. This, in fact, is how <<try_handle_all>>, <<try_handle_some>> and <<try_catch>> work. For example:
 
 [source,c++]
 ----
