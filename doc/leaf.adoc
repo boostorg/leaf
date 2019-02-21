@@ -472,7 +472,7 @@ TIP: The complete program from this tutorial is available https://github.com/zaj
 
 LEAF defines the following core terms:
 
-Error types, or E-types :: User-defined value types that describe or pertain to a failure. Objects of these types may carry `std::error_code`, error enums, relevant file names, and any other information that is required by an error-handling scope in case of a failure. E-types must define no-throw move, but need not be copyable.
+Error types, or E-types: :: User-defined value types that describe or pertain to a failure. Objects of these types may carry `std::error_code`, error enums, relevant file names, and any other information that is required by an error-handling scope in case of a failure. E-types must define no-throw move, but need not be copyable.
 
 error_id: :: This is a value type that acts as a program-wide unique identifier of a particular occurrence of a failure. The actual identifier is a simple `int`, but the `error_id` type derives from `std::error_code`. This enables LEAF error IDs to be communicated through any compatible API in plain `std::error_code` objects (sliced from an `error_id`), which LEAF recognizes by its own specific `std::error_category`.
 
@@ -984,7 +984,7 @@ leaf::remote_try_handle_all(
 
 TIP: The captured lambda must take at least one argument of type `leaf::error_info const &`, because LEAF invokes the error handling lambda we pass to <<remote_try_handle_all>> with a `leaf::error_info`. Note however that LEAF does not call `handle_error` directly, which means that it can take any additional arguments it needs in order to deal with failures, as long as they can be supplied when it is invoked.
 
-WARNING: LEAF provides three sets of "remote handler" APIs, "handle_all" (as presented above), "handle_some" and "handle_exception", and it is critical that they are not mixed up. Since in this example the `handle_error` lambda calls the helper function `remote_handle_all`, it can only be used in a call to `remote_try_handle_all`. If we needed a capture that can be used with e.g. `remote_try_catch`, it must be calling the `remote_handle_exception` helper function instead.
+WARNING: LEAF provides three sets of "remote handler" APIs, "handle_all" (as presented above), "handle_some" and "handle_exception", and it is critical that they are not mixed up. Since in this example the `handle_error` lambda calls the helper function `remote_handle_all`, it can only be used in a call to <<remote_try_handle_all>>. If we needed a capture that can be used with e.g. <<remote_try_catch>>, it must be calling the `remote_handle_exception` helper function instead.
 
 '''
 
@@ -1735,10 +1735,10 @@ namespace boost { namespace leaf {
     error_id error() const noexcept;
 
     template <class... E>
-    result & load( E && ... e ) noexcept;
+    error_id load( E && ... e ) noexcept;
 
     template <class... F>
-    result & accumulate( F && ... f ) noexcept;
+    error_id accumulate( F && ... f );
   };
 
   struct bad_result: std::exception { };
@@ -4347,10 +4347,10 @@ namespace boost { namespace leaf {
     error_id error() const noexcept;
 
     template <class... E>
-    result & load( E && ... e ) noexcept;
+    error_id load( E && ... e ) noexcept;
 
     template <class... F>
-    result & accumulate( F && ... f ) noexcept;
+    error_id accumulate( F && ... f );
   };
 
   struct bad_result: std::exception { };
@@ -4445,7 +4445,7 @@ namespace boost { namespace leaf {
 
   template <class T>
   template <class... F>
-  result<T> & result<T>::accumulate( F && ... f ) noexcept;
+  error_id result<T>::accumulate( F && ... f );
 
 } }
 ----
@@ -4489,7 +4489,7 @@ namespace boost { namespace leaf {
 
   template <class T>
   template <class... E>
-  result<T> & result<T>::load( E && ... e ) noexcept;
+  error_id result<T>::load( E && ... e ) noexcept;
 
 } }
 ----
@@ -5191,7 +5191,7 @@ leaf::try_catch(
 |====
 | Boost Exception | LEAF
 | https://www.boost.org/doc/libs/release/libs/exception/doc/exception_ptr.html[`boost::exception_ptr`] automatically captures https://www.boost.org/doc/libs/release/libs/exception/doc/error_info.html[`boost::error_info`] objects stored in a `boost::exception` and can transport them across thread boundaries.
-| Transporting error objects across thread boundaries requires the use of <<capture_exception>>.
+| Transporting error objects across thread boundaries requires the use of <<capture>>.
 |====
 
 .Printing of error objects in automatically-generated diagnostic information messages
@@ -5275,7 +5275,7 @@ Please post questions and feedback on the Boost Developers Mailing List (LEAF is
 [[portability]]
 == Portability
 
-LEAF requires a {CPP}11 compiler.
+LEAF requires a {CPP}11 compiler. It uses `thread_local` objects of built-in types, e.g. pointer types.
 
 See unit test matrix at https://travis-ci.org/zajo/leaf[Travis-CI] and https://ci.appveyor.com/project/zajo/leaf[AppVeyor].
 
