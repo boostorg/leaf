@@ -6,10 +6,10 @@
 = LEAF
 Lightweight Error Augmentation Framework
 :toclevels: 3
-:toc: macre
+:toc: left
 :toc-title:
 
-toc::[]
+//toc::[]
 
 [abstract]
 == Abstract
@@ -5279,7 +5279,7 @@ Please post questions and feedback on the Boost Developers Mailing List (LEAF is
 
 LEAF requires a {CPP}11 compiler.
 
-See unit test matrix at https://travis-ci.org/zajo/leaf[Travis-CI]. It has also been tested with Microsoft Visual Studio 2015 and 2017 (please install the latest patches from Microsoft).
+See unit test matrix at https://travis-ci.org/zajo/leaf[Travis-CI] and https://ci.appveyor.com/project/zajo/leaf[AppVeyor].
 
 [[building]]
 == Building
