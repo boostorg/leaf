@@ -300,22 +300,25 @@ namespace boost { namespace leaf {
 	template <class E, typename leaf_detail::match_traits<E>::enumerator... V>
 	class match
 	{
-		using match_type = typename leaf_detail::match_traits<E>::match_type;
-		match_type const * const value_;
+	public:
+		using type = typename leaf_detail::match_traits<E>::match_type;
+
+	private:
+		type const * const value_;
 
 	public:
 
-		explicit match( match_type const * value ) noexcept:
+		explicit match( type const * value ) noexcept:
 			value_(value)
 		{
 		}
 
-		bool operator()() const noexcept
+		explicit bool operator()() const noexcept
 		{
 			return value_ && leaf_detail::check_value_pack(*value_,V...);
 		}
 
-		match_type const & value() const noexcept
+		type const & value() const noexcept
 		{
 			assert(value_!=0);
 			return *value_;
