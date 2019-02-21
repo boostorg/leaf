@@ -4,7 +4,7 @@
 :source-highlighter: coderay
 :stylesheet: zajo.css
 = LEAF
-Lightweight Error Augmentation Framework for C++11
+Lightweight Error Augmentation Framework
 :toclevels: 3
 :toc: left
 :toc-title:
@@ -32,7 +32,7 @@ LEAF is a lightweight error handling library for {CPP}11. Features:
 
 [grid=none, frame=none]
 |====
-| https://github.com/zajo/leaf[GitHub] \| <<introduction,Introduction>> \| <<tutorial>> \|  <<synopsis>> \| <<rationale,Design Rationale>> >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<traits,Traits>> \| <<macros,Macros>>
+| <<introduction,Introduction>> \| <<tutorial>> \| <<synopsis>> \| <<rationale,Design Rationale>> \| https://github.com/zajo/leaf[GitHub] >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<traits,Traits>> \| <<macros,Macros>>
 |====
 
 [[introduction]]
@@ -328,10 +328,10 @@ int main( int argc, char const * argv[] )
 
       auto load = leaf::preload( leaf::e_file_name{file_name} ); <4>
 
-      std::shared_ptr<FILE> f = file_open( file_name );
+      std::shared_ptr<FILE> f = file_open( file_name ); <3>
 
-      std::string buffer( 1+file_size(*f), '\0' );
-      file_read(*f,&buffer[0],buffer.size()-1);
+      std::string buffer( 1+file_size(*f), '\0' ); <3>
+      file_read(*f,&buffer[0],buffer.size()-1); <3>
 
       auto propagate2 = leaf::defer([] { return leaf::e_errno{errno}; } ); <5>
       std::cout << buffer;
