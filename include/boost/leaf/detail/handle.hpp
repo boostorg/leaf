@@ -313,7 +313,7 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		explicit bool operator()() const noexcept
+		bool operator()() const noexcept
 		{
 			return value_ && leaf_detail::check_value_pack(*value_,V...);
 		}
