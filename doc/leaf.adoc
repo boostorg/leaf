@@ -1748,7 +1748,7 @@ namespace boost { namespace leaf {
 [[preload.hpp]]
 ==== `preload.hpp`
 
-This header defines functions for automatic inclusion of E-objects with any error exiting the scope in whic they are invoked. See <<tutorial-preload>>, <<tutorial-defer>>, <<tutorial-accumulate>>.
+This header defines functions for automatic inclusion of E-objects with any error exiting the scope in which they are invoked. See <<tutorial-preload>>, <<tutorial-defer>>, <<tutorial-accumulate>>.
 
 [source,c++]
 .#include <boost/leaf/preload.hpp>
@@ -2693,7 +2693,7 @@ return leaf::remote_try_handle_some(
   } );
 ----
 
-Like <<try_handle_some>>, the first thing `remote_try_handle_some` does is call the passed `try_block`. If it succeeds, the returned `result<T>` is forwared to the caller. Otherwise, it calls `h` with the `leaf::error_info` object that represents the error being handled, where we call the `remote_handlers` function we captured earlier, which will attempt to find a matching handler, as usual.
+Like <<try_handle_some>>, the first thing `remote_try_handle_some` does is call the passed `try_block`. If it succeeds, the returned `result<T>` is forwarded to the caller. Otherwise, it calls `h` with the `leaf::error_info` object that represents the error being handled, where we call the `remote_handlers` function we captured earlier, which will attempt to find a matching handler, as usual.
 
 TIP: <<remote_try_handle_some>> catches and handles exceptions iff at least one of the supplied remote handlers takes an argument of type that is an instance of the <<catch_>> template; otherwise it is exception-neutral.
 
@@ -3224,7 +3224,7 @@ Effects: ::
 +
 If `handle_some` is unable to find a matching handler, it returns `r`.
 
-NOTE: `handle_some` is exception-neutral: it does not throw exceptions, however the user-upplied handlers are permitted throw.
+NOTE: `handle_some` is exception-neutral: it does not throw exceptions, however the user-supplied handlers are permitted throw.
 
 Handler Matching Procedure: ::
 +

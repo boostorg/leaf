@@ -6,9 +6,9 @@
 
 // This program demonstrates the use of leaf::accumulate to print the path an error takes
 // as is bubbles up the call stack. The path is only printed if:
-// - An error occurrs, and
+// - An error occurs, and
 // - A handler that takes e_error_log argument is present.
-// Otherwse none of the error log machinery will be invoked by LEAF.
+// Otherwise none of the error log machinery will be invoked by LEAF.
 
 #include <boost/leaf/preload.hpp>
 #include <boost/leaf/handle_error.hpp>
