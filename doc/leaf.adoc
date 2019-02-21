@@ -6,10 +6,10 @@
 = LEAF
 Lightweight Error Augmentation Framework
 :toclevels: 3
-:toc: left
+:toc: macre
 :toc-title:
 
-//toc::[]
+toc::[]
 
 [abstract]
 == Abstract
@@ -726,7 +726,7 @@ leaf::result<info> parse_file( char const * file_name ) noexcept
 ----
 
 [.text-right]
-<<preload>> | <<new_error>>
+<<result>> | <<preload>> | <<new_error>>
 
 <1> `parse_info` parses `f`, communicating errors using `result<info>`.
 <2> Using `preload` ensures that the file name is included with any error reported out of `parse_file`. All we need to do is hold on to the returned object `load`: when it expires, if an error is being reported, the passed `e_file_name` value will be automatically associated with it.
@@ -750,7 +750,7 @@ void read_file(FILE * f) {
 ----
 
 [.text-right]
-`<<exception,exception>>`
+`<<exception,exception>>` | <<e_errno>>
 
 It is pretty straight-forward, reporting `e_errno` as it detects a `ferror`. But what if it calls `fread` multiple times?
 
@@ -802,7 +802,7 @@ void read_file(FILE * f) {
 ----
 
 [.text-right]
-<<defer>> | `<<exception,exception>>`
+<<defer>> | `<<exception,exception>>` | <<e_errno>>
 
 This works similarly to `preload`, except that the capturing of the `errno` is deferred until the destructor of the `load` object is called, which calls the passed lambda function to obtain the `errno`.
 
@@ -851,7 +851,7 @@ leaf::result<int> sum()
 ----
 
 [.text-right]
-<<accumulate>> | <<LEAF_AUTO>> | <<result>>
+<<result>> | <<accumulate>> | <<LEAF_AUTO>>
 
 <1> This lambda will be called in case an error is communicated by either `f1` or `f2` (below), but only if the error handling scope needs an `e_trace`.
 <2> Call `f1`, return error or get a value in `a`.
@@ -892,7 +892,10 @@ leaf::try_handle_all(
   });
 ----
 
-Looks pretty simple and clean, but what if we need to attempt a different set of operations yet use the same handlers? We could repeat the same thing with a different lambda passed as `TryBlock` for <<try_handle_all>>:
+[.text-right]
+<<try_handle_all>> | <<e_file_name>>
+
+Looks pretty simple and clean, but what if we need to attempt a different set of operations yet use the same handlers? We could repeat the same thing with a different lambda passed as `TryBlock` for `try_handle_all`:
 
 [source,c++]
 ----
@@ -1052,7 +1055,7 @@ std::future<leaf::result<task_result>> launch_task()
 ----
 
 [.text-right]
-<<make_shared_context>> | <<capture>> | <<result>>
+<<result>> | <<make_shared_context>> | <<capture>>
 
 That's it! Later when we `get` the `std::future`, we can process the returned `result<task_result>` in a call to <<remote_try_handle_some>>, using the `handle_error` remote handler we created earlier, as if it was generated locally:
 
@@ -1077,7 +1080,7 @@ return leaf::remote_try_handle_some(
 ----
 
 [.text-right]
-<<remote_try_handle_some>> | <<result>>
+<<remote_try_handle_some>> | <<result>> | <<LEAF_AUTO>> | <<error_info>>
 
 The reason this works is that in case it communicates a failure, `leaf::result<T>` is able to hold a `shared_ptr<polymorphic_context>` object. That is why earlier instead of calling `task()` directly, we called `leaf::capture`: it calls the passed function, and in case it fails it stores the `shared_ptr<polymorphic_context>` we created in the returned `result<T>`, which now doesn't just communicate the fact that an error has occurred, but also holds the `context` object that `remote_try_handle_some` needs in order to find a matching handler.
 
@@ -1162,7 +1165,7 @@ return leaf::remote_try_catch(
 ----
 
 [.text-right]
-<<remote_try_catch>>
+<<remote_try_catch>> | <<error_info>>
 
 This works similarly to using `result<T>`, except that the `std::shared_ptr<polymorphic_context>` is transported in an exception object (of unspecified type which <<remote_try_catch>> recognizes and then automatically unwraps the original exception).
 
@@ -1253,7 +1256,7 @@ int compute_answer_throws()
 }
 ----
 
-We can write a simple wrapper using <<exception_to_result>>, which calls `compute_answer_throws` and switches to `result<int>` for error handling:
+We can write a simple wrapper using `exception_to_result`, which calls `compute_answer_throws` and switches to `result<int>` for error handling:
 
 [source,c++]
 ----
@@ -1266,6 +1269,9 @@ leaf::result<int> compute_answer() noexcept
     } );
 }
 ----
+
+[.text-right]
+<<result>> | <<exception_to_result>>
 
 (As a demonstration, `compute_answer` specifically converts exceptions of type `error_a` or `error_b`, while it leaves `error_c` to be captured by `std::exception_ptr`).
 
@@ -1280,6 +1286,9 @@ leaf::result<void> print_answer() noexcept
   return { };
 }
 ----
+
+[.text-right]
+<<result>> | <<LEAF_AUTO>>
 
 Finally, here is a scope that handles the errors (which used to be exception objects):
 
@@ -1308,6 +1317,9 @@ leaf::try_handle_all(
     std::cerr << "Unknown error!" << std::endl;
   } );
 ----
+
+[.text-right]
+<<try_handle_all>> | <<result>> | <<LEAF_CHECK>>
 
 NOTE: The complete program illustrating this technique is available https://github.com/zajo/leaf/blob/master/examples/exception_to_result.cpp?ts=4[here].
 
@@ -1464,7 +1476,7 @@ int main() noexcept
   }
 ----
 [.text-right]
-<<try_handle_all>> | <<result>>
+<<try_handle_all>> | <<result>> | <<LEAF_AUTO>> | <<error_info>>
 
 <1> If the call to `call_lua` succeeded, just print the answer.
 <2> Handle `do_work` failures.
@@ -1669,7 +1681,7 @@ namespace boost { namespace leaf {
 ----
 
 [.text-right]
-<<e_api_function>> | <<e_file_name>> | <<e_errno>> | <<e_LastError>> | <<e_at_line>> | <<e_type_info_name>> | <<e_source_location>>
+<<e_api_function>> | <<e_file_name>> | <<e_errno>> | <<e_at_line>> | <<e_type_info_name>> | <<e_source_location>> | <<e_LastError>>
 
 '''
 
@@ -2263,6 +2275,9 @@ auto handle_error = []( leaf::error_info const & error )
 leaf::context_type_from_remote_handler<decltype(handle_error)> ctx;
 ----
 +
+[.text-right]
+<<error_info>> | <<diagnostic_info>>
++
 In the example above, `ctx` will be of type `context<e_this, e_that, leaf::diagnostic_info>`, deduced automatically from the handler list in `handle_error`. This guarantees that `ctx` provides storage for all E-types that are required by `handle_error` in order to handle errors.
 
 TIP: Alternatively, a suitable context may be created by calling <<make_context>>, or allocated dynamically by calling <<make_shared_context>> or <<allocate_shared_context>>.
@@ -2401,6 +2416,9 @@ return leaf::try_handle_some(
     return { };
   } );
 ----
+
+[.text-right]
+<<try_handle_some>> | <<result>> | <<LEAF_AUTO>>
 
 TIP: See also <<tutorial-exception_to_result>> from the tutorial.
 
@@ -2578,6 +2596,9 @@ auto remote_handlers = []( leaf::error_info const & error )
 };
 ----
 
+[.text-right]
+<<error_info>> | <<e_file_name>>
+
 To use the captured `remote_handlers`, we call `remote_try_catch` rather than <<try_catch>> (the latter requires the handlers to be passed inline):
 
 [source,c++]
@@ -2592,6 +2613,9 @@ return leaf::remote_try_catch(
     return remote_handlers(error);
   } );
 ----
+
+[.text-right]
+<<error_info>>
 
 TIP: See also <<tutorial-remote_handlers>> from the Tutorial.
 
@@ -2637,6 +2661,9 @@ auto remote_handlers = []( leaf::error_info const & error ) noexcept
 };
 ----
 
+[.text-right]
+<<error_info>> | <<e_file_name>>
+
 NOTE: For the capture (above) to be compatible with `remote_try_handle_all`, it must use the helper function `remote_handle_all`.
 
 TIP: See also <<tutorial-remote_handlers>> from the Tutorial.
@@ -2678,6 +2705,9 @@ auto remote_handlers = []( leaf::error_info const & error )
 };
 ----
 
+[.text-right]
+<<error_info>> | <<e_file_name>>
+
 Above, the `remote_handlers` function object captures the two handlers passed to the helper function `remote_handle_some`. Note that the function itself or the handlers are *not* called at this point; the only effect is that we now have a function, which we can later invoke to handle errors, using `remote_try_handle_some`:
 
 [source,c++]
@@ -2692,6 +2722,9 @@ return leaf::remote_try_handle_some(
     return remote_handlers(error);
   } );
 ----
+
+[.text-right]
+<<error_info>>
 
 Like <<try_handle_some>>, the first thing `remote_try_handle_some` does is call the passed `try_block`. If it succeeds, the returned `result<T>` is forwarded to the caller. Otherwise, it calls `h` with the `leaf::error_info` object that represents the error being handled, where we call the `remote_handlers` function we captured earlier, which will attempt to find a matching handler, as usual.
 
@@ -2718,6 +2751,9 @@ auto remote_handlers = []( leaf::error_info const & error, int a )
 };
 ----
 
+[.text-right]
+<<error_info>> | <<e_file_name>>
+
 Of course, later it is our responsibility to pass the extra arguments:
 
 [source,c++]
@@ -2732,6 +2768,9 @@ return leaf::remote_try_handle_some(
     return remote_handlers(error, 42); //Pass 42 for a
   } );
 ----
+
+[.text-right]
+<<error_info>>
 
 TIP: See also <<tutorial-remote_handlers>> from the Tutorial.
 
@@ -3254,6 +3293,10 @@ else
     } );
 }
 ----
++
+[.text-right]
+<<result>> | <<e_file_name>>
++
 <1> This handler will match only if `ctx` stores an `e_file_name` associated with the error.
 <2> Print the file name.
 +
@@ -3288,6 +3331,10 @@ else
     } );
 }
 ----
++
+[.text-right]
+<<result>> | <<match>>
++
 <1> This handler matches if the error includes an object of type `errors` with value `ec1`.
 <2> This handler matches if the error includes an object of type `errors` regardless of its value.
 +
@@ -3319,6 +3366,10 @@ else
     } );
 }
 ----
++
+[.text-right]
+<<result>> | <<match>> | <<condition>>
++
 <1> This handler matches if the error includes an object of type `std::error_code` equivalent to the error condition `cond_x::x11`.
 <2> This handler matches if the error includes any object of type `std::error_code`.
 +* If `a`~i~ is taken as `A`~i~ `const &` or by value:
@@ -3350,6 +3401,10 @@ else
       } );
 }
 ----
++
+[.text-right]
+<<result>> | <<catch_>> | <<error_info>>
++
 <1> This handler matches if the current exception is either of type `exception1` or `exception2`.
 <2> This handler matches any error. Use `info.<<error_info,exception>>()` to access the caught `std::exception` object.
 +
@@ -3374,6 +3429,10 @@ else
     } );
 }
 ----
++
+[.text-right]
+<<result>> | <<e_file_name>>
++
 <1> This handler matches any error, because it takes `e_file_name` as a `const *` (and nothing by `const &`).
 <2> If an `e_file_name` is available with the current error, print it.
 +
@@ -3396,6 +3455,10 @@ else
     } );
 }
 ----
++
+[.text-right]
+<<result>> | <<error_info>>
++
 <1> This handler matches any error.
 <2> Print error information.
 <3> Return the original error, which will be returned out of `handle_some`.
@@ -3419,6 +3482,10 @@ else
     } );
 }
 ----
++
+[.text-right]
+<<result>> | <<diagnostic_info>>
++
 <1> This handler matches any error.
 <2> Print diagnostic information, including limited information about dropped error objects.
 <3> Return the original error, which will be returned out of `handle_some`.
@@ -3442,6 +3509,10 @@ else
     } );
 }
 ----
++
+[.text-right]
+<<result>> | <<verbose_diagnostic_info>>
++
 <1> This handler matches any error.
 <2> Print verbose diagnostic information, including values of dropped error objects.
 <3> Return the original error, which will be returned out of `handle_some`.
@@ -3496,6 +3567,9 @@ auto handle_error = []( leaf::error_info const & error )
 };
 ----
 +
+[.text-right]
+<<error_info>>
++
 NOTE: The namespace-scope `remote_handle_all` invoked from the user-defined `handle_error` is a helper function which serves no purpose other than to return a function compatible with `remote_handle_all` or <<remote_try_handle_all>>.
 +
 The `handle_error` function we defined can be used with `remote_handle_all` like this:
@@ -3509,6 +3583,9 @@ ctx.remote_handle_all(r,
   } );
 ----
 +
+[.text-right]
+<<error_info>>
++
 Which is equivalent to:
 +
 [source,c++]
@@ -3516,6 +3593,9 @@ Which is equivalent to:
 ctx.handle_all(r,
   ....handlers.... );
 ----
+
+[.text-right]
+<<context::handle_all>>
 
 Note that LEAF does not invoke the user-defined `handle_error` function directly, which means that it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
 
@@ -3551,6 +3631,9 @@ auto handle_error = []( leaf::error_info const & error )
 };
 ----
 +
+[.text-right]
+<<error_info>>
++
 NOTE: The namespace-scope `remote_handle_exception` invoked from the user-defined `handle_error` is a helper function which serves no purpose other than to return a function compatible with `remote_handle_current_exception` or <<context::remote_handle_exception>> or <<remote_try_catch>>.
 +
 The `handle_error` function we defined can be used with `remote_handle_current_exception` like this:
@@ -3571,6 +3654,9 @@ Which is equivalent to:
 ctx.handle_current_exception(
   ....handlers.... );
 ----
+
+[.text-right]
+<<context::handle_current_exception>>
 
 Note that LEAF does not invoke the user-defined `handle_error` function directly, which means that it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
 
@@ -3606,6 +3692,9 @@ auto handle_error = []( leaf::error_info const & error )
 };
 ----
 +
+[.text-right]
+<<error_info>>
++
 NOTE: The namespace-scope `remote_handle_exception` invoked from the user-defined `handle_error` is a helper function which serves no purpose other than to return a function compatible with `remote_handle_exception` or <<context::remote_handle_current_exception>> or <<remote_try_catch>>.
 +
 The `handle_error` function we defined can be used with `remote_handle_exception` like this:
@@ -3626,6 +3715,9 @@ Which is equivalent to:
 ctx.handle_exception(ep,
   ....handlers.... );
 ----
+
+[.text-right]
+<<context::handle_exception>>
 
 Note that LEAF does not invoke the user-defined `handle_error` function directly, which means that it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
 
@@ -3661,6 +3753,9 @@ auto handle_error = []( leaf::error_info const & error )
 };
 ----
 +
+[.text-right]
+<<error_info>>
++
 NOTE: The namespace-scope `remote_handle_some` invoked from the user-defined `handle_error` is a helper function which serves no purpose other than to return a function compatible with `remote_handle_some` or <<try_handle_some>>.
 +
 The `handle_error` function we defined can be used with `remote_handle_some` like this:
@@ -3681,6 +3776,9 @@ Which is equivalent to:
 ctx.handle_some(r,
   ....handlers.... );
 ----
+
+[.text-right]
+<<context::handle_some>>
 
 Note that LEAF does not invoke the user-defined `handle_error` function directly, which means that it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
 
@@ -4545,6 +4643,9 @@ leaf::result<float> add_values()
 }
 ----
 
+[.text-right]
+<<result>>
+
 Of course, we could write `add_value` without using `LEAF_AUTO`. This is equivalent:
 
 .Compute two int values, return their sum as a float, without LEAF_AUTO:
@@ -4596,6 +4697,9 @@ leaf::result<int> say_hello_and_compute_value()
   return compute_value();
 }
 ----
+
+[.text-right]
+<<result>>
 
 Equivalent implementation without `LEAF_CHECK`:
 
@@ -4762,7 +4866,7 @@ leaf::try_catch(
 ----
 
 [.text-right]
-<<try_catch>> | <<catch_>>
+<<try_catch>> | <<catch_>> | <<e_file_name>> | <<e_errno>>
 
 Of course LEAF works without exception handling as well. Below is the same snippet, written using `<<result,result>><T>`:
 
@@ -4799,7 +4903,7 @@ return leaf::try_handle_some(
 ----
 
 [.text-right]
-<<result>> | <<try_handle_some>> | <<match>>
+<<result>> | <<try_handle_some>> | <<match>> | <<e_file_name>> | <<e_errno>>
 
 NOTE: Please post questions and feedback on the Boost Developers Mailing List (LEAF is not part of Boost).
 
