@@ -466,12 +466,9 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		class id_factory
+		namespace id_factory
 		{
-			id_factory( id_factory const & ) = delete;
-			id_factory & operator=( id_factory const & ) = delete;
-
-			static int new_err_id() noexcept
+			inline int new_err_id() noexcept
 			{
 				static std::atomic<unsigned> c;
 				if( unsigned id = ++c )
@@ -480,54 +477,35 @@ namespace boost { namespace leaf {
 					return int(++c);
 			}
 
-			int next_id_;
-			int last_id_;
-
-			id_factory() noexcept:
-				next_id_(new_err_id()),
-				last_id_(next_id_-1)
+			inline int & next_id_() noexcept
 			{
-			}
-
-		public:
-
-			static id_factory & tl_instance() noexcept
-			{
-				static thread_local id_factory s;
-				return s;
-			}
-
-			int last_id() noexcept
-			{
-				return last_id_;
-			}
-
-			int new_id() noexcept
-			{
-				int id = last_id_ = next_id_;
-				next_id_ = new_err_id();
+				static thread_local int id = new_err_id();
 				return id;
 			}
 
-			int next_id() noexcept
+			inline int & last_id_() noexcept
 			{
-				return next_id_;
+				static thread_local int id = 0;
+				return id;
 			}
-		};
-
-		inline int last_id() noexcept
-		{
-			return id_factory::tl_instance().last_id();
 		}
 
 		inline int new_id() noexcept
 		{
-			return id_factory::tl_instance().new_id();
+			int & n = id_factory::next_id_();
+			int id = id_factory::last_id_() = n;
+			n = id_factory::new_err_id();
+			return id;
 		}
 
 		inline int next_id() noexcept
 		{
-			return id_factory::tl_instance().next_id();
+			return id_factory::next_id_();
+		}
+
+		inline int last_id() noexcept
+		{
+			return id_factory::last_id_();
 		}
 	}
 
