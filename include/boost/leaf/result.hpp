@@ -87,14 +87,21 @@ namespace boost { namespace leaf {
 			{
 			case leaf_detail::result_variant:: value:
 				(void) new(&value_) T(std::move(x.value_));
+				which_ = x.which_;
 				break;
 			case leaf_detail::result_variant::err_id:
 				err_id_ = x.err_id_;
+				which_ = x.which_;
 				break;
 			default:
+				assert(x.which_==leaf_detail::result_variant::ctx);
+				assert(x.ctx_);
 				(void) new(&ctx_) context_ptr(std::move(x.ctx_));
+				x.destroy();
+				x.err_id_ = leaf_detail::import_error_code(ctx_->ec).value();
+				x.which_ = leaf_detail::result_variant::err_id;
+				which_ = leaf_detail::result_variant::ctx;
 			};
-			which_ = x.which_;
 		}
 
 		int unload_then_get_err_id() const noexcept

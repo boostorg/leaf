@@ -544,37 +544,24 @@ int main()
 	BOOST_TEST_EQ(val::count, 0);
 
 	{ // error move -> capture -> move
-		leaf::error_id err;
-		leaf::result<val> r1 = leaf::capture( std::make_shared<leaf::context<e_err>>(),
-			[&err]
-			{
-				leaf::error_id e = leaf::new_error(e_err {});
-				err = e;
-				return leaf::result<val>(std::move(e));
-			} );
+		leaf::result<val> r1 = leaf::capture( std::make_shared<leaf::context<e_err>>(), []{ return leaf::result<val>( leaf::new_error( e_err { } ) ); } );
 		BOOST_TEST(!r1);
 		BOOST_TEST_EQ(err::count, 1);
 		BOOST_TEST_EQ(val::count, 0);
 		leaf::result<val> r2 = std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST_EQ(err, r2.error());
+		BOOST_TEST_EQ(r1.error(), r2.error());
 	}
 	BOOST_TEST_EQ(err::count, 0);
 	BOOST_TEST_EQ(val::count, 0);
 	{ // error copy -> capture -> move
-		leaf::error_id err;
-		leaf::result<val> r1 = leaf::capture( std::make_shared<leaf::context<e_err>>(),
-		[&]
-		{
-			err = leaf::new_error( e_err{} );
-			return leaf::result<val>(err);
-		} );
+		leaf::result<val> r1 = leaf::capture( std::make_shared<leaf::context<e_err>>(), []{ leaf::error_id err = leaf::new_error( e_err{ } ); return leaf::result<val>(err); } );
 		BOOST_TEST(!r1);
 		BOOST_TEST_EQ(err::count, 1);
 		BOOST_TEST_EQ(val::count, 0);
 		leaf::result<val> r2 = std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST_EQ(err, r2.error());
+		BOOST_TEST_EQ(r1.error(), r2.error());
 	}
 	BOOST_TEST_EQ(err::count, 0);
 	BOOST_TEST_EQ(val::count, 0);
@@ -603,37 +590,24 @@ int main()
 	BOOST_TEST_EQ(val::count, 0);
 
 	{ // error move -> capture -> assign-move
-		leaf::error_id err;
-		leaf::result<val> r1 = leaf::capture( std::make_shared<leaf::context<e_err>>(),
-			[&err]
-			{
-				leaf::error_id e = leaf::new_error(e_err {});
-				err = e;
-				return leaf::result<val>(std::move(e));
-			} );
+		leaf::result<val> r1 = leaf::capture( std::make_shared<leaf::context<e_err>>(), []{ return leaf::result<val>( leaf::new_error( e_err { } ) ); } );
 		BOOST_TEST(!r1);
 		BOOST_TEST_EQ(err::count, 1);
 		BOOST_TEST_EQ(val::count, 0);
 		leaf::result<val> r2; r2=std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST_EQ(err, r2.error());
+		BOOST_TEST_EQ(r1.error(), r2.error());
 	}
 	BOOST_TEST_EQ(err::count, 0);
 	BOOST_TEST_EQ(val::count, 0);
 	{ // error copy -> capture -> assign-move
-		leaf::error_id err;
-		leaf::result<val> r1 = leaf::capture( std::make_shared<leaf::context<e_err>>(),
-		[&]
-		{
-			err = leaf::new_error( e_err{} );
-			return leaf::result<val>(err);
-		} );
+		leaf::result<val> r1 = leaf::capture( std::make_shared<leaf::context<e_err>>(), []{ leaf::error_id err = leaf::new_error( e_err{ } ); return leaf::result<val>(err); } );
 		BOOST_TEST(!r1);
 		BOOST_TEST_EQ(err::count, 1);
 		BOOST_TEST_EQ(val::count, 0);
 		leaf::result<val> r2; r2=std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST_EQ(err, r2.error());
+		BOOST_TEST_EQ(r1.error(), r2.error());
 	}
 	BOOST_TEST_EQ(err::count, 0);
 	BOOST_TEST_EQ(val::count, 0);
