@@ -82,6 +82,7 @@ run try_catch_test.cpp ;
 run try_exception_and_result_test.cpp ;
 
 compile-fail is_error_type_fail_test.cpp ;
+compile-fail result_fail_test.cpp ;
 
 exe capture_in_exception : ../examples/capture_in_exception.cpp : <threading>multi ;
 exe capture_in_result : ../examples/capture_in_result.cpp : <threading>multi ;

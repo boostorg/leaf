@@ -66,7 +66,7 @@ void test( F f )
 		int what = leaf::try_handle_all(
 			[&r]() -> leaf::result<int>
 			{
-				return r.error();
+				return r;
 			},
 			[]( info<1> const & x )
 			{
@@ -85,7 +85,7 @@ void test( F f )
 		int what = leaf::try_handle_all(
 			[&r]() -> leaf::result<int>
 			{
-				return r.error();
+				return r;
 			},
 			[]( info<2> const & x )
 			{
@@ -104,7 +104,7 @@ void test( F f )
 		bool what = leaf::try_handle_all(
 			[&r]() -> leaf::result<bool>
 			{
-				return r.error();
+				return r;
 			},
 			[]( info<1> const & x, info<2> const & )
 			{
@@ -132,7 +132,7 @@ void test( F f )
 		bool what = leaf::try_handle_all(
 			[&r]() -> leaf::result<bool>
 			{
-				return r.error();
+				return r;
 			},
 			[]( info<1> const & x, info<2> const & )
 			{
