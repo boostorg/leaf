@@ -5311,4 +5311,4 @@ meson test
 
 Special thanks to Peter Dimov and Sorin Fetche.
 
-Ivo Belchev, Sean Palmer, Jason King, Vinnie Falco, Glen Fernandes, Nir Friedman -- thanks for the valuable feedback.
+Ivo Belchev, Sean Palmer, Jason King, Vinnie Falco, Glen Fernandes, Nir Friedman, Augustín Bergé -- thanks for the valuable feedback.
