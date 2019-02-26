@@ -556,6 +556,13 @@ namespace boost { namespace leaf {
 
 		error_id() noexcept = default;
 
+		struct tag_error_id {};
+		error_id( std::error_code const & ec, tag_error_id ) noexcept:
+			std::error_code(ec)
+		{
+			assert(leaf_detail::is_error_id(ec));
+		}
+
 		error_id( std::error_code const & ec ) noexcept:
 			error_code(leaf_detail::import_error_code(ec))
 		{

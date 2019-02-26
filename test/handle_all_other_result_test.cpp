@@ -51,7 +51,7 @@ public:
 
 namespace boost { namespace leaf {
 	template <class T, class E>
-	struct is_result_type<result<T, E>>: std::true_type
+	struct is_result_type<::result<T, E>>: std::true_type
 	{
 	};
 } }

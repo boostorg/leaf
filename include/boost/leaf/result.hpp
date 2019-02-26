@@ -191,6 +191,7 @@ namespace boost { namespace leaf {
 			which_(leaf_detail::result_variant::ctx)
 		{
 			assert(ctx_->ec);
+			assert(leaf_detail::is_error_id(ctx_->ec));
 		}
 
 		result & operator=( result && x ) noexcept
