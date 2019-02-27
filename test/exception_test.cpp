@@ -98,5 +98,17 @@ int main()
 	BOOST_TEST_EQ( 4, test( [] { LEAF_THROW(my_error()); } ) );
 	BOOST_TEST_EQ( 2, test( [] { LEAF_THROW(my_error(),info{42}); } ) );
 
+	char const * wh = 0;
+	leaf::try_catch(
+		[]
+		{
+			throw std::runtime_error("Test");
+		},
+		[&]( leaf::catch_<std::exception> ex )
+		{
+			wh = ex.value().what();
+		} );
+	BOOST_TEST(wh!=0 || !strcmp(wh,"Test"));
+
 	return boost::report_errors();
 }
