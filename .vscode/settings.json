@@ -17,5 +17,8 @@
 		"tonumber",
 		"tostring",
 		"x"
-	]
+	],
+	"files.associations": {
+		"ostream": "cpp"
+	}
 }

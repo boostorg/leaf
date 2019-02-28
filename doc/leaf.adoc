@@ -2683,7 +2683,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-This function works the same way as <<try_handle_some>>, but rather than taking the handlers inline in a parameter pack, it takes a single function that captures the handlers, created like this:
+This function works the same way as <<try_handle_some>> and has the same requirements, but rather than taking the handlers inline in a parameter pack, it takes a single function that captures the handlers, created like this:
 
 [source,c++]
 ----
@@ -2833,7 +2833,9 @@ namespace boost { namespace leaf {
 } }
 ----
 
-Requirements: :: `TryBlock` must return a `result<T>` object (see <<is_result_type>>). It is valid for the `TryBlock` to return `leaf::<<result,result>><T>`, however this is not a requirement.
+Requirements: ::
+* `try_block` must return a `result<T>` object (see <<is_result_type>>). It is valid for the `TryBlock` to return `leaf::<<result,result>><T>`, however this is not a requirement.
+* `h...` must satisfy the same requirements as the handlers passed to <<context::handle_some>>.
 
 Effects: ::
 
