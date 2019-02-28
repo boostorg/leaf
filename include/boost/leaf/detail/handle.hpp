@@ -329,8 +329,8 @@ namespace boost { namespace leaf {
 	{
 		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...>> { using type = typename match_traits<T>::e_type; };
 		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const>;
-		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const *>;
-		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const &>;
+		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const *> { static_assert(sizeof(match<T,V...>)==0, "Handlers should take match<> by value, not as match<> const *"); };
+		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const &> { static_assert(sizeof(match<T,V...>)==0, "Handlers should take match<> by value, not as match<> const &"); };
 	}
 
 	////////////////////////////////////////

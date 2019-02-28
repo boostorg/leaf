@@ -80,8 +80,8 @@ namespace boost { namespace leaf {
 	{
 		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...>> { using type = void; };
 		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const>;
-		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const *>;
-		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const &>;
+		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const *> { static_assert(sizeof(catch_<Exceptions...>)==0, "Handlers should take catch_<> by value, not as catch_<> const *"); };
+		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const &> { static_assert(sizeof(catch_<Exceptions...>)==0, "Handlers should take catch_<> by value, not as catch_<> const &"); };
 
 		template <class SlotsTuple, class... Ex>
 		struct check_one_argument<SlotsTuple,catch_<Ex...>>
