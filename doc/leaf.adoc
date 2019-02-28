@@ -2812,7 +2812,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-The `try_handle_all` function has the same requirements and works similarly to <<try_handle_some>>, but it requires the passed handler pack to be able to handle any error, which is enforced at compile time. Secondly, because it is required to handle all errors, `try_handle_all` unpacks the `result<T>` object `r` returned by the `TryBlock`, returning `r.value()` instead of `r`.
+The `try_handle_all` function works similarly to <<try_handle_some>>, but in addition it requires the passed handler pack to be able to handle any error, which is enforced at compile time. Secondly, because it is required to handle all errors, `try_handle_all` unpacks the `result<T>` object `r` returned by the `TryBlock`, returning `r.value()` instead of `r`.
 
 TIP: See also Five Minute Introduction <<introduction-result>>.
 
