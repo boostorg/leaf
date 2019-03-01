@@ -27,7 +27,23 @@
 
 namespace boost { namespace leaf {
 
-	class bad_result: public std::exception { };
+	class bad_result:
+		public std::exception,
+		public error_id
+	{
+		char const * what() const noexcept final override
+		{
+			return "boost::leaf::bad_result";
+		}
+
+	public:
+
+		explicit bad_result( error_id && id ) noexcept:
+			error_id(std::move(id))
+		{
+			assert(value());
+		}
+	};
 
 	////////////////////////////////////////
 
@@ -234,7 +250,7 @@ namespace boost { namespace leaf {
 			if( which_==leaf_detail::result_variant::value )
 				return value_;
 			else
-				LEAF_THROW(bad_result());
+				throw bad_result(error());
 		}
 
 		T & value()
@@ -242,7 +258,7 @@ namespace boost { namespace leaf {
 			if( which_==leaf_detail::result_variant::value )
 				return value_;
 			else
-				LEAF_THROW(bad_result());
+				throw bad_result(error());
 		}
 
 		T const & operator*() const

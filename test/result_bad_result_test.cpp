@@ -10,11 +10,10 @@
 
 namespace leaf = boost::leaf;
 
-int check( leaf::catch_<leaf::bad_result>, leaf::e_source_location const & x )
+struct e_test { int value; };
+
+int check( leaf::catch_<leaf::bad_result>, leaf::match<e_test, 42> )
 {
-	BOOST_TEST(strstr(x.file,"result.hpp")!=0);
-	BOOST_TEST(x.line>0);
-	BOOST_TEST(strstr(x.function,"value")!=0);
 	return 1;
 }
 
@@ -24,7 +23,7 @@ int main()
 		int r = leaf::try_catch(
 			[]
 			{
-				leaf::result<int> r = leaf::new_error();
+				leaf::result<int> r = leaf::new_error(e_test{42});
 				(void) r.value();
 				return 0;
 			},
@@ -35,7 +34,7 @@ int main()
 		int r = leaf::try_catch(
 			[]
 			{
-				leaf::result<int> const r = leaf::new_error();
+				leaf::result<int> const r = leaf::new_error(e_test{42});
 				(void) r.value();
 				return 0;
 			},
@@ -46,7 +45,7 @@ int main()
 		int r = leaf::try_catch(
 			[]
 			{
-				leaf::result<int> r = leaf::new_error();
+				leaf::result<int> r = leaf::new_error(e_test{42});
 				(void) *r;
 				return 0;
 			},
@@ -57,7 +56,7 @@ int main()
 		int r = leaf::try_catch(
 			[]
 			{
-				leaf::result<int> const r = leaf::new_error();
+				leaf::result<int> const r = leaf::new_error(e_test{42});
 				(void) *r;
 				return 0;
 			},
