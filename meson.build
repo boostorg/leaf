@@ -49,16 +49,6 @@ includes = [ include_directories('include') ]
 leaf = declare_dependency( include_directories: includes )
 
 tests = [
-	'_hpp_all_test',
-	'_hpp_capture_test',
-	'_hpp_common_test',
-	'_hpp_context_test',
-	'_hpp_error_test',
-	'_hpp_exception_test',
-	'_hpp_handle_error_test',
-	'_hpp_handle_exception_test',
-	'_hpp_preload_test',
-	'_hpp_result_test',
 	'accumulate_basic_test',
 	'accumulate_nested_error_exception_test',
 	'accumulate_nested_error_result_test',
@@ -112,6 +102,16 @@ tests = [
 	'try_catch_error_id_test',
 	'try_catch_test',
 	'try_exception_and_result_test',
+	'_hpp_capture_test',
+	'_hpp_common_test',
+	'_hpp_context_test',
+	'_hpp_error_test',
+	'_hpp_exception_test',
+	'_hpp_handle_error_test',
+	'_hpp_handle_exception_test',
+	'_hpp_preload_test',
+	'_hpp_result_test',
+	'_hpp_all_test',
 ]
 foreach t : tests
 	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf,thread_dep] ) )

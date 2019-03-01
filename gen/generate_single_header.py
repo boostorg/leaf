@@ -28,10 +28,9 @@ def _append(input_file_name, input_file, output_file, regex_includes, include_fo
             next_input_file_name = result.group("include")
             include_first_time = next_input_file_name not in includes_set
             if include_first_time:
-                print("%s" % next_input_file_name, end="", flush=True)
+                print("%s" % next_input_file_name, flush=True)
             with open(os.path.join(include_folder, next_input_file_name), "r") as next_input_file:
                 if include_first_time:
-                    print("")
                     includes_set.add(next_input_file_name)
                 output_file.write('\n//>>>>>>>>\n//%s\n//>>>>>>>>\n#line 1 "%s"\n' % \
                     (next_input_file_name, next_input_file_name))
