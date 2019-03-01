@@ -2791,7 +2791,10 @@ namespace boost { namespace leaf {
 } }
 ----
 
-The `try_catch` function works similarly to <<try_handle_some>>, except that it does not use or understand the semantics of `result<T>` types. Instead, it assumes that the `try_block` throws to indicate a failure, in which case `try_catch` will attempt to find a matching handler among `h...`.
+The `try_catch` function works similarly to <<try_handle_some>>, except that it does not use or understand the semantics of `result<T>` types; instead:
+
+* It assumes that the `try_block` throws to indicate a failure, in which case `try_catch` will attempt to find a matching handler among `h...`;
+* If a suitable handler isn't found, the original exception is re-thrown using `throw;`.
 
 TIP: See also Five Minute Introduction <<introduction-eh>>.
 
@@ -2812,7 +2815,10 @@ namespace boost { namespace leaf {
 } }
 ----
 
-The `try_handle_all` function works similarly to <<try_handle_some>>, but in addition it requires the passed handler pack to be able to handle any error, which is enforced at compile time. Secondly, because it is required to handle all errors, `try_handle_all` unpacks the `result<T>` object `r` returned by the `TryBlock`, returning `r.value()` instead of `r`.
+The `try_handle_all` function works similarly to <<try_handle_some>>, except:
+
+* In addition, it requires the passed handler pack to be able to handle any error, which is enforced at compile time, and
+* because it is required to handle all errors, `try_handle_all` unpacks the `result<T>` object `r` returned by the `TryBlock`, returning `r.value()` instead of `r`.
 
 TIP: See also Five Minute Introduction <<introduction-result>>.
 
