@@ -2818,7 +2818,7 @@ namespace boost { namespace leaf {
 The `try_handle_all` function works similarly to <<try_handle_some>>, except:
 
 * In addition, it requires the passed handler pack to be able to handle any error, which is enforced at compile time, and
-* because it is required to handle all errors, `try_handle_all` unpacks the `result<T>` object `r` returned by the `TryBlock`, returning `r.value()` instead of `r`.
+* because it is required to handle all errors, `try_handle_all` unpacks the `result<T>` object `r` returned by the `try_block`, returning `r.value()` instead of `r`.
 
 TIP: See also Five Minute Introduction <<introduction-result>>.
 
@@ -2840,7 +2840,7 @@ namespace boost { namespace leaf {
 ----
 
 Requirements: ::
-* `try_block` must return a `result<T>` object (see <<is_result_type>>). It is valid for the `TryBlock` to return `leaf::<<result,result>><T>`, however this is not a requirement.
+* `try_block` must return a `result<T>` object (see <<is_result_type>>). It is valid for the `try_block` to return `leaf::<<result,result>><T>`, however this is not a requirement.
 * `h...` must satisfy the same requirements as the handlers passed to <<context::handle_some>>.
 
 Effects: ::
