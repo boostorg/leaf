@@ -24,6 +24,24 @@ if not meson.is_subproject()
 	endif
 endif
 
+if get_option('build_all_hpp')
+	prog_python = import('python').find_installation('python3')
+	custom_target(
+		'all_hpp',
+		command:
+		[
+			prog_python,
+			files('gen/generate_single_header.py'),
+			'-i', files('include/boost/leaf/detail/all.hpp'),
+			'-p', join_paths(meson.source_root(),'include'),
+			'-o', join_paths(meson.source_root(),'include/boost/leaf/all.hpp'),
+			'boost/leaf'
+		],
+		output: 'all.hpp',
+		build_always_stale: true,
+		build_by_default: true)
+endif
+
 thread_dep = dependency('threads')
 
 includes = [ include_directories('include') ]

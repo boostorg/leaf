@@ -1,1 +1,2 @@
 option('build_lua_examples',type:'boolean',value:false,description:'Enable or disable downloading of Lua and building the Lua examples')
+option('build_all_hpp',type:'boolean',value:false,description:'Enable or disable the automatic generation of include/boost/leaf/all.hpp')

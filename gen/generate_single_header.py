@@ -7,13 +7,18 @@
         python3 generate_single_header.py  --help
 
         e.g. python3 generate_single_header.py -i boost/leaf/all.hpp -o leaf_all.hpp boost/leaf
+
+    Note:
+
+        If unit tests are build by meson, you can enable the 'build_all_hpp' option (see meson_options.txt),
+        in which case each time the tests are built, first all.hpp will be rebuilt (no dependency checks).
+
 """
 
 import argparse
 import os
 import re
 
-# pylint: disable=too-many-arguments
 def _append(input_file_name, input_file, output_file, regex_includes, include_folder, includes_set):
     line_count = 1
     for line in input_file:
@@ -23,10 +28,10 @@ def _append(input_file_name, input_file, output_file, regex_includes, include_fo
             next_input_file_name = result.group("include")
             include_first_time = next_input_file_name not in includes_set
             if include_first_time:
-                print("Merging %s ..." % next_input_file_name, end="", flush=True)
+                print("%s" % next_input_file_name, end="", flush=True)
             with open(os.path.join(include_folder, next_input_file_name), "r") as next_input_file:
                 if include_first_time:
-                    print("found")
+                    print("")
                     includes_set.add(next_input_file_name)
                 output_file.write('\n//>>>>>>>>\n//%s\n//>>>>>>>>\n#line 1 "%s"\n' % \
                     (next_input_file_name, next_input_file_name))
@@ -51,6 +56,7 @@ def _main():
     args = parser.parse_args()
 
     regex_includes = re.compile(r"""^\s*#include\s*("|\<)(?P<include>%s.*)("|\>)""" % args.prefix)
+    print("Rebuilding %s:" % args.input)
     with open(args.output, 'w') as output_file, open(args.input, 'r') as input_file:
         _append(args.input, input_file, output_file, regex_includes, args.path, set())
 
