@@ -1919,11 +1919,11 @@ namespace boost { namespace leaf {
 
     template <class R, class... H>
     typename std::decay<decltype(std::declval<R>().value())>::type
-    handle_all( R const &, H && ... ) const noexcept;
+    handle_all( R const &, H && ... ) const;
 
     template <class R, class RemoteH>
     typename std::decay<decltype(std::declval<R>().value())>::type
-    remote_handle_all( R const &, RemoteH && ) const noexcept;
+    remote_handle_all( R const &, RemoteH && ) const;
 
     template <class R, class... H>
     R handle_some( R const &, H && ... ) const;
@@ -1981,19 +1981,19 @@ namespace boost { namespace leaf {
 
   template <class TryBlock, class... H>
   typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-  try_handle_all( TryBlock && try_block, H && ... h ) noexcept;
+  try_handle_all( TryBlock && try_block, H && ... h );
 
   template <class TryBlock, class... H>
   typename std::decay<decltype(std::declval<TryBlock>()())>::type
-  try_handle_some( TryBlock && try_block, H && ... h ) noexcept;
+  try_handle_some( TryBlock && try_block, H && ... h );
 
   template <class TryBlock, class RemoteH>
   typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-  remote_try_handle_all( TryBlock && try_block, RemoteH && h ) noexcept;
+  remote_try_handle_all( TryBlock && try_block, RemoteH && h );
 
   template <class TryBlock, class RemoteH>
   typename std::decay<decltype(std::declval<TryBlock>()())>::type
-  remote_try_handle_some( TryBlock && try_block, RemoteH && h ) noexcept;
+  remote_try_handle_some( TryBlock && try_block, RemoteH && h );
 
   //////////////////////////////////////////
 
@@ -2629,16 +2629,16 @@ namespace boost { namespace leaf {
 
   template <class TryBlock, class RemoteH>
   typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-  remote_try_handle_all( TryBlock && try_block, RemoteH && h ) noexcept;
+  remote_try_handle_all( TryBlock && try_block, RemoteH && h );
 
 } }
 ----
 
-This function works similarly to <<remote_try_handle_some>>, but like other "`_all`" functions, it is required to handle any error (enforced at compile-time). Therefore, the captured `remote_handlers` must include a handler that matches any error, and may not throw:
+This function works similarly to <<remote_try_handle_some>>, but like other "`_all`" functions, it is required to handle any error (enforced at compile-time). Therefore, the captured `remote_handlers` must include a handler that matches any error:
 
 [source,c++]
 ----
-auto remote_handlers = []( leaf::error_info const & error ) noexcept
+auto remote_handlers = []( leaf::error_info const & error )
 {
   return leaf::remote_handle_all( error,
 
@@ -2678,7 +2678,7 @@ namespace boost { namespace leaf {
 
   template <class TryBlock, class RemoteH>
   typename std::decay<decltype(std::declval<TryBlock>()())>::type
-  remote_try_handle_some( TryBlock && try_block, RemoteH && h ) noexcept;
+  remote_try_handle_some( TryBlock && try_block, RemoteH && h );
 
 } }
 ----
@@ -2810,7 +2810,7 @@ namespace boost { namespace leaf {
 
   template <class TryBlock, class... H>
   typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-  try_handle_all( TryBlock && try_block, H && ... h ) noexcept;
+  try_handle_all( TryBlock && try_block, H && ... h );
 
 } }
 ----
@@ -2974,11 +2974,11 @@ namespace boost { namespace leaf {
 
     template <class R, class... H>
     typename std::decay<decltype(std::declval<R>().value())>::type
-    handle_all( R const &, H && ... ) const noexcept;
+    handle_all( R const &, H && ... ) const;
 
     template <class R, class RemoteH>
     typename std::decay<decltype(std::declval<R>().value())>::type
-    remote_handle_all( R const &, RemoteH && ) const noexcept;
+    remote_handle_all( R const &, RemoteH && ) const;
 
     template <class R, class... H>
     R handle_some( R const &, H && ... ) const;
@@ -3141,7 +3141,7 @@ namespace boost { namespace leaf {
   template <class... E>
   template <class R, class... H>
   typename std::decay<decltype(std::declval<R>().value())>::type
-  context<E...>::handle_all( R const & r, H && ... h ) const noexcept;
+  context<E...>::handle_all( R const & r, H && ... h ) const;
 
 } }
 ----
@@ -3158,7 +3158,12 @@ And the following addition:
 
 Effects: :: `handle_all` is equivalent to `handle_some`, except that the handlers `h...` are not permitted to fail. Therefore, `handle_all` returns `T` rather than `result<T>`, and so each of the `h...` handlers is required to return an object that can be used to initialize a value of type `T`.
 
-NOTE: Handlers passed to `handle_all` may be matched to the current exception using <<catch_>>. In this case please `#include <boost/leaf/handle_exception.hpp>`.
+[NOTE]
+--
+* `handle_all` is exception-neutral: it does not throw exceptions, however the user-supplied handlers are permitted to throw.
+
+* Handlers passed to `handle_all` may be matched to the current exception using <<catch_>>. In this case please `#include <boost/leaf/handle_exception.hpp>`.
+--
 
 TIP: It is not typical to call `handle_all` directly; it is usually preferable to automate the instantiation of the <<context>> template, by using <<try_handle_all>> instead.
 
@@ -3269,7 +3274,7 @@ Effects: ::
 +
 If `handle_some` is unable to find a matching handler, it returns `r`.
 
-NOTE: `handle_some` is exception-neutral: it does not throw exceptions, however the user-supplied handlers are permitted throw.
+NOTE: `handle_some` is exception-neutral: it does not throw exceptions, however the user-supplied handlers are permitted to throw.
 
 Handler Matching Procedure: ::
 +
@@ -3555,7 +3560,7 @@ namespace boost { namespace leaf {
   template <class... E>
   template <class R, class RemoteH>
   typename std::decay<decltype(std::declval<R>().value())>::type
-  context<E...>::remote_handle_all( R const & r, RemoteH && h ) const noexcept;
+  context<E...>::remote_handle_all( R const & r, RemoteH && h ) const;
 
 } }
 ----
