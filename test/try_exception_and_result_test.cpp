@@ -218,5 +218,149 @@ int main()
 		}
 	}
 
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				return leaf::try_handle_all(
+					[]() -> leaf::result<int>
+					{
+						return leaf::new_error( info<1>{1} );
+					},
+					[]( info<1> const & ) -> int
+					{
+						LEAF_THROW(my_exception());
+					},
+					[]( leaf::catch_<> )
+					{
+						return 1;
+					},
+					[]
+					{
+						return 2;
+					} );
+			},
+			[]( leaf::catch_<> )
+			{
+				return 3;
+			},
+			[]
+			{
+				return 4;
+			} );
+
+		BOOST_TEST_EQ(r, 3);
+	}
+
+	{
+		auto handle_error = []( leaf::error_info const & error )
+		{
+			return leaf::remote_handle_all( error,
+				[]( info<1> const & ) -> int
+				{
+					LEAF_THROW(my_exception());
+				},
+				[]( leaf::catch_<> )
+				{
+					return 1;
+				},
+				[]
+				{
+					return 2;
+				} );
+		};
+		int r = leaf::try_handle_all(
+			[&]() -> leaf::result<int>
+			{
+				return leaf::remote_try_handle_all(
+					[&]() -> leaf::result<int>
+					{
+						return leaf::new_error( info<1>{1} );
+					},
+					[&]( leaf::error_info const & error )
+					{
+						return handle_error(error);
+					} );
+			},
+			[]( leaf::catch_<> )
+			{
+				return 3;
+			},
+			[]
+			{
+				return 4;
+			} );
+
+		BOOST_TEST_EQ(r, 3);
+	}
+
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				return leaf::try_handle_some(
+					[]() -> leaf::result<int>
+					{
+						return leaf::new_error( info<1>{1} );
+					},
+					[]( info<1> const & ) -> int
+					{
+						LEAF_THROW(my_exception());
+					},
+					[]( leaf::catch_<> )
+					{
+						return 1;
+					} );
+			},
+			[]( leaf::catch_<> )
+			{
+				return 3;
+			},
+			[]
+			{
+				return 4;
+			} );
+
+		BOOST_TEST_EQ(r, 3);
+	}
+
+	{
+		auto handle_error = []( leaf::error_info const & error )
+		{
+			return leaf::remote_handle_some( error,
+				[]( info<1> const & ) -> leaf::result<int>
+				{
+					LEAF_THROW(my_exception());
+				},
+				[]( leaf::catch_<> ) -> leaf::result<int>
+				{
+					return 1;
+				} );
+		};
+		int r = leaf::try_handle_all(
+			[&]() -> leaf::result<int>
+			{
+				return leaf::remote_try_handle_some(
+					[&]() -> leaf::result<int>
+					{
+						return leaf::new_error( info<1>{1} );
+					},
+					[&]( leaf::error_info const & error )
+					{
+						return handle_error(error);
+					} );
+			},
+			[]( leaf::catch_<> )
+			{
+				return 3;
+			},
+			[]
+			{
+				return 4;
+			} );
+
+		BOOST_TEST_EQ(r, 3);
+	}
+
 	return boost::report_errors();
 }
