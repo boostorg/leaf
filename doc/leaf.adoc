@@ -1530,6 +1530,7 @@ TIP: These automatically-generated diagnostic messages are developer-friendly, b
 * https://github.com/zajo/leaf/blob/master/examples/error_log.cpp?ts=4[exception_error_log.cpp]: Using `accumulate` to produce an error log.
 * https://github.com/zajo/leaf/blob/master/examples/error_trace.cpp?ts=4[exception_error_trace.cpp]: Using `accumulate` to produce an error trace.
 * https://github.com/zajo/leaf/blob/master/examples/print_half.cpp?ts=4[exception_print_half.cpp]: This is a Boost Outcome example translated to LEAF, demonstrating how easy it is to use <<try_handle_some>> to handle some errors, forwarding any other error to the caller.
+* https://github.com/zajo/leaf/blob/master/examples/asio_beast_leaf_rpc.cpp?ts=4[asio_beast_leaf_rpc.cpp]: A simple RPC calculator implemented with Beast+ASIO+LEAF, based on https://github.com/boostorg/beast/blob/b02f59ff9126c5a17f816852efbbd0ed20305930/example/echo-op/echo_op.cpp[echo_op.cpp] (Beast example) and https://github.com/chriskohlhoff/asio/blob/e7b397142ae11545ea08fcf04db3008f588b4ce7/asio/src/examples/cpp11/operations/composed_5.cpp[composed_5.cpp] (ASIO example).
 
 [[synopsis]]
 == Synopsis
