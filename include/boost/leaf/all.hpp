@@ -17386,7 +17386,7 @@ namespace boost { namespace leaf {
 			return dynamic_cast<Ex const *>(ex)!=0 || check_exception_pack(ex, ex_rest...);
 		}
 
-		bool check_exception_pack( std::exception const * )
+		inline bool check_exception_pack( std::exception const * )
 		{
 			return true;
 		}
