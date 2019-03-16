@@ -850,5 +850,16 @@ int main()
 	}
 	BOOST_TEST_EQ(err::count, 0);
 
+	{
+		leaf::result<int> r;
+		BOOST_TEST(r);
+		BOOST_TEST(!r.error());
+	}
+	{
+		leaf::result<void> r;
+		BOOST_TEST(r);
+		BOOST_TEST(!r.error());
+	}
+
 	return boost::report_errors();
 }
