@@ -3258,7 +3258,6 @@ TIP: It is not typical to call `handle_some` directly; it is usually preferable 
 Requirements: ::
 
 * `<<is_result_type,is_result_type>><R>::value` must be `true`;
-* `r` must indicate a failure, that is `!r` must evaluate to `true`;
 * Each of the `h...` functions:
 ** may take arguments of <<e_objects,E-types>>, either by value or by `const &`, or as a `const *`;
 ** may take arguments, either by value or by `const &`, of the predicate type `<<match,match>><E, V...>`, where `E` is an E-type or an instance of the <<condition>> class template.
@@ -3282,6 +3281,8 @@ Handler Matching Procedure: ::
 A handler `h` matches the failure reported by `r` iff `handle_some` is able to produce values to pass as its arguments, using the E-types stored in `*this`, associated with the error ID returned by `r.error()`. As soon as it is determined that an argument value can not be produced, the current handler is dropped and the matching procedure continues with the next handler, if any.
 +
 TIP: If `R` is an instance of the `leaf::result` template, `r.error()` would return <<error_id>>. However, it is permissible for `r.error()` to return `std::error_code`, because that type can also communicate LEAF error IDs; see <<tutorial-interoperability>>.
++
+NOTE: If `r.error().value()` is zero (which would be the case, for example, if `r` is in value state) then only handlers that match any error will be selected (if available).
 +
 If `err` is the error ID obtained from `r.error()`, each argument value `a`~i~ to be passed to the handler currently under consideration is produced as follows:
 +
