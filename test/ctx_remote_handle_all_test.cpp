@@ -8,6 +8,7 @@
 #include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/result.hpp>
 #include "boost/core/lightweight_test.hpp"
+#include <iostream>
 
 namespace leaf = boost::leaf;
 
@@ -34,8 +35,9 @@ int main()
 				BOOST_TEST(x.value==1);
 				return 1;
 			},
-			[]
+			[]( leaf::verbose_diagnostic_info const & info )
 			{
+				std::cout << info;
 				return 2;
 			} );
 	};

@@ -80,7 +80,6 @@ namespace boost { namespace leaf {
 
 			static void print( std::ostream & os, int err_id )
 			{
-				assert(err_id);
 				for( slot_base const * p = first(); p; p=p->next_ )
 					if( p->slot_print(os,err_id) )
 						os << std::endl;
@@ -279,10 +278,10 @@ namespace boost { namespace leaf {
 
 			bool slot_print( std::ostream & os, int err_id ) const
 			{
-				assert(err_id);
 				if( !diagnostic<E>::is_invisible && *top_==this )
 					if( E const * e = has_value(err_id) )
 					{
+						assert(err_id);
 						diagnostic<decltype(*e)>::print(os, *e);
 						return true;
 					}
@@ -338,19 +337,23 @@ namespace boost { namespace leaf {
 
 			E const * has_value( int err_id ) const noexcept
 			{
-				assert(err_id);
 				if( err_id == err_id_ )
+				{
+					assert(err_id);
 					if( E const * e = impl::has_value() )
 						return e;
+				}
 				return 0;
 			}
 
 			E * has_value( int err_id ) noexcept
 			{
-				assert(err_id);
 				if( err_id == err_id_ )
+				{
+					assert(err_id);
 					if( E * e = impl::has_value() )
 						return e;
+				}
 				return 0;
 			}
 

@@ -3273,7 +3273,7 @@ Effects: ::
 `handle_some` considers each of the `h...` handlers, in order, until it finds one that matches the reported `r.error()`. The first matching handler is invoked and its return value is used to initialize the return value of `handle_some`, which can indicate success if the handler was able to handle the error, or failure if it was not.
 +
 If `handle_some` is unable to find a matching handler, it returns `r`.
-
++
 NOTE: `handle_some` is exception-neutral: it does not throw exceptions, however the user-supplied handlers are permitted to throw.
 
 Handler Matching Procedure: ::
