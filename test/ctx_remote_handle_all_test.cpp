@@ -41,14 +41,30 @@ int main()
 	};
 
 	auto ctx = leaf::make_context(&handle_error);
-	leaf::result<int> r = f(ctx);
 
-	int rr = ctx.remote_handle_all( r,
-		[&]( leaf::error_info const & error )
-		{
-			return handle_error(error);
-		} );
-	BOOST_TEST_EQ(rr, 1);
+	{
+		leaf::result<int> r1 = f(ctx);
+		BOOST_TEST(!r1);
+
+		int r2 = ctx.remote_handle_all( r1,
+			[&]( leaf::error_info const & error )
+			{
+				return handle_error(error);
+			} );
+		BOOST_TEST_EQ(r2, 1);
+	}
+
+	{
+		auto r1 = leaf::result<int>(leaf::error_id());
+		BOOST_TEST(!r1);
+
+		int r2 = ctx.remote_handle_all( r1,
+			[&]( leaf::error_info const & error )
+			{
+				return handle_error(error);
+			} );
+		BOOST_TEST_EQ(r2, 2);
+	}
 
 	return boost::report_errors();
 }

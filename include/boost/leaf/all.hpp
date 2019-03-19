@@ -10352,16 +10352,6 @@ namespace boost { namespace leaf {
 	{
 		error_info & operator=( error_info const & ) = delete;
 
-		bool has_error() const noexcept
-		{
-			return bool(err_id_);
-		}
-
-		bool has_error_code() const noexcept
-		{
-			return ec_!=0;
-		}
-
 	protected:
 
 		void print( std::ostream & os ) const
@@ -10385,7 +10375,6 @@ namespace boost { namespace leaf {
 			ec_(&id),
 			err_id_(id)
 		{
-			assert(err_id_);
 		}
 
 		explicit error_info( polymorphic_context const & ctx, std::error_code const & ec ) noexcept:
@@ -10413,13 +10402,11 @@ namespace boost { namespace leaf {
 
 		error_id const & error() const noexcept
 		{
-			assert(has_error());
 			return err_id_;
 		}
 
 		std::error_code const & error_code() const noexcept
 		{
-			assert(has_error());
 			return ec_ ? *ec_ : err_id_;
 		}
 
@@ -10979,7 +10966,6 @@ namespace boost { namespace leaf {
 			using namespace leaf_detail;
 			using Ret = typename std::decay<decltype(std::declval<R>().value())>::type;
 			static_assert(is_result_type<R>::value, "The R type used with a handle_all function must be registered with leaf::is_result_type");
-			assert(!r);
 			return handle_error_<Ret>(tup(), error_info(*this, r.error()), std::forward<H>(h)...);
 		}
 
@@ -10988,7 +10974,6 @@ namespace boost { namespace leaf {
 		typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::remote_handle_all( R const & r, RemoteH && h ) const
 		{
 			static_assert(is_result_type<R>::value, "The R type used with a handle_all function must be registered with leaf::is_result_type");
-			assert(!r);
 			return std::forward<RemoteH>(h)(error_info(*this, r.error())).get();
 		}
 
@@ -10998,7 +10983,6 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<R>::value, "The R type used with a handle_some function must be registered with leaf::is_result_type");
-			assert(!r);
 			return handle_error_<R>(tup(), error_info(*this, r.error()), std::forward<H>(h)...,
 				[&r]{ return r; });
 		}
@@ -11008,7 +10992,6 @@ namespace boost { namespace leaf {
 		R context_base<E...>::remote_handle_some( R const & r, RemoteH && h ) const
 		{
 			static_assert(is_result_type<R>::value, "The R type used with a handle_some function must be registered with leaf::is_result_type");
-			assert(!r);
 			return std::forward<RemoteH>(h)(error_info(*this, r.error())).get();
 		}
 
@@ -16385,16 +16368,6 @@ namespace boost { namespace leaf {
 	{
 		error_info & operator=( error_info const & ) = delete;
 
-		bool has_error() const noexcept
-		{
-			return bool(err_id_);
-		}
-
-		bool has_error_code() const noexcept
-		{
-			return ec_!=0;
-		}
-
 	protected:
 
 		void print( std::ostream & os ) const
@@ -16418,7 +16391,6 @@ namespace boost { namespace leaf {
 			ec_(&id),
 			err_id_(id)
 		{
-			assert(err_id_);
 		}
 
 		explicit error_info( polymorphic_context const & ctx, std::error_code const & ec ) noexcept:
@@ -16446,13 +16418,11 @@ namespace boost { namespace leaf {
 
 		error_id const & error() const noexcept
 		{
-			assert(has_error());
 			return err_id_;
 		}
 
 		std::error_code const & error_code() const noexcept
 		{
-			assert(has_error());
 			return ec_ ? *ec_ : err_id_;
 		}
 
@@ -17012,7 +16982,6 @@ namespace boost { namespace leaf {
 			using namespace leaf_detail;
 			using Ret = typename std::decay<decltype(std::declval<R>().value())>::type;
 			static_assert(is_result_type<R>::value, "The R type used with a handle_all function must be registered with leaf::is_result_type");
-			assert(!r);
 			return handle_error_<Ret>(tup(), error_info(*this, r.error()), std::forward<H>(h)...);
 		}
 
@@ -17021,7 +16990,6 @@ namespace boost { namespace leaf {
 		typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::remote_handle_all( R const & r, RemoteH && h ) const
 		{
 			static_assert(is_result_type<R>::value, "The R type used with a handle_all function must be registered with leaf::is_result_type");
-			assert(!r);
 			return std::forward<RemoteH>(h)(error_info(*this, r.error())).get();
 		}
 
@@ -17031,7 +16999,6 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<R>::value, "The R type used with a handle_some function must be registered with leaf::is_result_type");
-			assert(!r);
 			return handle_error_<R>(tup(), error_info(*this, r.error()), std::forward<H>(h)...,
 				[&r]{ return r; });
 		}
@@ -17041,7 +17008,6 @@ namespace boost { namespace leaf {
 		R context_base<E...>::remote_handle_some( R const & r, RemoteH && h ) const
 		{
 			static_assert(is_result_type<R>::value, "The R type used with a handle_some function must be registered with leaf::is_result_type");
-			assert(!r);
 			return std::forward<RemoteH>(h)(error_info(*this, r.error())).get();
 		}
 

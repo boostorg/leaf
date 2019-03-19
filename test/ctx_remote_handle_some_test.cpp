@@ -33,18 +33,38 @@ int main()
 			{
 				BOOST_TEST(x.value==1);
 				return 1;
+			},
+			[]
+			{
+				return 2;
 			} );
 	};
 
 	auto ctx = leaf::make_context(&handle_error);
-	leaf::result<int> r = f(ctx);
 
-	leaf::result<int> rr = ctx.remote_handle_some( r,
-		[&]( leaf::error_info const & error )
-		{
-			return handle_error(error);
-		} );
-	BOOST_TEST_EQ(rr.value(), 1);
+	{
+		leaf::result<int> r1 = f(ctx);
+		BOOST_TEST(!r1);
+
+		leaf::result<int> r2 = ctx.remote_handle_some( r1,
+			[&]( leaf::error_info const & error )
+			{
+				return handle_error(error);
+			} );
+		BOOST_TEST_EQ(r2.value(), 1);
+	}
+
+	{
+		auto r1 = leaf::result<int>(leaf::error_id());
+		BOOST_TEST(!r1);
+
+		leaf::result<int> r2 = ctx.remote_handle_some( r1,
+			[&]( leaf::error_info const & error )
+			{
+				return handle_error(error);
+			} );
+		BOOST_TEST_EQ(r2.value(), 2);
+	}
 
 	return boost::report_errors();
 }
