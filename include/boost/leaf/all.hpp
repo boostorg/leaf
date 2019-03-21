@@ -10463,10 +10463,16 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
 		{
-			os << "leaf::diagnostic_info:" << std::endl;
-			x.print(os);
-			if( x.e_uc_  )
-				x.e_uc_->print(os);
+			os << "leaf::diagnostic_info:";
+			if( x.err_id_ )
+			{
+				os << std::endl;
+				x.print(os);
+				if( x.e_uc_  )
+					x.e_uc_->print(os);
+			}
+			else
+				os << " {No Error}" << std::endl;
 			return os;
 		}
 	};
@@ -10485,10 +10491,16 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
 		{
-			os << "leaf::verbose_diagnostic_info:" << std::endl;
-			x.print(os);
-			if( x.e_ui_ )
-				x.e_ui_->print(os);
+			os << "leaf::verbose_diagnostic_info:";
+			if( x.err_id_ )
+			{
+				os << std::endl;
+				x.print(os);
+				if( x.e_ui_ )
+					x.e_ui_->print(os);
+			}
+			else
+				os << " {No Error}" << std::endl;
 			return os;
 		}
 	};
@@ -16488,10 +16500,16 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
 		{
-			os << "leaf::diagnostic_info:" << std::endl;
-			x.print(os);
-			if( x.e_uc_  )
-				x.e_uc_->print(os);
+			os << "leaf::diagnostic_info:";
+			if( x.err_id_ )
+			{
+				os << std::endl;
+				x.print(os);
+				if( x.e_uc_  )
+					x.e_uc_->print(os);
+			}
+			else
+				os << " {No Error}" << std::endl;
 			return os;
 		}
 	};
@@ -16510,10 +16528,16 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
 		{
-			os << "leaf::verbose_diagnostic_info:" << std::endl;
-			x.print(os);
-			if( x.e_ui_ )
-				x.e_ui_->print(os);
+			os << "leaf::verbose_diagnostic_info:";
+			if( x.err_id_ )
+			{
+				os << std::endl;
+				x.print(os);
+				if( x.e_ui_ )
+					x.e_ui_->print(os);
+			}
+			else
+				os << " {No Error}" << std::endl;
 			return os;
 		}
 	};
