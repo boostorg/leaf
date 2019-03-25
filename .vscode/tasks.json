@@ -150,6 +150,15 @@
 			}
 		},
 		{
+			"label": "context_activator_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test context_activator_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test context_activator_test"
+			}
+		},
+		{
 			"label": "context_deduction_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test context_deduction_test",

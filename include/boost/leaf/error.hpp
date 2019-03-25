@@ -691,14 +691,17 @@ namespace boost { namespace leaf {
 
 		polymorphic_context & ctx_;
 		on_deactivation on_deactivate_;
+		bool const ctx_was_active_;
 
 	public:
 
 		context_activator( polymorphic_context & ctx, on_deactivation on_deactivate ) noexcept:
 			ctx_(ctx),
-			on_deactivate_(on_deactivate)
+			on_deactivate_(on_deactivate),
+			ctx_was_active_(ctx_.is_active())
 		{
-			ctx_.activate();
+			if( !ctx_was_active_ )
+				ctx_.activate();
 		}
 
 		~context_activator() noexcept
@@ -707,15 +710,16 @@ namespace boost { namespace leaf {
 				on_deactivate_ == on_deactivation::propagate ||
 				on_deactivate_ == on_deactivation::do_not_propagate ||
 				on_deactivate_ == on_deactivation::propagate_if_uncaught_exception);
-			if( on_deactivate_  == on_deactivation::propagate_if_uncaught_exception )
-			{
-				bool has_exception = std::uncaught_exception();
-				ctx_.deactivate(has_exception);
-				if( !has_exception )
-					(void) leaf_detail::new_id();
-			}
-			else
-				ctx_.deactivate(on_deactivate_ == on_deactivation::propagate);
+			if( !ctx_was_active_ )
+				if( on_deactivate_ == on_deactivation::propagate_if_uncaught_exception )
+				{
+					bool has_exception = std::uncaught_exception();
+					ctx_.deactivate(has_exception);
+					if( !has_exception )
+						(void) leaf_detail::new_id();
+				}
+				else
+					ctx_.deactivate(on_deactivate_ == on_deactivation::propagate);
 		}
 
 		void set_on_deactivate( on_deactivation on_deactivate ) noexcept
