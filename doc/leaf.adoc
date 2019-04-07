@@ -1733,6 +1733,9 @@ namespace boost { namespace leaf {
     T const & operator*() const;
     T & operator*();
 
+    T const * operator->() const;
+    T * operator->();
+
     error_id error() const noexcept;
 
     template <class... E>
@@ -4359,6 +4362,9 @@ namespace boost { namespace leaf {
     T const & operator*() const;
     T & operator*();
 
+    T const * operator->() const;
+    T * operator->();
+
     error_id error() const noexcept;
 
     template <class... E>
@@ -4378,8 +4384,8 @@ The `result<T>` type can be returned by functions which produce a value of type 
 Requirements: :: `T` must be movable, and its move constructor may not throw.
 
 Invariant: :: A `result<T>` object is in one of three states:
-* Value state, in which case it contains an object of type `T`, and `<<result::value,value>>`/`<<result::value,operator*>>` can be used to access the contained value.
-* Error state, in which case it contains an error ID, and calling `<<result::value,value>>`/`<<result::value,operator*>>` throws `leaf::bad_result`.
+* Value state, in which case it contains an object of type `T`, and `<<result::value,value>>`/`<<result::value,operator*>>`/`<<result::value,operatorpass:[->]>>` can be used to access the contained value.
+* Error state, in which case it contains an error ID, and calling `<<result::value,value>>`/`<<result::value,operator*>>`/`<<result::value,operatorpass:[->]>>` throws `leaf::bad_result`.
 * Error-capture state, which is the same as the Error state, but in addition to the error ID, it holds a `std::shared_ptr<<<polymorphic_context,polymorphic_context>>>`.
 
 '''
@@ -4565,7 +4571,7 @@ Returns: :: If `*this` is in <<result,value state>>, returns `true`, otherwise r
 '''
 
 [[result::value]]
-==== `operator*` / `value`
+==== `value` / `operator*` / `operatorpass:[->]`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
@@ -4584,13 +4590,19 @@ namespace boost { namespace leaf {
   template <class T>
   T & result<T>::operator*();
 
+  template <class T>
+  T const * result<T>::operator->() const;
+
+  template <class T>
+  T * result<T>::operator->();
+
   struct bad_result: std::exception { };
 
 } }
 ----
 
 [[result::bad_result]]
-Effects: :: If `*this` is in <<result,value state>>, returns a reference to the stored value, otherwise throws `bad_result`.
+Effects: :: If `*this` is in <<result,value state>>, returns a reference (or pointer) to the stored value, otherwise throws `bad_result`.
 
 '''
 
