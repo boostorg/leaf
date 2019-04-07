@@ -83,7 +83,9 @@ bool eq_value( leaf::result<val> & r1, leaf::result<val> & r2 )
 		r1.value()==r2.value() &&
 		cr1.value()==cr2.value() &&
 		*r1==*r2 &&
-		*cr1==*cr2;
+		*cr1==*cr2 &&
+		r1->id==r2->id &&
+		cr1->id==cr2->id;
 }
 
 int main()

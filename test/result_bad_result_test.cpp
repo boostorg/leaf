@@ -17,6 +17,8 @@ int check( leaf::catch_<leaf::bad_result>, leaf::match<e_test, 42> )
 	return 1;
 }
 
+struct res { int val; };
+
 int main()
 {
 	{
@@ -58,6 +60,28 @@ int main()
 			{
 				leaf::result<int> const r = leaf::new_error(e_test{42});
 				(void) *r;
+				return 0;
+			},
+			check );
+		BOOST_TEST_EQ(r, 1);
+	}
+	{
+		int r = leaf::try_catch(
+			[]
+			{
+				leaf::result<res> r = leaf::new_error(e_test{42});
+				(void) r->val;
+				return 0;
+			},
+			check );
+		BOOST_TEST_EQ(r, 1);
+	}
+	{
+		int r = leaf::try_catch(
+			[]
+			{
+				leaf::result<res> const r = leaf::new_error(e_test{42});
+				(void) r->val;
 				return 0;
 			},
 			check );
