@@ -21561,6 +21561,12 @@ namespace boost { namespace leaf {
 			return value();
 		}
 
+
+		void operator->() const
+		{
+			return value();
+		}
+
 		using base::operator bool;
 		using base::error;
 
