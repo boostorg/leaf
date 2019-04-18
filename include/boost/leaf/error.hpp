@@ -20,6 +20,21 @@
 
 #define LEAF_NEW_ERROR(...) ::boost::leaf::leaf_detail::new_error_at(__FILE__,__LINE__,__FUNCTION__).load(__VA_ARGS__)
 
+#define LEAF_AUTO(v,r)\
+	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "LEAF_AUTO requires a result type");\
+	auto _r_##v = r;\
+	if( !_r_##v )\
+		return _r_##v.error();\
+	auto & v = _r_##v.value()
+
+#define LEAF_CHECK(r)\
+	{\
+		static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "LEAF_CHECK requires a result type");\
+		auto const & _r = r;\
+		if( !_r )\
+			return _r.error();\
+	}
+
 namespace boost { namespace leaf {
 
 	namespace leaf_detail

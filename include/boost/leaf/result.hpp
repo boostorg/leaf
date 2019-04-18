@@ -10,21 +10,6 @@
 #include <boost/leaf/exception.hpp>
 #include <memory>
 
-#define LEAF_AUTO(v,r)\
-	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "LEAF_AUTO requires a result type");\
-	auto _r_##v = r;\
-	if( !_r_##v )\
-		return _r_##v.error();\
-	auto & v = *_r_##v
-
-#define LEAF_CHECK(r)\
-	{\
-		static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "LEAF_CHECK requires a result type");\
-		auto const & _r = r;\
-		if( !_r )\
-			return _r.error();\
-	}
-
 namespace boost { namespace leaf {
 
 	class bad_result:

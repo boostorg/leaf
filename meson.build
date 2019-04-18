@@ -132,6 +132,12 @@ foreach e : examples
 	executable(e, 'examples/'+e+'.cpp', dependencies: [leaf,thread_dep] )
 endforeach
 
+if get_option('build_boost_examples')
+	boost_headers = declare_dependency(include_directories: '../..')
+	executable('asio_beast_leaf_rpc', 'examples/asio_beast_leaf_rpc.cpp', dependencies: [leaf,thread_dep,boost_headers], override_options: ['cpp_std=c++17'] )
+	executable('print_file_outcome_result', 'examples/print_file_outcome_result.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
+endif
+
 if get_option('build_lua_examples')
 	lua=subproject('lua').get_variable('all')
 	executable('lua_callback_result', 'examples/lua_callback_result.cpp', dependencies: [ leaf, lua ] )
