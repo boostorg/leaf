@@ -1647,10 +1647,14 @@ namespace boost { namespace leaf {
   };
 
 } }
+
+#define LEAF_NEW_ERROR(...) ....
+#define LEAF_AUTO(v,r) ....
+#define LEAF_CHECK(r) ....
 ----
 
 [.text-right]
-<<is_e_type>> | <<error_id>> | <<is_error_id>> | <<new_error>> | <<next_error>> | <<last_error>> | <<polymorphic_context>> | <<context_activator>>
+<<is_e_type>> | <<error_id>> | <<is_error_id>> | <<new_error>> | <<next_error>> | <<last_error>> | <<polymorphic_context>> | <<context_activator>> | <<LEAF_NEW_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
 
 '''
 
@@ -1748,14 +1752,10 @@ namespace boost { namespace leaf {
   struct bad_result: std::exception { };
 
 } }
-
-#define LEAF_ERROR(...) ....
-#define LEAF_AUTO(v,r) ....
-#define LEAF_CHECK(r) ....
 ----
 
 [.text-right]
-<<result>> | <<LEAF_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
+<<result>>
 
 '''
 
@@ -4141,7 +4141,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-The <<LEAF_ERROR>>, <<LEAF_EXCEPTION>> and <<LEAF_THROW>> macros capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `e_source_location` object.
+The <<LEAF_NEW_ERROR>>, <<LEAF_EXCEPTION>> and <<LEAF_THROW>> macros capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `e_source_location` object.
 
 '''
 
@@ -4648,7 +4648,7 @@ TIP: The contents of each Reference section are organized alphabetically.
   auto _r_##v = r;\
   if( !_r_##v )\
     return _r_##v.error();\
-  auto & v = *_r_##v
+  auto & v = _r_##v.value()
 ----
 
 `LEAF_AUTO` is useful when calling a function that returns `result<T>` (other than `result<void>`), if the desired behavior is to forward any errors to the caller verbatim.
@@ -4685,7 +4685,7 @@ leaf::result<float> add_values()
   if( !v2 )
     return v2.error();
 
-  return *v1 + *v2;
+  return v1.value() + v2.value();
 }
 ----
 
@@ -4742,16 +4742,16 @@ leaf::result<float> add_values()
 
 '''
 
-[[LEAF_ERROR]]
-=== `LEAF_ERROR`
+[[LEAF_NEW_ERROR]]
+=== `LEAF_NEW_ERROR`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
-#define LEAF_ERROR(...) <<unspecified>>
+#define LEAF_NEW_ERROR(...) <<unspecified>>
 ----
 
-Effects: :: `LEAF_ERROR(e...)` is equivalent to `leaf::<<new_error,new_error>>(e...)`, except the current source location is automatically passed to `new_error` in a `<<common,e_source_location>>` object (in addition to all `e...` objects).
+Effects: :: `LEAF_NEW_ERROR(e...)` is equivalent to `leaf::<<new_error,new_error>>(e...)`, except the current source location is automatically passed to `new_error` in a `<<common,e_source_location>>` object (in addition to all `e...` objects).
 
 '''
 
