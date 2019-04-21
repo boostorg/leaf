@@ -41,7 +41,7 @@ LEAF is a lightweight error handling library for {CPP}11. Features:
 We'll implement two versions of the same simple program: one using error codes to handle errors, and one using exception handling.
 
 [[introduction-result]]
-=== Using a `result<T>`
+=== Using `result<T>`
 
 We'll write a short but complete program that reads a text file in a buffer and prints it to `std::cout`, using LEAF to handle errors without exception handling.
 
@@ -1521,6 +1521,7 @@ TIP: These automatically-generated diagnostic messages are developer-friendly, b
 == Examples
 
 * https://github.com/zajo/leaf/blob/master/examples/print_file_result.cpp?ts=4[print_file_result.cpp]: The complete example from the Five Minute Introduction <<introduction-result>>.
+* https://github.com/zajo/leaf/blob/master/examples/print_file_outcome_result.cpp?ts=4[print_file_outcome_result.cpp]: The complete example from the Five Minute Introduction, but using Boost `outcome::result<T>` instead of `leaf::<<result,result<T>>>`.
 * https://github.com/zajo/leaf/blob/master/examples/print_file_eh.cpp?ts=4[print_file_eh.cpp]: The complete example from the Five Minute Introduction <<introduction-eh>>.
 * https://github.com/zajo/leaf/blob/master/examples/capture_in_result.cpp?ts=4[capture_in_result.cpp]: Shows how to transport E-objects between threads in a `<<result,result>><T>` object.
 * https://github.com/zajo/leaf/blob/master/examples/capture_in_exception.cpp?ts=4[capture_in_exception.cpp]: Shows how to transport E-objects between threads in an exception object.
@@ -2511,7 +2512,7 @@ Effects: :: Each of the `e...` objects is <<tutorial-loading,loaded>> and unique
 
 Returns: :: A new `error_id` value, which is unique across the entire program.
 
-Postcondition: :: `id.value()!=0`, where `id` is the returned `error_id`.
+Ensures: :: `id.value()!=0`, where `id` is the returned `error_id`.
 
 TIP: The <<error_id>> type derives from `std::error_code`.
 
@@ -3070,7 +3071,7 @@ Preconditions: :: `!<<context::is_active,is_active>>()`.
 
 Effects: :: Associates `*this` with the calling thread.
 
-Postconditions: ::
+Ensures: ::
 
 * `<<context::is_active,is_active>>()`;
 * `<<context::thread_id,thread_id>>() == std::this_thread::get_id()`.
@@ -3103,7 +3104,7 @@ Preconditions: ::
 
 Effects: :: De-associates `*this` with the calling thread.
 
-Postconditions: :: * `!<<context::is_active,is_active>>()`.
+Ensures: :: * `!<<context::is_active,is_active>>()`.
 
 When a context is deactivated, the thread-local pointers that currently point to each individual E-object storage in it are restored to their original value prior to calling <<context::activate>>.
 
