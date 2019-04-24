@@ -3573,7 +3573,7 @@ namespace boost { namespace leaf {
 
 Effects: :: This function is similar to <<context::handle_all>>, but instead of taking a list of handlers, it takes a single function which internally captures the list of handlers, using the following procedure:
 +
-First, we create a handler capture:
+First, we create a handler capture (see the tutorial on <<tutorial-remote_handlers>>):
 +
 [source,c++]
 ----
@@ -3603,7 +3603,7 @@ ctx.remote_handle_all(r,
 [.text-right]
 <<error_info>>
 +
-Which is equivalent to:
+Which works similarly to:
 +
 [source,c++]
 ----
@@ -3614,9 +3614,11 @@ ctx.handle_all(r,
 [.text-right]
 <<context::handle_all>>
 
-Note that LEAF does not invoke the user-defined `handle_error` function directly, which means that it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
+Returns: :: If `r` indicates success, returns `r.value()`. Otherwise returns the value returned by the matching handler from the list of handlers used in the handler capture.
 
-TIP: See also <<tutorial-remote_handlers>>.
+CAUTION: It is critical that the lambda passed to `context::remote_handle_all` returns the value returned by the handler capture function (in this case, `handle_error`), even if the error handlers it contains return `void`.
+
+TIP: Because LEAF does not invoke the user-defined `handle_error` function directly, it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
 
 '''
 
@@ -3759,7 +3761,7 @@ namespace boost { namespace leaf {
 
 Effects: :: This function is similar to <<context::handle_some>>, but instead of taking a list of handlers, it takes a single function which internally captures the list of handlers, using the following procedure:
 +
-First, we create a handler capture:
+First, we create a handler capture (see the tutorial on <<tutorial-remote_handlers>>):
 +
 [source,c++]
 ----
@@ -3797,9 +3799,9 @@ ctx.handle_some(r,
 [.text-right]
 <<context::handle_some>>
 
-Note that LEAF does not invoke the user-defined `handle_error` function directly, which means that it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
+Returns: :: If `r` indicates success, or if no matching handler could be found, returns `r`. Otherwise returns the value returned by the matching handler from the list of handlers used in the handler capture.
 
-TIP: See also <<tutorial-remote_handlers>>.
+NOTE: Because LEAF does not invoke the user-defined `handle_error` function directly, it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
 
 '''
 
