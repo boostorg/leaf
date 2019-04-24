@@ -10,3 +10,4 @@
 bld/*
 snippets/*
 subprojects/*/
+.vscode/ipch/*

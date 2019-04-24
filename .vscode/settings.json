@@ -19,6 +19,7 @@
 		"x"
 	],
 	"files.associations": {
-		"ostream": "cpp"
+		"ostream": "cpp",
+		"exception": "cpp"
 	}
 }
