@@ -2350,7 +2350,7 @@ NOTE: To automatically capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[_
 === `exception_to_result`
 
 [source,c++]
-.#include <boost/leaf/exception.hpp>
+.#include <boost/leaf/capture.hpp>
 ----
 namespace boost { namespace leaf {
 
