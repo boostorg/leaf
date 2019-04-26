@@ -3571,7 +3571,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-Effects: :: This function is similar to <<context::handle_all>>, but instead of taking a list of handlers, it takes a single function which internally captures the list of handlers, using the following procedure:
+Effects: :: This member function is similar to <<context::handle_all>>, but instead of taking a list of handlers, it takes a single function which internally captures the list of handlers, using the following procedure.
 +
 First, we create a handler capture (see the tutorial on <<tutorial-remote_handlers>>):
 +
@@ -3587,9 +3587,9 @@ auto handle_error = []( leaf::error_info const & error )
 [.text-right]
 <<error_info>>
 +
-NOTE: The namespace-scope `remote_handle_all` invoked from the user-defined `handle_error` is a helper function which serves no purpose other than to return a function compatible with `remote_handle_all` or <<remote_try_handle_all>>.
+Above, the namespace-scope function `remote_handle_all` invoked from the user-defined `handle_error` is a helper function which serves no purpose other than to make `context::remote_handle_all` (or <<remote_try_handle_all>>) work.
 +
-The `handle_error` function we defined can be used with `remote_handle_all` like this:
+The return value of `leaf::remote_handle_all` (and, consequently, the return value of `handle_error` above) is of unspecified type; `handle_error` should be called from inside the lambda function passed to `context::remote_handle_all` (or `remote_try_handle_all`), which is required to forward the return value to its caller, e.g.:
 +
 [source,c++]
 ----
@@ -3637,9 +3637,9 @@ namespace boost { namespace leaf {
 } }
 ----
 
-Effects: :: This function is similar to <<context::handle_current_exception>>, but instead of taking a list of handlers, it takes a single function which internally captures the list of handlers, using the following procedure:
+Effects: :: This function is similar to <<context::handle_current_exception>>, but instead of taking a list of handlers, it takes a single function which internally captures the list of handlers, using the following procedure.
 +
-First, we create a handler capture:
+First, we create a handler capture (see the tutorial on <<tutorial-remote_handlers>>):
 +
 [source,c++]
 ----
@@ -3653,9 +3653,9 @@ auto handle_error = []( leaf::error_info const & error )
 [.text-right]
 <<error_info>>
 +
-NOTE: The namespace-scope `remote_handle_exception` invoked from the user-defined `handle_error` is a helper function which serves no purpose other than to return a function compatible with `remote_handle_current_exception` or <<context::remote_handle_exception>> or <<remote_try_catch>>.
+Above, the namespace-scope function `remote_handle_exception` invoked from the user-defined `handle_error` is a helper function which serves no purpose other than to make `context::remote_handle_current_exception` (or `remote_try_catch`) work.
 +
-The `handle_error` function we defined can be used with `remote_handle_current_exception` like this:
+The return value of `leaf::remote_handle_exception` (and, consequently, the return value of `handle_error` above) is of unspecified type; `handle_error` should be called from inside the lambda function passed to `context::remote_handle_current_exception` (or `remote_try_catch`), which is required to forward the return value to its caller, e.g.:
 +
 [source,c++]
 ----
@@ -3666,7 +3666,7 @@ ctx.remote_handle_current_exception(
   } );
 ----
 +
-Which is equivalent to:
+Which works similarly to:
 +
 [source,c++]
 ----
@@ -3677,9 +3677,7 @@ ctx.handle_current_exception(
 [.text-right]
 <<context::handle_current_exception>>
 
-Note that LEAF does not invoke the user-defined `handle_error` function directly, which means that it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
-
-TIP: See also <<tutorial-remote_handlers>>.
+TIP: Because LEAF does not invoke the user-defined `handle_error` function directly, it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
 
 '''
 
@@ -3698,49 +3696,22 @@ namespace boost { namespace leaf {
 } }
 ----
 
-Effects: :: This function is similar to <<context::handle_exception>>, but instead of taking a list of handlers, it takes a single function which internally captures the list of handlers, using the following procedure:
-+
-First, we create a handler capture:
+Effects: :: As if:
 +
 [source,c++]
 ----
-auto handle_error = []( leaf::error_info const & error )
+try
 {
-  return leaf::remote_handle_exception( error,
-    ....handlers.... );
-};
+  std::rethrow_exception(ep);
+}
+catch(...)
+{
+  return this->remote_handle_current_exception(std::forward<RemoteH>(h));
+}
 ----
 +
 [.text-right]
-<<error_info>>
-+
-NOTE: The namespace-scope `remote_handle_exception` invoked from the user-defined `handle_error` is a helper function which serves no purpose other than to return a function compatible with `remote_handle_exception` or <<context::remote_handle_current_exception>> or <<remote_try_catch>>.
-+
-The `handle_error` function we defined can be used with `remote_handle_exception` like this:
-+
-[source,c++]
-----
-ctx.remote_handle_exception(ep,
-  [&]( leaf::error_info const & error )
-  {
-    return handle_error(error);
-  } );
-----
-+
-Which is equivalent to:
-+
-[source,c++]
-----
-ctx.handle_exception(ep,
-  ....handlers.... );
-----
-
-[.text-right]
-<<context::handle_exception>>
-
-Note that LEAF does not invoke the user-defined `handle_error` function directly, which means that it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
-
-TIP: See also <<tutorial-remote_handlers>>.
+<<context::remote_handle_current_exception>>
 
 '''
 
@@ -3759,7 +3730,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-Effects: :: This function is similar to <<context::handle_some>>, but instead of taking a list of handlers, it takes a single function which internally captures the list of handlers, using the following procedure:
+Effects: :: This member function is similar to <<context::handle_some>>, but instead of taking a list of handlers, it takes a single function which internally captures the list of handlers, using the following procedure.
 +
 First, we create a handler capture (see the tutorial on <<tutorial-remote_handlers>>):
 +
@@ -3775,9 +3746,9 @@ auto handle_error = []( leaf::error_info const & error )
 [.text-right]
 <<error_info>>
 +
-NOTE: The namespace-scope `remote_handle_some` invoked from the user-defined `handle_error` is a helper function which serves no purpose other than to return a function compatible with `remote_handle_some` or <<try_handle_some>>.
+Above, the namespace-scope function `remote_handle_some` invoked from the user-defined `handle_error` is a helper function which serves no purpose other than to make `context::remote_handle_some` (or <<remote_try_handle_some>>) work.
 +
-The `handle_error` function we defined can be used with `remote_handle_some` like this:
+The return value of `leaf::remote_handle_some` (and, consequently, the return value of `handle_error` above) is of unspecified type; `handle_error` should be called from inside the lambda function passed to `context::remote_handle_some` (or `remote_try_handle_some`), which is required to forward the return value to its caller, e.g.:
 +
 [source,c++]
 ----
@@ -3788,7 +3759,10 @@ ctx.remote_handle_some(r,
   } );
 ----
 +
-Which is equivalent to:
+[.text-right]
+<<error_info>>
++
+Which works similarly to:
 +
 [source,c++]
 ----
@@ -3799,9 +3773,11 @@ ctx.handle_some(r,
 [.text-right]
 <<context::handle_some>>
 
-Returns: :: If `r` indicates success, or if no matching handler could be found, returns `r`. Otherwise returns the value returned by the matching handler from the list of handlers used in the handler capture.
+Returns: :: If `r` indicates success, returns `r`. Otherwise returns the value returned by the matching handler from the list of handlers used in the handler capture.
 
-NOTE: Because LEAF does not invoke the user-defined `handle_error` function directly, it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
+CAUTION: It is critical that the lambda passed to `context::remote_handle_some` returns the value returned by the handler capture function (in this case, `handle_error`).
+
+TIP: Because LEAF does not invoke the user-defined `handle_error` function directly, it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
 
 '''
 

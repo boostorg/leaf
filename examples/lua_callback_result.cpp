@@ -32,9 +32,7 @@ struct e_lua_pcall_error { int value; };
 struct e_lua_error_message { std::string value; };
 
 
-// This is a C callback function with a specific signature, made accessible to programs
-// written in Lua.
-
+// This is a C callback with a specific signature, callable from programs written in Lua.
 // If it succeeds, it returns an int answer, by pushing it onto the Lua stack. But "sometimes"
 // it fails, in which case it calls luaL_error. This causes the Lua interpreter to abort and pop
 // back into the C++ code which called it (see call_lua below).
@@ -48,7 +46,7 @@ int do_work( lua_State * L ) noexcept
 	}
 	else
 	{
-		// Associate an do_work_error_code object with the *next* leaf::error_id object we will
+		// Associate a do_work_error_code object with the *next* leaf::error_id object we will
 		// definitely return from the call_lua function...
 		leaf::next_error().load(ec1);
 
@@ -109,7 +107,7 @@ leaf::result<int> call_lua( lua_State * L )
 	}
 }
 
-int main() noexcept
+int main()
 {
 	std::shared_ptr<lua_State> L=init_lua_state();
 

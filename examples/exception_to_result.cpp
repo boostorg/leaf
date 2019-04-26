@@ -7,10 +7,6 @@
 // through an intermediate context that is not exception-safe, to be handled in a high level
 // function which may or may not be exception-safe.
 
-// An real-world example for this use case is when a C API (which may not throw) is implemented
-// using a C++ library that throws exceptions. As demonstrated below, these exception objects are
-// intercepted and reported by leaf::result<>.
-
 #include <boost/leaf/capture.hpp>
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/handle_error.hpp>
@@ -39,7 +35,7 @@ int compute_answer_throws()
 }
 
 
-// Calls compute_answer_throws, switches to result<int> for error handling.
+// Call compute_answer_throws, switch to result<int> for error handling.
 leaf::result<int> compute_answer() noexcept
 {
 	// Convert exceptions of types error_a and error_b to be communicated by leaf::result.
@@ -64,7 +60,8 @@ leaf::result<void> print_answer() noexcept
 int main()
 {
 	// Exercise print_answer a few times and handle errors. Note that the exception objects that
-	// compute_answer_throws throws are handled as regular LEAF error objects...
+	// compute_answer_throws throws are not handled with leaf::catch_<>, but as regular LEAF
+	// error objects...
 	for( int i=0; i!=42; ++i )
 	{
 		leaf::try_handle_all(
@@ -85,18 +82,17 @@ int main()
 			},
 
 			//...except for error_c errors, which (for demonstration) are captured as exceptions
-			// into std::exception_ptr as "unknown" exception. Presumably this should not
-			// happen, therefore at this point we treat this situation a logic error: we print
+			// into std::exception_ptr as "unknown" exceptions. Presumably this should not
+			// happen, therefore at this point we treat this situation as a logic error: we print
 			// diagnostic information and bail out.
 			[]( std::exception_ptr const * ep )
 			{
 				std::cerr << "Got unknown error!" << std::endl;
 
-				// Why do we take std::exception_ptr as a pointer? Because handle_all requires
-				// that the last handler matches any error -- taken as a pointer, if there isn't a
-				// std::exception_ptr associated with the error, the handler will still be matched
-				//(with 0 passed for ep). Had we taken it by value or by const &, the program
-				// would not compile.
+				// Above, why do we take ep as a pointer? Because handle_all requires that the last
+				// handler matches any error and, taken as a pointer, if there isn't a std::exception_ptr
+				// associated with the error, the handler will still be matched (with 0 passed for ep).
+				// Had we taken it by value or by const &, the program would not have compiled.
 				if( ep )
 					leaf::try_catch(
 						[&]

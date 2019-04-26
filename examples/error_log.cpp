@@ -4,10 +4,13 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // This program demonstrates the use of leaf::accumulate to print the path an error takes
-// as is bubbles up the call stack. The path is only printed if:
+// as is bubbles up the call stack. The printing code only runs if:
 // - An error occurs, and
 // - A handler that takes e_error_log argument is present.
 // Otherwise none of the error log machinery will be invoked by LEAF.
+
+// This example is similar to error_trace, except the path the error takes is not captured,
+// only printed.
 
 #include <boost/leaf/preload.hpp>
 #include <boost/leaf/handle_error.hpp>
@@ -19,6 +22,8 @@
 
 namespace leaf = boost::leaf;
 
+// The error log is activated only if an error-handling scope provides a handler for e_error_log.
+// This activation logic applies to any type passed to leaf::accumulate.
 struct e_error_log
 {
 	struct rec
@@ -36,6 +41,7 @@ struct e_error_log
 		std::cerr << "Error! Log:" << std::endl;
 	}
 
+	// Our e_error_log instance is stateless, used only as a target to operator<<.
 	template <class T>
 	friend std::ostream & operator<<( e_error_log const &, T const & x )
 	{
@@ -43,12 +49,19 @@ struct e_error_log
 	}
 };
 
+// Specializing leaf::is_e_type for e_error_log enables its use with LEAF.
 namespace boost { namespace leaf {
 	template <> struct is_e_type<e_error_log>: std::true_type { };
 } }
 
+// The ERROR_LOG macro is designed for use in functions that detect or forward errors
+// up the call stack. If an error occurs, and if an error-handling scope provides a handler
+// for e_error_log, the supplied lambda is executed as the error bubbles up.
 #define ERROR_LOG auto _log = leaf::accumulate( []( e_error_log & log ) { log << e_error_log::rec{__FILE__, __LINE__}; } )
 
+// Each function in the sequence below calls the previous function, and each function has
+// failure_percent chance of failing. If a failure occurs, the ERROR_LOG macro will cause
+// the path the error takes to be printed.
 int const failure_percent = 25;
 
 leaf::result<void> f1()
@@ -107,7 +120,7 @@ int main()
 				std::cout << "Success!" << std::endl;
 				return { };
 			},
-#if ENABLE_ERROR_LOG
+#if ENABLE_ERROR_LOG // This single #if enables or disables the printing of the error log.
 			[]( e_error_log const & )
 			{
 			},

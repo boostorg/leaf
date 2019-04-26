@@ -31,7 +31,7 @@ leaf::result<task_result> task()
 {
 	bool succeed = (rand()%4) !=0; //...at random.
 	if( succeed )
-		return task_result { };
+		return { };
 	else
 		return leaf::new_error(
 			e_thread_id{std::this_thread::get_id()},
@@ -43,9 +43,9 @@ int main()
 {
 	int const task_count = 42;
 
-	// The error_handler is called in this thread (see leaf::error_handle_all below), eath time we get a
-	// future from a worker that failed. The arguments passed to individual lambdas are transported
-	// from the worker thread to the main thread automatically.
+	// The error_handler is called in this thread (see leaf::remote_try_handle_all below).
+	// The arguments passed to individual lambdas are transported from the worker thread
+	// to the main thread automatically.
 	auto error_handler = []( leaf::error_info const & error )
 	{
 		return leaf::remote_handle_all( error,
@@ -68,7 +68,8 @@ int main()
 	// Launch the tasks, but rather than launching the task function directly, we launch a
 	// wrapper function which calls leaf::capture, passing a context object that will hold
 	// the E-objects loaded from the task in case of an error. The E-types the context is
-	// able to hold are automatically deduced from the type of the error_handler function.
+	// able to hold statically are automatically deduced from the type of the error_handler
+	// function.
 	std::generate_n( std::inserter(fut,fut.end()), task_count,
 		[&]
 		{
