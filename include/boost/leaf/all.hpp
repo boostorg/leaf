@@ -59,6 +59,14 @@
 //  See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt
 
+#ifdef BOOST_LEAF_USE_BOOST_MP11
+
+#include <boost/mp11.hpp>
+
+namespace boost { namespace leaf { namespace leaf_detail_mp11 = ::boost::mp11; } }
+
+#else
+
 #include <type_traits>
 #include <cstddef>
 
@@ -348,6 +356,8 @@ struct mp_valid_impl<void_t<F<T...>>, F, T...>: mp_true {};
 template<template<class...> class F, class... T> using mp_valid = typename detail::mp_valid_impl<void, F, T...>;
 
 } } }
+
+#endif
 
 #endif
 // <<< #include <boost/leaf/detail/mp11.hpp>

@@ -6,6 +6,7 @@
 project('leaf', 'cpp', default_options : ['cpp_std=c++11','b_pch=false'], license : 'boost')
 
 compiler = meson.get_compiler('cpp')
+warning(compiler.version())
 compiler_id = compiler.get_id()
 if not meson.is_subproject()
 	if compiler_id=='clang'
@@ -19,6 +20,7 @@ if not meson.is_subproject()
 		add_global_arguments(
 			'-Wno-non-virtual-dtor',
 			'-Wno-dangling-else',
+			'-Wno-parentheses',
 			language:'cpp' )
 	endif
 endif
@@ -41,11 +43,20 @@ if get_option('build_all_hpp')
 		build_by_default: true)
 endif
 
+boost_headers = declare_dependency(include_directories: '../..')
+
+mp11 = [ ]
+defines = [ ]
+if get_option('use_boost_mp11')
+	mp11 = [ boost_headers ]
+	defines = [ '-DBOOST_LEAF_USE_BOOST_MP11' ]
+endif
+
 thread_dep = dependency('threads')
 
 includes = [ include_directories('include') ]
 
-leaf = declare_dependency( include_directories: includes )
+leaf = declare_dependency( include_directories: includes, compile_args: defines )
 
 tests = [
 	'accumulate_basic_test',
@@ -114,7 +125,7 @@ tests = [
 	'_hpp_all_test',
 ]
 foreach t : tests
-	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf,thread_dep] ) )
+	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf,thread_dep]+mp11 ) )
 endforeach
 
 examples = [
@@ -128,17 +139,16 @@ examples = [
 	'print_half'
 ]
 foreach e : examples
-	executable(e, 'examples/'+e+'.cpp', dependencies: [leaf,thread_dep] )
+	executable(e, 'examples/'+e+'.cpp', dependencies: [leaf,thread_dep]+mp11 )
 endforeach
 
 if get_option('build_boost_examples')
-	boost_headers = declare_dependency(include_directories: '../..')
 	executable('asio_beast_leaf_rpc', 'examples/asio_beast_leaf_rpc.cpp', dependencies: [leaf,thread_dep,boost_headers], override_options: ['cpp_std=c++17'] )
 	executable('print_file_outcome_result', 'examples/print_file_outcome_result.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
 endif
 
 if get_option('build_lua_examples')
 	lua=subproject('lua').get_variable('all')
-	executable('lua_callback_result', 'examples/lua_callback_result.cpp', dependencies: [ leaf, lua ] )
-	executable('lua_callback_eh', 'examples/lua_callback_eh.cpp', dependencies: [ leaf, lua ] )
+	executable('lua_callback_result', 'examples/lua_callback_result.cpp', dependencies: [leaf,lua]+mp11 )
+	executable('lua_callback_eh', 'examples/lua_callback_eh.cpp', dependencies: [leaf,lua]+mp11 )
 endif
