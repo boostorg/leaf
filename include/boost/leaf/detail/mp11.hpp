@@ -290,20 +290,21 @@ template<std::size_t N> using make_index_sequence = make_integer_sequence<std::s
 // index_sequence_for
 template<class... T> using index_sequence_for = make_integer_sequence<std::size_t, sizeof...(T)>;
 
+// implementation by Bruno Dutra (by the name is_evaluable)
 namespace detail
 {
 
-template<class...> using void_t = void;
+template<template<class...> class F, class... T> struct mp_valid_impl
+{
+    template<template<class...> class G, class = G<T...>> static mp_true check(int);
+    template<template<class...> class> static mp_false check(...);
 
-template<class, template<class...> class F, class... T>
-struct mp_valid_impl: mp_false {};
-
-template<template<class...> class F, class... T>
-struct mp_valid_impl<void_t<F<T...>>, F, T...>: mp_true {};
+    using type = decltype(check<F>(0));
+};
 
 } // namespace detail
 
-template<template<class...> class F, class... T> using mp_valid = typename detail::mp_valid_impl<void, F, T...>;
+template<template<class...> class F, class... T> using mp_valid = typename detail::mp_valid_impl<F, T...>::type;
 
 } } }
 
