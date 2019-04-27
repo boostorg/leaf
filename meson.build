@@ -6,7 +6,6 @@
 project('leaf', 'cpp', default_options : ['cpp_std=c++11','b_pch=false'], license : 'boost')
 
 compiler = meson.get_compiler('cpp')
-warning(compiler.version())
 compiler_id = compiler.get_id()
 if not meson.is_subproject()
 	if compiler_id=='clang'

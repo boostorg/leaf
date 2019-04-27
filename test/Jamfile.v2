@@ -9,7 +9,6 @@ project
     : requirements
         <toolset>gcc:<cxxflags>"-std=c++11 -Wno-delete-non-virtual-dtor -Wno-parentheses"
         <toolset>gcc:<linkflags>"-pthread"
-        <toolset>gcc-4.9.4:<cxxflags>"-DBOOST_LEAF_USE_BOOST_MP11"
         <toolset>clang:<cxxflags>"-Wno-dangling-else"
         <toolset>darwin:<cxxflags>"-std=c++11 -Wno-unused-variable -Wno-delete-non-virtual-dtor -Wno-non-virtual-dtor -Wno-dangling-else"
 		<toolset>msvc:<cxxflags>"-wd 4267 -wd 4996 -wd 4244"
