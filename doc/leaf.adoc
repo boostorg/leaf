@@ -2334,7 +2334,7 @@ namespace boost { namespace leaf {
 
 Requirements: ::
 * `Ex` must derive from `std::exception`.
-* For each `E`~i~ int `E...`, `<<is_e_type,is_e_type>><E~i~>::value` is `true`.
+* For each `E`~i~ in `E...`, `<<is_e_type,is_e_type>><E~i~>::value` is `true`.
 
 Returns: :: An object of unspecified type which derives publicly from `Ex` *and* from class <<error_id>> such that:
 * its `Ex` subobject is initialized by `std::forward<Ex>(ex)`;
@@ -2579,7 +2579,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-This function works similarly to <<remote_try_handle_some>>, but handles exceptions rather than a `result<T>` result. Here is an example of how remote handlers should be captured so the captured function is compatible with  `remote_try_handle_catch`:
+This function works similarly to <<remote_try_handle_some>>, but handles exceptions rather than a `result<T>` result. Here is an example of how remote handlers should be captured so the captured function is compatible with  `remote_try_catch`:
 
 [source,c++]
 ----
@@ -2851,8 +2851,8 @@ Requirements: ::
 Effects: ::
 
 * Creates a local <<context>> object `ctx` of type that is automatically deduced from the passed handler pack `h...`, which guarantees that it is able to store all of the types required to handle errors.
-* Invokes the `try_block`; if the returned object `r` indicates success, it is forwarded to the caller. Otherwise, `try_handle_some` calls `ctx.<<context::handle_some,handle_some>>()` to handle the error.
-* If `ctx.handle_some()` indicates success, all error objects stored in `ctx` are discarded.
+* Invokes the `try_block`; if the returned object `r` indicates success, it is forwarded to the caller. Otherwise, `try_handle_some` calls `ctx.<<context::handle_some,handle_some>>`, forwarding `r` and `h...`, to handle the error.
+* If the call to `ctx.handle_some` indicates success, all error objects stored in `ctx` are discarded.
 
 NOTE: `try_handle_some` will catch and handle exceptions iff the handler pack `h...` contains a handler that takes an argument of type that is an instance of the <<catch_>> template. This behavior is dispatched statically; please `#include <boost/leaf/handle_exception.hpp>`.
 
@@ -2884,7 +2884,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-NOTE: The `catch_` template is useful only as an argument to a handler function passed a LEAF error-handling function.
+NOTE: The `catch_` template is useful only as an argument to a handler function passed to a LEAF error-handling function.
 
 Effects: ::
 
@@ -3018,7 +3018,7 @@ Independently, users can create `context` objects if they need to capture E-obje
 
 Even in that case it is recommended that users do not instantiate the `context` template by explicitly listing the E-types they want it to be able to store. Instead, use <<context_type_from_remote_handler>> or call the <<make_context>> function template, which deduce the correct E-types from a captured list of handler function objects.
 
-To load up error objects in a `context` object, it must be activated. Activating a `context` object `ctx` binds it to the calling thread, setting thread-local pointers of the stored `E...` types to point to the corresponding storage within `ctx`. It is possible, even likely, to have more than one active `context` in any given thread. In this case, activation/deactivation must happen in a LIFO manner. For this reason, it is best to use a <<context_activator>>, which relies on RAII to activate and deactivate a `context`.
+To be able to load up error objects in a `context` object, it must be activated. Activating a `context` object `ctx` binds it to the calling thread, setting thread-local pointers of the stored `E...` types to point to the corresponding storage within `ctx`. It is possible, even likely, to have more than one active `context` in any given thread. In this case, activation/deactivation must happen in a LIFO manner. For this reason, it is best to use a <<context_activator>>, which relies on RAII to activate and deactivate a `context`.
 
 To handle an error, call one of the error handling member functions, which match E-objects currently stored in `*this` to the user-supplied handler functions. See <<context::handle_some>> for a description of the handler matching procedure (this works regardless of whether or not the `context` is currently `active`).
 
@@ -3167,7 +3167,7 @@ Effects: :: `handle_all` is equivalent to `handle_some`, except that the handler
 --
 * `handle_all` is exception-neutral: it does not throw exceptions, however the user-supplied handlers are permitted to throw.
 
-* Handlers passed to `handle_all` may be matched to the current exception using <<catch_>>. In this case please `#include <boost/leaf/handle_exception.hpp>`.
+* Handlers passed to `handle_all` may be matched to the current exception using <<catch_>>. In this case please also `#include <boost/leaf/handle_exception.hpp>`.
 --
 
 TIP: It is not typical to call `handle_all` directly; it is usually preferable to automate the instantiation of the <<context>> template, by using <<try_handle_all>> instead.
@@ -3203,7 +3203,7 @@ When throwing, users are encouraged to pass the exception object through the <<e
 +
 However, this isn't possible when we don't control the `throw` site, for example if the exception is thrown by a standard function. In this case, E-objects communicated to LEAF are associated with the `error_id` value returned by <<next_error>>, which is a preview of sorts, of the `error_id` value that would be returned by the next call to <<new_error>>.
 +
-Similarly, if the current exception does not transports an `error_id` value, `handle_current_exception` looks up E-objects using the `error_id` value returned by <<next_error>>. If imperfect, this approach provides the needed association.
+To match that, if the current exception does not transports an `error_id` value, `handle_current_exception` looks up E-objects using the `error_id` value returned by <<next_error>>. If imperfect, this approach provides the needed association.
 +
 With the `error_id` value thus obtained, the `handler`-matching procedure works the same as in <<context::handle_some>>.
 
@@ -3263,9 +3263,9 @@ Requirements: ::
 
 * `<<is_result_type,is_result_type>><R>::value` must be `true`;
 * Each of the `h...` functions:
-** may take arguments of <<e_objects,E-types>>, either by value or by `const &`, or as a `const *`;
+** may take arguments of <<E-types>>, either by value or by `const &`, or as a `const *`;
 ** may take arguments, either by value or by `const &`, of the predicate type `<<match,match>><E, V...>`, where `E` is an E-type or an instance of the <<condition>> class template.
-** may take arguments, either by value or by `const &`, of the predicate type `<<catch_,catch_>><Ex...>`, where each of the `Ex` types derives from `std::exception` (please `#include <boost/leaf/handle_exception.hpp>`);
+** may take arguments, either by value or by `const &`, of the predicate type `<<catch_,catch_>><Ex...>`, where each of the `Ex` types derives from `std::exception` (in this case, please also `#include <boost/leaf/handle_exception.hpp>`);
 ** may take an <<error_info>> argument by `const &`;
 ** may take a <<diagnostic_info>> argument by `const &`;
 ** may take a <<verbose_diagnostic_info>> argument by `const &`;
@@ -3389,7 +3389,7 @@ else
 +
 <1> This handler matches if the error includes an object of type `std::error_code` equivalent to the error condition `cond_x::x11`.
 <2> This handler matches if the error includes any object of type `std::error_code`.
-+* If `a`~i~ is taken as `A`~i~ `const &` or by value:
++
 ** If `A`~i~ is of the predicate type `<<catch_,catch_>><Ex...>`, `a`~i~ is initialized with the current `std::exception`. The handler is dropped if the expression `a`~i~`()` evaluates to `false`.
 +
 .Example:
@@ -3553,6 +3553,8 @@ namespace boost { namespace leaf {
 
 Effects: :: Prints all E-objects currently stored in `*this`, together with the unique error ID each individual E-object is associated with.
 
+TIP: This is a virtual function, so it can be used with a <<polymorphic_context>>, which is the base type for all instances of the `context` template.
+
 '''
 
 [[context::remote_handle_all]]
@@ -3614,7 +3616,7 @@ ctx.handle_all(r,
 [.text-right]
 <<context::handle_all>>
 
-Returns: :: If `r` indicates success, returns `r.value()`. Otherwise returns the value returned by the matching handler from the list of handlers used in the handler capture.
+Returns: :: `r.value()` if `r` indicates success; otherwise returns the value returned by the matching handler from the list of handlers used in the handler capture.
 
 CAUTION: It is critical that the lambda passed to `context::remote_handle_all` returns the value returned by the handler capture function (in this case, `handle_error`), even if the error handlers it contains return `void`.
 
@@ -3676,6 +3678,8 @@ ctx.handle_current_exception(
 
 [.text-right]
 <<context::handle_current_exception>>
+
+CAUTION: It is critical that the lambda passed to `context::remote_handle_current_exception` returns the value returned by the handler capture function (in this case, `handle_error`), even if the error handlers it contains return `void`.
 
 TIP: Because LEAF does not invoke the user-defined `handle_error` function directly, it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
 
@@ -3863,7 +3867,7 @@ Handlers passed to <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> may 
 
 The message printed by `operator<<` includes the message printed by `error_info`, followed by basic information about E-objects that were communicated to LEAF (to be associated with the error) for which there was no storage available in any active <<context>> (these E-objects were discarded by LEAF, because no handler needed them).
 
-The additional information is limited the type name of the first such E-object, as well as their total count.
+The additional information is limited to the type name of the first such E-object, as well as their total count.
 
 '''
 
@@ -4211,7 +4215,6 @@ Effects: ::
 ** The boolean conversion operator evaluates to `true` iff the `value` passed to the constructor is not `0` and is equal to one of `V...`.
 * Otherwise:
 ** The type of the parameter pack `V...` and `match<E>::type` are deduced as `E`;
-** The `match` constructor initializes the `value` reference with `e`.
 ** The boolean conversion operator evaluates to `true` iff the `value` passed to the constructor is not `0` and is equal to one of `V...`.
 
 NOTE: The examples below demonstrate how `match` works in isolation, but it is designed to be used as argument to a handler function passed to an error-handling function such as <<try_handle_some>>, <<try_handle_all>>, <<try_catch>>. See Five Minute Introduction <<introduction-result>> for a more practical example.
@@ -4794,7 +4797,7 @@ As it turns out, dynamic memory allocation is not necessary due to the following
 Fact: ::
 * *Error-handling* functions already "know" which of the information _error-initiating_ and _error-neutral_ functions are [.underline]#able# to communicate is [.underline]#actually needed# in order to deal with failures in a particular program domain. Ideally, no resources should be [.line-through]#used# wasted storing or communicating information which is not currently needed to handle errors, even if it is relevant to the failure.
 
-The LEAF functions <<try_handle_some>>, <<try_handle_all>> and <<try_catch>> implement this idea. Users provide error-handling lambda functions which, naturally, take the arguments types they need. LEAF simply provides space needed to store these types, using automatic storage duration, before they are passed to a handler.
+The LEAF functions <<try_handle_some>>, <<try_handle_all>> and <<try_catch>> implement this idea. Users provide error-handling lambda functions which, naturally, take the argument types they need. LEAF simply provides space needed to store these types, using automatic storage duration, before they are passed to a handler.
 
 When this space is created, `thread_local` pointers of the required error types are set to point to the corresponding storage within the scope of <<try_handle_some>>, <<try_handle_all>> or <<try_catch>>. Later on, _error-initiating_ or _error-neutral_ functions wanting to communicate an error object of type `E` access the corresponding `thread_local` pointer to see if there is currently storage available for this type:
 
@@ -5184,7 +5187,7 @@ leaf::try_catch(
 <<try_catch>> | <<catch_>>
 |====
 
-.Propagation of <<e_objects>>
+.Propagation of <<E-types>>
 [cols="1a,1a",options="header",stripes=none]
 |====
 | Boost Exception | LEAF
@@ -5192,7 +5195,7 @@ leaf::try_catch(
 |  User-defined error objects are stored statically in the scope of <<try_catch>>, but only if their types are used to handle errors; otherwise they are discarded.
 |====
 
-.Transporting of <<e_objects>> across thread boundaries
+.Transporting of <<E-types>> across thread boundaries
 [cols="1a,1a",options="header",stripes=none]
 |====
 | Boost Exception | LEAF
@@ -5267,7 +5270,7 @@ The analysis above is clear and precise, but LEAF and Boost Outcome tackle the i
 
 * The Boost Outcome design asserts that the "cleanest" solution based on type-erasure is suboptimal ("almost certainly requires the use of `malloc`pass:[]"), and instead provides a system for injecting custom converters into the `outcome::convert` namespace, used to translate between library-specific and program-wide error types, even though this approach "may lose the original failure detail".
 
-* The LEAF design asserts that coupling the signatures of <<rationale,error-neutral>> functions with the static types of the error objects they need to forward to the caller <<translation,does not scale>>, and instead transports error objects directly to error-handling scopes where they are stored statically (without the use of `malloc`).
+* The LEAF design asserts that coupling the signatures of <<rationale,error-neutral>> functions with the static types of the error objects they need to forward to the caller <<translation,does not scale>>, and instead transports error objects directly to error-handling scopes where they are stored statically; effectively, this implements the third, "cleanest" solution (without the use of `malloc`).
 
 [[distribution]]
 == Distribution
