@@ -17,11 +17,13 @@ Lightweight Error Augmentation Framework
 LEAF is a lightweight error handling library for {CPP}11. Features:
 
 ====
-* Header-only, no dependencies.
+* Efficient delivery of arbitrary error objects to the correct error-handling scope.
 
 * No dynamic memory allocations.
 
-* Any error-related object of any movable type is efficiently delivered to the correct error handler.
+* Header-only, no dependencies.
+
+* Compatible with most external `result<T>` types.
 
 * Compatible with `std::error_code`, `errno` and any other error code type.
 
