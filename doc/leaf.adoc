@@ -5278,7 +5278,7 @@ Please post questions and feedback on the Boost Developers Mailing List (LEAF is
 [[portability]]
 == Portability
 
-LEAF requires a {CPP}11 compiler. It uses `thread_local` objects of built-in types, e.g. pointer types.
+LEAF requires a {CPP}11 compiler.
 
 See unit test matrix at https://travis-ci.org/zajo/leaf[Travis-CI] and https://ci.appveyor.com/project/zajo/leaf[AppVeyor].
 
