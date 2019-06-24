@@ -33,8 +33,7 @@ install:
   - git submodule update --init tools/boostdep
   - xcopy /s /e /q %APPVEYOR_BUILD_FOLDER% libs\leaf\
   - python tools/boostdep/depinst/depinst.py leaf
-  - cmd /c bootstrap & exit 0
-  - type bootstrap.log
+  - cmd /c bootstrap
   - b2 headers
 
 build: off
