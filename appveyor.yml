@@ -34,7 +34,7 @@ install:
   - xcopy /s /e /q %APPVEYOR_BUILD_FOLDER% libs\leaf\
   - python tools/boostdep/depinst/depinst.py leaf
   - cd tools\build\src\engine
-  - build.bat
+  - cmd /c build.bat
   - cd ..\..\..\..
   - cmd /c bootstrap
   - b2 headers
