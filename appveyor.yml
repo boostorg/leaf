@@ -35,7 +35,7 @@ install:
   - python tools/boostdep/depinst/depinst.py leaf
   - cd tools\build\src\engine
   - build.bat
-  - ch ..\..\..\..
+  - cd ..\..\..\..
   - cmd /c bootstrap
   - b2 headers
 
