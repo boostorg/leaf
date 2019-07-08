@@ -24,7 +24,7 @@ if not meson.is_subproject()
 	endif
 endif
 
-if get_option('build_all_hpp')
+if get_option('all_hpp')
 	prog_python = import('python').find_installation('python3')
 	custom_target(
 		'all_hpp',
@@ -141,12 +141,12 @@ foreach e : examples
 	executable(e, 'examples/'+e+'.cpp', dependencies: [leaf,thread_dep]+mp11 )
 endforeach
 
-if get_option('build_boost_examples')
+if get_option('boost_examples')
 	executable('asio_beast_leaf_rpc', 'examples/asio_beast_leaf_rpc.cpp', dependencies: [leaf,thread_dep,boost_headers], override_options: ['cpp_std=c++17'] )
 	executable('print_file_outcome_result', 'examples/print_file_outcome_result.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
 endif
 
-if get_option('build_lua_examples')
+if get_option('lua_examples')
 	lua=subproject('lua').get_variable('all')
 	executable('lua_callback_result', 'examples/lua_callback_result.cpp', dependencies: [leaf,lua]+mp11 )
 	executable('lua_callback_eh', 'examples/lua_callback_eh.cpp', dependencies: [leaf,lua]+mp11 )
