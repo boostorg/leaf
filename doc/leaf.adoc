@@ -729,6 +729,35 @@ leaf::result<info> parse_file( char const * file_name ) noexcept
 <1> `parse_info` parses `f`, communicating errors using `result<info>`.
 <2> Using `preload` ensures that the file name is included with any error reported out of `parse_file`. All we need to do is hold on to the returned object `load`: when it expires, if an error is being reported, the passed `e_file_name` value will be automatically associated with it.
 
+For `preload` to work, it must succeed in associating the passed E-objects with the correct `error_id`. The algorithm used to achieve this is intricate and imperfect:
+
+* If the calling thread has invoked <<new_error>> since the call to `preload`, the E-objects are associated with the <<error_id>> returned by <<last_error>>. This association effectively targets the `error_id` value carried in the most recently created `result<T>` object *or* the exception object most recently returned by <<exception,`leaf::exception`>>.
+* Else, if `std::uncaught_exception()` is `true`, the E-objects are associated with the `error_id` returned by <<next_error>>. This association targets exception objects that were not created using `leaf::exception` and therefore do not carry an `error_id` (see <<tutorial-interoperability>>).
+
+[TIP]
+--
+Because `preload` does not interact with exception objects directly, the above logic does not work correctly with exceptions that _do_ carry an `error_id` but originate in a thread other than the calling thread, e.g. thrown by a call to `std::future::get`. The workaround is to use `try`/`catch` instead of relying on `preload`:
+
+[source,c++]
+----
+try
+{
+  return fut.get(); <1>
+}
+catch( leaf::error_id const & err ) <2>
+{
+  err.load( leaf::e_file_name{file_name} ); <3>
+  throw; <4>
+}
+----
+<1> Call `std::future::get()`, which could throw;
+<2> `catch` exception objects that carry `error_id`;
+<3> associate an `e_file_name` with the correct `error_id`, effectively augmenting the caught exception;
+<4> re-throw the exception object.
+
+(This technique works even if the exception object originates in the calling thread, but of course in that case using `preload` is more elegant).
+--
+
 '''
 
 [[tutorial-defer]]
