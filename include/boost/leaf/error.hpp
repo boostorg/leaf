@@ -201,7 +201,7 @@ namespace boost { namespace leaf {
 
 		class e_unexpected_info
 		{
-			std::stringstream s_;
+			std::string s_;
 			std::set<char const *(*)()> already_;
 
 		public:
@@ -212,24 +212,28 @@ namespace boost { namespace leaf {
 
 			void reset() noexcept
 			{
-				s_.str(std::string());
+				s_.clear();
 				already_.clear();
 			}
 
 			template <class E>
 			void add( E const & e )
 			{
+				std::stringstream s;
 				if( !leaf_detail::diagnostic<E>::is_invisible )
 				{
-					leaf_detail::diagnostic<E>::print(s_,e);
+					leaf_detail::diagnostic<E>::print(s,e);
 					if( already_.insert(&type<E>).second  )
-						s_ << std::endl;
+					{
+						s << std::endl;
+						s_ += s.str();
+					}
 				}
 			}
 
 			void print( std::ostream & os ) const
 			{
-				os << s_.str();
+				os << s_;
 			}
 		};
 
