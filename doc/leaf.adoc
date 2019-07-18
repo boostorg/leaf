@@ -5106,7 +5106,7 @@ The objection is that LEAF will forward verbatim the errors that are detected in
 * When called, it should translate its own arguments to call `read_line` and `parse_line`;
 * If an error is detected, it should translate the errors from the error types returned by `read_line` and `parse_line` to a higher-level type.
 
-The motivation is to isolate the caller of `parse_line` from its implementation details `read_line` and `parse_line`.
+The motivation is to isolate the caller of `read_and_parse_line` from its implementation details `read_line` and `parse_line`.
 
 There are two possible ways to implement this translation:
 
