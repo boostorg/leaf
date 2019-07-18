@@ -3,8 +3,6 @@ cmake_minimum_required(VERSION 3.8)
 project(leaf VERSION 0.2.1 LANGUAGES CXX)
 
 add_library(leaf INTERFACE)
-target_sources(leaf INTERFACE 
-               $<BUILD_INTERFACE:${ARG_SOURCES}>)
 
 target_include_directories(leaf INTERFACE
  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
