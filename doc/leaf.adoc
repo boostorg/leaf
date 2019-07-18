@@ -5120,7 +5120,7 @@ But it gets worse. Consider the case where `read_line` communicates `errno` in i
 
 And what if the call to `read` is polymorphic, which is also typical? What if it involves a user-supplied function object? What kinds of errors does it return and why should `read_and_parse_line` care?
 
-Therefore, we're left with *2)*. There's almost nothing wrong with this case, since it passes any and all error-related information from lower level functions without any loss. However, using a wrapper type to grant (presumably dynamic) access to any lower-level error type it may be transporting is cumbersome and (like Niall Douglas <<translation,explains>>) in general probably requires dynamic allocations. It is better to use independent error types that communicate the additional information not available in the original error object, while error handlers rely on LEAF to provide efficient access to any and all low-level error types, as needed.
+Therefore, we're left with *2)*. There's almost nothing wrong with this case, since it passes any and all error-related information from lower level functions without any loss. However, using a wrapper type to grant (presumably dynamic) access to any lower-level error type it may be transporting is cumbersome and (like Niall Douglas <<interoperability,explains>>) in general probably requires dynamic allocations. It is better to use independent error types that communicate the additional information not available in the original error object, while error handlers rely on LEAF to provide efficient access to any and all low-level error types, as needed.
 
 == Alternatives to LEAF
 
@@ -5315,6 +5315,7 @@ TIP: The LEAF examples include an adaptation of the program from the https://ned
 
 NOTE: Programs using LEAF for error-handling are not required to use `leaf::result<T>`; for example, it is possible to use `outcome::result<T>` with LEAF.
 
+[[interoperability]]
 ==== The Interoperability Problem
 
 The Boost Outcome documentation discusses the important problem of bringing together multiple libraries -- each using its own error reporting mechanism -- and incorporating them in a robust error handling infrastructure in a client program.
