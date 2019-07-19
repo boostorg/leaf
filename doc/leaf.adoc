@@ -5116,11 +5116,11 @@ There are two possible ways to implement this translation:
 
 The problem with *1)* is that typically the caller of `read_and_parse_line` is not going to handle the error, but it does need to forward it to its caller. In our attempt to protect the *one* error-handling function from "implementation details", we've coupled the interface of *all* intermediate error-neutral functions with the static types of errors they do not understand and do not handle.
 
-But it gets worse. Consider the case where `read_line` communicates `errno` in its errors. What is `read_and_parse_line` supposed to do with e.g. `EACCESS`? Turn it into `READ_AND_PARSE_LINE_EACCESS`? To what end, other than to obfuscate the original (already complex and platform-specific) semantics of `errno`?
+Consider the case where `read_line` communicates `errno` in its errors. What is `read_and_parse_line` supposed to do with e.g. `EACCESS`? Turn it into `READ_AND_PARSE_LINE_EACCESS`? To what end, other than to obfuscate the original (already complex and platform-specific) semantics of `errno`?
 
 And what if the call to `read` is polymorphic, which is also typical? What if it involves a user-supplied function object? What kinds of errors does it return and why should `read_and_parse_line` care?
 
-Therefore, we're left with *2)*. There's almost nothing wrong with this case, since it passes any and all error-related information from lower level functions without any loss. However, using a wrapper type to grant (presumably dynamic) access to any lower-level error type it may be transporting is cumbersome and (like Niall Douglas <<interoperability,explains>>) in general probably requires dynamic allocations. It is better to use independent error types that communicate the additional information not available in the original error object, while error handlers rely on LEAF to provide efficient access to any and all low-level error types, as needed.
+Therefore, we're left with *2)*. There's almost nothing wrong with this option, since it passes any and all error-related information from lower level functions without any loss. However, using a wrapper type to grant (presumably dynamic) access to any lower-level error type it may be transporting is cumbersome and (like Niall Douglas <<interoperability,explains>>) in general probably requires dynamic allocations. It is better to use independent error types that communicate the additional information not available in the original error object, while error handlers rely on LEAF to provide efficient access to any and all low-level error types, as needed.
 
 == Alternatives to LEAF
 
