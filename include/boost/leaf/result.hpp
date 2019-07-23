@@ -280,7 +280,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class... F>
-		error_id accumulate( F && ... f )
+		error_id accumulate( F && ... f ) noexcept
 		{
 			if( *this )
 				return error_id();
