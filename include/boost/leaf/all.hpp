@@ -1256,10 +1256,13 @@ namespace boost { namespace leaf {
 		{
 			class cat: public std::error_category
 			{
-				bool equivalent( int,  std::error_condition const & ) const noexcept { return false; }
-				bool equivalent( std::error_code const &, int ) const noexcept { return false; }
-				char const * name() const noexcept { return "LEAF error"; }
-				std::string message( int condition ) const { return name(); }
+				bool equivalent( int,  std::error_condition const & ) const noexcept final override { return false; }
+				bool equivalent( std::error_code const &, int ) const noexcept final override { return false; }
+				char const * name() const noexcept final override { return "LEAF error"; }
+				std::string message( int condition ) const final override { return name(); }
+			public:
+				constexpr cat() noexcept  { }
+				~cat() noexcept final override { }
 			};
 			static cat c;
 			return c;
