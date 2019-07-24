@@ -59,9 +59,13 @@
 //  See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt
 
+// LEAF needs a few mp11 utilities, which have been copied into the internal
+// namespace boost::leaf::leaf_detail_mp11 in order to avoid a dependency
+// on the entire mp11 library. The BOOST_LEAF_USE_MP11 configuration macro
+// tells LEAF to not bother and just use <boost/mp11/algorithm.hpp> instead.
 #ifdef BOOST_LEAF_USE_BOOST_MP11
 
-#include <boost/mp11.hpp>
+#include <boost/mp11/algorithm.hpp>
 
 namespace boost { namespace leaf { namespace leaf_detail_mp11 = ::boost::mp11; } }
 
@@ -340,20 +344,21 @@ template<std::size_t N> using make_index_sequence = make_integer_sequence<std::s
 // index_sequence_for
 template<class... T> using index_sequence_for = make_integer_sequence<std::size_t, sizeof...(T)>;
 
+// implementation by Bruno Dutra (by the name is_evaluable)
 namespace detail
 {
 
-template<class...> using void_t = void;
+template<template<class...> class F, class... T> struct mp_valid_impl
+{
+    template<template<class...> class G, class = G<T...>> static mp_true check(int);
+    template<template<class...> class> static mp_false check(...);
 
-template<class, template<class...> class F, class... T>
-struct mp_valid_impl: mp_false {};
-
-template<template<class...> class F, class... T>
-struct mp_valid_impl<void_t<F<T...>>, F, T...>: mp_true {};
+    using type = decltype(check<F>(0));
+};
 
 } // namespace detail
 
-template<template<class...> class F, class... T> using mp_valid = typename detail::mp_valid_impl<void, F, T...>;
+template<template<class...> class F, class... T> using mp_valid = typename detail::mp_valid_impl<F, T...>::type;
 
 } } }
 
@@ -4297,7 +4302,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class... F>
-		error_id accumulate( F && ... f )
+		error_id accumulate( F && ... f ) noexcept
 		{
 			if( *this )
 				return error_id();
