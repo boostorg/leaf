@@ -4081,7 +4081,8 @@ namespace boost { namespace leaf {
 				assert(which_==leaf_detail::result_variant::ctx);
 				ctx_.~context_ptr();
 			}
-			which_= (leaf_detail::result_variant)-1;
+			which_ = leaf_detail::result_variant::err_id;
+			err_id_ = 0;
 		}
 
 		template <class U>
