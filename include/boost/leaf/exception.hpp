@@ -71,7 +71,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class Ex, class... E>
-		exception<Ex> exception_at( char const * file, int line, char const * function, Ex && ex, E && ... e ) noexcept
+		inline exception<Ex> exception_at( char const * file, int line, char const * function, Ex && ex, E && ... e ) noexcept
 		{
 			assert(file&&*file);
 			assert(line>0);
@@ -81,7 +81,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class Ex, class... E>
-	leaf_detail::exception<Ex> exception( Ex && ex, E && ... e ) noexcept
+	inline leaf_detail::exception<Ex> exception( Ex && ex, E && ... e ) noexcept
 	{
 		return leaf_detail::exception<Ex>( std::forward<Ex>(ex), std::forward<E>(e)... );
 	}

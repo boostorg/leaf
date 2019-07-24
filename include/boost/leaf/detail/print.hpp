@@ -22,7 +22,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class Name>
-	char const * type() noexcept
+	inline char const * type() noexcept
 	{
 	char const * t =
 #ifdef __FUNCSIG__

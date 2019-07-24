@@ -429,25 +429,25 @@ namespace boost { namespace leaf {
 	using context_type_from_remote_handler = typename leaf_detail::context_type_from_remote_handler_impl<leaf_detail::fn_return_type<RemoteH>>::type;
 
 	template <class...  H>
-	context_type_from_handlers<H...> make_context()
+	inline context_type_from_handlers<H...> make_context()
 	{
 		return { };
 	}
 
 	template <class RemoteH>
-	context_type_from_remote_handler<RemoteH> make_context( RemoteH const * = 0 )
+	inline context_type_from_remote_handler<RemoteH> make_context( RemoteH const * = 0 )
 	{
 		return { };
 	}
 
 	template <class RemoteH>
-	context_ptr make_shared_context( RemoteH const * = 0 )
+	inline context_ptr make_shared_context( RemoteH const * = 0 )
 	{
 		return std::make_shared<context_type_from_remote_handler<RemoteH>>();
 	}
 
 	template <class RemoteH, class Alloc>
-	context_ptr allocate_shared_context( Alloc alloc, RemoteH const * = 0 )
+	inline context_ptr allocate_shared_context( Alloc alloc, RemoteH const * = 0 )
 	{
 		return std::allocate_shared<context_type_from_remote_handler<RemoteH>>(alloc);
 	}

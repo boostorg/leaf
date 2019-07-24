@@ -109,7 +109,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... E>
-	leaf_detail::preloaded<E...> preload( E && ... e ) noexcept
+	inline leaf_detail::preloaded<E...> preload( E && ... e ) noexcept
 	{
 		return leaf_detail::preloaded<E...>(std::forward<E>(e)...);
 	}
@@ -193,7 +193,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... F>
-	leaf_detail::deferred<F...> defer( F && ... f ) noexcept
+	inline leaf_detail::deferred<F...> defer( F && ... f ) noexcept
 	{
 		return leaf_detail::deferred<F...>(std::forward<F>(f)...);
 	}
@@ -273,7 +273,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... F>
-	leaf_detail::accumulating<F...> accumulate( F && ... f ) noexcept
+	inline leaf_detail::accumulating<F...> accumulate( F && ... f ) noexcept
 	{
 		return leaf_detail::accumulating<F...>(std::forward<F>(f)...);
 	}

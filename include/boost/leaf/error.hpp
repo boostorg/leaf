@@ -271,7 +271,7 @@ namespace boost { namespace leaf {
 		class slot;
 
 		template <class E>
-		slot<E> * & tl_slot_ptr() noexcept
+		inline slot<E> * & tl_slot_ptr() noexcept
 		{
 			static thread_local slot<E> * s;
 			return s;
@@ -386,7 +386,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class E>
-		void load_unexpected_count( int err_id, E const & e ) noexcept
+		inline void load_unexpected_count( int err_id, E const & e ) noexcept
 		{
 			if( slot<e_unexpected_count> * sl = tl_slot_ptr<e_unexpected_count>() )
 				if( e_unexpected_count * unx = sl->has_value(err_id) )
@@ -396,7 +396,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		void load_unexpected_info( int err_id, E const & e ) noexcept
+		inline void load_unexpected_info( int err_id, E const & e ) noexcept
 		{
 			if( slot<e_unexpected_info> * sl = tl_slot_ptr<e_unexpected_info>() )
 				if( e_unexpected_info * unx = sl->has_value(err_id) )
@@ -406,14 +406,14 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		void no_expect_slot( int err_id, E const & e  ) noexcept
+		inline void no_expect_slot( int err_id, E const & e  ) noexcept
 		{
 			load_unexpected_count(err_id, e);
 			load_unexpected_info(err_id, e);
 		}
 
 		template <class E>
-		void slot<E>::deactivate( bool propagate_errors ) noexcept
+		inline void slot<E>::deactivate( bool propagate_errors ) noexcept
 		{
 			assert(top_!=0);
 			if( propagate_errors )
@@ -440,7 +440,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		int load_slot( int err_id, E && e ) noexcept
+		inline int load_slot( int err_id, E && e ) noexcept
 		{
 			using T = typename std::decay<E>::type;
 			assert(err_id);
@@ -457,7 +457,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class F>
-		int accumulate_slot( int err_id, F && f ) noexcept
+		inline int accumulate_slot( int err_id, F && f ) noexcept
 		{
 			static_assert(function_traits<F>::arity==1, "Lambdas passed to accumulate must take a single e-type argument by reference");
 			using E = typename std::decay<fn_arg_type<F,0>>::type;
@@ -546,17 +546,19 @@ namespace boost { namespace leaf {
 		}
 
 		template <class ErrorCode>
-		std::error_code import_error_code( ErrorCode && ec ) noexcept
+		inline std::error_code import_error_code( ErrorCode && ec ) noexcept
 		{
-			std::error_category const & cat = leaf_detail::get_error_category();
-			if( ec && &ec.category()!=&cat )
+			if( ec )
 			{
-				int err_id = leaf_detail::new_id();
-				leaf_detail::load_slot(err_id, leaf_detail::e_original_ec{ec});
-				return std::error_code(err_id, cat);
+				std::error_category const & cat = leaf_detail::get_error_category();
+				if( &ec.category()!=&cat )
+				{
+					int err_id = leaf_detail::new_id();
+					leaf_detail::load_slot(err_id, leaf_detail::e_original_ec{ec});
+					return std::error_code(err_id, cat);
+				}
 			}
-			else
-				return ec;
+			return ec;
 		}
 
 		inline bool is_error_id( std::error_code const & ec ) noexcept
@@ -638,13 +640,13 @@ namespace boost { namespace leaf {
 	}
 
 	template <class E1, class... E>
-	typename std::enable_if<is_e_type<E1>::value, error_id>::type new_error( E1 && e1, E && ... e ) noexcept
+	inline typename std::enable_if<is_e_type<E1>::value, error_id>::type new_error( E1 && e1, E && ... e ) noexcept
 	{
 		return leaf_detail::make_error_id(leaf_detail::new_id()).load(std::forward<E1>(e1), std::forward<E>(e)...);
 	}
 
 	template <class E1, class... E>
-	typename std::enable_if<std::is_same<std::error_code, decltype(make_error_code(std::declval<E1>()))>::value, error_id>::type new_error( E1 const & e1, E && ... e ) noexcept
+	inline typename std::enable_if<std::is_same<std::error_code, decltype(make_error_code(std::declval<E1>()))>::value, error_id>::type new_error( E1 const & e1, E && ... e ) noexcept
 	{
 		return error_id(make_error_code(e1)).load(std::forward<E>(e)...);
 	}
@@ -657,7 +659,7 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class... E>
-		error_id new_error_at( char const * file, int line, char const * function ) noexcept
+		inline error_id new_error_at( char const * file, int line, char const * function ) noexcept
 		{
 			assert(file&&*file);
 			assert(line>0);

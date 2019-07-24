@@ -43,7 +43,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class R, class F, class... A>
-		decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr  const & ctx, F && f, A... a)
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr  const & ctx, F && f, A... a)
 		{
 			context_activator active_context(*ctx, on_deactivation::do_not_propagate);
 			try
@@ -61,7 +61,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class R, class F, class... A>
-		decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr  const & ctx, F && f, A... a)
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr  const & ctx, F && f, A... a)
 		{
 			context_activator active_context(*ctx, on_deactivation::do_not_propagate);
 			try
@@ -86,7 +86,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class F, class... A>
-	decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture(context_ptr const & ctx, F && f, A... a)
+	inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture(context_ptr const & ctx, F && f, A... a)
 	{
 		using namespace leaf_detail;
 		return capture_impl(is_result_tag<decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))>(), ctx, std::forward<F>(f), std::forward<A>(a)...);
@@ -105,7 +105,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class Ex1, class... Ex>
-		error_id catch_exceptions_helper( std::exception const & ex, leaf_detail_mp11::mp_list<Ex1,Ex...> )
+		inline error_id catch_exceptions_helper( std::exception const & ex, leaf_detail_mp11::mp_list<Ex1,Ex...> )
 		{
 			if( Ex1 const * p = dynamic_cast<Ex1 const *>(&ex) )
 				return catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>{ }).load(*p);
@@ -130,7 +130,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class... Ex, class F>
-	leaf_detail::deduce_exception_to_result_return_type<leaf_detail::fn_return_type<F>> exception_to_result( F && f ) noexcept
+	inline leaf_detail::deduce_exception_to_result_return_type<leaf_detail::fn_return_type<F>> exception_to_result( F && f ) noexcept
 	{
 		try
 		{
