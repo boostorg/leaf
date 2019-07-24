@@ -1261,7 +1261,6 @@ namespace boost { namespace leaf {
 				char const * name() const noexcept final override { return "LEAF error"; }
 				std::string message( int condition ) const final override { return name(); }
 			public:
-				constexpr cat() noexcept  { }
 				~cat() noexcept final override { }
 			};
 			static cat c;
