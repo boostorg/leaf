@@ -118,7 +118,8 @@ namespace boost { namespace leaf {
 					err_id_ = leaf_detail::import_error_code(ctx->ec).value();
 					assert(err_id_!=0);
 					which_ = leaf_detail::result_variant::err_id;
-					context_activator active_context(*ctx, on_deactivation::propagate);
+					ctx->activate();
+					ctx->deactivate(true);
 				}
 			default:
 				assert(which_==leaf_detail::result_variant::err_id);
