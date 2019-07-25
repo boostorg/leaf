@@ -1203,46 +1203,62 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		namespace id_factory
+		template <class=void>
+		struct id_factory
 		{
-			inline int new_err_id() noexcept
-			{
-				static std::atomic<unsigned> c;
-				if( unsigned id = ++c )
-					return int(id);
-				else
-					return int(++c);
-			}
+			static std::atomic<unsigned> counter;
+			static thread_local int last_id;
+			static thread_local int next_id;
 
-			inline int & next_id_() noexcept
+			static int get() noexcept
 			{
-				static thread_local int id = new_err_id();
-				return id;
+				unsigned id = counter.fetch_add(2u);
+				assert(id&1u);
+				return int(id);
 			}
+		};
 
-			inline int & last_id_() noexcept
-			{
-				static thread_local int id = 0;
-				return id;
-			}
-		}
+		template <class T>
+		std::atomic<unsigned> id_factory<T>::counter(1u);
+
+		template <class T>
+		thread_local int id_factory<T>::last_id;
+
+		template <class T>
+		thread_local int id_factory<T>::next_id;
 
 		inline int new_id() noexcept
 		{
-			int & n = id_factory::next_id_();
-			int id = id_factory::last_id_() = n;
-			n = id_factory::new_err_id();
+			int id = id_factory<>::next_id;
+			int next = id_factory<>::get();
+			assert(next&1);
+			if( !id )
+			{
+				id = next;
+				next = id_factory<>::get();
+			}
+			assert(id&1);
+			id_factory<>::last_id = id;
+			id_factory<>::next_id = next;
 			return id;
 		}
 
 		inline int next_id() noexcept
 		{
-			return id_factory::next_id_();
+			if( int id = id_factory<>::next_id )
+				return id;
+			else
+			{
+				id = id_factory<>::get();
+				assert(id&1);
+				id_factory<>::next_id = id;
+				return id;
+			}
 		}
 
 		inline int last_id() noexcept
 		{
-			return id_factory::last_id_();
+			return id_factory<>::last_id;
 		}
 	}
 
@@ -1252,27 +1268,31 @@ namespace boost { namespace leaf {
 	{
 		struct e_original_ec { std::error_code value; };
 
-		inline std::error_category const & get_error_category() noexcept
+		class leaf_category: public std::error_category
 		{
-			class cat: public std::error_category
-			{
-				bool equivalent( int,  std::error_condition const & ) const noexcept final override { return false; }
-				bool equivalent( std::error_code const &, int ) const noexcept final override { return false; }
-				char const * name() const noexcept final override { return "LEAF error"; }
-				std::string message( int condition ) const final override { return name(); }
-			public:
-				~cat() noexcept final override { }
-			};
-			static cat c;
-			return c;
-		}
+			bool equivalent( int,  std::error_condition const & ) const noexcept final override { return false; }
+			bool equivalent( std::error_code const &, int ) const noexcept final override { return false; }
+			char const * name() const noexcept final override { return "LEAF error"; }
+			std::string message( int condition ) const final override { return name(); }
+		public:
+			~leaf_category() noexcept final override { }
+		};
+
+		template <class=void>
+		struct get_error_category
+		{
+			static leaf_category cat;
+		};
+
+		template <class T>
+		leaf_category get_error_category<T>::cat;
 
 		template <class ErrorCode>
 		inline std::error_code import_error_code( ErrorCode && ec ) noexcept
 		{
 			if( ec )
 			{
-				std::error_category const & cat = leaf_detail::get_error_category();
+				std::error_category const & cat = leaf_detail::get_error_category<>::cat;
 				if( &ec.category()!=&cat )
 				{
 					int err_id = leaf_detail::new_id();
@@ -1285,7 +1305,9 @@ namespace boost { namespace leaf {
 
 		inline bool is_error_id( std::error_code const & ec ) noexcept
 		{
-			return &ec.category() == &leaf_detail::get_error_category();
+			bool res = (&ec.category() == &leaf_detail::get_error_category<>::cat);
+			assert(!res || !ec.value() || (ec.value()&1));
+			return res;
 		}
 }
 
@@ -1352,7 +1374,7 @@ namespace boost { namespace leaf {
 		inline error_id make_error_id( int err_id ) noexcept
 		{
 			assert(err_id);
-			return std::error_code(err_id, get_error_category());
+			return std::error_code(err_id, get_error_category<>::cat);
 		}
 	}
 
@@ -4295,7 +4317,7 @@ namespace boost { namespace leaf {
 
 		error_id error() const noexcept
 		{
-			return std::error_code(unload_then_get_err_id(), leaf_detail::get_error_category());
+			return std::error_code(unload_then_get_err_id(), leaf_detail::get_error_category<>::cat);
 		}
 
 		template <class... E>

@@ -269,7 +269,7 @@ namespace boost { namespace leaf {
 
 		error_id error() const noexcept
 		{
-			return std::error_code(unload_then_get_err_id(), leaf_detail::get_error_category());
+			return std::error_code(unload_then_get_err_id(), leaf_detail::get_error_category<>::cat);
 		}
 
 		template <class... E>
