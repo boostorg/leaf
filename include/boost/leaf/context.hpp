@@ -27,6 +27,14 @@ namespace boost { namespace leaf {
 				tuple_for_each<I-1,Tuple>::deactivate(tup, propagate_errors);
 			}
 
+			static void propagate( Tuple & tup, int err_id ) noexcept
+			{
+				auto & sl = std::get<I-1>(tup);
+				if( sl.has_value(err_id) )
+					leaf_detail::load_slot(err_id, sl.extract(err_id));
+				tuple_for_each<I-1,Tuple>::propagate(tup, err_id);
+			}
+
 			static void print( std::ostream & os, Tuple const & tup ) noexcept
 			{
 				tuple_for_each<I-1,Tuple>::print(os,tup);
@@ -39,6 +47,7 @@ namespace boost { namespace leaf {
 		{
 			static void activate( Tuple & ) noexcept { }
 			static void deactivate( Tuple &, bool ) noexcept { }
+			static void propagate( Tuple & tup, int ) noexcept { }
 			static void print( std::ostream &, Tuple const & ) noexcept { }
 		};
 	}
@@ -208,6 +217,14 @@ namespace boost { namespace leaf {
 			Tup const & tup() const noexcept
 			{
 				return tup_;
+			}
+
+			int propagate_errors() noexcept final override
+			{
+				assert(is_error_id(ec));
+				int err_id = ec.value();
+				tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_, err_id);
+				return err_id;
 			}
 
 			void activate() noexcept final override

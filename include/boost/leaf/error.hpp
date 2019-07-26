@@ -371,6 +371,14 @@ namespace boost { namespace leaf {
 				return 0;
 			}
 
+			E extract( int err_id ) noexcept
+			{
+				assert(has_value(err_id));
+				err_id_ = 0;
+				optional<E> & opt(*this);
+				return std::move(opt).value();
+			}
+
 			bool print( std::ostream & os ) const
 			{
 				os << '[' << err_id_ << "]: ";
@@ -470,13 +478,6 @@ namespace boost { namespace leaf {
 					(void) std::forward<F>(f)(sl->load(err_id,E()));
 			return 0;
 		}
-
-		enum class result_variant
-		{
-			value,
-			err_id,
-			ctx
-		};
 	} // leaf_detail
 
 	////////////////////////////////////////
@@ -597,7 +598,10 @@ namespace boost { namespace leaf {
 	{
 	public:
 
-		error_id() noexcept = default;
+		error_id() noexcept:
+			std::error_code(0, leaf_detail::get_error_category<>::cat)
+		{
+		}
 
 		struct tag_error_id {};
 		error_id( std::error_code const & ec, tag_error_id ) noexcept:
@@ -704,6 +708,7 @@ namespace boost { namespace leaf {
 	public:
 
 		virtual ~polymorphic_context() noexcept = default;
+		virtual int propagate_errors() noexcept = 0;
 		virtual void activate() noexcept = 0;
 		virtual void deactivate( bool propagate_errors ) noexcept = 0;
 		virtual bool is_active() const noexcept = 0;

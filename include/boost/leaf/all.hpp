@@ -1091,6 +1091,14 @@ namespace boost { namespace leaf {
 				return 0;
 			}
 
+			E extract( int err_id ) noexcept
+			{
+				assert(has_value(err_id));
+				err_id_ = 0;
+				optional<E> & opt(*this);
+				return std::move(opt).value();
+			}
+
 			bool print( std::ostream & os ) const
 			{
 				os << '[' << err_id_ << "]: ";
@@ -1190,13 +1198,6 @@ namespace boost { namespace leaf {
 					(void) std::forward<F>(f)(sl->load(err_id,E()));
 			return 0;
 		}
-
-		enum class result_variant
-		{
-			value,
-			err_id,
-			ctx
-		};
 	} // leaf_detail
 
 	////////////////////////////////////////
@@ -1317,7 +1318,10 @@ namespace boost { namespace leaf {
 	{
 	public:
 
-		error_id() noexcept = default;
+		error_id() noexcept:
+			std::error_code(0, leaf_detail::get_error_category<>::cat)
+		{
+		}
 
 		struct tag_error_id {};
 		error_id( std::error_code const & ec, tag_error_id ) noexcept:
@@ -1424,6 +1428,7 @@ namespace boost { namespace leaf {
 	public:
 
 		virtual ~polymorphic_context() noexcept = default;
+		virtual int propagate_errors() noexcept = 0;
 		virtual void activate() noexcept = 0;
 		virtual void deactivate( bool propagate_errors ) noexcept = 0;
 		virtual bool is_active() const noexcept = 0;
@@ -1863,6 +1868,14 @@ namespace boost { namespace leaf {
 				tuple_for_each<I-1,Tuple>::deactivate(tup, propagate_errors);
 			}
 
+			static void propagate( Tuple & tup, int err_id ) noexcept
+			{
+				auto & sl = std::get<I-1>(tup);
+				if( sl.has_value(err_id) )
+					leaf_detail::load_slot(err_id, sl.extract(err_id));
+				tuple_for_each<I-1,Tuple>::propagate(tup, err_id);
+			}
+
 			static void print( std::ostream & os, Tuple const & tup ) noexcept
 			{
 				tuple_for_each<I-1,Tuple>::print(os,tup);
@@ -1875,6 +1888,7 @@ namespace boost { namespace leaf {
 		{
 			static void activate( Tuple & ) noexcept { }
 			static void deactivate( Tuple &, bool ) noexcept { }
+			static void propagate( Tuple & tup, int ) noexcept { }
 			static void print( std::ostream &, Tuple const & ) noexcept { }
 		};
 	}
@@ -2044,6 +2058,14 @@ namespace boost { namespace leaf {
 			Tup const & tup() const noexcept
 			{
 				return tup_;
+			}
+
+			int propagate_errors() noexcept final override
+			{
+				assert(is_error_id(ec));
+				int err_id = ec.value();
+				tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_, err_id);
+				return err_id;
 			}
 
 			void activate() noexcept final override
@@ -4085,94 +4107,86 @@ namespace boost { namespace leaf {
 		template <class U>
 		friend class result;
 
+		mutable int err_id_; // 0:value_, 2:ctx_, else neither (error ids are always odd numbers)
+
 		union
 		{
 			T value_;
-			mutable int err_id_;
 			context_ptr ctx_;
 		};
 
-		mutable leaf_detail::result_variant which_;
-
 		void destroy() const noexcept
 		{
-			switch( which_ )
+			switch(err_id_)
 			{
-			case leaf_detail::result_variant::value:
+			case 0:
 				value_.~T();
 				break;
-			case leaf_detail::result_variant::err_id:
+			case 2:
+				assert(!ctx_ || leaf_detail::is_error_id(ctx_->ec));
+				ctx_.~context_ptr();
 				break;
 			default:
-				assert(which_==leaf_detail::result_variant::ctx);
-				ctx_.~context_ptr();
+				assert(err_id_&1);
 			}
-			which_ = leaf_detail::result_variant::err_id;
-			err_id_ = 0;
 		}
 
 		template <class U>
 		void copy_from( result<U> const & x )
 		{
-			switch( x.which_ )
+			int const x_err_id = x.err_id_;
+			switch(x_err_id)
 			{
-			case leaf_detail::result_variant::value:
+			case 0:
 				(void) new(&value_) T(x.value_);
 				break;
-			case leaf_detail::result_variant::err_id:
-				err_id_ = x.err_id_;
+			case 2:
+				assert(!x.ctx_ || leaf_detail::is_error_id(x.ctx_->ec));
+				(void) new(&ctx_) context_ptr(x.ctx_);
 				break;
 			default:
-				assert(x.which_==leaf_detail::result_variant::ctx);
-				(void) new(&ctx_) context_ptr(x.ctx_);
-			};
-			which_ = x.which_;
+				assert(x_err_id&1);
+			}
+			err_id_ = x_err_id;
 		}
 
 		template <class U>
 		void move_from( result<U> && x ) noexcept
 		{
-			switch( x.which_ )
+			int const x_err_id = x.err_id_;
+			switch(x_err_id)
 			{
-			case leaf_detail::result_variant:: value:
+			case 0:
 				(void) new(&value_) T(std::move(x.value_));
-				which_ = x.which_;
 				break;
-			case leaf_detail::result_variant::err_id:
-				err_id_ = x.err_id_;
-				which_ = x.which_;
+			case 2:
+				assert(!x.ctx_ || leaf_detail::is_error_id(x.ctx_->ec));
+				(void) new(&ctx_) context_ptr(std::move(x.ctx_));
 				break;
 			default:
-				assert(x.which_==leaf_detail::result_variant::ctx);
-				assert(x.ctx_);
-				(void) new(&ctx_) context_ptr(std::move(x.ctx_));
-				x.destroy();
-				x.err_id_ = leaf_detail::import_error_code(ctx_->ec).value();
-				x.which_ = leaf_detail::result_variant::err_id;
-				which_ = leaf_detail::result_variant::ctx;
-			};
+				assert(x_err_id&1);
+			}
+			err_id_ = x_err_id;
 		}
 
 		int unload_then_get_err_id() const noexcept
 		{
-			switch( which_ )
+			int const err_id = err_id_;
+			if( err_id!=2 )
 			{
-			case leaf_detail::result_variant::value:
-				return 0;
-			case leaf_detail::result_variant::ctx:
-				{
-					context_ptr ctx = std::move(ctx_);
-					destroy();
-					err_id_ = leaf_detail::import_error_code(ctx->ec).value();
-					assert(err_id_!=0);
-					which_ = leaf_detail::result_variant::err_id;
-					ctx->activate();
-					ctx->deactivate(true);
-				}
-			default:
-				assert(which_==leaf_detail::result_variant::err_id);
+				assert(err_id==0 || err_id&1);
+				return err_id;
+			}
+			else if( ctx_ )
+			{
+				assert(leaf_detail::is_error_id(ctx_->ec));
+				err_id_ = ctx_->propagate_errors();
+				ctx_.~context_ptr();
+				assert(err_id_&1);
 				return err_id_;
 			}
+			else
+				return 0;
 		}
 
 	public:
@@ -4207,41 +4221,55 @@ namespace boost { namespace leaf {
 		}
 
 		result():
-			value_(T()),
-			which_(leaf_detail::result_variant::value)
+			err_id_(0),
+			value_(T())
 		{
 		}
 
 		result( T && v ) noexcept:
-			value_(std::move(v)),
-			which_(leaf_detail::result_variant::value)
+			err_id_(0),
+			value_(std::move(v))
 		{
 		}
 
 		result( T const & v ):
-			value_(v),
-			which_(leaf_detail::result_variant::value)
+			err_id_(0),
+			value_(v)
 		{
 		}
 
-		result( error_id const & err ) noexcept:
-			err_id_(err.value()),
-			which_(leaf_detail::result_variant::err_id)
+		result( error_id const & err ) noexcept
 		{
+			if( int err_id=err.value() )
+			{
+				err_id_ = err_id;
+				assert(err_id_&1);
+			}
+			else
+			{
+				err_id_ = 2;
+				(void) new(&ctx_) context_ptr;
+			}
 		}
 
-		result( std::error_code const & ec ) noexcept:
-			err_id_(error_id(ec).value()),
-			which_(leaf_detail::result_variant::err_id)
+		result( std::error_code const & ec ) noexcept
 		{
+			if( int err_id=error_id(ec).value() )
+			{
+				err_id_ = err_id;
+				assert(err_id_&1);
+			}
+			else
+			{
+				err_id_ = 2;
+				(void) new(&ctx_) context_ptr;
+			}
 		}
 
 		result( context_ptr const & ctx ) noexcept:
-			ctx_(ctx),
-			which_(leaf_detail::result_variant::ctx)
+			err_id_(2),
+			ctx_(ctx)
 		{
-			assert(ctx_->ec);
-			assert(leaf_detail::is_error_id(ctx_->ec));
 		}
 
 		result & operator=( result && x ) noexcept
@@ -4276,12 +4304,12 @@ namespace boost { namespace leaf {
 
 		explicit operator bool() const noexcept
 		{
-			return which_==leaf_detail::result_variant::value;
+			return err_id_==0;
 		}
 
 		T const & value() const
 		{
-			if( which_==leaf_detail::result_variant::value )
+			if( err_id_==0 )
 				return value_;
 			else
 				throw bad_result(error());
@@ -4289,7 +4317,7 @@ namespace boost { namespace leaf {
 
 		T & value()
 		{
-			if( which_==leaf_detail::result_variant::value )
+			if( err_id_==0 )
 				return value_;
 			else
 				throw bad_result(error());

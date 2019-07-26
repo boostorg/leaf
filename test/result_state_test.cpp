@@ -551,7 +551,7 @@ int main()
 		BOOST_TEST_EQ(val::count, 0);
 		leaf::result<val> r2 = std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST_EQ(r1.error(), r2.error());
+		BOOST_TEST(!r1);
 	}
 	BOOST_TEST_EQ(err::count, 0);
 	BOOST_TEST_EQ(val::count, 0);
@@ -562,7 +562,7 @@ int main()
 		BOOST_TEST_EQ(val::count, 0);
 		leaf::result<val> r2 = std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST_EQ(r1.error(), r2.error());
+		BOOST_TEST(!r1);
 	}
 	BOOST_TEST_EQ(err::count, 0);
 	BOOST_TEST_EQ(val::count, 0);
@@ -597,7 +597,7 @@ int main()
 		BOOST_TEST_EQ(val::count, 0);
 		leaf::result<val> r2; r2=std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST_EQ(r1.error(), r2.error());
+		BOOST_TEST(!r1);
 	}
 	BOOST_TEST_EQ(err::count, 0);
 	BOOST_TEST_EQ(val::count, 0);
@@ -608,7 +608,7 @@ int main()
 		BOOST_TEST_EQ(val::count, 0);
 		leaf::result<val> r2; r2=std::move(r1);
 		BOOST_TEST(!r2);
-		BOOST_TEST_EQ(r1.error(), r2.error());
+		BOOST_TEST(!r1);
 	}
 	BOOST_TEST_EQ(err::count, 0);
 	BOOST_TEST_EQ(val::count, 0);
