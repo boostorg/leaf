@@ -129,6 +129,10 @@ namespace boost { namespace leaf {
 		template <> struct does_not_participate_in_context_deduction<error_info>: std::true_type { };
 		template <> struct does_not_participate_in_context_deduction<std::error_code>: std::true_type { };
 		template <> struct does_not_participate_in_context_deduction<void>: std::true_type { };
+#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
+		template <> struct does_not_participate_in_context_deduction<e_unexpected_count>: std::true_type { };
+		template <> struct does_not_participate_in_context_deduction<e_unexpected_info>: std::true_type { };
+#endif
 
 		template <class L>
 		struct transform_e_type_list_impl;
@@ -232,8 +236,10 @@ namespace boost { namespace leaf {
 				using namespace leaf_detail;
 				assert(!is_active());
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
+#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
 				if( unexpected_requested<Tup>::value )
 					++tl_unexpected_enabled_counter();
+#endif
 				thread_id_ = std::this_thread::get_id();
 				is_active_ = true;
 			}
@@ -244,8 +250,10 @@ namespace boost { namespace leaf {
 				assert(is_active());
 				is_active_ = false;
 				thread_id_ = std::thread::id();
+#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
 				if( unexpected_requested<Tup>::value )
 					--tl_unexpected_enabled_counter();
+#endif
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_, propagate_errors);
 			}
 

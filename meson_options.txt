@@ -2,3 +2,4 @@ option('lua_examples',type:'boolean',value:false,description:'Enable or disable 
 option('boost_examples',type:'boolean',value:false,description:'Enable or disable building of examples that need Boost')
 option('all_hpp',type:'boolean',value:false,description:'Enable or disable the automatic generation of include/boost/leaf/all.hpp')
 option('use_boost_mp11',type:'boolean',value:false,description:'Use <boost/mp11.hpp> instead of internal copied&pasted mp11 code')
+option('discard_unexpected',type:'boolean',value:false,description:'#define BOOST_LEAF_DISCARD_UNEXPECTED')

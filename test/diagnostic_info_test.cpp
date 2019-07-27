@@ -141,6 +141,9 @@ int main()
 				std::ostringstream st;
 				st << unmatched;
 				std::string s = st.str();
+#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
+				BOOST_TEST(s.find("BOOST_LEAF_DISCARD_UNEXPECTED")!=s.npos);
+#else
 				BOOST_TEST(s.find("leaf::diagnostic_info:")!=s.npos);
 				BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
 				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
@@ -150,6 +153,7 @@ int main()
 				BOOST_TEST(s.find(") in function")!=s.npos);
 				BOOST_TEST(s.find("Detected 2 attempts")!=s.npos);
 				BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
+#endif
 				BOOST_TEST_EQ(s.find("unexpected_test<2>"), s.npos);
 				std::cout << s;
 			}
@@ -189,6 +193,9 @@ int main()
 				std::ostringstream st;
 				st << di;
 				std::string s = st.str();
+#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
+				BOOST_TEST(s.find("BOOST_LEAF_DISCARD_UNEXPECTED")!=s.npos);
+#else
 				BOOST_TEST(s.find("leaf::verbose_diagnostic_info:")!=s.npos);
 				BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
 				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
@@ -198,6 +205,7 @@ int main()
 				BOOST_TEST(s.find(") in function")!=s.npos);
 				BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
 				BOOST_TEST(s.find("unexpected_test<2>")!=s.npos);
+#endif
 				std::cout << s;
 			}
 			std::cout << "polymorphic_context::print():" << std::endl;
@@ -222,7 +230,7 @@ int main()
 				std::ostringstream st;
 				st << di;
 				std::string s = st.str();
-				BOOST_TEST(s.find("leaf::diagnostic_info:")!=s.npos);
+				BOOST_TEST(s.find("leaf::diagnostic_info")!=s.npos);
 				std::cout << s;
 			}
 			std::cout << "polymorphic_context::print():" << std::endl;
@@ -247,7 +255,7 @@ int main()
 				std::ostringstream st;
 				st << vdi;
 				std::string s = st.str();
-				BOOST_TEST(s.find("leaf::verbose_diagnostic_info:")!=s.npos);
+				BOOST_TEST(s.find("leaf::verbose_diagnostic_info")!=s.npos);
 				std::cout << s;
 			}
 			std::cout << "polymorphic_context::print():" << std::endl;

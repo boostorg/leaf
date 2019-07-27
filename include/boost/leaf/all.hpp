@@ -877,6 +877,8 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
+#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+
 	namespace leaf_detail
 	{
 		class e_unexpected_count
@@ -982,6 +984,8 @@ namespace boost { namespace leaf {
 			return c;
 		}
 	}
+
+#endif
 
 	////////////////////////////////////////
 
@@ -1113,6 +1117,8 @@ namespace boost { namespace leaf {
 			}
 		};
 
+#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+
 		template <class E>
 		inline void load_unexpected_count( int err_id, E const & e ) noexcept
 		{
@@ -1140,6 +1146,8 @@ namespace boost { namespace leaf {
 			load_unexpected_info(err_id, e);
 		}
 
+#endif
+
 		template <class E>
 		inline void slot<E>::deactivate( bool propagate_errors ) noexcept
 		{
@@ -1154,6 +1162,7 @@ namespace boost { namespace leaf {
 						prev_->err_id_ = err_id_;
 					}
 				}
+#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
 				else
 				{
 					int c = tl_unexpected_enabled_counter();
@@ -1162,6 +1171,7 @@ namespace boost { namespace leaf {
 						if( E const * e = impl::has_value() )
 							no_expect_slot(err_id_, *e);
 				}
+#endif
 			*top_ = prev_;
 			top_ = 0;
 			slot_base::deactivate();
@@ -1174,6 +1184,7 @@ namespace boost { namespace leaf {
 			assert(err_id);
 			if( slot<T> * p = tl_slot_ptr<T>() )
 				(void) p->load(err_id, std::forward<E>(e));
+#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
 			else
 			{
 				int c = tl_unexpected_enabled_counter();
@@ -1181,6 +1192,7 @@ namespace boost { namespace leaf {
 				if( c )
 					no_expect_slot(err_id, std::forward<E>(e));
 			}
+#endif
 			return 0;
 		}
 
@@ -1970,6 +1982,10 @@ namespace boost { namespace leaf {
 		template <> struct does_not_participate_in_context_deduction<error_info>: std::true_type { };
 		template <> struct does_not_participate_in_context_deduction<std::error_code>: std::true_type { };
 		template <> struct does_not_participate_in_context_deduction<void>: std::true_type { };
+#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
+		template <> struct does_not_participate_in_context_deduction<e_unexpected_count>: std::true_type { };
+		template <> struct does_not_participate_in_context_deduction<e_unexpected_info>: std::true_type { };
+#endif
 
 		template <class L>
 		struct transform_e_type_list_impl;
@@ -2073,8 +2089,10 @@ namespace boost { namespace leaf {
 				using namespace leaf_detail;
 				assert(!is_active());
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
+#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
 				if( unexpected_requested<Tup>::value )
 					++tl_unexpected_enabled_counter();
+#endif
 				thread_id_ = std::this_thread::get_id();
 				is_active_ = true;
 			}
@@ -2085,8 +2103,10 @@ namespace boost { namespace leaf {
 				assert(is_active());
 				is_active_ = false;
 				thread_id_ = std::thread::id();
+#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
 				if( unexpected_requested<Tup>::value )
 					--tl_unexpected_enabled_counter();
+#endif
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_, propagate_errors);
 			}
 
@@ -2440,6 +2460,40 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
+#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
+
+	class diagnostic_info: public error_info
+	{
+	public:
+
+		diagnostic_info( error_info const & ei ) noexcept:
+			error_info(ei)
+		{
+		}
+
+		friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
+		{
+			return os << "leaf::diagnostic_info not available due to BOOST_LEAF_DISCARD_UNEXPECTED" << std::endl;
+		}
+	};
+
+	class verbose_diagnostic_info: public error_info
+	{
+	public:
+
+		verbose_diagnostic_info( error_info const & ei ) noexcept:
+			error_info(ei)
+		{
+		}
+
+		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
+		{
+			return os << "leaf::verbose_diagnostic_info not available due to BOOST_LEAF_DISCARD_UNEXPECTED" << std::endl;
+		}
+	};
+
+#else
+
 	class diagnostic_info: public error_info
 	{
 		leaf_detail::e_unexpected_count const * e_uc_;
@@ -2495,6 +2549,8 @@ namespace boost { namespace leaf {
 			return os;
 		}
 	};
+
+#endif
 
 	////////////////////////////////////////
 
@@ -2784,6 +2840,30 @@ namespace boost { namespace leaf {
 			}
 		};
 
+#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
+
+		template <>
+		struct get_one_argument<diagnostic_info>
+		{
+			template <class SlotsTuple>
+			static diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			{
+				return diagnostic_info(ei);
+			}
+		};
+
+		template <>
+		struct get_one_argument<verbose_diagnostic_info>
+		{
+			template <class SlotsTuple>
+			static verbose_diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			{
+				return verbose_diagnostic_info(ei);
+			}
+		};
+
+#else
+
 		template <>
 		struct get_one_argument<diagnostic_info>
 		{
@@ -2803,6 +2883,8 @@ namespace boost { namespace leaf {
 				return verbose_diagnostic_info(ei, peek<e_unexpected_info>(tup, ei.err_id()));
 			}
 		};
+
+#endif
 
 		template <>
 		struct get_one_argument<std::error_code>
@@ -3840,6 +3922,7 @@ namespace boost { namespace leaf {
 					if( !s_->has_value(err_id) )
 						s_->load(err_id, std::move(e_));
 				}
+#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
 				else
 				{
 					int c = tl_unexpected_enabled_counter();
@@ -3847,6 +3930,7 @@ namespace boost { namespace leaf {
 					if( c )
 						no_expect_slot(err_id, std::forward<E>(e_));
 				}
+#endif
 			}
 		};
 
@@ -3925,6 +4009,7 @@ namespace boost { namespace leaf {
 					if( !s_->has_value(err_id) )
 						s_->load(err_id, f_());
 				}
+#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
 				else
 				{
 					int c = tl_unexpected_enabled_counter();
@@ -3932,6 +4017,7 @@ namespace boost { namespace leaf {
 					if( c )
 						no_expect_slot(err_id, std::forward<E>(f_()));
 				}
+#endif
 			}
 		};
 

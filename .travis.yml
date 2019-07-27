@@ -252,6 +252,8 @@ script:
     echo "using $TOOLSET : : $COMPILER ;" > ~/user-config.jam
   - ../../b2 variant=debug test toolset=$TOOLSET cxxstd=$CXXSTD
   - ../../b2 variant=release test toolset=$TOOLSET cxxstd=$CXXSTD
+  - ../../b2 variant=debug-discard-unexpected test toolset=$TOOLSET cxxstd=$CXXSTD
+  - ../../b2 variant=release-discard-unexpected test toolset=$TOOLSET cxxstd=$CXXSTD
 #  - cd bld/debug && meson test
 
 notifications:

@@ -24,6 +24,15 @@
 			}
 		},
 		{
+			"label": "Run all unit tests (BOOST_LEAF_DISCARD_UNEXPECTED)",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug_discard_unexpected && meson test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug_discard_unexpected"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug_discard_unexpected && meson test"
+			}
+		},
+		{
 			"label": "accumulate_basic_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test accumulate_basic_test",

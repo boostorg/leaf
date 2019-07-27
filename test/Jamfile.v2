@@ -5,6 +5,9 @@
 
 import testing ;
 
+variant debug-discard-unexpected : debug : <define>BOOST_LEAF_DISCARD_UNEXPECTED ;
+variant release-discard-unexpected : release : <define>BOOST_LEAF_DISCARD_UNEXPECTED ;
+
 project
     : requirements
         <toolset>gcc:<cxxflags>"-std=c++11 -Wno-delete-non-virtual-dtor -Wno-parentheses"

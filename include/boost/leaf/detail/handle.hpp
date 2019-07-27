@@ -112,6 +112,40 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
+#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
+
+	class diagnostic_info: public error_info
+	{
+	public:
+
+		diagnostic_info( error_info const & ei ) noexcept:
+			error_info(ei)
+		{
+		}
+
+		friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
+		{
+			return os << "leaf::diagnostic_info not available due to BOOST_LEAF_DISCARD_UNEXPECTED" << std::endl;
+		}
+	};
+
+	class verbose_diagnostic_info: public error_info
+	{
+	public:
+
+		verbose_diagnostic_info( error_info const & ei ) noexcept:
+			error_info(ei)
+		{
+		}
+
+		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
+		{
+			return os << "leaf::verbose_diagnostic_info not available due to BOOST_LEAF_DISCARD_UNEXPECTED" << std::endl;
+		}
+	};
+
+#else
+
 	class diagnostic_info: public error_info
 	{
 		leaf_detail::e_unexpected_count const * e_uc_;
@@ -167,6 +201,8 @@ namespace boost { namespace leaf {
 			return os;
 		}
 	};
+
+#endif
 
 	////////////////////////////////////////
 
@@ -456,6 +492,30 @@ namespace boost { namespace leaf {
 			}
 		};
 
+#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
+
+		template <>
+		struct get_one_argument<diagnostic_info>
+		{
+			template <class SlotsTuple>
+			static diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			{
+				return diagnostic_info(ei);
+			}
+		};
+
+		template <>
+		struct get_one_argument<verbose_diagnostic_info>
+		{
+			template <class SlotsTuple>
+			static verbose_diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			{
+				return verbose_diagnostic_info(ei);
+			}
+		};
+
+#else
+
 		template <>
 		struct get_one_argument<diagnostic_info>
 		{
@@ -475,6 +535,8 @@ namespace boost { namespace leaf {
 				return verbose_diagnostic_info(ei, peek<e_unexpected_info>(tup, ei.err_id()));
 			}
 		};
+
+#endif
 
 		template <>
 		struct get_one_argument<std::error_code>

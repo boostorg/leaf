@@ -157,6 +157,8 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
+#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+
 	namespace leaf_detail
 	{
 		class e_unexpected_count
@@ -262,6 +264,8 @@ namespace boost { namespace leaf {
 			return c;
 		}
 	}
+
+#endif
 
 	////////////////////////////////////////
 
@@ -393,6 +397,8 @@ namespace boost { namespace leaf {
 			}
 		};
 
+#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+
 		template <class E>
 		inline void load_unexpected_count( int err_id, E const & e ) noexcept
 		{
@@ -420,6 +426,8 @@ namespace boost { namespace leaf {
 			load_unexpected_info(err_id, e);
 		}
 
+#endif
+
 		template <class E>
 		inline void slot<E>::deactivate( bool propagate_errors ) noexcept
 		{
@@ -434,6 +442,7 @@ namespace boost { namespace leaf {
 						prev_->err_id_ = err_id_;
 					}
 				}
+#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
 				else
 				{
 					int c = tl_unexpected_enabled_counter();
@@ -442,6 +451,7 @@ namespace boost { namespace leaf {
 						if( E const * e = impl::has_value() )
 							no_expect_slot(err_id_, *e);
 				}
+#endif
 			*top_ = prev_;
 			top_ = 0;
 			slot_base::deactivate();
@@ -454,6 +464,7 @@ namespace boost { namespace leaf {
 			assert(err_id);
 			if( slot<T> * p = tl_slot_ptr<T>() )
 				(void) p->load(err_id, std::forward<E>(e));
+#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
 			else
 			{
 				int c = tl_unexpected_enabled_counter();
@@ -461,6 +472,7 @@ namespace boost { namespace leaf {
 				if( c )
 					no_expect_slot(err_id, std::forward<E>(e));
 			}
+#endif
 			return 0;
 		}
 

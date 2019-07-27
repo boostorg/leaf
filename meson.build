@@ -44,11 +44,16 @@ endif
 
 boost_headers = declare_dependency(include_directories: '../..')
 
-mp11 = [ ]
 defines = [ ]
+
+if get_option('discard_unexpected')
+	defines += [ '-DBOOST_LEAF_DISCARD_UNEXPECTED' ]
+endif
+
+mp11 = [ ]
 if get_option('use_boost_mp11')
 	mp11 = [ boost_headers ]
-	defines = [ '-DBOOST_LEAF_USE_BOOST_MP11' ]
+	defines += [ '-DBOOST_LEAF_USE_BOOST_MP11' ]
 endif
 
 thread_dep = dependency('threads')
