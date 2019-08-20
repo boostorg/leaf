@@ -61,7 +61,7 @@ Note that an *error-handling* function may act as *error-neutral* as well, by fo
 
 # Types of error information based on context
 
-Consider a function which opens a file using [`open`](http://man7.org/linux/man-pages/man2/open.2.html)`()`, reads it then parses it. If it fails, we need to know what failed:
+Consider a function which opens a file using [`open()`](http://man7.org/linux/man-pages/man2/open.2.html), reads it then parses it. If it fails, we need to know what failed:
 
 * Did the file fail to open?
 * Was the file opened successfully but the attempt to read it failed?
@@ -71,7 +71,7 @@ But these are also booleans. And again, this may be sufficient, but probably not
 
 Secondly, if the file failed to open, we need to know the `pathname` passed to `open()`, in case it happens to be incorrect. But what if it is correct and yet `open()` failed? Right, we probably need to know the `flags` argument passed to `open()` as well.
 
-Similar reasoning applies to the reading step, except there is an additional complication: in the function that reads the file we use the `int` handle to identify the file, and therefore we don't have access to the `pathname` to report in case the call to [`read`](http://man7.org/linux/man-pages/man2/read.2.html)`()` fails. And if the failure is detected in the parsing step, the file may be closed already, so we may not even have the handle available.
+Similar reasoning applies to the reading step, except there is an additional complication: in the function that reads the file we use the `int` handle to identify the file, and therefore we don't have access to the `pathname` to report in case the call to [`read()`](http://man7.org/linux/man-pages/man2/read.2.html) fails. And if the failure is detected in the parsing step, the file may be closed already, so we may not even have the handle available.
 
 Is it important to know the name of the file which we failed to read or parse? It sure is. What got us on the error-handling path (*error-neutral* functions passing the failure to their caller, until an *error-handling* scope is reached) may be a failure to read or parse the file, but once we reach a scope where the `pathname` is available, we should be able to report it in addition to the initial error information.
 
@@ -244,7 +244,7 @@ In case of failure to `open()`, our function stays out of the way: the error cod
 This approach has two major drawbacks:
 
 * Usually the *failure flag* is not communicated explicitly, which means that *error-neutral* functions can't check for errors generically (e.g. each layer needs to know about the different `INVALID_VALUE`s).
-* It is possible that `errno` (or the value returned by `GetLastError()` under Windows) is stale, that is, a leftover from an earlier failed function call. This means that we must not forget to clear the `errno` before doing any work, and that is prone to errors (although other approaches are also possible, for example OpenGL may record multiple error codes, and the user is expected to call [`glGetError`](https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glGetError.xhtml)`()` in a loop until `GL_NO_ERROR` is returned).
+* It is possible that `errno` (or the value returned by `GetLastError()` under Windows) is stale, that is, a leftover from an earlier failed function call. This means that we must not forget to clear the `errno` before doing any work, and that is prone to errors (although other approaches are also possible, for example OpenGL may record multiple error codes, and the user is expected to call [`glGetError()`](https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glGetError.xhtml) in a loop until `GL_NO_ERROR` is returned).
 
 ## C++ Exceptions
 
