@@ -21,10 +21,10 @@
 
 #define LEAF_AUTO(v,r)\
 	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "LEAF_AUTO requires a result type");\
-	auto _r_##v = r;\
+	auto && _r_##v = r;\
 	if( !_r_##v )\
 		return _r_##v.error();\
-	auto & v = _r_##v.value()
+	auto && v = _r_##v.value()
 
 #define LEAF_CHECK(r)\
 	{\
