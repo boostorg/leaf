@@ -118,7 +118,7 @@ While this is similar to writing the relevant error information in a log, this a
 
 ### Communicating all error information with type-safety
 
-The error-handling strategies we discussed so far work well as long as automatically-printed (or logged) error information is sufficient. And while there are many problem domains where this is true, we still need a solution for the case when error-handling code has to react to failures intelligently and to understand available error information, rather than just print it for a developer to analyze. This requires that the various error objects delivered to an *error-handling* function retain their static type even as they cross library boundaries; for example, in case of errors, the `flags` argument passed to `open()` should be communicated as an `int` rather than a `std::string`.
+The error-handling strategies we discussed so far work well as long as automatically-printed (or logged) error information is sufficient. And while there are many problem domains where this is true, we still need a solution for the case when error-handling code has to react to failures intelligently and to understand the available error information, rather than just print it for a developer to analyze. This requires that the various error objects delivered to an *error-handling* function retain their static type even as they cross library boundaries; for example, in case of errors, the `flags` argument passed to `open()` should be communicated as an `int` rather than a `std::string`.
 
 More generally, this is known as "The Interoperability Problem". The following analysis is from Niall Douglas:<sup>[1](#reference)</sup>
 
@@ -241,10 +241,7 @@ The above function computes a `float` value based on the contents of the specifi
 
 In case of failure to `open()`, our function stays out of the way: the error code is communicated from `open()` (which sets the `errno`) *directly* to an *error-handling* function up the call stack (which examines the `errno` in order to understand the failure), while the return value of each intermediate function needs only communicate a single bit of data (the *failure flag*).
 
-This approach has two major drawbacks:
-
-* Usually the *failure flag* is not communicated explicitly, which means that *error-neutral* functions can't check for errors generically (e.g. each layer needs to know about the different `INVALID_VALUE`s).
-* It is possible that `errno` (or the value returned by `GetLastError()` under Windows) is stale, that is, a leftover from an earlier failed function call. This means that we must not forget to clear the `errno` before doing any work, and that is prone to errors (although other approaches are also possible, for example OpenGL may record multiple error codes, and the user is expected to call [`glGetError()`](https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glGetError.xhtml) in a loop until `GL_NO_ERROR` is returned).
+The major drawback of this appoach is that the *failure flag* is not communicated uniformly, which means that *error-neutral* functions can't check for errors generically (e.g. each layer needs to know about the different `INVALID_VALUE`s).
 
 ### C++ Exceptions
 
@@ -337,7 +334,7 @@ leaf::handle_all(
 
 In LEAF, error objects are allocated using automatic duration, stored in a `std::tuple` in the scope of `leaf::handle_all`. The arguments of the `std::tuple` template are automatically deduced from the types of the arguments of the error-handling lambdas passed to `leaf::handle_all`. If the user attempts to communicate error objects of any other type, these objects are discarded, since no error handler can make any use of them.
 
-The `leaf::result<T>` template can be used as a return value for functions that may fail to produce a `T`. In case of an error, the returned object transports only an integer serial number of the failure, while actual error objects are immediately moved into the matching storage available in the scope of an error-handling function (e.g. `handle_all`) found in the call stack.
+The `leaf::result<T>` template can be used as a return value for functions that may fail to produce a `T`. It carries the [*failure flag*](#the-semantics-of-a-failure) and, in case it is set, an integer serial number of the failure, while actual error objects are immediately moved into the matching storage reserved in the scope of an error-handling function (e.g. `handle_all`) found in the call stack.
 
 ## Exception-safety vs. failure-safety
 
@@ -401,7 +398,7 @@ Logically, this behavior is identical to the compiler-generated code when callin
 
 * Error-handling is a dynamic process, so the static type system is of limited assistance; for example, `ENOENT` is a *value* and not a *type*, and therefore the appropriate error-handler has to be matched dynamically rather than statically.
 
-* Because most of he functions in a program are *error-neutral*, the ability to automatically (e.g. when using exception handling) or at least generically (e.g. `OUTCOME_TRY`, `LEAF_AUTO`) forward errors to the caller is critical for correctness.
+* Because most of the functions in a program are *error-neutral*, the ability to automatically (e.g. when using exception handling) or at least generically (e.g. `OUTCOME_TRY`, `LEAF_AUTO`) forward errors to the caller is critical for correctness.
 
 * The formal ~~exception-safety~~ failure-safety guarantees are applicable to *error-neutral* functions responding to failures generically, even when not using exception handling.
 
