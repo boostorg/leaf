@@ -5344,6 +5344,10 @@ The analysis above (emphasis added) is clear and precise, but LEAF and Boost Out
 
 * The LEAF design asserts that coupling the signatures of <<rationale,error-neutral>> functions with the static types of the error objects they need to forward to the caller <<translation,does not scale>>, and instead transports error objects directly to error-handling scopes where they are stored statically, effectively implementing the third choice outlined above (without the use of `malloc`).
 
+Further, consider that Outcome aims to hopefully become _the_ one error-handling API all libraries would use, and in theory everyone would benefit from uniformity and standardization. But the reality is that this is wishful thinking. In fact, that reality is reflected in the design of `outcome::result<>`, in its failure to commit to using `std::error_code` for its intended purpose: to become _the_ standard type for transporting error codes. The fact is that `std::error_code` became _yet another_ error code type programmers need to understand and support.
+
+In contrast, the design of LEAF acknowledges that {CPP} programmers don't even agree on what a string is. If your project uses 10 different libraries, this probably means 15 different ways to report errors, sometimes across uncooperative interfaces (e.g. C APIs). LEAF helps you get the job done elegantly and efficiently.
+
 [[distribution]]
 == Distribution
 
