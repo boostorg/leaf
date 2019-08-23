@@ -392,7 +392,7 @@ Logically, this behavior is identical to the compiler-generated code when callin
 
 * We described an [alternative approach to implementing C++ exception handling](#62-c-exceptions) which would eliminate all overhead in practice.
 
-* We showed that the three formal safety guarantees (*Basic*, *Strong*, *~~Nothrow~~ No-fail*) are useful when reasoning about object invariants, [regardless of how errors are communicated](#7-exception-safety-vs.-failure-safety).
+* We showed that the three formal safety guarantees (*Basic*, *Strong*, *~~Nothrow~~ No-fail*) are useful when reasoning about object invariants, [regardless of how errors are communicated](#7-exception-safety-vs-failure-safety).
 
 ## Conclusions
 
@@ -415,5 +415,5 @@ https://herbsutter.com/2007/01/24/questions-about-exception-specifications
 [3](#63-leaf). Emil Dotchevski, Lightweight Error Augmentation Framework (library documentation),\
 https://zajo.github.io/leaf
 
-[4](#7-exception-safety-vs.-failure-safety). Bjarne Stroustrup, Exception Safety: Concepts and Techniques,\
+[4](#7-exception-safety-vs-failure-safety). Bjarne Stroustrup, Exception Safety: Concepts and Techniques,\
 http://www.stroustrup.com/except.pdf
