@@ -46,7 +46,7 @@ These are functions which, based on the semantics of the operations they perform
 
 > **Definition:** Functions which forward to the caller error information communicated by lower-level functions are called *error-neutral* functions.
 
-These functions react solely based on the [*failure flag*](#1.-the-semantics-of-a-failure) indicated by a lower-level function, forwarding failures to the caller without understanding the semantics of the error ("something went wrong").
+These functions react solely based on the [*failure flag*](#1-the-semantics-of-a-failure) indicated by a lower-level function, forwarding failures to the caller without understanding the semantics of the error ("something went wrong").
 
 For example, an *error-initiating* function may initialize a new `std::error_code` object to describe a failure, while an *error-neutral* function may just forward the `std::error_code` returned by a lower-level function to its own caller.
 
@@ -176,7 +176,7 @@ On the other hand, not all objects a function needs to use should be passed thro
 
 When an object must be communicated down the call stack to a function several levels removed from the one that initiates the call, it is sometimes desirable to decouple the signature of all intermediate functions from that object, because their interface has nothing to do with it.
 
-The same reasoning applies to *error-neutral* functions with regards to failures originating in lower-level functions. While it is possible to couple the signatures of intermediate functions with the static type of all the [error information they may need to communicate](#4.-handling-of-error-information), this essentially destroys their neutrality towards failures. That's because, in order for each function to define a specific type to report all possible error objects statically, it must understand the exact semantics of all lower level error types. This turns what would have been *error-neutral* functions into a game of telephone, requiring each node to both understand and correctly re-encode each communicated failure.
+The same reasoning applies to *error-neutral* functions with regards to failures originating in lower-level functions. While it is possible to couple the signatures of intermediate functions with the static type of all the [error information they may need to communicate](#4-handling-of-error-information), this essentially destroys their neutrality towards failures. That's because, in order for each function to define a specific type to report all possible error objects statically, it must understand the exact semantics of all lower level error types. This turns what would have been *error-neutral* functions into a game of telephone, requiring each node to both understand and correctly re-encode each communicated failure.
 
 ## 6. Alternative mechanisms for transporting of error objects
 
@@ -334,7 +334,7 @@ leaf::handle_all(
 
 In LEAF, error objects are allocated using automatic duration, stored in a `std::tuple` in the scope of `leaf::handle_all`. The arguments of the `std::tuple` template are automatically deduced from the types of the arguments of the error-handling lambdas passed to `leaf::handle_all`. If the user attempts to communicate error objects of any other type, these objects are discarded, since no error handler can make any use of them.
 
-The `leaf::result<T>` template can be used as a return value for functions that may fail to produce a `T`. It carries the [*failure flag*](#1.-the-semantics-of-a-failure) and, in case it is set, an integer serial number of the failure, while actual error objects are immediately moved into the matching storage reserved in the scope of an error-handling function (e.g. `handle_all`) found in the call stack.
+The `leaf::result<T>` template can be used as a return value for functions that may fail to produce a `T`. It carries the [*failure flag*](#1-the-semantics-of-a-failure) and, in case it is set, an integer serial number of the failure, while actual error objects are immediately moved into the matching storage reserved in the scope of an error-handling function (e.g. `handle_all`) found in the call stack.
 
 ## 7. Exception-safety vs. failure-safety
 
@@ -375,8 +375,8 @@ auto&& i = __result.value();
 
 The idea of `OUTCOME_TRY` is to support generic response to failures in *error-neutral* functions. It relies on two things:
 
-1. That the [*failure flag* can be observed generically](#1.-the-semantics-of-a-failure), and
-2. That it is safe to simply return from an [*error-neutral* function](#2.-classification-of-functions-based-on-their-affinity-to-errors) in case of a failure, forwarding error objects to the caller.
+1. That the [*failure flag* can be observed generically](#1-the-semantics-of-a-failure), and
+2. That it is safe to simply return from an [*error-neutral* function](#2-classification-of-functions-based-on-their-affinity-to-errors) in case of a failure, forwarding error objects to the caller.
 
 Logically, this behavior is identical to the compiler-generated code when calling a function which may throw an exception. Consequently, all reasoning applicable to object invariants when throwing exceptions apply equally when using `OUTCOME_TRY` (or the [LEAF](https://zajo.github.io/leaf) analog, `LEAF_AUTO`).
 
@@ -384,15 +384,15 @@ Logically, this behavior is identical to the compiler-generated code when callin
 
 ## Summary
 
-* We examined several [different approaches to error handling](#4.-handling-of-error-information), as well as several mechanisms for [transporting of error objects of arbitrary static types safely](#4.4.-communicating-all-error-information-with-type-safety).
+* We examined several [different approaches to error handling](#4-handling-of-error-information), as well as several mechanisms for [transporting of error objects of arbitrary static types safely](#44-communicating-all-error-information-with-type-safety).
 
-* We demonstrated that [generally](#4.4.-communicating-all-error-information-with-type-safety) it is not a good idea to [couple function signatures with the types of all error objects they need to communicate](#5.-error-handling-and-function-signatures).
+* We demonstrated that [generally](#44-communicating-all-error-information-with-type-safety) it is not a good idea to [couple function signatures with the types of all error objects they need to communicate](#5-error-handling-and-function-signatures).
 
-* We presented a novel method for transporting of error objects of arbitrary static types without using dynamic memory allocation, implemented by the [LEAF](#6.3.-leaf) library.
+* We presented a novel method for transporting of error objects of arbitrary static types without using dynamic memory allocation, implemented by the [LEAF](#63-leaf) library.
 
-* We described an [alternative approach to implementing C++ exception handling](#6.2.-c++-exceptions) which would eliminate all overhead in practice.
+* We described an [alternative approach to implementing C++ exception handling](#62-c++-exceptions) which would eliminate all overhead in practice.
 
-* We showed that the three formal safety guarantees (*Basic*, *Strong*, *~~Nothrow~~ No-fail*) are useful when reasoning about object invariants, [regardless of how errors are communicated](#7.-exception-safety-vs.-failure-safety).
+* We showed that the three formal safety guarantees (*Basic*, *Strong*, *~~Nothrow~~ No-fail*) are useful when reasoning about object invariants, [regardless of how errors are communicated](#7-exception-safety-vs.-failure-safety).
 
 ## Conclusions
 
@@ -406,14 +406,14 @@ Logically, this behavior is identical to the compiler-generated code when callin
 
 ## Reference
 
-[1](#4.4.-communicating-all-error-information-with-type-safety). Niall Douglas, Incommensurate E types (Outcome library documentation),\
+[1](#44-communicating-all-error-information-with-type-safety). Niall Douglas, Incommensurate E types (Outcome library documentation),\
 https://ned14.github.io/outcome/tutorial/advanced/interop/problem
 
-[2](#4.4.-communicating-all-error-information-with-type-safety). Herb Sutter, Questions About Exception Specifications (Sutter's Mill),\
+[2](#44-communicating-all-error-information-with-type-safety). Herb Sutter, Questions About Exception Specifications (Sutter's Mill),\
 https://herbsutter.com/2007/01/24/questions-about-exception-specifications
 
-[3](#6.3.-leaf). Emil Dotchevski, Lightweight Error Augmentation Framework (library documentation),\
+[3](#63-leaf). Emil Dotchevski, Lightweight Error Augmentation Framework (library documentation),\
 https://zajo.github.io/leaf
 
-[4](#7.-exception-safety-vs.-failure-safety). Bjarne Stroustrup, Exception Safety: Concepts and Techniques,\
+[4](#7-exception-safety-vs.-failure-safety). Bjarne Stroustrup, Exception Safety: Concepts and Techniques,\
 http://www.stroustrup.com/except.pdf
