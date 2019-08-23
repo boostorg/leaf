@@ -390,7 +390,7 @@ Logically, this behavior is identical to the compiler-generated code when callin
 
 * We presented a novel method for transporting of error objects of arbitrary static types without using dynamic memory allocation, implemented by the [LEAF](#63-leaf) library.
 
-* We described an [alternative approach to implementing C++ exception handling](#62-c++-exceptions) which would eliminate all overhead in practice.
+* We described an [alternative approach to implementing C++ exception handling](#62-c-exceptions) which would eliminate all overhead in practice.
 
 * We showed that the three formal safety guarantees (*Basic*, *Strong*, *~~Nothrow~~ No-fail*) are useful when reasoning about object invariants, [regardless of how errors are communicated](#7-exception-safety-vs.-failure-safety).
 
