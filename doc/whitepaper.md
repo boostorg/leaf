@@ -245,10 +245,7 @@ The major drawback of this appoach is that the *failure flag* is not communicate
 
 ### 6.2. C++ Exceptions
 
-In C++, the default mechanism for dealing with failures is exception handling. This fixes the two major drawbacks of the `errno`-style APIs (see above):
-
-* The check for errors is not only generic but completely automated: *by default*, if a function fails, the error will be communicated to the caller. Literally, the programmer can't forget to check the *failure flag*.
-* Exception objects are generated dynamically, as if each failure gets its own `errno` instance that can't be stale.
+In C++, the default mechanism for dealing with failures is exception handling. In this case,the check for errors is not only generic but completely automated: *by default*, if a function fails, the error will be communicated to the caller. Literally, the programmer can't forget to check the *failure flag*.
 
 The drawback of virtually all implementations is overhead, both in terms of space and speed. Below we'll analyze the reasons for this overhead, and point out ways to alleviate them in future ABIs.
 
