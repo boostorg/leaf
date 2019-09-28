@@ -67,13 +67,13 @@ Consider a function which opens a file using [`open()`](http://man7.org/linux/ma
 * Was the file opened successfully but the attempt to read it failed?
 * Was there a parsing error after the file was successfully read?
 
-But these are also booleans. And again, this may be sufficient, but probably not. Reasonably, we need to respond differently depending on whether the call to `open()` resulted in `ENOENT` vs. `EACCESS` -- and if we got `EEXIST`, that would be a logic error. Therefore, most likely we need to know the relevant `errno`.
+But these are also booleans. And again, this may be sufficient, but probably not. Reasonably, we need to respond differently depending on whether the call to `open()` resulted in `ENOENT` vs. `EACCESS` -- and if we got `EEXIST`, that would be a logic error. Therefore, a simple boolean is not enough; we need to know the relevant `errno`.
 
 Secondly, if the file failed to open, we need to know the `pathname` passed to `open()`, in case it happens to be incorrect. But what if it is correct and yet `open()` failed? Right, we probably need to know the `flags` argument passed to `open()` as well.
 
 Similar reasoning applies to the reading step, except there is an additional complication: in the function that reads the file we use the `int` handle to identify the file, and therefore we don't have access to the `pathname` to report in case the call to [`read()`](http://man7.org/linux/man-pages/man2/read.2.html) fails. And if the failure is detected in the parsing step, the file may be closed already, so we may not even have the handle available.
 
-Is it important to know the name of the file which we failed to read or parse? It sure is. What got us on the error-handling path (*error-neutral* functions passing the failure to their caller, until an *error-handling* scope is reached) may be a failure to read or parse the file, but once we reach a scope where the `pathname` is available, we should be able to report it in addition to the initial error information.
+Is it important to know the name of the file which we failed to read or parse? It sure is. What got us on the error-handling path (*error-neutral* functions forwarding the failure to their caller, until an *error-handling* scope is reached) may be a failure to read or parse the file, but once we reach a scope where the `pathname` is available, we should be able to report it in addition to the initial error information.
 
 ## 4. Handling of error information
 
@@ -100,7 +100,7 @@ This approach offers the simplicity of communicating just an error code, but it 
 
 There are several problems with this approach:
 
-* It couples us with a logging system, which may not be a problem in the domain of a particular project, but is certainly not ideal for a universal library.
+* It couples us with a logging system, which may not be a problem in the domain of a particular project, but certainly is not ideal for a universal library.
 * Depending on the use case, it may be too costly to hit the file system or some other logging target while handling errors.
 * The information in the log is developer-friendly, but not user-friendly. Again, there are many projects where this is not a problem (for example, internet servers), but generally it is not appropriate to present a wall of cryptic diagnostic information to a user in hopes he will find clues in it to help fix the problem. Even a developer-facing command line utility has to print error information in plain English -- and the typical user-friendly app has to be able to use different languages.
 
@@ -114,7 +114,7 @@ While this is similar to writing the relevant error information in a log, this a
 
 * The result of the automatic conversion to string is not user-friendly.
 * The ability to concatenate strings usually requires dynamic memory allocations, which may be too slow in some cases.
-* Concatenation may fail, which is especially problematic during error handling.
+* Dynamic allocations may also fail, which is especially problematic during error handling.
 
 ### 4.4. Communicating all error information with type-safety
 
@@ -184,7 +184,7 @@ So far we established that in general it is not a good idea to couple return val
 
 ### 6.1. `GetLastError` / `errno`
 
-A typical classical approach is to only communicate the value of the *failure flag* in the return value, while additional information is delivered through a separate mechanism. Here is an example from the Windows API:
+A typical classical approach is to only communicate the *failure flag* in the return value, while additional information is delivered through a separate mechanism. Here is an example from the Windows API:
 
 ```c
 BOOL DeleteFileW(
@@ -192,13 +192,13 @@ BOOL DeleteFileW(
 );
 ```
 
-If the function succeeds, the return value is non-zero. If the function fails, the return value is zero. If error occurs, the user can call `GetLastError()` to obtain an error code:
+If the function succeeds, the return value is non-zero. If the function fails, the return value is zero. In case of failure, the user can call `GetLastError()` to obtain an error code:
 
 ```c
 DWORD GetLastError();
 ```
 
-This approach is appealing because it frees the return value from the burden of transporting any error information beyond the value of the *failure flag*. For example:
+This approach is appealing because it frees the return value from the burden of transporting any error information beyond the *failure flag*. For example:
 
 ```c
 HANDLE CreateFileW(
@@ -245,7 +245,7 @@ The major drawback of this appoach is that the *failure flag* is not communicate
 
 ### 6.2. C++ Exceptions
 
-In C++, the default mechanism for dealing with failures is exception handling. In this case,the check for errors is not only generic but completely automated: *by default*, if a function fails, the error will be communicated to the caller. Literally, the programmer can't forget to check the *failure flag*.
+In C++, the default mechanism for dealing with failures is exception handling. In this case, the check for errors is not only generic but completely automated: *by default*, if a function fails, the error will be communicated to the caller. Literally, the programmer can't forget to check the *failure flag*.
 
 The drawback of virtually all implementations is overhead, both in terms of space and speed. Below we'll analyze the reasons for this overhead, and point out ways to alleviate them in future ABIs.
 
@@ -329,7 +329,7 @@ leaf::handle_all(
 );
 ```
 
-In LEAF, error objects are allocated using automatic duration, stored in a `std::tuple` in the scope of `leaf::handle_all`. The arguments of the `std::tuple` template are automatically deduced from the types of the arguments of the error-handling lambdas passed to `leaf::handle_all`. If the user attempts to communicate error objects of any other type, these objects are discarded, since no error handler can make any use of them.
+In LEAF, error objects are allocated using automatic duration, stored in a `std::tuple` in the scope of `leaf::handle_all`. The type arguments of the `std::tuple` template are automatically deduced from the types of the arguments of the error-handling lambdas passed to `leaf::handle_all`. If the user attempts to communicate error objects of any other type, these objects are discarded, since no error handler can make any use of them.
 
 The `leaf::result<T>` template can be used as a return value for functions that may fail to produce a `T`. It carries the [*failure flag*](#1-the-semantics-of-a-failure) and, in case it is set, an integer serial number of the failure, while actual error objects are immediately moved into the matching storage reserved in the scope of an error-handling function (e.g. `handle_all`) found in the call stack.
 
