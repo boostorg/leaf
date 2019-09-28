@@ -12,6 +12,7 @@ import asciidoctor ;
 html index.html : leaf.adoc ;
 
 install html_ : index.html LEAF-1.png LEAF-2.png : <location>html ;
+install md_ : whitepaper.md : <location>html ;
 
 pdf leaf.pdf : leaf.adoc ;
 explicit leaf.pdf ;
