@@ -7,7 +7,7 @@
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/handle_exception.hpp>
 
-#include "boost/core/lightweight_test.hpp"
+#include "lightweight_test.hpp"
 #include <vector>
 #include <future>
 #include <iterator>

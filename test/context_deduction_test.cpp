@@ -3,7 +3,10 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/handle_exception.hpp>
+#ifndef LEAF_NO_EXCEPTIONS
+#	include <boost/leaf/handle_exception.hpp>
+#endif
+#include <boost/leaf/handle_error.hpp>
 
 namespace leaf = boost::leaf;
 
@@ -87,7 +90,9 @@ void not_called_on_purpose()
 
 	test< std::tuple<my_error_code> >( expd([]( leaf::match<my_error_code,my_error_code::error1> ){ }) );
 	test< std::tuple<info<1>> >( expd([]( leaf::match<info<1>,42> ){ }) );
+#ifndef LEAF_NO_EXCEPTIONS
 	test< std::tuple<info<1>> >( expd([]( leaf::catch_<std::exception>, info<1> ){ }) );
+#endif
 
 	test< std::tuple<info<1>,info<2>,info<3>> >( expd([]( info<1> const *, info<2> ){ }, []( info<1>, info<3> const * ){ }) );
 	test< std::tuple<info<1>,info<2>,info<3>> >( expd([]( info<1> const, info<2> ){ }, []( info<1> const *, info<3> ){ }) );

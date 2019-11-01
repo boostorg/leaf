@@ -9,7 +9,7 @@
 #include <deque>
 #include <functional>
 #include <future>
-#include "boost/core/lightweight_test.hpp"
+#include "lightweight_test.hpp"
 
 namespace asio_simulator
 {

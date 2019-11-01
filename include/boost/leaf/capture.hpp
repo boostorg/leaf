@@ -12,6 +12,8 @@
 
 namespace boost { namespace leaf {
 
+#if !defined(LEAF_NO_EXCEPTIONS) && !defined(BOOST_NO_EXCEPTIONS)
+
 	namespace leaf_detail
 	{
 		class capturing_exception:
@@ -85,6 +87,33 @@ namespace boost { namespace leaf {
 		}
 	}
 
+#else
+
+	namespace leaf_detail
+	{
+		template <class R, class F, class... A>
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr  const & ctx, F && f, A... a)
+		{
+			context_activator active_context(*ctx, on_deactivation::do_not_propagate);
+			return std::forward<F>(f)(std::forward<A>(a)...);
+		}
+
+		template <class R, class F, class... A>
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr  const & ctx, F && f, A... a)
+		{
+			context_activator active_context(*ctx, on_deactivation::do_not_propagate);
+			if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
+				return r;
+			else
+			{
+				ctx->ec = r.error();
+				return ctx;
+			}
+		}
+	}
+
+#endif
+
 	template <class F, class... A>
 	inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture(context_ptr const & ctx, F && f, A... a)
 	{
@@ -93,6 +122,8 @@ namespace boost { namespace leaf {
 	}
 
 	////////////////////////////////////////
+
+#if !defined(LEAF_NO_EXCEPTIONS) && !defined(BOOST_NO_EXCEPTIONS)
 
 	template <class T>
 	class result;
@@ -145,6 +176,8 @@ namespace boost { namespace leaf {
 			return leaf::new_error(std::current_exception());
 		}
 	};
+
+#endif
 
 } }
 

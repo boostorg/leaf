@@ -4,7 +4,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/detail/optional.hpp>
-#include "boost/core/lightweight_test.hpp"
+#include "lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
 
@@ -47,6 +47,7 @@ public:
 	}
 };
 
+#ifndef LEAF_NO_EXCEPTIONS
 class throws_on_copy
 {
 	throws_on_copy & operator=( throws_on_copy const & )=delete;
@@ -75,6 +76,7 @@ public:
 		BOOST_TEST(--object_count>=0);
 	}
 };
+#endif
 
 void run_tests()
 {
@@ -97,6 +99,7 @@ void run_tests()
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
+#ifndef LEAF_NO_EXCEPTIONS
 	{
 		throws_on_copy a;
 		BOOST_TEST_EQ(object_count, 1);
@@ -109,6 +112,7 @@ void run_tests()
 		{
 		}
 	}
+#endif
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
 	{
@@ -190,6 +194,7 @@ void run_tests()
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
+#ifndef LEAF_NO_EXCEPTIONS
 	{
 		optional<throws_on_copy> x((throws_on_copy()));
 		BOOST_TEST_EQ(object_count, 1);
@@ -206,6 +211,7 @@ void run_tests()
 		BOOST_TEST(x.has_value());
 		BOOST_TEST(!y.has_value());
 	}
+#endif
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
 	{

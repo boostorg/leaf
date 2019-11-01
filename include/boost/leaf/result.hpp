@@ -242,7 +242,7 @@ namespace boost { namespace leaf {
 			if( err_id_==0 )
 				return value_;
 			else
-				throw bad_result(error());
+				::boost::leaf::throw_exception(bad_result(error()));
 		}
 
 		T & value()
@@ -250,7 +250,7 @@ namespace boost { namespace leaf {
 			if( err_id_==0 )
 				return value_;
 			else
-				throw bad_result(error());
+				::boost::leaf::throw_exception(bad_result(error()));
 		}
 
 		T const & operator*() const

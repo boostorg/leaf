@@ -6,6 +6,10 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#if defined(LEAF_NO_EXCEPTIONS) || defined(BOOST_NO_EXCEPTIONS)
+#	error This header requires exception handling
+#endif
+
 #include <boost/leaf/capture.hpp>
 #include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/detail/demangle.hpp>

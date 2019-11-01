@@ -12,7 +12,9 @@
 #include <boost/leaf/error.hpp>
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/handle_error.hpp>
-#include <boost/leaf/handle_exception.hpp>
+#if !defined(LEAF_NO_EXCEPTIONS) && !defined(BOOST_NO_EXCEPTIONS)
+#	include <boost/leaf/handle_exception.hpp>
+#endif
 #include <boost/leaf/preload.hpp>
 #include <boost/leaf/result.hpp>
 

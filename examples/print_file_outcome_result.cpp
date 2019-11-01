@@ -20,6 +20,17 @@
 namespace leaf = boost::leaf;
 namespace outcome = boost::outcome_v2;
 
+#ifdef LEAF_NO_EXCEPTIONS
+namespace boost
+{
+	[[noreturn]] void throw_exception( std::exception const & e )
+	{
+		std::cerr << "Terminating due to a C++ exception under LEAF_NO_EXCEPTIONS: " << e.what();
+		std::terminate();
+	}
+}
+#endif
+
 template <class T>
 using result = outcome::std_result<T>;
 
