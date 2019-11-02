@@ -5392,6 +5392,17 @@ cd bld/debug
 meson test
 ----
 
+== Configuration macros
+
+The following configuration macros are recognized:
+
+* `LEAF_NO_EXCEPTIONS`: Disable all exception handling support.
+* `LEAF_NO_THREADS`: Disable all multi-thread support.
+
+It is possible to request that `LEAF_NO_EXCEPTIONS` and `LEAF_NO_THREADS` are deduced automatically based on the compiler and command line used (e.g. `-fno-exceptions`). To do this, leave both `LEAF_NO_EXCEPTIONS` and `LEAF_NO_THREADS` undefined and instead define `LEAF_USE_BOOST_CONFIG` before including any LEAF headers. This relies on LEAF being able to `#include <boost/config.hpp>`.
+
+NOTE: `LEAF_USE_BOOST_CONFIG` must be specifically requested because otherwise LEAF does not depend on Boost or any other library.
+
 == Acknowledgements
 
 Special thanks to Peter Dimov and Sorin Fetche.
