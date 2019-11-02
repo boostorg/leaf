@@ -13,7 +13,6 @@ project
         <cxxstd>11
         <define>LEAF_USE_BOOST_CONFIG
         <toolset>gcc:<cxxflags>"-Wno-delete-non-virtual-dtor -Wno-parentheses"
-        <toolset>gcc<threading>multi:<linkflags>"-pthread"
         <toolset>clang:<cxxflags>"-Wno-dangling-else"
         <toolset>darwin:<cxxflags>"-Wno-unused-variable -Wno-delete-non-virtual-dtor -Wno-non-virtual-dtor -Wno-dangling-else"
 		<toolset>msvc:<cxxflags>"-wd 4267 -wd 4996 -wd 4244"
