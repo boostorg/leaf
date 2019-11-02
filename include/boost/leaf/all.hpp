@@ -738,7 +738,6 @@ namespace boost { namespace leaf {
 			}
 		};
 
-#ifndef LEAF_NO_EXCEPTIONS
 		template <>
 		struct diagnostic<std::exception_ptr, false, false>
 		{
@@ -747,7 +746,6 @@ namespace boost { namespace leaf {
 			{
 			}
 		};
-#endif
 	} // leaf_detail
 
 } }
@@ -813,12 +811,10 @@ namespace boost { namespace leaf {
 			static constexpr bool value = has_value<T>::value || std::is_base_of<std::exception,T>::value;
 		};
 
-#ifndef LEAF_NO_EXCEPTIONS
 		template <>
 		struct is_error_type_default<std::exception_ptr>: std::true_type
 		{
 		};
-#endif
 	}
 
 	template <class T> struct is_e_type: leaf_detail::is_error_type_default<T> { };
@@ -2245,7 +2241,6 @@ namespace boost { namespace leaf {
 			template <class R, class RemoteH>
 			R remote_handle_some( R const &, RemoteH && ) const;
 
-#ifndef LEAF_NO_EXCEPTIONS
 			template <class TryBlock, class... H>
 			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... ) const;
 
@@ -2263,7 +2258,6 @@ namespace boost { namespace leaf {
 
 			template <class R, class RemoteH>
 			R remote_handle_exception( std::exception_ptr const &, RemoteH &&  ) const;
-#endif
 		};
 
 		template <class... E>
