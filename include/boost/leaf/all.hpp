@@ -812,10 +812,12 @@ namespace boost { namespace leaf {
 			static constexpr bool value = has_value<T>::value || std::is_base_of<std::exception,T>::value;
 		};
 
+#ifndef LEAF_NO_EXCEPTIONS
 		template <>
 		struct is_error_type_default<std::exception_ptr>: std::true_type
 		{
 		};
+#endif
 	}
 
 	template <class T> struct is_e_type: leaf_detail::is_error_type_default<T> { };
