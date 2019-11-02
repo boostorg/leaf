@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <ostream>
 #include <sstream>
+#include <memory>
 #include <set>
 
 #ifdef LEAF_NO_THREADS
