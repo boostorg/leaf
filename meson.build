@@ -53,13 +53,17 @@ if not exceptions
 endif
 
 if get_option('discard_unexpected')
-	defines += [ '-DBOOST_LEAF_DISCARD_UNEXPECTED' ]
+	defines += [ '-DLEAF_DISCARD_UNEXPECTED' ]
 endif
 
 mp11 = [ ]
 if get_option('use_boost_mp11')
 	mp11 = [ boost_headers ]
-	defines += [ '-DBOOST_LEAF_USE_BOOST_MP11' ]
+	defines += [ '-DLEAF_USE_BOOST_MP11' ]
+endif
+
+if get_option('use_boost_config')
+	defines += [ '-DLEAF_USE_BOOST_CONFIG' ]
 endif
 
 thread_dep = dependency('threads')
@@ -70,9 +74,16 @@ leaf = declare_dependency( include_directories: includes, compile_args: defines 
 
 tests = [
 	'accumulate_basic_test',
+	'accumulate_nested_error_exception_test',
 	'accumulate_nested_error_result_test',
+	'accumulate_nested_new_error_exception_test',
 	'accumulate_nested_new_error_result_test',
+	'accumulate_nested_success_exception_test',
 	'accumulate_nested_success_result_test',
+	'capture_exception_async_test',
+	'capture_exception_result_async_test',
+	'capture_exception_state_test',
+	'capture_exception_unload_test',
 	'capture_result_async_test',
 	'capture_result_state_test',
 	'context_activator_test',
@@ -80,13 +91,19 @@ tests = [
 	'capture_result_unload_test',
 	'continuation_test',
 	'ctx_remote_handle_all_test',
+	'ctx_remote_handle_exception_test',
 	'ctx_remote_handle_some_test',
 	'defer_basic_test',
+	'defer_nested_error_exception_test',
 	'defer_nested_error_result_test',
+	'defer_nested_new_error_exception_test',
 	'defer_nested_new_error_result_test',
+	'defer_nested_success_exception_test',
 	'defer_nested_success_result_test',
 	'diagnostic_info_test',
 	'error_code_test',
+	'exception_test',
+	'exception_to_result_test',
 	'function_traits_test',
 	'handle_all_other_result_test',
 	'handle_all_test',
@@ -97,76 +114,57 @@ tests = [
 	'multiple_errors_test',
 	'optional_test',
 	'preload_basic_test',
+	'preload_nested_error_exception_test',
 	'preload_nested_error_result_test',
+	'preload_nested_new_error_exception_test',
 	'preload_nested_new_error_result_test',
+	'preload_nested_success_exception_test',
 	'preload_nested_success_result_test',
 	'print_test',
+	'result_bad_result_test',
 	'result_load_accumulate_test',
 	'result_state_test',
+	'try_catch_error_id_test',
+	'try_catch_test',
+	'try_exception_and_result_test',
 	'_hpp_capture_test',
 	'_hpp_common_test',
 	'_hpp_context_test',
 	'_hpp_error_test',
 	'_hpp_exception_test',
 	'_hpp_handle_error_test',
+	'_hpp_handle_exception_test',
 	'_hpp_preload_test',
 	'_hpp_result_test',
-	'_hpp_all_test'
+	'_hpp_all_test',
 ]
-if exceptions
-	tests += [
-		'accumulate_nested_error_exception_test',
-		'accumulate_nested_new_error_exception_test',
-		'accumulate_nested_success_exception_test',
-		'capture_exception_async_test',
-		'capture_exception_result_async_test',
-		'capture_exception_state_test',
-		'capture_exception_unload_test',
-		'ctx_remote_handle_exception_test',
-		'defer_nested_error_exception_test',
-		'defer_nested_new_error_exception_test',
-		'defer_nested_success_exception_test',
-		'exception_test',
-		'exception_to_result_test',
-		'preload_nested_error_exception_test',
-		'preload_nested_new_error_exception_test',
-		'preload_nested_success_exception_test',
-		'result_bad_result_test',
-		'try_catch_error_id_test',
-		'try_catch_test',
-		'try_exception_and_result_test',
-		'_hpp_handle_exception_test'
-	]
-endif
 foreach t : tests
 	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf,thread_dep]+mp11 ) )
 endforeach
 
-examples = [
-	'capture_in_result',
-	'error_log',
-	'error_trace',
-	'print_file_result',
-	'print_half'
-]
 if exceptions
-	examples += [
+	examples = [
 		'capture_in_exception',
+		'capture_in_result',
+		'error_log',
+		'error_trace',
 		'exception_to_result',
-		'print_file_eh'
+		'print_file_eh',
+		'print_file_result',
+		'print_half'
 	]
-endif
-foreach e : examples
-	executable(e, 'examples/'+e+'.cpp', dependencies: [leaf,thread_dep]+mp11 )
-endforeach
+	foreach e : examples
+		executable(e, 'examples/'+e+'.cpp', dependencies: [leaf,thread_dep]+mp11 )
+	endforeach
 
-if exceptions and get_option('boost_examples')
-	executable('asio_beast_leaf_rpc', 'examples/asio_beast_leaf_rpc.cpp', dependencies: [leaf,thread_dep,boost_headers], override_options: ['cpp_std=c++17'] )
-	executable('print_file_outcome_result', 'examples/print_file_outcome_result.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
-endif
+	if get_option('boost_examples')
+		executable('asio_beast_leaf_rpc', 'examples/asio_beast_leaf_rpc.cpp', dependencies: [leaf,thread_dep,boost_headers], override_options: ['cpp_std=c++17'] )
+		executable('print_file_outcome_result', 'examples/print_file_outcome_result.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
+	endif
 
-if exceptions and get_option('lua_examples')
-	lua=subproject('lua').get_variable('all')
-	executable('lua_callback_result', 'examples/lua_callback_result.cpp', dependencies: [leaf,lua]+mp11 )
-	executable('lua_callback_eh', 'examples/lua_callback_eh.cpp', dependencies: [leaf,lua]+mp11 )
+	if get_option('lua_examples')
+		lua=subproject('lua').get_variable('all')
+		executable('lua_callback_result', 'examples/lua_callback_result.cpp', dependencies: [leaf,lua]+mp11 )
+		executable('lua_callback_eh', 'examples/lua_callback_eh.cpp', dependencies: [leaf,lua]+mp11 )
+	endif
 endif

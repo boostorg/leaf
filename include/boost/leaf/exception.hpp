@@ -1,5 +1,5 @@
-#ifndef BOOST_LEAF_75F38740D98D11E881DDB244C82C3C47
-#define BOOST_LEAF_75F38740D98D11E881DDB244C82C3C47
+#ifndef LEAF_75F38740D98D11E881DDB244C82C3C47
+#define LEAF_75F38740D98D11E881DDB244C82C3C47
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -12,7 +12,7 @@
 #define LEAF_EXCEPTION(...) ::boost::leaf::leaf_detail::exception_at(__FILE__,__LINE__,__FUNCTION__,__VA_ARGS__)
 #define LEAF_THROW(...) ::boost::leaf::throw_exception(LEAF_EXCEPTION(__VA_ARGS__))
 
-#if defined(LEAF_NO_EXCEPTIONS) || defined(BOOST_NO_EXCEPTIONS)
+#ifdef LEAF_NO_EXCEPTIONS
 
 namespace boost
 {

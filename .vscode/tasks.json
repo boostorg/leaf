@@ -24,7 +24,7 @@
 			}
 		},
 		{
-			"label": "Run all unit tests (BOOST_LEAF_DISCARD_UNEXPECTED)",
+			"label": "Run all unit tests (LEAF_DISCARD_UNEXPECTED)",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug_discard_unexpected && meson test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug_discard_unexpected"] },

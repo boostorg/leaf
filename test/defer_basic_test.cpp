@@ -49,8 +49,8 @@ int main()
 			std::stringstream ss; ss << di;
 			std::string s = ss.str();
 			std::cout << s;
-#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
-			BOOST_TEST(s.find("BOOST_LEAF_DISCARD_UNEXPECTED")!=s.npos);
+#ifdef LEAF_DISCARD_UNEXPECTED
+			BOOST_TEST(s.find("LEAF_DISCARD_UNEXPECTED")!=s.npos);
 #else
 			BOOST_TEST(s.find("info<-42>")!=s.npos);
 #endif

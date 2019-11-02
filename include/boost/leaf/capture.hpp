@@ -1,5 +1,5 @@
-#ifndef BOOST_LEAF_BC24FB98B2DE11E884419CF5AD35F1A2
-#define BOOST_LEAF_BC24FB98B2DE11E884419CF5AD35F1A2
+#ifndef LEAF_BC24FB98B2DE11E884419CF5AD35F1A2
+#define LEAF_BC24FB98B2DE11E884419CF5AD35F1A2
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -7,12 +7,11 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/exception.hpp>
-#include <boost/leaf/error.hpp>
 #include <memory>
 
 namespace boost { namespace leaf {
 
-#if !defined(LEAF_NO_EXCEPTIONS) && !defined(BOOST_NO_EXCEPTIONS)
+#ifndef LEAF_NO_EXCEPTIONS
 
 	namespace leaf_detail
 	{
@@ -123,7 +122,7 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-#if !defined(LEAF_NO_EXCEPTIONS) && !defined(BOOST_NO_EXCEPTIONS)
+#ifndef LEAF_NO_EXCEPTIONS
 
 	template <class T>
 	class result;

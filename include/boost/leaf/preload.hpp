@@ -1,5 +1,5 @@
-#ifndef BOOST_LEAF_25AF99F6DC6F11E8803DE9BC9723C688
-#define BOOST_LEAF_25AF99F6DC6F11E8803DE9BC9723C688
+#ifndef LEAF_25AF99F6DC6F11E8803DE9BC9723C688
+#define LEAF_25AF99F6DC6F11E8803DE9BC9723C688
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -56,7 +56,7 @@ namespace boost { namespace leaf {
 					if( !s_->has_value(err_id) )
 						s_->load(err_id, std::move(e_));
 				}
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifndef LEAF_DISCARD_UNEXPECTED
 				else
 				{
 					int c = tl_unexpected_enabled_counter();
@@ -143,7 +143,7 @@ namespace boost { namespace leaf {
 					if( !s_->has_value(err_id) )
 						s_->load(err_id, f_());
 				}
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifndef LEAF_DISCARD_UNEXPECTED
 				else
 				{
 					int c = tl_unexpected_enabled_counter();

@@ -1,5 +1,5 @@
-#ifndef BOOST_LEAF_BA049396D0D411E8B45DF7D4A759E189
-#define BOOST_LEAF_BA049396D0D411E8B45DF7D4A759E189
+#ifndef LEAF_BA049396D0D411E8B45DF7D4A759E189
+#define LEAF_BA049396D0D411E8B45DF7D4A759E189
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -13,9 +13,27 @@
 #include <type_traits>
 #include <ostream>
 #include <sstream>
-#include <atomic>
-#include <thread>
 #include <set>
+
+#ifdef LEAF_NO_THREADS
+#	define LEAF_THREAD_LOCAL
+	namespace boost { namespace leaf {
+		namespace leaf_detail
+		{
+			using atomic_unsigned_int = unsigned int;
+		}
+	} }
+#else
+#	include <atomic>
+#	include <thread>
+#	define LEAF_THREAD_LOCAL thread_local
+	namespace boost { namespace leaf {
+		namespace leaf_detail
+		{
+			using atomic_unsigned_int = std::atomic<unsigned int>;
+		}
+	} }
+#endif
 
 #define LEAF_NEW_ERROR(...) ::boost::leaf::leaf_detail::new_error_at(__FILE__,__LINE__,__FUNCTION__).load(__VA_ARGS__)
 
@@ -112,7 +130,7 @@ namespace boost { namespace leaf {
 
 			static slot_base * & first() noexcept
 			{
-				static thread_local slot_base * p = 0;
+				static LEAF_THREAD_LOCAL slot_base * p = 0;
 				return p;
 			}
 
@@ -157,7 +175,7 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifndef LEAF_DISCARD_UNEXPECTED
 
 	namespace leaf_detail
 	{
@@ -260,7 +278,7 @@ namespace boost { namespace leaf {
 	{
 		inline int & tl_unexpected_enabled_counter() noexcept
 		{
-			static thread_local int c;
+			static LEAF_THREAD_LOCAL int c;
 			return c;
 		}
 	}
@@ -277,7 +295,7 @@ namespace boost { namespace leaf {
 		template <class E>
 		inline slot<E> * & tl_slot_ptr() noexcept
 		{
-			static thread_local slot<E> * s;
+			static LEAF_THREAD_LOCAL slot<E> * s;
 			return s;
 		}
 
@@ -397,7 +415,7 @@ namespace boost { namespace leaf {
 			}
 		};
 
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifndef LEAF_DISCARD_UNEXPECTED
 
 		template <class E>
 		inline void load_unexpected_count( int err_id, E const & e ) noexcept
@@ -442,7 +460,7 @@ namespace boost { namespace leaf {
 						prev_->err_id_ = err_id_;
 					}
 				}
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifndef LEAF_DISCARD_UNEXPECTED
 				else
 				{
 					int c = tl_unexpected_enabled_counter();
@@ -464,7 +482,7 @@ namespace boost { namespace leaf {
 			assert(err_id);
 			if( slot<T> * p = tl_slot_ptr<T>() )
 				(void) p->load(err_id, std::forward<E>(e));
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifndef LEAF_DISCARD_UNEXPECTED
 			else
 			{
 				int c = tl_unexpected_enabled_counter();
@@ -499,26 +517,26 @@ namespace boost { namespace leaf {
 		template <class=void>
 		struct id_factory
 		{
-			static std::atomic<unsigned> counter;
-			static thread_local int last_id;
-			static thread_local int next_id;
+			static atomic_unsigned_int counter;
+			static LEAF_THREAD_LOCAL int last_id;
+			static LEAF_THREAD_LOCAL int next_id;
 
 			static int get() noexcept
 			{
-				unsigned id = counter.fetch_add(2u);
+				unsigned id = (counter+=2u);
 				assert(id&1u);
 				return int(id);
 			}
 		};
 
 		template <class T>
-		std::atomic<unsigned> id_factory<T>::counter(1u);
+		atomic_unsigned_int id_factory<T>::counter(-1);
 
 		template <class T>
-		thread_local int id_factory<T>::last_id;
+		LEAF_THREAD_LOCAL int id_factory<T>::last_id;
 
 		template <class T>
-		thread_local int id_factory<T>::next_id;
+		LEAF_THREAD_LOCAL int id_factory<T>::next_id;
 
 		inline int new_id() noexcept
 		{
@@ -725,7 +743,9 @@ namespace boost { namespace leaf {
 		virtual void deactivate( bool propagate_errors ) noexcept = 0;
 		virtual bool is_active() const noexcept = 0;
 		virtual void print( std::ostream & ) const = 0;
+#ifndef LEAF_NO_THREADS
 		virtual std::thread::id const & thread_id() const noexcept = 0;
+#endif
 
 		std::error_code ec;
 	};
@@ -809,5 +829,7 @@ namespace boost { namespace leaf {
 	}
 
 } }
+
+#undef LEAF_THREAD_LOCAL
 
 #endif

@@ -1,15 +1,38 @@
-#ifndef BOOST_LEAF_3382F652FCDD11E8AAD1CCB3642D5A5F
-#define BOOST_LEAF_3382F652FCDD11E8AAD1CCB3642D5A5F
+#ifndef LEAF_3382F652FCDD11E8AAD1CCB3642D5A5F
+#define LEAF_3382F652FCDD11E8AAD1CCB3642D5A5F
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+// >>> #include <boost/leaf/config.hpp>
+#line 1 "boost/leaf/config.hpp"
+#ifndef LEAF_13D3591AFC6811E9883D0A836044C98A
+#define LEAF_13D3591AFC6811E9883D0A836044C98A
+
+// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#ifdef LEAF_USE_BOOST_CONFIG
+#	include <boost/config.hpp>
+#	if !defined(LEAF_NO_EXCEPTIONS) && defined(BOOST_NO_EXCEPTIONS)
+#		define LEAF_NO_EXCEPTIONS
+#	endif
+#	if !defined(LEAF_NO_THREADS) && !defined(BOOST_HAS_THREADS)
+#		define LEAF_NO_THREADS
+#	endif
+#endif
+
+#endif
+// <<< #include <boost/leaf/config.hpp>
+#line 10 "../../include/boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/capture.hpp>
 #line 1 "boost/leaf/capture.hpp"
-#ifndef BOOST_LEAF_BC24FB98B2DE11E884419CF5AD35F1A2
-#define BOOST_LEAF_BC24FB98B2DE11E884419CF5AD35F1A2
+#ifndef LEAF_BC24FB98B2DE11E884419CF5AD35F1A2
+#define LEAF_BC24FB98B2DE11E884419CF5AD35F1A2
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -18,8 +41,8 @@
 
 // >>> #include <boost/leaf/exception.hpp>
 #line 1 "boost/leaf/exception.hpp"
-#ifndef BOOST_LEAF_75F38740D98D11E881DDB244C82C3C47
-#define BOOST_LEAF_75F38740D98D11E881DDB244C82C3C47
+#ifndef LEAF_75F38740D98D11E881DDB244C82C3C47
+#define LEAF_75F38740D98D11E881DDB244C82C3C47
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -28,8 +51,8 @@
 
 // >>> #include <boost/leaf/error.hpp>
 #line 1 "boost/leaf/error.hpp"
-#ifndef BOOST_LEAF_BA049396D0D411E8B45DF7D4A759E189
-#define BOOST_LEAF_BA049396D0D411E8B45DF7D4A759E189
+#ifndef LEAF_BA049396D0D411E8B45DF7D4A759E189
+#define LEAF_BA049396D0D411E8B45DF7D4A759E189
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -38,8 +61,8 @@
 
 // >>> #include <boost/leaf/detail/function_traits.hpp>
 #line 1 "boost/leaf/detail/function_traits.hpp"
-#ifndef BOOST_LEAF_14440B9CF07011E88377FD4B0ABE8030
-#define BOOST_LEAF_14440B9CF07011E88377FD4B0ABE8030
+#ifndef LEAF_14440B9CF07011E88377FD4B0ABE8030
+#define LEAF_14440B9CF07011E88377FD4B0ABE8030
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -48,8 +71,8 @@
 
 // >>> #include <boost/leaf/detail/mp11.hpp>
 #line 1 "boost/leaf/detail/mp11.hpp"
-#ifndef BOOST_LEAF_91843B04108711E9AA4E56D98C7F4AFC
-#define BOOST_LEAF_91843B04108711E9AA4E56D98C7F4AFC
+#ifndef LEAF_91843B04108711E9AA4E56D98C7F4AFC
+#define LEAF_91843B04108711E9AA4E56D98C7F4AFC
 
 //  Copyright 2015-2017 Peter Dimov.
 //  Copyright 2019 Emil Dotchevski.
@@ -61,9 +84,9 @@
 
 // LEAF needs a few mp11 utilities, which have been copied into the internal
 // namespace boost::leaf::leaf_detail_mp11 in order to avoid a dependency
-// on the entire mp11 library. The BOOST_LEAF_USE_MP11 configuration macro
+// on the entire mp11 library. The LEAF_USE_MP11 configuration macro
 // tells LEAF to not bother and just use <boost/mp11/algorithm.hpp> instead.
-#ifdef BOOST_LEAF_USE_BOOST_MP11
+#ifdef LEAF_USE_BOOST_MP11
 
 #include <boost/mp11/algorithm.hpp>
 
@@ -445,8 +468,8 @@ namespace boost { namespace leaf {
 #line 10 "boost/leaf/error.hpp"
 // >>> #include <boost/leaf/detail/optional.hpp>
 #line 1 "boost/leaf/detail/optional.hpp"
-#ifndef BOOST_LEAF_47258FCCB6B411E8A1F35AA00C39171A
-#define BOOST_LEAF_47258FCCB6B411E8A1F35AA00C39171A
+#ifndef LEAF_47258FCCB6B411E8A1F35AA00C39171A
+#define LEAF_47258FCCB6B411E8A1F35AA00C39171A
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -606,14 +629,15 @@ namespace boost { namespace leaf {
 #line 11 "boost/leaf/error.hpp"
 // >>> #include <boost/leaf/detail/print.hpp>
 #line 1 "boost/leaf/detail/print.hpp"
-#ifndef BOOST_LEAF_3BAB50A2B87E11E89EEB30600C39171A
-#define BOOST_LEAF_3BAB50A2B87E11E89EEB30600C39171A
+#ifndef LEAF_3BAB50A2B87E11E89EEB30600C39171A
+#define LEAF_3BAB50A2B87E11E89EEB30600C39171A
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <exception>
 #include <ostream>
 #include <cstring>
 #include <cassert>
@@ -714,6 +738,7 @@ namespace boost { namespace leaf {
 			}
 		};
 
+#ifndef LEAF_NO_EXCEPTIONS
 		template <>
 		struct diagnostic<std::exception_ptr, false, false>
 		{
@@ -722,6 +747,7 @@ namespace boost { namespace leaf {
 			{
 			}
 		};
+#endif
 	} // leaf_detail
 
 } }
@@ -733,9 +759,27 @@ namespace boost { namespace leaf {
 #include <type_traits>
 #include <ostream>
 #include <sstream>
-#include <atomic>
-#include <thread>
 #include <set>
+
+#ifdef LEAF_NO_THREADS
+#	define LEAF_THREAD_LOCAL
+	namespace boost { namespace leaf {
+		namespace leaf_detail
+		{
+			using atomic_unsigned_int = unsigned int;
+		}
+	} }
+#else
+#	include <atomic>
+#	include <thread>
+#	define LEAF_THREAD_LOCAL thread_local
+	namespace boost { namespace leaf {
+		namespace leaf_detail
+		{
+			using atomic_unsigned_int = std::atomic<unsigned int>;
+		}
+	} }
+#endif
 
 #define LEAF_NEW_ERROR(...) ::boost::leaf::leaf_detail::new_error_at(__FILE__,__LINE__,__FUNCTION__).load(__VA_ARGS__)
 
@@ -832,7 +876,7 @@ namespace boost { namespace leaf {
 
 			static slot_base * & first() noexcept
 			{
-				static thread_local slot_base * p = 0;
+				static LEAF_THREAD_LOCAL slot_base * p = 0;
 				return p;
 			}
 
@@ -877,7 +921,7 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifndef LEAF_DISCARD_UNEXPECTED
 
 	namespace leaf_detail
 	{
@@ -980,7 +1024,7 @@ namespace boost { namespace leaf {
 	{
 		inline int & tl_unexpected_enabled_counter() noexcept
 		{
-			static thread_local int c;
+			static LEAF_THREAD_LOCAL int c;
 			return c;
 		}
 	}
@@ -997,7 +1041,7 @@ namespace boost { namespace leaf {
 		template <class E>
 		inline slot<E> * & tl_slot_ptr() noexcept
 		{
-			static thread_local slot<E> * s;
+			static LEAF_THREAD_LOCAL slot<E> * s;
 			return s;
 		}
 
@@ -1117,7 +1161,7 @@ namespace boost { namespace leaf {
 			}
 		};
 
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifndef LEAF_DISCARD_UNEXPECTED
 
 		template <class E>
 		inline void load_unexpected_count( int err_id, E const & e ) noexcept
@@ -1162,7 +1206,7 @@ namespace boost { namespace leaf {
 						prev_->err_id_ = err_id_;
 					}
 				}
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifndef LEAF_DISCARD_UNEXPECTED
 				else
 				{
 					int c = tl_unexpected_enabled_counter();
@@ -1184,7 +1228,7 @@ namespace boost { namespace leaf {
 			assert(err_id);
 			if( slot<T> * p = tl_slot_ptr<T>() )
 				(void) p->load(err_id, std::forward<E>(e));
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifndef LEAF_DISCARD_UNEXPECTED
 			else
 			{
 				int c = tl_unexpected_enabled_counter();
@@ -1219,26 +1263,26 @@ namespace boost { namespace leaf {
 		template <class=void>
 		struct id_factory
 		{
-			static std::atomic<unsigned> counter;
-			static thread_local int last_id;
-			static thread_local int next_id;
+			static atomic_unsigned_int counter;
+			static LEAF_THREAD_LOCAL int last_id;
+			static LEAF_THREAD_LOCAL int next_id;
 
 			static int get() noexcept
 			{
-				unsigned id = counter.fetch_add(2u);
+				unsigned id = (counter+=2u);
 				assert(id&1u);
 				return int(id);
 			}
 		};
 
 		template <class T>
-		std::atomic<unsigned> id_factory<T>::counter(1u);
+		atomic_unsigned_int id_factory<T>::counter(-1);
 
 		template <class T>
-		thread_local int id_factory<T>::last_id;
+		LEAF_THREAD_LOCAL int id_factory<T>::last_id;
 
 		template <class T>
-		thread_local int id_factory<T>::next_id;
+		LEAF_THREAD_LOCAL int id_factory<T>::next_id;
 
 		inline int new_id() noexcept
 		{
@@ -1445,7 +1489,9 @@ namespace boost { namespace leaf {
 		virtual void deactivate( bool propagate_errors ) noexcept = 0;
 		virtual bool is_active() const noexcept = 0;
 		virtual void print( std::ostream & ) const = 0;
+#ifndef LEAF_NO_THREADS
 		virtual std::thread::id const & thread_id() const noexcept = 0;
+#endif
 
 		std::error_code ec;
 	};
@@ -1530,6 +1576,8 @@ namespace boost { namespace leaf {
 
 } }
 
+#undef LEAF_THREAD_LOCAL
+
 #endif
 // <<< #include <boost/leaf/error.hpp>
 #line 10 "boost/leaf/exception.hpp"
@@ -1538,7 +1586,7 @@ namespace boost { namespace leaf {
 #define LEAF_EXCEPTION(...) ::boost::leaf::leaf_detail::exception_at(__FILE__,__LINE__,__FUNCTION__,__VA_ARGS__)
 #define LEAF_THROW(...) ::boost::leaf::throw_exception(LEAF_EXCEPTION(__VA_ARGS__))
 
-#if defined(LEAF_NO_EXCEPTIONS) || defined(BOOST_NO_EXCEPTIONS)
+#ifdef LEAF_NO_EXCEPTIONS
 
 namespace boost
 {
@@ -1621,7 +1669,7 @@ namespace boost { namespace leaf {
 
 namespace boost { namespace leaf {
 
-#if !defined(LEAF_NO_EXCEPTIONS) && !defined(BOOST_NO_EXCEPTIONS)
+#ifndef LEAF_NO_EXCEPTIONS
 
 	namespace leaf_detail
 	{
@@ -1732,7 +1780,7 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-#if !defined(LEAF_NO_EXCEPTIONS) && !defined(BOOST_NO_EXCEPTIONS)
+#ifndef LEAF_NO_EXCEPTIONS
 
 	template <class T>
 	class result;
@@ -1792,11 +1840,11 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/capture.hpp>
-#line 10 "../../include/boost/leaf/detail/all.hpp"
+#line 11 "../../include/boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/common.hpp>
 #line 1 "boost/leaf/common.hpp"
-#ifndef EBA7EF10B6F311E8AAD493990D39171A
-#define EBA7EF10B6F311E8AAD493990D39171A
+#ifndef LEAF_EBA7EF10B6F311E8AAD493990D39171A
+#define LEAF_EBA7EF10B6F311E8AAD493990D39171A
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -1882,11 +1930,11 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/common.hpp>
-#line 11 "../../include/boost/leaf/detail/all.hpp"
+#line 12 "../../include/boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/context.hpp>
 #line 1 "boost/leaf/context.hpp"
-#ifndef BOOST_LEAF_E72958AC28C711E9998B3465EBB1FB94
-#define BOOST_LEAF_E72958AC28C711E9998B3465EBB1FB94
+#ifndef LEAF_E72958AC28C711E9998B3465EBB1FB94
+#define LEAF_E72958AC28C711E9998B3465EBB1FB94
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -2015,7 +2063,7 @@ namespace boost { namespace leaf {
 		template <> struct does_not_participate_in_context_deduction<error_info>: std::true_type { };
 		template <> struct does_not_participate_in_context_deduction<std::error_code>: std::true_type { };
 		template <> struct does_not_participate_in_context_deduction<void>: std::true_type { };
-#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifdef LEAF_DISCARD_UNEXPECTED
 		template <> struct does_not_participate_in_context_deduction<e_unexpected_count>: std::true_type { };
 		template <> struct does_not_participate_in_context_deduction<e_unexpected_info>: std::true_type { };
 #endif
@@ -2082,7 +2130,9 @@ namespace boost { namespace leaf {
 		private:
 
 			Tup tup_;
+#ifndef LEAF_NO_THREADS
 			std::thread::id thread_id_;
+#endif
 			bool is_active_;
 
 		public:
@@ -2122,11 +2172,13 @@ namespace boost { namespace leaf {
 				using namespace leaf_detail;
 				assert(!is_active());
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifndef LEAF_DISCARD_UNEXPECTED
 				if( unexpected_requested<Tup>::value )
 					++tl_unexpected_enabled_counter();
 #endif
+#ifndef LEAF_NO_THREADS
 				thread_id_ = std::this_thread::get_id();
+#endif
 				is_active_ = true;
 			}
 
@@ -2135,8 +2187,10 @@ namespace boost { namespace leaf {
 				using namespace leaf_detail;
 				assert(is_active());
 				is_active_ = false;
+#ifndef LEAF_NO_THREADS
 				thread_id_ = std::thread::id();
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#endif
+#ifndef LEAF_DISCARD_UNEXPECTED
 				if( unexpected_requested<Tup>::value )
 					--tl_unexpected_enabled_counter();
 #endif
@@ -2153,10 +2207,12 @@ namespace boost { namespace leaf {
 				leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, tup_);
 			}
 
+#ifndef LEAF_NO_THREADS
 			std::thread::id const & thread_id() const noexcept final override
 			{
 				return thread_id_;
 			}
+#endif
 
 		protected:
 
@@ -2186,6 +2242,7 @@ namespace boost { namespace leaf {
 			template <class R, class RemoteH>
 			R remote_handle_some( R const &, RemoteH && ) const;
 
+#ifndef LEAF_NO_EXCEPTIONS
 			template <class TryBlock, class... H>
 			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... ) const;
 
@@ -2203,6 +2260,7 @@ namespace boost { namespace leaf {
 
 			template <class R, class RemoteH>
 			R remote_handle_exception( std::exception_ptr const &, RemoteH &&  ) const;
+#endif
 		};
 
 		template <class... E>
@@ -2367,11 +2425,11 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/context.hpp>
-#line 12 "../../include/boost/leaf/detail/all.hpp"
+#line 13 "../../include/boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/handle_error.hpp>
 #line 1 "boost/leaf/handle_error.hpp"
-#ifndef BOOST_LEAF_539464A021D411E9BC8A79361E29EE6E
-#define BOOST_LEAF_539464A021D411E9BC8A79361E29EE6E
+#ifndef LEAF_539464A021D411E9BC8A79361E29EE6E
+#define LEAF_539464A021D411E9BC8A79361E29EE6E
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -2380,8 +2438,8 @@ namespace boost { namespace leaf {
 
 // >>> #include <boost/leaf/detail/handle.hpp>
 #line 1 "boost/leaf/detail/handle.hpp"
-#ifndef BOOST_LEAF_AFBBD676B2FF11E8984C7976AE35F1A2
-#define BOOST_LEAF_AFBBD676B2FF11E8984C7976AE35F1A2
+#ifndef LEAF_AFBBD676B2FF11E8984C7976AE35F1A2
+#define LEAF_AFBBD676B2FF11E8984C7976AE35F1A2
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -2493,7 +2551,7 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifdef LEAF_DISCARD_UNEXPECTED
 
 	class diagnostic_info: public error_info
 	{
@@ -2506,7 +2564,7 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
 		{
-			return os << "leaf::diagnostic_info not available due to BOOST_LEAF_DISCARD_UNEXPECTED" << std::endl;
+			return os << "leaf::diagnostic_info not available due to LEAF_DISCARD_UNEXPECTED" << std::endl;
 		}
 	};
 
@@ -2521,7 +2579,7 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
 		{
-			return os << "leaf::verbose_diagnostic_info not available due to BOOST_LEAF_DISCARD_UNEXPECTED" << std::endl;
+			return os << "leaf::verbose_diagnostic_info not available due to LEAF_DISCARD_UNEXPECTED" << std::endl;
 		}
 	};
 
@@ -2873,7 +2931,7 @@ namespace boost { namespace leaf {
 			}
 		};
 
-#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifdef LEAF_DISCARD_UNEXPECTED
 
 		template <>
 		struct get_one_argument<diagnostic_info>
@@ -3318,14 +3376,14 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/handle_error.hpp>
-#line 15 "../../include/boost/leaf/detail/all.hpp"
-#if !defined(LEAF_NO_EXCEPTIONS) && !defined(BOOST_NO_EXCEPTIONS)
+#line 16 "../../include/boost/leaf/detail/all.hpp"
+#ifndef LEAF_NO_EXCEPTIONS
 #	include <boost/leaf/handle_exception.hpp>
 #endif
 // >>> #include <boost/leaf/preload.hpp>
 #line 1 "boost/leaf/preload.hpp"
-#ifndef BOOST_LEAF_25AF99F6DC6F11E8803DE9BC9723C688
-#define BOOST_LEAF_25AF99F6DC6F11E8803DE9BC9723C688
+#ifndef LEAF_25AF99F6DC6F11E8803DE9BC9723C688
+#define LEAF_25AF99F6DC6F11E8803DE9BC9723C688
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -3381,7 +3439,7 @@ namespace boost { namespace leaf {
 					if( !s_->has_value(err_id) )
 						s_->load(err_id, std::move(e_));
 				}
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifndef LEAF_DISCARD_UNEXPECTED
 				else
 				{
 					int c = tl_unexpected_enabled_counter();
@@ -3468,7 +3526,7 @@ namespace boost { namespace leaf {
 					if( !s_->has_value(err_id) )
 						s_->load(err_id, f_());
 				}
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifndef LEAF_DISCARD_UNEXPECTED
 				else
 				{
 					int c = tl_unexpected_enabled_counter();
@@ -3611,11 +3669,11 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/preload.hpp>
-#line 19 "../../include/boost/leaf/detail/all.hpp"
+#line 20 "../../include/boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/result.hpp>
 #line 1 "boost/leaf/result.hpp"
-#ifndef BOOST_LEAF_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
-#define BOOST_LEAF_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
+#ifndef LEAF_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
+#define LEAF_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -4018,6 +4076,6 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/result.hpp>
-#line 20 "../../include/boost/leaf/detail/all.hpp"
+#line 21 "../../include/boost/leaf/detail/all.hpp"
 
 #endif

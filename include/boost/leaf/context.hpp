@@ -1,5 +1,5 @@
-#ifndef BOOST_LEAF_E72958AC28C711E9998B3465EBB1FB94
-#define BOOST_LEAF_E72958AC28C711E9998B3465EBB1FB94
+#ifndef LEAF_E72958AC28C711E9998B3465EBB1FB94
+#define LEAF_E72958AC28C711E9998B3465EBB1FB94
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -129,7 +129,7 @@ namespace boost { namespace leaf {
 		template <> struct does_not_participate_in_context_deduction<error_info>: std::true_type { };
 		template <> struct does_not_participate_in_context_deduction<std::error_code>: std::true_type { };
 		template <> struct does_not_participate_in_context_deduction<void>: std::true_type { };
-#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifdef LEAF_DISCARD_UNEXPECTED
 		template <> struct does_not_participate_in_context_deduction<e_unexpected_count>: std::true_type { };
 		template <> struct does_not_participate_in_context_deduction<e_unexpected_info>: std::true_type { };
 #endif
@@ -196,7 +196,9 @@ namespace boost { namespace leaf {
 		private:
 
 			Tup tup_;
+#ifndef LEAF_NO_THREADS
 			std::thread::id thread_id_;
+#endif
 			bool is_active_;
 
 		public:
@@ -236,11 +238,13 @@ namespace boost { namespace leaf {
 				using namespace leaf_detail;
 				assert(!is_active());
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifndef LEAF_DISCARD_UNEXPECTED
 				if( unexpected_requested<Tup>::value )
 					++tl_unexpected_enabled_counter();
 #endif
+#ifndef LEAF_NO_THREADS
 				thread_id_ = std::this_thread::get_id();
+#endif
 				is_active_ = true;
 			}
 
@@ -249,8 +253,10 @@ namespace boost { namespace leaf {
 				using namespace leaf_detail;
 				assert(is_active());
 				is_active_ = false;
+#ifndef LEAF_NO_THREADS
 				thread_id_ = std::thread::id();
-#ifndef BOOST_LEAF_DISCARD_UNEXPECTED
+#endif
+#ifndef LEAF_DISCARD_UNEXPECTED
 				if( unexpected_requested<Tup>::value )
 					--tl_unexpected_enabled_counter();
 #endif
@@ -267,10 +273,12 @@ namespace boost { namespace leaf {
 				leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, tup_);
 			}
 
+#ifndef LEAF_NO_THREADS
 			std::thread::id const & thread_id() const noexcept final override
 			{
 				return thread_id_;
 			}
+#endif
 
 		protected:
 
@@ -300,6 +308,7 @@ namespace boost { namespace leaf {
 			template <class R, class RemoteH>
 			R remote_handle_some( R const &, RemoteH && ) const;
 
+#ifndef LEAF_NO_EXCEPTIONS
 			template <class TryBlock, class... H>
 			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... ) const;
 
@@ -317,6 +326,7 @@ namespace boost { namespace leaf {
 
 			template <class R, class RemoteH>
 			R remote_handle_exception( std::exception_ptr const &, RemoteH &&  ) const;
+#endif
 		};
 
 		template <class... E>

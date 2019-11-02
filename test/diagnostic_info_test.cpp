@@ -3,6 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <boost/leaf/config.hpp>
 #ifndef LEAF_NO_EXCEPTIONS
 #	include <boost/leaf/handle_exception.hpp>
 #endif
@@ -147,8 +148,8 @@ int main()
 				std::ostringstream st;
 				st << unmatched;
 				std::string s = st.str();
-#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
-				BOOST_TEST(s.find("BOOST_LEAF_DISCARD_UNEXPECTED")!=s.npos);
+#ifdef LEAF_DISCARD_UNEXPECTED
+				BOOST_TEST(s.find("LEAF_DISCARD_UNEXPECTED")!=s.npos);
 #else
 				BOOST_TEST(s.find("leaf::diagnostic_info:")!=s.npos);
 				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
@@ -202,8 +203,8 @@ int main()
 				std::ostringstream st;
 				st << di;
 				std::string s = st.str();
-#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
-				BOOST_TEST(s.find("BOOST_LEAF_DISCARD_UNEXPECTED")!=s.npos);
+#ifdef LEAF_DISCARD_UNEXPECTED
+				BOOST_TEST(s.find("LEAF_DISCARD_UNEXPECTED")!=s.npos);
 #else
 				BOOST_TEST(s.find("leaf::verbose_diagnostic_info:")!=s.npos);
 				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
@@ -364,8 +365,8 @@ int main()
 				std::ostringstream st;
 				st << unmatched;
 				std::string s = st.str();
-#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
-				BOOST_TEST(s.find("BOOST_LEAF_DISCARD_UNEXPECTED")!=s.npos);
+#ifdef LEAF_DISCARD_UNEXPECTED
+				BOOST_TEST(s.find("LEAF_DISCARD_UNEXPECTED")!=s.npos);
 #else
 				BOOST_TEST(s.find("leaf::diagnostic_info:")!=s.npos);
 				BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
@@ -416,8 +417,8 @@ int main()
 				std::ostringstream st;
 				st << di;
 				std::string s = st.str();
-#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
-				BOOST_TEST(s.find("BOOST_LEAF_DISCARD_UNEXPECTED")!=s.npos);
+#ifdef LEAF_DISCARD_UNEXPECTED
+				BOOST_TEST(s.find("LEAF_DISCARD_UNEXPECTED")!=s.npos);
 #else
 				BOOST_TEST(s.find("leaf::verbose_diagnostic_info:")!=s.npos);
 				BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);

@@ -3,6 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <boost/leaf/config.hpp>
 #ifndef LEAF_NO_EXCEPTIONS
 #	include <boost/leaf/handle_exception.hpp>
 #endif
@@ -97,7 +98,7 @@ void not_called_on_purpose()
 	test< std::tuple<info<1>,info<2>,info<3>> >( expd([]( info<1> const *, info<2> ){ }, []( info<1>, info<3> const * ){ }) );
 	test< std::tuple<info<1>,info<2>,info<3>> >( expd([]( info<1> const, info<2> ){ }, []( info<1> const *, info<3> ){ }) );
 
-#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifdef LEAF_DISCARD_UNEXPECTED
 	test< std::tuple<info<1>,info<2>> >( expd([]( info<1>, info<2>, leaf::diagnostic_info const & ){ }, []( info<1>, info<2> ){ }) );
 	test< std::tuple<info<1>,info<2>> >( expd([]( info<1>, info<2> ){ }, []( info<1>, leaf::verbose_diagnostic_info const &, info<2> ){ }) );
 	test< std::tuple<info<1>,info<2>> >( expd([]( info<1>, info<2>, leaf::diagnostic_info const & ){ }, []( info<1>, leaf::verbose_diagnostic_info const &, info<2> ){ }) );

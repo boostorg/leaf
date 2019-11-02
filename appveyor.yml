@@ -48,3 +48,11 @@ test_script:
   - b2 -j3 exception-handling=off rtti=off libs/leaf/test toolset=%TOOLSET% variant=release %CXXSTD%
   - b2 -j3 exception-handling=off rtti=off libs/leaf/test toolset=%TOOLSET% variant=debug-discard-unexpected %CXXSTD%
   - b2 -j3 exception-handling=off rtti=off libs/leaf/test toolset=%TOOLSET% variant=release-discard-unexpected %CXXSTD%
+  - b2 -j3 threading=single libs/leaf/test toolset=%TOOLSET% variant=debug %CXXSTD%
+  - b2 -j3 threading=single libs/leaf/test toolset=%TOOLSET% variant=release %CXXSTD%
+  - b2 -j3 threading=single libs/leaf/test toolset=%TOOLSET% variant=debug-discard-unexpected %CXXSTD%
+  - b2 -j3 threading=single libs/leaf/test toolset=%TOOLSET% variant=release-discard-unexpected %CXXSTD%
+  - b2 -j3 threading=single exception-handling=off rtti=off libs/leaf/test toolset=%TOOLSET% variant=debug %CXXSTD%
+  - b2 -j3 threading=single exception-handling=off rtti=off libs/leaf/test toolset=%TOOLSET% variant=release %CXXSTD%
+  - b2 -j3 threading=single exception-handling=off rtti=off libs/leaf/test toolset=%TOOLSET% variant=debug-discard-unexpected %CXXSTD%
+  - b2 -j3 threading=single exception-handling=off rtti=off libs/leaf/test toolset=%TOOLSET% variant=release-discard-unexpected %CXXSTD%

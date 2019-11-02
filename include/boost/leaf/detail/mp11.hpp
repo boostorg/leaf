@@ -1,5 +1,5 @@
-#ifndef BOOST_LEAF_91843B04108711E9AA4E56D98C7F4AFC
-#define BOOST_LEAF_91843B04108711E9AA4E56D98C7F4AFC
+#ifndef LEAF_91843B04108711E9AA4E56D98C7F4AFC
+#define LEAF_91843B04108711E9AA4E56D98C7F4AFC
 
 //  Copyright 2015-2017 Peter Dimov.
 //  Copyright 2019 Emil Dotchevski.
@@ -11,9 +11,9 @@
 
 // LEAF needs a few mp11 utilities, which have been copied into the internal
 // namespace boost::leaf::leaf_detail_mp11 in order to avoid a dependency
-// on the entire mp11 library. The BOOST_LEAF_USE_MP11 configuration macro
+// on the entire mp11 library. The LEAF_USE_MP11 configuration macro
 // tells LEAF to not bother and just use <boost/mp11/algorithm.hpp> instead.
-#ifdef BOOST_LEAF_USE_BOOST_MP11
+#ifdef LEAF_USE_BOOST_MP11
 
 #include <boost/mp11/algorithm.hpp>
 

@@ -258,6 +258,14 @@ script:
   - ../../b2 exception-handling=off rtti=off test toolset=$TOOLSET cxxstd=$CXXSTD variant=release
   - ../../b2 exception-handling=off rtti=off test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug-discard-unexpected
   - ../../b2 exception-handling=off rtti=off test toolset=$TOOLSET cxxstd=$CXXSTD variant=release-discard-unexpected
+  - ../../b2 threading=single test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug
+  - ../../b2 threading=single test toolset=$TOOLSET cxxstd=$CXXSTD variant=release
+  - ../../b2 threading=single test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug-discard-unexpected
+  - ../../b2 threading=single test toolset=$TOOLSET cxxstd=$CXXSTD variant=release-discard-unexpected
+  - ../../b2 threading=single exception-handling=off rtti=off test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug
+  - ../../b2 threading=single exception-handling=off rtti=off test toolset=$TOOLSET cxxstd=$CXXSTD variant=release
+  - ../../b2 threading=single exception-handling=off rtti=off test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug-discard-unexpected
+  - ../../b2 threading=single exception-handling=off rtti=off test toolset=$TOOLSET cxxstd=$CXXSTD variant=release-discard-unexpected
 #  - cd bld/debug && meson test
 
 notifications:

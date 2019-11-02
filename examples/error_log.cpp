@@ -22,17 +22,6 @@
 
 namespace leaf = boost::leaf;
 
-#ifdef LEAF_NO_EXCEPTIONS
-namespace boost
-{
-	[[noreturn]] void throw_exception( std::exception const & e )
-	{
-		std::cerr << "Terminating due to a C++ exception under LEAF_NO_EXCEPTIONS: " << e.what();
-		std::terminate();
-	}
-}
-#endif
-
 // The error log is activated only if an error-handling scope provides a handler for e_error_log.
 // This activation logic applies to any type passed to leaf::accumulate.
 struct e_error_log

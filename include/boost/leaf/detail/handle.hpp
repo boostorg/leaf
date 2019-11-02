@@ -1,5 +1,5 @@
-#ifndef BOOST_LEAF_AFBBD676B2FF11E8984C7976AE35F1A2
-#define BOOST_LEAF_AFBBD676B2FF11E8984C7976AE35F1A2
+#ifndef LEAF_AFBBD676B2FF11E8984C7976AE35F1A2
+#define LEAF_AFBBD676B2FF11E8984C7976AE35F1A2
 
 // Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -112,7 +112,7 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifdef LEAF_DISCARD_UNEXPECTED
 
 	class diagnostic_info: public error_info
 	{
@@ -125,7 +125,7 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
 		{
-			return os << "leaf::diagnostic_info not available due to BOOST_LEAF_DISCARD_UNEXPECTED" << std::endl;
+			return os << "leaf::diagnostic_info not available due to LEAF_DISCARD_UNEXPECTED" << std::endl;
 		}
 	};
 
@@ -140,7 +140,7 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
 		{
-			return os << "leaf::verbose_diagnostic_info not available due to BOOST_LEAF_DISCARD_UNEXPECTED" << std::endl;
+			return os << "leaf::verbose_diagnostic_info not available due to LEAF_DISCARD_UNEXPECTED" << std::endl;
 		}
 	};
 
@@ -492,7 +492,7 @@ namespace boost { namespace leaf {
 			}
 		};
 
-#ifdef BOOST_LEAF_DISCARD_UNEXPECTED
+#ifdef LEAF_DISCARD_UNEXPECTED
 
 		template <>
 		struct get_one_argument<diagnostic_info>
