@@ -5399,7 +5399,10 @@ The following configuration macros are recognized:
 * `LEAF_NO_EXCEPTIONS`: Disable all exception handling support.
 * `LEAF_NO_THREADS`: Disable all multi-thread support.
 
-It is possible to request that `LEAF_NO_EXCEPTIONS` and `LEAF_NO_THREADS` are deduced automatically based on the compiler and command line used (e.g. `-fno-exceptions`). To do this, leave both `LEAF_NO_EXCEPTIONS` and `LEAF_NO_THREADS` undefined and instead define `LEAF_USE_BOOST_CONFIG` before including any LEAF headers. This relies on LEAF being able to `#include <boost/config.hpp>`.
+It is possible to request that `LEAF_NO_EXCEPTIONS` and `LEAF_NO_THREADS` are deduced automatically. To do this, leave both `LEAF_NO_EXCEPTIONS` and `LEAF_NO_THREADS` undefined and instead define `LEAF_USE_BOOST_CONFIG` before including any LEAF headers. This relies on LEAF being able to `#include <boost/config.hpp>`:
+
+* `LEAF_NO_EXCEPTIONS` will be defined if https://www.boost.org/doc/libs/release/libs/config/doc/html/boost_config/boost_macro_reference.html[`BOOST_NO_EXCEPTIONS`] is defined (e.g. `-fno-exceptions`).
+* `LEAF_NO_THREADS` will be defined if https://www.boost.org/doc/libs/release/libs/config/doc/html/boost_config/boost_macro_reference.html[`BOOST_HAS_THREADS`] is _not_ defined. Note that `BOOST_HAS_THREADS` does not necessarily reflect a command line request to turn multi-thread support on or off.
 
 NOTE: `LEAF_USE_BOOST_CONFIG` must be specifically requested because otherwise LEAF does not depend on Boost or any other library.
 
