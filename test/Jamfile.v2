@@ -12,6 +12,7 @@ project
     : requirements
         <cxxstd>11
         <define>LEAF_USE_BOOST_CONFIG
+        <threading>single:<define>LEAF_NO_THREADS
         <toolset>gcc:<cxxflags>"-Wno-delete-non-virtual-dtor -Wno-parentheses"
         <toolset>clang:<cxxflags>"-Wno-dangling-else"
         <toolset>darwin:<cxxflags>"-Wno-unused-variable -Wno-delete-non-virtual-dtor -Wno-non-virtual-dtor -Wno-dangling-else"
