@@ -56,7 +56,7 @@ template <class TryBlock, class... Handler>
 
 The first thing `try_handle_all` does is invoke the `try_block` function. If the returned object `r` indicates success, `try_handle_all` returns the contained `r.value()`; otherwise it calls the first suitable error handling function from the `handler...` list.
 
-We'll see later just what kind of a `TryBlock` will our `main` function pass to `try_handle_all`, but first, let's look at the juicy error-handling part:
+We'll see later just what kind of a `TryBlock` will our `main` function pass to `try_handle_all`, but first, let's look at the juicy error-handling part. LEAF will consider each of the `handler...` lambdas, in order, and call the first suitable match:
 
 [source,c++]
 ----
@@ -118,26 +118,26 @@ int main( int argc, char const * argv[] )
 }
 ----
 
-<1> This handler will be called if the error includes: +
-pass:[•] an object of type `error_code` equal to `input_file_open_error`, and +
+<1> This handler will be called if the detected error includes: +
+pass:[•] an object of type `enum error_code` equal to the value `input_file_open_error`, and +
 pass:[•] an object of type `leaf::e_errno` that has `.value` equal to `ENOENT`, and +
 pass:[•] an object of type `leaf::e_file_name`.
 
-<2> This handler will be called if the error includes: +
-pass:[•] an object of type `error_code` equal to `input_file_open_error`, and +
+<2> This handler will be called if the detected error includes: +
+pass:[•] an object of type `enum error_code` equal to `input_file_open_error`, and +
 pass:[•] an object of type `leaf::e_errno` (regardless of its `.value`), and +
 pass:[•] an object of type `leaf::e_file_name`.
 
-<3> This handler will be called if the error includes: +
-pass:[•] an object of type `error_code` equal to any of `input_file_size_error`, `input_file_read_error`, `input_eof_error`, and +
+<3> This handler will be called if the detected error includes: +
+pass:[•] an object of type `enum error_code` equal to any of `input_file_size_error`, `input_file_read_error`, `input_eof_error`, and +
 pass:[•] an object of type `leaf::e_errno` (regardless of its `.value`), and +
 pass:[•] an object of type `leaf::e_file_name`.
 
-<4> This handler will be called if the error includes: +
-pass:[•] an object of type `error_code` equal to `cout_error`, and +
+<4> This handler will be called if the detected error includes: +
+pass:[•] an object of type `enum error_code` equal to `cout_error`, and +
 pass:[•] an object of type `leaf::e_errno` (regardless of its `.value`),
 
-<5> This handler will be called if the error includes an object of type `error_code` equal to `bad_command_line`.
+<5> This handler will be called if the detected error includes an object of type `enum error_code` equal to `bad_command_line`.
 
 <6> This last handler is a catch-all for any error, in case no other handler could be matched: it prints diagnostic information to help debug logic errors in the program, since it failed to match an appropriate error handler to the error condition it encountered.
 
@@ -258,7 +258,7 @@ int main( int argc, char const * argv[] )
 <5> ...but this is slightly different: we didn't get a failure via `result<T>` from another function, this is our own error we've detected! We return a `new_error`, passing the `cout_error` error code and the system `errno` (LEAF defines `struct e_errno {int value;}`).
 <6> This concludes the `try_handle_all` arguments -- as well as our program!
 
-Nice and simple! Writing the `TryBlock`, we concentrate on the "no errors" code path -- if we encounter any error we just return it to `try_handle_all` for processing. Well, that's if we're being good and using RAII for automatic clean-up -- which we are, `shared_ptr` will automatically close the file for us.
+Nice and simple! Writing the `TryBlock`, we focus on the "no errors" code path -- if we encounter any error we just return it to `try_handle_all` for processing. Well, that's if we're being good and using RAII for automatic clean-up -- which we are, `shared_ptr` will automatically close the file for us.
 
 TIP: The complete program from this tutorial is available https://github.com/zajo/leaf/blob/master/examples/print_file_result.cpp?ts=4[here]. The https://github.com/zajo/leaf/blob/master/examples/print_file_eh.cpp?ts=4[other] version of the same program uses exception handling to report errors (see <<introduction-eh,below>>).
 
@@ -309,7 +309,7 @@ template <class TryBlock, class... Handler>
 <<deduced-type>> try_catch( TryBlock && try_block, Handler && ... handler );
 ----
 
-`TryBlock` is a function type, almost always a lambda; `try_catch` simply returns the value returned by the `try_block`, catching any exception it throws, in which case it calls a suitable error handling function from the `handler...` list.
+`TryBlock` is a function type, almost always a lambda; `try_catch` simply returns the value returned by the `try_block`, catching any exception it throws, in which case it calls the first suitable error handling function from the `handler...` list.
 
 Let's look at the `TryBlock` our `main` function passes to `try_catch`:
 
@@ -353,7 +353,7 @@ int main( int argc, char const * argv[] )
 <6> List of error handlers goes here. We'll see that later.
 <7> This concludes the `try_catch` arguments -- as well as our program!
 
-As it is always the case when using exception handling, as long as our `TryBlock` is exception-safe, we can concentrate on the "no errors" code path. Of course, our `TryBlock` is exception-safe, since `shared_ptr` will automatically close the file for us in case an exception is thrown.
+As it is always the case when using exception handling, as long as our `TryBlock` is exception-safe, we can focus on the "no errors" code path. Of course, our `TryBlock` is exception-safe, since `shared_ptr` will automatically close the file for us in case an exception is thrown.
 
 Now let's look at the second part of the call to `try_catch`, which lists the error handlers:
 
@@ -956,7 +956,7 @@ That works, but LEAF also allows error handlers to be captured and reused. This 
 ----
 auto handle_error = []( leaf::error_info const & error )
 {
-  return leaf::remote_handle_all( <1>
+  return leaf::remote_handle_all( error, <1>
 
     []( my_error_enum x )
     {
