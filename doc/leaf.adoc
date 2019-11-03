@@ -5393,7 +5393,7 @@ cd bld/debug
 meson test
 ----
 
-== Configuration macros
+== Configuration Macros
 
 The following configuration macros are recognized:
 
