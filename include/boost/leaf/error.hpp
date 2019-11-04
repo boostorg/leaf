@@ -531,25 +531,20 @@ namespace boost { namespace leaf {
 		};
 
 		template <class T>
-		atomic_unsigned_int id_factory<T>::counter(-1);
+		atomic_unsigned_int id_factory<T>::counter(1);
 
 		template <class T>
 		LEAF_THREAD_LOCAL int id_factory<T>::last_id;
 
 		template <class T>
-		LEAF_THREAD_LOCAL int id_factory<T>::next_id;
+		LEAF_THREAD_LOCAL int id_factory<T>::next_id(1);
 
 		inline int new_id() noexcept
 		{
 			int id = id_factory<>::next_id;
+			assert(id&1);
 			int next = id_factory<>::get();
 			assert(next&1);
-			if( !id )
-			{
-				id = next;
-				next = id_factory<>::get();
-			}
-			assert(id&1);
 			id_factory<>::last_id = id;
 			id_factory<>::next_id = next;
 			return id;
