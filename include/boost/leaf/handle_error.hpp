@@ -16,7 +16,7 @@ namespace boost { namespace leaf {
 		template <class TryBlock, class... H>
 		inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type nocatch_context<E...>::try_handle_all( TryBlock && try_block, H && ... h )
 		{
-			context_activator active_context(*this, on_deactivation::do_not_propagate);
+			context_activator<nocatch_context<E...>> active_context(*this, on_deactivation::do_not_propagate);
 			return this->try_handle_all_( std::forward<TryBlock>(try_block), std::forward<H>(h)... );
 		}
 
@@ -24,7 +24,7 @@ namespace boost { namespace leaf {
 		template <class TryBlock, class RemoteH>
 		inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type nocatch_context<E...>::remote_try_handle_all( TryBlock && try_block, RemoteH && h )
 		{
-			context_activator active_context(*this, on_deactivation::do_not_propagate);
+			context_activator<nocatch_context<E...>> active_context(*this, on_deactivation::do_not_propagate);
 			return this->remote_try_handle_all_( std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
 		}
 
@@ -32,7 +32,7 @@ namespace boost { namespace leaf {
 		template <class TryBlock, class... H>
 		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type nocatch_context<E...>::try_handle_some( TryBlock && try_block, H && ... h )
 		{
-			context_activator active_context(*this, on_deactivation::propagate_if_uncaught_exception);
+			context_activator<nocatch_context<E...>> active_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			return this->try_handle_some_( active_context, std::forward<TryBlock>(try_block), std::forward<H>(h)... );
 		}
 
@@ -40,7 +40,7 @@ namespace boost { namespace leaf {
 		template <class TryBlock, class RemoteH>
 		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type nocatch_context<E...>::remote_try_handle_some( TryBlock && try_block, RemoteH && h )
 		{
-			context_activator active_context(*this, on_deactivation::propagate_if_uncaught_exception);
+			context_activator<nocatch_context<E...>> active_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			return this->remote_try_handle_some_( active_context, std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
 		}
 	}

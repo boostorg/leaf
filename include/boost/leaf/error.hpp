@@ -757,18 +757,19 @@ namespace boost { namespace leaf {
 		propagate_if_uncaught_exception
 	};
 
+	template <class Ctx = polymorphic_context>
 	class context_activator
 	{
 		context_activator( context_activator const & ) = delete;
 		context_activator & operator=( context_activator const & ) = delete;
 
-		polymorphic_context & ctx_;
+		Ctx & ctx_;
 		on_deactivation on_deactivate_;
 		bool const ctx_was_active_;
 
 	public:
 
-		context_activator( polymorphic_context & ctx, on_deactivation on_deactivate ) noexcept:
+		context_activator( Ctx & ctx, on_deactivation on_deactivate ) noexcept:
 			ctx_(ctx),
 			on_deactivate_(on_deactivate),
 			ctx_was_active_(ctx_.is_active())

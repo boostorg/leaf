@@ -19,7 +19,7 @@ struct info
 template <class Ctx>
 leaf::result<int> f( Ctx & ctx )
 {
-	leaf::context_activator active_context(ctx, leaf::on_deactivation::do_not_propagate);
+	leaf::context_activator<> active_context(ctx, leaf::on_deactivation::do_not_propagate);
 	return leaf::new_error( info<1>{1} );
 }
 
