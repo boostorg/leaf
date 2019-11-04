@@ -101,8 +101,10 @@ namespace boost { namespace leaf {
 				int const err_id = last_id();
 				if( err_id==err_id_ )
 				{
+#ifndef LEAF_NO_EXCEPTINS
 					if( std::uncaught_exception() )
 						leaf_detail::tuple_for_each_preload<sizeof...(E),decltype(p_)>::trigger(p_,next_id());
+#endif
 				}
 				else
 					leaf_detail::tuple_for_each_preload<sizeof...(E),decltype(p_)>::trigger(p_,err_id);
@@ -187,8 +189,10 @@ namespace boost { namespace leaf {
 				int const err_id = last_id();
 				if( err_id==err_id_ )
 				{
+#ifndef LEAF_NO_EXCEPTINS
 					if( std::uncaught_exception() )
 						leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(d_)>::trigger(d_,next_id());
+#endif
 				}
 				else
 					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(d_)>::trigger(d_,err_id);
@@ -267,8 +271,10 @@ namespace boost { namespace leaf {
 				int const err_id = last_id();
 				if( err_id==err_id_ )
 				{
+#ifndef LEAF_NO_EXCEPTINS
 					if( std::uncaught_exception() )
 						leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(a_)>::trigger(a_,next_id());
+#endif
 				}
 				else
 					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(a_)>::trigger(a_,err_id);

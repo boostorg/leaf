@@ -787,10 +787,14 @@ namespace boost { namespace leaf {
 			if( !ctx_was_active_ )
 				if( on_deactivate_ == on_deactivation::propagate_if_uncaught_exception )
 				{
+#ifdef LEAF_NO_EXCEPTIONS
+					ctx_.deactivate(false);
+#else
 					bool has_exception = std::uncaught_exception();
 					ctx_.deactivate(has_exception);
 					if( !has_exception )
 						(void) leaf_detail::new_id();
+#endif
 				}
 				else
 					ctx_.deactivate(on_deactivate_ == on_deactivation::propagate);
