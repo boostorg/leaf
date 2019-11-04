@@ -51,7 +51,7 @@ def _main():
 		help="Non-empty include file prefix (e.g. a/b)")
 	args = parser.parse_args()
 
-	regex_includes = re.compile(r"""^\s*#include\s*("|\<)(?P<include>%s.*)("|\>)""" % args.prefix)
+	regex_includes = re.compile(r"""^\s*#[\t ]*include\s*("|\<)(?P<include>%s.*)("|\>)""" % args.prefix)
 	print("Rebuilding %s:" % args.input)
 	with open(args.output, 'w') as output_file, open(args.input, 'r') as input_file:
 		append(args.input, input_file, output_file, regex_includes, args.path)
