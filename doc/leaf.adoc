@@ -3899,6 +3899,8 @@ The message printed by `operator<<` includes the message printed by `error_info`
 
 The additional information is limited to the type name of the first such E-object, as well as their total count.
 
+NOTE: If the configuration macro `LEAF_DISCARD_UNEXPECTED` is defined, most of the `diagnostic_info` and <<verbose_diagnostic_info>> functionality is disabled, which could improve performance of the error path in some programs.
+
 '''
 
 [[error_id]]
@@ -4642,6 +4644,8 @@ The message printed by `operator<<` includes the message printed by `error_info`
 The additional information includes the types and the values of all such E-objects.
 
 WARNING: Using `verbose_diagnostic_info` will likely allocate memory dynamically.
+
+NOTE: If the configuration macro `LEAF_DISCARD_UNEXPECTED` is defined, most of the <<diagnostic_info>> and `verbose_diagnostic_info` functionality is disabled, which could improve performance of the error path in some programs.
 
 [[macros]]
 == Reference: Macros
@@ -5397,6 +5401,7 @@ meson test
 
 The following configuration macros are recognized:
 
+* `LEAF_DISCARD_UNEXPECTED`: Defining this macro disables most of the <<diagnostic_info>> and <<verbose_diagnostic_info>> functionality, which could improve the performance of the error path.
 * `LEAF_NO_EXCEPTIONS`: Disable all exception handling support.
 * `LEAF_NO_THREADS`: Disable all multi-thread support.
 
