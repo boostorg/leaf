@@ -1663,6 +1663,7 @@ namespace boost { namespace leaf {
     capture_do_not_propagate
   };
 
+  template <class Ctx = polymorphic_context>
   class context_activator
   {
     context_activator( context_activator const & ) = delete;
@@ -3849,6 +3850,7 @@ namespace boost { namespace leaf {
     capture_do_not_propagate
   };
 
+  template <class Ctx = polymorphic_context>
   class context_activator
   {
     context_activator( context_activator const & ) = delete;
@@ -3873,6 +3875,8 @@ namespace boost { namespace leaf {
 ** `on_deactivation::propagate` instructs `~context_activator` to call <<context::deactivate>> with `true`;
 ** `on_deactivation::propagate_if_uncaught_exception` instructs `~context_activator` to call `deactivate` with the value returned from `std::uncaught_exception()`;
 ** `on_deactivation::capture_do_not_propagate` instructs `~context_activator` to call `deactivate` with `false`.
+
+NOTE: If `Ctx` is `polymorphic_context`, the calls to <<context::activate>> and <<context::deactivate>> are virtual, which allows for the exact context type to be erased. To avoid the overhead of these virtual function calls, instantiate the `context_activator` class template with a specific instance of the <<context>> class template.
 
 '''
 
