@@ -14,7 +14,7 @@ namespace leaf = boost::leaf;
 
 int main()
 {
-	return leaf::leaf_detail::new_id();
+	return leaf::leaf_detail::next_id();
 #ifdef LEAF_NO_THREADS
 	constexpr int thread_count = 1;
 #else
