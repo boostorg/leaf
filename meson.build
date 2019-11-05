@@ -102,6 +102,7 @@ tests = [
 	'defer_nested_success_result_test',
 	'diagnostic_info_test',
 	'error_code_test',
+	'error_id_test',
 	'exception_test',
 	'exception_to_result_test',
 	'function_traits_test',

@@ -1259,6 +1259,11 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
+		//Starting with first_id, all error IDs are odd numbers, in order to ensure
+		//that the sequence will not include 0, which is used to indicate no error.
+		constexpr int first_id = 1;
+		static_assert(first_id&1, "first_id must be an odd number");
+
 		template <class=void>
 		struct id_factory
 		{
@@ -1266,7 +1271,7 @@ namespace boost { namespace leaf {
 			static LEAF_THREAD_LOCAL int last_id;
 			static LEAF_THREAD_LOCAL int next_id;
 
-			static int get() noexcept
+			static int generate_next_id() noexcept
 			{
 				unsigned id = (counter+=2u);
 				assert(id&1u);
@@ -1275,41 +1280,34 @@ namespace boost { namespace leaf {
 		};
 
 		template <class T>
-		atomic_unsigned_int id_factory<T>::counter(1);
+		atomic_unsigned_int id_factory<T>::counter(first_id-2u);
 
 		template <class T>
-		LEAF_THREAD_LOCAL int id_factory<T>::last_id;
+		LEAF_THREAD_LOCAL int id_factory<T>::last_id(0);
 
 		template <class T>
-		LEAF_THREAD_LOCAL int id_factory<T>::next_id(1);
-
-		inline int new_id() noexcept
-		{
-			int id = id_factory<>::next_id;
-			assert(id&1);
-			int next = id_factory<>::get();
-			assert(next&1);
-			id_factory<>::last_id = id;
-			id_factory<>::next_id = next;
-			return id;
-		}
-
-		inline int next_id() noexcept
-		{
-			if( int id = id_factory<>::next_id )
-				return id;
-			else
-			{
-				id = id_factory<>::get();
-				assert(id&1);
-				id_factory<>::next_id = id;
-				return id;
-			}
-		}
+		LEAF_THREAD_LOCAL int id_factory<T>::next_id(generate_next_id());
 
 		inline int last_id() noexcept
 		{
 			return id_factory<>::last_id;
+		}
+
+		inline int next_id() noexcept
+		{
+			int id = id_factory<>::next_id;
+			assert(id&1);
+			return id;
+		}
+
+		inline int new_id() noexcept
+		{
+			int id = next_id();
+			int next = id_factory<>::generate_next_id();
+			assert(next&1);
+			id_factory<>::last_id = id;
+			id_factory<>::next_id = next;
+			return id;
 		}
 	}
 
