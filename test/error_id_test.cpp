@@ -14,7 +14,11 @@ namespace leaf = boost::leaf;
 
 int main()
 {
+#ifdef LEAF_NO_THREADS
+	constexpr int thread_count = 1;
+#else
 	constexpr int thread_count = 100;
+#endif
 	constexpr int ids_per_thread = 10000;
 	using thread_ids = std::future<std::vector<int>>;
 	std::vector<thread_ids> fut;
