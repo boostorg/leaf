@@ -18,21 +18,26 @@ std::vector<int> generate_ids()
 {
 	std::vector<int> ids;
 	ids.reserve(ids_per_thread);
-	BOOST_TEST(leaf::leaf_detail::last_id()==0);
+#ifndef _MSC_VER
+	//This test is to ensure that the TL objects are initialized to the correct
+	//values (which are implementation details). However, on MSVC std::async
+	//reuses threads.
+	BOOST_TEST_EQ(leaf::leaf_detail::last_id(), 0);
+#endif
 	for(int i=0; i!=ids_per_thread-1; ++i)
 	{
 		int next = leaf::leaf_detail::next_id();
-		BOOST_TEST(next==leaf::leaf_detail::next_id());
-		BOOST_TEST(next&1);
+		BOOST_TEST_EQ(next, leaf::leaf_detail::next_id());
+		BOOST_TEST_NE(next&1, 0);
 		int id = leaf::leaf_detail::new_id();
-		BOOST_TEST(id&1);
+		BOOST_TEST_NE(id&1, 0);
 		int last = leaf::leaf_detail::last_id();
-		BOOST_TEST(last==leaf::leaf_detail::last_id());
-		BOOST_TEST(last&1);
-		BOOST_TEST(next==id);
-		BOOST_TEST(last==id);
+		BOOST_TEST_EQ(last, leaf::leaf_detail::last_id());
+		BOOST_TEST_NE(last&1, 0);
+		BOOST_TEST_EQ(next, id);
+		BOOST_TEST_EQ(last, id);
 		ids.push_back(id);
-		BOOST_TEST(leaf::leaf_detail::next_id()!=id);
+		BOOST_TEST_NE(leaf::leaf_detail::next_id(), id);
 	}
 	return ids;
 }
