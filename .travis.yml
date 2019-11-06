@@ -137,16 +137,6 @@ matrix:
       compiler: clang++
       env: TOOLSET=clang COMPILER=clang++ CXXSTD=11,14,1z
 
-    - os: osx
-      osx_image: xcode7.3
-      compiler: clang++
-      env: TOOLSET=clang COMPILER=clang++ CXXSTD=11,14,1z
-
-    - os: osx
-      osx_image: xcode6.4
-      compiler: clang++
-      env: TOOLSET=clang COMPILER=clang++ CXXSTD=11,14,1z
-
     - os: linux
       compiler: g++-4.9
       env: TOOLSET=gcc COMPILER=g++-4.9 CXXSTD=11
