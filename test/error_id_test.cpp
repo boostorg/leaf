@@ -12,15 +12,46 @@
 
 namespace leaf = boost::leaf;
 
+constexpr int ids_per_thread = 10000;
+
+std::vector<int> generate_ids()
+{
+	std::vector<int> ids;
+	ids.reserve(ids_per_thread);
+	BOOST_TEST(leaf::leaf_detail::last_id()==0);
+	for(int i=0; i!=ids_per_thread-1; ++i)
+	{
+		int next = leaf::leaf_detail::next_id();
+		BOOST_TEST(next==leaf::leaf_detail::next_id());
+		BOOST_TEST(next&1);
+		int id = leaf::leaf_detail::new_id();
+		BOOST_TEST(id&1);
+		int last = leaf::leaf_detail::last_id();
+		BOOST_TEST(last==leaf::leaf_detail::last_id());
+		BOOST_TEST(last&1);
+		BOOST_TEST(next==id);
+		BOOST_TEST(last==id);
+		ids.push_back(id);
+		BOOST_TEST(leaf::leaf_detail::next_id()!=id);
+	}
+	return ids;
+}
+
+#ifdef LEAF_NO_THREADS
+
 int main()
 {
-	return leaf::leaf_detail::next_id();
-#ifdef LEAF_NO_THREADS
-	constexpr int thread_count = 1;
+	std::sort(ids.begin(), ids.end());
+	auto u = std::unique(ids.begin(), ids.end());
+	BOOST_TEST(u==ids.end());
+	return boost::report_errors();
+}
+
 #else
+
+int main()
+{
 	constexpr int thread_count = 100;
-#endif
-	constexpr int ids_per_thread = 10000;
 	using thread_ids = std::future<std::vector<int>>;
 	std::vector<thread_ids> fut;
 	fut.reserve(thread_count);
@@ -65,3 +96,5 @@ int main()
 	BOOST_TEST(u==all_ids.end());
 	return boost::report_errors();
 }
+
+#endif
