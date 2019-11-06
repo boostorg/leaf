@@ -37,20 +37,11 @@ std::vector<int> generate_ids()
 	return ids;
 }
 
+int main()
+{
 #ifdef LEAF_NO_THREADS
-
-int main()
-{
-	std::sort(ids.begin(), ids.end());
-	auto u = std::unique(ids.begin(), ids.end());
-	BOOST_TEST(u==ids.end());
-	return boost::report_errors();
-}
-
+	std::vector<int> all_ids = generate_ids();
 #else
-
-int main()
-{
 	constexpr int thread_count = 100;
 	using thread_ids = std::future<std::vector<int>>;
 	std::vector<thread_ids> fut;
@@ -60,30 +51,7 @@ int main()
 		thread_count,
 		[=]
 		{
-			return std::async(
-				std::launch::async,
-				[=]
-				{
-					std::vector<int> ids;
-					ids.reserve(ids_per_thread);
-					BOOST_TEST(leaf::leaf_detail::last_id()==0);
-					for(int i=0; i!=ids_per_thread-1; ++i)
-					{
-						int next = leaf::leaf_detail::next_id();
-						BOOST_TEST(next==leaf::leaf_detail::next_id());
-						BOOST_TEST(next&1);
-						int id = leaf::leaf_detail::new_id();
-						BOOST_TEST(id&1);
-						int last = leaf::leaf_detail::last_id();
-						BOOST_TEST(last==leaf::leaf_detail::last_id());
-						BOOST_TEST(last&1);
-						BOOST_TEST(next==id);
-						BOOST_TEST(last==id);
-						ids.push_back(id);
-						BOOST_TEST(leaf::leaf_detail::next_id()!=id);
-					}
-					return ids;
-				});
+			return std::async(std::launch::async, &generate_ids);
 		});
 	std::vector<int> all_ids;
 	for(auto & f : fut)
@@ -91,10 +59,9 @@ int main()
 		auto fv = f.get();
 		all_ids.insert(all_ids.end(), fv.begin(), fv.end());
 	}
+#endif
 	std::sort(all_ids.begin(), all_ids.end());
 	auto u = std::unique(all_ids.begin(), all_ids.end());
 	BOOST_TEST(u==all_ids.end());
 	return boost::report_errors();
 }
-
-#endif
