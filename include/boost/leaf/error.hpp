@@ -539,10 +539,10 @@ namespace boost { namespace leaf {
 		atomic_unsigned_int id_factory<T>::counter(first_id-2u);
 
 		template <class T>
-		LEAF_THREAD_LOCAL int id_factory<T>::last_id;
+		LEAF_THREAD_LOCAL int id_factory<T>::last_id(0);
 
 		template <class T>
-		LEAF_THREAD_LOCAL int id_factory<T>::next_id;
+		LEAF_THREAD_LOCAL int id_factory<T>::next_id(0);
 
 		inline int last_id() noexcept
 		{
