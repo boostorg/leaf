@@ -330,10 +330,7 @@ namespace boost { namespace leaf {
 		template <class... E>
 		class nocatch_context: public context_base<E...>
 		{
-			using base = context_base<E...>;
-
 		public:
-
 			template <class TryBlock, class... H>
 			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock &&, H && ... );
 
@@ -350,10 +347,7 @@ namespace boost { namespace leaf {
 		template <class... E>
 		class catch_context: public context_base<E...>
 		{
-			using base = context_base<E...>;
-
 		public:
-
 			template <class TryBlock, class... H>
 			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock && try_block, H && ... h );
 
@@ -409,6 +403,10 @@ namespace boost { namespace leaf {
 	template <class... E>
 	class context: public leaf_detail::select_context_base<E...>
 	{
+	public:
+		context() noexcept = default;
+		context( context && ) noexcept = default;
+		~context() noexcept final override { }
 	};
 
 	////////////////////////////////////////

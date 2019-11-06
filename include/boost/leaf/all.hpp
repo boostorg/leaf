@@ -855,7 +855,7 @@ namespace boost { namespace leaf {
 
 		public:
 
-			static void print( std::ostream & os, int err_id )
+			static void print_all( std::ostream & os, int err_id )
 			{
 				for( slot_base const * p = first(); p; p=p->next_ )
 					if( p->slot_print(os,err_id) )
@@ -1057,7 +1057,7 @@ namespace boost { namespace leaf {
 			slot<E> * prev_;
 			static_assert(is_e_type<E>::value,"Not an error type");
 
-			bool slot_print( std::ostream & os, int err_id ) const
+			bool slot_print( std::ostream & os, int err_id ) const final override
 			{
 				if( !diagnostic<E>::is_invisible && *top_==this )
 					if( E const * e = has_value(err_id) )
@@ -1902,7 +1902,7 @@ namespace boost { namespace leaf {
 				{
 					LPVOID * p;
 					msg_buf(): p(0) { }
-					~msg_buf() { if(p) LocalFree(p); }
+					~msg_buf() noexcept { if(p) LocalFree(p); }
 				};
 				msg_buf mb;
 				if( FormatMessageA(
@@ -2268,10 +2268,7 @@ namespace boost { namespace leaf {
 		template <class... E>
 		class nocatch_context: public context_base<E...>
 		{
-			using base = context_base<E...>;
-
 		public:
-
 			template <class TryBlock, class... H>
 			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock &&, H && ... );
 
@@ -2288,10 +2285,7 @@ namespace boost { namespace leaf {
 		template <class... E>
 		class catch_context: public context_base<E...>
 		{
-			using base = context_base<E...>;
-
 		public:
-
 			template <class TryBlock, class... H>
 			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock && try_block, H && ... h );
 
@@ -2347,6 +2341,10 @@ namespace boost { namespace leaf {
 	template <class... E>
 	class context: public leaf_detail::select_context_base<E...>
 	{
+	public:
+		context() noexcept = default;
+		context( context && ) noexcept = default;
+		~context() noexcept final override { }
 	};
 
 	////////////////////////////////////////
@@ -2481,7 +2479,7 @@ namespace boost { namespace leaf {
 			os << "Error ID: " << err_id_.value() << std::endl;
 			if( xi_ )
 				xi_->print(os);
-			leaf_detail::slot_base::print(os,err_id_.value());
+			leaf_detail::slot_base::print_all(os,err_id_.value());
 		}
 
 	public:
@@ -3777,7 +3775,7 @@ namespace boost { namespace leaf {
 			exception_info_( exception_info_ const & ) = delete;
 			exception_info_ & operator=( exception_info_ const & ) = delete;
 
-			void print( std::ostream & os ) const
+			void print( std::ostream & os ) const final override
 			{
 				if( ex_ )
 				{

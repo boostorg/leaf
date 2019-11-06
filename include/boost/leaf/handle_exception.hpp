@@ -274,7 +274,7 @@ namespace boost { namespace leaf {
 			exception_info_( exception_info_ const & ) = delete;
 			exception_info_ & operator=( exception_info_ const & ) = delete;
 
-			void print( std::ostream & os ) const
+			void print( std::ostream & os ) const final override
 			{
 				if( ex_ )
 				{

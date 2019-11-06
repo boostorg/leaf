@@ -54,7 +54,7 @@ namespace boost { namespace leaf {
 				{
 					LPVOID * p;
 					msg_buf(): p(0) { }
-					~msg_buf() { if(p) LocalFree(p); }
+					~msg_buf() noexcept { if(p) LocalFree(p); }
 				};
 				msg_buf mb;
 				if( FormatMessageA(

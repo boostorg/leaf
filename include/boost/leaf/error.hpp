@@ -111,7 +111,7 @@ namespace boost { namespace leaf {
 
 		public:
 
-			static void print( std::ostream & os, int err_id )
+			static void print_all( std::ostream & os, int err_id )
 			{
 				for( slot_base const * p = first(); p; p=p->next_ )
 					if( p->slot_print(os,err_id) )
@@ -313,7 +313,7 @@ namespace boost { namespace leaf {
 			slot<E> * prev_;
 			static_assert(is_e_type<E>::value,"Not an error type");
 
-			bool slot_print( std::ostream & os, int err_id ) const
+			bool slot_print( std::ostream & os, int err_id ) const final override
 			{
 				if( !diagnostic<E>::is_invisible && *top_==this )
 					if( E const * e = has_value(err_id) )

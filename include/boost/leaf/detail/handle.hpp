@@ -40,7 +40,7 @@ namespace boost { namespace leaf {
 			os << "Error ID: " << err_id_.value() << std::endl;
 			if( xi_ )
 				xi_->print(os);
-			leaf_detail::slot_base::print(os,err_id_.value());
+			leaf_detail::slot_base::print_all(os,err_id_.value());
 		}
 
 	public:
