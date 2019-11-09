@@ -269,30 +269,22 @@ namespace boost { namespace leaf {
 
 		////////////////////////////////////////
 
-		class exception_info_: public exception_info_base
+		inline void exception_info_::print( std::ostream & os ) const
 		{
-			exception_info_( exception_info_ const & ) = delete;
-			exception_info_ & operator=( exception_info_ const & ) = delete;
-
-			void print( std::ostream & os ) const final override
+			if( ex_ )
 			{
-				if( ex_ )
-				{
-					os <<
-						"Exception dynamic type: " << leaf_detail::demangle(typeid(*ex_).name()) << std::endl <<
-						"std::exception::what(): " << ex_->what() << std::endl;
-				}
-				else
-					os << "Unknown exception type (not a std::exception)" << std::endl;
+				os <<
+					"Exception dynamic type: " << leaf_detail::demangle(typeid(*ex_).name()) << std::endl <<
+					"std::exception::what(): " << ex_->what() << std::endl;
 			}
+			else
+				os << "Unknown exception type (not a std::exception)" << std::endl;
+		}
 
-		public:
-
-			explicit exception_info_( std::exception const * ex ) noexcept:
-				exception_info_base(ex)
-			{
-			}
-		};
+		inline exception_info_::exception_info_( std::exception const * ex ) noexcept:
+			exception_info_base(ex)
+		{
+		}
 
 		template <class... E>
 		template <class TryBlock, class... H>
@@ -414,22 +406,14 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		inline std::error_code const * unpack_error_code( std::exception const * ex )
+		inline error_id unpack_error_id( std::exception const * ex )
 		{
 			if( std::system_error const * se = dynamic_cast<std::system_error const *>(ex) )
-				return &se->code();
-			else if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
-				return err_id;
+				return error_id(se->code());
 			else if( std::error_code const * ec = dynamic_cast<std::error_code const *>(ex) )
-				return ec;
-			else
-				return 0;
-		}
-
-		inline error_id unpack_error_id( std::error_code const * ec )
-		{
-			if( ec )
 				return error_id(*ec);
+			else if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
+				return *err_id;
 			else
 				return next_error();
 		}
@@ -448,8 +432,7 @@ namespace boost { namespace leaf {
 	inline error_info::error_info( polymorphic_context const & ctx, leaf_detail::exception_info_ const & xi ) noexcept:
 		ctx_(ctx),
 		xi_(&xi),
-		ec_(leaf_detail::unpack_error_code(xi_->ex_)),
-		err_id_(leaf_detail::unpack_error_id(ec_))
+		err_id_(leaf_detail::unpack_error_id(xi_->ex_))
 	{
 	}
 

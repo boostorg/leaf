@@ -227,8 +227,8 @@ namespace boost { namespace leaf {
 
 			int propagate_errors() noexcept final override
 			{
-				assert(is_error_id(ec));
-				int err_id = ec.value();
+				assert(captured_id_);
+				int err_id = captured_id_.value();
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_, err_id);
 				return err_id;
 			}

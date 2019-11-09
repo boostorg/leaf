@@ -26,7 +26,17 @@ namespace boost { namespace leaf {
 			virtual void print( std::ostream & os ) const = 0;
 		};
 
-		class exception_info_;
+		class exception_info_: public exception_info_base
+		{
+			exception_info_( exception_info_ const & ) = delete;
+			exception_info_ & operator=( exception_info_ const & ) = delete;
+
+			void print( std::ostream & os ) const final override;
+
+		public:
+
+			explicit exception_info_( std::exception const * ex ) noexcept;
+		};
 	}
 
 	class error_info
@@ -47,22 +57,12 @@ namespace boost { namespace leaf {
 
 		polymorphic_context const & ctx_;
 		leaf_detail::exception_info_base const * const xi_;
-		std::error_code const * const ec_;
 		error_id const err_id_;
 
-		explicit error_info( polymorphic_context const & ctx, error_id const & id ) noexcept:
+		explicit error_info( polymorphic_context const & ctx, error_id id ) noexcept:
 			ctx_(ctx),
 			xi_(0),
-			ec_(&id),
 			err_id_(id)
-		{
-		}
-
-		explicit error_info( polymorphic_context const & ctx, std::error_code const & ec ) noexcept:
-			ctx_(ctx),
-			xi_(0),
-			ec_(&ec),
-			err_id_(ec)
 		{
 		}
 
@@ -71,7 +71,6 @@ namespace boost { namespace leaf {
 		explicit error_info( error_info const & x ) noexcept:
 			ctx_(x.ctx_),
 			xi_(x.xi_),
-			ec_(x.ec_),
 			err_id_(x.err_id_)
 		{
 		}
@@ -81,14 +80,14 @@ namespace boost { namespace leaf {
 			return err_id_.value();
 		}
 
-		error_id const & error() const noexcept
+		error_id error() const noexcept
 		{
 			return err_id_;
 		}
 
-		std::error_code const & error_code() const noexcept
+		std::error_code error_code() const noexcept
 		{
-			return ec_ ? *ec_ : err_id_;
+			return err_id_;
 		}
 
 		bool exception_caught() const noexcept
@@ -294,7 +293,7 @@ namespace boost { namespace leaf {
 				if( e_type const * ec = peek<e_type>(tup, ei.err_id()) )
 					return &ec->value;
 				else
-					return &ei.error_code();
+					return 0;
 			}
 		};
 
@@ -542,12 +541,11 @@ namespace boost { namespace leaf {
 		struct get_one_argument<std::error_code>
 		{
 			template <class SlotsTuple>
-			static std::error_code const & get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			static std::error_code get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				if( leaf_detail::e_original_ec const * org = peek<e_original_ec>(tup, ei.err_id()) )
-					return org->value;
-				else
-					return ei.error_code();
+				leaf_detail::e_original_ec const * org = peek<e_original_ec>(tup, ei.err_id());
+				assert(org!=0);
+				return org->value;
 			}
 		};
 

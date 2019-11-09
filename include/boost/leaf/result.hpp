@@ -22,8 +22,8 @@ namespace boost { namespace leaf {
 
 	public:
 
-		explicit bad_result( error_id && id ) noexcept:
-			error_id(std::move(id))
+		explicit bad_result( error_id id ) noexcept:
+			error_id(id)
 		{
 			assert(value());
 		}
@@ -53,7 +53,7 @@ namespace boost { namespace leaf {
 				value_.~T();
 				break;
 			case 2:
-				assert(!ctx_ || leaf_detail::is_error_id(ctx_->ec));
+				assert(!ctx_ || ctx_->captured_id_);
 				ctx_.~context_ptr();
 				break;
 			default:
@@ -71,7 +71,7 @@ namespace boost { namespace leaf {
 				(void) new(&value_) T(x.value_);
 				break;
 			case 2:
-				assert(!x.ctx_ || leaf_detail::is_error_id(x.ctx_->ec));
+				assert(!x.ctx_ || x.ctx_->captured_id_);
 				(void) new(&ctx_) context_ptr(x.ctx_);
 				break;
 			default:
@@ -90,7 +90,7 @@ namespace boost { namespace leaf {
 				(void) new(&value_) T(std::move(x.value_));
 				break;
 			case 2:
-				assert(!x.ctx_ || leaf_detail::is_error_id(x.ctx_->ec));
+				assert(!x.ctx_ || x.ctx_->captured_id_);
 				(void) new(&ctx_) context_ptr(std::move(x.ctx_));
 				break;
 			default:
@@ -109,7 +109,7 @@ namespace boost { namespace leaf {
 			}
 			else if( ctx_ )
 			{
-				assert(leaf_detail::is_error_id(ctx_->ec));
+				assert(!ctx_ || ctx_->captured_id_);
 				err_id_ = ctx_->propagate_errors();
 				ctx_.~context_ptr();
 				assert(err_id_&1);
@@ -168,7 +168,7 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		result( error_id const & err ) noexcept
+		result( error_id err ) noexcept
 		{
 			if( int err_id=err.value() )
 			{
@@ -275,7 +275,7 @@ namespace boost { namespace leaf {
 
 		error_id error() const noexcept
 		{
-			return std::error_code(unload_then_get_err_id(), leaf_detail::get_error_category<>::cat);
+			return leaf_detail::make_error_id(unload_then_get_err_id());
 		}
 
 		template <class... E>
@@ -323,7 +323,7 @@ namespace boost { namespace leaf {
 
 		result() = default;
 
-		result( error_id const & err ) noexcept:
+		result( error_id err ) noexcept:
 			base(err)
 		{
 		}
@@ -391,7 +391,7 @@ namespace boost { namespace leaf {
 			leaf_detail::slot_base::reassign(r.error().value(), ne.value());
 			if( ctx )
 			{
-				ctx->ec = ne;
+				ctx->captured_id_ = ne;
 				return ctx;
 			}
 			else

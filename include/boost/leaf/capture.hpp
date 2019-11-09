@@ -71,7 +71,7 @@ namespace boost { namespace leaf {
 					return r;
 				else
 				{
-					ctx->ec = r.error();
+					ctx->captured_id_ = r.error();
 					return ctx;
 				}
 			}
@@ -105,7 +105,7 @@ namespace boost { namespace leaf {
 				return r;
 			else
 			{
-				ctx->ec = r.error();
+				ctx->captured_id_ = r.error();
 				return ctx;
 			}
 		}

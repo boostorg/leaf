@@ -599,20 +599,20 @@ namespace boost { namespace leaf {
 		template <class T>
 		leaf_category get_error_category<T>::cat;
 
-		template <class ErrorCode>
-		inline std::error_code import_error_code( ErrorCode && ec ) noexcept
+		inline int import_error_code( std::error_code const & ec ) noexcept
 		{
-			if( ec )
+			int err_id = ec.value();
+			if( err_id )
 			{
 				std::error_category const & cat = leaf_detail::get_error_category<>::cat;
 				if( &ec.category()!=&cat )
 				{
-					int err_id = leaf_detail::new_id();
+					err_id = leaf_detail::new_id();
 					leaf_detail::load_slot(err_id, leaf_detail::e_original_ec{ec});
-					return std::error_code(err_id, cat);
+					return err_id;
 				}
 			}
-			return ec;
+			return err_id;
 		}
 
 		inline bool is_error_id( std::error_code const & ec ) noexcept
@@ -625,39 +625,45 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	class error_id: public std::error_code
+	class error_id;
+
+	namespace leaf_detail
 	{
+		error_id make_error_id(int) noexcept;
+	}
+
+	class error_id
+	{
+		friend error_id leaf_detail::make_error_id(int ) noexcept;
+
+		int value_;
+
+		explicit error_id( int value ) noexcept:
+			value_(value)
+		{
+			assert(value_==0 || (value_&1));
+		}
+
 	public:
 
 		error_id() noexcept:
-			std::error_code(0, leaf_detail::get_error_category<>::cat)
+			value_(0)
 		{
-		}
-
-		struct tag_error_id {};
-		error_id( std::error_code const & ec, tag_error_id ) noexcept:
-			std::error_code(ec)
-		{
-			assert(leaf_detail::is_error_id(ec));
 		}
 
 		error_id( std::error_code const & ec ) noexcept:
-			error_code(leaf_detail::import_error_code(ec))
+			value_(leaf_detail::import_error_code(ec))
 		{
+			assert(!value_ || (value_&1));
 		}
 
-		error_id( std::error_code && ec ) noexcept:
-			error_code(leaf_detail::import_error_code(std::move(ec)))
-		{
-		}
-
-		error_id const & load() const noexcept
+		error_id load() const noexcept
 		{
 			return *this;
 		}
 
 		template <class... E>
-		error_id const & load( E && ... e ) const noexcept
+		error_id load( E && ... e ) const noexcept
 		{
 			if( int err_id = value() )
 			{
@@ -667,13 +673,13 @@ namespace boost { namespace leaf {
 			return *this;
 		}
 
-		error_id const & accumulate() const noexcept
+		error_id accumulate() const noexcept
 		{
 			return *this;
 		}
 
 		template <class... F>
-		error_id const & accumulate( F && ... f ) const noexcept
+		error_id accumulate( F && ... f ) const noexcept
 		{
 			if( int err_id = value() )
 			{
@@ -682,14 +688,53 @@ namespace boost { namespace leaf {
 			}
 			return *this;
 		}
+
+		template<class T, class E = typename std::enable_if<
+			std::is_nothrow_constructible<T, std::error_code>::value &&
+			std::is_convertible<std::error_code, T>::value
+			>::type>
+		operator T() const noexcept
+		{
+			return std::error_code(value(), leaf_detail::get_error_category<>::cat);
+		}
+
+		int value() const noexcept
+		{
+			assert(!value_ || (value_&1));
+			return value_;
+		}
+
+		explicit operator bool() const noexcept
+		{
+			return value()!=0;
+		}
+
+		friend bool operator==( error_id a, error_id b ) noexcept
+		{
+			return a.value()==b.value();
+		}
+
+		friend bool operator!=( error_id a, error_id b ) noexcept
+		{
+			return !(a==b);
+		}
+
+		friend bool operator<( error_id a, error_id b ) noexcept
+		{
+			return a.value()<b.value();
+		}
+
+		friend std::ostream & operator<<( std::ostream & os, error_id x )
+		{
+			return os<<x.value();
+		}
 	};
 
 	namespace leaf_detail
 	{
 		inline error_id make_error_id( int err_id ) noexcept
 		{
-			assert(err_id);
-			return std::error_code(err_id, get_error_category<>::cat);
+			return error_id(err_id);
 		}
 	}
 
@@ -748,7 +793,7 @@ namespace boost { namespace leaf {
 		virtual std::thread::id const & thread_id() const noexcept = 0;
 #endif
 
-		std::error_code ec;
+		error_id captured_id_;
 	};
 
 	using context_ptr = std::shared_ptr<polymorphic_context>;
