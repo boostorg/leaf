@@ -44,6 +44,66 @@ std::vector<int> generate_ids()
 
 int main()
 {
+	{
+		leaf::error_id e1;
+		leaf::error_id e2;
+		BOOST_TEST(!e1);
+		BOOST_TEST_EQ(e1.value(), 0);
+		BOOST_TEST(!e2);
+		BOOST_TEST_EQ(e2.value(), 0);
+		BOOST_TEST(e1==e2);
+		BOOST_TEST(!(e1!=e2));
+		BOOST_TEST(!(e1<e2));
+		BOOST_TEST(!(e2<e1));
+	}
+	{
+		leaf::error_id e1;
+		leaf::error_id e2 = leaf::new_error();
+		BOOST_TEST(!e1);
+		BOOST_TEST_EQ(e1.value(), 0);
+		BOOST_TEST(e2);
+		BOOST_TEST_EQ(e2.value(), 1);
+		BOOST_TEST(!(e1==e2));
+		BOOST_TEST(e1!=e2);
+		BOOST_TEST(e1<e2);
+		BOOST_TEST(!(e2<e1));
+	}
+	{
+		leaf::error_id e1 = leaf::new_error();
+		leaf::error_id e2 = leaf::new_error();
+		BOOST_TEST(e1);
+		BOOST_TEST_EQ(e1.value(), 3);
+		BOOST_TEST(e2);
+		BOOST_TEST_EQ(e2.value(), 5);
+		BOOST_TEST(!(e1==e2));
+		BOOST_TEST(e1!=e2);
+		BOOST_TEST(e1<e2);
+		BOOST_TEST(!(e2<e1));
+	}
+	{
+		leaf::error_id e1 = leaf::new_error();
+		leaf::error_id e2 = e1;
+		BOOST_TEST(e1);
+		BOOST_TEST_EQ(e1.value(), 7);
+		BOOST_TEST(e2);
+		BOOST_TEST_EQ(e2.value(), 7);
+		BOOST_TEST(e1==e2);
+		BOOST_TEST(!(e1!=e2));
+		BOOST_TEST(!(e1<e2));
+		BOOST_TEST(!(e2<e1));
+	}
+	{
+		leaf::error_id e1 = leaf::new_error();
+		leaf::error_id e2; e2 = e1;
+		BOOST_TEST(e1);
+		BOOST_TEST_EQ(e1.value(), 9);
+		BOOST_TEST(e2);
+		BOOST_TEST_EQ(e2.value(), 9);
+		BOOST_TEST(e1==e2);
+		BOOST_TEST(!(e1!=e2));
+		BOOST_TEST(!(e1<e2));
+		BOOST_TEST(!(e2<e1));
+	}
 #ifdef LEAF_NO_THREADS
 	std::vector<int> all_ids = generate_ids();
 #else
