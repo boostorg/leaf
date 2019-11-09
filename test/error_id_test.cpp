@@ -18,12 +18,6 @@ std::vector<int> generate_ids()
 {
 	std::vector<int> ids;
 	ids.reserve(ids_per_thread);
-#ifndef _MSC_VER
-	//This test is to ensure that the TL objects are initialized to the correct
-	//values (which are implementation details). However, on MSVC std::async
-	//reuses threads.
-	BOOST_TEST_EQ(leaf::leaf_detail::last_id(), 0);
-#endif
 	for(int i=0; i!=ids_per_thread-1; ++i)
 	{
 		int next = leaf::leaf_detail::next_id();

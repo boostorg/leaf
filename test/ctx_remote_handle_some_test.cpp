@@ -53,17 +53,5 @@ int main()
 		BOOST_TEST_EQ(r2.value(), 1);
 	}
 
-	{
-		auto r1 = leaf::result<int>(leaf::error_id());
-		BOOST_TEST(!r1);
-
-		leaf::result<int> r2 = ctx.remote_handle_some( r1,
-			[&]( leaf::error_info const & error )
-			{
-				return handle_error(error);
-			} );
-		BOOST_TEST_EQ(r2.value(), 2);
-	}
-
 	return boost::report_errors();
 }

@@ -4327,21 +4327,19 @@ namespace boost { namespace leaf {
 			friend class ::boost::leaf::result;
 
 			int err_id_;
-			context_ptr ctx_;
+			union { context_ptr ctx_; };
 
-			error_result( int err_id, context_ptr const & ctx ) noexcept:
-				err_id_(err_id),
-				ctx_(ctx)
-			{
-				assert(err_id_);
-				assert(bool(ctx_) == (err_id_==2));
-				assert(ctx_ || (err_id_&1));
-			}
+			template <class T>
+			explicit error_result( result<T> const & ) noexcept;
 
 		public:
 
+			error_result( error_result && x ) noexcept;
+
+			~error_result() noexcept;
+
 			template <class T>
-			operator result<T>() const noexcept;
+			operator result<T>() && noexcept;
 
 			operator error_id() const noexcept;
 		};
@@ -4354,6 +4352,8 @@ namespace boost { namespace leaf {
 	{
 		template <class U>
 		friend class result;
+
+		friend class leaf_detail::error_result;
 
 		mutable int err_id_; // 0:value_, 2:ctx_, else neither (error ids are always odd numbers)
 
@@ -4581,7 +4581,7 @@ namespace boost { namespace leaf {
 		leaf_detail::error_result error() const noexcept
 		{
 			assert(!*this);
-			return leaf_detail::error_result(err_id_, ctx_);
+			return leaf_detail::error_result(*this);
 		}
 
 		template <class... E>
@@ -4688,11 +4688,45 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class T>
-		inline error_result::operator result<T>() const noexcept
+		inline error_result::error_result( result<T> const & r ) noexcept:
+			err_id_(r.err_id_)
 		{
-			int const err_id = err_id_;
+			if( err_id_==2 )
+			{
+				(void) new(&ctx_) context_ptr(r.ctx_);
+				assert(ctx_);
+			}
+			else
+				assert(err_id_&1);
+		}
+
+		inline error_result::error_result( error_result && x ) noexcept:
+			err_id_(std::move(x.err_id_))
+		{
+			if( err_id_==2 )
+			{
+				(void) new(&ctx_) context_ptr(std::move(x.ctx_));
+				assert(ctx_);
+			}
+			else
+				assert(err_id_&1);
+		}
+
+		inline error_result::~error_result() noexcept
+		{
+			if( err_id_==2 )
+				ctx_.~context_ptr();
+		}
+
+		template <class T>
+		inline error_result::operator result<T>() && noexcept
+		{
+			auto err_id = std::move(err_id_);
 			if( err_id==2 )
-				return result<T>(ctx_);
+			{
+				assert(ctx_);
+				return result<T>(std::move(ctx_));
+			}
 			else
 			{
 				assert(err_id&1);
