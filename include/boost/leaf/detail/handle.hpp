@@ -822,10 +822,15 @@ namespace boost { namespace leaf {
 		{
 			using result_type = handler_result<H...>;
 
+			//When can HH... be different than H...? It isn't, except that the _some
+			//versions internally need to add a match-all handler at the end, which we
+			//know is not going to affect the deduced context type Ctx.
 			template <class... HH>
 			static result_type handle( error_info const & err, HH && ... h )
 			{
-				using Ctx = context_type_from_handlers<HH...>;
+				using Ctx = context_type_from_handlers<H...>;
+				using CtxHH = context_type_from_handlers<HH...>;
+				static_assert(std::is_same<Ctx,CtxHH>::value, "Buggy context deduction logic");
 				return { handle_error_<R>(static_cast<Ctx const &>(err.ctx_).tup(), err, std::forward<HH>(h)...) };
 			}
 		};
@@ -835,10 +840,15 @@ namespace boost { namespace leaf {
 		{
 			using result_type = handler_result_void<H...>;
 
+			//When can HH... be different than H...? It isn't, except that the _some
+			//versions internally need to add a match-all handler at the end, which we
+			//know is not going to affect the deduced context type Ctx.
 			template <class... HH>
 			static result_type handle( error_info const & err, HH && ... h )
 			{
-				using Ctx = context_type_from_handlers<HH...>;
+				using Ctx = context_type_from_handlers<H...>;
+				using CtxHH = context_type_from_handlers<HH...>;
+				static_assert(std::is_same<Ctx,CtxHH>::value, "Buggy context deduction logic");
 				handle_error_<void>(static_cast<Ctx const &>(err.ctx_).tup(), err, std::forward<HH>(h)...);
 				return { };
 			}
