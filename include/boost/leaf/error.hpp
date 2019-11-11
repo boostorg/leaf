@@ -778,13 +778,10 @@ namespace boost { namespace leaf {
 	class polymorphic_context
 	{
 	protected:
-
 		polymorphic_context() noexcept = default;
-
+		~polymorphic_context() noexcept = default;
 	public:
-
-		virtual ~polymorphic_context() noexcept = default;
-		virtual int propagate_errors() noexcept = 0;
+		virtual int propagate_captured_errors() noexcept = 0;
 		virtual void activate() noexcept = 0;
 		virtual void deactivate( bool propagate_errors ) noexcept = 0;
 		virtual bool is_active() const noexcept = 0;
@@ -792,7 +789,6 @@ namespace boost { namespace leaf {
 #ifndef LEAF_NO_THREADS
 		virtual std::thread::id const & thread_id() const noexcept = 0;
 #endif
-
 		error_id captured_id_;
 	};
 
@@ -807,25 +803,35 @@ namespace boost { namespace leaf {
 		propagate_if_uncaught_exception
 	};
 
-	template <class Ctx = polymorphic_context>
 	class context_activator
 	{
 		context_activator( context_activator const & ) = delete;
 		context_activator & operator=( context_activator const & ) = delete;
 
-		Ctx & ctx_;
-		on_deactivation on_deactivate_;
+		void (* const deactivate_)(context_activator *, bool) noexcept;
+		void * const ctx_;
 		bool const ctx_was_active_;
+		on_deactivation on_deactivate_;
+
+		template <class Ctx>
+		static void deactivate_fwd(context_activator * this_, bool propagate_errors) noexcept
+		{
+			assert(this_->deactivate_!=0);
+			assert(this_->ctx_!=0);
+			static_cast<Ctx *>(this_->ctx_)->deactivate(propagate_errors);
+		}
 
 	public:
 
-		context_activator( Ctx & ctx, on_deactivation on_deactivate ) noexcept:
-			ctx_(ctx),
-			on_deactivate_(on_deactivate),
-			ctx_was_active_(ctx_.is_active())
+		template <class Ctx>
+		context_activator(Ctx & ctx, on_deactivation on_deactivate) noexcept:
+			deactivate_(&deactivate_fwd<Ctx>),
+			ctx_(&ctx),
+			ctx_was_active_(ctx.is_active()),
+			on_deactivate_(on_deactivate)
 		{
 			if( !ctx_was_active_ )
-				ctx_.activate();
+				ctx.activate();
 		}
 
 		~context_activator() noexcept
@@ -838,16 +844,16 @@ namespace boost { namespace leaf {
 				if( on_deactivate_ == on_deactivation::propagate_if_uncaught_exception )
 				{
 #ifdef LEAF_NO_EXCEPTIONS
-					ctx_.deactivate(false);
+					deactivate_(this, false);
 #else
 					bool has_exception = std::uncaught_exception();
-					ctx_.deactivate(has_exception);
+					deactivate_(this, has_exception);
 					if( !has_exception )
 						(void) leaf_detail::new_id();
 #endif
 				}
 				else
-					ctx_.deactivate(on_deactivate_ == on_deactivation::propagate);
+					deactivate_(this, on_deactivate_ == on_deactivation::propagate);
 		}
 
 		void set_on_deactivate( on_deactivation on_deactivate ) noexcept

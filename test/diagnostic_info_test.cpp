@@ -108,13 +108,6 @@ int main()
 				BOOST_TEST_EQ(s.find("unexpected"), s.npos);
 				std::cout << s;
 			}
-			std::cout << "polymorphic_context::print():" << std::endl;
-			{
-				std::ostringstream st;
-				unmatched.ctx_.print(st);
-				std::string s = st.str();
-				std::cout << s;
-			}
 		},
 		[]()
 		{
@@ -161,13 +154,6 @@ int main()
 				BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
 #endif
 				BOOST_TEST_EQ(s.find("unexpected_test<2>"), s.npos);
-				std::cout << s;
-			}
-			std::cout << "polymorphic_context::print():" << std::endl;
-			{
-				std::ostringstream st;
-				unmatched.ctx_.print(st);
-				std::string s = st.str();
 				std::cout << s;
 			}
 		},
@@ -217,13 +203,6 @@ int main()
 #endif
 				std::cout << s;
 			}
-			std::cout << "polymorphic_context::print():" << std::endl;
-			{
-				std::ostringstream st;
-				di.ctx_.print(st);
-				std::string s = st.str();
-				std::cout << s;
-			}
 		},
 		[]()
 		{
@@ -246,13 +225,6 @@ int main()
 				BOOST_TEST(s.find("leaf::diagnostic_info")!=s.npos);
 				std::cout << s;
 			}
-			std::cout << "polymorphic_context::print():" << std::endl;
-			{
-				std::ostringstream st;
-				di.ctx_.print(st);
-				std::string s = st.str();
-				std::cout << s;
-			}
 		},
 		[]()
 		{
@@ -273,13 +245,6 @@ int main()
 				st << vdi;
 				std::string s = st.str();
 				BOOST_TEST(s.find("leaf::verbose_diagnostic_info")!=s.npos);
-				std::cout << s;
-			}
-			std::cout << "polymorphic_context::print():" << std::endl;
-			{
-				std::ostringstream st;
-				vdi.ctx_.print(st);
-				std::string s = st.str();
 				std::cout << s;
 			}
 		},
@@ -329,13 +294,6 @@ int main()
 				BOOST_TEST_EQ(s.find("unexpected"), s.npos);
 				std::cout << s;
 			}
-			std::cout << "polymorphic_context::print():" << std::endl;
-			{
-				std::ostringstream st;
-				unmatched.ctx_.print(st);
-				std::string s = st.str();
-				std::cout << s;
-			}
 		} );
 
 	std::cout << std::endl;
@@ -379,13 +337,6 @@ int main()
 				BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
 #endif
 				BOOST_TEST_EQ(s.find("unexpected_test<2>"), s.npos);
-				std::cout << s;
-			}
-			std::cout << "polymorphic_context::print():" << std::endl;
-			{
-				std::ostringstream st;
-				unmatched.ctx_.print(st);
-				std::string s = st.str();
 				std::cout << s;
 			}
 		} );
@@ -432,13 +383,6 @@ int main()
 #endif
 				std::cout << s;
 			}
-			std::cout << "polymorphic_context::print():" << std::endl;
-			{
-				std::ostringstream st;
-				di.ctx_.print(st);
-				std::string s = st.str();
-				std::cout << s;
-			}
 		} );
 
 	std::cout << std::endl;
@@ -457,13 +401,6 @@ int main()
 				BOOST_TEST(s.find("leaf::diagnostic_info")!=s.npos);
 				std::cout << s;
 			}
-			std::cout << "polymorphic_context::print():" << std::endl;
-			{
-				std::ostringstream st;
-				di.ctx_.print(st);
-				std::string s = st.str();
-				std::cout << s;
-			}
 		} );
 
 	std::cout << std::endl;
@@ -480,13 +417,6 @@ int main()
 				st << vdi;
 				std::string s = st.str();
 				BOOST_TEST(s.find("leaf::verbose_diagnostic_info")!=s.npos);
-				std::cout << s;
-			}
-			std::cout << "polymorphic_context::print():" << std::endl;
-			{
-				std::ostringstream st;
-				vdi.ctx_.print(st);
-				std::string s = st.str();
 				std::cout << s;
 			}
 		} );

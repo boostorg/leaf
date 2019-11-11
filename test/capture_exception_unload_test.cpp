@@ -34,7 +34,7 @@ void test( F f_ )
 		{
 			try
 			{
-				leaf::capture( std::make_shared<leaf::context<info<1>, info<2>, info<3>>>(), f_);
+				leaf::capture( std::make_shared<leaf::leaf_detail::polymorphic_context_impl<leaf::context<info<1>, info<2>, info<3>>>>(), f_);
 				BOOST_TEST(false);
 				return std::exception_ptr();
 			}

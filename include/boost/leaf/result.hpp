@@ -455,7 +455,7 @@ namespace boost { namespace leaf {
 			if( err_id==2 )
 			{
 				assert(ctx_);
-				return leaf_detail::make_error_id(ctx_->propagate_errors());
+				return leaf_detail::make_error_id(ctx_->propagate_captured_errors());
 			}
 			else
 			{

@@ -87,6 +87,21 @@
 		"typeinfo": "cpp",
 		"utility": "cpp",
 		"variant": "cpp",
-		"vector": "cpp"
+		"vector": "cpp",
+		"__hash_table": "cpp",
+		"bit": "cpp",
+		"clocale": "cpp",
+		"complex": "cpp",
+		"csetjmp": "cpp",
+		"fstream": "cpp",
+		"numeric": "cpp",
+		"queue": "cpp",
+		"random": "cpp",
+		"stack": "cpp",
+		"strstream": "cpp",
+		"unordered_map": "cpp",
+		"*.tcc": "cpp",
+		"memory_resource": "cpp",
+		"cinttypes": "cpp"
 	}
 }

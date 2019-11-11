@@ -178,7 +178,7 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class... E>
-		class context_base: public polymorphic_context
+		class context_base
 		{
 			context_base( context_base const & ) = delete;
 			context_base & operator=( context_base const & ) = delete;
@@ -225,15 +225,7 @@ namespace boost { namespace leaf {
 				return tup_;
 			}
 
-			int propagate_errors() noexcept final override
-			{
-				assert(captured_id_);
-				int err_id = captured_id_.value();
-				tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_, err_id);
-				return err_id;
-			}
-
-			void activate() noexcept final override
+			void activate() noexcept
 			{
 				using namespace leaf_detail;
 				assert(!is_active());
@@ -248,12 +240,13 @@ namespace boost { namespace leaf {
 				is_active_ = true;
 			}
 
-			void deactivate( bool propagate_errors ) noexcept final override
+			void deactivate( bool propagate_errors ) noexcept
 			{
 				using namespace leaf_detail;
 				assert(is_active());
 				is_active_ = false;
 #ifndef LEAF_NO_THREADS
+				assert(std::this_thread::get_id() == thread_id_);
 				thread_id_ = std::thread::id();
 #endif
 #ifndef LEAF_DISCARD_UNEXPECTED
@@ -263,18 +256,18 @@ namespace boost { namespace leaf {
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_, propagate_errors);
 			}
 
-			bool is_active() const noexcept final override
+			bool is_active() const noexcept
 			{
 				return is_active_;
 			}
 
-			void print( std::ostream & os ) const final override
+			void print( std::ostream & os ) const
 			{
 				leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, tup_);
 			}
 
 #ifndef LEAF_NO_THREADS
-			std::thread::id const & thread_id() const noexcept final override
+			std::thread::id const & thread_id() const noexcept
 			{
 				return thread_id_;
 			}
@@ -282,17 +275,24 @@ namespace boost { namespace leaf {
 
 		protected:
 
+			int propagate_captured_errors( int err_id ) noexcept
+			{
+				assert(err_id&1);
+				tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_, err_id);
+				return err_id;
+			}
+
 			template <class TryBlock, class... H>
 			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all_( TryBlock &&, H && ... ) const;
 
 			template <class TryBlock, class RemoteH>
 			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all_( TryBlock &&, RemoteH && ) const;
 
-			template <class TryBlock, class... H, class Ctx>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some_( context_activator<Ctx> &, TryBlock &&, H && ... ) const;
+			template <class TryBlock, class... H>
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some_( context_activator &, TryBlock &&, H && ... ) const;
 
-			template <class TryBlock, class RemoteH, class Ctx>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some_( context_activator<Ctx> &, TryBlock &&, RemoteH && ) const;
+			template <class TryBlock, class RemoteH>
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some_( context_activator &, TryBlock &&, RemoteH && ) const;
 
 		public:
 
@@ -331,6 +331,7 @@ namespace boost { namespace leaf {
 		class nocatch_context: public context_base<E...>
 		{
 		public:
+
 			template <class TryBlock, class... H>
 			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock &&, H && ... );
 
@@ -348,6 +349,7 @@ namespace boost { namespace leaf {
 		class catch_context: public context_base<E...>
 		{
 		public:
+
 			template <class TryBlock, class... H>
 			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock && try_block, H && ... h );
 
@@ -403,10 +405,6 @@ namespace boost { namespace leaf {
 	template <class... E>
 	class context: public leaf_detail::select_context_base<E...>
 	{
-	public:
-		context() noexcept = default;
-		context( context && ) noexcept = default;
-		~context() noexcept final override { }
 	};
 
 	////////////////////////////////////////
@@ -451,6 +449,19 @@ namespace boost { namespace leaf {
 		{
 			using type = deduce_context<leaf_detail_mp11::mp_append<fn_mp_args<H>...>>;
 		};
+
+		template <class Ctx>
+		struct polymorphic_context_impl: polymorphic_context, Ctx
+		{
+			int propagate_captured_errors() noexcept final override { return Ctx::propagate_captured_errors(captured_id_.value()); }
+			void activate() noexcept final override { Ctx::activate(); }
+			void deactivate( bool propagate_errors ) noexcept final override { Ctx::deactivate(propagate_errors); }
+			bool is_active() const noexcept final override { return Ctx::is_active(); }
+			void print( std::ostream & os ) const final override { return Ctx::print(os); }
+#ifndef LEAF_NO_THREADS
+			std::thread::id const & thread_id() const noexcept final override { return Ctx::thread_id(); }
+#endif
+		};
 	}
 
 	template <class... H>
@@ -474,15 +485,14 @@ namespace boost { namespace leaf {
 	template <class RemoteH>
 	inline context_ptr make_shared_context( RemoteH const * = 0 )
 	{
-		return std::make_shared<context_type_from_remote_handler<RemoteH>>();
+		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_remote_handler<RemoteH>>>();
 	}
 
 	template <class RemoteH, class Alloc>
 	inline context_ptr allocate_shared_context( Alloc alloc, RemoteH const * = 0 )
 	{
-		return std::allocate_shared<context_type_from_remote_handler<RemoteH>>(alloc);
+		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_remote_handler<RemoteH>>>(alloc);
 	}
-
 } }
 
 #endif

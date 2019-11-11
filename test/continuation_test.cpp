@@ -70,7 +70,7 @@ struct io_task_context
 		asio::post( io_ctx,
 			[=]() mutable
 			{
-				leaf::context_activator<> active_context(*err_ctx, leaf::on_deactivation::do_not_propagate);
+				leaf::context_activator active_context(*err_ctx, leaf::on_deactivation::do_not_propagate);
 				f();
 			} );
 	}

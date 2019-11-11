@@ -33,7 +33,7 @@ namespace boost { namespace leaf {
 
 			[[noreturn]] void unload_and_rethrow_original_exception() const
 			{
-				context_activator<> active_context(*ctx_, on_deactivation::propagate);
+				context_activator active_context(*ctx_, on_deactivation::propagate);
 				std::rethrow_exception(ex_);
 			}
 
@@ -46,7 +46,7 @@ namespace boost { namespace leaf {
 		template <class R, class F, class... A>
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr  const & ctx, F && f, A... a)
 		{
-			context_activator<> active_context(*ctx, on_deactivation::do_not_propagate);
+			context_activator active_context(*ctx, on_deactivation::do_not_propagate);
 			try
 			{
 				return std::forward<F>(f)(std::forward<A>(a)...);
@@ -64,7 +64,7 @@ namespace boost { namespace leaf {
 		template <class R, class F, class... A>
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr  const & ctx, F && f, A... a)
 		{
-			context_activator<> active_context(*ctx, on_deactivation::do_not_propagate);
+			context_activator active_context(*ctx, on_deactivation::do_not_propagate);
 			try
 			{
 				if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
@@ -93,14 +93,14 @@ namespace boost { namespace leaf {
 		template <class R, class F, class... A>
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr  const & ctx, F && f, A... a)
 		{
-			context_activator<> active_context(*ctx, on_deactivation::do_not_propagate);
+			context_activator active_context(*ctx, on_deactivation::do_not_propagate);
 			return std::forward<F>(f)(std::forward<A>(a)...);
 		}
 
 		template <class R, class F, class... A>
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr  const & ctx, F && f, A... a)
 		{
-			context_activator<> active_context(*ctx, on_deactivation::do_not_propagate);
+			context_activator active_context(*ctx, on_deactivation::do_not_propagate);
 			if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
 				return r;
 			else
