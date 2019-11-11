@@ -792,9 +792,6 @@ namespace boost { namespace leaf {
 		virtual void deactivate( bool propagate_errors ) noexcept = 0;
 		virtual bool is_active() const noexcept = 0;
 		virtual void print( std::ostream & ) const = 0;
-#ifndef LEAF_NO_THREADS
-		virtual std::thread::id const & thread_id() const noexcept = 0;
-#endif
 		error_id captured_id_;
 	};
 

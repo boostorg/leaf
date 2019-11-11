@@ -196,7 +196,7 @@ namespace boost { namespace leaf {
 		private:
 
 			Tup tup_;
-#ifndef LEAF_NO_THREADS
+#if !defined(LEAF_NO_THREADS) && !defined(NDEBUG)
 			std::thread::id thread_id_;
 #endif
 			bool is_active_;
@@ -234,7 +234,7 @@ namespace boost { namespace leaf {
 				if( unexpected_requested<Tup>::value )
 					++tl_unexpected_enabled_counter();
 #endif
-#ifndef LEAF_NO_THREADS
+#if !defined(LEAF_NO_THREADS) && !defined(NDEBUG)
 				thread_id_ = std::this_thread::get_id();
 #endif
 				is_active_ = true;
@@ -245,7 +245,7 @@ namespace boost { namespace leaf {
 				using namespace leaf_detail;
 				assert(is_active());
 				is_active_ = false;
-#ifndef LEAF_NO_THREADS
+#if !defined(LEAF_NO_THREADS) && !defined(NDEBUG)
 				assert(std::this_thread::get_id() == thread_id_);
 				thread_id_ = std::thread::id();
 #endif
@@ -265,13 +265,6 @@ namespace boost { namespace leaf {
 			{
 				leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, tup_);
 			}
-
-#ifndef LEAF_NO_THREADS
-			std::thread::id const & thread_id() const noexcept
-			{
-				return thread_id_;
-			}
-#endif
 
 		protected:
 
@@ -458,9 +451,6 @@ namespace boost { namespace leaf {
 			void deactivate( bool propagate_errors ) noexcept final override { Ctx::deactivate(propagate_errors); }
 			bool is_active() const noexcept final override { return Ctx::is_active(); }
 			void print( std::ostream & os ) const final override { return Ctx::print(os); }
-#ifndef LEAF_NO_THREADS
-			std::thread::id const & thread_id() const noexcept final override { return Ctx::thread_id(); }
-#endif
 		};
 	}
 
