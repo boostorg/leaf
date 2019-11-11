@@ -50,7 +50,9 @@ namespace boost { namespace leaf {
 			os << "Error ID: " << err_id_.value() << std::endl;
 			if( xi_ )
 				xi_->print(os);
+#ifndef LEAF_NO_DIAGNOSTIC_INFO
 			leaf_detail::slot_base::print_all(os,err_id_.value());
+#endif
 		}
 
 	public:

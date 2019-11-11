@@ -100,11 +100,13 @@ int main()
 				st << unmatched;
 				std::string s = st.str();
 				BOOST_TEST(s.find("leaf::error_info:")!=s.npos);
+#ifndef LEAF_NO_DIAGNOSTIC_INFO
 				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
 				BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
 				BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
 				BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
 				BOOST_TEST(s.find(") in function")!=s.npos);
+#endif
 				BOOST_TEST_EQ(s.find("unexpected"), s.npos);
 				std::cout << s;
 			}
@@ -145,11 +147,13 @@ int main()
 				BOOST_TEST(s.find("LEAF_DISCARD_UNEXPECTED")!=s.npos);
 #else
 				BOOST_TEST(s.find("leaf::diagnostic_info:")!=s.npos);
+#	ifndef LEAF_NO_DIAGNOSTIC_INFO
 				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
 				BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
 				BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
 				BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
 				BOOST_TEST(s.find(") in function")!=s.npos);
+#	endif
 				BOOST_TEST(s.find("Detected 2 attempts")!=s.npos);
 				BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
 #endif
@@ -286,11 +290,13 @@ int main()
 				std::string s = st.str();
 				BOOST_TEST(s.find("leaf::error_info:")!=s.npos);
 				BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
+#ifndef LEAF_NO_DIAGNOSTIC_INFO
 				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
 				BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
 				BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
 				BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
 				BOOST_TEST(s.find(") in function")!=s.npos);
+#endif
 				BOOST_TEST_EQ(s.find("unexpected"), s.npos);
 				std::cout << s;
 			}
@@ -328,11 +334,13 @@ int main()
 #else
 				BOOST_TEST(s.find("leaf::diagnostic_info:")!=s.npos);
 				BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
+#	ifndef LEAF_NO_DIAGNOSTIC_INFO
 				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
 				BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
 				BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
 				BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
 				BOOST_TEST(s.find(") in function")!=s.npos);
+#	endif
 				BOOST_TEST(s.find("Detected 2 attempts")!=s.npos);
 				BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
 #endif
@@ -373,11 +381,13 @@ int main()
 #else
 				BOOST_TEST(s.find("leaf::verbose_diagnostic_info:")!=s.npos);
 				BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
+#	ifndef LEAF_NO_DIAGNOSTIC_INFO
 				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
 				BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
 				BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
 				BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
 				BOOST_TEST(s.find(") in function")!=s.npos);
+#	endif
 				BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
 				BOOST_TEST(s.find("unexpected_test<2>")!=s.npos);
 #endif

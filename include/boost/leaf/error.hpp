@@ -107,16 +107,20 @@ namespace boost { namespace leaf {
 			slot_base & operator=( slot_base const & ) = delete;
 			slot_base( slot_base const & ) = delete;
 
+#ifndef LEAF_NO_DIAGNOSTIC_INFO
 			virtual bool slot_print( std::ostream &, int err_id ) const = 0;
+#endif
 
 		public:
 
+#ifndef LEAF_NO_DIAGNOSTIC_INFO
 			static void print_all( std::ostream & os, int err_id )
 			{
 				for( slot_base const * p = first(); p; p=p->next_ )
 					if( p->slot_print(os,err_id) )
 						os << std::endl;
 			}
+#endif
 
 			static void reassign( int from_err_id, int to_err_id ) noexcept
 			{
@@ -313,6 +317,7 @@ namespace boost { namespace leaf {
 			slot<E> * prev_;
 			static_assert(is_e_type<E>::value,"Not an error type");
 
+#ifndef LEAF_NO_DIAGNOSTIC_INFO
 			bool slot_print( std::ostream & os, int err_id ) const final override
 			{
 				if( !diagnostic<E>::is_invisible && *top_==this )
@@ -324,6 +329,7 @@ namespace boost { namespace leaf {
 					}
 				return false;
 			}
+#endif
 
 		public:
 

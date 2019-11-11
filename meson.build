@@ -52,6 +52,10 @@ if not exceptions
 	defines += [ '-DLEAF_NO_EXCEPTIONS' ]
 endif
 
+if get_option('no_diagnostic_info')
+	defines += [ '-DLEAF_NO_DIAGNOSTIC_INFO' ]
+endif
+
 if get_option('discard_unexpected')
 	defines += [ '-DLEAF_DISCARD_UNEXPECTED' ]
 endif
