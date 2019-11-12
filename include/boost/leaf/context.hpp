@@ -281,11 +281,11 @@ namespace boost { namespace leaf {
 			template <class TryBlock, class RemoteH>
 			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all_( TryBlock &&, RemoteH && ) const;
 
-			template <class TryBlock, class... H>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some_( context_activator &, TryBlock &&, H && ... ) const;
+			template <class TryBlock, class... H, class Ctx>
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some_( context_activator<Ctx> &, TryBlock &&, H && ... ) const;
 
-			template <class TryBlock, class RemoteH>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some_( context_activator &, TryBlock &&, RemoteH && ) const;
+			template <class TryBlock, class RemoteH, class Ctx>
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some_( context_activator<Ctx> &, TryBlock &&, RemoteH && ) const;
 
 		public:
 

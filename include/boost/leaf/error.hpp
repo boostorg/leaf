@@ -806,29 +806,19 @@ namespace boost { namespace leaf {
 		propagate_if_uncaught_exception
 	};
 
+	template <class Ctx>
 	class context_activator
 	{
 		context_activator( context_activator const & ) = delete;
 		context_activator & operator=( context_activator const & ) = delete;
 
-		void (* const deactivate_)(context_activator *, bool) noexcept;
-		void * const ctx_;
+		Ctx * ctx_;
 		bool const ctx_was_active_;
 		on_deactivation on_deactivate_;
 
-		template <class Ctx>
-		static void deactivate_fwd(context_activator * this_, bool propagate_errors) noexcept
-		{
-			assert(this_->deactivate_!=0);
-			assert(this_->ctx_!=0);
-			static_cast<Ctx *>(this_->ctx_)->deactivate(propagate_errors);
-		}
-
 	public:
 
-		template <class Ctx>
 		context_activator(Ctx & ctx, on_deactivation on_deactivate) noexcept:
-			deactivate_(&deactivate_fwd<Ctx>),
 			ctx_(&ctx),
 			ctx_was_active_(ctx.is_active()),
 			on_deactivate_(on_deactivate)
@@ -837,26 +827,37 @@ namespace boost { namespace leaf {
 				ctx.activate();
 		}
 
+		context_activator( context_activator && x ) noexcept:
+			ctx_(x.ctx_),
+			ctx_was_active_(x.ctx_was_active_),
+			on_deactivate_(x.on_deactivate_)
+		{
+			x.ctx_ = 0;
+		}
+
 		~context_activator() noexcept
 		{
-			assert(
-				on_deactivate_ == on_deactivation::propagate ||
-				on_deactivate_ == on_deactivation::do_not_propagate ||
-				on_deactivate_ == on_deactivation::propagate_if_uncaught_exception);
-			if( !ctx_was_active_ )
-				if( on_deactivate_ == on_deactivation::propagate_if_uncaught_exception )
-				{
+			if( ctx_ )
+			{
+				assert(
+					on_deactivate_ == on_deactivation::propagate ||
+					on_deactivate_ == on_deactivation::do_not_propagate ||
+					on_deactivate_ == on_deactivation::propagate_if_uncaught_exception);
+				if( !ctx_was_active_ )
+					if( on_deactivate_ == on_deactivation::propagate_if_uncaught_exception )
+					{
 #ifdef LEAF_NO_EXCEPTIONS
-					deactivate_(this, false);
+						ctx_->deactivate(false);
 #else
-					bool has_exception = std::uncaught_exception();
-					deactivate_(this, has_exception);
-					if( !has_exception )
-						(void) leaf_detail::new_id();
+						bool has_exception = std::uncaught_exception();
+						ctx_->deactivate(has_exception);
+						if( !has_exception )
+							(void) leaf_detail::new_id();
 #endif
-				}
-				else
-					deactivate_(this, on_deactivate_ == on_deactivation::propagate);
+					}
+					else
+						ctx_->deactivate(on_deactivate_ == on_deactivation::propagate);
+			}
 		}
 
 		void set_on_deactivate( on_deactivation on_deactivate ) noexcept
@@ -864,6 +865,12 @@ namespace boost { namespace leaf {
 			on_deactivate_ = on_deactivate;
 		}
 	};
+
+	template <class Ctx>
+	context_activator<Ctx> activate_context( Ctx & ctx, on_deactivation on_deactivate ) noexcept
+	{
+		return context_activator<Ctx>(ctx, on_deactivate);
+	}
 
 	////////////////////////////////////////////
 

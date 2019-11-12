@@ -124,7 +124,7 @@ namespace boost { namespace leaf {
 	{
 		using namespace leaf_detail;
 		context_type_from_handlers<H...> ctx;
-		context_activator active_context(ctx, on_deactivation::propagate_if_uncaught_exception);
+		auto active_context = activate_context(ctx, on_deactivation::propagate_if_uncaught_exception);
 		return ctx.try_catch_(
 			[&]
 			{
@@ -138,7 +138,7 @@ namespace boost { namespace leaf {
 	{
 		using namespace leaf_detail;
 		context_type_from_remote_handler<RemoteH> ctx;
-		context_activator active_context(ctx, on_deactivation::propagate_if_uncaught_exception);
+		auto active_context = activate_context(ctx, on_deactivation::propagate_if_uncaught_exception);
 		return ctx.remote_try_catch_(
 			[&]
 			{
@@ -193,7 +193,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
-			context_activator active_context(*this, on_deactivation::propagate_if_uncaught_exception);
+			auto active_context = activate_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			if(	auto r = this->try_catch_(
 					[&]
 					{
@@ -211,7 +211,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
-			context_activator active_context(*this, on_deactivation::propagate_if_uncaught_exception);
+			auto active_context = activate_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			if(	auto r = this->remote_try_catch_(
 					[&]
 					{
@@ -229,7 +229,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
-			context_activator active_context(*this, on_deactivation::propagate_if_uncaught_exception);
+			auto active_context = activate_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			if(	auto r = this->try_catch_(
 					[&]
 					{
@@ -250,7 +250,7 @@ namespace boost { namespace leaf {
 		template <class TryBlock, class RemoteH>
 		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type catch_context<E...>::remote_try_handle_some( TryBlock && try_block, RemoteH && h )
 		{
-			context_activator active_context(*this, on_deactivation::propagate_if_uncaught_exception);
+			auto active_context = activate_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			if( auto r = this->remote_try_catch_(
 					[&]
 					{

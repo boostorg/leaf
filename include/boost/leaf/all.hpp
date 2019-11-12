@@ -1554,29 +1554,19 @@ namespace boost { namespace leaf {
 		propagate_if_uncaught_exception
 	};
 
+	template <class Ctx>
 	class context_activator
 	{
 		context_activator( context_activator const & ) = delete;
 		context_activator & operator=( context_activator const & ) = delete;
 
-		void (* const deactivate_)(context_activator *, bool) noexcept;
-		void * const ctx_;
+		Ctx * ctx_;
 		bool const ctx_was_active_;
 		on_deactivation on_deactivate_;
 
-		template <class Ctx>
-		static void deactivate_fwd(context_activator * this_, bool propagate_errors) noexcept
-		{
-			assert(this_->deactivate_!=0);
-			assert(this_->ctx_!=0);
-			static_cast<Ctx *>(this_->ctx_)->deactivate(propagate_errors);
-		}
-
 	public:
 
-		template <class Ctx>
 		context_activator(Ctx & ctx, on_deactivation on_deactivate) noexcept:
-			deactivate_(&deactivate_fwd<Ctx>),
 			ctx_(&ctx),
 			ctx_was_active_(ctx.is_active()),
 			on_deactivate_(on_deactivate)
@@ -1585,26 +1575,37 @@ namespace boost { namespace leaf {
 				ctx.activate();
 		}
 
+		context_activator( context_activator && x ) noexcept:
+			ctx_(x.ctx_),
+			ctx_was_active_(x.ctx_was_active_),
+			on_deactivate_(x.on_deactivate_)
+		{
+			x.ctx_ = 0;
+		}
+
 		~context_activator() noexcept
 		{
-			assert(
-				on_deactivate_ == on_deactivation::propagate ||
-				on_deactivate_ == on_deactivation::do_not_propagate ||
-				on_deactivate_ == on_deactivation::propagate_if_uncaught_exception);
-			if( !ctx_was_active_ )
-				if( on_deactivate_ == on_deactivation::propagate_if_uncaught_exception )
-				{
+			if( ctx_ )
+			{
+				assert(
+					on_deactivate_ == on_deactivation::propagate ||
+					on_deactivate_ == on_deactivation::do_not_propagate ||
+					on_deactivate_ == on_deactivation::propagate_if_uncaught_exception);
+				if( !ctx_was_active_ )
+					if( on_deactivate_ == on_deactivation::propagate_if_uncaught_exception )
+					{
 #ifdef LEAF_NO_EXCEPTIONS
-					deactivate_(this, false);
+						ctx_->deactivate(false);
 #else
-					bool has_exception = std::uncaught_exception();
-					deactivate_(this, has_exception);
-					if( !has_exception )
-						(void) leaf_detail::new_id();
+						bool has_exception = std::uncaught_exception();
+						ctx_->deactivate(has_exception);
+						if( !has_exception )
+							(void) leaf_detail::new_id();
 #endif
-				}
-				else
-					deactivate_(this, on_deactivate_ == on_deactivation::propagate);
+					}
+					else
+						ctx_->deactivate(on_deactivate_ == on_deactivation::propagate);
+			}
 		}
 
 		void set_on_deactivate( on_deactivation on_deactivate ) noexcept
@@ -1612,6 +1613,12 @@ namespace boost { namespace leaf {
 			on_deactivate_ = on_deactivate;
 		}
 	};
+
+	template <class Ctx>
+	context_activator<Ctx> activate_context( Ctx & ctx, on_deactivation on_deactivate ) noexcept
+	{
+		return context_activator<Ctx>(ctx, on_deactivate);
+	}
 
 	////////////////////////////////////////////
 
@@ -1753,7 +1760,7 @@ namespace boost { namespace leaf {
 
 			[[noreturn]] void unload_and_rethrow_original_exception() const
 			{
-				context_activator active_context(*ctx_, on_deactivation::propagate);
+				auto active_context = activate_context(*ctx_, on_deactivation::propagate);
 				std::rethrow_exception(ex_);
 			}
 
@@ -1766,7 +1773,7 @@ namespace boost { namespace leaf {
 		template <class R, class F, class... A>
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr  const & ctx, F && f, A... a)
 		{
-			context_activator active_context(*ctx, on_deactivation::do_not_propagate);
+			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			try
 			{
 				return std::forward<F>(f)(std::forward<A>(a)...);
@@ -1784,7 +1791,7 @@ namespace boost { namespace leaf {
 		template <class R, class F, class... A>
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr  const & ctx, F && f, A... a)
 		{
-			context_activator active_context(*ctx, on_deactivation::do_not_propagate);
+			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			try
 			{
 				if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
@@ -1813,14 +1820,14 @@ namespace boost { namespace leaf {
 		template <class R, class F, class... A>
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr  const & ctx, F && f, A... a)
 		{
-			context_activator active_context(*ctx, on_deactivation::do_not_propagate);
+			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			return std::forward<F>(f)(std::forward<A>(a)...);
 		}
 
 		template <class R, class F, class... A>
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr  const & ctx, F && f, A... a)
 		{
-			context_activator active_context(*ctx, on_deactivation::do_not_propagate);
+			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
 				return r;
 			else
@@ -2277,11 +2284,11 @@ namespace boost { namespace leaf {
 			template <class TryBlock, class RemoteH>
 			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all_( TryBlock &&, RemoteH && ) const;
 
-			template <class TryBlock, class... H>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some_( context_activator &, TryBlock &&, H && ... ) const;
+			template <class TryBlock, class... H, class Ctx>
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some_( context_activator<Ctx> &, TryBlock &&, H && ... ) const;
 
-			template <class TryBlock, class RemoteH>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some_( context_activator &, TryBlock &&, RemoteH && ) const;
+			template <class TryBlock, class RemoteH, class Ctx>
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some_( context_activator<Ctx> &, TryBlock &&, RemoteH && ) const;
 
 		public:
 
@@ -3276,8 +3283,8 @@ namespace boost { namespace leaf {
 		}
 
 		template <class... E>
-		template <class TryBlock, class... H>
-		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type context_base<E...>::try_handle_some_( context_activator & active_context, TryBlock && try_block, H && ... h ) const
+		template <class TryBlock, class... H, class Ctx>
+		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type context_base<E...>::try_handle_some_( context_activator<Ctx> & active_context, TryBlock && try_block, H && ... h ) const
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
@@ -3294,8 +3301,8 @@ namespace boost { namespace leaf {
 		}
 
 		template <class... E>
-		template <class TryBlock, class RemoteH>
-		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type context_base<E...>::remote_try_handle_some_( context_activator & active_context, TryBlock && try_block, RemoteH && h ) const
+		template <class TryBlock, class RemoteH, class Ctx>
+		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type context_base<E...>::remote_try_handle_some_( context_activator<Ctx> & active_context, TryBlock && try_block, RemoteH && h ) const
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a remote_try_handle_some function must be registered with leaf::is_result_type");
@@ -3411,7 +3418,7 @@ namespace boost { namespace leaf {
 		template <class TryBlock, class... H>
 		inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type nocatch_context<E...>::try_handle_all( TryBlock && try_block, H && ... h )
 		{
-			context_activator active_context(*this, on_deactivation::do_not_propagate);
+			auto active_context = activate_context(*this, on_deactivation::do_not_propagate);
 			return this->try_handle_all_( std::forward<TryBlock>(try_block), std::forward<H>(h)... );
 		}
 
@@ -3419,7 +3426,7 @@ namespace boost { namespace leaf {
 		template <class TryBlock, class RemoteH>
 		inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type nocatch_context<E...>::remote_try_handle_all( TryBlock && try_block, RemoteH && h )
 		{
-			context_activator active_context(*this, on_deactivation::do_not_propagate);
+			auto active_context = activate_context(*this, on_deactivation::do_not_propagate);
 			return this->remote_try_handle_all_( std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
 		}
 
@@ -3427,7 +3434,7 @@ namespace boost { namespace leaf {
 		template <class TryBlock, class... H>
 		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type nocatch_context<E...>::try_handle_some( TryBlock && try_block, H && ... h )
 		{
-			context_activator active_context(*this, on_deactivation::propagate_if_uncaught_exception);
+			auto active_context = activate_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			return this->try_handle_some_( active_context, std::forward<TryBlock>(try_block), std::forward<H>(h)... );
 		}
 
@@ -3435,7 +3442,7 @@ namespace boost { namespace leaf {
 		template <class TryBlock, class RemoteH>
 		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type nocatch_context<E...>::remote_try_handle_some( TryBlock && try_block, RemoteH && h )
 		{
-			context_activator active_context(*this, on_deactivation::propagate_if_uncaught_exception);
+			auto active_context = activate_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			return this->remote_try_handle_some_( active_context, std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
 		}
 	}
@@ -3693,7 +3700,7 @@ namespace boost { namespace leaf {
 	{
 		using namespace leaf_detail;
 		context_type_from_handlers<H...> ctx;
-		context_activator active_context(ctx, on_deactivation::propagate_if_uncaught_exception);
+		auto active_context = activate_context(ctx, on_deactivation::propagate_if_uncaught_exception);
 		return ctx.try_catch_(
 			[&]
 			{
@@ -3707,7 +3714,7 @@ namespace boost { namespace leaf {
 	{
 		using namespace leaf_detail;
 		context_type_from_remote_handler<RemoteH> ctx;
-		context_activator active_context(ctx, on_deactivation::propagate_if_uncaught_exception);
+		auto active_context = activate_context(ctx, on_deactivation::propagate_if_uncaught_exception);
 		return ctx.remote_try_catch_(
 			[&]
 			{
@@ -3762,7 +3769,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
-			context_activator active_context(*this, on_deactivation::propagate_if_uncaught_exception);
+			auto active_context = activate_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			if(	auto r = this->try_catch_(
 					[&]
 					{
@@ -3780,7 +3787,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
-			context_activator active_context(*this, on_deactivation::propagate_if_uncaught_exception);
+			auto active_context = activate_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			if(	auto r = this->remote_try_catch_(
 					[&]
 					{
@@ -3798,7 +3805,7 @@ namespace boost { namespace leaf {
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
-			context_activator active_context(*this, on_deactivation::propagate_if_uncaught_exception);
+			auto active_context = activate_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			if(	auto r = this->try_catch_(
 					[&]
 					{
@@ -3819,7 +3826,7 @@ namespace boost { namespace leaf {
 		template <class TryBlock, class RemoteH>
 		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type catch_context<E...>::remote_try_handle_some( TryBlock && try_block, RemoteH && h )
 		{
-			context_activator active_context(*this, on_deactivation::propagate_if_uncaught_exception);
+			auto active_context = activate_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			if( auto r = this->remote_try_catch_(
 					[&]
 					{
