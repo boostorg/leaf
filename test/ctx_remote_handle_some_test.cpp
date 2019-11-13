@@ -45,7 +45,7 @@ int main()
 		leaf::result<int> r1 = f(ctx);
 		BOOST_TEST(!r1);
 
-		leaf::result<int> r2 = ctx.remote_handle_some( r1,
+		leaf::result<int> r2 = ctx.remote_handle_some( std::move(r1),
 			[&]( leaf::error_info const & error )
 			{
 				return handle_error(error);

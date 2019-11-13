@@ -30,6 +30,12 @@
 #	endif
 #endif
 
+#ifdef _MSC_VER
+#	define LEAF_NOINLINE __declspec(noinline)
+#else
+#	define LEAF_NOINLINE __attribute__((noinline))
+#endif
+
 #endif
 // <<< #include <boost/leaf/config.hpp>
 #line 10 "../../include/boost/leaf/detail/all.hpp"
@@ -796,7 +802,7 @@ namespace boost { namespace leaf {
 #define LEAF_CHECK(r)\
 	{\
 		static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "LEAF_CHECK requires a result type");\
-		auto const & _r = r;\
+		auto && _r = r;\
 		if( !_r )\
 			return _r.error();\
 	}
@@ -1535,7 +1541,7 @@ namespace boost { namespace leaf {
 		polymorphic_context() noexcept = default;
 		~polymorphic_context() noexcept = default;
 	public:
-		virtual int propagate_captured_errors() noexcept = 0;
+		virtual error_id propagate_captured_errors() noexcept = 0;
 		virtual void activate() noexcept = 0;
 		virtual void deactivate( bool propagate_errors ) noexcept = 0;
 		virtual bool is_active() const noexcept = 0;
@@ -1745,12 +1751,12 @@ namespace boost { namespace leaf {
 		class capturing_exception:
 			public std::exception
 		{
-			std::exception_ptr const ex_;
-			context_ptr const ctx_;
+			std::exception_ptr ex_;
+			context_ptr ctx_;
 
 		public:
 
-			capturing_exception(std::exception_ptr && ex, context_ptr const & ctx) noexcept:
+			capturing_exception(std::exception_ptr && ex, context_ptr && ctx) noexcept:
 				ex_(std::move(ex)),
 				ctx_(std::move(ctx))
 			{
@@ -1771,7 +1777,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class R, class F, class... A>
-		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr  const & ctx, F && f, A... a)
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr && ctx, F && f, A... a)
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			try
@@ -1784,12 +1790,12 @@ namespace boost { namespace leaf {
 			}
 			catch(...)
 			{
-				throw_exception( capturing_exception(std::current_exception(), ctx) );
+				throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
 			}
 		}
 
 		template <class R, class F, class... A>
-		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr  const & ctx, F && f, A... a)
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr && ctx, F && f, A... a)
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			try
@@ -1799,7 +1805,7 @@ namespace boost { namespace leaf {
 				else
 				{
 					ctx->captured_id_ = r.error();
-					return ctx;
+					return std::move(ctx);
 				}
 			}
 			catch( capturing_exception const & )
@@ -1808,7 +1814,7 @@ namespace boost { namespace leaf {
 			}
 			catch(...)
 			{
-				throw_exception( capturing_exception(std::current_exception(), ctx) );
+				throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
 			}
 		}
 	}
@@ -1818,14 +1824,14 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class R, class F, class... A>
-		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr  const & ctx, F && f, A... a)
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr && ctx, F && f, A... a)
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			return std::forward<F>(f)(std::forward<A>(a)...);
 		}
 
 		template <class R, class F, class... A>
-		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr  const & ctx, F && f, A... a)
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr && ctx, F && f, A... a)
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
@@ -1833,7 +1839,7 @@ namespace boost { namespace leaf {
 			else
 			{
 				ctx->captured_id_ = r.error();
-				return ctx;
+				return std::move(ctx);
 			}
 		}
 	}
@@ -1841,10 +1847,10 @@ namespace boost { namespace leaf {
 #endif
 
 	template <class F, class... A>
-	inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture(context_ptr const & ctx, F && f, A... a)
+	inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture(context_ptr && ctx, F && f, A... a)
 	{
 		using namespace leaf_detail;
-		return capture_impl(is_result_tag<decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))>(), ctx, std::forward<F>(f), std::forward<A>(a)...);
+		return capture_impl(is_result_tag<decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))>(), std::move(ctx), std::forward<F>(f), std::forward<A>(a)...);
 	}
 
 	////////////////////////////////////////
@@ -2271,10 +2277,9 @@ namespace boost { namespace leaf {
 
 		protected:
 
-			int propagate_captured_errors( int err_id ) noexcept
+			error_id propagate_captured_errors( error_id err_id ) noexcept
 			{
-				assert(err_id&1);
-				tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_, err_id);
+				tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_, err_id.value());
 				return err_id;
 			}
 
@@ -2299,10 +2304,10 @@ namespace boost { namespace leaf {
 			typename std::decay<decltype(std::declval<R>().value())>::type remote_handle_all( R const &, RemoteH && ) const;
 
 			template <class R, class... H>
-			R handle_some( R const &, H && ... ) const;
+			R handle_some( R &&, H && ... ) const;
 
 			template <class R, class RemoteH>
-			R remote_handle_some( R const &, RemoteH && ) const;
+			R remote_handle_some( R &&, RemoteH && ) const;
 
 			template <class TryBlock, class... H>
 			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... ) const;
@@ -2449,7 +2454,7 @@ namespace boost { namespace leaf {
 		template <class Ctx>
 		struct polymorphic_context_impl: polymorphic_context, Ctx
 		{
-			int propagate_captured_errors() noexcept final override { return Ctx::propagate_captured_errors(captured_id_.value()); }
+			error_id propagate_captured_errors() noexcept final override { return Ctx::propagate_captured_errors(captured_id_); }
 			void activate() noexcept final override { Ctx::activate(); }
 			void deactivate( bool propagate_errors ) noexcept final override { Ctx::deactivate(propagate_errors); }
 			bool is_active() const noexcept final override { return Ctx::is_active(); }
@@ -3201,7 +3206,7 @@ namespace boost { namespace leaf {
 
 			R get() noexcept
 			{
-				return r;
+				return std::move(r);
 			}
 		};
 
@@ -3238,17 +3243,17 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class R, class... H>
-		inline R context_base<E...>::handle_some( R const & r, H && ... h ) const
+		inline R context_base<E...>::handle_some( R && r, H && ... h ) const
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<R>::value, "The R type used with a handle_some function must be registered with leaf::is_result_type");
 			return handle_error_<R>(tup(), error_info(0, r.error()), std::forward<H>(h)...,
-				[&r]{ return r; });
+				[&r]()->R { return std::move(r); });
 		}
 
 		template <class... E>
 		template <class R, class RemoteH>
-		inline R context_base<E...>::remote_handle_some( R const & r, RemoteH && h ) const
+		inline R context_base<E...>::remote_handle_some( R && r, RemoteH && h ) const
 		{
 			static_assert(is_result_type<R>::value, "The R type used with a handle_some function must be registered with leaf::is_result_type");
 			return std::forward<RemoteH>(h)(error_info(this, r.error())).get();
@@ -3293,7 +3298,7 @@ namespace boost { namespace leaf {
 				return r;
 			else
 			{
-				auto rr = handle_some(r, std::forward<H>(h)...);
+				auto rr = handle_some(std::move(r), std::forward<H>(h)...);
 				if( !rr )
 					active_context.set_on_deactivate(on_deactivation::propagate);
 				return rr;
@@ -3311,7 +3316,7 @@ namespace boost { namespace leaf {
 				return r;
 			else
 			{
-				auto rr = remote_handle_some(r, std::forward<RemoteH>(h));
+				auto rr = remote_handle_some(std::move(r), std::forward<RemoteH>(h));
 				if( !rr )
 					active_context.set_on_deactivate(on_deactivation::propagate);
 				return rr;
@@ -3815,7 +3820,7 @@ namespace boost { namespace leaf {
 				return r;
 			else
 			{
-				auto rr = this->handle_some(r, std::forward<H>(h)...);
+				auto rr = this->handle_some(std::move(r), std::forward<H>(h)...);
 				if( !rr )
 					active_context.set_on_deactivate(on_deactivation::propagate);
 				return rr;
@@ -3836,7 +3841,7 @@ namespace boost { namespace leaf {
 				return r;
 			else
 			{
-				auto rr = this->remote_handle_some(r, std::forward<RemoteH>(h));
+				auto rr = this->remote_handle_some(std::move(r), std::forward<RemoteH>(h));
 				if( !rr )
 					active_context.set_on_deactivate(on_deactivation::propagate);
 				return rr;
@@ -4358,22 +4363,20 @@ namespace boost { namespace leaf {
 			template <class T>
 			friend class ::boost::leaf::result;
 
-			int err_id_;
-			union { context_ptr ctx_; };
+			error_id const err_id_;
+			context_ptr * const ctx_;
 
-			template <class T>
-			explicit error_result( result<T> const & ) noexcept;
+			explicit error_result( error_id ) noexcept;
+			explicit error_result( context_ptr * ) noexcept;
 
 		public:
 
-			error_result( error_result && x ) noexcept;
-
-			~error_result() noexcept;
+			error_result( error_result && x ) noexcept = default;
 
 			template <class T>
 			operator result<T>() && noexcept;
 
-			operator error_id() const noexcept;
+			operator error_id() && noexcept;
 		};
 	}
 
@@ -4392,7 +4395,7 @@ namespace boost { namespace leaf {
 		union
 		{
 			T value_;
-			context_ptr ctx_;
+			mutable context_ptr ctx_;
 		};
 
 		void destroy() const noexcept
@@ -4410,26 +4413,6 @@ namespace boost { namespace leaf {
 				assert(err_id_&1);
 			}
 		}
-
-		template <class U>
-		void copy_from( result<U> const & x )
-		{
-			int const x_err_id = x.err_id_;
-			switch(x_err_id)
-			{
-			case 0:
-				(void) new(&value_) T(x.value_);
-				break;
-			case 2:
-				assert(!x.ctx_ || x.ctx_->captured_id_);
-				(void) new(&ctx_) context_ptr(x.ctx_);
-				break;
-			default:
-				assert(x_err_id&1);
-			}
-			err_id_ = x_err_id;
-		}
-
 		template <class U>
 		void move_from( result<U> && x ) noexcept
 		{
@@ -4463,21 +4446,10 @@ namespace boost { namespace leaf {
 			move_from(std::move(x));
 		}
 
-		result( result const & x )
-		{
-			copy_from(x);
-		}
-
 		template <class U>
 		result( result<U> && x ) noexcept
 		{
 			move_from(std::move(x));
-		}
-
-		template <class U>
-		result( result<U> const & x )
-		{
-			copy_from(x);
 		}
 
 		result():
@@ -4512,6 +4484,12 @@ namespace boost { namespace leaf {
 			}
 		}
 
+		result( context_ptr && ctx ) noexcept:
+			err_id_(2),
+			ctx_(std::move(ctx))
+		{
+		}
+
 		result( std::error_code const & ec ) noexcept
 		{
 			if( int err_id=error_id(ec).value() )
@@ -4526,30 +4504,10 @@ namespace boost { namespace leaf {
 			}
 		}
 
-		result( context_ptr const & ctx ) noexcept:
-			err_id_(2),
-			ctx_(ctx)
-		{
-		}
-
-		result( leaf_detail::error_result && r ) noexcept:
-			err_id_(std::move(r.err_id_))
-		{
-			if( err_id_==2 )
-				(void) new(&ctx_) context_ptr(std::move(r.ctx_));
-		}
-
 		result & operator=( result && x ) noexcept
 		{
 			destroy();
 			move_from(std::move(x));
-			return *this;
-		}
-
-		result & operator=( result const & x )
-		{
-			destroy();
-			copy_from(x);
 			return *this;
 		}
 
@@ -4558,14 +4516,6 @@ namespace boost { namespace leaf {
 		{
 			destroy();
 			move_from(std::move(x));
-			return *this;
-		}
-
-		template <class U>
-		result & operator=( result<U> const & x )
-		{
-			destroy();
-			copy_from(x);
 			return *this;
 		}
 
@@ -4613,25 +4563,22 @@ namespace boost { namespace leaf {
 		leaf_detail::error_result error() const noexcept
 		{
 			assert(!*this);
-			return leaf_detail::error_result(*this);
+			if( err_id_==2 )
+				return leaf_detail::error_result(&ctx_);
+			else
+				return leaf_detail::error_result(leaf_detail::make_error_id(err_id_));
 		}
 
 		template <class... E>
 		error_id load( E && ... e ) noexcept
 		{
-			if( *this )
-				return error_id();
-			else
-				return error_id(error()).load(std::forward<E>(e)...);
+			return error_id(error()).load(std::forward<E>(e)...);
 		}
 
 		template <class... F>
 		error_id accumulate( F && ... f ) noexcept
 		{
-			if( *this )
-				return error_id();
-			else
-				return error_id(error()).accumulate(std::forward<F>(f)...);
+			return error_id(error()).accumulate(std::forward<F>(f)...);
 		}
 	};
 
@@ -4659,25 +4606,27 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		result() = default;
+		result( result && x ) noexcept:
+			base(std::move(x))
+		{
+		}
+
+		result() noexcept
+		{
+		}
 
 		result( error_id err ) noexcept:
 			base(err)
 		{
 		}
 
+		result( context_ptr && ctx ) noexcept:
+			base(std::move(ctx))
+		{
+		}
+
 		result( std::error_code const & ec ) noexcept:
 			base(ec)
-		{
-		}
-
-		result( context_ptr const & ctx ) noexcept:
-			base(ctx)
-		{
-		}
-
-		result( leaf_detail::error_result && r ) noexcept:
-			base(std::move(r))
 		{
 		}
 
@@ -4697,88 +4646,45 @@ namespace boost { namespace leaf {
 			return value();
 		}
 
+		using base::operator=;
 		using base::operator bool;
 		using base::error;
-
-		template <class... E>
-		result & load( E && ... e ) noexcept
-		{
-			(void) base::load(std::forward<E>(e)...);
-			return *this;
-		}
-
-		template <class... F>
-		result & accumulate( F && ... f ) noexcept
-		{
-			(void) base::accumulate(std::forward<F>(f)...);
-			return *this;
-		}
+		using base::load;
+		using base::accumulate;
 	};
 
 	////////////////////////////////////////
 
 	namespace leaf_detail
 	{
-		template <class T>
-		inline error_result::error_result( result<T> const & r ) noexcept:
-			err_id_(r.err_id_)
+		inline error_result::error_result( error_id err_id ) noexcept:
+			err_id_(err_id),
+			ctx_(0)
 		{
-			if( err_id_==2 )
-			{
-				(void) new(&ctx_) context_ptr(r.ctx_);
-				assert(ctx_);
-			}
-			else
-				assert(err_id_&1);
 		}
 
-		inline error_result::error_result( error_result && x ) noexcept:
-			err_id_(std::move(x.err_id_))
+		inline error_result::error_result( context_ptr * ctx ) noexcept:
+			ctx_(ctx)
 		{
-			if( err_id_==2 )
-			{
-				(void) new(&ctx_) context_ptr(std::move(x.ctx_));
-				assert(ctx_);
-			}
-			else
-				assert(err_id_&1);
-		}
-
-		inline error_result::~error_result() noexcept
-		{
-			if( err_id_==2 )
-				ctx_.~context_ptr();
+			assert(ctx_!=0);
+			assert(*ctx_);
 		}
 
 		template <class T>
 		inline error_result::operator result<T>() && noexcept
 		{
-			auto err_id = std::move(err_id_);
-			if( err_id==2 )
-			{
-				assert(ctx_);
-				return result<T>(std::move(ctx_));
-			}
+			if( ctx_ )
+				return result<T>(std::move(*ctx_));
 			else
-			{
-				assert(err_id&1);
-				return result<T>(err_id);
-			}
+				return result<T>(err_id_);
 		}
 
-		inline error_result::operator error_id() const noexcept
+		inline error_result::operator error_id() && noexcept
 		{
-			int const err_id = err_id_;
-			if( err_id==2 )
-			{
-				assert(ctx_);
-				return leaf_detail::make_error_id(ctx_->propagate_captured_errors());
-			}
+			if( ctx_ )
+				return (*ctx_)->propagate_captured_errors();
 			else
-			{
-				assert(err_id&1);
-				return leaf_detail::make_error_id(err_id);
-			}
+				return err_id_;
 		}
 	}
 
@@ -4793,10 +4699,10 @@ namespace boost { namespace leaf {
 	};
 
 	template <class T>
-	inline result<T> make_continuation_result( result<T>  const & r, context_ptr const & ctx = context_ptr() ) noexcept
+	inline result<T> make_continuation_result( result<T> && r, context_ptr ctx = context_ptr() ) noexcept
 	{
 		if( r )
-			return r;
+			return std::move(r);
 		else
 		{
 			error_id ne = new_error();
@@ -4804,7 +4710,7 @@ namespace boost { namespace leaf {
 			if( ctx )
 			{
 				ctx->captured_id_ = ne;
-				return ctx;
+				return std::move(ctx);
 			}
 			else
 				return ne;

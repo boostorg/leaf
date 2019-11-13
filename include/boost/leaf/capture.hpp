@@ -18,12 +18,12 @@ namespace boost { namespace leaf {
 		class capturing_exception:
 			public std::exception
 		{
-			std::exception_ptr const ex_;
-			context_ptr const ctx_;
+			std::exception_ptr ex_;
+			context_ptr ctx_;
 
 		public:
 
-			capturing_exception(std::exception_ptr && ex, context_ptr const & ctx) noexcept:
+			capturing_exception(std::exception_ptr && ex, context_ptr && ctx) noexcept:
 				ex_(std::move(ex)),
 				ctx_(std::move(ctx))
 			{
@@ -44,7 +44,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class R, class F, class... A>
-		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr  const & ctx, F && f, A... a)
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr && ctx, F && f, A... a)
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			try
@@ -57,12 +57,12 @@ namespace boost { namespace leaf {
 			}
 			catch(...)
 			{
-				throw_exception( capturing_exception(std::current_exception(), ctx) );
+				throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
 			}
 		}
 
 		template <class R, class F, class... A>
-		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr  const & ctx, F && f, A... a)
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr && ctx, F && f, A... a)
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			try
@@ -72,7 +72,7 @@ namespace boost { namespace leaf {
 				else
 				{
 					ctx->captured_id_ = r.error();
-					return ctx;
+					return std::move(ctx);
 				}
 			}
 			catch( capturing_exception const & )
@@ -81,7 +81,7 @@ namespace boost { namespace leaf {
 			}
 			catch(...)
 			{
-				throw_exception( capturing_exception(std::current_exception(), ctx) );
+				throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
 			}
 		}
 	}
@@ -91,14 +91,14 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class R, class F, class... A>
-		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr  const & ctx, F && f, A... a)
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr && ctx, F && f, A... a)
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			return std::forward<F>(f)(std::forward<A>(a)...);
 		}
 
 		template <class R, class F, class... A>
-		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr  const & ctx, F && f, A... a)
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr && ctx, F && f, A... a)
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
@@ -106,7 +106,7 @@ namespace boost { namespace leaf {
 			else
 			{
 				ctx->captured_id_ = r.error();
-				return ctx;
+				return std::move(ctx);
 			}
 		}
 	}
@@ -114,10 +114,10 @@ namespace boost { namespace leaf {
 #endif
 
 	template <class F, class... A>
-	inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture(context_ptr const & ctx, F && f, A... a)
+	inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture(context_ptr && ctx, F && f, A... a)
 	{
 		using namespace leaf_detail;
-		return capture_impl(is_result_tag<decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))>(), ctx, std::forward<F>(f), std::forward<A>(a)...);
+		return capture_impl(is_result_tag<decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))>(), std::move(ctx), std::forward<F>(f), std::forward<A>(a)...);
 	}
 
 	////////////////////////////////////////

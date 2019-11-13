@@ -268,10 +268,9 @@ namespace boost { namespace leaf {
 
 		protected:
 
-			int propagate_captured_errors( int err_id ) noexcept
+			error_id propagate_captured_errors( error_id err_id ) noexcept
 			{
-				assert(err_id&1);
-				tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_, err_id);
+				tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_, err_id.value());
 				return err_id;
 			}
 
@@ -296,10 +295,10 @@ namespace boost { namespace leaf {
 			typename std::decay<decltype(std::declval<R>().value())>::type remote_handle_all( R const &, RemoteH && ) const;
 
 			template <class R, class... H>
-			R handle_some( R const &, H && ... ) const;
+			R handle_some( R &&, H && ... ) const;
 
 			template <class R, class RemoteH>
-			R remote_handle_some( R const &, RemoteH && ) const;
+			R remote_handle_some( R &&, RemoteH && ) const;
 
 			template <class TryBlock, class... H>
 			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... ) const;
@@ -446,7 +445,7 @@ namespace boost { namespace leaf {
 		template <class Ctx>
 		struct polymorphic_context_impl: polymorphic_context, Ctx
 		{
-			int propagate_captured_errors() noexcept final override { return Ctx::propagate_captured_errors(captured_id_.value()); }
+			error_id propagate_captured_errors() noexcept final override { return Ctx::propagate_captured_errors(captured_id_); }
 			void activate() noexcept final override { Ctx::activate(); }
 			void deactivate( bool propagate_errors ) noexcept final override { Ctx::deactivate(propagate_errors); }
 			bool is_active() const noexcept final override { return Ctx::is_active(); }

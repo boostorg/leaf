@@ -48,7 +48,7 @@
 #define LEAF_CHECK(r)\
 	{\
 		static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "LEAF_CHECK requires a result type");\
-		auto const & _r = r;\
+		auto && _r = r;\
 		if( !_r )\
 			return _r.error();\
 	}
@@ -787,7 +787,7 @@ namespace boost { namespace leaf {
 		polymorphic_context() noexcept = default;
 		~polymorphic_context() noexcept = default;
 	public:
-		virtual int propagate_captured_errors() noexcept = 0;
+		virtual error_id propagate_captured_errors() noexcept = 0;
 		virtual void activate() noexcept = 0;
 		virtual void deactivate( bool propagate_errors ) noexcept = 0;
 		virtual bool is_active() const noexcept = 0;

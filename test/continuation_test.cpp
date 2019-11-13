@@ -284,7 +284,7 @@ int main()
 			op_b::start( ioc, fw,
 				[&]( leaf::result<int> && answer ) mutable
 				{
-					res = leaf::make_continuation_result(answer, ioc.err_ctx);
+					res = leaf::make_continuation_result(std::move(answer), ioc.err_ctx);
 				} );
 			if( res )
 				ioc.io_ctx.run();

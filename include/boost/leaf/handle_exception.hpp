@@ -239,7 +239,7 @@ namespace boost { namespace leaf {
 				return r;
 			else
 			{
-				auto rr = this->handle_some(r, std::forward<H>(h)...);
+				auto rr = this->handle_some(std::move(r), std::forward<H>(h)...);
 				if( !rr )
 					active_context.set_on_deactivate(on_deactivation::propagate);
 				return rr;
@@ -260,7 +260,7 @@ namespace boost { namespace leaf {
 				return r;
 			else
 			{
-				auto rr = this->remote_handle_some(r, std::forward<RemoteH>(h));
+				auto rr = this->remote_handle_some(std::move(r), std::forward<RemoteH>(h));
 				if( !rr )
 					active_context.set_on_deactivate(on_deactivation::propagate);
 				return rr;

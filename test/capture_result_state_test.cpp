@@ -60,7 +60,7 @@ int main()
 		int answer = leaf::remote_try_handle_all(
 			[&r]
 			{
-				return r;
+				return std::move(r);
 			},
 			[&]( leaf::error_info const & err )
 			{

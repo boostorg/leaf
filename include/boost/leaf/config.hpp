@@ -20,4 +20,10 @@
 #	endif
 #endif
 
+#ifdef _MSC_VER
+#	define LEAF_NOINLINE __declspec(noinline)
+#else
+#	define LEAF_NOINLINE __attribute__((noinline))
+#endif
+
 #endif

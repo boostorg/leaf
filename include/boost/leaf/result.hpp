@@ -41,22 +41,20 @@ namespace boost { namespace leaf {
 			template <class T>
 			friend class ::boost::leaf::result;
 
-			int err_id_;
-			union { context_ptr ctx_; };
+			error_id const err_id_;
+			context_ptr * const ctx_;
 
-			template <class T>
-			explicit error_result( result<T> const & ) noexcept;
+			explicit error_result( error_id ) noexcept;
+			explicit error_result( context_ptr * ) noexcept;
 
 		public:
 
-			error_result( error_result && x ) noexcept;
-
-			~error_result() noexcept;
+			error_result( error_result && x ) noexcept = default;
 
 			template <class T>
 			operator result<T>() && noexcept;
 
-			operator error_id() const noexcept;
+			operator error_id() && noexcept;
 		};
 	}
 
@@ -75,7 +73,7 @@ namespace boost { namespace leaf {
 		union
 		{
 			T value_;
-			context_ptr ctx_;
+			mutable context_ptr ctx_;
 		};
 
 		void destroy() const noexcept
@@ -93,26 +91,6 @@ namespace boost { namespace leaf {
 				assert(err_id_&1);
 			}
 		}
-
-		template <class U>
-		void copy_from( result<U> const & x )
-		{
-			int const x_err_id = x.err_id_;
-			switch(x_err_id)
-			{
-			case 0:
-				(void) new(&value_) T(x.value_);
-				break;
-			case 2:
-				assert(!x.ctx_ || x.ctx_->captured_id_);
-				(void) new(&ctx_) context_ptr(x.ctx_);
-				break;
-			default:
-				assert(x_err_id&1);
-			}
-			err_id_ = x_err_id;
-		}
-
 		template <class U>
 		void move_from( result<U> && x ) noexcept
 		{
@@ -146,21 +124,10 @@ namespace boost { namespace leaf {
 			move_from(std::move(x));
 		}
 
-		result( result const & x )
-		{
-			copy_from(x);
-		}
-
 		template <class U>
 		result( result<U> && x ) noexcept
 		{
 			move_from(std::move(x));
-		}
-
-		template <class U>
-		result( result<U> const & x )
-		{
-			copy_from(x);
 		}
 
 		result():
@@ -195,6 +162,12 @@ namespace boost { namespace leaf {
 			}
 		}
 
+		result( context_ptr && ctx ) noexcept:
+			err_id_(2),
+			ctx_(std::move(ctx))
+		{
+		}
+
 		result( std::error_code const & ec ) noexcept
 		{
 			if( int err_id=error_id(ec).value() )
@@ -209,30 +182,10 @@ namespace boost { namespace leaf {
 			}
 		}
 
-		result( context_ptr const & ctx ) noexcept:
-			err_id_(2),
-			ctx_(ctx)
-		{
-		}
-
-		result( leaf_detail::error_result && r ) noexcept:
-			err_id_(std::move(r.err_id_))
-		{
-			if( err_id_==2 )
-				(void) new(&ctx_) context_ptr(std::move(r.ctx_));
-		}
-
 		result & operator=( result && x ) noexcept
 		{
 			destroy();
 			move_from(std::move(x));
-			return *this;
-		}
-
-		result & operator=( result const & x )
-		{
-			destroy();
-			copy_from(x);
 			return *this;
 		}
 
@@ -241,14 +194,6 @@ namespace boost { namespace leaf {
 		{
 			destroy();
 			move_from(std::move(x));
-			return *this;
-		}
-
-		template <class U>
-		result & operator=( result<U> const & x )
-		{
-			destroy();
-			copy_from(x);
 			return *this;
 		}
 
@@ -296,25 +241,22 @@ namespace boost { namespace leaf {
 		leaf_detail::error_result error() const noexcept
 		{
 			assert(!*this);
-			return leaf_detail::error_result(*this);
+			if( err_id_==2 )
+				return leaf_detail::error_result(&ctx_);
+			else
+				return leaf_detail::error_result(leaf_detail::make_error_id(err_id_));
 		}
 
 		template <class... E>
 		error_id load( E && ... e ) noexcept
 		{
-			if( *this )
-				return error_id();
-			else
-				return error_id(error()).load(std::forward<E>(e)...);
+			return error_id(error()).load(std::forward<E>(e)...);
 		}
 
 		template <class... F>
 		error_id accumulate( F && ... f ) noexcept
 		{
-			if( *this )
-				return error_id();
-			else
-				return error_id(error()).accumulate(std::forward<F>(f)...);
+			return error_id(error()).accumulate(std::forward<F>(f)...);
 		}
 	};
 
@@ -342,25 +284,27 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		result() = default;
+		result( result && x ) noexcept:
+			base(std::move(x))
+		{
+		}
+
+		result() noexcept
+		{
+		}
 
 		result( error_id err ) noexcept:
 			base(err)
 		{
 		}
 
+		result( context_ptr && ctx ) noexcept:
+			base(std::move(ctx))
+		{
+		}
+
 		result( std::error_code const & ec ) noexcept:
 			base(ec)
-		{
-		}
-
-		result( context_ptr const & ctx ) noexcept:
-			base(ctx)
-		{
-		}
-
-		result( leaf_detail::error_result && r ) noexcept:
-			base(std::move(r))
 		{
 		}
 
@@ -380,88 +324,45 @@ namespace boost { namespace leaf {
 			return value();
 		}
 
+		using base::operator=;
 		using base::operator bool;
 		using base::error;
-
-		template <class... E>
-		result & load( E && ... e ) noexcept
-		{
-			(void) base::load(std::forward<E>(e)...);
-			return *this;
-		}
-
-		template <class... F>
-		result & accumulate( F && ... f ) noexcept
-		{
-			(void) base::accumulate(std::forward<F>(f)...);
-			return *this;
-		}
+		using base::load;
+		using base::accumulate;
 	};
 
 	////////////////////////////////////////
 
 	namespace leaf_detail
 	{
-		template <class T>
-		inline error_result::error_result( result<T> const & r ) noexcept:
-			err_id_(r.err_id_)
+		inline error_result::error_result( error_id err_id ) noexcept:
+			err_id_(err_id),
+			ctx_(0)
 		{
-			if( err_id_==2 )
-			{
-				(void) new(&ctx_) context_ptr(r.ctx_);
-				assert(ctx_);
-			}
-			else
-				assert(err_id_&1);
 		}
 
-		inline error_result::error_result( error_result && x ) noexcept:
-			err_id_(std::move(x.err_id_))
+		inline error_result::error_result( context_ptr * ctx ) noexcept:
+			ctx_(ctx)
 		{
-			if( err_id_==2 )
-			{
-				(void) new(&ctx_) context_ptr(std::move(x.ctx_));
-				assert(ctx_);
-			}
-			else
-				assert(err_id_&1);
-		}
-
-		inline error_result::~error_result() noexcept
-		{
-			if( err_id_==2 )
-				ctx_.~context_ptr();
+			assert(ctx_!=0);
+			assert(*ctx_);
 		}
 
 		template <class T>
 		inline error_result::operator result<T>() && noexcept
 		{
-			auto err_id = std::move(err_id_);
-			if( err_id==2 )
-			{
-				assert(ctx_);
-				return result<T>(std::move(ctx_));
-			}
+			if( ctx_ )
+				return result<T>(std::move(*ctx_));
 			else
-			{
-				assert(err_id&1);
-				return result<T>(err_id);
-			}
+				return result<T>(err_id_);
 		}
 
-		inline error_result::operator error_id() const noexcept
+		inline error_result::operator error_id() && noexcept
 		{
-			int const err_id = err_id_;
-			if( err_id==2 )
-			{
-				assert(ctx_);
-				return leaf_detail::make_error_id(ctx_->propagate_captured_errors());
-			}
+			if( ctx_ )
+				return (*ctx_)->propagate_captured_errors();
 			else
-			{
-				assert(err_id&1);
-				return leaf_detail::make_error_id(err_id);
-			}
+				return err_id_;
 		}
 	}
 
@@ -476,10 +377,10 @@ namespace boost { namespace leaf {
 	};
 
 	template <class T>
-	inline result<T> make_continuation_result( result<T>  const & r, context_ptr const & ctx = context_ptr() ) noexcept
+	inline result<T> make_continuation_result( result<T> && r, context_ptr ctx = context_ptr() ) noexcept
 	{
 		if( r )
-			return r;
+			return std::move(r);
 		else
 		{
 			error_id ne = new_error();
@@ -487,7 +388,7 @@ namespace boost { namespace leaf {
 			if( ctx )
 			{
 				ctx->captured_id_ = ne;
-				return ctx;
+				return std::move(ctx);
 			}
 			else
 				return ne;

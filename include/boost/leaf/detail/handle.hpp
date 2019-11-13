@@ -697,7 +697,7 @@ namespace boost { namespace leaf {
 
 			R get() noexcept
 			{
-				return r;
+				return std::move(r);
 			}
 		};
 
@@ -734,17 +734,17 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class R, class... H>
-		inline R context_base<E...>::handle_some( R const & r, H && ... h ) const
+		inline R context_base<E...>::handle_some( R && r, H && ... h ) const
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<R>::value, "The R type used with a handle_some function must be registered with leaf::is_result_type");
 			return handle_error_<R>(tup(), error_info(0, r.error()), std::forward<H>(h)...,
-				[&r]{ return r; });
+				[&r]()->R { return std::move(r); });
 		}
 
 		template <class... E>
 		template <class R, class RemoteH>
-		inline R context_base<E...>::remote_handle_some( R const & r, RemoteH && h ) const
+		inline R context_base<E...>::remote_handle_some( R && r, RemoteH && h ) const
 		{
 			static_assert(is_result_type<R>::value, "The R type used with a handle_some function must be registered with leaf::is_result_type");
 			return std::forward<RemoteH>(h)(error_info(this, r.error())).get();
@@ -789,7 +789,7 @@ namespace boost { namespace leaf {
 				return r;
 			else
 			{
-				auto rr = handle_some(r, std::forward<H>(h)...);
+				auto rr = handle_some(std::move(r), std::forward<H>(h)...);
 				if( !rr )
 					active_context.set_on_deactivate(on_deactivation::propagate);
 				return rr;
@@ -807,7 +807,7 @@ namespace boost { namespace leaf {
 				return r;
 			else
 			{
-				auto rr = remote_handle_some(r, std::forward<RemoteH>(h));
+				auto rr = remote_handle_some(std::move(r), std::forward<RemoteH>(h));
 				if( !rr )
 					active_context.set_on_deactivate(on_deactivation::propagate);
 				return rr;
