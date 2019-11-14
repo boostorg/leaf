@@ -4,58 +4,15 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/handle_error.hpp>
+#include "_test_res.hpp"
 #include "lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
 
 template <int> struct info { int value; };
 
-template <class T, class E>
-class result
-{
-	enum class variant
-	{
-		value,
-		error
-	};
-	T value_;
-	E error_;
-	variant which_;
-public:
-	result( T const & value ) noexcept:
-		value_(value),
-		which_(variant::value)
-	{
-	}
-	result( E const & error ) noexcept:
-		error_(error),
-		which_(variant::error)
-	{
-	}
-	explicit operator bool() const noexcept
-	{
-		return which_==variant::value;
-	}
-	T const & value() const
-	{
-		assert(which_==variant::value);
-		return value_;
-	}
-	E const & error() const
-	{
-		assert(which_==variant::error);
-		return error_;
-	}
-};
-
-namespace boost { namespace leaf {
-	template <class T, class E>
-	struct is_result_type<::result<T, E>>: std::true_type
-	{
-	};
-} }
-
-result<int,std::error_code> f( bool succeed )
+template <class ResType>
+ResType f( bool succeed )
 {
 	if( succeed )
 		return 42;
@@ -63,21 +20,23 @@ result<int,std::error_code> f( bool succeed )
 		return make_error_code(std::errc::no_such_file_or_directory);
 }
 
-result<int,std::error_code> g( bool succeed )
+template <class ResType>
+ResType g( bool succeed )
 {
-	if( auto r = f(succeed) )
+	if( auto r = f<ResType>(succeed) )
 		return r;
 	else
 		return leaf::error_id(r.error()).load(info<42>{42});
 }
 
-int main()
+template <class ResType>
+void test()
 {
 	{
 		int r = leaf::try_handle_all(
 			[]
 			{
-				return g(true);
+				return g<ResType>(true);
 			},
 			[]
 			{
@@ -89,7 +48,7 @@ int main()
 		int r = leaf::try_handle_all(
 			[&]
 			{
-				auto r = g(false);
+				auto r = g<ResType>(false);
 				BOOST_TEST(!r);
 				auto ec = r.error();
 				BOOST_TEST_EQ(ec.message(), "LEAF error");
@@ -108,5 +67,13 @@ int main()
 			} );
 		BOOST_TEST_EQ(r, 1);
 	}
+}
+
+int main()
+{
+	test<res<int, std::error_code>>();
+	test<res<int const, std::error_code>>();
+	test<res<int, std::error_code> const>();
+	test<res<int const, std::error_code> const>();
 	return boost::report_errors();
 }

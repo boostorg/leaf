@@ -1290,7 +1290,7 @@ namespace boost { namespace leaf {
 			static int generate_next_id() noexcept
 			{
 				unsigned id = (counter+=2u);
-				assert(id&1u);
+				assert(id&1);
 				return int(id);
 			}
 		};
@@ -1324,13 +1324,14 @@ namespace boost { namespace leaf {
 
 		inline int new_id() noexcept
 		{
-			int id = next_id();
-			assert(id&1);
-			int next = id_factory<>::generate_next_id();
-			assert(next&1);
-			id_factory<>::last_id = id;
-			id_factory<>::next_id = next;
-			return id;
+			if( int id = id_factory<>::next_id )
+			{
+				assert(id&1);
+				id_factory<>::next_id = 0;
+				return id_factory<>::last_id = id;
+			}
+			else
+				return id_factory<>::last_id = id_factory<>::generate_next_id();
 		}
 	}
 
@@ -2298,10 +2299,10 @@ namespace boost { namespace leaf {
 		public:
 
 			template <class R, class... H>
-			typename std::decay<decltype(std::declval<R>().value())>::type handle_all( R const &, H && ... ) const;
+			typename std::decay<decltype(std::declval<R>().value())>::type handle_all( R &, H && ... ) const;
 
 			template <class R, class RemoteH>
-			typename std::decay<decltype(std::declval<R>().value())>::type remote_handle_all( R const &, RemoteH && ) const;
+			typename std::decay<decltype(std::declval<R>().value())>::type remote_handle_all( R &, RemoteH && ) const;
 
 			template <class R, class... H>
 			R handle_some( R &&, H && ... ) const;
@@ -3225,7 +3226,7 @@ namespace boost { namespace leaf {
 	{
 		template <class... E>
 		template <class R, class... H>
-		inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::handle_all( R const & r, H && ... h ) const
+		inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::handle_all( R & r, H && ... h ) const
 		{
 			using namespace leaf_detail;
 			using Ret = typename std::decay<decltype(std::declval<R>().value())>::type;
@@ -3235,7 +3236,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class R, class RemoteH>
-		inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::remote_handle_all( R const & r, RemoteH && h ) const
+		inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::remote_handle_all( R & r, RemoteH && h ) const
 		{
 			static_assert(is_result_type<R>::value, "The R type used with a handle_all function must be registered with leaf::is_result_type");
 			return std::forward<RemoteH>(h)(error_info(this, r.error())).get();
@@ -4366,8 +4367,18 @@ namespace boost { namespace leaf {
 			error_id const err_id_;
 			context_ptr * const ctx_;
 
-			explicit error_result( error_id ) noexcept;
-			explicit error_result( context_ptr * ) noexcept;
+			error_result( error_id err_id ) noexcept:
+				err_id_(err_id),
+				ctx_(0)
+			{
+			}
+
+			error_result( context_ptr * ctx ) noexcept:
+				ctx_(ctx)
+			{
+				assert(ctx_!=0);
+				assert(*ctx_);
+			}
 
 		public:
 
@@ -4376,7 +4387,13 @@ namespace boost { namespace leaf {
 			template <class T>
 			operator result<T>() && noexcept;
 
-			operator error_id() && noexcept;
+			operator error_id() && noexcept
+			{
+				if( ctx_ )
+					return (*ctx_)->propagate_captured_errors();
+				else
+					return err_id_;
+			}
 		};
 	}
 
@@ -4390,12 +4407,12 @@ namespace boost { namespace leaf {
 
 		friend class leaf_detail::error_result;
 
-		mutable int err_id_; // 0:value_, 2:ctx_, else neither (error ids are always odd numbers)
+		int err_id_; // 0:value_, 2:ctx_, else neither (error ids are always odd numbers)
 
 		union
 		{
 			T value_;
-			mutable context_ptr ctx_;
+			context_ptr ctx_;
 		};
 
 		void destroy() const noexcept
@@ -4529,7 +4546,7 @@ namespace boost { namespace leaf {
 			if( err_id_==0 )
 				return value_;
 			else
-				::boost::leaf::throw_exception(bad_result(error()));
+				::boost::leaf::throw_exception(bad_result(get_error_id()));
 		}
 
 		T & value()
@@ -4537,7 +4554,7 @@ namespace boost { namespace leaf {
 			if( err_id_==0 )
 				return value_;
 			else
-				::boost::leaf::throw_exception(bad_result(error()));
+				::boost::leaf::throw_exception(bad_result(get_error_id()));
 		}
 
 		T const & operator*() const
@@ -4560,7 +4577,12 @@ namespace boost { namespace leaf {
 			return &value();
 		}
 
-		leaf_detail::error_result error() const noexcept
+		error_id get_error_id() const noexcept
+		{
+			return err_id_==2 ? ctx_->captured_id_ : leaf_detail::make_error_id(err_id_);
+		}
+
+		leaf_detail::error_result error() noexcept
 		{
 			assert(!*this);
 			if( err_id_==2 )
@@ -4648,6 +4670,7 @@ namespace boost { namespace leaf {
 
 		using base::operator=;
 		using base::operator bool;
+		using base::get_error_id;
 		using base::error;
 		using base::load;
 		using base::accumulate;
@@ -4657,19 +4680,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		inline error_result::error_result( error_id err_id ) noexcept:
-			err_id_(err_id),
-			ctx_(0)
-		{
-		}
-
-		inline error_result::error_result( context_ptr * ctx ) noexcept:
-			ctx_(ctx)
-		{
-			assert(ctx_!=0);
-			assert(*ctx_);
-		}
-
 		template <class T>
 		inline error_result::operator result<T>() && noexcept
 		{
@@ -4677,14 +4687,6 @@ namespace boost { namespace leaf {
 				return result<T>(std::move(*ctx_));
 			else
 				return result<T>(err_id_);
-		}
-
-		inline error_result::operator error_id() && noexcept
-		{
-			if( ctx_ )
-				return (*ctx_)->propagate_captured_errors();
-			else
-				return err_id_;
 		}
 	}
 

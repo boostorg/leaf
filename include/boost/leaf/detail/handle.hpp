@@ -716,7 +716,7 @@ namespace boost { namespace leaf {
 	{
 		template <class... E>
 		template <class R, class... H>
-		inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::handle_all( R const & r, H && ... h ) const
+		inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::handle_all( R & r, H && ... h ) const
 		{
 			using namespace leaf_detail;
 			using Ret = typename std::decay<decltype(std::declval<R>().value())>::type;
@@ -726,7 +726,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class R, class RemoteH>
-		inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::remote_handle_all( R const & r, RemoteH && h ) const
+		inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::remote_handle_all( R & r, RemoteH && h ) const
 		{
 			static_assert(is_result_type<R>::value, "The R type used with a handle_all function must be registered with leaf::is_result_type");
 			return std::forward<RemoteH>(h)(error_info(this, r.error())).get();

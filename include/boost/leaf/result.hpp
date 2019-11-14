@@ -44,8 +44,18 @@ namespace boost { namespace leaf {
 			error_id const err_id_;
 			context_ptr * const ctx_;
 
-			explicit error_result( error_id ) noexcept;
-			explicit error_result( context_ptr * ) noexcept;
+			error_result( error_id err_id ) noexcept:
+				err_id_(err_id),
+				ctx_(0)
+			{
+			}
+
+			error_result( context_ptr * ctx ) noexcept:
+				ctx_(ctx)
+			{
+				assert(ctx_!=0);
+				assert(*ctx_);
+			}
 
 		public:
 
@@ -54,7 +64,13 @@ namespace boost { namespace leaf {
 			template <class T>
 			operator result<T>() && noexcept;
 
-			operator error_id() && noexcept;
+			operator error_id() && noexcept
+			{
+				if( ctx_ )
+					return (*ctx_)->propagate_captured_errors();
+				else
+					return err_id_;
+			}
 		};
 	}
 
@@ -68,12 +84,12 @@ namespace boost { namespace leaf {
 
 		friend class leaf_detail::error_result;
 
-		mutable int err_id_; // 0:value_, 2:ctx_, else neither (error ids are always odd numbers)
+		int err_id_; // 0:value_, 2:ctx_, else neither (error ids are always odd numbers)
 
 		union
 		{
 			T value_;
-			mutable context_ptr ctx_;
+			context_ptr ctx_;
 		};
 
 		void destroy() const noexcept
@@ -207,7 +223,7 @@ namespace boost { namespace leaf {
 			if( err_id_==0 )
 				return value_;
 			else
-				::boost::leaf::throw_exception(bad_result(error()));
+				::boost::leaf::throw_exception(bad_result(get_error_id()));
 		}
 
 		T & value()
@@ -215,7 +231,7 @@ namespace boost { namespace leaf {
 			if( err_id_==0 )
 				return value_;
 			else
-				::boost::leaf::throw_exception(bad_result(error()));
+				::boost::leaf::throw_exception(bad_result(get_error_id()));
 		}
 
 		T const & operator*() const
@@ -238,7 +254,12 @@ namespace boost { namespace leaf {
 			return &value();
 		}
 
-		leaf_detail::error_result error() const noexcept
+		error_id get_error_id() const noexcept
+		{
+			return err_id_==2 ? ctx_->captured_id_ : leaf_detail::make_error_id(err_id_);
+		}
+
+		leaf_detail::error_result error() noexcept
 		{
 			assert(!*this);
 			if( err_id_==2 )
@@ -326,6 +347,7 @@ namespace boost { namespace leaf {
 
 		using base::operator=;
 		using base::operator bool;
+		using base::get_error_id;
 		using base::error;
 		using base::load;
 		using base::accumulate;
@@ -335,19 +357,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		inline error_result::error_result( error_id err_id ) noexcept:
-			err_id_(err_id),
-			ctx_(0)
-		{
-		}
-
-		inline error_result::error_result( context_ptr * ctx ) noexcept:
-			ctx_(ctx)
-		{
-			assert(ctx_!=0);
-			assert(*ctx_);
-		}
-
 		template <class T>
 		inline error_result::operator result<T>() && noexcept
 		{
@@ -355,14 +364,6 @@ namespace boost { namespace leaf {
 				return result<T>(std::move(*ctx_));
 			else
 				return result<T>(err_id_);
-		}
-
-		inline error_result::operator error_id() && noexcept
-		{
-			if( ctx_ )
-				return (*ctx_)->propagate_captured_errors();
-			else
-				return err_id_;
 		}
 	}
 

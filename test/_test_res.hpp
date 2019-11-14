@@ -22,10 +22,12 @@ class res
 public:
 	res( T const & value ) noexcept:
 		value_(value),
+		error_(),
 		which_(variant::value)
 	{
 	}
 	res( E const & error ) noexcept:
+		value_(),
 		error_(error),
 		which_(variant::error)
 	{

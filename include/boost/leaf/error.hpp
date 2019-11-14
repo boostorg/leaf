@@ -536,7 +536,7 @@ namespace boost { namespace leaf {
 			static int generate_next_id() noexcept
 			{
 				unsigned id = (counter+=2u);
-				assert(id&1u);
+				assert(id&1);
 				return int(id);
 			}
 		};
@@ -570,13 +570,14 @@ namespace boost { namespace leaf {
 
 		inline int new_id() noexcept
 		{
-			int id = next_id();
-			assert(id&1);
-			int next = id_factory<>::generate_next_id();
-			assert(next&1);
-			id_factory<>::last_id = id;
-			id_factory<>::next_id = next;
-			return id;
+			if( int id = id_factory<>::next_id )
+			{
+				assert(id&1);
+				id_factory<>::next_id = 0;
+				return id_factory<>::last_id = id;
+			}
+			else
+				return id_factory<>::last_id = id_factory<>::generate_next_id();
 		}
 	}
 

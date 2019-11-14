@@ -289,10 +289,10 @@ namespace boost { namespace leaf {
 		public:
 
 			template <class R, class... H>
-			typename std::decay<decltype(std::declval<R>().value())>::type handle_all( R const &, H && ... ) const;
+			typename std::decay<decltype(std::declval<R>().value())>::type handle_all( R &, H && ... ) const;
 
 			template <class R, class RemoteH>
-			typename std::decay<decltype(std::declval<R>().value())>::type remote_handle_all( R const &, RemoteH && ) const;
+			typename std::decay<decltype(std::declval<R>().value())>::type remote_handle_all( R &, RemoteH && ) const;
 
 			template <class R, class... H>
 			R handle_some( R &&, H && ... ) const;

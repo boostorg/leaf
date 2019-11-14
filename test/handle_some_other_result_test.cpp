@@ -11,7 +11,8 @@ namespace leaf = boost::leaf;
 
 template <int> struct info { int value; };
 
-res<int,std::error_code> f( bool succeed )
+template <class ResType>
+ResType f( bool succeed )
 {
 	if( succeed )
 		return 42;
@@ -19,31 +20,33 @@ res<int,std::error_code> f( bool succeed )
 		return make_error_code(errc_a::a0);
 }
 
-res<int,std::error_code> g( bool succeed )
+template <class ResType>
+ResType g( bool succeed )
 {
-	if( auto r = f(succeed) )
+	if( auto r = f<ResType>(succeed) )
 		return r;
 	else
 		return leaf::error_id(r.error()).load(info<42>{42});
 }
 
-int main()
+template <class ResType>
+void test()
 {
 	{
-		res<int,std::error_code> r = leaf::try_handle_some(
+		ResType r = leaf::try_handle_some(
 			[]
 			{
-				return g(true);
+				return g<ResType>(true);
 			} );
 		BOOST_TEST(r);
 		BOOST_TEST_EQ(r.value(), 42);
 	}
 	{
 		int called = 0;
-		res<int,std::error_code> r = leaf::try_handle_some(
+		ResType r = leaf::try_handle_some(
 			[&]
 			{
-				auto r = g(false);
+				auto r = g<ResType>(false);
 				BOOST_TEST(!r);
 				auto ec = r.error();
 				BOOST_TEST_EQ(ec.message(), "LEAF error");
@@ -60,5 +63,13 @@ int main()
 		BOOST_TEST_EQ(r.error(), make_error_code(errc_a::a0));
 		BOOST_TEST(called);
 	}
+}
+
+int main()
+{
+	test<res<int, std::error_code>>();
+	test<res<int const, std::error_code>>();
+	test<res<int, std::error_code> const>();
+	test<res<int const, std::error_code> const>();
 	return boost::report_errors();
 }
