@@ -122,6 +122,13 @@ namespace boost { namespace leaf {
 
 		protected:
 
+#ifdef LEAF_NO_DIAGNOSTIC_INFO
+			slot_base() noexcept = default;
+			slot_base( slot_base && x ) noexcept = default;
+			~slot_base() noexcept = default;
+			void activate() noexcept { }
+			void deactivate() noexcept { }
+#else
 			static slot_base * & first() noexcept
 			{
 				static LEAF_THREAD_LOCAL slot_base * p = 0;
@@ -161,6 +168,7 @@ namespace boost { namespace leaf {
 				*f = next_;
 				next_ = 0;
 			}
+#endif
 		};
 	}
 
