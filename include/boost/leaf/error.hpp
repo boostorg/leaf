@@ -521,11 +521,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		//Starting with first_id, all error IDs are odd numbers, in order to ensure
-		//that the sequence will not include 0, which is used to indicate no error.
-		constexpr int first_id = 1;
-		static_assert(first_id&1, "first_id must be an odd number");
-
 		template <class=void>
 		struct id_factory
 		{
@@ -535,14 +530,14 @@ namespace boost { namespace leaf {
 
 			static int generate_next_id() noexcept
 			{
-				unsigned id = (counter+=2u);
-				assert(id&1);
-				return int(id);
+				unsigned id = (counter+=4u);
+				assert((id&3)==1);
+				return id;
 			}
 		};
 
 		template <class T>
-		atomic_unsigned_int id_factory<T>::counter(first_id-2u);
+		atomic_unsigned_int id_factory<T>::counter(-3u);
 
 		template <class T>
 		LEAF_THREAD_LOCAL int id_factory<T>::last_id(0);
@@ -553,7 +548,7 @@ namespace boost { namespace leaf {
 		inline int last_id() noexcept
 		{
 			int id = id_factory<>::last_id;
-			assert(id==0 || (id&1));
+			assert(id==0 || ((id&3)==1));
 			return id;
 		}
 
@@ -561,7 +556,7 @@ namespace boost { namespace leaf {
 		{
 			if( int id = id_factory<>::next_id )
 			{
-				assert(id&1);
+				assert((id&3)==1);
 				return id;
 			}
 			else
@@ -572,7 +567,7 @@ namespace boost { namespace leaf {
 		{
 			if( int id = id_factory<>::next_id )
 			{
-				assert(id&1);
+				assert((id&3)==1);
 				id_factory<>::next_id = 0;
 				return id_factory<>::last_id = id;
 			}
@@ -608,24 +603,29 @@ namespace boost { namespace leaf {
 
 		inline int import_error_code( std::error_code const & ec ) noexcept
 		{
-			int err_id = ec.value();
-			if( err_id )
+			if( int err_id = ec.value() )
 			{
 				std::error_category const & cat = leaf_detail::get_error_category<>::cat;
-				if( &ec.category()!=&cat )
+				if( &ec.category()==&cat )
+				{
+					assert((err_id&3)==1);
+					return err_id;
+				}
+				else
 				{
 					err_id = leaf_detail::new_id();
 					leaf_detail::load_slot(err_id, leaf_detail::e_original_ec{ec});
 					return err_id;
 				}
 			}
-			return err_id;
+			else
+				return 0;
 		}
 
 		inline bool is_error_id( std::error_code const & ec ) noexcept
 		{
 			bool res = (&ec.category() == &leaf_detail::get_error_category<>::cat);
-			assert(!res || !ec.value() || (ec.value()&1));
+			assert(!res || !ec.value() || ((ec.value()&3)==1));
 			return res;
 		}
 }
@@ -648,7 +648,7 @@ namespace boost { namespace leaf {
 		explicit error_id( int value ) noexcept:
 			value_(value)
 		{
-			assert(value_==0 || (value_&1));
+			assert(value_==0 || ((value_&3)==1));
 		}
 
 	public:
@@ -661,7 +661,7 @@ namespace boost { namespace leaf {
 		error_id( std::error_code const & ec ) noexcept:
 			value_(leaf_detail::import_error_code(ec))
 		{
-			assert(!value_ || (value_&1));
+			assert(!value_ || ((value_&3)==1));
 		}
 
 		error_id load() const noexcept
@@ -707,7 +707,7 @@ namespace boost { namespace leaf {
 
 		int value() const noexcept
 		{
-			assert(!value_ || (value_&1));
+			assert(!value_ || ((value_&3)==1));
 			return value_;
 		}
 

@@ -30,12 +30,6 @@
 #	endif
 #endif
 
-#ifdef _MSC_VER
-#	define LEAF_NOINLINE __declspec(noinline)
-#else
-#	define LEAF_NOINLINE __attribute__((noinline))
-#endif
-
 #endif
 // <<< #include <boost/leaf/config.hpp>
 #line 10 "../../include/boost/leaf/detail/all.hpp"
@@ -1275,11 +1269,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		//Starting with first_id, all error IDs are odd numbers, in order to ensure
-		//that the sequence will not include 0, which is used to indicate no error.
-		constexpr int first_id = 1;
-		static_assert(first_id&1, "first_id must be an odd number");
-
 		template <class=void>
 		struct id_factory
 		{
@@ -1289,14 +1278,14 @@ namespace boost { namespace leaf {
 
 			static int generate_next_id() noexcept
 			{
-				unsigned id = (counter+=2u);
-				assert(id&1);
-				return int(id);
+				unsigned id = (counter+=4u);
+				assert((id&3)==1);
+				return id;
 			}
 		};
 
 		template <class T>
-		atomic_unsigned_int id_factory<T>::counter(first_id-2u);
+		atomic_unsigned_int id_factory<T>::counter(-3u);
 
 		template <class T>
 		LEAF_THREAD_LOCAL int id_factory<T>::last_id(0);
@@ -1307,7 +1296,7 @@ namespace boost { namespace leaf {
 		inline int last_id() noexcept
 		{
 			int id = id_factory<>::last_id;
-			assert(id==0 || (id&1));
+			assert(id==0 || ((id&3)==1));
 			return id;
 		}
 
@@ -1315,7 +1304,7 @@ namespace boost { namespace leaf {
 		{
 			if( int id = id_factory<>::next_id )
 			{
-				assert(id&1);
+				assert((id&3)==1);
 				return id;
 			}
 			else
@@ -1326,7 +1315,7 @@ namespace boost { namespace leaf {
 		{
 			if( int id = id_factory<>::next_id )
 			{
-				assert(id&1);
+				assert((id&3)==1);
 				id_factory<>::next_id = 0;
 				return id_factory<>::last_id = id;
 			}
@@ -1362,24 +1351,29 @@ namespace boost { namespace leaf {
 
 		inline int import_error_code( std::error_code const & ec ) noexcept
 		{
-			int err_id = ec.value();
-			if( err_id )
+			if( int err_id = ec.value() )
 			{
 				std::error_category const & cat = leaf_detail::get_error_category<>::cat;
-				if( &ec.category()!=&cat )
+				if( &ec.category()==&cat )
+				{
+					assert((err_id&3)==1);
+					return err_id;
+				}
+				else
 				{
 					err_id = leaf_detail::new_id();
 					leaf_detail::load_slot(err_id, leaf_detail::e_original_ec{ec});
 					return err_id;
 				}
 			}
-			return err_id;
+			else
+				return 0;
 		}
 
 		inline bool is_error_id( std::error_code const & ec ) noexcept
 		{
 			bool res = (&ec.category() == &leaf_detail::get_error_category<>::cat);
-			assert(!res || !ec.value() || (ec.value()&1));
+			assert(!res || !ec.value() || ((ec.value()&3)==1));
 			return res;
 		}
 }
@@ -1402,7 +1396,7 @@ namespace boost { namespace leaf {
 		explicit error_id( int value ) noexcept:
 			value_(value)
 		{
-			assert(value_==0 || (value_&1));
+			assert(value_==0 || ((value_&3)==1));
 		}
 
 	public:
@@ -1415,7 +1409,7 @@ namespace boost { namespace leaf {
 		error_id( std::error_code const & ec ) noexcept:
 			value_(leaf_detail::import_error_code(ec))
 		{
-			assert(!value_ || (value_&1));
+			assert(!value_ || ((value_&3)==1));
 		}
 
 		error_id load() const noexcept
@@ -1461,7 +1455,7 @@ namespace boost { namespace leaf {
 
 		int value() const noexcept
 		{
-			assert(!value_ || (value_&1));
+			assert(!value_ || ((value_&3)==1));
 			return value_;
 		}
 
@@ -4331,11 +4325,9 @@ namespace boost { namespace leaf {
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <memory>
+#include <climits>
 
 namespace boost { namespace leaf {
-
-	template <class T>
-	class result;
 
 	class bad_result:
 		public std::exception,
@@ -4359,40 +4351,55 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		class error_result
+		class result_discriminant
 		{
-			template <class T>
-			friend class ::boost::leaf::result;
-
-			error_id const err_id_;
-			context_ptr * const ctx_;
-
-			error_result( error_id err_id ) noexcept:
-				err_id_(err_id),
-				ctx_(0)
-			{
-			}
-
-			error_result( context_ptr * ctx ) noexcept:
-				ctx_(ctx)
-			{
-				assert(ctx_!=0);
-				assert(*ctx_);
-			}
+			unsigned kind_: 2;
+			unsigned err_id_: sizeof(unsigned)*CHAR_BIT - 2;
 
 		public:
 
-			error_result( error_result && x ) noexcept = default;
-
-			template <class T>
-			operator result<T>() && noexcept;
-
-			operator error_id() && noexcept
+			enum kind_t
 			{
-				if( ctx_ )
-					return (*ctx_)->propagate_captured_errors();
-				else
-					return err_id_;
+				val = 0,
+				no_error = 1,
+				err_id = 2,
+				ctx_ptr = 3
+			};
+
+			result_discriminant() noexcept
+			{
+			}
+
+			explicit result_discriminant( error_id id ) noexcept:
+				kind_(id.value() ? err_id : no_error),
+				err_id_(id.value()>>2)
+			{
+				assert(!id.value() || ((id.value()&3)==1));
+			}
+
+			struct kind_val { };
+			explicit result_discriminant( kind_val ) noexcept:
+				kind_(val),
+				err_id_(0)
+			{
+			}
+
+			struct kind_ctx_ptr { };
+			explicit result_discriminant( kind_ctx_ptr ) noexcept:
+				kind_(ctx_ptr),
+				err_id_(0)
+			{
+			}
+
+			kind_t kind() const noexcept
+			{
+				return kind_t(kind_);
+			}
+
+			error_id get_error_id() const noexcept
+			{
+				assert(kind()==no_error || kind()==err_id);
+				return leaf_detail::make_error_id((err_id_<<2) | (kind()==err_id));
 			}
 		};
 	}
@@ -4405,9 +4412,35 @@ namespace boost { namespace leaf {
 		template <class U>
 		friend class result;
 
-		friend class leaf_detail::error_result;
+		struct error_result
+		{
+			error_result( error_result && ) = default;
+			error_result( error_result const & ) = delete;
+			error_result & operator=( error_result const & ) = delete;
 
-		int err_id_; // 0:value_, 2:ctx_, else neither (error ids are always odd numbers)
+			result & r_;
+
+			template <class U>
+			operator result<U>() noexcept
+			{
+				assert(!r_);
+				if( r_.what_.kind() == leaf_detail::result_discriminant::ctx_ptr )
+					return result<U>(std::move(r_.ctx_));
+				else
+					return result<U>(std::move(r_.what_));
+			}
+
+			operator error_id() noexcept
+			{
+				assert(!r_);
+				if( r_.what_.kind() == leaf_detail::result_discriminant::ctx_ptr )
+					return r_.ctx_->propagate_captured_errors();
+				else
+					return r_.what_.get_error_id();
+			}
+		};
+
+		leaf_detail::result_discriminant what_;
 
 		union
 		{
@@ -4417,36 +4450,44 @@ namespace boost { namespace leaf {
 
 		void destroy() const noexcept
 		{
-			switch(err_id_)
+			using leaf_detail::result_discriminant;
+			switch(this->what_.kind())
 			{
-			case 0:
+			case result_discriminant::val:
 				value_.~T();
 				break;
-			case 2:
+			case result_discriminant::ctx_ptr:
 				assert(!ctx_ || ctx_->captured_id_);
 				ctx_.~context_ptr();
-				break;
 			default:
-				assert(err_id_&1);
+				break;
 			}
 		}
+
 		template <class U>
 		void move_from( result<U> && x ) noexcept
 		{
-			int const x_err_id = x.err_id_;
-			switch(x_err_id)
+			using leaf_detail::result_discriminant;
+			auto x_what = x.what_;
+			switch(x_what.kind())
 			{
-			case 0:
+			case result_discriminant::val:
 				(void) new(&value_) T(std::move(x.value_));
 				break;
-			case 2:
+			case result_discriminant::ctx_ptr:
 				assert(!x.ctx_ || x.ctx_->captured_id_);
 				(void) new(&ctx_) context_ptr(std::move(x.ctx_));
-				break;
 			default:
-				assert(x_err_id&1);
+				break;
 			}
-			err_id_ = x_err_id;
+			what_ = x_what;
+		}
+
+		result( leaf_detail::result_discriminant && what ) noexcept:
+			what_(std::move(what))
+		{
+			using leaf_detail::result_discriminant;
+			assert(what_.kind()==result_discriminant::err_id || what_.kind()==result_discriminant::no_error);
 		}
 
 	public:
@@ -4470,55 +4511,37 @@ namespace boost { namespace leaf {
 		}
 
 		result():
-			err_id_(0),
+			what_(leaf_detail::result_discriminant::kind_val{}),
 			value_(T())
 		{
 		}
 
 		result( T && v ) noexcept:
-			err_id_(0),
+			what_(leaf_detail::result_discriminant::kind_val{}),
 			value_(std::move(v))
 		{
 		}
 
 		result( T const & v ):
-			err_id_(0),
+			what_(leaf_detail::result_discriminant::kind_val{}),
 			value_(v)
 		{
 		}
 
-		result( error_id err ) noexcept
+		result( error_id err ) noexcept:
+			what_(err)
 		{
-			if( int err_id=err.value() )
-			{
-				err_id_ = err_id;
-				assert(err_id_&1);
-			}
-			else
-			{
-				err_id_ = 2;
-				(void) new(&ctx_) context_ptr;
-			}
+		}
+
+		result( std::error_code const & ec ) noexcept:
+			what_(error_id(ec))
+		{
 		}
 
 		result( context_ptr && ctx ) noexcept:
-			err_id_(2),
+			what_(leaf_detail::result_discriminant::kind_ctx_ptr{}),
 			ctx_(std::move(ctx))
 		{
-		}
-
-		result( std::error_code const & ec ) noexcept
-		{
-			if( int err_id=error_id(ec).value() )
-			{
-				err_id_ = err_id;
-				assert(err_id_&1);
-			}
-			else
-			{
-				err_id_ = 2;
-				(void) new(&ctx_) context_ptr;
-			}
 		}
 
 		result & operator=( result && x ) noexcept
@@ -4538,12 +4561,13 @@ namespace boost { namespace leaf {
 
 		explicit operator bool() const noexcept
 		{
-			return err_id_==0;
+			using leaf_detail::result_discriminant;
+			return what_.kind() == result_discriminant::val;
 		}
 
 		T const & value() const
 		{
-			if( err_id_==0 )
+			if( what_.kind() == leaf_detail::result_discriminant::val )
 				return value_;
 			else
 				::boost::leaf::throw_exception(bad_result(get_error_id()));
@@ -4551,7 +4575,7 @@ namespace boost { namespace leaf {
 
 		T & value()
 		{
-			if( err_id_==0 )
+			if( what_.kind() == leaf_detail::result_discriminant::val )
 				return value_;
 			else
 				::boost::leaf::throw_exception(bad_result(get_error_id()));
@@ -4579,16 +4603,14 @@ namespace boost { namespace leaf {
 
 		error_id get_error_id() const noexcept
 		{
-			return err_id_==2 ? ctx_->captured_id_ : leaf_detail::make_error_id(err_id_);
+			using leaf_detail::result_discriminant;
+			assert(what_.kind()!=result_discriminant::val);
+			return what_.kind()==result_discriminant::ctx_ptr ? ctx_->captured_id_ : what_.get_error_id();
 		}
 
-		leaf_detail::error_result error() noexcept
+		error_result error() noexcept
 		{
-			assert(!*this);
-			if( err_id_==2 )
-				return leaf_detail::error_result(&ctx_);
-			else
-				return leaf_detail::error_result(leaf_detail::make_error_id(err_id_));
+			return error_result{*this};
 		}
 
 		template <class... E>
@@ -4620,6 +4642,11 @@ namespace boost { namespace leaf {
 		{
 		}
 
+		result( leaf_detail::result_discriminant && what ) noexcept:
+			base(std::move(what))
+		{
+		}
+
 	public:
 
 		typedef void value_type;
@@ -4642,13 +4669,13 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		result( context_ptr && ctx ) noexcept:
-			base(std::move(ctx))
+		result( std::error_code const & ec ) noexcept:
+			base(ec)
 		{
 		}
 
-		result( std::error_code const & ec ) noexcept:
-			base(ec)
+		result( context_ptr && ctx ) noexcept:
+			base(std::move(ctx))
 		{
 		}
 
@@ -4675,20 +4702,6 @@ namespace boost { namespace leaf {
 		using base::load;
 		using base::accumulate;
 	};
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		template <class T>
-		inline error_result::operator result<T>() && noexcept
-		{
-			if( ctx_ )
-				return result<T>(std::move(*ctx_));
-			else
-				return result<T>(err_id_);
-		}
-	}
 
 	////////////////////////////////////////
 

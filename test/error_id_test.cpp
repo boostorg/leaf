@@ -66,9 +66,9 @@ int main()
 		leaf::error_id e1 = leaf::new_error();
 		leaf::error_id e2 = leaf::new_error();
 		BOOST_TEST(e1);
-		BOOST_TEST_EQ(e1.value(), 3);
+		BOOST_TEST_EQ(e1.value(), 5);
 		BOOST_TEST(e2);
-		BOOST_TEST_EQ(e2.value(), 5);
+		BOOST_TEST_EQ(e2.value(), 9);
 		BOOST_TEST(!(e1==e2));
 		BOOST_TEST(e1!=e2);
 		BOOST_TEST(e1<e2);
@@ -78,9 +78,9 @@ int main()
 		leaf::error_id e1 = leaf::new_error();
 		leaf::error_id e2 = e1;
 		BOOST_TEST(e1);
-		BOOST_TEST_EQ(e1.value(), 7);
+		BOOST_TEST_EQ(e1.value(), 13);
 		BOOST_TEST(e2);
-		BOOST_TEST_EQ(e2.value(), 7);
+		BOOST_TEST_EQ(e2.value(), 13);
 		BOOST_TEST(e1==e2);
 		BOOST_TEST(!(e1!=e2));
 		BOOST_TEST(!(e1<e2));
@@ -90,9 +90,9 @@ int main()
 		leaf::error_id e1 = leaf::new_error();
 		leaf::error_id e2; e2 = e1;
 		BOOST_TEST(e1);
-		BOOST_TEST_EQ(e1.value(), 9);
+		BOOST_TEST_EQ(e1.value(), 17);
 		BOOST_TEST(e2);
-		BOOST_TEST_EQ(e2.value(), 9);
+		BOOST_TEST_EQ(e2.value(), 17);
 		BOOST_TEST(e1==e2);
 		BOOST_TEST(!(e1!=e2));
 		BOOST_TEST(!(e1<e2));
