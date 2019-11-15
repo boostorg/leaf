@@ -23,6 +23,7 @@ namespace boost { namespace leaf {
 		public:
 
 			typedef T value_type;
+
 			optional() noexcept:
 				has_value_(false)
 			{

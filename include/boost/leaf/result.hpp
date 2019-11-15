@@ -36,17 +36,16 @@ namespace boost { namespace leaf {
 	{
 		class result_discriminant
 		{
-			unsigned kind_: 2;
-			unsigned err_id_: sizeof(unsigned)*CHAR_BIT - 2;
+			unsigned state_;
 
 		public:
 
 			enum kind_t
 			{
-				val = 0,
-				no_error = 1,
-				err_id = 2,
-				ctx_ptr = 3
+				no_error = 0,
+				err_id = 1,
+				ctx_ptr = 2,
+				val = 3
 			};
 
 			result_discriminant() noexcept
@@ -54,35 +53,32 @@ namespace boost { namespace leaf {
 			}
 
 			explicit result_discriminant( error_id id ) noexcept:
-				kind_(id.value() ? err_id : no_error),
-				err_id_(id.value()>>2)
+				state_(id.value())
 			{
-				assert(!id.value() || ((id.value()&3)==1));
+				assert(state_==0 || (state_&3)==1);
 			}
 
 			struct kind_val { };
 			explicit result_discriminant( kind_val ) noexcept:
-				kind_(val),
-				err_id_(0)
+				state_(val)
 			{
 			}
 
 			struct kind_ctx_ptr { };
 			explicit result_discriminant( kind_ctx_ptr ) noexcept:
-				kind_(ctx_ptr),
-				err_id_(0)
+				state_(ctx_ptr)
 			{
 			}
 
 			kind_t kind() const noexcept
 			{
-				return kind_t(kind_);
+				return kind_t(state_&3);
 			}
 
 			error_id get_error_id() const noexcept
 			{
 				assert(kind()==no_error || kind()==err_id);
-				return leaf_detail::make_error_id((err_id_<<2) | (kind()==err_id));
+				return leaf_detail::make_error_id(state_);
 			}
 		};
 	}

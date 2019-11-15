@@ -497,6 +497,7 @@ namespace boost { namespace leaf {
 		public:
 
 			typedef T value_type;
+
 			optional() noexcept:
 				has_value_(false)
 			{
@@ -1071,7 +1072,7 @@ namespace boost { namespace leaf {
 				if( !diagnostic<E>::is_invisible && *top_==this )
 					if( E const * e = has_value(err_id) )
 					{
-						assert(err_id);
+						assert((err_id&3)==1);
 						diagnostic<decltype(*e)>::print(os, *e);
 						return true;
 					}
@@ -1112,7 +1113,7 @@ namespace boost { namespace leaf {
 
 			E & load( int err_id, E const & e ) noexcept
 			{
-				assert(err_id);
+				assert((err_id&3)==1);
 				E & ret = impl::put(e);
 				err_id_ = err_id;
 				return ret;
@@ -1120,7 +1121,7 @@ namespace boost { namespace leaf {
 
 			E & load( int err_id, E && e ) noexcept
 			{
-				assert(err_id);
+				assert((err_id&3)==1);
 				E & ret = impl::put(std::forward<E>(e));
 				err_id_ = err_id;
 				return ret;
@@ -1130,7 +1131,7 @@ namespace boost { namespace leaf {
 			{
 				if( err_id == err_id_ )
 				{
-					assert(err_id);
+					assert((err_id&3)==1);
 					if( E const * e = impl::has_value() )
 						return e;
 				}
@@ -1141,7 +1142,7 @@ namespace boost { namespace leaf {
 			{
 				if( err_id == err_id_ )
 				{
-					assert(err_id);
+					assert((err_id&3)==1);
 					if( E * e = impl::has_value() )
 						return e;
 				}
@@ -1234,7 +1235,7 @@ namespace boost { namespace leaf {
 		inline int load_slot( int err_id, E && e ) noexcept
 		{
 			using T = typename std::decay<E>::type;
-			assert(err_id);
+			assert((err_id&3)==1);
 			if( slot<T> * p = tl_slot_ptr<T>() )
 				(void) p->load(err_id, std::forward<E>(e));
 #ifndef LEAF_DISCARD_UNEXPECTED
@@ -1255,7 +1256,7 @@ namespace boost { namespace leaf {
 			static_assert(function_traits<F>::arity==1, "Lambdas passed to accumulate must take a single e-type argument by reference");
 			using E = typename std::decay<fn_arg_type<F,0>>::type;
 			static_assert(is_e_type<E>::value, "Lambdas passed to accumulate must take a single e-type argument by reference");
-			assert(err_id);
+			assert((err_id&3)==1);
 			if( auto sl = tl_slot_ptr<E>() )
 				if( auto v = sl->has_value(err_id) )
 					(void) std::forward<F>(f)(*v);
@@ -1278,14 +1279,14 @@ namespace boost { namespace leaf {
 
 			static int generate_next_id() noexcept
 			{
-				unsigned id = (counter+=4u);
+				unsigned id = ((counter+=4) & ~3) | 1;
 				assert((id&3)==1);
 				return id;
 			}
 		};
 
 		template <class T>
-		atomic_unsigned_int id_factory<T>::counter(-3u);
+		atomic_unsigned_int id_factory<T>::counter(-3);
 
 		template <class T>
 		LEAF_THREAD_LOCAL int id_factory<T>::last_id(0);
@@ -4038,7 +4039,7 @@ namespace boost { namespace leaf {
 		{
 			static void trigger( Tuple & tup, int err_id ) noexcept
 			{
-				assert(err_id);
+				assert((err_id&3)==1);
 				tuple_for_each_preload<I-1,Tuple>::trigger(tup,err_id);
 				std::get<I-1>(tup).trigger(err_id);
 			}
@@ -4071,7 +4072,7 @@ namespace boost { namespace leaf {
 
 			void trigger( int err_id ) noexcept
 			{
-				assert(err_id);
+				assert((err_id&3)==1);
 				if( s_ )
 				{
 					if( !s_->has_value(err_id) )
@@ -4160,7 +4161,7 @@ namespace boost { namespace leaf {
 
 			void trigger( int err_id ) noexcept
 			{
-				assert(err_id);
+				assert((err_id&3)==1);
 				if( s_ )
 				{
 					if( !s_->has_value(err_id) )
@@ -4251,7 +4252,7 @@ namespace boost { namespace leaf {
 
 			void trigger( int err_id ) noexcept
 			{
-				assert(err_id);
+				assert((err_id&3)==1);
 				if( s_ )
 					if( E * e = s_->has_value(err_id) )
 						(void) f_(*e);
@@ -4353,17 +4354,16 @@ namespace boost { namespace leaf {
 	{
 		class result_discriminant
 		{
-			unsigned kind_: 2;
-			unsigned err_id_: sizeof(unsigned)*CHAR_BIT - 2;
+			unsigned state_;
 
 		public:
 
 			enum kind_t
 			{
-				val = 0,
-				no_error = 1,
-				err_id = 2,
-				ctx_ptr = 3
+				no_error = 0,
+				err_id = 1,
+				ctx_ptr = 2,
+				val = 3
 			};
 
 			result_discriminant() noexcept
@@ -4371,35 +4371,32 @@ namespace boost { namespace leaf {
 			}
 
 			explicit result_discriminant( error_id id ) noexcept:
-				kind_(id.value() ? err_id : no_error),
-				err_id_(id.value()>>2)
+				state_(id.value())
 			{
-				assert(!id.value() || ((id.value()&3)==1));
+				assert(state_==0 || (state_&3)==1);
 			}
 
 			struct kind_val { };
 			explicit result_discriminant( kind_val ) noexcept:
-				kind_(val),
-				err_id_(0)
+				state_(val)
 			{
 			}
 
 			struct kind_ctx_ptr { };
 			explicit result_discriminant( kind_ctx_ptr ) noexcept:
-				kind_(ctx_ptr),
-				err_id_(0)
+				state_(ctx_ptr)
 			{
 			}
 
 			kind_t kind() const noexcept
 			{
-				return kind_t(kind_);
+				return kind_t(state_&3);
 			}
 
 			error_id get_error_id() const noexcept
 			{
 				assert(kind()==no_error || kind()==err_id);
-				return leaf_detail::make_error_id((err_id_<<2) | (kind()==err_id));
+				return leaf_detail::make_error_id(state_);
 			}
 		};
 	}

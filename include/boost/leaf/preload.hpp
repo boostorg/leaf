@@ -17,7 +17,7 @@ namespace boost { namespace leaf {
 		{
 			static void trigger( Tuple & tup, int err_id ) noexcept
 			{
-				assert(err_id);
+				assert((err_id&3)==1);
 				tuple_for_each_preload<I-1,Tuple>::trigger(tup,err_id);
 				std::get<I-1>(tup).trigger(err_id);
 			}
@@ -50,7 +50,7 @@ namespace boost { namespace leaf {
 
 			void trigger( int err_id ) noexcept
 			{
-				assert(err_id);
+				assert((err_id&3)==1);
 				if( s_ )
 				{
 					if( !s_->has_value(err_id) )
@@ -139,7 +139,7 @@ namespace boost { namespace leaf {
 
 			void trigger( int err_id ) noexcept
 			{
-				assert(err_id);
+				assert((err_id&3)==1);
 				if( s_ )
 				{
 					if( !s_->has_value(err_id) )
@@ -230,7 +230,7 @@ namespace boost { namespace leaf {
 
 			void trigger( int err_id ) noexcept
 			{
-				assert(err_id);
+				assert((err_id&3)==1);
 				if( s_ )
 					if( E * e = s_->has_value(err_id) )
 						(void) f_(*e);
