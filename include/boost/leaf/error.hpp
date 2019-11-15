@@ -371,7 +371,7 @@ namespace boost { namespace leaf {
 				if( e_unexpected_count * unx = sl->has_value(err_id) )
 					++unx->count;
 				else
-					sl->load(err_id, e_unexpected_count(&type<E>));
+					sl->put(err_id, e_unexpected_count(&type<E>));
 		}
 
 		template <class E>
@@ -381,7 +381,7 @@ namespace boost { namespace leaf {
 				if( e_unexpected_info * unx = sl->has_value(err_id) )
 					unx->add(e);
 				else
-					sl->load(err_id, e_unexpected_info()).add(e);
+					sl->put(err_id, e_unexpected_info()).add(e);
 		}
 
 		template <class E>
