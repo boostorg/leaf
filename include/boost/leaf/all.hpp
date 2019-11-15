@@ -470,6 +470,16 @@ namespace boost { namespace leaf {
 #endif
 // <<< #include <boost/leaf/detail/function_traits.hpp>
 #line 10 "boost/leaf/error.hpp"
+// >>> #include <boost/leaf/detail/print.hpp>
+#line 1 "boost/leaf/detail/print.hpp"
+#ifndef LEAF_3BAB50A2B87E11E89EEB30600C39171A
+#define LEAF_3BAB50A2B87E11E89EEB30600C39171A
+
+// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
 // >>> #include <boost/leaf/detail/optional.hpp>
 #line 1 "boost/leaf/detail/optional.hpp"
 #ifndef LEAF_47258FCCB6B411E8A1F35AA00C39171A
@@ -483,6 +493,7 @@ namespace boost { namespace leaf {
 #include <utility>
 #include <new>
 #include <cassert>
+#include <ostream>
 
 namespace boost { namespace leaf {
 
@@ -491,61 +502,68 @@ namespace boost { namespace leaf {
 		template <class T>
 		class optional
 		{
+			int key_;
 			union { T value_; };
-			bool has_value_;
 
 		public:
 
 			typedef T value_type;
 
 			optional() noexcept:
-				has_value_(false)
+				key_(0)
 			{
 			}
 
 			optional( optional const & x ):
-				has_value_(x.has_value_)
+				key_(x.key_)
 			{
-				if( x.has_value_ )
+				if( x.key_ )
 					(void) new (&value_) T( x.value_ );
 			}
 
 			optional( optional && x ) noexcept:
-				has_value_(x.has_value_)
+				key_(x.key_)
 			{
-				if( x.has_value_ )
+				if( x.key_ )
 				{
 					(void) new (&value_) T( std::move(x.value_) );
-					x.value_.~T();
-					x.has_value_ = false;
+					x.reset();
 				}
 			}
 
-			optional( T const & v ):
-				value_(v),
-				has_value_(true)
+			optional( int key, T const & v ):
+				key_(key),
+				value_(v)
 			{
+				assert(!empty());
 			}
 
-			optional( T && v ) noexcept:
-				value_(std::move(v)),
-				has_value_(true)
+			optional( int key, T && v ) noexcept:
+				key_(key),
+				value_(std::move(v))
 			{
+				assert(!empty());
 			}
 
 			optional & operator=( optional const & x )
 			{
 				reset();
-				if( auto pv = x.has_value() )
-					put(*pv);
+				if( int key = x.key() )
+				{
+					put(key, x.value_);
+					key_ = key;
+				}
 				return *this;
 			}
 
 			optional & operator=( optional && x ) noexcept
 			{
 				reset();
-				if( x.has_value() )
-					put(std::move(x).value());
+				if( int key = x.key() )
+				{
+					put(key, std::move(x.value_));
+					x.reset();
+				}
 				return *this;
 			}
 
@@ -554,75 +572,98 @@ namespace boost { namespace leaf {
 				reset();
 			}
 
+			bool empty() const noexcept
+			{
+				return key_==0;
+			}
+
+			int key() const noexcept
+			{
+				return key_;
+			}
+
+			void set_key( int key ) noexcept
+			{
+				assert(!empty());
+				key_ = key;
+			}
+
 			void reset() noexcept
 			{
-				if( has_value() )
+				if( key_ )
 				{
 					value_.~T();
-					has_value_=false;
+					key_=0;
 				}
 			}
 
 			template <class... A>
-			T & emplace( A && ... a )
+			T & emplace( int key, A && ... a )
 			{
+				assert(key);
 				reset();
 				(void) new(&value_) T(std::forward<A>(a)...);
-				has_value_=true;
+				key_=key;
 				return value_;
 			}
 
-			T & put( T const & v )
+			T & put( int key, T const & v )
 			{
+				assert(key);
 				reset();
 				(void) new(&value_) T(v);
-				has_value_=true;
+				key_=key;
 				return value_;
 			}
 
-			T & put( T && v ) noexcept
+			T & put( int key, T && v ) noexcept
 			{
+				assert(key);
 				reset();
 				(void) new(&value_) T(std::move(v));
-				has_value_=true;
+				key_=key;
 				return value_;
 			}
 
-			T const * has_value() const noexcept
+			T const * has_value(int key) const noexcept
 			{
-				return has_value_ ? &value_ : 0;
+				assert(key);
+				return key_==key ? &value_ : 0;
 			}
 
-			T * has_value() noexcept
+			T * has_value(int key) noexcept
 			{
-				return has_value_ ? &value_ : 0;
+				assert(key);
+				return key_==key ? &value_ : 0;
 			}
 
-			T const & value() const & noexcept
+			T const & value(int key) const & noexcept
 			{
-				assert(has_value()!=0);
+				assert(has_value(key)!=0);
 				return value_;
 			}
 
-			T & value() & noexcept
+			T & value(int key) & noexcept
 			{
-				assert(has_value()!=0);
+				assert(has_value(key)!=0);
 				return value_;
 			}
 
-			T const && value() const && noexcept
+			T const && value(int key) const && noexcept
 			{
-				assert(has_value()!=0);
+				assert(has_value(key)!=0);
 				return value_;
 			}
 
-			T value() && noexcept
+			T value(int key) && noexcept
 			{
-				assert(has_value()!=0);
+				assert(has_value(key)!=0);
 				T tmp(std::move(value_));
 				reset();
 				return tmp;
 			}
+
+			void print( std::ostream & ) const;
 		};
 
 	} // leaf_detail
@@ -631,17 +672,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/detail/optional.hpp>
-#line 11 "boost/leaf/error.hpp"
-// >>> #include <boost/leaf/detail/print.hpp>
-#line 1 "boost/leaf/detail/print.hpp"
-#ifndef LEAF_3BAB50A2B87E11E89EEB30600C39171A
-#define LEAF_3BAB50A2B87E11E89EEB30600C39171A
-
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
-
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
+#line 11 "boost/leaf/detail/print.hpp"
 #include <exception>
 #include <ostream>
 #include <cstring>
@@ -751,16 +782,26 @@ namespace boost { namespace leaf {
 			{
 			}
 		};
+
+		template <class T>
+		void optional<T>::print( std::ostream & os ) const
+		{
+			if( int k = key() )
+			{
+				os << type<T>() << '[' << k << "]: ";
+				diagnostic<T>::print(os, value_);
+				os << std::endl;
+			}
+		}
 	} // leaf_detail
 
 } }
 
 #endif
 // <<< #include <boost/leaf/detail/print.hpp>
-#line 12 "boost/leaf/error.hpp"
+#line 11 "boost/leaf/error.hpp"
 #include <system_error>
 #include <type_traits>
-#include <ostream>
 #include <sstream>
 #include <memory>
 #include <set>
@@ -871,15 +912,6 @@ namespace boost { namespace leaf {
 			}
 #endif
 
-			static void reassign( int from_err_id, int to_err_id ) noexcept
-			{
-				assert(from_err_id);
-				assert(to_err_id);
-				for( slot_base * p = first(); p; p=p->next_ )
-					if( p->err_id_==from_err_id )
-						p->err_id_ = to_err_id;
-			}
-
 		protected:
 
 			static slot_base * & first() noexcept
@@ -888,17 +920,14 @@ namespace boost { namespace leaf {
 				return p;
 			}
 
-			int err_id_;
 			slot_base * next_;
 
 			slot_base() noexcept:
-				err_id_(0),
 				next_(0)
 			{
 			}
 
 			slot_base( slot_base && x ) noexcept:
-				err_id_(std::move(x.err_id_)),
 				next_(0)
 			{
 				assert(x.next_==0);
@@ -1111,70 +1140,16 @@ namespace boost { namespace leaf {
 
 			void deactivate( bool propagate_errors ) noexcept;
 
-			E & load( int err_id, E const & e ) noexcept
-			{
-				assert((err_id&3)==1);
-				E & ret = impl::put(e);
-				err_id_ = err_id;
-				return ret;
-			}
-
-			E & load( int err_id, E && e ) noexcept
-			{
-				assert((err_id&3)==1);
-				E & ret = impl::put(std::forward<E>(e));
-				err_id_ = err_id;
-				return ret;
-			}
-
-			E const * has_value( int err_id ) const noexcept
-			{
-				if( err_id == err_id_ )
-				{
-					assert((err_id&3)==1);
-					if( E const * e = impl::has_value() )
-						return e;
-				}
-				return 0;
-			}
-
-			E * has_value( int err_id ) noexcept
-			{
-				if( err_id == err_id_ )
-				{
-					assert((err_id&3)==1);
-					if( E * e = impl::has_value() )
-						return e;
-				}
-				return 0;
-			}
-
-			E extract( int err_id ) noexcept
-			{
-				assert(has_value(err_id));
-				err_id_ = 0;
-				optional<E> & opt(*this);
-				return std::move(opt).value();
-			}
-
-			bool print( std::ostream & os ) const
-			{
-				os << '[' << err_id_ << "]: ";
-				if( E const * e = impl::has_value() )
-				{
-					diagnostic<decltype(*e)>::print(os, *e);
-					os << std::endl;
-				}
-				else
-					os << type<E>() << ": {Empty}" << std::endl;
-				return true;
-			}
+			using impl::put;
+			using impl::has_value;
+			using impl::value;
+			using impl::print;
 		};
 
 #ifndef LEAF_DISCARD_UNEXPECTED
 
 		template <class E>
-		inline void load_unexpected_count( int err_id, E const & e ) noexcept
+		inline void load_unexpected_count( int err_id ) noexcept
 		{
 			if( slot<e_unexpected_count> * sl = tl_slot_ptr<e_unexpected_count>() )
 				if( e_unexpected_count * unx = sl->has_value(err_id) )
@@ -1184,7 +1159,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		inline void load_unexpected_info( int err_id, E const & e ) noexcept
+		inline void load_unexpected_info( int err_id, E && e ) noexcept
 		{
 			if( slot<e_unexpected_info> * sl = tl_slot_ptr<e_unexpected_info>() )
 				if( e_unexpected_info * unx = sl->has_value(err_id) )
@@ -1194,10 +1169,10 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		inline void no_expect_slot( int err_id, E const & e  ) noexcept
+		inline void no_expect_slot( int err_id, E && e  ) noexcept
 		{
-			load_unexpected_count(err_id, e);
-			load_unexpected_info(err_id, e);
+			load_unexpected_count<E>(err_id);
+			load_unexpected_info(err_id, std::move(e));
 		}
 
 #endif
@@ -1209,12 +1184,9 @@ namespace boost { namespace leaf {
 			if( propagate_errors )
 				if( prev_ )
 				{
-					if( err_id_ )
-					{
-						optional<E> & p = *prev_;
-						p = std::move(*this);
-						prev_->err_id_ = err_id_;
-					}
+					impl & this_ = *this;
+					impl & that_ = *prev_;
+					that_ = std::move(this_);
 				}
 #ifndef LEAF_DISCARD_UNEXPECTED
 				else
@@ -1222,8 +1194,8 @@ namespace boost { namespace leaf {
 					int c = tl_unexpected_enabled_counter();
 					assert(c>=0);
 					if( c )
-						if( E const * e = impl::has_value() )
-							no_expect_slot(err_id_, *e);
+						if( int err_id = impl::key() )
+							no_expect_slot(err_id, std::move(*this).value(err_id));
 				}
 #endif
 			*top_ = prev_;
@@ -1237,7 +1209,7 @@ namespace boost { namespace leaf {
 			using T = typename std::decay<E>::type;
 			assert((err_id&3)==1);
 			if( slot<T> * p = tl_slot_ptr<T>() )
-				(void) p->load(err_id, std::forward<E>(e));
+				(void) p->put(err_id, std::forward<E>(e));
 #ifndef LEAF_DISCARD_UNEXPECTED
 			else
 			{
@@ -1261,7 +1233,7 @@ namespace boost { namespace leaf {
 				if( auto v = sl->has_value(err_id) )
 					(void) std::forward<F>(f)(*v);
 				else
-					(void) std::forward<F>(f)(sl->load(err_id,E()));
+					(void) std::forward<F>(f)(sl->put(err_id,E()));
 			return 0;
 		}
 	} // leaf_detail
@@ -2036,13 +2008,13 @@ namespace boost { namespace leaf {
 			{
 				auto & sl = std::get<I-1>(tup);
 				if( sl.has_value(err_id) )
-					leaf_detail::load_slot(err_id, sl.extract(err_id));
+					leaf_detail::load_slot(err_id, std::move(sl).value(err_id));
 				tuple_for_each<I-1,Tuple>::propagate(tup, err_id);
 			}
 
 			static void print( std::ostream & os, Tuple const & tup ) noexcept
 			{
-				tuple_for_each<I-1,Tuple>::print(os,tup);
+				tuple_for_each<I-1,Tuple>::print(os, tup);
 				std::get<I-1>(tup).print(os);
 			}
 		};
@@ -4076,7 +4048,7 @@ namespace boost { namespace leaf {
 				if( s_ )
 				{
 					if( !s_->has_value(err_id) )
-						s_->load(err_id, std::move(e_));
+						s_->put(err_id, std::move(e_));
 				}
 #ifndef LEAF_DISCARD_UNEXPECTED
 				else
@@ -4165,7 +4137,7 @@ namespace boost { namespace leaf {
 				if( s_ )
 				{
 					if( !s_->has_value(err_id) )
-						s_->load(err_id, f_());
+						s_->put(err_id, f_());
 				}
 #ifndef LEAF_DISCARD_UNEXPECTED
 				else
@@ -4257,7 +4229,7 @@ namespace boost { namespace leaf {
 					if( E * e = s_->has_value(err_id) )
 						(void) f_(*e);
 					else
-						(void) f_(s_->load(err_id, E()));
+						(void) f_(s_->put(err_id, E()));
 			}
 		};
 
@@ -4709,26 +4681,6 @@ namespace boost { namespace leaf {
 	struct is_result_type<result<T>>: std::true_type
 	{
 	};
-
-	template <class T>
-	inline result<T> make_continuation_result( result<T> && r, context_ptr ctx = context_ptr() ) noexcept
-	{
-		if( r )
-			return std::move(r);
-		else
-		{
-			error_id ne = new_error();
-			leaf_detail::slot_base::reassign(error_id(r.error()).value(), ne.value());
-			if( ctx )
-			{
-				ctx->captured_id_ = ne;
-				return std::move(ctx);
-			}
-			else
-				return ne;
-		}
-	}
-
 } }
 
 #endif

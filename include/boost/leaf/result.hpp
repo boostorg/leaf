@@ -391,26 +391,6 @@ namespace boost { namespace leaf {
 	struct is_result_type<result<T>>: std::true_type
 	{
 	};
-
-	template <class T>
-	inline result<T> make_continuation_result( result<T> && r, context_ptr ctx = context_ptr() ) noexcept
-	{
-		if( r )
-			return std::move(r);
-		else
-		{
-			error_id ne = new_error();
-			leaf_detail::slot_base::reassign(error_id(r.error()).value(), ne.value());
-			if( ctx )
-			{
-				ctx->captured_id_ = ne;
-				return std::move(ctx);
-			}
-			else
-				return ne;
-		}
-	}
-
 } }
 
 #endif

@@ -7,11 +7,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/detail/function_traits.hpp>
-#include <boost/leaf/detail/optional.hpp>
 #include <boost/leaf/detail/print.hpp>
 #include <system_error>
 #include <type_traits>
-#include <ostream>
 #include <sstream>
 #include <memory>
 #include <set>
@@ -122,15 +120,6 @@ namespace boost { namespace leaf {
 			}
 #endif
 
-			static void reassign( int from_err_id, int to_err_id ) noexcept
-			{
-				assert(from_err_id);
-				assert(to_err_id);
-				for( slot_base * p = first(); p; p=p->next_ )
-					if( p->err_id_==from_err_id )
-						p->err_id_ = to_err_id;
-			}
-
 		protected:
 
 			static slot_base * & first() noexcept
@@ -139,17 +128,14 @@ namespace boost { namespace leaf {
 				return p;
 			}
 
-			int err_id_;
 			slot_base * next_;
 
 			slot_base() noexcept:
-				err_id_(0),
 				next_(0)
 			{
 			}
 
 			slot_base( slot_base && x ) noexcept:
-				err_id_(std::move(x.err_id_)),
 				next_(0)
 			{
 				assert(x.next_==0);
@@ -362,70 +348,16 @@ namespace boost { namespace leaf {
 
 			void deactivate( bool propagate_errors ) noexcept;
 
-			E & load( int err_id, E const & e ) noexcept
-			{
-				assert((err_id&3)==1);
-				E & ret = impl::put(e);
-				err_id_ = err_id;
-				return ret;
-			}
-
-			E & load( int err_id, E && e ) noexcept
-			{
-				assert((err_id&3)==1);
-				E & ret = impl::put(std::forward<E>(e));
-				err_id_ = err_id;
-				return ret;
-			}
-
-			E const * has_value( int err_id ) const noexcept
-			{
-				if( err_id == err_id_ )
-				{
-					assert((err_id&3)==1);
-					if( E const * e = impl::has_value() )
-						return e;
-				}
-				return 0;
-			}
-
-			E * has_value( int err_id ) noexcept
-			{
-				if( err_id == err_id_ )
-				{
-					assert((err_id&3)==1);
-					if( E * e = impl::has_value() )
-						return e;
-				}
-				return 0;
-			}
-
-			E extract( int err_id ) noexcept
-			{
-				assert(has_value(err_id));
-				err_id_ = 0;
-				optional<E> & opt(*this);
-				return std::move(opt).value();
-			}
-
-			bool print( std::ostream & os ) const
-			{
-				os << '[' << err_id_ << "]: ";
-				if( E const * e = impl::has_value() )
-				{
-					diagnostic<decltype(*e)>::print(os, *e);
-					os << std::endl;
-				}
-				else
-					os << type<E>() << ": {Empty}" << std::endl;
-				return true;
-			}
+			using impl::put;
+			using impl::has_value;
+			using impl::value;
+			using impl::print;
 		};
 
 #ifndef LEAF_DISCARD_UNEXPECTED
 
 		template <class E>
-		inline void load_unexpected_count( int err_id, E const & e ) noexcept
+		inline void load_unexpected_count( int err_id ) noexcept
 		{
 			if( slot<e_unexpected_count> * sl = tl_slot_ptr<e_unexpected_count>() )
 				if( e_unexpected_count * unx = sl->has_value(err_id) )
@@ -435,7 +367,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		inline void load_unexpected_info( int err_id, E const & e ) noexcept
+		inline void load_unexpected_info( int err_id, E && e ) noexcept
 		{
 			if( slot<e_unexpected_info> * sl = tl_slot_ptr<e_unexpected_info>() )
 				if( e_unexpected_info * unx = sl->has_value(err_id) )
@@ -445,10 +377,10 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		inline void no_expect_slot( int err_id, E const & e  ) noexcept
+		inline void no_expect_slot( int err_id, E && e  ) noexcept
 		{
-			load_unexpected_count(err_id, e);
-			load_unexpected_info(err_id, e);
+			load_unexpected_count<E>(err_id);
+			load_unexpected_info(err_id, std::move(e));
 		}
 
 #endif
@@ -460,12 +392,9 @@ namespace boost { namespace leaf {
 			if( propagate_errors )
 				if( prev_ )
 				{
-					if( err_id_ )
-					{
-						optional<E> & p = *prev_;
-						p = std::move(*this);
-						prev_->err_id_ = err_id_;
-					}
+					impl & this_ = *this;
+					impl & that_ = *prev_;
+					that_ = std::move(this_);
 				}
 #ifndef LEAF_DISCARD_UNEXPECTED
 				else
@@ -473,8 +402,8 @@ namespace boost { namespace leaf {
 					int c = tl_unexpected_enabled_counter();
 					assert(c>=0);
 					if( c )
-						if( E const * e = impl::has_value() )
-							no_expect_slot(err_id_, *e);
+						if( int err_id = impl::key() )
+							no_expect_slot(err_id, std::move(*this).value(err_id));
 				}
 #endif
 			*top_ = prev_;
@@ -488,7 +417,7 @@ namespace boost { namespace leaf {
 			using T = typename std::decay<E>::type;
 			assert((err_id&3)==1);
 			if( slot<T> * p = tl_slot_ptr<T>() )
-				(void) p->load(err_id, std::forward<E>(e));
+				(void) p->put(err_id, std::forward<E>(e));
 #ifndef LEAF_DISCARD_UNEXPECTED
 			else
 			{
@@ -512,7 +441,7 @@ namespace boost { namespace leaf {
 				if( auto v = sl->has_value(err_id) )
 					(void) std::forward<F>(f)(*v);
 				else
-					(void) std::forward<F>(f)(sl->load(err_id,E()));
+					(void) std::forward<F>(f)(sl->put(err_id,E()));
 			return 0;
 		}
 	} // leaf_detail

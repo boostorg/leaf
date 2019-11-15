@@ -9,6 +9,7 @@
 #include <utility>
 #include <new>
 #include <cassert>
+#include <ostream>
 
 namespace boost { namespace leaf {
 
@@ -17,61 +18,68 @@ namespace boost { namespace leaf {
 		template <class T>
 		class optional
 		{
+			int key_;
 			union { T value_; };
-			bool has_value_;
 
 		public:
 
 			typedef T value_type;
 
 			optional() noexcept:
-				has_value_(false)
+				key_(0)
 			{
 			}
 
 			optional( optional const & x ):
-				has_value_(x.has_value_)
+				key_(x.key_)
 			{
-				if( x.has_value_ )
+				if( x.key_ )
 					(void) new (&value_) T( x.value_ );
 			}
 
 			optional( optional && x ) noexcept:
-				has_value_(x.has_value_)
+				key_(x.key_)
 			{
-				if( x.has_value_ )
+				if( x.key_ )
 				{
 					(void) new (&value_) T( std::move(x.value_) );
-					x.value_.~T();
-					x.has_value_ = false;
+					x.reset();
 				}
 			}
 
-			optional( T const & v ):
-				value_(v),
-				has_value_(true)
+			optional( int key, T const & v ):
+				key_(key),
+				value_(v)
 			{
+				assert(!empty());
 			}
 
-			optional( T && v ) noexcept:
-				value_(std::move(v)),
-				has_value_(true)
+			optional( int key, T && v ) noexcept:
+				key_(key),
+				value_(std::move(v))
 			{
+				assert(!empty());
 			}
 
 			optional & operator=( optional const & x )
 			{
 				reset();
-				if( auto pv = x.has_value() )
-					put(*pv);
+				if( int key = x.key() )
+				{
+					put(key, x.value_);
+					key_ = key;
+				}
 				return *this;
 			}
 
 			optional & operator=( optional && x ) noexcept
 			{
 				reset();
-				if( x.has_value() )
-					put(std::move(x).value());
+				if( int key = x.key() )
+				{
+					put(key, std::move(x.value_));
+					x.reset();
+				}
 				return *this;
 			}
 
@@ -80,75 +88,98 @@ namespace boost { namespace leaf {
 				reset();
 			}
 
+			bool empty() const noexcept
+			{
+				return key_==0;
+			}
+
+			int key() const noexcept
+			{
+				return key_;
+			}
+
+			void set_key( int key ) noexcept
+			{
+				assert(!empty());
+				key_ = key;
+			}
+
 			void reset() noexcept
 			{
-				if( has_value() )
+				if( key_ )
 				{
 					value_.~T();
-					has_value_=false;
+					key_=0;
 				}
 			}
 
 			template <class... A>
-			T & emplace( A && ... a )
+			T & emplace( int key, A && ... a )
 			{
+				assert(key);
 				reset();
 				(void) new(&value_) T(std::forward<A>(a)...);
-				has_value_=true;
+				key_=key;
 				return value_;
 			}
 
-			T & put( T const & v )
+			T & put( int key, T const & v )
 			{
+				assert(key);
 				reset();
 				(void) new(&value_) T(v);
-				has_value_=true;
+				key_=key;
 				return value_;
 			}
 
-			T & put( T && v ) noexcept
+			T & put( int key, T && v ) noexcept
 			{
+				assert(key);
 				reset();
 				(void) new(&value_) T(std::move(v));
-				has_value_=true;
+				key_=key;
 				return value_;
 			}
 
-			T const * has_value() const noexcept
+			T const * has_value(int key) const noexcept
 			{
-				return has_value_ ? &value_ : 0;
+				assert(key);
+				return key_==key ? &value_ : 0;
 			}
 
-			T * has_value() noexcept
+			T * has_value(int key) noexcept
 			{
-				return has_value_ ? &value_ : 0;
+				assert(key);
+				return key_==key ? &value_ : 0;
 			}
 
-			T const & value() const & noexcept
+			T const & value(int key) const & noexcept
 			{
-				assert(has_value()!=0);
+				assert(has_value(key)!=0);
 				return value_;
 			}
 
-			T & value() & noexcept
+			T & value(int key) & noexcept
 			{
-				assert(has_value()!=0);
+				assert(has_value(key)!=0);
 				return value_;
 			}
 
-			T const && value() const && noexcept
+			T const && value(int key) const && noexcept
 			{
-				assert(has_value()!=0);
+				assert(has_value(key)!=0);
 				return value_;
 			}
 
-			T value() && noexcept
+			T value(int key) && noexcept
 			{
-				assert(has_value()!=0);
+				assert(has_value(key)!=0);
 				T tmp(std::move(value_));
 				reset();
 				return tmp;
 			}
+
+			void print( std::ostream & ) const;
 		};
 
 	} // leaf_detail

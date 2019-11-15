@@ -31,13 +31,13 @@ namespace boost { namespace leaf {
 			{
 				auto & sl = std::get<I-1>(tup);
 				if( sl.has_value(err_id) )
-					leaf_detail::load_slot(err_id, sl.extract(err_id));
+					leaf_detail::load_slot(err_id, std::move(sl).value(err_id));
 				tuple_for_each<I-1,Tuple>::propagate(tup, err_id);
 			}
 
 			static void print( std::ostream & os, Tuple const & tup ) noexcept
 			{
-				tuple_for_each<I-1,Tuple>::print(os,tup);
+				tuple_for_each<I-1,Tuple>::print(os, tup);
 				std::get<I-1>(tup).print(os);
 			}
 		};

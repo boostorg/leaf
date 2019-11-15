@@ -93,7 +93,6 @@ tests = [
 	'context_activator_test',
 	'context_deduction_test',
 	'capture_result_unload_test',
-	'continuation_test',
 	'ctx_remote_handle_all_test',
 	'ctx_remote_handle_exception_test',
 	'ctx_remote_handle_some_test',

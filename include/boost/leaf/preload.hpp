@@ -54,7 +54,7 @@ namespace boost { namespace leaf {
 				if( s_ )
 				{
 					if( !s_->has_value(err_id) )
-						s_->load(err_id, std::move(e_));
+						s_->put(err_id, std::move(e_));
 				}
 #ifndef LEAF_DISCARD_UNEXPECTED
 				else
@@ -143,7 +143,7 @@ namespace boost { namespace leaf {
 				if( s_ )
 				{
 					if( !s_->has_value(err_id) )
-						s_->load(err_id, f_());
+						s_->put(err_id, f_());
 				}
 #ifndef LEAF_DISCARD_UNEXPECTED
 				else
@@ -235,7 +235,7 @@ namespace boost { namespace leaf {
 					if( E * e = s_->has_value(err_id) )
 						(void) f_(*e);
 					else
-						(void) f_(s_->load(err_id, E()));
+						(void) f_(s_->put(err_id, E()));
 			}
 		};
 

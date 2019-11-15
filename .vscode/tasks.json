@@ -177,15 +177,6 @@
 			}
 		},
 		{
-			"label": "continuation_test",
-			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test continuation_test",
-			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
-			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test continuation_test"
-			}
-		},
-		{
 			"label": "ctx_remote_handle_all_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test ctx_remote_handle_all_test",

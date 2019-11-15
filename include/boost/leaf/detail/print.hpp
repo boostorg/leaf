@@ -7,6 +7,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
+#include <boost/leaf/detail/optional.hpp>
 #include <exception>
 #include <ostream>
 #include <cstring>
@@ -116,6 +117,17 @@ namespace boost { namespace leaf {
 			{
 			}
 		};
+
+		template <class T>
+		void optional<T>::print( std::ostream & os ) const
+		{
+			if( int k = key() )
+			{
+				os << type<T>() << '[' << k << "]: ";
+				diagnostic<T>::print(os, value_);
+				os << std::endl;
+			}
+		}
 	} // leaf_detail
 
 } }
