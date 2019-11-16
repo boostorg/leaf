@@ -102,6 +102,7 @@
 		"unordered_map": "cpp",
 		"*.tcc": "cpp",
 		"memory_resource": "cpp",
-		"cinttypes": "cpp"
+		"cinttypes": "cpp",
+		"cfenv": "cpp"
 	}
 }

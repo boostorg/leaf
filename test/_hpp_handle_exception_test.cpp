@@ -7,5 +7,5 @@
 #ifndef LEAF_NO_EXCEPTIONS
 #include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/handle_exception.hpp>
-int main() { return 0; }
 #endif
+int main() { return 0; }

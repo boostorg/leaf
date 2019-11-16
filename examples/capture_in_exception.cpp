@@ -70,7 +70,7 @@ int main()
 	// Launch the tasks, but rather than launching the task function directly, we launch a
 	// wrapper function which calls leaf::capture, passing a context object that will hold
 	// the E-objects loaded from the task in case it throws. The E-types the context is
-	// able to hold statically are automatically deduced from the type of the error_handler\
+	// able to hold statically are automatically deduced from the type of the error_handler
 	// function.
 	std::generate_n( std::inserter(fut,fut.end()), task_count,
 		[&]

@@ -2154,12 +2154,6 @@ namespace boost { namespace leaf {
 	template <class... Ex>
 	class catch_;
 
-	template <class TryBlock, class... H>
-	decltype(std::declval<TryBlock>()()) try_catch( TryBlock &&, H && ... );
-
-	template <class TryBlock, class RemoteH>
-	decltype(std::declval<TryBlock>()()) remote_try_catch( TryBlock &&, RemoteH && );
-
 	namespace leaf_detail
 	{
 		template <class... E>
@@ -2167,12 +2161,6 @@ namespace boost { namespace leaf {
 		{
 			context_base( context_base const & ) = delete;
 			context_base & operator=( context_base const & ) = delete;
-
-			template <class TryBlock, class... H>
-			friend decltype(std::declval<TryBlock>()()) leaf::try_catch( TryBlock &&, H && ... );
-
-			template <class TryBlock, class RemoteH>
-			friend decltype(std::declval<TryBlock>()()) leaf::remote_try_catch( TryBlock &&, RemoteH && );
 
 		public:
 
