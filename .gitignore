@@ -11,3 +11,4 @@ bld/*
 snippets/*
 subprojects/*/
 .vscode/ipch/*
+.vscode/settings.json
