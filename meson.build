@@ -172,3 +172,8 @@ if exceptions
 		executable('lua_callback_eh', 'examples/lua_callback_eh.cpp', dependencies: [leaf,lua]+mp11 )
 	endif
 endif
+
+executable('deep_stack', 'benchmark/deep_stack.cpp', dependencies: [leaf])
+if get_option('boost_examples')
+	executable('deep_stack_outcome', 'benchmark/deep_stack_outcome.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
+endif
