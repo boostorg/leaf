@@ -3352,25 +3352,33 @@ namespace boost { namespace leaf {
 	template <class TryBlock, class... H>
 	inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock && try_block, H && ... h )
 	{
-		return context_type_from_handlers<H...>().try_handle_all( std::forward<TryBlock>(try_block), std::forward<H>(h)... );
+		// Creating a named temp on purpose, to avoid C++11 and C++14 zero-initializing the context.
+		context_type_from_handlers<H...> c;
+		return c.try_handle_all( std::forward<TryBlock>(try_block), std::forward<H>(h)... );
 	}
 
 	template <class TryBlock, class RemoteH>
 	inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock && try_block, RemoteH && h )
 	{
-		return context_type_from_remote_handler<RemoteH>().remote_try_handle_all( std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
+		// Creating a named temp on purpose, to avoid C++11 and C++14 zero-initializing the context.
+		context_type_from_remote_handler<RemoteH> c;
+		return c.remote_try_handle_all( std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
 	}
 
 	template <class TryBlock, class... H>
 	inline typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock && try_block, H && ... h )
 	{
-		return context_type_from_handlers<H...>().try_handle_some( std::forward<TryBlock>(try_block), std::forward<H>(h)... );
+		// Creating a named temp on purpose, to avoid C++11 and C++14 zero-initializing the context.
+		context_type_from_handlers<H...> c;
+		return c.try_handle_some( std::forward<TryBlock>(try_block), std::forward<H>(h)... );
 	}
 
 	template <class TryBlock, class RemoteH>
 	inline typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( TryBlock && try_block, RemoteH && h )
 	{
-		return context_type_from_remote_handler<RemoteH>().remote_try_handle_some( std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
+		// Creating a named temp on purpose, to avoid C++11 and C++14 zero-initializing the context.
+		context_type_from_remote_handler<RemoteH> c;
+		return c.remote_try_handle_some( std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
 	}
 
 } }
