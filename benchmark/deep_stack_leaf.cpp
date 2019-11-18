@@ -27,36 +27,36 @@
 #	include <boost/leaf/all.hpp>
 #endif
 #include <cstring>
+#include <cstdlib>
 #include <chrono>
 #include <iostream>
 #include <iomanip>
 
+#ifndef LEAF_NO_EXCEPTIONS
+#	error Please disable exception handling.
+#endif
+
+namespace boost
+{
+	void throw_exception( std::exception const & e )
+	{
+		std::cerr << "Terminating due to a C++ exception under LEAF_NO_EXCEPTIONS: " << e.what();
+		std::terminate();
+	}
+}
+
+//////////////////////////////////////
+
 namespace leaf = boost::leaf;
 
-// Disable inlining for correct benchmarking.
 #ifdef _MSC_VER
 #	define NOINLINE __declspec(noinline)
 #else
 #	define NOINLINE __attribute__((noinline))
 #endif
 
-#ifdef LEAF_NO_EXCEPTIONS
-// leaf::result<T>::value() calls throw_exception to throw if it has no value.
-// When exceptions are disabled, throw_exception is left undefined, and the user
-// is required to define it (it may not return).
-namespace boost
-{
-	[[noreturn]] void throw_exception( std::exception const & e )
-	{
-		std::cerr << "Terminating due to a C++ exception under LEAF_NO_EXCEPTIONS: " << e.what();
-		std::terminate();
-	}
-}
-#endif
-
 //////////////////////////////////////
 
-// A simple error code type.
 enum class e_error_code
 {
 	ec1=1,
@@ -69,7 +69,6 @@ namespace boost { namespace leaf {
 
 } }
 
-// This error type has a large size and takes at least a second to init or move.
 // Note: in LEAF, handling of error objects is O(1) no matter how many stack frames.
 struct e_heavy_payload
 {
@@ -77,63 +76,91 @@ struct e_heavy_payload
 
 	e_heavy_payload() noexcept
 	{
-		std::memset(value, 0, sizeof(value));
+		std::memset(value, std::rand(), sizeof(value));
 	}
 };
 
+template <class E>
+E make_error() noexcept;
+
+template <>
+inline e_error_code make_error() noexcept
+{
+	return (std::rand()%2) ? e_error_code::ec1 : e_error_code::ec2;
+}
+
+template <>
+inline e_heavy_payload make_error() noexcept
+{
+	return e_heavy_payload();
+}
+
+inline bool should_fail( int failure_rate ) noexcept
+{
+	assert(failure_rate>=0);
+	assert(failure_rate<=100);
+	return (std::rand()%100) < failure_rate;
+}
+
 //////////////////////////////////////
 
-template <int N, class T, class... E>
+template <int N, class T, class E>
 struct benchmark_check_error_noinline
 {
-	NOINLINE static leaf::result<T> f() noexcept
+	NOINLINE static leaf::result<T> f( int failure_rate ) noexcept
 	{
-		LEAF_AUTO(x, (benchmark_check_error_noinline<N-1, T, E...>::f()));
+		LEAF_AUTO(x, (benchmark_check_error_noinline<N-1, T, E>::f(failure_rate)));
 		return x+1;
 	}
 };
 
-template <class T, class... E>
-struct benchmark_check_error_noinline<0, T, E...>
+template <class T, class E>
+struct benchmark_check_error_noinline<0, T, E>
 {
-	NOINLINE static leaf::result<T> f() noexcept
+	NOINLINE static leaf::result<T> f( int failure_rate ) noexcept
 	{
-		return leaf::new_error(E{}...);
+		if( should_fail(failure_rate) )
+			return leaf::new_error(make_error<E>());
+		else
+			return T{ };
 	}
 };
 
 //////////////////////////////////////
 
-template <int N, class T, class... E>
+template <int N, class T, class E>
 struct benchmark_check_error_inline
 {
-	NOINLINE static leaf::result<T> f() noexcept
+	static leaf::result<T> f( int failure_rate ) noexcept
 	{
-		LEAF_AUTO(x, (benchmark_check_error_inline<N-1, T, E...>::f()));
+		LEAF_AUTO(x, (benchmark_check_error_inline<N-1, T, E>::f(failure_rate)));
 		return x+1;
 	}
 };
 
-template <class T, class... E>
-struct benchmark_check_error_inline<0, T, E...>
+template <class T, class E>
+struct benchmark_check_error_inline<0, T, E>
 {
-	NOINLINE static leaf::result<T> f() noexcept
+	static leaf::result<T> f( int failure_rate ) noexcept
 	{
-		return leaf::new_error(E{}...);
+		if( should_fail(failure_rate) )
+			return leaf::new_error(make_error<E>());
+		else
+			return T{ };
 	}
 };
 
 //////////////////////////////////////
 
-template <int N, class T, class... E>
+template <int N, class T, class E>
 struct benchmark_handle_some_noinline
 {
-	NOINLINE static leaf::result<T> f() noexcept
+	NOINLINE static leaf::result<T> f( int failure_rate ) noexcept
 	{
 		return leaf::try_handle_some(
-			[]() -> leaf::result<T>
+			[=]() -> leaf::result<T>
 			{
-				LEAF_AUTO(x, (benchmark_handle_some_noinline<N-1, T, E...>::f()));
+				LEAF_AUTO(x, (benchmark_handle_some_noinline<N-1, T, E>::f(failure_rate)));
 				return x+1;
 			},
 			[]( leaf::match<e_error_code, e_error_code::ec2> )
@@ -143,26 +170,29 @@ struct benchmark_handle_some_noinline
 	}
 };
 
-template <class T, class... E>
-struct benchmark_handle_some_noinline<0, T, E...>
+template <class T, class E>
+struct benchmark_handle_some_noinline<0, T, E>
 {
-	NOINLINE static leaf::result<T> f() noexcept
+	NOINLINE static leaf::result<T> f( int failure_rate ) noexcept
 	{
-		return leaf::new_error(E{}...);
+		if( should_fail(failure_rate) )
+			return leaf::new_error(make_error<E>());
+		else
+			return T{ };
 	}
 };
 
 //////////////////////////////////////
 
-template <int N, class T, class... E>
+template <int N, class T, class E>
 struct benchmark_handle_some_inline
 {
-	static leaf::result<T> f() noexcept
+	static leaf::result<T> f( int failure_rate ) noexcept
 	{
 		return leaf::try_handle_some(
-			[]() -> leaf::result<T>
+			[=]() -> leaf::result<T>
 			{
-				LEAF_AUTO(x, (benchmark_handle_some_inline<N-1, T, E...>::f()));
+				LEAF_AUTO(x, (benchmark_handle_some_inline<N-1, T, E>::f(failure_rate)));
 				return x+1;
 			},
 			[]( leaf::match<e_error_code, e_error_code::ec2> )
@@ -172,24 +202,27 @@ struct benchmark_handle_some_inline
 	}
 };
 
-template <class T, class... E>
-struct benchmark_handle_some_inline<0, T, E...>
+template <class T, class E>
+struct benchmark_handle_some_inline<0, T, E>
 {
-	static leaf::result<T> f() noexcept
+	static leaf::result<T> f( int failure_rate ) noexcept
 	{
-		return leaf::new_error(E{}...);
+		if( should_fail(failure_rate) )
+			return leaf::new_error(make_error<E>());
+		else
+			return T{ };
 	}
 };
 
 //////////////////////////////////////
 
 template <class Benchmark>
-int runner() noexcept
+int runner( int failure_rate ) noexcept
 {
 	return leaf::try_handle_all(
-		[]
+		[=]
 		{
-			return Benchmark::f();
+			return Benchmark::f(failure_rate);
 		},
 		[]( e_error_code const & )
 		{
@@ -215,7 +248,7 @@ int print_elapsed_time( F && f )
 	for( int i = 0; i!=Iterations; ++i )
 		val += std::forward<F>(f)();
 	auto stop = std::chrono::system_clock::now();
-	std::cout << std::setw(10) << std::chrono::duration_cast<std::chrono::milliseconds>(stop-start).count();
+	std::cout << std::setw(10) << std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count();
 	return val;
 }
 
@@ -224,30 +257,33 @@ int print_elapsed_time( F && f )
 int main()
 {
 	int const depth = 200;
-	int const iteration_count = 50000;
+	int const iteration_count = 5000;
+	int const test_rates[ ] = { 5, 50, 95 };
 	int x=0;
 
-	std::cout <<
-	iteration_count << " iterations, call depth " << depth << ", sizeof(e_heavy_payload) = " << sizeof(e_heavy_payload) << ":"
-	"\n"
-	"\nError type      | At each level      | Inlining | Elapsed ms"
-	"\n----------------|--------------------|----------|-----------";
-	std::cout << "\ne_error_code    | LEAF_AUTO          | Disabled | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_check_error_noinline<depth, int, e_error_code>>(); } );
-	std::cout << "\ne_error_code    | LEAF_AUTO          | Enabled  | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_check_error_inline<depth, int, e_error_code>>(); } );
-	std::cout << "\ne_error_code    | try_handle_some    | Disabled | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_handle_some_noinline<depth, int, e_error_code>>(); } );
-	std::cout << "\ne_error_code    | try_handle_some    | Enabled  | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_handle_some_inline<depth, int, e_error_code>>(); } );
-	std::cout << "\ne_heavy_payload | LEAF_AUTO          | Disabled | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_check_error_noinline<depth, int, e_heavy_payload>>(); } );
-	std::cout << "\ne_heavy_payload | LEAF_AUTO          | Enabled  | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_check_error_inline<depth, int, e_heavy_payload>>(); } );
-	std::cout << "\ne_heavy_payload | try_handle_some    | Disabled | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_handle_some_noinline<depth, int, e_heavy_payload>>(); } );
-	std::cout << "\ne_heavy_payload | try_handle_some    | Enabled  | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_handle_some_inline<depth, int, e_heavy_payload>>(); } );
+	std::cout << iteration_count << " iterations, call depth " << depth << ", sizeof(e_heavy_payload) = " << sizeof(e_heavy_payload);
+	for( auto fr : test_rates )
+	{
+		std::cout << "\n"
+		"\nError type      | At each level      | Inlining | Elapsed μs"
+		"\n----------------|--------------------|----------|----------- failure rate = " << fr << '%';
+		std::cout << "\ne_error_code    | LEAF_AUTO          | Disabled | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_check_error_noinline<depth, int, e_error_code>>(fr); } );
+		std::cout << "\ne_error_code    | LEAF_AUTO          | Enabled  | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_check_error_inline<depth, int, e_error_code>>(fr); } );
+		std::cout << "\ne_error_code    | try_handle_some    | Disabled | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_handle_some_noinline<depth, int, e_error_code>>(fr); } );
+		std::cout << "\ne_error_code    | try_handle_some    | Enabled  | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_handle_some_inline<depth, int, e_error_code>>(fr); } );
+		std::cout << "\ne_heavy_payload | LEAF_AUTO          | Disabled | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_check_error_noinline<depth, int, e_heavy_payload>>(fr); } );
+		std::cout << "\ne_heavy_payload | LEAF_AUTO          | Enabled  | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_check_error_inline<depth, int, e_heavy_payload>>(fr); } );
+		std::cout << "\ne_heavy_payload | try_handle_some    | Disabled | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_handle_some_noinline<depth, int, e_heavy_payload>>(fr); } );
+		std::cout << "\ne_heavy_payload | try_handle_some    | Enabled  | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_handle_some_inline<depth, int, e_heavy_payload>>(fr); } );
+	};
 
 	std::cout << std::endl;
 	return x;

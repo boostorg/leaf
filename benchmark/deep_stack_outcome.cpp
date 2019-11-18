@@ -17,19 +17,34 @@
 //
 // Benchmarking is run with inlining enabled as well as disabled.
 
-#include <boost/outcome/outcome.hpp>
+#include <boost/outcome/std_outcome.hpp>
 #include <boost/outcome/try.hpp>
 #include <cstring>
+#include <cstdlib>
 #include <chrono>
 #include <iostream>
 #include <iomanip>
 
+#ifndef BOOST_NO_EXCEPTIONS
+#	error Please disable exception handling.
+#endif
+
+namespace boost
+{
+	void throw_exception( std::exception const & e )
+	{
+		std::cerr << "Terminating due to a C++ exception under BOOST_NO_EXCEPTIONS: " << e.what();
+		std::terminate();
+	}
+}
+
+//////////////////////////////////////
+
 namespace outcome = boost::outcome_v2;
 
 template <class T, class EC>
-using result = outcome::outcome<T, EC>;
+using result = outcome::std_outcome<T, EC>;
 
-// Disable inlining for correct benchmarking.
 #ifdef _MSC_VER
 #	define NOINLINE __declspec(noinline)
 #else
@@ -38,31 +53,50 @@ using result = outcome::outcome<T, EC>;
 
 //////////////////////////////////////
 
-// A simple error code type.
 enum class e_error_code
 {
 	ec1=1,
 	ec2
 };
 
-// This error type has a large size and takes at least a second to init or move.
-// Note: in LEAF, handling of error objects is O(1) no matter how many stack frames.
 struct e_heavy_payload
 {
 	char value[4096];
 
 	e_heavy_payload() noexcept
 	{
-		std::memset(value, 0, sizeof(value));
+		std::memset(value, std::rand(), sizeof(value));
 	}
 };
 
-bool check_handle_some_value( e_error_code e )
+template <class E>
+E make_error() noexcept;
+
+template <>
+inline e_error_code make_error() noexcept
+{
+	return (std::rand()%2) ? e_error_code::ec1 : e_error_code::ec2;
+}
+
+template <>
+inline e_heavy_payload make_error() noexcept
+{
+	return e_heavy_payload();
+}
+
+inline bool should_fail( int failure_rate ) noexcept
+{
+	assert(failure_rate>=0);
+	assert(failure_rate<=100);
+	return (std::rand()%100) < failure_rate;
+}
+
+bool check_handle_some_value( e_error_code e ) noexcept
 {
 	return e==e_error_code::ec2;
 }
 
-bool check_handle_some_value( e_heavy_payload const & )
+bool check_handle_some_value( e_heavy_payload const & ) noexcept
 {
 	return false;
 }
@@ -72,9 +106,9 @@ bool check_handle_some_value( e_heavy_payload const & )
 template <int N, class T, class E>
 struct benchmark_check_error_noinline
 {
-	NOINLINE static result<T, E> f() noexcept
+	NOINLINE static result<T, E> f( int failure_rate ) noexcept
 	{
-		BOOST_OUTCOME_TRY(x, (benchmark_check_error_noinline<N-1, T, E>::f()));
+		BOOST_OUTCOME_TRY(x, (benchmark_check_error_noinline<N-1, T, E>::f(failure_rate)));
 		return x+1;
 	}
 };
@@ -82,9 +116,12 @@ struct benchmark_check_error_noinline
 template <class T, class E>
 struct benchmark_check_error_noinline<0, T, E>
 {
-	NOINLINE static result<T, E> f() noexcept
+	static result<T, E> f( int failure_rate ) noexcept
 	{
-		return E{};
+		if( should_fail(failure_rate) )
+			return make_error<E>();
+		else
+			return T{ };
 	}
 };
 
@@ -93,9 +130,9 @@ struct benchmark_check_error_noinline<0, T, E>
 template <int N, class T, class E>
 struct benchmark_check_error_inline
 {
-	NOINLINE static result<T, E> f() noexcept
+	static result<T, E> f( int failure_rate ) noexcept
 	{
-		BOOST_OUTCOME_TRY(x, (benchmark_check_error_noinline<N-1, T, E>::f()));
+		BOOST_OUTCOME_TRY(x, (benchmark_check_error_inline<N-1, T, E>::f(failure_rate)));
 		return x+1;
 	}
 };
@@ -103,9 +140,12 @@ struct benchmark_check_error_inline
 template <class T, class E>
 struct benchmark_check_error_inline<0, T, E>
 {
-	NOINLINE static result<T, E> f() noexcept
+	static result<T, E> f( int failure_rate ) noexcept
 	{
-		return E{};
+		if( should_fail(failure_rate) )
+			return make_error<E>();
+		else
+			return T{ };
 	}
 };
 
@@ -114,9 +154,9 @@ struct benchmark_check_error_inline<0, T, E>
 template <int N, class T, class E>
 struct benchmark_handle_some_noinline
 {
-	NOINLINE static result<T, E> f() noexcept
+	NOINLINE static result<T, E> f( int failure_rate ) noexcept
 	{
-		if( auto r = benchmark_handle_some_noinline<N-1, T, E>::f() )
+		if( auto r = benchmark_handle_some_noinline<N-1, T, E>::f(failure_rate) )
 			return r.value()+1;
 		else if( check_handle_some_value(r.error()) )
 			return 1;
@@ -128,9 +168,12 @@ struct benchmark_handle_some_noinline
 template <class T, class E>
 struct benchmark_handle_some_noinline<0, T, E>
 {
-	NOINLINE static result<T, E> f() noexcept
+	static result<T, E> f( int failure_rate ) noexcept
 	{
-		return E{};
+		if( should_fail(failure_rate) )
+			return make_error<E>();
+		else
+			return T{ };
 	}
 };
 
@@ -139,9 +182,9 @@ struct benchmark_handle_some_noinline<0, T, E>
 template <int N, class T, class E>
 struct benchmark_handle_some_inline
 {
-	static result<T, E> f() noexcept
+	static result<T, E> f( int failure_rate ) noexcept
 	{
-		if( auto r = benchmark_handle_some_noinline<N-1, T, E>::f() )
+		if( auto r = benchmark_handle_some_inline<N-1, T, E>::f(failure_rate) )
 			return r.value()+1;
 		else if( check_handle_some_value(r.error()) )
 			return 1;
@@ -153,18 +196,21 @@ struct benchmark_handle_some_inline
 template <class T, class E>
 struct benchmark_handle_some_inline<0, T, E>
 {
-	static result<T, E> f() noexcept
+	static result<T, E> f( int failure_rate ) noexcept
 	{
-		return E{};
+		if( should_fail(failure_rate) )
+			return make_error<E>();
+		else
+			return T{ };
 	}
 };
 
 //////////////////////////////////////
 
 template <class Benchmark>
-int runner() noexcept
+int runner( int failure_rate ) noexcept
 {
-	if( auto r = Benchmark::f() )
+	if( auto r = Benchmark::f(failure_rate) )
 		return r.value();
 	else
 		return -1;
@@ -180,7 +226,7 @@ int print_elapsed_time( F && f )
 	for( int i = 0; i!=Iterations; ++i )
 		val += std::forward<F>(f)();
 	auto stop = std::chrono::system_clock::now();
-	std::cout << std::setw(10) << std::chrono::duration_cast<std::chrono::milliseconds>(stop-start).count();
+	std::cout << std::setw(10) << std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count();
 	return val;
 }
 
@@ -189,30 +235,33 @@ int print_elapsed_time( F && f )
 int main()
 {
 	int const depth = 200;
-	int const iteration_count = 50000;
+	int const iteration_count = 5000;
+	int const test_rates[ ] = { 5, 50, 95 };
 	int x=0;
 
-	std::cout <<
-	iteration_count << " iterations, call depth " << depth << ", sizeof(e_heavy_payload) = " << sizeof(e_heavy_payload) << ":"
-	"\n"
-	"\nError type      | At each level      | Inlining | Elapsed ms"
-	"\n----------------|--------------------|----------|-----------";
-	std::cout << "\ne_error_code    | OUTCOME_TRY        | Disabled | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_check_error_noinline<depth, int, e_error_code>>(); } );
-	std::cout << "\ne_error_code    | OUTCOME_TRY        | Enabled  | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_check_error_inline<depth, int, e_error_code>>(); } );
-	std::cout << "\ne_error_code    | Handle some errors | Disabled | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_handle_some_noinline<depth, int, e_error_code>>(); } );
-	std::cout << "\ne_error_code    | Handle some errors | Enabled  | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_handle_some_inline<depth, int, e_error_code>>(); } );
-	std::cout << "\ne_heavy_payload | OUTCOME_TRY        | Disabled | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_check_error_noinline<depth, int, e_heavy_payload>>(); } );
-	std::cout << "\ne_heavy_payload | OUTCOME_TRY        | Enabled  | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_check_error_inline<depth, int, e_heavy_payload>>(); } );
-	std::cout << "\ne_heavy_payload | Handle some errors | Disabled | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_handle_some_noinline<depth, int, e_heavy_payload>>(); } );
-	std::cout << "\ne_heavy_payload | Handle some errors | Enabled  | ";
-	x += print_elapsed_time<iteration_count>( [ ] { return runner<benchmark_handle_some_inline<depth, int, e_heavy_payload>>(); } );
+	std::cout << iteration_count << " iterations, call depth " << depth << ", sizeof(e_heavy_payload) = " << sizeof(e_heavy_payload);
+	for( auto fr : test_rates )
+	{
+		std::cout << "\n"
+		"\nError type      | At each level      | Inlining | Elapsed μs"
+		"\n----------------|--------------------|----------|----------- failure rate = " << fr << '%';
+		std::cout << "\ne_error_code    | OUTCOME_TRY        | Disabled | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_check_error_noinline<depth, int, e_error_code>>(fr); } );
+		std::cout << "\ne_error_code    | OUTCOME_TRY        | Enabled  | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_check_error_inline<depth, int, e_error_code>>(fr); } );
+		std::cout << "\ne_error_code    | Handle some errors | Disabled | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_handle_some_noinline<depth, int, e_error_code>>(fr); } );
+		std::cout << "\ne_error_code    | Handle some errors | Enabled  | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_handle_some_inline<depth, int, e_error_code>>(fr); } );
+		std::cout << "\ne_heavy_payload | OUTCOME_TRY        | Disabled | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_check_error_noinline<depth, int, e_heavy_payload>>(fr); } );
+		std::cout << "\ne_heavy_payload | OUTCOME_TRY        | Enabled  | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_check_error_inline<depth, int, e_heavy_payload>>(fr); } );
+		std::cout << "\ne_heavy_payload | Handle some errors | Disabled | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_handle_some_noinline<depth, int, e_heavy_payload>>(fr); } );
+		std::cout << "\ne_heavy_payload | Handle some errors | Enabled  | ";
+		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_handle_some_inline<depth, int, e_heavy_payload>>(fr); } );
+	};
 
 	std::cout << std::endl;
 	return x;
