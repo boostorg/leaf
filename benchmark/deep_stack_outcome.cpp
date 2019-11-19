@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <chrono>
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 
 #ifndef BOOST_NO_EXCEPTIONS
@@ -218,51 +219,76 @@ int runner( int failure_rate ) noexcept
 
 //////////////////////////////////////
 
-template <int Iterations, class F>
-int print_elapsed_time( F && f )
+std::fstream append_csv()
+{
+	if( FILE * f = fopen("benchmark.csv","rb") )
+	{
+		fclose(f);
+		return std::fstream("benchmark.csv", std::fstream::out | std::fstream::app);
+	}
+	else
+	{
+		std::fstream fs("benchmark.csv", std::fstream::out | std::fstream::app);
+		fs << ",\"Check, noinline\",\"Check, inline\",\"Handle some, noinline\", \"Handle some, inline\",\"Error rate\"\n";
+		return fs;
+	}
+}
+
+template <class F>
+int print_elapsed_time( int iteration_count, F && f )
 {
 	auto start = std::chrono::system_clock::now();
 	int val = 0;
-	for( int i = 0; i!=Iterations; ++i )
+	for( int i = 0; i!=iteration_count; ++i )
 		val += std::forward<F>(f)();
 	auto stop = std::chrono::system_clock::now();
-	std::cout << std::setw(10) << std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count();
+	int elapsed = std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count();
+	std::cout << std::right << std::setw(8) << elapsed;
+	append_csv() << ',' << elapsed;
 	return val;
+}
+
+//////////////////////////////////////
+
+template <int Depth, class E>
+int benchmark_type( char const * type_name, int iteration_count )
+{
+	int const test_rates[ ] = { 10, 50, 90 };
+	int x=0;
+	std::cout << "----------------|--------------------|----------|-------|--------";
+	for( auto fr : test_rates )
+	{
+		append_csv() << "Outcome";
+		std::cout << '\n' << std::left << std::setw(16) << type_name << "| OUTCOME_TRY        | Disabled | " << std::right << std::setw(4) << fr << "% |";
+		std::srand(0);
+		x += print_elapsed_time( iteration_count, [=] { return runner<benchmark_check_error_noinline<Depth, int, E>>(fr); } );
+		std::cout << '\n' << std::left << std::setw(16) << type_name << "| OUTCOME_TRY        | Enabled  | " << std::right << std::setw(4) << fr << "% |";
+		std::srand(0);
+		x += print_elapsed_time( iteration_count, [=] { return runner<benchmark_check_error_inline<Depth, int, E>>(fr); } );
+		std::cout << '\n' << std::left << std::setw(16) << type_name << "| Handle some errors | Disabled | " << std::right << std::setw(4) << fr << "% |";
+		std::srand(0);
+		x += print_elapsed_time( iteration_count, [=] { return runner<benchmark_handle_some_noinline<Depth, int, E>>(fr); } );
+		std::cout << '\n' << std::left << std::setw(16) << type_name << "| Handle some errors | Enabled  | " << std::right << std::setw(4) << fr << "% |";
+		std::srand(0);
+		x += print_elapsed_time( iteration_count, [=] { return runner<benchmark_handle_some_inline<Depth, int, E>>(fr); } );
+		append_csv() << ',' << fr << '\n';
+	};
+	std::cout << '\n';
+	return x;
 }
 
 //////////////////////////////////////
 
 int main()
 {
-	int const depth = 200;
-	int const iteration_count = 5000;
-	int const test_rates[ ] = { 5, 50, 95 };
-	int x=0;
-
-	std::cout << iteration_count << " iterations, call depth " << depth << ", sizeof(e_heavy_payload) = " << sizeof(e_heavy_payload);
-	for( auto fr : test_rates )
-	{
-		std::cout << "\n"
-		"\nError type      | At each level      | Inlining | Elapsed μs"
-		"\n----------------|--------------------|----------|----------- failure rate = " << fr << '%';
-		std::cout << "\ne_error_code    | OUTCOME_TRY        | Disabled | ";
-		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_check_error_noinline<depth, int, e_error_code>>(fr); } );
-		std::cout << "\ne_error_code    | OUTCOME_TRY        | Enabled  | ";
-		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_check_error_inline<depth, int, e_error_code>>(fr); } );
-		std::cout << "\ne_error_code    | Handle some errors | Disabled | ";
-		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_handle_some_noinline<depth, int, e_error_code>>(fr); } );
-		std::cout << "\ne_error_code    | Handle some errors | Enabled  | ";
-		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_handle_some_inline<depth, int, e_error_code>>(fr); } );
-		std::cout << "\ne_heavy_payload | OUTCOME_TRY        | Disabled | ";
-		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_check_error_noinline<depth, int, e_heavy_payload>>(fr); } );
-		std::cout << "\ne_heavy_payload | OUTCOME_TRY        | Enabled  | ";
-		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_check_error_inline<depth, int, e_heavy_payload>>(fr); } );
-		std::cout << "\ne_heavy_payload | Handle some errors | Disabled | ";
-		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_handle_some_noinline<depth, int, e_heavy_payload>>(fr); } );
-		std::cout << "\ne_heavy_payload | Handle some errors | Enabled  | ";
-		x += print_elapsed_time<iteration_count>( [=] { return runner<benchmark_handle_some_inline<depth, int, e_heavy_payload>>(fr); } );
-	};
-
-	std::cout << std::endl;
-	return x;
+	int const depth = 100;
+	int const iteration_count = 1000;
+	std::cout <<
+		iteration_count << " iterations, call depth " << depth << ", sizeof(e_heavy_payload) = " << sizeof(e_heavy_payload) << "\n"
+		"Outcome\n"
+		"                |                    | Function | Error | Elapsed\n"
+		"Error type      | At each level      | inlining | rate  |    (μs)\n";
+	return
+		benchmark_type<depth, e_error_code>("e_error_code", iteration_count) +
+		benchmark_type<depth, e_heavy_payload>("e_heavy_payload", iteration_count);
 }

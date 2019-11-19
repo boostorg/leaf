@@ -173,7 +173,9 @@ if exceptions
 	endif
 endif
 
-executable('deep_stack_leaf', 'benchmark/deep_stack_leaf.cpp', dependencies: [leaf])
-if get_option('boost_examples')
-	executable('deep_stack_outcome', 'benchmark/deep_stack_outcome.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
+if get_option('cpp_eh')=='none'
+	executable('deep_stack_leaf', 'benchmark/deep_stack_leaf.cpp', dependencies: [leaf])
+	if get_option('boost_examples')
+		executable('deep_stack_outcome', 'benchmark/deep_stack_outcome.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
+	endif
 endif
