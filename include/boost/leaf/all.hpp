@@ -1609,6 +1609,11 @@ namespace boost { namespace leaf {
 	{
 	};
 
+	template <class R>
+	struct is_result_type<R const>: is_result_type<R>
+	{
+	};
+
 	namespace leaf_detail
 	{
 		template <class R, bool IsResult = is_result_type<R>::value>

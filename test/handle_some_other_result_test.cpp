@@ -67,9 +67,9 @@ void test()
 
 int main()
 {
-	test<res<int, std::error_code>>();
-	test<res<int const, std::error_code>>();
-	test<res<int, std::error_code> const>();
-	test<res<int const, std::error_code> const>();
+	test<test_res<int, std::error_code>>();
+	test<test_res<int const, std::error_code>>();
+	test<test_res<int, std::error_code> const>();
+	test<test_res<int const, std::error_code> const>();
 	return boost::report_errors();
 }

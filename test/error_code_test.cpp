@@ -106,6 +106,6 @@ void test()
 int main()
 {
 	test<leaf::result<int>>();
-	test<res<int, std::error_code>>();
+	test<test_res<int, std::error_code>>();
 	return boost::report_errors();
 }

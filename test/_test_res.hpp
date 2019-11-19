@@ -9,7 +9,7 @@
 #include "_test_ec.hpp"
 
 template <class T, class E>
-class res
+class test_res
 {
 	enum class variant
 	{
@@ -20,13 +20,13 @@ class res
 	E error_;
 	variant which_;
 public:
-	res( T const & value ) noexcept:
+	test_res( T const & value ) noexcept:
 		value_(value),
 		error_(),
 		which_(variant::value)
 	{
 	}
-	res( E const & error ) noexcept:
+	test_res( E const & error ) noexcept:
 		value_(),
 		error_(error),
 		which_(variant::error)
@@ -54,7 +54,7 @@ namespace boost { namespace leaf {
 	struct is_result_type;
 
 	template <class T, class E>
-	struct is_result_type<res<T, E>>: std::true_type
+	struct is_result_type<test_res<T, E>>: std::true_type
 	{
 	};
 
