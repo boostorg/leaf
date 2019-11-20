@@ -21,11 +21,10 @@
 #define LEAF_NO_DIAGNOSTIC_INFO
 #define LEAF_DISCARD_UNEXPECTED
 
-#if GODBOLT
-#	include "https://raw.githubusercontent.com/zajo/leaf/master/include/boost/leaf/all.hpp"
-#else
+#ifndef LEAF_ALL_HPP_INCLUDED
 #	include <boost/leaf/all.hpp>
 #endif
+
 #include <cstring>
 #include <cstdlib>
 #include <chrono>
@@ -241,16 +240,9 @@ int runner( int failure_rate ) noexcept
 
 //////////////////////////////////////
 
-char const * csv_name = 0;
-
 std::fstream append_csv()
 {
-	if( !csv_name )
-	{
-		assert(*csv_name);
-		return { };
-	}
-	else if( FILE * f = fopen("benchmark.csv","rb") )
+	if( FILE * f = fopen("benchmark.csv","rb") )
 	{
 		fclose(f);
 		return std::fstream("benchmark.csv", std::fstream::out | std::fstream::app);
@@ -266,11 +258,11 @@ std::fstream append_csv()
 template <class F>
 int print_elapsed_time( int iteration_count, F && f )
 {
-	auto start = std::chrono::system_clock::now();
+	auto start = std::chrono::steady_clock::now();
 	int val = 0;
 	for( int i = 0; i!=iteration_count; ++i )
 		val += std::forward<F>(f)();
-	auto stop = std::chrono::system_clock::now();
+	auto stop = std::chrono::steady_clock::now();
 	int elapsed = std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count();
 	std::cout << std::right << std::setw(8) << elapsed;
 	append_csv() << ',' << elapsed;
@@ -310,15 +302,8 @@ int benchmark_type( char const * type_name, int iteration_count )
 
 int main( int argc, char const * argv[] )
 {
-	int const depth = 100;
+	int const depth = 20;
 	int const iteration_count = 1000;
-	if( argc==2 )
-		csv_name = argv[1];
-	else if( argc!=1 )
-	{
-		std::cerr << "Bad command line\n";
-		return 1;
-	}
 	std::cout <<
 		iteration_count << " iterations, call depth " << depth << ", sizeof(e_heavy_payload) = " << sizeof(e_heavy_payload) << "\n"
 		"LEAF\n"
