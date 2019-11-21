@@ -237,11 +237,11 @@ std::fstream append_csv()
 template <class F>
 int print_elapsed_time( int iteration_count, F && f )
 {
-	auto start = std::chrono::steady_clock::now();
+	auto start = std::chrono::system_clock::now();
 	int val = 0;
 	for( int i = 0; i!=iteration_count; ++i )
 		val += std::forward<F>(f)();
-	auto stop = std::chrono::steady_clock::now();
+	auto stop = std::chrono::system_clock::now();
 	int elapsed = std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count();
 	std::cout << std::right << std::setw(8) << elapsed;
 	append_csv() << ',' << elapsed;
