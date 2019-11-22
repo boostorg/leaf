@@ -3,19 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// This benchmark forwards an outcome<T, E> through very many stack frames.
-//
-// It runs the following outcome<T, E> variants:
-//
-// - outcome<int, e_error_code>, where e_error_code is a simple error enum.
-// - outcome<int, e_heavy_payload>, where e_heavy_payload is a large error type.
-//
-// Each of the above variants is benchmarked using 2 different scenarios:
-//
-// - Each level computes a value, forwards all errors to the caller.
-// - Each level computes a value, handles some errors, forwards other errors.
-//
-// Benchmarking is run with inlining enabled as well as disabled.
+// See benchmark.md
 
 #include <boost/outcome/std_outcome.hpp>
 #include <boost/outcome/try.hpp>
@@ -157,7 +145,12 @@ struct benchmark_handle_some_noinline
 {
 	NOINLINE static result<T, E> f( int failure_rate ) noexcept
 	{
-		if( auto r = benchmark_handle_some_noinline<N-1, T, E>::f(failure_rate) )
+		if( N%4 )
+		{
+			BOOST_OUTCOME_TRY(x, (benchmark_handle_some_noinline<N-1, T, E>::f(failure_rate)));
+			return x+1;
+		}
+		else if( auto r = benchmark_handle_some_noinline<N-1, T, E>::f(failure_rate) )
 			return r.value()+1;
 		else if( check_handle_some_value(r.error()) )
 			return 1;
@@ -185,7 +178,12 @@ struct benchmark_handle_some_inline
 {
 	static result<T, E> f( int failure_rate ) noexcept
 	{
-		if( auto r = benchmark_handle_some_inline<N-1, T, E>::f(failure_rate) )
+		if( N%4 )
+		{
+			BOOST_OUTCOME_TRY(x, (benchmark_handle_some_inline<N-1, T, E>::f(failure_rate)));
+			return x+1;
+		}
+		else if( auto r = benchmark_handle_some_inline<N-1, T, E>::f(failure_rate) )
 			return r.value()+1;
 		else if( check_handle_some_value(r.error()) )
 			return 1;

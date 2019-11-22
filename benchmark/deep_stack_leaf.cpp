@@ -3,19 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// This benchmark forwards a leaf::result<int> through very many stack frames.
-//
-// It runs the following scenarios:
-//
-// - In case of error, communicating e_error_code, a simple error enum.
-// - In case of error, communicating e_heavy_payload, a large error type.
-//
-// Each of the above variants is benchmarked using 2 different scenarios:
-//
-// - Each level computes a value, forwards all errors to the caller.
-// - Each level computes a value, handles some errors, forwards other errors.
-//
-// Benchmarking is run with inlining enabled as well as disabled.
+// See benchmark.md
 
 //Disable diagnostic features.
 #define LEAF_NO_DIAGNOSTIC_INFO
