@@ -157,16 +157,22 @@ struct benchmark_handle_some_noinline
 {
 	NOINLINE static leaf::result<T> f( int failure_rate ) noexcept
 	{
-		return leaf::try_handle_some(
-			[=]() -> leaf::result<T>
-			{
-				LEAF_AUTO(x, (benchmark_handle_some_noinline<N-1, T, E>::f(failure_rate)));
-				return x+1;
-			},
-			[]( leaf::match<e_error_code, e_error_code::ec2> )
-			{
-				return 2;
-			} );
+		if( N%4 )
+		{
+			LEAF_AUTO(x, (benchmark_handle_some_noinline<N-1, T, E>::f(failure_rate)));
+			return x+1;
+		}
+		else
+			return leaf::try_handle_some(
+				[=]() -> leaf::result<T>
+				{
+					LEAF_AUTO(x, (benchmark_handle_some_noinline<N-1, T, E>::f(failure_rate)));
+					return x+1;
+				},
+				[]( leaf::match<e_error_code, e_error_code::ec2> )
+				{
+					return 2;
+				} );
 	}
 };
 
@@ -189,16 +195,22 @@ struct benchmark_handle_some_inline
 {
 	static leaf::result<T> f( int failure_rate ) noexcept
 	{
-		return leaf::try_handle_some(
-			[=]() -> leaf::result<T>
-			{
-				LEAF_AUTO(x, (benchmark_handle_some_inline<N-1, T, E>::f(failure_rate)));
-				return x+1;
-			},
-			[]( leaf::match<e_error_code, e_error_code::ec2> )
-			{
-				return 2;
-			} );
+		if( N%4 )
+		{
+			LEAF_AUTO(x, (benchmark_handle_some_inline<N-1, T, E>::f(failure_rate)));
+			return x+1;
+		}
+		else
+			return leaf::try_handle_some(
+				[=]() -> leaf::result<T>
+				{
+					LEAF_AUTO(x, (benchmark_handle_some_inline<N-1, T, E>::f(failure_rate)));
+					return x+1;
+				},
+				[]( leaf::match<e_error_code, e_error_code::ec2> )
+				{
+					return 2;
+				} );
 	}
 };
 
@@ -302,7 +314,7 @@ int benchmark_type( char const * type_name, int iteration_count )
 
 int main( int argc, char const * argv[] )
 {
-	int const depth = 20;
+	int const depth = 32;
 	int const iteration_count = 1000;
 	std::cout <<
 		iteration_count << " iterations, call depth " << depth << ", sizeof(e_heavy_payload) = " << sizeof(e_heavy_payload) << "\n"

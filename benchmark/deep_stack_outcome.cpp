@@ -281,7 +281,7 @@ int benchmark_type( char const * type_name, int iteration_count )
 
 int main()
 {
-	int const depth = 20;
+	int const depth = 32;
 	int const iteration_count = 1000;
 	std::cout <<
 		iteration_count << " iterations, call depth " << depth << ", sizeof(e_heavy_payload) = " << sizeof(e_heavy_payload) << "\n"
