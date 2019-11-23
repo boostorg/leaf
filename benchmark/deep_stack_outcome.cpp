@@ -103,7 +103,7 @@ struct benchmark_check_error_noinline
 };
 
 template <class T, class E>
-struct benchmark_check_error_noinline<0, T, E>
+struct benchmark_check_error_noinline<1, T, E>
 {
 	static result<T, E> f( int failure_rate ) noexcept
 	{
@@ -127,7 +127,7 @@ struct benchmark_check_error_inline
 };
 
 template <class T, class E>
-struct benchmark_check_error_inline<0, T, E>
+struct benchmark_check_error_inline<1, T, E>
 {
 	static result<T, E> f( int failure_rate ) noexcept
 	{
@@ -160,7 +160,7 @@ struct benchmark_handle_some_noinline
 };
 
 template <class T, class E>
-struct benchmark_handle_some_noinline<0, T, E>
+struct benchmark_handle_some_noinline<1, T, E>
 {
 	static result<T, E> f( int failure_rate ) noexcept
 	{
@@ -193,7 +193,7 @@ struct benchmark_handle_some_inline
 };
 
 template <class T, class E>
-struct benchmark_handle_some_inline<0, T, E>
+struct benchmark_handle_some_inline<1, T, E>
 {
 	static result<T, E> f( int failure_rate ) noexcept
 	{

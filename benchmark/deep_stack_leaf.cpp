@@ -5,9 +5,17 @@
 
 // See benchmark.md
 
-//Disable diagnostic features.
+// Disable diagnostic features.
 #define LEAF_NO_DIAGNOSTIC_INFO
 #define LEAF_DISCARD_UNEXPECTED
+
+// Please disable exceptions for this program.
+#if !__EXCEPTIONS && !_CPPUWNIND
+#	define LEAF_NO_EXCEPTIONS
+#endif
+#ifndef LEAF_NO_EXCEPTIONS
+#	error Please disable exception handling for this program.
+#endif
 
 #ifndef LEAF_ALL_HPP_INCLUDED
 #	include <boost/leaf/all.hpp>
@@ -19,10 +27,6 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-
-#ifndef LEAF_NO_EXCEPTIONS
-#	error Please disable exception handling.
-#endif
 
 namespace boost
 {
@@ -103,7 +107,7 @@ struct benchmark_check_error_noinline
 };
 
 template <class T, class E>
-struct benchmark_check_error_noinline<0, T, E>
+struct benchmark_check_error_noinline<1, T, E>
 {
 	NOINLINE static leaf::result<T> f( int failure_rate ) noexcept
 	{
@@ -127,7 +131,7 @@ struct benchmark_check_error_inline
 };
 
 template <class T, class E>
-struct benchmark_check_error_inline<0, T, E>
+struct benchmark_check_error_inline<1, T, E>
 {
 	static leaf::result<T> f( int failure_rate ) noexcept
 	{
@@ -165,7 +169,7 @@ struct benchmark_handle_some_noinline
 };
 
 template <class T, class E>
-struct benchmark_handle_some_noinline<0, T, E>
+struct benchmark_handle_some_noinline<1, T, E>
 {
 	NOINLINE static leaf::result<T> f( int failure_rate ) noexcept
 	{
@@ -203,7 +207,7 @@ struct benchmark_handle_some_inline
 };
 
 template <class T, class E>
-struct benchmark_handle_some_inline<0, T, E>
+struct benchmark_handle_some_inline<1, T, E>
 {
 	static leaf::result<T> f( int failure_rate ) noexcept
 	{
