@@ -274,7 +274,7 @@ int print_elapsed_time( int iteration_count, F && f )
 template <int Depth, class E>
 int benchmark_type( char const * type_name, int iteration_count )
 {
-	int const test_rates[ ] = { 10, 50, 90 };
+	int const test_rates[ ] = { 2, 50, 98 };
 	int x=0;
 	std::cout << "----------------|--------------------|----------|-------|--------";
 	for( auto fr : test_rates )
