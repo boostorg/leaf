@@ -82,7 +82,7 @@ int main( int argc, char const * argv[] )
 			std::cout << buffer;
 			std::cout.flush();
 			if( std::cout.fail() )
-				return std::error_code(leaf::new_error( cout_error, leaf::e_errno{errno} ));
+				return leaf::new_error( cout_error, leaf::e_errno{errno} ).to_error_code();
 
 			return 0;
 		},
@@ -159,7 +159,7 @@ result<char const *> parse_command_line( int argc, char const * argv[] )
 	if( argc==2 )
 		return argv[1];
 	else
-		return leaf::new_error(bad_command_line);
+		return leaf::new_error(bad_command_line).to_error_code();
 }
 
 
@@ -169,7 +169,7 @@ result<std::shared_ptr<FILE>> file_open( char const * file_name )
 	if( FILE * f = fopen(file_name,"rb") )
 		return std::shared_ptr<FILE>(f,&fclose);
 	else
-		return leaf::new_error(input_file_open_error, leaf::e_errno{errno});
+		return leaf::new_error(input_file_open_error, leaf::e_errno{errno}).to_error_code();
 }
 
 
@@ -180,14 +180,14 @@ result<int> file_size( FILE & f )
 	auto load = leaf::defer([] { return leaf::e_errno{errno}; });
 
 	if( fseek(&f,0,SEEK_END) )
-		return leaf::new_error(input_file_size_error);
+		return leaf::new_error(input_file_size_error).to_error_code();
 
 	int s = ftell(&f);
 	if( s==-1L )
-		return leaf::new_error(input_file_size_error);
+		return leaf::new_error(input_file_size_error).to_error_code();
 
 	if( fseek(&f,0,SEEK_SET) )
-		return leaf::new_error(input_file_size_error);
+		return leaf::new_error(input_file_size_error).to_error_code();
 
 	return s;
 }
@@ -199,10 +199,10 @@ result<void> file_read( FILE & f, void * buf, int size )
 	int n = fread(buf,1,size,&f);
 
 	if( ferror(&f) )
-		return leaf::new_error(input_file_read_error, leaf::e_errno{errno});
+		return leaf::new_error(input_file_read_error, leaf::e_errno{errno}).to_error_code();
 
 	if( n!=size )
-		return leaf::new_error(input_eof_error);
+		return leaf::new_error(input_eof_error).to_error_code();
 
 	return outcome::success();
 }

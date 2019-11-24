@@ -73,7 +73,7 @@ void test()
 		int r = leaf::try_handle_all(
 			[]() -> R
 			{
-				return leaf::new_error(errc_a::a0, e_errc_a<1>{make_error_code(errc_a::a1)});
+				return leaf::new_error(errc_a::a0, e_errc_a<1>{make_error_code(errc_a::a1)}).to_error_code();
 			},
 			[]( leaf::match<leaf::condition<cond_x>, cond_x::x00>, leaf::match<leaf::condition<e_errc_a<1>, cond_y>, cond_y::y12, cond_y::y03> )
 			{
@@ -89,7 +89,7 @@ void test()
 		int r = leaf::try_handle_all(
 			[]() -> R
 			{
-				return leaf::new_error(errc_a::a1, e_errc_a<1>{make_error_code(errc_a::a0)});
+				return leaf::new_error(errc_a::a1, e_errc_a<1>{make_error_code(errc_a::a0)}).to_error_code();
 			},
 			[]( leaf::match<leaf::condition<cond_x>, cond_x::x11>, leaf::match<leaf::condition<e_errc_a<1>, cond_y>, cond_y::y12, cond_y::y03> )
 			{

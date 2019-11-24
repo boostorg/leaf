@@ -633,11 +633,7 @@ namespace boost { namespace leaf {
 			return *this;
 		}
 
-		template<class T, class E = typename std::enable_if<
-			std::is_nothrow_constructible<T, std::error_code>::value &&
-			std::is_convertible<std::error_code, T>::value
-			>::type>
-		operator T() const noexcept
+		std::error_code to_error_code() const noexcept
 		{
 			return std::error_code(value(), leaf_detail::get_error_category<>::cat);
 		}
