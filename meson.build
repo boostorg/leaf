@@ -48,10 +48,6 @@ exceptions = (get_option('cpp_eh')!='none')
 
 defines = [ ]
 
-if not exceptions
-	defines += [ '-DLEAF_NO_EXCEPTIONS' ]
-endif
-
 if get_option('no_diagnostic_info')
 	defines += [ '-DLEAF_NO_DIAGNOSTIC_INFO' ]
 endif
@@ -64,10 +60,6 @@ mp11 = [ ]
 if get_option('use_boost_mp11')
 	mp11 = [ boost_headers ]
 	defines += [ '-DLEAF_USE_BOOST_MP11' ]
-endif
-
-if get_option('use_boost_config')
-	defines += [ '-DLEAF_USE_BOOST_CONFIG' ]
 endif
 
 thread_dep = dependency('threads')

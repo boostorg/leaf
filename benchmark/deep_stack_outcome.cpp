@@ -7,16 +7,17 @@
 
 #include <boost/outcome/std_outcome.hpp>
 #include <boost/outcome/try.hpp>
+
+#ifndef BOOST_NO_EXCEPTIONS
+#	error Please disable exception handling.
+#endif
+
 #include <cstring>
 #include <cstdlib>
 #include <chrono>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-
-#ifndef BOOST_NO_EXCEPTIONS
-#	error Please disable exception handling.
-#endif
 
 namespace boost
 {

@@ -16,18 +16,97 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(LEAF_NO_DIAGNOSTIC_INFO) && !defined(LEAF_DISCARD_UNEXPECTED)
-#	define LEAF_DISCARD_UNEXPECTED
+// The following is based on Boost Config.
+
+// (C) Copyright John Maddock 2001 - 2003.
+// (C) Copyright Martin Wille 2003.
+// (C) Copyright Guillaume Melquiond 2003.
+
+////////////////////////////////////////
+
+// Configure LEAF_NO_EXCEPTIONS, unless already #defined
+#ifndef LEAF_NO_EXCEPTIONS
+
+#	if defined __clang__ && !defined(__ibmxl__)
+//	Clang C++ emulates GCC, so it has to appear early.
+
+#		if !__has_feature(cxx_exceptions)
+#			define LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined __DMC__
+//	Digital Mars C++
+
+#		if !defined(_CPPUNWIND)
+#			define LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined(__GNUC__) && !defined(__ibmxl__)
+//	GNU C++:
+
+#		if !defined(__EXCEPTIONS)
+#			define LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined __KCC
+//	Kai C++
+
+#		if !defined(_EXCEPTIONS)
+#			define LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined __CODEGEARC__
+//	CodeGear - must be checked for before Borland
+
+#		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
+#			define LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined __BORLANDC__
+//	Borland
+
+#		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
+# 			define LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined  __MWERKS__
+//	Metrowerks CodeWarrior
+
+#		if !__option(exceptions)
+#			define LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined(__IBMCPP__) && defined(__COMPILER_VER__) && defined(__MVS__)
+//	IBM z/OS XL C/C++
+
+#		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
+#			define LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined(__ibmxl__)
+//	IBM XL C/C++ for Linux (Little Endian)
+
+#		if !__has_feature(cxx_exceptions)
+#			define LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined _MSC_VER
+//	Microsoft Visual C++
+//
+//	Must remain the last #elif since some other vendors (Metrowerks, for
+//	example) also #define _MSC_VER
+
+#		if !defined(_CPPUNWIND)
+#			define LEAF_NO_EXCEPTIONS
+#		endif
+#	endif
+
 #endif
 
-#ifdef LEAF_USE_BOOST_CONFIG
-#	include <boost/config.hpp>
-#	if !defined(LEAF_NO_EXCEPTIONS) && defined(BOOST_NO_EXCEPTIONS)
-#		define LEAF_NO_EXCEPTIONS
-#	endif
-#	if !defined(LEAF_NO_THREADS) && !defined(BOOST_HAS_THREADS)
-#		define LEAF_NO_THREADS
-#	endif
+////////////////////////////////////////
+
+#if defined(LEAF_NO_DIAGNOSTIC_INFO) && !defined(LEAF_DISCARD_UNEXPECTED)
+#	define LEAF_DISCARD_UNEXPECTED
 #endif
 
 #endif

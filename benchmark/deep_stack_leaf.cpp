@@ -9,16 +9,12 @@
 #define LEAF_NO_DIAGNOSTIC_INFO
 #define LEAF_DISCARD_UNEXPECTED
 
-// Please disable exceptions for this program.
-#if !__EXCEPTIONS && !_CPPUWNIND
-#	define LEAF_NO_EXCEPTIONS
-#endif
-#ifndef LEAF_NO_EXCEPTIONS
-#	error Please disable exception handling for this program.
-#endif
-
 #ifndef LEAF_ALL_HPP_INCLUDED
 #	include <boost/leaf/all.hpp>
+#endif
+
+#ifndef LEAF_NO_EXCEPTIONS
+#	error Please disable exception handling.
 #endif
 
 #include <cstring>
