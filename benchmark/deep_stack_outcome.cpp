@@ -49,6 +49,12 @@ enum class e_error_code
 	ec2
 };
 
+struct e_system_error
+{
+	e_error_code value;
+	std::string what;
+};
+
 struct e_heavy_payload
 {
 	char value[4096];
@@ -63,13 +69,20 @@ template <class E>
 E make_error() noexcept;
 
 template <>
-inline e_error_code make_error() noexcept
+inline e_error_code make_error<e_error_code>() noexcept
 {
 	return (std::rand()%2) ? e_error_code::ec1 : e_error_code::ec2;
 }
 
 template <>
-inline e_heavy_payload make_error() noexcept
+inline e_system_error make_error<e_system_error>() noexcept
+{
+	e_error_code ec = make_error<e_error_code>();
+	return { ec, std::string(ec==e_error_code::ec1 ? "ec1" : "ec2") };
+}
+
+template <>
+inline e_heavy_payload make_error<e_heavy_payload>() noexcept
 {
 	return e_heavy_payload();
 }
@@ -84,6 +97,11 @@ inline bool should_fail( int failure_rate ) noexcept
 bool check_handle_some_value( e_error_code e ) noexcept
 {
 	return e==e_error_code::ec2;
+}
+
+bool check_handle_some_value( e_system_error const & e ) noexcept
+{
+	return check_handle_some_value(e.value);
 }
 
 bool check_handle_some_value( e_heavy_payload const & ) noexcept
@@ -289,5 +307,6 @@ int main()
 		"Error type      | At each level      | inlining | rate  |    (μs)\n";
 	return
 		benchmark_type<depth, e_error_code>("e_error_code", iteration_count) +
+		benchmark_type<depth, e_system_error>("e_system_error", iteration_count) +
 		benchmark_type<depth, e_heavy_payload>("e_heavy_payload", iteration_count);
 }

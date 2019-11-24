@@ -57,6 +57,12 @@ namespace boost { namespace leaf {
 
 } }
 
+struct e_system_error
+{
+	e_error_code value;
+	std::string what;
+};
+
 // Note: in LEAF, handling of error objects is O(1) no matter how many stack frames.
 struct e_heavy_payload
 {
@@ -72,13 +78,20 @@ template <class E>
 E make_error() noexcept;
 
 template <>
-inline e_error_code make_error() noexcept
+inline e_error_code make_error<e_error_code>() noexcept
 {
 	return (std::rand()%2) ? e_error_code::ec1 : e_error_code::ec2;
 }
 
 template <>
-inline e_heavy_payload make_error() noexcept
+inline e_system_error make_error<e_system_error>() noexcept
+{
+	e_error_code ec = make_error<e_error_code>();
+	return { ec, std::string(ec==e_error_code::ec1 ? "ec1" : "ec2") };
+}
+
+template <>
+inline e_heavy_payload make_error<e_heavy_payload>() noexcept
 {
 	return e_heavy_payload();
 }
@@ -311,5 +324,6 @@ int main( int argc, char const * argv[] )
 		"Error type      | At each level      | inlining | rate  |    (μs)\n";
 	return
 		benchmark_type<depth, e_error_code>("e_error_code", iteration_count) +
+		benchmark_type<depth, e_system_error>("e_system_error", iteration_count) +
 		benchmark_type<depth, e_heavy_payload>("e_heavy_payload", iteration_count);
 }
