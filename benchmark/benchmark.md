@@ -131,9 +131,9 @@ The benchmark matrix has 4 dimensions:
 
 ## Godbolt
 
-LEAF provides a single header which makes it very easy to use online. To see the generated code for the benchmark program, copy and paste the following into Godbolt:
+LEAF provides a single header which makes it very easy to use online. To see the generated code for the benchmark program, copy and paste the following into [Godbolt](https://godbolt.org/z/nPfzVN):
 
-```C++
+```c++
 #include "https://raw.githubusercontent.com/zajo/leaf/master/include/boost/leaf/all.hpp"
 #include "https://raw.githubusercontent.com/zajo/leaf/master/benchmark/deep_stack_leaf.cpp"
 
@@ -147,8 +147,8 @@ The compilers are invoked using the following command line options: `-fno-except
 
 #### 1000 iterations, call depth 32, sizeof(e_heavy_payload) = 4096 (clang, LEAF):
 
-Error type      | At each level      | Inlining | Rate | (μs)
-----------------|--------------------|:--------:|------:|-------:
+Error type      | At each level      | Inlining | Rate | μs
+----------------|--------------------|----------|------:|-------:
 e_error_code    | LEAF_AUTO          | Disabled |    2% |     127
 e_error_code    | LEAF_AUTO          | Enabled  |    2% |      12
 e_error_code    | try_handle_some    | Disabled |    2% |     179
@@ -176,8 +176,8 @@ e_heavy_payload | try_handle_some    | Enabled  |   98% |     250
 
 #### 1000 iterations, call depth 32, sizeof(e_heavy_payload) = 4096 (clang, Outcome):
 
-Error type      | At each level      | Inlining | Rate  | (μs)
-----------------|--------------------|:--------:|------:|-------:
+Error type      | At each level      | Inlining | Rate  | μs
+----------------|--------------------|----------|------:|-------:
 e_error_code    | OUTCOME_TRY        | Disabled |    2% |     244
 e_error_code    | OUTCOME_TRY        | Enabled  |    2% |     234
 e_error_code    | Handle some errors | Disabled |    2% |     238
@@ -205,8 +205,8 @@ e_heavy_payload | Handle some errors | Enabled  |   98% |    7335
 
 #### 1000 iterations, call depth 32, sizeof(e_heavy_payload) = 4096 (gcc, LEAF):
 
-Error type      | At each level      | Inlining | Rate | (μs)
-----------------|--------------------|:--------:|------:|-------:
+Error type      | At each level      | Inlining | Rate | μs
+----------------|--------------------|----------|------:|-------:
 e_error_code    | LEAF_AUTO          | Disabled |    2% |     252
 e_error_code    | LEAF_AUTO          | Enabled  |    2% |       7
 e_error_code    | try_handle_some    | Disabled |    2% |     236
@@ -234,8 +234,8 @@ e_heavy_payload | try_handle_some    | Enabled  |   98% |     194
 
 #### 1000 iterations, call depth 32, sizeof(e_heavy_payload) = 4096 (gcc, Outcome):
 
-Error type      | At each level      | Inlining | Rate  | (μs)
-----------------|--------------------|:--------:|------:|-------:
+Error type      | At each level      | Inlining | Rate  | μs
+----------------|--------------------|----------|------:|-------:
 e_error_code    | OUTCOME_TRY        | Disabled |    2% |     240
 e_error_code    | OUTCOME_TRY        | Enabled  |    2% |     175
 e_error_code    | Handle some errors | Disabled |    2% |     253
@@ -263,7 +263,7 @@ e_heavy_payload | Handle some errors | Enabled  |   98% |    4185
 
 ## Charts
 
-The charts below are generated from the results from the previous section, converted from elapsed time in microseconds to millions of calls per second (so, bigger is better). Outcome performance plotted in grey, LEAF performance is plotted in purple for clang, orange for gcc.
+The charts below are generated from the results from the previous section, converted from elapsed time in microseconds to millions of calls per second (so, bigger is better). Outcome performance is plotted in grey, LEAF performance is plotted in purple for clang, orange for gcc.
 
 | Error rate | `e_error_code` (clang) | `e_heavy_payload` (clang) |
 |:---:|:---:|:---:|
