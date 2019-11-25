@@ -4461,20 +4461,30 @@ namespace boost { namespace leaf {
 			template <class U>
 			operator result<U>() noexcept
 			{
-				assert(!r_);
-				if( r_.what_.kind() == leaf_detail::result_discriminant::ctx_ptr )
+				using leaf_detail::result_discriminant;
+				switch(r_.what_.kind())
+				{
+				case result_discriminant::val:
+					return result<U>(error_id());
+				case result_discriminant::ctx_ptr:
 					return result<U>(std::move(r_.ctx_));
-				else
+				default:
 					return result<U>(std::move(r_.what_));
+				}
 			}
 
 			operator error_id() noexcept
 			{
-				assert(!r_);
-				if( r_.what_.kind() == leaf_detail::result_discriminant::ctx_ptr )
+				using leaf_detail::result_discriminant;
+				switch(r_.what_.kind())
+				{
+				case result_discriminant::val:
+					return error_id();
+				case result_discriminant::ctx_ptr:
 					return r_.ctx_->propagate_captured_errors();
-				else
+				default:
 					return r_.what_.get_error_id();
+				}
 			}
 		};
 
