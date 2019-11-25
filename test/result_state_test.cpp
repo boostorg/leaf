@@ -532,6 +532,39 @@ int main()
 	BOOST_TEST_EQ(err::count, 0);
 
 	{
+		leaf::result<void> r;
+		BOOST_TEST(r);
+		leaf::result<val> r1 = r.error();
+		BOOST_TEST_EQ(val::count, 0);
+		BOOST_TEST(!r1);
+		leaf::error_id id = r.error();
+		BOOST_TEST(!id);
+	}
+	BOOST_TEST_EQ(val::count, 0);
+
+	{
+		leaf::result<val> r;
+		BOOST_TEST(r);
+		leaf::result<void> r1 = r.error();
+		BOOST_TEST(!r1);
+		leaf::error_id id = r.error();
+		BOOST_TEST(!id);
+		BOOST_TEST_EQ(val::count, 1);
+	}
+	BOOST_TEST_EQ(val::count, 0);
+
+	{
+		leaf::result<val> r;
+		BOOST_TEST(r);
+		leaf::result<float> r1 = r.error();
+		BOOST_TEST(!r1);
+		leaf::error_id id = r.error();
+		BOOST_TEST(!id);
+		BOOST_TEST_EQ(val::count, 1);
+	}
+	BOOST_TEST_EQ(val::count, 0);
+
+	{
 		leaf::result<int> r;
 		BOOST_TEST(r);
 	}
