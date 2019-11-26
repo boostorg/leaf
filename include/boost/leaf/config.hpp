@@ -93,10 +93,12 @@
 
 #endif
 
-////////////////////////////////////////
+#ifndef LEAF_DIAGNOSTICS
+#	define LEAF_DIAGNOSTICS 1
+#endif
 
-#if defined(LEAF_NO_DIAGNOSTIC_INFO) && !defined(LEAF_DISCARD_UNEXPECTED)
-#	define LEAF_DISCARD_UNEXPECTED
+#if LEAF_DIAGNOSTICS!=0 && LEAF_DIAGNOSTICS!=1
+#	error LEAF_DIAGNOSTICS must be 0 or 1.
 #endif
 
 #endif

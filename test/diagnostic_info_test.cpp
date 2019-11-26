@@ -95,28 +95,18 @@ int main()
 			leaf::e_errno,
 			leaf::error_info const & unmatched )
 		{
-			{
-				std::ostringstream st;
-				st << unmatched;
-				std::string s = st.str();
-				BOOST_TEST(s.find("leaf::error_info:")!=s.npos);
-#ifndef LEAF_NO_DIAGNOSTIC_INFO
-				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
-				BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
-				BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
-				BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
-				BOOST_TEST(s.find(") in function")!=s.npos);
-#endif
-				BOOST_TEST_EQ(s.find("unexpected"), s.npos);
-				std::cout << s;
-			}
+			std::ostringstream st;
+			st << unmatched;
+			std::string s = st.str();
+			BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
+			std::cout << s;
 		},
 		[]()
 		{
 			BOOST_ERROR("Bad error dispatch");
 		} );
 
-	std::cout << std::endl;
+	std::cout << __LINE__  << " ----\n";
 
 	leaf::try_handle_all(
 		[]() -> leaf::result<void>
@@ -139,34 +129,31 @@ int main()
 			leaf::e_errno,
 			leaf::diagnostic_info const & unmatched )
 		{
-			{
-				std::ostringstream st;
-				st << unmatched;
-				std::string s = st.str();
-#ifdef LEAF_DISCARD_UNEXPECTED
-				BOOST_TEST(s.find("LEAF_DISCARD_UNEXPECTED")!=s.npos);
+			std::ostringstream st;
+			st << unmatched;
+			std::string s = st.str();
+#if LEAF_DIAGNOSTICS
+			BOOST_TEST_NE(s.find("leaf::diagnostic_info for Error ID = "), s.npos);
+			BOOST_TEST_NE(s.find("e_source_location"), s.npos);
+			BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
+			BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
+			BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
+			BOOST_TEST_NE(s.find(": {Non-Printable}"), s.npos);
+			BOOST_TEST_NE(s.find("Detected 2 attempts"), s.npos);
+			BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
+			BOOST_TEST_EQ(s.find("unexpected_test<2>"), s.npos);
 #else
-				BOOST_TEST(s.find("leaf::diagnostic_info:")!=s.npos);
-#	ifndef LEAF_NO_DIAGNOSTIC_INFO
-				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
-				BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
-				BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
-				BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
-				BOOST_TEST(s.find(") in function")!=s.npos);
-#	endif
-				BOOST_TEST(s.find("Detected 2 attempts")!=s.npos);
-				BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
+			BOOST_TEST_NE(s.find("leaf::diagnostic_info requires #define LEAF_DIAGNOSTICS 1"), s.npos);
+			BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
 #endif
-				BOOST_TEST_EQ(s.find("unexpected_test<2>"), s.npos);
-				std::cout << s;
-			}
+			std::cout << s;
 		},
 		[]()
 		{
 			BOOST_ERROR("Bad error dispatch");
 		} );
 
-	std::cout << std::endl;
+	std::cout << __LINE__  << " ----\n";
 
 	leaf::try_handle_all(
 		[]() -> leaf::result<void>
@@ -189,75 +176,33 @@ int main()
 			leaf::e_errno,
 			leaf::verbose_diagnostic_info const & di )
 		{
-			{
-				std::ostringstream st;
-				st << di;
-				std::string s = st.str();
-#ifdef LEAF_DISCARD_UNEXPECTED
-				BOOST_TEST(s.find("LEAF_DISCARD_UNEXPECTED")!=s.npos);
+			std::ostringstream st;
+			st << di;
+			std::string s = st.str();
+#if LEAF_DIAGNOSTICS
+			BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info for Error ID = "), s.npos);
+			BOOST_TEST_NE(s.find("e_source_location"), s.npos);
+			BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
+			BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
+			BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
+			BOOST_TEST_NE(s.find(": {Non-Printable}"), s.npos);
+			BOOST_TEST_NE(s.find("Unexpected error objects:"), s.npos);
+			BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
+			BOOST_TEST_NE(s.find("unexpected_test<2>"), s.npos);
+			BOOST_TEST_NE(s.find(": 1"), s.npos);
+			BOOST_TEST_NE(s.find(": 2"), s.npos);
 #else
-				BOOST_TEST(s.find("leaf::verbose_diagnostic_info:")!=s.npos);
-				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
-				BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
-				BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
-				BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
-				BOOST_TEST(s.find(") in function")!=s.npos);
-				BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
-				BOOST_TEST(s.find("unexpected_test<2>")!=s.npos);
+			BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info requires #define LEAF_DIAGNOSTICS 1"), s.npos);
+			BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
 #endif
-				std::cout << s;
-			}
+			std::cout << s;
 		},
 		[]()
 		{
 			BOOST_ERROR("Bad error dispatch");
 		} );
 
-	std::cout << std::endl;
-
-	leaf::try_handle_all(
-		[]() -> leaf::result<void>
-		{
-			return LEAF_NEW_ERROR( leaf::e_errno{ENOENT} );
-		},
-		[]( leaf::e_source_location, leaf::e_errno, leaf::diagnostic_info const & di )
-		{
-			{
-				std::ostringstream st;
-				st << di;
-				std::string s = st.str();
-				BOOST_TEST(s.find("leaf::diagnostic_info")!=s.npos);
-				std::cout << s;
-			}
-		},
-		[]()
-		{
-			BOOST_ERROR("Bad error dispatch");
-		} );
-
-	std::cout << std::endl;
-
-	leaf::try_handle_all(
-		[]() -> leaf::result<void>
-		{
-			return LEAF_NEW_ERROR( leaf::e_errno{ENOENT} );
-		},
-		[]( leaf::e_source_location, leaf::e_errno, leaf::verbose_diagnostic_info const & vdi )
-		{
-			{
-				std::ostringstream st;
-				st << vdi;
-				std::string s = st.str();
-				BOOST_TEST(s.find("leaf::verbose_diagnostic_info")!=s.npos);
-				std::cout << s;
-			}
-		},
-		[]()
-		{
-			BOOST_ERROR("Bad error dispatch");
-		} );
-
-	std::cout << std::endl;
+	std::cout << __LINE__  << " ----\n";
 
 	///////////////////////////////////
 
@@ -284,25 +229,16 @@ int main()
 			leaf::e_errno,
 			leaf::error_info const & unmatched )
 		{
-			{
-				std::ostringstream st;
-				st << unmatched;
-				std::string s = st.str();
-				BOOST_TEST(s.find("leaf::error_info:")!=s.npos);
-				BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
-#ifndef LEAF_NO_DIAGNOSTIC_INFO
-				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
-				BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
-				BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
-				BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
-				BOOST_TEST(s.find(") in function")!=s.npos);
-#endif
-				BOOST_TEST_EQ(s.find("unexpected"), s.npos);
-				std::cout << s;
-			}
+			std::ostringstream st;
+			st << unmatched;
+			std::string s = st.str();
+			BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
+			BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
+			BOOST_TEST_NE(s.find("std::exception::what(): my_error"), s.npos);
+			std::cout << s;
 		} );
 
-	std::cout << std::endl;
+	std::cout << __LINE__  << " ----\n";
 
 	leaf::try_catch(
 		[]
@@ -325,31 +261,31 @@ int main()
 			leaf::e_errno,
 			leaf::diagnostic_info const & unmatched )
 		{
-			{
-				std::ostringstream st;
-				st << unmatched;
-				std::string s = st.str();
-#ifdef LEAF_DISCARD_UNEXPECTED
-				BOOST_TEST(s.find("LEAF_DISCARD_UNEXPECTED")!=s.npos);
+			std::ostringstream st;
+			st << unmatched;
+			std::string s = st.str();
+#if LEAF_DIAGNOSTICS
+			BOOST_TEST_NE(s.find("leaf::diagnostic_info for Error ID = "), s.npos);
+			BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
+			BOOST_TEST_NE(s.find("std::exception::what(): my_error"), s.npos);
+			BOOST_TEST_NE(s.find("e_source_location"), s.npos);
+			BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
+			BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
+			BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
+			BOOST_TEST_NE(s.find(": {Non-Printable}"), s.npos);
+			BOOST_TEST_NE(s.find("Detected 2 attempts"), s.npos);
+			BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
+			BOOST_TEST_EQ(s.find("unexpected_test<2>"), s.npos);
 #else
-				BOOST_TEST(s.find("leaf::diagnostic_info:")!=s.npos);
-				BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
-#	ifndef LEAF_NO_DIAGNOSTIC_INFO
-				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
-				BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
-				BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
-				BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
-				BOOST_TEST(s.find(") in function")!=s.npos);
-#	endif
-				BOOST_TEST(s.find("Detected 2 attempts")!=s.npos);
-				BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
+			BOOST_TEST_NE(s.find("leaf::diagnostic_info requires #define LEAF_DIAGNOSTICS 1"), s.npos);
+			BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
+			BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
+			BOOST_TEST_NE(s.find("std::exception::what(): my_error"), s.npos);
 #endif
-				BOOST_TEST_EQ(s.find("unexpected_test<2>"), s.npos);
-				std::cout << s;
-			}
+			std::cout << s;
 		} );
 
-	std::cout << std::endl;
+	std::cout << __LINE__  << " ----\n";
 
 	leaf::try_catch(
 		[]
@@ -372,66 +308,31 @@ int main()
 			leaf::e_errno,
 			leaf::verbose_diagnostic_info const & di )
 		{
-			{
-				std::ostringstream st;
-				st << di;
-				std::string s = st.str();
-#ifdef LEAF_DISCARD_UNEXPECTED
-				BOOST_TEST(s.find("LEAF_DISCARD_UNEXPECTED")!=s.npos);
+			std::ostringstream st;
+			st << di;
+			std::string s = st.str();
+#if LEAF_DIAGNOSTICS
+			BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info for Error ID = "), s.npos);
+			BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
+			BOOST_TEST_NE(s.find("std::exception::what(): my_error"), s.npos);
+			BOOST_TEST_NE(s.find("e_source_location"), s.npos);
+			BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
+			BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
+			BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
+			BOOST_TEST_NE(s.find(": {Non-Printable}"), s.npos);
+			BOOST_TEST_NE(s.find("Unexpected error objects:"), s.npos);
+			BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
+			BOOST_TEST_NE(s.find("unexpected_test<2>"), s.npos);
+			BOOST_TEST_NE(s.find(": 1"), s.npos);
+			BOOST_TEST_NE(s.find(": 2"), s.npos);
 #else
-				BOOST_TEST(s.find("leaf::verbose_diagnostic_info:")!=s.npos);
-				BOOST_TEST(s.find("std::exception::what(): my_error")!=s.npos);
-#	ifndef LEAF_NO_DIAGNOSTIC_INFO
-				BOOST_TEST(s.find(": {Non-Printable}")!=s.npos);
-				BOOST_TEST(s.find(": printed printable_payload")!=s.npos);
-				BOOST_TEST(s.find("*** printable_info_non_printable_payload ***")!=s.npos);
-				BOOST_TEST(s.find("*** printable_info_printable_payload printed printable_payload ***")!=s.npos);
-				BOOST_TEST(s.find(") in function")!=s.npos);
-#	endif
-				BOOST_TEST(s.find("unexpected_test<1>")!=s.npos);
-				BOOST_TEST(s.find("unexpected_test<2>")!=s.npos);
+			BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info requires #define LEAF_DIAGNOSTICS 1"), s.npos);
+			BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
+			BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
+			BOOST_TEST_NE(s.find("std::exception::what(): my_error"), s.npos);
 #endif
-				std::cout << s;
-			}
+			std::cout << s;
 		} );
-
-	std::cout << std::endl;
-
-	leaf::try_catch(
-		[]
-		{
-			LEAF_THROW( my_error(), leaf::e_errno{ENOENT} );
-		},
-		[]( leaf::e_source_location, leaf::e_errno, leaf::diagnostic_info const & di )
-		{
-			{
-				std::ostringstream st;
-				st << di;
-				std::string s = st.str();
-				BOOST_TEST(s.find("leaf::diagnostic_info")!=s.npos);
-				std::cout << s;
-			}
-		} );
-
-	std::cout << std::endl;
-
-	leaf::try_catch(
-		[]
-		{
-			LEAF_THROW( my_error(), leaf::e_errno{ENOENT} );
-		},
-		[]( leaf::e_source_location, leaf::e_errno, leaf::verbose_diagnostic_info const & vdi )
-		{
-			{
-				std::ostringstream st;
-				st << vdi;
-				std::string s = st.str();
-				BOOST_TEST(s.find("leaf::verbose_diagnostic_info")!=s.npos);
-				std::cout << s;
-			}
-		} );
-
-	std::cout << std::endl;
 
 #endif
 

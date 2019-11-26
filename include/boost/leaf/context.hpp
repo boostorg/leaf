@@ -35,10 +35,11 @@ namespace boost { namespace leaf {
 				tuple_for_each<I-1,Tuple>::propagate(tup, err_id);
 			}
 
-			static void print( std::ostream & os, Tuple const & tup ) noexcept
+			static void print( std::ostream & os, void const * tup, int key_to_print )
 			{
-				tuple_for_each<I-1,Tuple>::print(os, tup);
-				std::get<I-1>(tup).print(os);
+				assert(tup!=0);
+				tuple_for_each<I-1,Tuple>::print(os, tup, key_to_print);
+				std::get<I-1>(*static_cast<Tuple const *>(tup)).print(os, key_to_print);
 			}
 		};
 
@@ -48,7 +49,7 @@ namespace boost { namespace leaf {
 			static void activate( Tuple & ) noexcept { }
 			static void deactivate( Tuple &, bool ) noexcept { }
 			static void propagate( Tuple & tup, int ) noexcept { }
-			static void print( std::ostream &, Tuple const & ) noexcept { }
+			static void print( std::ostream &, void const *, int ) { }
 		};
 	}
 
@@ -129,7 +130,7 @@ namespace boost { namespace leaf {
 		template <> struct does_not_participate_in_context_deduction<error_info>: std::true_type { };
 		template <> struct does_not_participate_in_context_deduction<std::error_code>: std::true_type { };
 		template <> struct does_not_participate_in_context_deduction<void>: std::true_type { };
-#ifdef LEAF_DISCARD_UNEXPECTED
+#if !LEAF_DIAGNOSTICS
 		template <> struct does_not_participate_in_context_deduction<e_unexpected_count>: std::true_type { };
 		template <> struct does_not_participate_in_context_deduction<e_unexpected_info>: std::true_type { };
 #endif
@@ -218,7 +219,7 @@ namespace boost { namespace leaf {
 				using namespace leaf_detail;
 				assert(!is_active());
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
-#ifndef LEAF_DISCARD_UNEXPECTED
+#if LEAF_DIAGNOSTICS
 				if( unexpected_requested<Tup>::value )
 					++tl_unexpected_enabled_counter();
 #endif
@@ -237,7 +238,7 @@ namespace boost { namespace leaf {
 				assert(std::this_thread::get_id() == thread_id_);
 				thread_id_ = std::thread::id();
 #endif
-#ifndef LEAF_DISCARD_UNEXPECTED
+#if LEAF_DIAGNOSTICS
 				if( unexpected_requested<Tup>::value )
 					--tl_unexpected_enabled_counter();
 #endif
@@ -251,7 +252,7 @@ namespace boost { namespace leaf {
 
 			void print( std::ostream & os ) const
 			{
-				leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, tup_);
+				leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, &tup_, 0);
 			}
 
 		protected:

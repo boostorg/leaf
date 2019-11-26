@@ -47,12 +47,9 @@ namespace boost { namespace leaf {
 
 		void print( std::ostream & os ) const
 		{
-			os << "Error ID: " << err_id_.value() << std::endl;
+			os << "Error ID = " << err_id_.value();
 			if( xi_ )
 				xi_->print(os);
-#ifndef LEAF_NO_DIAGNOSTIC_INFO
-			leaf_detail::slot_base::print_all(os,err_id_.value());
-#endif
 		}
 
 		error_info( error_info  const & ) noexcept = default;
@@ -90,15 +87,75 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, error_info const & x )
 		{
-			os << "leaf::error_info:" << std::endl;
+			os << "leaf::error_info: ";
 			x.print(os);
-			return os;
+			return os << '\n';
 		}
 	};
 
 	////////////////////////////////////////
 
-#ifdef LEAF_DISCARD_UNEXPECTED
+#if LEAF_DIAGNOSTICS
+
+	class diagnostic_info: public error_info
+	{
+		leaf_detail::e_unexpected_count const * e_uc_;
+		void const * tup_;
+		void (*print_)( std::ostream &, void const * tup, int key_to_print );
+
+	public:
+
+		template <class Tup>
+		diagnostic_info( error_info const & ei, leaf_detail::e_unexpected_count const * e_uc, Tup const & tup ) noexcept:
+			error_info(ei),
+			e_uc_(e_uc),
+			tup_(&tup),
+			print_(&leaf_detail::tuple_for_each<std::tuple_size<Tup>::value, Tup>::print)
+		{
+		}
+
+		friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
+		{
+			os << "leaf::diagnostic_info for ";
+			x.print(os);
+			os << ":\n";
+			x.print_(os, x.tup_, x.err_id_.value());
+			if( x.e_uc_  )
+				x.e_uc_->print(os);
+			return os;
+		}
+	};
+
+	class verbose_diagnostic_info: public error_info
+	{
+		leaf_detail::e_unexpected_info const * e_ui_;
+		void const * tup_;
+		void (*print_)( std::ostream &, void const * tup, int key_to_print );
+
+	public:
+
+		template <class Tup>
+		verbose_diagnostic_info( error_info const & ei, leaf_detail::e_unexpected_info const * e_ui, Tup const & tup ) noexcept:
+			error_info(ei),
+			e_ui_(e_ui),
+			tup_(&tup),
+			print_(&leaf_detail::tuple_for_each<std::tuple_size<Tup>::value, Tup>::print)
+		{
+		}
+
+		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
+		{
+			os << "leaf::verbose_diagnostic_info for ";
+			x.print(os);
+			os << ":\n";
+			x.print_(os, x.tup_, x.err_id_.value());
+			if( x.e_ui_ )
+				x.e_ui_->print(os);
+			return os;
+		}
+	};
+
+#else
 
 	class diagnostic_info: public error_info
 	{
@@ -111,7 +168,11 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
 		{
-			return os << "leaf::diagnostic_info not available due to LEAF_DISCARD_UNEXPECTED" << std::endl;
+			os <<
+				"leaf::diagnostic_info requires #define LEAF_DIAGNOSTICS 1\n"
+				"leaf::error_info: ";
+			x.print(os);
+			return os << '\n';
 		}
 	};
 
@@ -126,65 +187,11 @@ namespace boost { namespace leaf {
 
 		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
 		{
-			return os << "leaf::verbose_diagnostic_info not available due to LEAF_DISCARD_UNEXPECTED" << std::endl;
-		}
-	};
-
-#else
-
-	class diagnostic_info: public error_info
-	{
-		leaf_detail::e_unexpected_count const * e_uc_;
-
-	public:
-
-		diagnostic_info( error_info const & ei, leaf_detail::e_unexpected_count const * e_uc ) noexcept:
-			error_info(ei),
-			e_uc_(e_uc)
-		{
-		}
-
-		friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
-		{
-			os << "leaf::diagnostic_info:";
-			if( x.err_id_ )
-			{
-				os << std::endl;
-				x.print(os);
-				if( x.e_uc_  )
-					x.e_uc_->print(os);
-			}
-			else
-				os << " {No Error}" << std::endl;
-			return os;
-		}
-	};
-
-	class verbose_diagnostic_info: public error_info
-	{
-		leaf_detail::e_unexpected_info const * e_ui_;
-
-	public:
-
-		verbose_diagnostic_info( error_info const & ei, leaf_detail::e_unexpected_info const * e_ui ) noexcept:
-			error_info(ei),
-			e_ui_(e_ui)
-		{
-		}
-
-		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
-		{
-			os << "leaf::verbose_diagnostic_info:";
-			if( x.err_id_ )
-			{
-				os << std::endl;
-				x.print(os);
-				if( x.e_ui_ )
-					x.e_ui_->print(os);
-			}
-			else
-				os << " {No Error}" << std::endl;
-			return os;
+			os <<
+				"leaf::verbose_diagnostic_info requires #define LEAF_DIAGNOSTICS 1\n"
+				"leaf::error_info: ";
+			x.print(os);
+			return os << '\n';
 		}
 	};
 
@@ -478,7 +485,29 @@ namespace boost { namespace leaf {
 			}
 		};
 
-#ifdef LEAF_DISCARD_UNEXPECTED
+#if LEAF_DIAGNOSTICS
+
+		template <>
+		struct get_one_argument<diagnostic_info>
+		{
+			template <class SlotsTuple>
+			static diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			{
+				return diagnostic_info(ei, peek<e_unexpected_count>(tup, ei.error()), tup);
+			}
+		};
+
+		template <>
+		struct get_one_argument<verbose_diagnostic_info>
+		{
+			template <class SlotsTuple>
+			static verbose_diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			{
+				return verbose_diagnostic_info(ei, peek<e_unexpected_info>(tup, ei.error()), tup);
+			}
+		};
+
+#else
 
 		template <>
 		struct get_one_argument<diagnostic_info>
@@ -497,28 +526,6 @@ namespace boost { namespace leaf {
 			static verbose_diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				return verbose_diagnostic_info(ei);
-			}
-		};
-
-#else
-
-		template <>
-		struct get_one_argument<diagnostic_info>
-		{
-			template <class SlotsTuple>
-			static diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
-			{
-				return diagnostic_info(ei, peek<e_unexpected_count>(tup, ei.error()));
-			}
-		};
-
-		template <>
-		struct get_one_argument<verbose_diagnostic_info>
-		{
-			template <class SlotsTuple>
-			static verbose_diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
-			{
-				return verbose_diagnostic_info(ei, peek<e_unexpected_info>(tup, ei.error()));
 			}
 		};
 

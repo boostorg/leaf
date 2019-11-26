@@ -5,16 +5,16 @@
 
 // See benchmark.md
 
-// Disable diagnostic features.
-#define LEAF_NO_DIAGNOSTIC_INFO
-#define LEAF_DISCARD_UNEXPECTED
-
 #ifndef LEAF_ALL_HPP_INCLUDED
 #	include <boost/leaf/all.hpp>
 #endif
 
 #ifndef LEAF_NO_EXCEPTIONS
 #	error Please disable exception handling.
+#endif
+
+#if LEAF_DIAGNOSTICS
+#	error Please disable diagnostics.
 #endif
 
 #include <cstring>

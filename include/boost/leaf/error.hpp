@@ -98,83 +98,7 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	namespace leaf_detail
-	{
-		class slot_base
-		{
-			slot_base & operator=( slot_base const & ) = delete;
-			slot_base( slot_base const & ) = delete;
-
-#ifndef LEAF_NO_DIAGNOSTIC_INFO
-			virtual bool slot_print( std::ostream &, int err_id ) const = 0;
-#endif
-
-		public:
-
-#ifndef LEAF_NO_DIAGNOSTIC_INFO
-			static void print_all( std::ostream & os, int err_id )
-			{
-				for( slot_base const * p = first(); p; p=p->next_ )
-					if( p->slot_print(os,err_id) )
-						os << std::endl;
-			}
-#endif
-
-		protected:
-
-#ifdef LEAF_NO_DIAGNOSTIC_INFO
-			slot_base() noexcept = default;
-			slot_base( slot_base && x ) noexcept = default;
-			~slot_base() noexcept = default;
-			void activate() noexcept { }
-			void deactivate() noexcept { }
-#else
-			static slot_base * & first() noexcept
-			{
-				static LEAF_THREAD_LOCAL slot_base * p = 0;
-				return p;
-			}
-
-			slot_base * next_;
-
-			slot_base() noexcept:
-				next_(0)
-			{
-			}
-
-			slot_base( slot_base && x ) noexcept:
-				next_(0)
-			{
-				assert(x.next_==0);
-			}
-
-			~slot_base() noexcept
-			{
-				assert(next_ == 0);
-			}
-
-			void activate() noexcept
-			{
-				assert(next_ == 0);
-				slot_base * * f = &first();
-				next_ = *f;
-				*f = this;
-			}
-
-			void deactivate() noexcept
-			{
-				slot_base * * f = &first();
-				assert(*f == this);
-				*f = next_;
-				next_ = 0;
-			}
-#endif
-		};
-	}
-
-	////////////////////////////////////////
-
-#ifndef LEAF_DISCARD_UNEXPECTED
+#if LEAF_DIAGNOSTICS
 
 	namespace leaf_detail
 	{
@@ -197,9 +121,9 @@ namespace boost { namespace leaf {
 				assert(count>0);
 				os << "Detected ";
 				if( count==1 )
-					os << "1 attempt to communicate an E-object";
+					os << "1 attempt to communicate an unexpected error object";
 				else
-					os << count << " attempts to communicate unexpected E-objects, the first one";
+					os << count << " attempts to communicate unexpected error objects, the first one";
 				os << " of type " << first_type() << std::endl;
 			}
 		};
@@ -252,7 +176,7 @@ namespace boost { namespace leaf {
 
 			void print( std::ostream & os ) const
 			{
-				os << s_;
+				os << "Unexpected error objects:\n" << s_;
 			}
 		};
 
@@ -269,12 +193,7 @@ namespace boost { namespace leaf {
 			{
 			}
 		};
-	}
 
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
 		inline int & tl_unexpected_enabled_counter() noexcept
 		{
 			static LEAF_THREAD_LOCAL int c;
@@ -300,7 +219,6 @@ namespace boost { namespace leaf {
 
 		template <class E>
 		class slot:
-			slot_base,
 			optional<E>
 		{
 			slot( slot const & ) = delete;
@@ -311,20 +229,6 @@ namespace boost { namespace leaf {
 			slot<E> * prev_;
 			static_assert(is_e_type<E>::value,"Not an error type");
 
-#ifndef LEAF_NO_DIAGNOSTIC_INFO
-			bool slot_print( std::ostream & os, int err_id ) const final override
-			{
-				if( !diagnostic<E>::is_invisible && *top_==this )
-					if( E const * e = has_value(err_id) )
-					{
-						assert((err_id&3)==1);
-						diagnostic<decltype(*e)>::print(os, *e);
-						return true;
-					}
-				return false;
-			}
-#endif
-
 		public:
 
 			slot() noexcept:
@@ -333,7 +237,6 @@ namespace boost { namespace leaf {
 			}
 
 			slot( slot && x ) noexcept:
-				slot_base(std::move(x)),
 				optional<E>(std::move(x)),
 				top_(0)
 			{
@@ -348,7 +251,6 @@ namespace boost { namespace leaf {
 			void activate() noexcept
 			{
 				assert(top_==0);
-				slot_base::activate();
 				top_ = &tl_slot_ptr<E>();
 				prev_ = *top_;
 				*top_ = this;
@@ -362,7 +264,7 @@ namespace boost { namespace leaf {
 			using impl::print;
 		};
 
-#ifndef LEAF_DISCARD_UNEXPECTED
+#if LEAF_DIAGNOSTICS
 
 		template <class E>
 		inline void load_unexpected_count( int err_id ) noexcept
@@ -385,7 +287,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		inline void no_expect_slot( int err_id, E && e  ) noexcept
+		inline void load_unexpected( int err_id, E && e  ) noexcept
 		{
 			load_unexpected_count<E>(err_id);
 			load_unexpected_info(err_id, std::move(e));
@@ -404,19 +306,18 @@ namespace boost { namespace leaf {
 					impl & that_ = *prev_;
 					that_ = std::move(this_);
 				}
-#ifndef LEAF_DISCARD_UNEXPECTED
+#if LEAF_DIAGNOSTICS
 				else
 				{
 					int c = tl_unexpected_enabled_counter();
 					assert(c>=0);
 					if( c )
 						if( int err_id = impl::key() )
-							no_expect_slot(err_id, std::move(*this).value(err_id));
+							load_unexpected(err_id, std::move(*this).value(err_id));
 				}
 #endif
 			*top_ = prev_;
 			top_ = 0;
-			slot_base::deactivate();
 		}
 
 		template <class E>
@@ -426,13 +327,13 @@ namespace boost { namespace leaf {
 			assert((err_id&3)==1);
 			if( slot<T> * p = tl_slot_ptr<T>() )
 				(void) p->put(err_id, std::forward<E>(e));
-#ifndef LEAF_DISCARD_UNEXPECTED
+#if LEAF_DIAGNOSTICS
 			else
 			{
 				int c = tl_unexpected_enabled_counter();
 				assert(c>=0);
 				if( c )
-					no_expect_slot(err_id, std::forward<E>(e));
+					load_unexpected(err_id, std::forward<E>(e));
 			}
 #endif
 			return 0;

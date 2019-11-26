@@ -5,8 +5,8 @@
 
 import testing ;
 
-variant debug-discard-unexpected : debug : <define>LEAF_DISCARD_UNEXPECTED ;
-variant release-discard-unexpected : release : <define>LEAF_DISCARD_UNEXPECTED ;
+variant debug-diagnostics0 : debug : <define>LEAF_DIAGNOSTICS=0 ;
+variant release-diagnostics0 : release : <define>LEAF_DIAGNOSTICS=0 ;
 
 project
     : requirements

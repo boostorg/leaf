@@ -2,6 +2,10 @@
 
 The LEAF github repository contains two similar benchmarking programs, one using LEAF, the other using Boost Outcome, that simulate transporting error objects across 32 levels of function calls, measuring the performance of the two libraries.
 
+Official library documentation:
+* LEAF: https://zajo.github.io/leaf
+* Boost Outcome: https://www.boost.org/doc/libs/release/libs/outcome/doc/html/index.html
+
 ## Library design considerations
 
 It is important to understand that LEAF and Outcome serve similar purpose but follow very different design philosophy. The benchmarks are comparing apples and oranges.
@@ -133,19 +137,34 @@ The benchmark matrix has 4 dimensions:
 
 ## Godbolt
 
-LEAF provides a single header which makes it very easy to use online. To see the generated code for the benchmark program, copy and paste the following into [Godbolt](https://godbolt.org/z/nPfzVN):
+LEAF provides a single header which makes it very easy to use online. To see the generated code for the benchmark program, you can copy and paste the following into Godbolt:
 
 ```c++
 #include "https://raw.githubusercontent.com/zajo/leaf/master/include/boost/leaf/all.hpp"
 #include "https://raw.githubusercontent.com/zajo/leaf/master/benchmark/deep_stack_leaf.cpp"
-
 ```
+
+See https://godbolt.org/z/DTk4N4.
+
+## Build options
+
+To build both versions of the benchmark program, the compilers are invoked using the following command line options:
+
+* `-std=c++17`: Required by Outcome (LEAF only requires C++11);
+* `-fno-exceptions`: Disable exception handling;
+* `-O3`: Maximum optimizations;
+* `-DNDEBUG`: Disable asserts.
+
+In addition, the LEAF version is compiled with:
+
+* `-DLEAF_DIAGNOSTICS=0`: Disable diagnostic information for error objects not recognized by the program. This is a debugging feature, see [Configuration Macros](https://zajo.github.io/leaf/#_configuration_macros).
 
 ## Results
 
 Below is the output the benchmark programs running on a MacBook Pro. The tables show the elapsed time for returning a result across 32 levels of function calls, depending on the error type, the action taken at each level, whether inlining is enabled, and the rate of failures. In addition, the programs generate a `benchmark.csv` file in the current working directory.
 
-The compilers are invoked using the following command line options: `-std=c++17 -fno-exceptions -O3 -DNDEBUG`
+
+The following tables show elapsed time
 
 #### 1000 iterations, call depth 32, sizeof(e_heavy_payload) = 4096 (clang, LEAF):
 

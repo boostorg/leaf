@@ -45,16 +45,9 @@ endif
 boost_headers = declare_dependency(include_directories: '../..')
 
 exceptions = (get_option('cpp_eh')!='none')
+diagnostics = get_option('diagnostics')
 
-defines = [ ]
-
-if get_option('no_diagnostic_info')
-	defines += [ '-DLEAF_NO_DIAGNOSTIC_INFO' ]
-endif
-
-if get_option('discard_unexpected')
-	defines += [ '-DLEAF_DISCARD_UNEXPECTED' ]
-endif
+defines = [ '-DLEAF_DIAGNOSTICS='+diagnostics.to_string() ]
 
 mp11 = [ ]
 if get_option('use_boost_mp11')
@@ -166,7 +159,9 @@ if exceptions
 endif
 
 if not exceptions
-	executable('deep_stack_leaf', 'benchmark/deep_stack_leaf.cpp', dependencies: [leaf], override_options: ['cpp_std=c++17'])
+	if diagnostics == 0
+		executable('deep_stack_leaf', 'benchmark/deep_stack_leaf.cpp', dependencies: [leaf], override_options: ['cpp_std=c++17'])
+	endif
 	if get_option('boost_examples')
 		executable('deep_stack_outcome', 'benchmark/deep_stack_outcome.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
 	endif

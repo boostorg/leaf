@@ -274,11 +274,11 @@ namespace boost { namespace leaf {
 			if( ex_ )
 			{
 				os <<
-					"Exception dynamic type: " << leaf_detail::demangle(typeid(*ex_).name()) << std::endl <<
-					"std::exception::what(): " << ex_->what() << std::endl;
+					"\nException dynamic type: " << leaf_detail::demangle(typeid(*ex_).name()) <<
+					"\nstd::exception::what(): " << ex_->what();
 			}
 			else
-				os << "Unknown exception type (not a std::exception)" << std::endl;
+				os << "\nUnknown exception type (not a std::exception)";
 		}
 
 		inline exception_info::exception_info( std::exception const * ex ) noexcept:

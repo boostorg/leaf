@@ -49,10 +49,10 @@ int main()
 			std::stringstream ss; ss << di;
 			std::string s = ss.str();
 			std::cout << s;
-#ifdef LEAF_DISCARD_UNEXPECTED
-			BOOST_TEST(s.find("LEAF_DISCARD_UNEXPECTED")!=s.npos);
-#else
+#if LEAF_DIAGNOSTICS
 			BOOST_TEST(s.find("info<-42>")!=s.npos);
+#else
+			BOOST_TEST(s.find("LEAF_DIAGNOSTICS")!=s.npos);
 #endif
 			return 1;
 		},

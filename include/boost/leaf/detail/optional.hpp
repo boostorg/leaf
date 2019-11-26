@@ -179,7 +179,7 @@ namespace boost { namespace leaf {
 				return tmp;
 			}
 
-			void print( std::ostream & ) const;
+			void print( std::ostream &, int key_to_print ) const;
 		};
 
 	} // leaf_detail

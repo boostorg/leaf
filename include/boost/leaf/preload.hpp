@@ -56,13 +56,13 @@ namespace boost { namespace leaf {
 					if( !s_->has_value(err_id) )
 						s_->put(err_id, std::move(e_));
 				}
-#ifndef LEAF_DISCARD_UNEXPECTED
+#if LEAF_DIAGNOSTICS
 				else
 				{
 					int c = tl_unexpected_enabled_counter();
 					assert(c>=0);
 					if( c )
-						no_expect_slot(err_id, std::forward<E>(e_));
+						load_unexpected(err_id, std::forward<E>(e_));
 				}
 #endif
 			}
@@ -145,13 +145,13 @@ namespace boost { namespace leaf {
 					if( !s_->has_value(err_id) )
 						s_->put(err_id, f_());
 				}
-#ifndef LEAF_DISCARD_UNEXPECTED
+#if LEAF_DIAGNOSTICS
 				else
 				{
 					int c = tl_unexpected_enabled_counter();
 					assert(c>=0);
 					if( c )
-						no_expect_slot(err_id, std::forward<E>(f_()));
+						load_unexpected(err_id, std::forward<E>(f_()));
 				}
 #endif
 			}
