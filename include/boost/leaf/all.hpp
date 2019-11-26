@@ -2491,16 +2491,16 @@ namespace boost { namespace leaf {
 			virtual void print( std::ostream & os ) const = 0;
 		};
 
-		class exception_info: public exception_info_base
+		class exception_info_: public exception_info_base
 		{
-			exception_info( exception_info const & ) = delete;
-			exception_info & operator=( exception_info const & ) = delete;
+			exception_info_( exception_info_ const & ) = delete;
+			exception_info_ & operator=( exception_info_ const & ) = delete;
 
 			void print( std::ostream & os ) const final override;
 
 		public:
 
-			explicit exception_info( std::exception const * ex ) noexcept;
+			explicit exception_info_( std::exception const * ex ) noexcept;
 		};
 	}
 
@@ -2532,7 +2532,7 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		explicit error_info( leaf_detail::exception_info const &, void const * remote_handling_ctx = 0 ) noexcept;
+		explicit error_info( leaf_detail::exception_info_ const &, void const * remote_handling_ctx = 0 ) noexcept;
 
 		error_id error() const noexcept
 		{
@@ -3806,7 +3806,7 @@ namespace boost { namespace leaf {
 
 		////////////////////////////////////////
 
-		inline void exception_info::print( std::ostream & os ) const
+		inline void exception_info_::print( std::ostream & os ) const
 		{
 			if( ex_ )
 			{
@@ -3818,7 +3818,7 @@ namespace boost { namespace leaf {
 				os << "\nUnknown exception type (not a std::exception)";
 		}
 
-		inline exception_info::exception_info( std::exception const * ex ) noexcept:
+		inline exception_info_::exception_info_( std::exception const * ex ) noexcept:
 			exception_info_base(ex)
 		{
 		}
@@ -3841,23 +3841,23 @@ namespace boost { namespace leaf {
 				}
 				catch( std::exception const & ex )
 				{
-					return leaf_detail::handle_error_<R>(this->tup(), error_info(exception_info(&ex)), std::forward<H>(h)...,
+					return leaf_detail::handle_error_<R>(this->tup(), error_info(exception_info_(&ex)), std::forward<H>(h)...,
 						[]() -> R { throw; } );
 				}
 				catch(...)
 				{
-					return leaf_detail::handle_error_<R>(this->tup(), error_info(exception_info(0)), std::forward<H>(h)...,
+					return leaf_detail::handle_error_<R>(this->tup(), error_info(exception_info_(0)), std::forward<H>(h)...,
 						[]() -> R { throw; } );
 				}
 			}
 			catch( std::exception const & ex )
 			{
-				return leaf_detail::handle_error_<R>(this->tup(), error_info(exception_info(&ex)), std::forward<H>(h)...,
+				return leaf_detail::handle_error_<R>(this->tup(), error_info(exception_info_(&ex)), std::forward<H>(h)...,
 					[]() -> R { throw; } );
 			}
 			catch(...)
 			{
-				return leaf_detail::handle_error_<R>(this->tup(), error_info(exception_info(0)), std::forward<H>(h)...,
+				return leaf_detail::handle_error_<R>(this->tup(), error_info(exception_info_(0)), std::forward<H>(h)...,
 					[]() -> R { throw; } );
 			}
 		}
@@ -3879,20 +3879,20 @@ namespace boost { namespace leaf {
 				}
 				catch( std::exception const & ex )
 				{
-					return std::forward<RemoteH>(h)(error_info(exception_info(&ex), this)).get();
+					return std::forward<RemoteH>(h)(error_info(exception_info_(&ex), this)).get();
 				}
 				catch(...)
 				{
-					return std::forward<RemoteH>(h)(error_info(exception_info(0), this)).get();
+					return std::forward<RemoteH>(h)(error_info(exception_info_(0), this)).get();
 				}
 			}
 			catch( std::exception const & ex )
 			{
-				return std::forward<RemoteH>(h)(error_info(exception_info(&ex), this)).get();
+				return std::forward<RemoteH>(h)(error_info(exception_info_(&ex), this)).get();
 			}
 			catch(...)
 			{
-				return std::forward<RemoteH>(h)(error_info(exception_info(0), this)).get();
+				return std::forward<RemoteH>(h)(error_info(exception_info_(0), this)).get();
 			}
 		}
 	}
@@ -3966,7 +3966,7 @@ namespace boost { namespace leaf {
 		}
 	}
 
-	inline error_info::error_info( leaf_detail::exception_info const & xi, void const * remote_handling_ctx ) noexcept:
+	inline error_info::error_info( leaf_detail::exception_info_ const & xi, void const * remote_handling_ctx ) noexcept:
 		remote_handling_ctx_(remote_handling_ctx),
 		xi_(&xi),
 		err_id_(leaf_detail::unpack_error_id(xi_->ex_))

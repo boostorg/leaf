@@ -26,16 +26,16 @@ namespace boost { namespace leaf {
 			virtual void print( std::ostream & os ) const = 0;
 		};
 
-		class exception_info: public exception_info_base
+		class exception_info_: public exception_info_base
 		{
-			exception_info( exception_info const & ) = delete;
-			exception_info & operator=( exception_info const & ) = delete;
+			exception_info_( exception_info_ const & ) = delete;
+			exception_info_ & operator=( exception_info_ const & ) = delete;
 
 			void print( std::ostream & os ) const final override;
 
 		public:
 
-			explicit exception_info( std::exception const * ex ) noexcept;
+			explicit exception_info_( std::exception const * ex ) noexcept;
 		};
 	}
 
@@ -67,7 +67,7 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		explicit error_info( leaf_detail::exception_info const &, void const * remote_handling_ctx = 0 ) noexcept;
+		explicit error_info( leaf_detail::exception_info_ const &, void const * remote_handling_ctx = 0 ) noexcept;
 
 		error_id error() const noexcept
 		{
