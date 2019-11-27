@@ -91,7 +91,7 @@ int main() {
 
 Which on clang 9 outputs:
 
-```
+```x86asm
 val():
         mov     eax, 42
         ret
@@ -123,7 +123,7 @@ leaf::result<int> g()
 
 Generates this code on clang ([Godbolt](https://godbolt.org/z/4AtHMk)):
 
-```
+```x86asm
 g():                                  # @g()
         push    rbx
         sub     rsp, 32
@@ -180,7 +180,7 @@ leaf::result<int> g()
 
 We get:
 
-```
+```x86asm
 g():                                  # @g()
         mov     rax, rdi
         mov     dword ptr [rdi], 3
@@ -208,7 +208,7 @@ leaf::result<int> g()
 
 We get ([Godbolt](https://godbolt.org/z/4P7Jvv)):
 
-```
+```x86asm
 g():                                  # @g()
         push    rbx
         mov     rbx, rdi
