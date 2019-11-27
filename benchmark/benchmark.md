@@ -107,6 +107,156 @@ It does not appear that anything like this is occurring in our case, but it is s
 > - For benchmarking, both programs are compiled with exception handling disabled.
 > - LEAF is able to work with external `result<>` types. The benchmark uses `leaf::result<T>`.
 
+## Show me the code!
+
+The following source:
+
+```C++
+leaf::result<int> f();
+
+leaf::result<int> g()
+{
+    LEAF_AUTO(x, f());
+    return x+1;
+}
+```
+
+Generates this code on clang ([Godbolt](https://godbolt.org/z/4AtHMk)):
+
+```
+g():                                  # @g()
+        push    rbx
+        sub     rsp, 32
+        mov     rbx, rdi
+        lea     rdi, [rsp + 8]
+        call    f()
+        mov     eax, dword ptr [rsp + 8]
+        mov     ecx, eax
+        and     ecx, 3
+        cmp     ecx, 2
+        je      .LBB0_4
+        cmp     ecx, 3
+        jne     .LBB0_2
+        mov     eax, dword ptr [rsp + 16]
+        add     eax, 1
+        mov     dword ptr [rbx], 3
+        mov     dword ptr [rbx + 8], eax
+        mov     rax, rbx
+        add     rsp, 32
+        pop     rbx
+        ret
+.LBB0_4:
+        mov     dword ptr [rbx], 2
+        movups  xmm0, xmmword ptr [rsp + 16]
+        mov     qword ptr [rsp + 24], 0
+        movups  xmmword ptr [rbx + 8], xmm0
+        mov     qword ptr [rsp + 16], 0
+        mov     rax, rbx
+        add     rsp, 32
+        pop     rbx
+        ret
+.LBB0_2:
+        mov     dword ptr [rbx], eax
+        mov     rax, rbx
+        add     rsp, 32
+        pop     rbx
+        ret
+```
+
+Note that `f` is undefined, hence the `call` instruction. Predictably, if we provide a trivial definition for `f`:
+
+```C++
+leaf::result<int> f()
+{
+    return 42;
+}
+
+leaf::result<int> g()
+{
+    LEAF_AUTO(x, f());
+    return x+1;
+}
+```
+
+We get:
+
+```
+g():                                  # @g()
+        mov     rax, rdi
+        mov     dword ptr [rdi], 3
+        mov     dword ptr [rdi + 8], 43
+        ret
+```
+
+With a less trivial definition of `f`:
+
+```C++
+leaf::result<int> f()
+{
+    if( rand()%2 )
+        return 42;
+    else
+        return leaf::new_error();
+}
+
+leaf::result<int> g()
+{
+    LEAF_AUTO(x, f());
+    return x+1;
+}
+```
+
+We get ([Godbolt](https://godbolt.org/z/4P7Jvv)):
+
+```
+g():                                  # @g()
+        push    rbx
+        mov     rbx, rdi
+        call    rand
+        test    al, 1
+        jne     .LBB1_7
+        mov     eax, dword ptr fs:[boost::leaf::leaf_detail::id_factory<void>::next_id@TPOFF]
+        test    eax, eax
+        je      .LBB1_3
+        mov     dword ptr fs:[boost::leaf::leaf_detail::id_factory<void>::next_id@TPOFF], 0
+        jmp     .LBB1_4
+.LBB1_3:
+        mov     eax, 4
+        lock            xadd    dword ptr [rip + boost::leaf::leaf_detail::id_factory<void>::counter], eax
+        add     eax, 4
+        and     eax, -4
+        or      eax, 1
+.LBB1_4:
+        mov     dword ptr fs:[boost::leaf::leaf_detail::id_factory<void>::last_id@TPOFF], eax
+        mov     ecx, eax
+        and     ecx, 3
+        cmp     ecx, 2
+        je      .LBB1_8
+        cmp     ecx, 3
+        jne     .LBB1_6
+.LBB1_7:
+        mov     dword ptr [rbx], 3
+        mov     dword ptr [rbx + 8], 43
+        mov     rax, rbx
+        pop     rbx
+        ret
+.LBB1_8:
+        mov     dword ptr [rbx], 2
+        mov     eax, 42
+        movq    xmm0, rax
+        movdqu  xmmword ptr [rbx + 8], xmm0
+        mov     rax, rbx
+        pop     rbx
+        ret
+.LBB1_6:
+        mov     dword ptr [rbx], eax
+        mov     rax, rbx
+        pop     rbx
+        ret
+```
+
+Above, the call to `f()` is inlined, most of the code is from the initial error reporting machinery in LEAF.
+
 ## Benchmark matrix dimensions
 
 The benchmark matrix has 4 dimensions:
