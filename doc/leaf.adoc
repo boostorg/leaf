@@ -34,6 +34,12 @@ LEAF is a lightweight error handling library for {CPP}11. Features:
 | <<introduction,Introduction>> \| <<tutorial>> \| <<synopsis>> \| <<rationale,Design Rationale>> \| https://github.com/zajo/leaf/blob/master/doc/whitepaper.md[Whitepaper] \| https://github.com/zajo/leaf/blob/master/benchmark/benchmark.md[Benchmark] >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<traits,Traits>> \| <<macros,Macros>>
 |====
 
+LEAF is designed with a strong bias towards the common use case where callers of functions which may fail check for success and forward errors up the call chain but do not handle them. When a function fails, the only data transported in the `leaf::result<T>` object is a simple discriminant. In this case, LEAF does not bother to make the actual error object(s) available to the caller. This saves a lot of cycles and results in very efficient code.
+
+If the caller wants to handle at least some failures, this intention must be explicitly expressed by a call to `try_handle_some`. This instructs LEAF to deliver relevant error objects to this scope, so the program can inspect them and possibly restore normal operation. If we want to handle all, rather than only some failures, this is expressed by a call to `try_handle_all`. In this case, LEAF ensures (statically, at compile time) that the user provides suitable handlers for all failures.
+
+Regardless of whether we call `try_handle_some`, `try_handle_all`, or the exception-handling alternative `try_catch`, LEAF reserves memory on the stack, suitable for storage of error objects based on the static types of the arguments of the provided error handlers. No dynamic memory allocations occur, even when working with extremely large error objects.
+
 [[introduction]]
 == Five Minute Introduction
 
@@ -5415,6 +5421,10 @@ Further, consider that Outcome aims to hopefully become _the_ one error-handling
 
 In contrast, the design of LEAF acknowledges that {CPP} programmers don't even agree on what a string is. If your project uses 10 different libraries, this probably means 15 different ways to report errors, sometimes across uncooperative interfaces (e.g. C APIs). LEAF helps you get the job done elegantly and efficiently.
 
+==== Benchmark
+
+https://github.com/zajo/leaf/blob/master/benchmark/benchmark.md[This benchmark] compares the performance of LEAF and Boost Outcome.
+
 [[distribution]]
 == Distribution
 
@@ -5464,15 +5474,8 @@ meson test
 The following configuration macros are recognized:
 
 * `LEAF_DIAGNOSTICS`: Defining this macro to `0` stubs out both <<diagnostic_info>> and <<verbose_diagnostic_info>>, which could improve the performance of the error path in some programs (if the macro is left undefined, LEAF defines it as `1`).
-* `LEAF_NO_EXCEPTIONS`: Disable all exception handling support.
+* `LEAF_NO_EXCEPTIONS`: Disable all exception handling support. If left undefined, LEAF defines it based on the compiler configuration (e.g. `-fno-exceptions`).
 * `LEAF_NO_THREADS`: Disable all multi-thread support.
-
-It is possible to request that `LEAF_NO_EXCEPTIONS` and `LEAF_NO_THREADS` are deduced automatically. To do this, leave both `LEAF_NO_EXCEPTIONS` and `LEAF_NO_THREADS` undefined and instead define `LEAF_USE_BOOST_CONFIG` before including any LEAF headers. This relies on LEAF being able to `#include <boost/config.hpp>`:
-
-* `LEAF_NO_EXCEPTIONS` will be defined if https://www.boost.org/doc/libs/release/libs/config/doc/html/boost_config/boost_macro_reference.html[`BOOST_NO_EXCEPTIONS`] is defined (e.g. `-fno-exceptions`).
-* `LEAF_NO_THREADS` will be defined if https://www.boost.org/doc/libs/release/libs/config/doc/html/boost_config/boost_macro_reference.html[`BOOST_HAS_THREADS`] is _not_ defined. Note that `BOOST_HAS_THREADS` does not necessarily reflect a command line request to turn multi-thread support on or off.
-
-NOTE: `LEAF_USE_BOOST_CONFIG` must be specifically requested because otherwise LEAF does not depend on Boost or any other library.
 
 == Acknowledgements
 
