@@ -163,6 +163,14 @@ g():                                  # @g()
         ret
 ```
 
+> Description:
+>
+> * The default no-jump path is the happy path (ends at the first `ret`); the returned `result<T>` holds the `int` discriminant and the `T` (`int` in this case).
+>
+> * `.LBB0_2`: Regular failure; the returned `result<T>` object holds only the `int` discriminant.
+>
+> * `.LBB0_4`: Failure; the returned `result<T>` holds the `int` discriminant and a `std::shared_ptr<leaf::polymorphic_context>` (used to hold error objects transported from another thread).
+
 Note that `f` is undefined, hence the `call` instruction. Predictably, if we provide a trivial definition for `f`:
 
 ```C++
@@ -214,41 +222,26 @@ g():                                  # @g()
         mov     rbx, rdi
         call    rand
         test    al, 1
-        jne     .LBB1_7
+        jne     .LBB1_5
         mov     eax, dword ptr fs:[boost::leaf::leaf_detail::id_factory<void>::next_id@TPOFF]
         test    eax, eax
         je      .LBB1_3
         mov     dword ptr fs:[boost::leaf::leaf_detail::id_factory<void>::next_id@TPOFF], 0
         jmp     .LBB1_4
-.LBB1_3:
-        mov     eax, 4
-        lock            xadd    dword ptr [rip + boost::leaf::leaf_detail::id_factory<void>::counter], eax
-        add     eax, 4
-        and     eax, -4
-        or      eax, 1
-.LBB1_4:
-        mov     dword ptr fs:[boost::leaf::leaf_detail::id_factory<void>::last_id@TPOFF], eax
-        mov     ecx, eax
-        and     ecx, 3
-        cmp     ecx, 2
-        je      .LBB1_8
-        cmp     ecx, 3
-        jne     .LBB1_6
-.LBB1_7:
+.LBB1_5:
         mov     dword ptr [rbx], 3
         mov     dword ptr [rbx + 8], 43
         mov     rax, rbx
         pop     rbx
         ret
-.LBB1_8:
-        mov     dword ptr [rbx], 2
-        mov     eax, 42
-        movq    xmm0, rax
-        movdqu  xmmword ptr [rbx + 8], xmm0
-        mov     rax, rbx
-        pop     rbx
-        ret
-.LBB1_6:
+.LBB1_3:
+        mov     eax, 4
+        lock            xadd    dword ptr [rip + boost::leaf::leaf_detail::id_factory<void>::counter], eax
+        add     eax, 4
+.LBB1_4:
+        and     eax, -4
+        or      eax, 1
+        mov     dword ptr fs:[boost::leaf::leaf_detail::id_factory<void>::last_id@TPOFF], eax
         mov     dword ptr [rbx], eax
         mov     rax, rbx
         pop     rbx
