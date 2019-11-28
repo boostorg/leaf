@@ -309,169 +309,169 @@ Below is the output the benchmark programs running on a MacBook Pro. The tables 
 
 The following tables show elapsed time
 
-#### 1000 iterations, call depth 32, sizeof(e_heavy_payload) = 4096 (clang, LEAF):
+#### 10000 iterations, call depth 32, sizeof(e_heavy_payload) = 4096 (clang, LEAF):
 
 Error type      | At each level      | Inlining | Rate | μs
 ----------------|--------------------|----------|------:|-------:
-e_error_code    | LEAF_AUTO          | Disabled |    2% |     124
-e_error_code    | LEAF_AUTO          | Enabled  |    2% |      12
-e_error_code    | try_handle_some    | Disabled |    2% |     180
-e_error_code    | try_handle_some    | Enabled  |    2% |      95
-e_error_code    | LEAF_AUTO          | Disabled |   50% |     125
-e_error_code    | LEAF_AUTO          | Enabled  |   50% |      25
-e_error_code    | try_handle_some    | Disabled |   50% |     198
-e_error_code    | try_handle_some    | Enabled  |   50% |     120
-e_error_code    | LEAF_AUTO          | Disabled |   98% |     129
-e_error_code    | LEAF_AUTO          | Enabled  |   98% |      24
-e_error_code    | try_handle_some    | Disabled |   98% |     208
-e_error_code    | try_handle_some    | Enabled  |   98% |     131
-e_system_error  | LEAF_AUTO          | Disabled |    2% |     116
-e_system_error  | LEAF_AUTO          | Enabled  |    2% |      18
-e_system_error  | try_handle_some    | Disabled |    2% |     178
-e_system_error  | try_handle_some    | Enabled  |    2% |      94
-e_system_error  | LEAF_AUTO          | Disabled |   50% |     122
-e_system_error  | LEAF_AUTO          | Enabled  |   50% |      28
-e_system_error  | try_handle_some    | Disabled |   50% |     278
-e_system_error  | try_handle_some    | Enabled  |   50% |     232
-e_system_error  | LEAF_AUTO          | Disabled |   98% |     148
-e_system_error  | LEAF_AUTO          | Enabled  |   98% |      27
-e_system_error  | try_handle_some    | Disabled |   98% |     209
-e_system_error  | try_handle_some    | Enabled  |   98% |     142
-e_heavy_payload | LEAF_AUTO          | Disabled |    2% |     145
-e_heavy_payload | LEAF_AUTO          | Enabled  |    2% |      14
-e_heavy_payload | try_handle_some    | Disabled |    2% |     185
-e_heavy_payload | try_handle_some    | Enabled  |    2% |      95
-e_heavy_payload | LEAF_AUTO          | Disabled |   50% |     186
-e_heavy_payload | LEAF_AUTO          | Enabled  |   50% |      71
-e_heavy_payload | try_handle_some    | Disabled |   50% |     247
-e_heavy_payload | try_handle_some    | Enabled  |   50% |     181
-e_heavy_payload | LEAF_AUTO          | Disabled |   98% |     225
-e_heavy_payload | LEAF_AUTO          | Enabled  |   98% |     123
-e_heavy_payload | try_handle_some    | Disabled |   98% |     537
-e_heavy_payload | try_handle_some    | Enabled  |   98% |     269
+e_error_code    | LEAF_AUTO          | Disabled |    2% |     920
+e_error_code    | LEAF_AUTO          | Enabled  |    2% |     135
+e_error_code    | try_handle_some    | Disabled |    2% |    1407
+e_error_code    | try_handle_some    | Enabled  |    2% |     708
+e_error_code    | LEAF_AUTO          | Disabled |   50% |     916
+e_error_code    | LEAF_AUTO          | Enabled  |   50% |     215
+e_error_code    | try_handle_some    | Disabled |   50% |    1467
+e_error_code    | try_handle_some    | Enabled  |   50% |     851
+e_error_code    | LEAF_AUTO          | Disabled |   98% |     803
+e_error_code    | LEAF_AUTO          | Enabled  |   98% |     204
+e_error_code    | try_handle_some    | Disabled |   98% |    1671
+e_error_code    | try_handle_some    | Enabled  |   98% |     907
+e_system_error  | LEAF_AUTO          | Disabled |    2% |    1255
+e_system_error  | LEAF_AUTO          | Enabled  |    2% |     204
+e_system_error  | try_handle_some    | Disabled |    2% |    1482
+e_system_error  | try_handle_some    | Enabled  |    2% |     731
+e_system_error  | LEAF_AUTO          | Disabled |   50% |    1147
+e_system_error  | LEAF_AUTO          | Enabled  |   50% |     362
+e_system_error  | try_handle_some    | Disabled |   50% |    1821
+e_system_error  | try_handle_some    | Enabled  |   50% |     858
+e_system_error  | LEAF_AUTO          | Disabled |   98% |     977
+e_system_error  | LEAF_AUTO          | Enabled  |   98% |     211
+e_system_error  | try_handle_some    | Disabled |   98% |    1585
+e_system_error  | try_handle_some    | Enabled  |   98% |     952
+e_heavy_payload | LEAF_AUTO          | Disabled |    2% |    1089
+e_heavy_payload | LEAF_AUTO          | Enabled  |    2% |     154
+e_heavy_payload | try_handle_some    | Disabled |    2% |    1405
+e_heavy_payload | try_handle_some    | Enabled  |    2% |     824
+e_heavy_payload | LEAF_AUTO          | Disabled |   50% |    1476
+e_heavy_payload | LEAF_AUTO          | Enabled  |   50% |     576
+e_heavy_payload | try_handle_some    | Disabled |   50% |    2494
+e_heavy_payload | try_handle_some    | Enabled  |   50% |    1338
+e_heavy_payload | LEAF_AUTO          | Disabled |   98% |    1644
+e_heavy_payload | LEAF_AUTO          | Enabled  |   98% |     931
+e_heavy_payload | try_handle_some    | Disabled |   98% |    2646
+e_heavy_payload | try_handle_some    | Enabled  |   98% |    1676
 
-#### 1000 iterations, call depth 32, sizeof(e_heavy_payload) = 4096 (clang, Outcome):
+#### 10000 iterations, call depth 32, sizeof(e_heavy_payload) = 4096 (clang, Outcome):
 
 Error type      | At each level      | Inlining | Rate  | μs
 ----------------|--------------------|----------|------:|-------:
-e_error_code    | OUTCOME_TRY        | Disabled |    2% |     239
-e_error_code    | OUTCOME_TRY        | Enabled  |    2% |     226
-e_error_code    | Handle some errors | Disabled |    2% |     230
-e_error_code    | Handle some errors | Enabled  |    2% |     229
-e_error_code    | OUTCOME_TRY        | Disabled |   50% |     453
-e_error_code    | OUTCOME_TRY        | Enabled  |   50% |     456
-e_error_code    | Handle some errors | Disabled |   50% |     321
-e_error_code    | Handle some errors | Enabled  |   50% |     339
-e_error_code    | OUTCOME_TRY        | Disabled |   98% |     631
-e_error_code    | OUTCOME_TRY        | Enabled  |   98% |     676
-e_error_code    | Handle some errors | Disabled |   98% |     449
-e_error_code    | Handle some errors | Enabled  |   98% |     424
-e_system_error  | OUTCOME_TRY        | Disabled |    2% |     302
-e_system_error  | OUTCOME_TRY        | Enabled  |    2% |     259
-e_system_error  | Handle some errors | Disabled |    2% |     259
-e_system_error  | Handle some errors | Enabled  |    2% |     259
-e_system_error  | OUTCOME_TRY        | Disabled |   50% |     470
-e_system_error  | OUTCOME_TRY        | Enabled  |   50% |     458
-e_system_error  | Handle some errors | Disabled |   50% |     389
-e_system_error  | Handle some errors | Enabled  |   50% |     376
-e_system_error  | OUTCOME_TRY        | Disabled |   98% |     724
-e_system_error  | OUTCOME_TRY        | Enabled  |   98% |     672
-e_system_error  | Handle some errors | Disabled |   98% |     486
-e_system_error  | Handle some errors | Enabled  |   98% |     484
-e_heavy_payload | OUTCOME_TRY        | Disabled |    2% |    3694
-e_heavy_payload | OUTCOME_TRY        | Enabled  |    2% |    3690
-e_heavy_payload | Handle some errors | Disabled |    2% |    3592
-e_heavy_payload | Handle some errors | Enabled  |    2% |    3618
-e_heavy_payload | OUTCOME_TRY        | Disabled |   50% |    6055
-e_heavy_payload | OUTCOME_TRY        | Enabled  |   50% |    5612
-e_heavy_payload | Handle some errors | Disabled |   50% |    5356
-e_heavy_payload | Handle some errors | Enabled  |   50% |    5654
-e_heavy_payload | OUTCOME_TRY        | Disabled |   98% |    7789
-e_heavy_payload | OUTCOME_TRY        | Enabled  |   98% |    8406
-e_heavy_payload | Handle some errors | Disabled |   98% |    7646
-e_heavy_payload | Handle some errors | Enabled  |   98% |    7263
+e_error_code    | OUTCOME_TRY        | Disabled |    2% |    2129
+e_error_code    | OUTCOME_TRY        | Enabled  |    2% |    2245
+e_error_code    | Handle some errors | Disabled |    2% |    2102
+e_error_code    | Handle some errors | Enabled  |    2% |    2157
+e_error_code    | OUTCOME_TRY        | Disabled |   50% |    3994
+e_error_code    | OUTCOME_TRY        | Enabled  |   50% |    4043
+e_error_code    | Handle some errors | Disabled |   50% |    2958
+e_error_code    | Handle some errors | Enabled  |   50% |    2994
+e_error_code    | OUTCOME_TRY        | Disabled |   98% |    5533
+e_error_code    | OUTCOME_TRY        | Enabled  |   98% |    5573
+e_error_code    | Handle some errors | Disabled |   98% |    3754
+e_error_code    | Handle some errors | Enabled  |   98% |    3824
+e_system_error  | OUTCOME_TRY        | Disabled |    2% |    2144
+e_system_error  | OUTCOME_TRY        | Enabled  |    2% |    2158
+e_system_error  | Handle some errors | Disabled |    2% |    2130
+e_system_error  | Handle some errors | Enabled  |    2% |    2187
+e_system_error  | OUTCOME_TRY        | Disabled |   50% |    3954
+e_system_error  | OUTCOME_TRY        | Enabled  |   50% |    3996
+e_system_error  | Handle some errors | Disabled |   50% |    3210
+e_system_error  | Handle some errors | Enabled  |   50% |    3369
+e_system_error  | OUTCOME_TRY        | Disabled |   98% |    5422
+e_system_error  | OUTCOME_TRY        | Enabled  |   98% |    5247
+e_system_error  | Handle some errors | Disabled |   98% |    4278
+e_system_error  | Handle some errors | Enabled  |   98% |    4126
+e_heavy_payload | OUTCOME_TRY        | Disabled |    2% |   25931
+e_heavy_payload | OUTCOME_TRY        | Enabled  |    2% |   26290
+e_heavy_payload | Handle some errors | Disabled |    2% |   26060
+e_heavy_payload | Handle some errors | Enabled  |    2% |   26176
+e_heavy_payload | OUTCOME_TRY        | Disabled |   50% |   43802
+e_heavy_payload | OUTCOME_TRY        | Enabled  |   50% |   42883
+e_heavy_payload | Handle some errors | Disabled |   50% |   42538
+e_heavy_payload | Handle some errors | Enabled  |   50% |   42590
+e_heavy_payload | OUTCOME_TRY        | Disabled |   98% |   58263
+e_heavy_payload | OUTCOME_TRY        | Enabled  |   98% |   57450
+e_heavy_payload | Handle some errors | Disabled |   98% |   58248
+e_heavy_payload | Handle some errors | Enabled  |   98% |   57814
 
-#### 1000 iterations, call depth 32, sizeof(e_heavy_payload) = 4096 (gcc, LEAF):
+#### 10000 iterations, call depth 32, sizeof(e_heavy_payload) = 4096 (gcc, LEAF):
 
 Error type      | At each level      | Inlining | Rate | μs
 ----------------|--------------------|----------|------:|-------:
-e_error_code    | LEAF_AUTO          | Disabled |    2% |     260
-e_error_code    | LEAF_AUTO          | Enabled  |    2% |       9
-e_error_code    | try_handle_some    | Disabled |    2% |     252
-e_error_code    | try_handle_some    | Enabled  |    2% |      48
-e_error_code    | LEAF_AUTO          | Disabled |   50% |     164
-e_error_code    | LEAF_AUTO          | Enabled  |   50% |      25
-e_error_code    | try_handle_some    | Disabled |   50% |     254
-e_error_code    | try_handle_some    | Enabled  |   50% |      67
-e_error_code    | LEAF_AUTO          | Disabled |   98% |     157
-e_error_code    | LEAF_AUTO          | Enabled  |   98% |      26
-e_error_code    | try_handle_some    | Disabled |   98% |     234
-e_error_code    | try_handle_some    | Enabled  |   98% |      75
-e_system_error  | LEAF_AUTO          | Disabled |    2% |     195
-e_system_error  | LEAF_AUTO          | Enabled  |    2% |      10
-e_system_error  | try_handle_some    | Disabled |    2% |     244
-e_system_error  | try_handle_some    | Enabled  |    2% |      45
-e_system_error  | LEAF_AUTO          | Disabled |   50% |     164
-e_system_error  | LEAF_AUTO          | Enabled  |   50% |      29
-e_system_error  | try_handle_some    | Disabled |   50% |     232
-e_system_error  | try_handle_some    | Enabled  |   50% |     102
-e_system_error  | LEAF_AUTO          | Disabled |   98% |     142
-e_system_error  | LEAF_AUTO          | Enabled  |   98% |      48
-e_system_error  | try_handle_some    | Disabled |   98% |     206
-e_system_error  | try_handle_some    | Enabled  |   98% |      79
-e_heavy_payload | LEAF_AUTO          | Disabled |    2% |     210
-e_heavy_payload | LEAF_AUTO          | Enabled  |    2% |      12
-e_heavy_payload | try_handle_some    | Disabled |    2% |     234
-e_heavy_payload | try_handle_some    | Enabled  |    2% |      51
-e_heavy_payload | LEAF_AUTO          | Disabled |   50% |     205
-e_heavy_payload | LEAF_AUTO          | Enabled  |   50% |      86
-e_heavy_payload | try_handle_some    | Disabled |   50% |     268
-e_heavy_payload | try_handle_some    | Enabled  |   50% |     125
-e_heavy_payload | LEAF_AUTO          | Disabled |   98% |     210
-e_heavy_payload | LEAF_AUTO          | Enabled  |   98% |     147
-e_heavy_payload | try_handle_some    | Disabled |   98% |     301
-e_heavy_payload | try_handle_some    | Enabled  |   98% |     191
+e_error_code    | LEAF_AUTO          | Disabled |    2% |    1973
+e_error_code    | LEAF_AUTO          | Enabled  |    2% |      76
+e_error_code    | try_handle_some    | Disabled |    2% |    2381
+e_error_code    | try_handle_some    | Enabled  |    2% |     356
+e_error_code    | LEAF_AUTO          | Disabled |   50% |    1741
+e_error_code    | LEAF_AUTO          | Enabled  |   50% |     235
+e_error_code    | try_handle_some    | Disabled |   50% |    2681
+e_error_code    | try_handle_some    | Enabled  |   50% |     555
+e_error_code    | LEAF_AUTO          | Disabled |   98% |    1296
+e_error_code    | LEAF_AUTO          | Enabled  |   98% |     234
+e_error_code    | try_handle_some    | Disabled |   98% |    2389
+e_error_code    | try_handle_some    | Enabled  |   98% |     599
+e_system_error  | LEAF_AUTO          | Disabled |    2% |    1796
+e_system_error  | LEAF_AUTO          | Enabled  |    2% |      76
+e_system_error  | try_handle_some    | Disabled |    2% |    2511
+e_system_error  | try_handle_some    | Enabled  |    2% |     369
+e_system_error  | LEAF_AUTO          | Disabled |   50% |    1643
+e_system_error  | LEAF_AUTO          | Enabled  |   50% |     249
+e_system_error  | try_handle_some    | Disabled |   50% |    2338
+e_system_error  | try_handle_some    | Enabled  |   50% |     574
+e_system_error  | LEAF_AUTO          | Disabled |   98% |    1205
+e_system_error  | LEAF_AUTO          | Enabled  |   98% |     263
+e_system_error  | try_handle_some    | Disabled |   98% |    2316
+e_system_error  | try_handle_some    | Enabled  |   98% |     672
+e_heavy_payload | LEAF_AUTO          | Disabled |    2% |    1907
+e_heavy_payload | LEAF_AUTO          | Enabled  |    2% |      91
+e_heavy_payload | try_handle_some    | Disabled |    2% |    2069
+e_heavy_payload | try_handle_some    | Enabled  |    2% |     392
+e_heavy_payload | LEAF_AUTO          | Disabled |   50% |    1982
+e_heavy_payload | LEAF_AUTO          | Enabled  |   50% |     831
+e_heavy_payload | try_handle_some    | Disabled |   50% |    2579
+e_heavy_payload | try_handle_some    | Enabled  |   50% |    1139
+e_heavy_payload | LEAF_AUTO          | Disabled |   98% |    2032
+e_heavy_payload | LEAF_AUTO          | Enabled  |   98% |    1579
+e_heavy_payload | try_handle_some    | Disabled |   98% |    2806
+e_heavy_payload | try_handle_some    | Enabled  |   98% |    1682
 
-#### 1000 iterations, call depth 32, sizeof(e_heavy_payload) = 4096 (gcc, Outcome):
+#### 10000 iterations, call depth 32, sizeof(e_heavy_payload) = 4096 (gcc, Outcome):
 
 Error type      | At each level      | Inlining | Rate  | μs
 ----------------|--------------------|----------|------:|-------:
-e_error_code    | OUTCOME_TRY        | Disabled |    2% |     251
-e_error_code    | OUTCOME_TRY        | Enabled  |    2% |     175
-e_error_code    | Handle some errors | Disabled |    2% |     234
-e_error_code    | Handle some errors | Enabled  |    2% |     177
-e_error_code    | OUTCOME_TRY        | Disabled |   50% |     362
-e_error_code    | OUTCOME_TRY        | Enabled  |   50% |     244
-e_error_code    | Handle some errors | Disabled |   50% |     314
-e_error_code    | Handle some errors | Enabled  |   50% |     228
-e_error_code    | OUTCOME_TRY        | Disabled |   98% |     487
-e_error_code    | OUTCOME_TRY        | Enabled  |   98% |     302
-e_error_code    | Handle some errors | Disabled |   98% |     364
-e_error_code    | Handle some errors | Enabled  |   98% |     275
-e_system_error  | OUTCOME_TRY        | Disabled |    2% |     250
-e_system_error  | OUTCOME_TRY        | Enabled  |    2% |     187
-e_system_error  | Handle some errors | Disabled |    2% |     304
-e_system_error  | Handle some errors | Enabled  |    2% |     225
-e_system_error  | OUTCOME_TRY        | Disabled |   50% |     576
-e_system_error  | OUTCOME_TRY        | Enabled  |   50% |     372
-e_system_error  | Handle some errors | Disabled |   50% |     521
-e_system_error  | Handle some errors | Enabled  |   50% |     449
-e_system_error  | OUTCOME_TRY        | Disabled |   98% |     899
-e_system_error  | OUTCOME_TRY        | Enabled  |   98% |     606
-e_system_error  | Handle some errors | Disabled |   98% |     687
-e_system_error  | Handle some errors | Enabled  |   98% |     511
-e_heavy_payload | OUTCOME_TRY        | Disabled |    2% |    3637
-e_heavy_payload | OUTCOME_TRY        | Enabled  |    2% |    1947
-e_heavy_payload | Handle some errors | Disabled |    2% |    3105
-e_heavy_payload | Handle some errors | Enabled  |    2% |    2497
-e_heavy_payload | OUTCOME_TRY        | Disabled |   50% |    4896
-e_heavy_payload | OUTCOME_TRY        | Enabled  |   50% |    3312
-e_heavy_payload | Handle some errors | Disabled |   50% |    5333
-e_heavy_payload | Handle some errors | Enabled  |   50% |    3290
-e_heavy_payload | OUTCOME_TRY        | Disabled |   98% |    7088
-e_heavy_payload | OUTCOME_TRY        | Enabled  |   98% |    4613
-e_heavy_payload | Handle some errors | Disabled |   98% |    7675
-e_heavy_payload | Handle some errors | Enabled  |   98% |    4766
+e_error_code    | OUTCOME_TRY        | Disabled |    2% |    2261
+e_error_code    | OUTCOME_TRY        | Enabled  |    2% |    1699
+e_error_code    | Handle some errors | Disabled |    2% |    2333
+e_error_code    | Handle some errors | Enabled  |    2% |    1738
+e_error_code    | OUTCOME_TRY        | Disabled |   50% |    3754
+e_error_code    | OUTCOME_TRY        | Enabled  |   50% |    2466
+e_error_code    | Handle some errors | Disabled |   50% |    3004
+e_error_code    | Handle some errors | Enabled  |   50% |    2303
+e_error_code    | OUTCOME_TRY        | Disabled |   98% |    4745
+e_error_code    | OUTCOME_TRY        | Enabled  |   98% |    2897
+e_error_code    | Handle some errors | Disabled |   98% |    3482
+e_error_code    | Handle some errors | Enabled  |   98% |    2663
+e_system_error  | OUTCOME_TRY        | Disabled |    2% |    2591
+e_system_error  | OUTCOME_TRY        | Enabled  |    2% |    2053
+e_system_error  | Handle some errors | Disabled |    2% |    2591
+e_system_error  | Handle some errors | Enabled  |    2% |    1969
+e_system_error  | OUTCOME_TRY        | Disabled |   50% |    4793
+e_system_error  | OUTCOME_TRY        | Enabled  |   50% |    3375
+e_system_error  | Handle some errors | Disabled |   50% |    3662
+e_system_error  | Handle some errors | Enabled  |   50% |    2883
+e_system_error  | OUTCOME_TRY        | Disabled |   98% |    6653
+e_system_error  | OUTCOME_TRY        | Enabled  |   98% |    4602
+e_system_error  | Handle some errors | Disabled |   98% |    4550
+e_system_error  | Handle some errors | Enabled  |   98% |    3711
+e_heavy_payload | OUTCOME_TRY        | Disabled |    2% |   31509
+e_heavy_payload | OUTCOME_TRY        | Enabled  |    2% |   17713
+e_heavy_payload | Handle some errors | Disabled |    2% |   28230
+e_heavy_payload | Handle some errors | Enabled  |    2% |   17252
+e_heavy_payload | OUTCOME_TRY        | Disabled |   50% |   44864
+e_heavy_payload | OUTCOME_TRY        | Enabled  |   50% |   25929
+e_heavy_payload | Handle some errors | Disabled |   50% |   43575
+e_heavy_payload | Handle some errors | Enabled  |   50% |   26238
+e_heavy_payload | OUTCOME_TRY        | Disabled |   98% |   63491
+e_heavy_payload | OUTCOME_TRY        | Enabled  |   98% |   35355
+e_heavy_payload | Handle some errors | Disabled |   98% |   61875
+e_heavy_payload | Handle some errors | Enabled  |   98% |   34624
 
 ## Charts
 
