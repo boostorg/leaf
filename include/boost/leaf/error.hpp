@@ -363,14 +363,12 @@ namespace boost { namespace leaf {
 		struct id_factory
 		{
 			static atomic_unsigned_int counter;
-			static LEAF_THREAD_LOCAL int last_id;
-			static LEAF_THREAD_LOCAL int next_id;
+			static LEAF_THREAD_LOCAL unsigned last_id;
+			static LEAF_THREAD_LOCAL unsigned next_id;
 
-			static int generate_next_id() noexcept
+			static unsigned generate_next_id() noexcept
 			{
-				unsigned id = ((counter+=4) & ~3) | 1;
-				assert((id&3)==1);
-				return id;
+				return counter+=4;
 			}
 		};
 
@@ -378,39 +376,57 @@ namespace boost { namespace leaf {
 		atomic_unsigned_int id_factory<T>::counter(-3);
 
 		template <class T>
-		LEAF_THREAD_LOCAL int id_factory<T>::last_id(0);
+		LEAF_THREAD_LOCAL unsigned id_factory<T>::last_id(0);
 
 		template <class T>
-		LEAF_THREAD_LOCAL int id_factory<T>::next_id(0);
+		LEAF_THREAD_LOCAL unsigned id_factory<T>::next_id(0);
 
 		inline int last_id() noexcept
 		{
-			int id = id_factory<>::last_id;
-			assert(id==0 || ((id&3)==1));
-			return id;
+			if( auto id = id_factory<>::last_id )
+			{
+				assert((id&3)==1);
+				return (id&~3)|1;
+			}
+			else
+				return id;
 		}
 
 		inline int next_id() noexcept
 		{
-			if( int id = id_factory<>::next_id )
+			if( auto id = id_factory<>::next_id )
 			{
 				assert((id&3)==1);
-				return id;
+				return (id&~3)|1;
 			}
 			else
-				return id_factory<>::next_id = id_factory<>::generate_next_id();
+			{
+				id = id_factory<>::generate_next_id();
+				assert((id&3)==1);
+				id = (id&~3)|1;
+				id_factory<>::next_id = id;
+				return id;
+			}
 		}
 
 		inline int new_id() noexcept
 		{
-			if( int id = id_factory<>::next_id )
+			if( auto id = id_factory<>::next_id )
 			{
-				assert((id&3)==1);
 				id_factory<>::next_id = 0;
-				return id_factory<>::last_id = id;
+				assert((id&3)==1);
+				id = (id&~3)|1;
+				id_factory<>::last_id = id;
+				return id;
 			}
 			else
-				return id_factory<>::last_id = id_factory<>::generate_next_id();
+			{
+				id = id_factory<>::generate_next_id();
+				assert((id&3)==1);
+				id = (id&~3)|1;
+				id_factory<>::last_id = id;
+				return id;
+			}
 		}
 	}
 
