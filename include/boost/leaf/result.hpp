@@ -97,6 +97,11 @@ namespace boost { namespace leaf {
 			error_result( error_result const & ) = delete;
 			error_result & operator=( error_result const & ) = delete;
 
+			error_result( result & r ) noexcept:
+				r_(r)
+			{
+			}
+
 			result & r_;
 
 			template <class U>
