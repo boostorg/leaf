@@ -113,16 +113,6 @@ namespace boost { namespace leaf {
 				}
 			}
 
-			template <class... A>
-			T & emplace( int key, A && ... a )
-			{
-				assert(key);
-				reset();
-				(void) new(&value_) T(std::forward<A>(a)...);
-				key_=key;
-				return value_;
-			}
-
 			T & put( int key, T const & v )
 			{
 				assert(key);
