@@ -669,7 +669,7 @@ namespace boost { namespace leaf {
 
 	public:
 
-		context_activator(Ctx & ctx, on_deactivation on_deactivate) noexcept:
+		LEAF_ALWAYS_INLINE context_activator(Ctx & ctx, on_deactivation on_deactivate) noexcept:
 			ctx_(&ctx),
 			ctx_was_active_(ctx.is_active()),
 			on_deactivate_(on_deactivate)
@@ -678,7 +678,7 @@ namespace boost { namespace leaf {
 				ctx.activate();
 		}
 
-		context_activator( context_activator && x ) noexcept:
+		LEAF_ALWAYS_INLINE context_activator( context_activator && x ) noexcept:
 			ctx_(x.ctx_),
 			ctx_was_active_(x.ctx_was_active_),
 			on_deactivate_(x.on_deactivate_)
@@ -686,7 +686,7 @@ namespace boost { namespace leaf {
 			x.ctx_ = 0;
 		}
 
-		~context_activator() noexcept
+		LEAF_ALWAYS_INLINE ~context_activator() noexcept
 		{
 			if( ctx_ )
 			{
@@ -711,14 +711,14 @@ namespace boost { namespace leaf {
 			}
 		}
 
-		void set_on_deactivate( on_deactivation on_deactivate ) noexcept
+		LEAF_ALWAYS_INLINE void set_on_deactivate( on_deactivation on_deactivate ) noexcept
 		{
 			on_deactivate_ = on_deactivate;
 		}
 	};
 
 	template <class Ctx>
-	context_activator<Ctx> activate_context( Ctx & ctx, on_deactivation on_deactivate ) noexcept
+	LEAF_ALWAYS_INLINE context_activator<Ctx> activate_context( Ctx & ctx, on_deactivation on_deactivate ) noexcept
 	{
 		return context_activator<Ctx>(ctx, on_deactivate);
 	}
