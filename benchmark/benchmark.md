@@ -335,71 +335,71 @@ Below is the output the benchmark programs running on a MacBook Pro. The tables 
 
 ### gcc:
 
-> `leaf::result<T>`:
->
-> Error type      |  2% (?s) | 98% (?s)
-> ----------------|---------:|--------:
-> e_error_code    |      692 |      543
-> e_system_error  |      676 |     1198
-> e_heavy_payload |      898 |     6927
->
-> `tl::expected<T, E>`:
->
-> Error type      |  2% (?s) | 98% (?s)
-> ----------------|---------:|--------:
-> e_error_code    |     1204 |      870
-> e_system_error  |      871 |     5804
-> e_heavy_payload |     1113 |    22361
->
-> `outcome::result<T, E>`:
->
-> Error type      |  2% (?s) | 98% (?s)
-> ----------------|---------:|--------:
-> e_error_code    |     1249 |      846
-> e_system_error  |      746 |     1331
-> e_heavy_payload |    10516 |    24120
->
-> `outcome::outcome<T, E>`:
->
-> Error type      |  2% (?s) | 98% (?s)
-> ----------------|---------:|--------:
-> e_error_code    |      825 |     1267
-> e_system_error  |     1009 |     2528
-> e_heavy_payload |    10439 |    26361
+`leaf::result<T>`:
+
+Error type      |  2% (?s) | 98% (?s)
+----------------|---------:|--------:
+e_error_code    |      692 |      543
+e_system_error  |      676 |     1198
+e_heavy_payload |      898 |     6927
+
+`tl::expected<T, E>`:
+
+Error type      |  2% (?s) | 98% (?s)
+----------------|---------:|--------:
+e_error_code    |     1204 |      870
+e_system_error  |      871 |     5804
+e_heavy_payload |     1113 |    22361
+
+`outcome::result<T, E>`:
+
+Error type      |  2% (?s) | 98% (?s)
+----------------|---------:|--------:
+e_error_code    |     1249 |      846
+e_system_error  |      746 |     1331
+e_heavy_payload |    10516 |    24120
+
+`outcome::outcome<T, E>`:
+
+Error type      |  2% (?s) | 98% (?s)
+----------------|---------:|--------:
+e_error_code    |      825 |     1267
+e_system_error  |     1009 |     2528
+e_heavy_payload |    10439 |    26361
 
 ### clang:
 
-> `leaf::result<T>`:
->
-> Error type      |  2% (?s) | 98% (?s)
-> ----------------|---------:|--------:
-> e_error_code    |      613 |      485
-> e_system_error  |      629 |      993
-> e_heavy_payload |      754 |     4641
->
-> `tl::expected<T, E>`:
->
-> Error type      |  2% (?s) | 98% (?s)
-> ----------------|---------:|--------:
-> e_error_code    |      817 |      489
-> e_system_error  |      936 |     3907
-> e_heavy_payload |     1202 |    13909
->
-> `outcome::result<T, E>`:
->
-> Error type      |  2% (?s) | 98% (?s)
-> ----------------|---------:|--------:
-> e_error_code    |      664 |      662
-> e_system_error  |      735 |     1815
-> e_heavy_payload |     9925 |    14216
->
-> `outcome::outcome<T, E>`:
->
-> Error type      |  2% (?s) | 98% (?s)
-> ----------------|---------:|--------:
-> e_error_code    |     1009 |     2232
-> e_system_error  |      874 |     2588
-> e_heavy_payload |     9803 |    21218
+`leaf::result<T>`:
+
+Error type      |  2% (?s) | 98% (?s)
+----------------|---------:|--------:
+e_error_code    |      613 |      485
+e_system_error  |      629 |      993
+e_heavy_payload |      754 |     4641
+
+`tl::expected<T, E>`:
+
+Error type      |  2% (?s) | 98% (?s)
+----------------|---------:|--------:
+e_error_code    |      817 |      489
+e_system_error  |      936 |     3907
+e_heavy_payload |     1202 |    13909
+
+`outcome::result<T, E>`:
+
+Error type      |  2% (?s) | 98% (?s)
+----------------|---------:|--------:
+e_error_code    |      664 |      662
+e_system_error  |      735 |     1815
+e_heavy_payload |     9925 |    14216
+
+`outcome::outcome<T, E>`:
+
+Error type      |  2% (?s) | 98% (?s)
+----------------|---------:|--------:
+e_error_code    |     1009 |     2232
+e_system_error  |      874 |     2588
+e_heavy_payload |     9803 |    21218
 
 ## Charts
 
@@ -407,19 +407,19 @@ The charts below are generated from the results from the previous section, conve
 
 ### gcc:
 
-> ![](gcc_e_error_code.png)
->
-> ![](gcc_e_system_error.png)
->
-> ![](gcc_e_heavy_payload.png)
+![](gcc_e_error_code.png)
+
+![](gcc_e_system_error.png)
+
+![](gcc_e_heavy_payload.png)
 
 ### clang:
 
-> ![](clang_e_error_code.png)
->
-> ![](clang_e_system_error.png)
->
-> ![](clang_e_heavy_payload.png)
+![](clang_e_error_code.png)
+
+![](clang_e_system_error.png)
+
+![](clang_e_heavy_payload.png)
 
 ## Thanks
 
