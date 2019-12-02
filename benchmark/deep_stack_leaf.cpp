@@ -53,14 +53,20 @@ namespace leaf = boost::leaf;
 
 //////////////////////////////////////
 
-struct e_int
+enum class e_error_code
 {
-	int value;
+	ec0, ec1, ec2, ec3
 };
+
+namespace boost { namespace leaf {
+
+	template <> struct is_e_type<e_error_code>: std::true_type { };
+
+} }
 
 struct e_system_error
 {
-	e_int value;
+	int value;
 	std::string what;
 };
 
@@ -73,19 +79,25 @@ template <class E>
 E make_error() noexcept;
 
 template <>
-NOINLINE e_int make_error<e_int>() noexcept
+inline e_error_code make_error<e_error_code>() noexcept
 {
-	return { std::rand() };
+	switch(std::rand()%4)
+	{
+		default: return e_error_code::ec0;
+		case 1: return e_error_code::ec1;
+		case 2: return e_error_code::ec2;
+		case 3: return e_error_code::ec3;
+	}
 }
 
 template <>
-NOINLINE e_system_error make_error<e_system_error>() noexcept
+inline e_system_error make_error<e_system_error>() noexcept
 {
-	return { make_error<e_int>(), std::string(std::rand()%32, ' ') };
+	return { std::rand(), std::string(std::rand()%32, ' ') };
 }
 
 template <>
-NOINLINE e_heavy_payload make_error<e_heavy_payload>() noexcept
+inline e_heavy_payload make_error<e_heavy_payload>() noexcept
 {
 	e_heavy_payload e;
 	std::fill(e.value.begin(), e.value.end(), std::rand());
@@ -99,14 +111,14 @@ inline bool should_fail( int failure_rate ) noexcept
 	return (std::rand()%100) < failure_rate;
 }
 
-inline int handle_error(e_int e ) noexcept
+inline int handle_error( e_error_code e ) noexcept
 {
-	return e.value;
+	return int(e);
 }
 
 inline int handle_error( e_system_error const & e ) noexcept
 {
-	return handle_error(e.value) + e.what.size();
+	return e.value + e.what.size();
 }
 
 inline int handle_error( e_heavy_payload const & e ) noexcept
@@ -244,7 +256,7 @@ int main()
 		"Error type      |  2% (μs) | 98% (μs)\n"
 		"----------------|----------|---------";
 	int r = 0;
-	r += benchmark_type<depth, e_int>("e_int", iteration_count);
+	r += benchmark_type<depth, e_error_code>("e_error_code", iteration_count);
 	r += benchmark_type<depth, e_system_error>("e_system_error", iteration_count);
 	r += benchmark_type<depth, e_heavy_payload>("e_heavy_payload", iteration_count);
 	std::cout << '\n';

@@ -5,7 +5,7 @@ The LEAF github repository contains two similar benchmarking programs, one using
 Links:
 * LEAF: https://zajo.github.io/leaf
 * `tl::expected`: https://github.com/TartanLlama/expected
-* Boost Outcome: https://www.boost.org/doc/libs/release/libs/outcome/doc/html/index.html
+* Boost Outcome V2: https://www.boost.org/doc/libs/release/libs/outcome/doc/html/index.html
 
 ## Library design considerations
 
@@ -293,17 +293,17 @@ The benchmark matrix has 2 dimensions:
 
 ## Godbolt
 
-LEAF and `tl::expected` both provide a single header, which makes it very easy to use them online. To see the generated code for the benchmark program, you can copy and paste the following into Godbolt:
+Godbolt has built-in support for Boost (Outcome), but LEAF and `tl::expected` both provide a single header, which makes it very easy to use them online as well. To see the generated code for the benchmark program, you can copy and paste the following into Godbolt:
 
-LEAF:
+[LEAF](https://godbolt.org/z/DTk4N4):
+
 ```c++
-#include "https://raw.githubusercontent.com/zajo/leaf/master/include/boost/> af/all.hpp"
+#include "https://raw.githubusercontent.com/zajo/leaf/master/include/boost/leaf/all.hpp"
 #include "https://raw.githubusercontent.com/zajo/leaf/master/benchmark/> deep_stack_leaf.cpp"
 ```
 
-See https://godbolt.org/z/DTk4N4.
-
 `tl::expected`:
+
 ```c++
 #include "https://raw.githubusercontent.com/TartanLlama/expected/master/include/tl/expected.hpp"
 #include "https://raw.githubusercontent.com/zajo/leaf/master/benchmark/> deep_stack_other.cpp"
@@ -332,33 +332,33 @@ Below is the output the benchmark programs running on a MacBook Pro. The tables 
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_int           |      719 |      562
-> e_system_error  |      682 |     1251
-> e_heavy_payload |      787 |     5995
+> e_error_code    |      742 |      561
+> e_system_error  |      689 |     1178
+> e_heavy_payload |      768 |     5947
 >
 > `tl::expected<T, E>`:
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_int           |     1283 |      847
-> e_system_error  |      858 |     5735
-> e_heavy_payload |     1083 |    21715
+> e_error_code    |     1078 |      842
+> e_system_error  |      842 |     6294
+> e_heavy_payload |     1270 |    24543
 >
 > `outcome::result<T, E>`:
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_int           |     1254 |      858
-> e_system_error  |      754 |     1309
-> e_heavy_payload |     8925 |    23146
+> e_error_code    |     1135 |      760
+> e_system_error  |      780 |     1275
+> e_heavy_payload |     9794 |    25182
 >
 > `outcome::outcome<T, E>`:
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_int           |      830 |     1236
-> e_system_error  |      991 |     2458
-> e_heavy_payload |    10113 |    25330
+> e_error_code    |      730 |     1097
+> e_system_error  |      883 |     2245
+> e_heavy_payload |     9782 |    27709
 
 ### clang:
 
@@ -366,33 +366,33 @@ Below is the output the benchmark programs running on a MacBook Pro. The tables 
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_int           |      729 |      562
-> e_system_error  |      732 |     1134
-> e_heavy_payload |      901 |     5203
+> e_error_code    |      520 |      410
+> e_system_error  |      527 |      804
+> e_heavy_payload |      636 |     3774
 >
 > `tl::expected<T, E>`:
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_int           |      830 |      459
-> e_system_error  |      791 |     3957
-> e_heavy_payload |     1224 |    15512
+> e_error_code    |      492 |      292
+> e_system_error  |      570 |     2852
+> e_heavy_payload |      950 |    11385
 >
 > `outcome::result<T, E>`:
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_int           |      661 |      589
-> e_system_error  |      743 |     1786
-> e_heavy_payload |    10453 |    15487
+> e_error_code    |      523 |      482
+> e_system_error  |      607 |     1316
+> e_heavy_payload |     7392 |    11786
 >
 > `outcome::outcome<T, E>`:
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_int           |      781 |     1811
-> e_system_error  |      876 |     2493
-> e_heavy_payload |    10055 |    22527
+> e_error_code    |      633 |     1426
+> e_system_error  |      753 |     2170
+> e_heavy_payload |    10107 |    20561
 
 ## Charts
 
@@ -400,7 +400,7 @@ The charts below are generated from the results from the previous section, conve
 
 ### gcc:
 
-> ![](gcc_e_int.png)
+> ![](gcc_e_error_code.png)
 >
 > ![](gcc_e_system_error.png)
 >
@@ -408,7 +408,7 @@ The charts below are generated from the results from the previous section, conve
 
 ### clang:
 
-> ![](clang_e_int.png)
+> ![](clang_e_error_code.png)
 >
 > ![](clang_e_system_error.png)
 >
