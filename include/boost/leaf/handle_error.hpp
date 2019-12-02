@@ -14,7 +14,7 @@ namespace boost { namespace leaf {
 	{
 		template <class... E>
 		template <class TryBlock, class... H>
-		inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type nocatch_context<E...>::try_handle_all( TryBlock && try_block, H && ... h )
+		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE typename std::decay<decltype(std::declval<TryBlock>()().value())>::type nocatch_context<E...>::try_handle_all( TryBlock && try_block, H && ... h )
 		{
 			auto active_context = activate_context(*this, on_deactivation::do_not_propagate);
 			return this->try_handle_all_( std::forward<TryBlock>(try_block), std::forward<H>(h)... );
@@ -22,7 +22,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class TryBlock, class RemoteH>
-		inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type nocatch_context<E...>::remote_try_handle_all( TryBlock && try_block, RemoteH && h )
+		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE typename std::decay<decltype(std::declval<TryBlock>()().value())>::type nocatch_context<E...>::remote_try_handle_all( TryBlock && try_block, RemoteH && h )
 		{
 			auto active_context = activate_context(*this, on_deactivation::do_not_propagate);
 			return this->remote_try_handle_all_( std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
@@ -30,7 +30,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class TryBlock, class... H>
-		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type nocatch_context<E...>::try_handle_some( TryBlock && try_block, H && ... h )
+		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE typename std::decay<decltype(std::declval<TryBlock>()())>::type nocatch_context<E...>::try_handle_some( TryBlock && try_block, H && ... h )
 		{
 			auto active_context = activate_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			return this->try_handle_some_( active_context, std::forward<TryBlock>(try_block), std::forward<H>(h)... );
@@ -38,7 +38,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class TryBlock, class RemoteH>
-		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type nocatch_context<E...>::remote_try_handle_some( TryBlock && try_block, RemoteH && h )
+		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE typename std::decay<decltype(std::declval<TryBlock>()())>::type nocatch_context<E...>::remote_try_handle_some( TryBlock && try_block, RemoteH && h )
 		{
 			auto active_context = activate_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			return this->remote_try_handle_some_( active_context, std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );

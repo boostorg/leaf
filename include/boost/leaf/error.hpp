@@ -109,7 +109,7 @@ namespace boost { namespace leaf {
 			char const * (*first_type)();
 			int count;
 
-			explicit e_unexpected_count( char const * (*first_type)() ) noexcept:
+			LEAF_CONSTEXPR explicit e_unexpected_count( char const * (*first_type)() ) noexcept:
 				first_type(first_type),
 				count(1)
 			{
@@ -137,7 +137,7 @@ namespace boost { namespace leaf {
 		struct diagnostic<e_unexpected_count,false,false>
 		{
 			static constexpr bool is_invisible = true;
-			static void print( std::ostream &, e_unexpected_count const & ) noexcept
+			LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_count const & ) noexcept
 			{
 			}
 		};
@@ -189,7 +189,7 @@ namespace boost { namespace leaf {
 		struct diagnostic<e_unexpected_info,false,false>
 		{
 			static constexpr bool is_invisible = true;
-			static void print( std::ostream &, e_unexpected_info const & ) noexcept
+			LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_info const & ) noexcept
 			{
 			}
 		};
@@ -231,12 +231,12 @@ namespace boost { namespace leaf {
 
 		public:
 
-			slot() noexcept:
+			LEAF_CONSTEXPR slot() noexcept:
 				top_(0)
 			{
 			}
 
-			slot( slot && x ) noexcept:
+			LEAF_CONSTEXPR slot( slot && x ) noexcept:
 				optional<E>(std::move(x)),
 				top_(0)
 			{
@@ -248,7 +248,7 @@ namespace boost { namespace leaf {
 				assert(top_==0);
 			}
 
-			void activate() noexcept
+			LEAF_CONSTEXPR void activate() noexcept
 			{
 				assert(top_==0);
 				top_ = &tl_slot_ptr<E>();
@@ -256,7 +256,7 @@ namespace boost { namespace leaf {
 				*top_ = this;
 			}
 
-			void deactivate( bool propagate_errors ) noexcept;
+			LEAF_CONSTEXPR void deactivate( bool propagate_errors ) noexcept;
 
 			using impl::put;
 			using impl::has_value;
@@ -267,7 +267,7 @@ namespace boost { namespace leaf {
 #if LEAF_DIAGNOSTICS
 
 		template <class E>
-		inline void load_unexpected_count( int err_id ) noexcept
+		LEAF_CONSTEXPR inline void load_unexpected_count( int err_id ) noexcept
 		{
 			if( slot<e_unexpected_count> * sl = tl_slot_ptr<e_unexpected_count>() )
 				if( e_unexpected_count * unx = sl->has_value(err_id) )
@@ -277,7 +277,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		inline void load_unexpected_info( int err_id, E && e ) noexcept
+		LEAF_CONSTEXPR inline void load_unexpected_info( int err_id, E && e ) noexcept
 		{
 			if( slot<e_unexpected_info> * sl = tl_slot_ptr<e_unexpected_info>() )
 				if( e_unexpected_info * unx = sl->has_value(err_id) )
@@ -287,7 +287,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		inline void load_unexpected( int err_id, E && e  ) noexcept
+		LEAF_CONSTEXPR inline void load_unexpected( int err_id, E && e  ) noexcept
 		{
 			load_unexpected_count<E>(err_id);
 			load_unexpected_info(err_id, std::move(e));
@@ -296,7 +296,7 @@ namespace boost { namespace leaf {
 #endif
 
 		template <class E>
-		inline void slot<E>::deactivate( bool propagate_errors ) noexcept
+		LEAF_CONSTEXPR inline void slot<E>::deactivate( bool propagate_errors ) noexcept
 		{
 			assert(top_!=0);
 			if( propagate_errors )
@@ -321,7 +321,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		inline int load_slot( int err_id, E && e ) noexcept
+		LEAF_CONSTEXPR inline int load_slot( int err_id, E && e ) noexcept
 		{
 			using T = typename std::decay<E>::type;
 			assert((err_id&3)==1);
@@ -340,7 +340,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class F>
-		inline int accumulate_slot( int err_id, F && f ) noexcept
+		LEAF_CONSTEXPR inline int accumulate_slot( int err_id, F && f ) noexcept
 		{
 			static_assert(function_traits<F>::arity==1, "Lambdas passed to accumulate must take a single e-type argument by reference");
 			using E = typename std::decay<fn_arg_type<F,0>>::type;
@@ -366,7 +366,7 @@ namespace boost { namespace leaf {
 			static LEAF_THREAD_LOCAL unsigned last_id;
 			static LEAF_THREAD_LOCAL unsigned next_id;
 
-			static unsigned generate_next_id() noexcept
+			LEAF_CONSTEXPR static unsigned generate_next_id() noexcept
 			{
 				return counter+=4;
 			}
@@ -490,16 +490,16 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		error_id make_error_id(int) noexcept;
+		LEAF_CONSTEXPR error_id make_error_id(int) noexcept;
 	}
 
 	class error_id
 	{
-		friend error_id leaf_detail::make_error_id(int ) noexcept;
+		friend error_id LEAF_CONSTEXPR leaf_detail::make_error_id(int ) noexcept;
 
 		int value_;
 
-		explicit error_id( int value ) noexcept:
+		LEAF_CONSTEXPR explicit error_id( int value ) noexcept:
 			value_(value)
 		{
 			assert(value_==0 || ((value_&3)==1));
@@ -507,7 +507,7 @@ namespace boost { namespace leaf {
 
 	public:
 
-		error_id() noexcept:
+		LEAF_CONSTEXPR error_id() noexcept:
 			value_(0)
 		{
 		}
@@ -518,13 +518,13 @@ namespace boost { namespace leaf {
 			assert(!value_ || ((value_&3)==1));
 		}
 
-		error_id load() const noexcept
+		LEAF_CONSTEXPR error_id load() const noexcept
 		{
 			return *this;
 		}
 
 		template <class... E>
-		error_id load( E && ... e ) const noexcept
+		LEAF_CONSTEXPR error_id load( E && ... e ) const noexcept
 		{
 			if( int err_id = value() )
 			{
@@ -534,13 +534,13 @@ namespace boost { namespace leaf {
 			return *this;
 		}
 
-		error_id accumulate() const noexcept
+		LEAF_CONSTEXPR error_id accumulate() const noexcept
 		{
 			return *this;
 		}
 
 		template <class... F>
-		error_id accumulate( F && ... f ) const noexcept
+		LEAF_CONSTEXPR error_id accumulate( F && ... f ) const noexcept
 		{
 			if( int err_id = value() )
 			{
@@ -555,41 +555,41 @@ namespace boost { namespace leaf {
 			return std::error_code(value(), leaf_detail::get_error_category<>::cat);
 		}
 
-		int value() const noexcept
+		LEAF_CONSTEXPR int value() const noexcept
 		{
 			assert(!value_ || ((value_&3)==1));
 			return value_;
 		}
 
-		explicit operator bool() const noexcept
+		LEAF_CONSTEXPR explicit operator bool() const noexcept
 		{
-			return value()!=0;
+			return value() != 0;
 		}
 
-		friend bool operator==( error_id a, error_id b ) noexcept
+		LEAF_CONSTEXPR friend bool operator==( error_id a, error_id b ) noexcept
 		{
-			return a.value()==b.value();
+			return a.value() == b.value();
 		}
 
-		friend bool operator!=( error_id a, error_id b ) noexcept
+		LEAF_CONSTEXPR friend bool operator!=( error_id a, error_id b ) noexcept
 		{
-			return !(a==b);
+			return !(a == b);
 		}
 
-		friend bool operator<( error_id a, error_id b ) noexcept
+		LEAF_CONSTEXPR friend bool operator<( error_id a, error_id b ) noexcept
 		{
-			return a.value()<b.value();
+			return a.value() < b.value();
 		}
 
 		friend std::ostream & operator<<( std::ostream & os, error_id x )
 		{
-			return os<<x.value();
+			return os << x.value();
 		}
 	};
 
 	namespace leaf_detail
 	{
-		inline error_id make_error_id( int err_id ) noexcept
+		LEAF_CONSTEXPR inline error_id make_error_id( int err_id ) noexcept
 		{
 			return error_id(err_id);
 		}
@@ -669,7 +669,7 @@ namespace boost { namespace leaf {
 
 	public:
 
-		context_activator(Ctx & ctx, on_deactivation on_deactivate) noexcept:
+		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE context_activator(Ctx & ctx, on_deactivation on_deactivate) noexcept:
 			ctx_(&ctx),
 			ctx_was_active_(ctx.is_active()),
 			on_deactivate_(on_deactivate)
@@ -678,7 +678,7 @@ namespace boost { namespace leaf {
 				ctx.activate();
 		}
 
-		context_activator( context_activator && x ) noexcept:
+		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE context_activator( context_activator && x ) noexcept:
 			ctx_(x.ctx_),
 			ctx_was_active_(x.ctx_was_active_),
 			on_deactivate_(x.on_deactivate_)
@@ -686,7 +686,7 @@ namespace boost { namespace leaf {
 			x.ctx_ = 0;
 		}
 
-		~context_activator() noexcept
+		LEAF_ALWAYS_INLINE ~context_activator() noexcept
 		{
 			if( ctx_ )
 			{
@@ -700,7 +700,7 @@ namespace boost { namespace leaf {
 #ifdef LEAF_NO_EXCEPTIONS
 						ctx_->deactivate(false);
 #else
-						bool has_exception = std::uncaught_exception();
+						bool has_exception = LEAF_UNCAUGHT_EXCEPTIONS();
 						ctx_->deactivate(has_exception);
 						if( !has_exception )
 							(void) leaf_detail::new_id();
@@ -711,14 +711,14 @@ namespace boost { namespace leaf {
 			}
 		}
 
-		void set_on_deactivate( on_deactivation on_deactivate ) noexcept
+		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE void set_on_deactivate( on_deactivation on_deactivate ) noexcept
 		{
 			on_deactivate_ = on_deactivate;
 		}
 	};
 
 	template <class Ctx>
-	context_activator<Ctx> activate_context( Ctx & ctx, on_deactivation on_deactivate ) noexcept
+	LEAF_CONSTEXPR LEAF_ALWAYS_INLINE context_activator<Ctx> activate_context( Ctx & ctx, on_deactivation on_deactivate ) noexcept
 	{
 		return context_activator<Ctx>(ctx, on_deactivate);
 	}

@@ -101,4 +101,18 @@
 #	error LEAF_DIAGNOSTICS must be 0 or 1.
 #endif
 
+#ifdef _MSC_VER
+#	define LEAF_ALWAYS_INLINE __forceinline
+#else
+#	define LEAF_ALWAYS_INLINE __attribute__((always_inline)) inline
+#endif
+
+#if __cplusplus > 201402L
+#	define LEAF_CONSTEXPR constexpr
+#	define LEAF_UNCAUGHT_EXCEPTIONS std::uncaught_exceptions
+#else
+#	define LEAF_CONSTEXPR
+#	define LEAF_UNCAUGHT_EXCEPTIONS std::uncaught_exception
+#endif
+
 #endif

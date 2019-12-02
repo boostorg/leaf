@@ -18,14 +18,14 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <int N>
-		inline char const * check_prefix( char const * t, char const (&prefix)[N] )
+		LEAF_CONSTEXPR inline char const * check_prefix( char const * t, char const (&prefix)[N] )
 		{
 			return std::strncmp(t,prefix,sizeof(prefix)-1)==0 ? t+sizeof(prefix)-1 : t;
 		}
 	}
 
 	template <class Name>
-	inline char const * type() noexcept
+	LEAF_CONSTEXPR inline char const * type() noexcept
 	{
 	char const * t =
 #ifdef __FUNCSIG__
@@ -113,7 +113,7 @@ namespace boost { namespace leaf {
 		struct diagnostic<std::exception_ptr, false, false>
 		{
 			static constexpr bool is_invisible = true;
-			static void print( std::ostream &, std::exception_ptr const & )
+			LEAF_CONSTEXPR static void print( std::ostream &, std::exception_ptr const & )
 			{
 			}
 		};

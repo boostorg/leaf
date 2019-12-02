@@ -48,34 +48,30 @@ namespace boost { namespace leaf {
 				val = 3
 			};
 
-			result_discriminant() noexcept
-			{
-			}
-
-			explicit result_discriminant( error_id id ) noexcept:
+			LEAF_CONSTEXPR explicit result_discriminant( error_id id ) noexcept:
 				state_(id.value())
 			{
 				assert(state_==0 || (state_&3)==1);
 			}
 
 			struct kind_val { };
-			explicit result_discriminant( kind_val ) noexcept:
+			LEAF_CONSTEXPR explicit result_discriminant( kind_val ) noexcept:
 				state_(val)
 			{
 			}
 
 			struct kind_ctx_ptr { };
-			explicit result_discriminant( kind_ctx_ptr ) noexcept:
+			LEAF_CONSTEXPR explicit result_discriminant( kind_ctx_ptr ) noexcept:
 				state_(ctx_ptr)
 			{
 			}
 
-			kind_t kind() const noexcept
+			LEAF_CONSTEXPR kind_t kind() const noexcept
 			{
 				return kind_t(state_&3);
 			}
 
-			error_id get_error_id() const noexcept
+			LEAF_CONSTEXPR error_id get_error_id() const noexcept
 			{
 				assert(kind()==no_error || kind()==err_id);
 				return leaf_detail::make_error_id(state_);
@@ -97,7 +93,7 @@ namespace boost { namespace leaf {
 			error_result( error_result const & ) = delete;
 			error_result & operator=( error_result const & ) = delete;
 
-			error_result( result & r ) noexcept:
+			LEAF_CONSTEXPR error_result( result & r ) noexcept:
 				r_(r)
 			{
 			}
@@ -105,7 +101,7 @@ namespace boost { namespace leaf {
 			result & r_;
 
 			template <class U>
-			operator result<U>() noexcept
+			LEAF_CONSTEXPR operator result<U>() noexcept
 			{
 				using leaf_detail::result_discriminant;
 				switch(r_.what_.kind())
@@ -119,7 +115,7 @@ namespace boost { namespace leaf {
 				}
 			}
 
-			operator error_id() noexcept
+			LEAF_CONSTEXPR operator error_id() noexcept
 			{
 				using leaf_detail::result_discriminant;
 				switch(r_.what_.kind())
@@ -134,15 +130,15 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		leaf_detail::result_discriminant what_;
-
 		union
 		{
 			T value_;
 			context_ptr ctx_;
 		};
 
-		void destroy() const noexcept
+		leaf_detail::result_discriminant what_;
+
+		LEAF_CONSTEXPR void destroy() const noexcept
 		{
 			using leaf_detail::result_discriminant;
 			switch(this->what_.kind())
@@ -159,7 +155,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class U>
-		void move_from( result<U> && x ) noexcept
+		LEAF_CONSTEXPR leaf_detail::result_discriminant move_from( result<U> && x ) noexcept
 		{
 			using leaf_detail::result_discriminant;
 			auto x_what = x.what_;
@@ -174,10 +170,10 @@ namespace boost { namespace leaf {
 			default:
 				break;
 			}
-			what_ = x_what;
+			return x_what;
 		}
 
-		result( leaf_detail::result_discriminant && what ) noexcept:
+		LEAF_CONSTEXPR result( leaf_detail::result_discriminant && what ) noexcept:
 			what_(std::move(what))
 		{
 			using leaf_detail::result_discriminant;
@@ -193,73 +189,74 @@ namespace boost { namespace leaf {
 			destroy();
 		}
 
-		result( result && x ) noexcept
+		LEAF_CONSTEXPR result( result && x ) noexcept:
+			what_(move_from(std::move(x)))
 		{
-			move_from(std::move(x));
 		}
 
 		template <class U>
-		result( result<U> && x ) noexcept
-		{
-			move_from(std::move(x));
-		}
+		LEAF_CONSTEXPR result( result<U> && x ) noexcept:
+			what_(move_from(std::move(x)))
 
-		result():
-			what_(leaf_detail::result_discriminant::kind_val{}),
-			value_(T())
 		{
 		}
 
-		result( T && v ) noexcept:
-			what_(leaf_detail::result_discriminant::kind_val{}),
-			value_(std::move(v))
+		LEAF_CONSTEXPR result():
+			value_(T()),
+			what_(leaf_detail::result_discriminant::kind_val{})
 		{
 		}
 
-		result( T const & v ):
-			what_(leaf_detail::result_discriminant::kind_val{}),
-			value_(v)
+		LEAF_CONSTEXPR result( T && v ) noexcept:
+			value_(std::move(v)),
+			what_(leaf_detail::result_discriminant::kind_val{})
 		{
 		}
 
-		result( error_id err ) noexcept:
+		LEAF_CONSTEXPR result( T const & v ):
+			value_(v),
+			what_(leaf_detail::result_discriminant::kind_val{})
+		{
+		}
+
+		LEAF_CONSTEXPR result( error_id err ) noexcept:
 			what_(err)
 		{
 		}
 
-		result( std::error_code const & ec ) noexcept:
+		LEAF_CONSTEXPR result( std::error_code const & ec ) noexcept:
 			what_(error_id(ec))
 		{
 		}
 
-		result( context_ptr && ctx ) noexcept:
-			what_(leaf_detail::result_discriminant::kind_ctx_ptr{}),
-			ctx_(std::move(ctx))
+		LEAF_CONSTEXPR result( context_ptr && ctx ) noexcept:
+			ctx_(std::move(ctx)),
+			what_(leaf_detail::result_discriminant::kind_ctx_ptr{})
 		{
 		}
 
-		result & operator=( result && x ) noexcept
+		LEAF_CONSTEXPR result & operator=( result && x ) noexcept
 		{
 			destroy();
-			move_from(std::move(x));
+			what_ = move_from(std::move(x));
 			return *this;
 		}
 
 		template <class U>
-		result & operator=( result<U> && x ) noexcept
+		LEAF_CONSTEXPR result & operator=( result<U> && x ) noexcept
 		{
 			destroy();
-			move_from(std::move(x));
+			what_ = move_from(std::move(x));
 			return *this;
 		}
 
-		explicit operator bool() const noexcept
+		LEAF_CONSTEXPR explicit operator bool() const noexcept
 		{
 			using leaf_detail::result_discriminant;
 			return what_.kind() == result_discriminant::val;
 		}
 
-		T const & value() const
+		LEAF_CONSTEXPR T const & value() const
 		{
 			if( what_.kind() == leaf_detail::result_discriminant::val )
 				return value_;
@@ -267,7 +264,7 @@ namespace boost { namespace leaf {
 				::boost::leaf::throw_exception(bad_result(get_error_id()));
 		}
 
-		T & value()
+		LEAF_CONSTEXPR T & value()
 		{
 			if( what_.kind() == leaf_detail::result_discriminant::val )
 				return value_;
@@ -275,46 +272,46 @@ namespace boost { namespace leaf {
 				::boost::leaf::throw_exception(bad_result(get_error_id()));
 		}
 
-		T const & operator*() const
+		LEAF_CONSTEXPR T const & operator*() const
 		{
 			return value();
 		}
 
-		T & operator*()
+		LEAF_CONSTEXPR T & operator*()
 		{
 			return value();
 		}
 
-		T const * operator->() const
+		LEAF_CONSTEXPR T const * operator->() const
 		{
 			return &value();
 		}
 
-		T * operator->()
+		LEAF_CONSTEXPR T * operator->()
 		{
 			return &value();
 		}
 
-		error_id get_error_id() const noexcept
+		LEAF_CONSTEXPR error_id get_error_id() const noexcept
 		{
 			using leaf_detail::result_discriminant;
 			assert(what_.kind()!=result_discriminant::val);
 			return what_.kind()==result_discriminant::ctx_ptr ? ctx_->captured_id_ : what_.get_error_id();
 		}
 
-		error_result error() noexcept
+		LEAF_CONSTEXPR error_result error() noexcept
 		{
 			return error_result{*this};
 		}
 
 		template <class... E>
-		error_id load( E && ... e ) noexcept
+		LEAF_CONSTEXPR error_id load( E && ... e ) noexcept
 		{
 			return error_id(error()).load(std::forward<E>(e)...);
 		}
 
 		template <class... F>
-		error_id accumulate( F && ... f ) noexcept
+		LEAF_CONSTEXPR error_id accumulate( F && ... f ) noexcept
 		{
 			return error_id(error()).accumulate(std::forward<F>(f)...);
 		}
@@ -331,12 +328,12 @@ namespace boost { namespace leaf {
 		template <class U>
 		friend class result;
 
-		result( result<bool> && rb ):
+		LEAF_CONSTEXPR result( result<bool> && rb ):
 			base(std::move(rb))
 		{
 		}
 
-		result( leaf_detail::result_discriminant && what ) noexcept:
+		LEAF_CONSTEXPR result( leaf_detail::result_discriminant && what ) noexcept:
 			base(std::move(what))
 		{
 		}
@@ -349,42 +346,42 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		result( result && x ) noexcept:
+		LEAF_CONSTEXPR result( result && x ) noexcept:
 			base(std::move(x))
 		{
 		}
 
-		result() noexcept
+		LEAF_CONSTEXPR result() noexcept
 		{
 		}
 
-		result( error_id err ) noexcept:
+		LEAF_CONSTEXPR result( error_id err ) noexcept:
 			base(err)
 		{
 		}
 
-		result( std::error_code const & ec ) noexcept:
+		LEAF_CONSTEXPR result( std::error_code const & ec ) noexcept:
 			base(ec)
 		{
 		}
 
-		result( context_ptr && ctx ) noexcept:
+		LEAF_CONSTEXPR result( context_ptr && ctx ) noexcept:
 			base(std::move(ctx))
 		{
 		}
 
-		void value() const
+		LEAF_CONSTEXPR void value() const
 		{
 			(void) base::value();
 		}
 
-		void operator*() const
+		LEAF_CONSTEXPR void operator*() const
 		{
 			return value();
 		}
 
 
-		void operator->() const
+		LEAF_CONSTEXPR void operator->() const
 		{
 			return value();
 		}

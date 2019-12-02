@@ -25,19 +25,19 @@ namespace boost { namespace leaf {
 
 			typedef T value_type;
 
-			optional() noexcept:
+			LEAF_CONSTEXPR optional() noexcept:
 				key_(0)
 			{
 			}
 
-			optional( optional const & x ):
+			LEAF_CONSTEXPR optional( optional const & x ):
 				key_(x.key_)
 			{
 				if( x.key_ )
 					(void) new (&value_) T( x.value_ );
 			}
 
-			optional( optional && x ) noexcept:
+			LEAF_CONSTEXPR optional( optional && x ) noexcept:
 				key_(x.key_)
 			{
 				if( x.key_ )
@@ -47,21 +47,21 @@ namespace boost { namespace leaf {
 				}
 			}
 
-			optional( int key, T const & v ):
+			LEAF_CONSTEXPR optional( int key, T const & v ):
 				key_(key),
 				value_(v)
 			{
 				assert(!empty());
 			}
 
-			optional( int key, T && v ) noexcept:
+			LEAF_CONSTEXPR optional( int key, T && v ) noexcept:
 				key_(key),
 				value_(std::move(v))
 			{
 				assert(!empty());
 			}
 
-			optional & operator=( optional const & x )
+			LEAF_CONSTEXPR optional & operator=( optional const & x )
 			{
 				reset();
 				if( int key = x.key() )
@@ -72,7 +72,7 @@ namespace boost { namespace leaf {
 				return *this;
 			}
 
-			optional & operator=( optional && x ) noexcept
+			LEAF_CONSTEXPR optional & operator=( optional && x ) noexcept
 			{
 				reset();
 				if( int key = x.key() )
@@ -88,23 +88,23 @@ namespace boost { namespace leaf {
 				reset();
 			}
 
-			bool empty() const noexcept
+			LEAF_CONSTEXPR bool empty() const noexcept
 			{
 				return key_==0;
 			}
 
-			int key() const noexcept
+			LEAF_CONSTEXPR int key() const noexcept
 			{
 				return key_;
 			}
 
-			void set_key( int key ) noexcept
+			LEAF_CONSTEXPR void set_key( int key ) noexcept
 			{
 				assert(!empty());
 				key_ = key;
 			}
 
-			void reset() noexcept
+			LEAF_CONSTEXPR void reset() noexcept
 			{
 				if( key_ )
 				{
@@ -113,17 +113,7 @@ namespace boost { namespace leaf {
 				}
 			}
 
-			template <class... A>
-			T & emplace( int key, A && ... a )
-			{
-				assert(key);
-				reset();
-				(void) new(&value_) T(std::forward<A>(a)...);
-				key_=key;
-				return value_;
-			}
-
-			T & put( int key, T const & v )
+			LEAF_CONSTEXPR T & put( int key, T const & v )
 			{
 				assert(key);
 				reset();
@@ -132,7 +122,7 @@ namespace boost { namespace leaf {
 				return value_;
 			}
 
-			T & put( int key, T && v ) noexcept
+			LEAF_CONSTEXPR T & put( int key, T && v ) noexcept
 			{
 				assert(key);
 				reset();
@@ -141,37 +131,37 @@ namespace boost { namespace leaf {
 				return value_;
 			}
 
-			T const * has_value(int key) const noexcept
+			LEAF_CONSTEXPR T const * has_value(int key) const noexcept
 			{
 				assert(key);
 				return key_==key ? &value_ : 0;
 			}
 
-			T * has_value(int key) noexcept
+			LEAF_CONSTEXPR T * has_value(int key) noexcept
 			{
 				assert(key);
 				return key_==key ? &value_ : 0;
 			}
 
-			T const & value(int key) const & noexcept
+			LEAF_CONSTEXPR T const & value(int key) const & noexcept
 			{
 				assert(has_value(key)!=0);
 				return value_;
 			}
 
-			T & value(int key) & noexcept
+			LEAF_CONSTEXPR T & value(int key) & noexcept
 			{
 				assert(has_value(key)!=0);
 				return value_;
 			}
 
-			T const && value(int key) const && noexcept
+			LEAF_CONSTEXPR T const && value(int key) const && noexcept
 			{
 				assert(has_value(key)!=0);
 				return value_;
 			}
 
-			T value(int key) && noexcept
+			LEAF_CONSTEXPR T value(int key) && noexcept
 			{
 				assert(has_value(key)!=0);
 				T tmp(std::move(value_));
