@@ -3,7 +3,7 @@
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-project('leaf', 'cpp', default_options : ['cpp_std=c++11','b_pch=false'], license : 'boost')
+project('leaf', 'cpp', default_options : ['cpp_std=c++17','b_pch=false'], license : 'boost')
 
 compiler = meson.get_compiler('cpp')
 compiler_id = compiler.get_id()
@@ -14,12 +14,14 @@ if not meson.is_subproject()
 			'-Wno-non-virtual-dtor',
 			'-Wno-dangling-else',
 			'-Wno-delete-non-virtual-dtor',
+			'-std=c++17',
 			language:'cpp' )
 	elif compiler_id=='gcc'
 		add_global_arguments(
 			'-Wno-non-virtual-dtor',
 			'-Wno-dangling-else',
 			'-Wno-parentheses',
+			'-std=c++17',
 			language:'cpp' )
 	endif
 endif
@@ -163,6 +165,8 @@ if not exceptions
 		executable('deep_stack_leaf', 'benchmark/deep_stack_leaf.cpp', dependencies: [leaf], override_options: ['cpp_std=c++17'])
 	endif
 	if get_option('boost_examples')
-		executable('deep_stack_outcome', 'benchmark/deep_stack_outcome.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
+		executable('deep_stack_tl', 'benchmark/deep_stack_other.cpp', override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=0' )
+		executable('deep_stack_result', 'benchmark/deep_stack_other.cpp', dependencies: [boost_headers], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=1' )
+		executable('deep_stack_outcome', 'benchmark/deep_stack_other.cpp', dependencies: [boost_headers], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=2' )
 	endif
 endif

@@ -5,16 +5,32 @@
 
 // See benchmark.md
 
-#ifndef LEAF_ALL_HPP_INCLUDED
-#	include <boost/leaf/all.hpp>
+#ifndef BENCHMARK_WHAT
+#	define BENCHMARK_WHAT 0
 #endif
 
-#ifndef LEAF_NO_EXCEPTIONS
-#	error Please disable exception handling.
-#endif
+#if BENCHMARK_WHAT == 0
 
-#if LEAF_DIAGNOSTICS
-#	error Please disable diagnostics.
+#	ifndef TL_EXPECTED_HPP
+#		include "tl/expected.hpp"
+#	endif
+#	define ERROR(e) tl::unexpected(e)
+#	define BENCHMARK_TRY(v,r)\
+		auto && _r_##v = r;\
+		if( !_r_##v )\
+			return ERROR(_r_##v.error());\
+	auto && v = _r_##v.value()
+
+#else
+
+#	include <boost/outcome/std_outcome.hpp>
+#	include <boost/outcome/try.hpp>
+#	define ERROR(e) e
+#	define BENCHMARK_TRY BOOST_OUTCOME_TRY
+#	ifndef BOOST_NO_EXCEPTIONS
+#		error Please disable exception handling.
+#	endif
+
 #endif
 
 #ifdef _MSC_VER
@@ -40,16 +56,37 @@ namespace boost
 {
 	void throw_exception( std::exception const & e )
 	{
-		std::cerr << "Terminating due to a C++ exception under LEAF_NO_EXCEPTIONS: " << e.what();
+		std::cerr << "Terminating due to a C++ exception under BOOST_NO_EXCEPTIONS: " << e.what();
 		std::terminate();
 	}
 }
 
 //////////////////////////////////////
 
-namespace leaf = boost::leaf;
+#if BENCHMARK_WHAT == 0 // tl::expected
 
-#define USING_RESULT_TYPE "leaf::result<T>"
+#	define USING_RESULT_TYPE "tl::expected<T, E>"
+
+	template <class T, class E>
+	using result = tl::expected<T, E>;
+
+#elif BENCHMARK_WHAT == 1 // outcome::result
+
+#	define USING_RESULT_TYPE "outcome::result<T, E>"
+
+	template <class T, class E>
+	using result = boost::outcome_v2::std_result<T, E, boost::outcome_v2::policy::terminate>;
+
+#elif BENCHMARK_WHAT == 2 // outcome::outcome
+
+#	define USING_RESULT_TYPE "outcome::outcome<T, E>"
+
+	template <class T, class E>
+	using result = boost::outcome_v2::std_outcome<T, E>;
+
+#else
+#	error Benchmark what?
+#endif
 
 //////////////////////////////////////
 
@@ -124,13 +161,13 @@ struct select_result_type;
 template <int N, class E>
 struct select_result_type<N, E, true>
 {
-	using type = leaf::result<int>; // Does not depend on E
+	using type = result<int, E>;
 };
 
 template <int N, class E>
 struct select_result_type<N, E, false>
 {
-	using type = leaf::result<float>; // Does not depend on E
+	using type = result<float, E>;
 };
 
 template <int N, class E>
@@ -145,7 +182,7 @@ struct benchmark
 
 	NOINLINE static select_result_t<N, E> f( int failure_rate ) noexcept
 	{
-		LEAF_AUTO(x, (benchmark<N-1, E>::f(failure_rate)));
+		BENCHMARK_TRY(x, (benchmark<N-1, E>::f(failure_rate)));
 		return x+1;
 	}
 };
@@ -158,7 +195,7 @@ struct benchmark<1, E>
 	NOINLINE static select_result_t<1, E> f( int failure_rate ) noexcept
 	{
 		if( should_fail(failure_rate) )
-			return leaf::new_error(make_error<E>());
+			return ERROR(make_error<E>());
 		else
 			return std::rand();
 	}
@@ -169,19 +206,10 @@ struct benchmark<1, E>
 template <class Benchmark>
 NOINLINE int runner( int failure_rate ) noexcept
 {
-	return leaf::try_handle_all(
-		[=]
-		{
-			return Benchmark::f(failure_rate);
-		},
-		[]( typename Benchmark::e_type const & e )
-		{
-			return handle_error(e);
-		},
-		[]
-		{
-			return -1;
-		} );
+	if( auto r = Benchmark::f(failure_rate) )
+		return r.value();
+	else
+		return handle_error(r.error());
 }
 
 //////////////////////////////////////
