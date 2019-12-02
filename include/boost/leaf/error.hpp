@@ -153,7 +153,7 @@ namespace boost { namespace leaf {
 			{
 			}
 
-			LEAF_CONSTEXPR void reset() noexcept
+			void reset() noexcept
 			{
 				s_.clear();
 				already_.clear();
@@ -455,7 +455,7 @@ namespace boost { namespace leaf {
 		template <class T>
 		leaf_category get_error_category<T>::cat;
 
-		LEAF_CONSTEXPR inline int import_error_code( std::error_code const & ec ) noexcept
+		inline int import_error_code( std::error_code const & ec ) noexcept
 		{
 			if( int err_id = ec.value() )
 			{
@@ -476,7 +476,7 @@ namespace boost { namespace leaf {
 				return 0;
 		}
 
-		LEAF_CONSTEXPR inline bool is_error_id( std::error_code const & ec ) noexcept
+		inline bool is_error_id( std::error_code const & ec ) noexcept
 		{
 			bool res = (&ec.category() == &leaf_detail::get_error_category<>::cat);
 			assert(!res || !ec.value() || ((ec.value()&3)==1));
@@ -512,7 +512,7 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		LEAF_CONSTEXPR error_id( std::error_code const & ec ) noexcept:
+		error_id( std::error_code const & ec ) noexcept:
 			value_(leaf_detail::import_error_code(ec))
 		{
 			assert(!value_ || ((value_&3)==1));
