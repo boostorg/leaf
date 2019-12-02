@@ -111,6 +111,20 @@
 #	error LEAF_DIAGNOSTICS must be 0 or 1.
 #endif
 
+#ifdef _MSC_VER
+#	define LEAF_ALWAYS_INLINE __forceinline
+#else
+#	define LEAF_ALWAYS_INLINE __attribute__((always_inline)) inline
+#endif
+
+#if __cplusplus > 201402L
+#	define LEAF_CONSTEXPR constexpr
+#	define LEAF_UNCAUGHT_EXCEPTIONS std::uncaught_exceptions
+#else
+#	define LEAF_CONSTEXPR
+#	define LEAF_UNCAUGHT_EXCEPTIONS std::uncaught_exception
+#endif
+
 #endif
 // <<< #include <boost/leaf/config.hpp>
 #line 10 "../../include/boost/leaf/detail/all.hpp"
@@ -590,19 +604,19 @@ namespace boost { namespace leaf {
 
 			typedef T value_type;
 
-			optional() noexcept:
+			LEAF_CONSTEXPR optional() noexcept:
 				key_(0)
 			{
 			}
 
-			optional( optional const & x ):
+			LEAF_CONSTEXPR optional( optional const & x ):
 				key_(x.key_)
 			{
 				if( x.key_ )
 					(void) new (&value_) T( x.value_ );
 			}
 
-			optional( optional && x ) noexcept:
+			LEAF_CONSTEXPR optional( optional && x ) noexcept:
 				key_(x.key_)
 			{
 				if( x.key_ )
@@ -612,21 +626,21 @@ namespace boost { namespace leaf {
 				}
 			}
 
-			optional( int key, T const & v ):
+			LEAF_CONSTEXPR optional( int key, T const & v ):
 				key_(key),
 				value_(v)
 			{
 				assert(!empty());
 			}
 
-			optional( int key, T && v ) noexcept:
+			LEAF_CONSTEXPR optional( int key, T && v ) noexcept:
 				key_(key),
 				value_(std::move(v))
 			{
 				assert(!empty());
 			}
 
-			optional & operator=( optional const & x )
+			LEAF_CONSTEXPR optional & operator=( optional const & x )
 			{
 				reset();
 				if( int key = x.key() )
@@ -637,7 +651,7 @@ namespace boost { namespace leaf {
 				return *this;
 			}
 
-			optional & operator=( optional && x ) noexcept
+			LEAF_CONSTEXPR optional & operator=( optional && x ) noexcept
 			{
 				reset();
 				if( int key = x.key() )
@@ -653,23 +667,23 @@ namespace boost { namespace leaf {
 				reset();
 			}
 
-			bool empty() const noexcept
+			LEAF_CONSTEXPR bool empty() const noexcept
 			{
 				return key_==0;
 			}
 
-			int key() const noexcept
+			LEAF_CONSTEXPR int key() const noexcept
 			{
 				return key_;
 			}
 
-			void set_key( int key ) noexcept
+			LEAF_CONSTEXPR void set_key( int key ) noexcept
 			{
 				assert(!empty());
 				key_ = key;
 			}
 
-			void reset() noexcept
+			LEAF_CONSTEXPR void reset() noexcept
 			{
 				if( key_ )
 				{
@@ -678,17 +692,7 @@ namespace boost { namespace leaf {
 				}
 			}
 
-			template <class... A>
-			T & emplace( int key, A && ... a )
-			{
-				assert(key);
-				reset();
-				(void) new(&value_) T(std::forward<A>(a)...);
-				key_=key;
-				return value_;
-			}
-
-			T & put( int key, T const & v )
+			LEAF_CONSTEXPR T & put( int key, T const & v )
 			{
 				assert(key);
 				reset();
@@ -697,7 +701,7 @@ namespace boost { namespace leaf {
 				return value_;
 			}
 
-			T & put( int key, T && v ) noexcept
+			LEAF_CONSTEXPR T & put( int key, T && v ) noexcept
 			{
 				assert(key);
 				reset();
@@ -706,37 +710,37 @@ namespace boost { namespace leaf {
 				return value_;
 			}
 
-			T const * has_value(int key) const noexcept
+			LEAF_CONSTEXPR T const * has_value(int key) const noexcept
 			{
 				assert(key);
 				return key_==key ? &value_ : 0;
 			}
 
-			T * has_value(int key) noexcept
+			LEAF_CONSTEXPR T * has_value(int key) noexcept
 			{
 				assert(key);
 				return key_==key ? &value_ : 0;
 			}
 
-			T const & value(int key) const & noexcept
+			LEAF_CONSTEXPR T const & value(int key) const & noexcept
 			{
 				assert(has_value(key)!=0);
 				return value_;
 			}
 
-			T & value(int key) & noexcept
+			LEAF_CONSTEXPR T & value(int key) & noexcept
 			{
 				assert(has_value(key)!=0);
 				return value_;
 			}
 
-			T const && value(int key) const && noexcept
+			LEAF_CONSTEXPR T const && value(int key) const && noexcept
 			{
 				assert(has_value(key)!=0);
 				return value_;
 			}
 
-			T value(int key) && noexcept
+			LEAF_CONSTEXPR T value(int key) && noexcept
 			{
 				assert(has_value(key)!=0);
 				T tmp(std::move(value_));
@@ -764,14 +768,14 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <int N>
-		inline char const * check_prefix( char const * t, char const (&prefix)[N] )
+		LEAF_CONSTEXPR inline char const * check_prefix( char const * t, char const (&prefix)[N] )
 		{
 			return std::strncmp(t,prefix,sizeof(prefix)-1)==0 ? t+sizeof(prefix)-1 : t;
 		}
 	}
 
 	template <class Name>
-	inline char const * type() noexcept
+	LEAF_CONSTEXPR inline char const * type() noexcept
 	{
 	char const * t =
 #ifdef __FUNCSIG__
@@ -859,7 +863,7 @@ namespace boost { namespace leaf {
 		struct diagnostic<std::exception_ptr, false, false>
 		{
 			static constexpr bool is_invisible = true;
-			static void print( std::ostream &, std::exception_ptr const & )
+			LEAF_CONSTEXPR static void print( std::ostream &, std::exception_ptr const & )
 			{
 			}
 		};
@@ -990,7 +994,7 @@ namespace boost { namespace leaf {
 			char const * (*first_type)();
 			int count;
 
-			explicit e_unexpected_count( char const * (*first_type)() ) noexcept:
+			LEAF_CONSTEXPR explicit e_unexpected_count( char const * (*first_type)() ) noexcept:
 				first_type(first_type),
 				count(1)
 			{
@@ -1018,7 +1022,7 @@ namespace boost { namespace leaf {
 		struct diagnostic<e_unexpected_count,false,false>
 		{
 			static constexpr bool is_invisible = true;
-			static void print( std::ostream &, e_unexpected_count const & ) noexcept
+			LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_count const & ) noexcept
 			{
 			}
 		};
@@ -1034,7 +1038,7 @@ namespace boost { namespace leaf {
 			{
 			}
 
-			void reset() noexcept
+			LEAF_CONSTEXPR void reset() noexcept
 			{
 				s_.clear();
 				already_.clear();
@@ -1070,7 +1074,7 @@ namespace boost { namespace leaf {
 		struct diagnostic<e_unexpected_info,false,false>
 		{
 			static constexpr bool is_invisible = true;
-			static void print( std::ostream &, e_unexpected_info const & ) noexcept
+			LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_info const & ) noexcept
 			{
 			}
 		};
@@ -1112,12 +1116,12 @@ namespace boost { namespace leaf {
 
 		public:
 
-			slot() noexcept:
+			LEAF_CONSTEXPR slot() noexcept:
 				top_(0)
 			{
 			}
 
-			slot( slot && x ) noexcept:
+			LEAF_CONSTEXPR slot( slot && x ) noexcept:
 				optional<E>(std::move(x)),
 				top_(0)
 			{
@@ -1129,7 +1133,7 @@ namespace boost { namespace leaf {
 				assert(top_==0);
 			}
 
-			void activate() noexcept
+			LEAF_CONSTEXPR void activate() noexcept
 			{
 				assert(top_==0);
 				top_ = &tl_slot_ptr<E>();
@@ -1137,7 +1141,7 @@ namespace boost { namespace leaf {
 				*top_ = this;
 			}
 
-			void deactivate( bool propagate_errors ) noexcept;
+			LEAF_CONSTEXPR void deactivate( bool propagate_errors ) noexcept;
 
 			using impl::put;
 			using impl::has_value;
@@ -1148,7 +1152,7 @@ namespace boost { namespace leaf {
 #if LEAF_DIAGNOSTICS
 
 		template <class E>
-		inline void load_unexpected_count( int err_id ) noexcept
+		LEAF_CONSTEXPR inline void load_unexpected_count( int err_id ) noexcept
 		{
 			if( slot<e_unexpected_count> * sl = tl_slot_ptr<e_unexpected_count>() )
 				if( e_unexpected_count * unx = sl->has_value(err_id) )
@@ -1158,7 +1162,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		inline void load_unexpected_info( int err_id, E && e ) noexcept
+		LEAF_CONSTEXPR inline void load_unexpected_info( int err_id, E && e ) noexcept
 		{
 			if( slot<e_unexpected_info> * sl = tl_slot_ptr<e_unexpected_info>() )
 				if( e_unexpected_info * unx = sl->has_value(err_id) )
@@ -1168,7 +1172,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		inline void load_unexpected( int err_id, E && e  ) noexcept
+		LEAF_CONSTEXPR inline void load_unexpected( int err_id, E && e  ) noexcept
 		{
 			load_unexpected_count<E>(err_id);
 			load_unexpected_info(err_id, std::move(e));
@@ -1177,7 +1181,7 @@ namespace boost { namespace leaf {
 #endif
 
 		template <class E>
-		inline void slot<E>::deactivate( bool propagate_errors ) noexcept
+		LEAF_CONSTEXPR inline void slot<E>::deactivate( bool propagate_errors ) noexcept
 		{
 			assert(top_!=0);
 			if( propagate_errors )
@@ -1202,7 +1206,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		inline int load_slot( int err_id, E && e ) noexcept
+		LEAF_CONSTEXPR inline int load_slot( int err_id, E && e ) noexcept
 		{
 			using T = typename std::decay<E>::type;
 			assert((err_id&3)==1);
@@ -1221,7 +1225,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class F>
-		inline int accumulate_slot( int err_id, F && f ) noexcept
+		LEAF_CONSTEXPR inline int accumulate_slot( int err_id, F && f ) noexcept
 		{
 			static_assert(function_traits<F>::arity==1, "Lambdas passed to accumulate must take a single e-type argument by reference");
 			using E = typename std::decay<fn_arg_type<F,0>>::type;
@@ -1247,7 +1251,7 @@ namespace boost { namespace leaf {
 			static LEAF_THREAD_LOCAL unsigned last_id;
 			static LEAF_THREAD_LOCAL unsigned next_id;
 
-			static unsigned generate_next_id() noexcept
+			LEAF_CONSTEXPR static unsigned generate_next_id() noexcept
 			{
 				return counter+=4;
 			}
@@ -1336,7 +1340,7 @@ namespace boost { namespace leaf {
 		template <class T>
 		leaf_category get_error_category<T>::cat;
 
-		inline int import_error_code( std::error_code const & ec ) noexcept
+		LEAF_CONSTEXPR inline int import_error_code( std::error_code const & ec ) noexcept
 		{
 			if( int err_id = ec.value() )
 			{
@@ -1357,7 +1361,7 @@ namespace boost { namespace leaf {
 				return 0;
 		}
 
-		inline bool is_error_id( std::error_code const & ec ) noexcept
+		LEAF_CONSTEXPR inline bool is_error_id( std::error_code const & ec ) noexcept
 		{
 			bool res = (&ec.category() == &leaf_detail::get_error_category<>::cat);
 			assert(!res || !ec.value() || ((ec.value()&3)==1));
@@ -1371,16 +1375,16 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		error_id make_error_id(int) noexcept;
+		LEAF_CONSTEXPR error_id make_error_id(int) noexcept;
 	}
 
 	class error_id
 	{
-		friend error_id leaf_detail::make_error_id(int ) noexcept;
+		friend error_id LEAF_CONSTEXPR leaf_detail::make_error_id(int ) noexcept;
 
 		int value_;
 
-		explicit error_id( int value ) noexcept:
+		LEAF_CONSTEXPR explicit error_id( int value ) noexcept:
 			value_(value)
 		{
 			assert(value_==0 || ((value_&3)==1));
@@ -1388,24 +1392,24 @@ namespace boost { namespace leaf {
 
 	public:
 
-		error_id() noexcept:
+		LEAF_CONSTEXPR error_id() noexcept:
 			value_(0)
 		{
 		}
 
-		error_id( std::error_code const & ec ) noexcept:
+		LEAF_CONSTEXPR error_id( std::error_code const & ec ) noexcept:
 			value_(leaf_detail::import_error_code(ec))
 		{
 			assert(!value_ || ((value_&3)==1));
 		}
 
-		error_id load() const noexcept
+		LEAF_CONSTEXPR error_id load() const noexcept
 		{
 			return *this;
 		}
 
 		template <class... E>
-		error_id load( E && ... e ) const noexcept
+		LEAF_CONSTEXPR error_id load( E && ... e ) const noexcept
 		{
 			if( int err_id = value() )
 			{
@@ -1415,13 +1419,13 @@ namespace boost { namespace leaf {
 			return *this;
 		}
 
-		error_id accumulate() const noexcept
+		LEAF_CONSTEXPR error_id accumulate() const noexcept
 		{
 			return *this;
 		}
 
 		template <class... F>
-		error_id accumulate( F && ... f ) const noexcept
+		LEAF_CONSTEXPR error_id accumulate( F && ... f ) const noexcept
 		{
 			if( int err_id = value() )
 			{
@@ -1436,41 +1440,41 @@ namespace boost { namespace leaf {
 			return std::error_code(value(), leaf_detail::get_error_category<>::cat);
 		}
 
-		int value() const noexcept
+		LEAF_CONSTEXPR int value() const noexcept
 		{
 			assert(!value_ || ((value_&3)==1));
 			return value_;
 		}
 
-		explicit operator bool() const noexcept
+		LEAF_CONSTEXPR explicit operator bool() const noexcept
 		{
-			return value()!=0;
+			return value() != 0;
 		}
 
-		friend bool operator==( error_id a, error_id b ) noexcept
+		LEAF_CONSTEXPR friend bool operator==( error_id a, error_id b ) noexcept
 		{
-			return a.value()==b.value();
+			return a.value() == b.value();
 		}
 
-		friend bool operator!=( error_id a, error_id b ) noexcept
+		LEAF_CONSTEXPR friend bool operator!=( error_id a, error_id b ) noexcept
 		{
-			return !(a==b);
+			return !(a == b);
 		}
 
-		friend bool operator<( error_id a, error_id b ) noexcept
+		LEAF_CONSTEXPR friend bool operator<( error_id a, error_id b ) noexcept
 		{
-			return a.value()<b.value();
+			return a.value() < b.value();
 		}
 
 		friend std::ostream & operator<<( std::ostream & os, error_id x )
 		{
-			return os<<x.value();
+			return os << x.value();
 		}
 	};
 
 	namespace leaf_detail
 	{
-		inline error_id make_error_id( int err_id ) noexcept
+		LEAF_CONSTEXPR inline error_id make_error_id( int err_id ) noexcept
 		{
 			return error_id(err_id);
 		}
@@ -1550,7 +1554,7 @@ namespace boost { namespace leaf {
 
 	public:
 
-		context_activator(Ctx & ctx, on_deactivation on_deactivate) noexcept:
+		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE context_activator(Ctx & ctx, on_deactivation on_deactivate) noexcept:
 			ctx_(&ctx),
 			ctx_was_active_(ctx.is_active()),
 			on_deactivate_(on_deactivate)
@@ -1559,7 +1563,7 @@ namespace boost { namespace leaf {
 				ctx.activate();
 		}
 
-		context_activator( context_activator && x ) noexcept:
+		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE context_activator( context_activator && x ) noexcept:
 			ctx_(x.ctx_),
 			ctx_was_active_(x.ctx_was_active_),
 			on_deactivate_(x.on_deactivate_)
@@ -1567,7 +1571,7 @@ namespace boost { namespace leaf {
 			x.ctx_ = 0;
 		}
 
-		~context_activator() noexcept
+		LEAF_ALWAYS_INLINE ~context_activator() noexcept
 		{
 			if( ctx_ )
 			{
@@ -1581,7 +1585,7 @@ namespace boost { namespace leaf {
 #ifdef LEAF_NO_EXCEPTIONS
 						ctx_->deactivate(false);
 #else
-						bool has_exception = std::uncaught_exception();
+						bool has_exception = LEAF_UNCAUGHT_EXCEPTIONS();
 						ctx_->deactivate(has_exception);
 						if( !has_exception )
 							(void) leaf_detail::new_id();
@@ -1592,14 +1596,14 @@ namespace boost { namespace leaf {
 			}
 		}
 
-		void set_on_deactivate( on_deactivation on_deactivate ) noexcept
+		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE void set_on_deactivate( on_deactivation on_deactivate ) noexcept
 		{
 			on_deactivate_ = on_deactivate;
 		}
 	};
 
 	template <class Ctx>
-	context_activator<Ctx> activate_context( Ctx & ctx, on_deactivation on_deactivate ) noexcept
+	LEAF_CONSTEXPR LEAF_ALWAYS_INLINE context_activator<Ctx> activate_context( Ctx & ctx, on_deactivation on_deactivate ) noexcept
 	{
 		return context_activator<Ctx>(ctx, on_deactivate);
 	}
@@ -1694,7 +1698,7 @@ namespace boost { namespace leaf {
 			exception( exception && ) = default;
 
 			template <class... E>
-			exception( Ex && ex, E && ... e ) noexcept:
+			LEAF_CONSTEXPR exception( Ex && ex, E && ... e ) noexcept:
 				Ex(std::move(ex)),
 				error_id(new_error(std::forward<E>(e)...))
 			{
@@ -1703,7 +1707,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class Ex, class... E>
-		inline exception<Ex> exception_at( char const * file, int line, char const * function, Ex && ex, E && ... e ) noexcept
+		LEAF_CONSTEXPR inline exception<Ex> exception_at( char const * file, int line, char const * function, Ex && ex, E && ... e ) noexcept
 		{
 			assert(file&&*file);
 			assert(line>0);
@@ -1713,7 +1717,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class Ex, class... E>
-	inline leaf_detail::exception<Ex> exception( Ex && ex, E && ... e ) noexcept
+	LEAF_CONSTEXPR inline leaf_detail::exception<Ex> exception( Ex && ex, E && ... e ) noexcept
 	{
 		return leaf_detail::exception<Ex>( std::forward<Ex>(ex), std::forward<E>(e)... );
 	}
@@ -2007,19 +2011,19 @@ namespace boost { namespace leaf {
 		template <int I, class Tuple>
 		struct tuple_for_each
 		{
-			static void activate( Tuple & tup ) noexcept
+			LEAF_CONSTEXPR static void activate( Tuple & tup ) noexcept
 			{
 				tuple_for_each<I-1,Tuple>::activate(tup);
 				std::get<I-1>(tup).activate();
 			}
 
-			static void deactivate( Tuple & tup, bool propagate_errors ) noexcept
+			LEAF_CONSTEXPR static void deactivate( Tuple & tup, bool propagate_errors ) noexcept
 			{
 				std::get<I-1>(tup).deactivate(propagate_errors);
 				tuple_for_each<I-1,Tuple>::deactivate(tup, propagate_errors);
 			}
 
-			static void propagate( Tuple & tup, int err_id ) noexcept
+			LEAF_CONSTEXPR static void propagate( Tuple & tup, int err_id ) noexcept
 			{
 				auto & sl = std::get<I-1>(tup);
 				if( sl.has_value(err_id) )
@@ -2038,9 +2042,9 @@ namespace boost { namespace leaf {
 		template <class Tuple>
 		struct tuple_for_each<0, Tuple>
 		{
-			static void activate( Tuple & ) noexcept { }
-			static void deactivate( Tuple &, bool ) noexcept { }
-			static void propagate( Tuple & tup, int ) noexcept { }
+			LEAF_CONSTEXPR static void activate( Tuple & ) noexcept { }
+			LEAF_CONSTEXPR static void deactivate( Tuple &, bool ) noexcept { }
+			LEAF_CONSTEXPR static void propagate( Tuple & tup, int ) noexcept { }
 			static void print( std::ostream &, void const *, int ) { }
 		};
 	}
@@ -2184,12 +2188,12 @@ namespace boost { namespace leaf {
 
 		public:
 
-			context_base() noexcept:
+			LEAF_CONSTEXPR context_base() noexcept:
 				is_active_(false)
 			{
 			}
 
-			context_base( context_base && x ) noexcept:
+			LEAF_CONSTEXPR context_base( context_base && x ) noexcept:
 				tup_(std::move(x.tup_)),
 				is_active_(false)
 			{
@@ -2201,12 +2205,12 @@ namespace boost { namespace leaf {
 				assert(!is_active());
 			}
 
-			Tup const & tup() const noexcept
+			LEAF_CONSTEXPR Tup const & tup() const noexcept
 			{
 				return tup_;
 			}
 
-			void activate() noexcept
+			LEAF_CONSTEXPR void activate() noexcept
 			{
 				using namespace leaf_detail;
 				assert(!is_active());
@@ -2221,7 +2225,7 @@ namespace boost { namespace leaf {
 				is_active_ = true;
 			}
 
-			void deactivate( bool propagate_errors ) noexcept
+			LEAF_CONSTEXPR void deactivate( bool propagate_errors ) noexcept
 			{
 				using namespace leaf_detail;
 				assert(is_active());
@@ -2237,7 +2241,7 @@ namespace boost { namespace leaf {
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_, propagate_errors);
 			}
 
-			bool is_active() const noexcept
+			LEAF_CONSTEXPR bool is_active() const noexcept
 			{
 				return is_active_;
 			}
@@ -2249,37 +2253,37 @@ namespace boost { namespace leaf {
 
 		protected:
 
-			error_id propagate_captured_errors( error_id err_id ) noexcept
+			LEAF_CONSTEXPR error_id propagate_captured_errors( error_id err_id ) noexcept
 			{
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_, err_id.value());
 				return err_id;
 			}
 
 			template <class TryBlock, class... H>
-			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all_( TryBlock &&, H && ... ) const;
+			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all_( TryBlock &&, H && ... ) const;
 
 			template <class TryBlock, class RemoteH>
-			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all_( TryBlock &&, RemoteH && ) const;
+			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all_( TryBlock &&, RemoteH && ) const;
 
 			template <class TryBlock, class... H, class Ctx>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some_( context_activator<Ctx> &, TryBlock &&, H && ... ) const;
+			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some_( context_activator<Ctx> &, TryBlock &&, H && ... ) const;
 
 			template <class TryBlock, class RemoteH, class Ctx>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some_( context_activator<Ctx> &, TryBlock &&, RemoteH && ) const;
+			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some_( context_activator<Ctx> &, TryBlock &&, RemoteH && ) const;
 
 		public:
 
 			template <class R, class... H>
-			typename std::decay<decltype(std::declval<R>().value())>::type handle_all( R &, H && ... ) const;
+			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<R>().value())>::type handle_all( R &, H && ... ) const;
 
 			template <class R, class RemoteH>
-			typename std::decay<decltype(std::declval<R>().value())>::type remote_handle_all( R &, RemoteH && ) const;
+			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<R>().value())>::type remote_handle_all( R &, RemoteH && ) const;
 
 			template <class R, class... H>
-			R handle_some( R &&, H && ... ) const;
+			LEAF_CONSTEXPR R handle_some( R &&, H && ... ) const;
 
 			template <class R, class RemoteH>
-			R remote_handle_some( R &&, RemoteH && ) const;
+			LEAF_CONSTEXPR R remote_handle_some( R &&, RemoteH && ) const;
 
 			template <class TryBlock, class... H>
 			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... ) const;
@@ -2288,16 +2292,16 @@ namespace boost { namespace leaf {
 			decltype(std::declval<TryBlock>()()) remote_try_catch_( TryBlock &&, RemoteH && ) const;
 
 			template <class R, class... H>
-			R handle_current_exception( H && ... ) const;
+			LEAF_CONSTEXPR R handle_current_exception( H && ... ) const;
 
 			template <class R, class RemoteH>
-			R remote_handle_current_exception( RemoteH && ) const;
+			LEAF_CONSTEXPR R remote_handle_current_exception( RemoteH && ) const;
 
 			template <class R, class... H>
-			R handle_exception( std::exception_ptr const &, H && ... ) const;
+			LEAF_CONSTEXPR R handle_exception( std::exception_ptr const &, H && ... ) const;
 
 			template <class R, class RemoteH>
-			R remote_handle_exception( std::exception_ptr const &, RemoteH &&  ) const;
+			LEAF_CONSTEXPR R remote_handle_exception( std::exception_ptr const &, RemoteH &&  ) const;
 		};
 
 		template <class... E>
@@ -2306,16 +2310,16 @@ namespace boost { namespace leaf {
 		public:
 
 			template <class TryBlock, class... H>
-			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock &&, H && ... );
+			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock &&, H && ... );
 
 			template <class TryBlock, class RemoteH>
-			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock &&, RemoteH && );
+			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock &&, RemoteH && );
 
 			template <class TryBlock, class... H>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock &&, H && ... );
+			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock &&, H && ... );
 
 			template <class TryBlock, class RemoteH>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( TryBlock &&, RemoteH && );
+			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( TryBlock &&, RemoteH && );
 		};
 
 		template <class... E>
@@ -2324,16 +2328,16 @@ namespace boost { namespace leaf {
 		public:
 
 			template <class TryBlock, class... H>
-			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock && try_block, H && ... h );
+			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock && try_block, H && ... h );
 
 			template <class TryBlock, class RemoteH>
-			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock && try_block, RemoteH && h );
+			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock && try_block, RemoteH && h );
 
 			template <class TryBlock, class... H>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock && try_block, H && ... h );
+			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock && try_block, H && ... h );
 
 			template <class TryBlock, class RemoteH>
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( TryBlock && try_block, RemoteH && h );
+			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( TryBlock && try_block, RemoteH && h );
 		};
 
 		template <class T> struct requires_catch { constexpr static bool value = false; };
@@ -2441,13 +2445,13 @@ namespace boost { namespace leaf {
 	using context_type_from_remote_handler = typename leaf_detail::context_type_from_remote_handler_impl<leaf_detail::fn_return_type<RemoteH>>::type;
 
 	template <class...  H>
-	inline context_type_from_handlers<H...> make_context()
+	LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context()
 	{
 		return { };
 	}
 
 	template <class RemoteH>
-	inline context_type_from_remote_handler<RemoteH> make_context( RemoteH const * = 0 )
+	LEAF_CONSTEXPR inline context_type_from_remote_handler<RemoteH> make_context( RemoteH const * = 0 )
 	{
 		return { };
 	}
@@ -2497,7 +2501,7 @@ namespace boost { namespace leaf {
 		{
 		protected:
 
-			explicit exception_info_base( std::exception const * ) noexcept;
+			LEAF_CONSTEXPR explicit exception_info_base( std::exception const * ) noexcept;
 			~exception_info_base() noexcept;
 
 		public:
@@ -2516,7 +2520,7 @@ namespace boost { namespace leaf {
 
 		public:
 
-			explicit exception_info_( std::exception const * ex ) noexcept;
+			LEAF_CONSTEXPR explicit exception_info_( std::exception const * ex ) noexcept;
 		};
 	}
 
@@ -2533,7 +2537,7 @@ namespace boost { namespace leaf {
 				xi_->print(os);
 		}
 
-		error_info( error_info  const & ) noexcept = default;
+		LEAF_CONSTEXPR error_info( error_info  const & ) noexcept = default;
 
 	public:
 
@@ -2541,7 +2545,7 @@ namespace boost { namespace leaf {
 		leaf_detail::exception_info_base const * const xi_;
 		error_id const err_id_;
 
-		explicit error_info( error_id id, void const * remote_handling_ctx = 0 ) noexcept:
+		LEAF_CONSTEXPR explicit error_info( error_id id, void const * remote_handling_ctx = 0 ) noexcept:
 			remote_handling_ctx_(remote_handling_ctx),
 			xi_(0),
 			err_id_(id)
@@ -2550,17 +2554,17 @@ namespace boost { namespace leaf {
 
 		explicit error_info( leaf_detail::exception_info_ const &, void const * remote_handling_ctx = 0 ) noexcept;
 
-		error_id error() const noexcept
+		LEAF_CONSTEXPR error_id error() const noexcept
 		{
 			return err_id_;
 		}
 
-		bool exception_caught() const noexcept
+		LEAF_CONSTEXPR bool exception_caught() const noexcept
 		{
 			return xi_!=0;
 		}
 
-		std::exception const * exception() const noexcept
+		LEAF_CONSTEXPR std::exception const * exception() const noexcept
 		{
 			assert(exception_caught());
 			return xi_->ex_;
@@ -2587,7 +2591,7 @@ namespace boost { namespace leaf {
 	public:
 
 		template <class Tup>
-		diagnostic_info( error_info const & ei, leaf_detail::e_unexpected_count const * e_uc, Tup const & tup ) noexcept:
+		LEAF_CONSTEXPR diagnostic_info( error_info const & ei, leaf_detail::e_unexpected_count const * e_uc, Tup const & tup ) noexcept:
 			error_info(ei),
 			e_uc_(e_uc),
 			tup_(&tup),
@@ -2616,7 +2620,7 @@ namespace boost { namespace leaf {
 	public:
 
 		template <class Tup>
-		verbose_diagnostic_info( error_info const & ei, leaf_detail::e_unexpected_info const * e_ui, Tup const & tup ) noexcept:
+		LEAF_CONSTEXPR verbose_diagnostic_info( error_info const & ei, leaf_detail::e_unexpected_info const * e_ui, Tup const & tup ) noexcept:
 			error_info(ei),
 			e_ui_(e_ui),
 			tup_(&tup),
@@ -2642,7 +2646,7 @@ namespace boost { namespace leaf {
 	{
 	public:
 
-		diagnostic_info( error_info const & ei ) noexcept:
+		LEAF_CONSTEXPR diagnostic_info( error_info const & ei ) noexcept:
 			error_info(ei)
 		{
 		}
@@ -2661,7 +2665,7 @@ namespace boost { namespace leaf {
 	{
 	public:
 
-		verbose_diagnostic_info( error_info const & ei ) noexcept:
+		LEAF_CONSTEXPR verbose_diagnostic_info( error_info const & ei ) noexcept:
 			error_info(ei)
 		{
 		}
@@ -2707,7 +2711,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class E, class SlotsTuple>
-		inline E const * peek( SlotsTuple const & tup, error_id err ) noexcept
+		LEAF_CONSTEXPR inline E const * peek( SlotsTuple const & tup, error_id err ) noexcept
 		{
 			return err ? std::get<tuple_type_index<slot<E>,SlotsTuple>::value>(tup).has_value(err.value()) : 0;
 		}
@@ -2730,7 +2734,7 @@ namespace boost { namespace leaf {
 			using match_type = enumerator;
 
 			template <class SlotsTuple>
-			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				return peek<e_type>(tup, ei.error());
 			}
@@ -2744,7 +2748,7 @@ namespace boost { namespace leaf {
 			using match_type = enumerator;
 
 			template <class SlotsTuple>
-			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				if( auto pv = peek<e_type>(tup, ei.error()) )
 					return &pv->value;
@@ -2763,7 +2767,7 @@ namespace boost { namespace leaf {
 			using match_type = std::error_code;
 
 			template <class SlotsTuple>
-			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				if( e_type const * ec = peek<e_type>(tup, ei.error()) )
 					return &ec->value;
@@ -2783,7 +2787,7 @@ namespace boost { namespace leaf {
 			using match_type = std::error_code;
 
 			template <class SlotsTuple>
-			static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				if( auto pv = peek<e_type>(tup, ei.error()) )
 					return &pv->value;
@@ -2793,13 +2797,13 @@ namespace boost { namespace leaf {
 		};
 
 		template <class MatchType, class Enumerator>
-		inline bool check_value_pack( MatchType const & x, Enumerator v ) noexcept
+		LEAF_CONSTEXPR inline bool check_value_pack( MatchType const & x, Enumerator v ) noexcept
 		{
 			return x==v;
 		}
 
 		template <class MatchType, class Enumerator, class... EnumeratorRest>
-		inline bool check_value_pack( MatchType const & x, Enumerator v1, EnumeratorRest ... v_rest ) noexcept
+		LEAF_CONSTEXPR inline bool check_value_pack( MatchType const & x, Enumerator v1, EnumeratorRest ... v_rest ) noexcept
 		{
 			return x==v1 || check_value_pack(x,v_rest...);
 		}
@@ -2816,17 +2820,17 @@ namespace boost { namespace leaf {
 
 	public:
 
-		explicit match( type const * value ) noexcept:
+		LEAF_CONSTEXPR explicit match( type const * value ) noexcept:
 			value_(value)
 		{
 		}
 
-		bool operator()() const noexcept
+		LEAF_CONSTEXPR bool operator()() const noexcept
 		{
 			return value_ && leaf_detail::check_value_pack(*value_,V...);
 		}
 
-		type const & value() const noexcept
+		LEAF_CONSTEXPR type const & value() const noexcept
 		{
 			assert(value_!=0);
 			return *value_;
@@ -2848,7 +2852,7 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple,class T>
 		struct check_one_argument
 		{
-			static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				return peek<T>(tup, ei.error())!=0;
 			}
@@ -2857,7 +2861,7 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple,class T>
 		struct check_one_argument<SlotsTuple,T *>
 		{
-			static bool check( SlotsTuple const &, error_info const & ) noexcept
+			constexpr static bool check( SlotsTuple const &, error_info const & ) noexcept
 			{
 				return true;
 			}
@@ -2866,7 +2870,7 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple>
 		struct check_one_argument<SlotsTuple,error_info>
 		{
-			static constexpr bool check( SlotsTuple const &, error_info const & )
+			constexpr static bool check( SlotsTuple const &, error_info const & )
 			{
 				return true;
 			}
@@ -2875,7 +2879,7 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple>
 		struct check_one_argument<SlotsTuple,diagnostic_info>
 		{
-			static bool check( SlotsTuple const &, error_info const & ) noexcept
+			constexpr static bool check( SlotsTuple const &, error_info const & ) noexcept
 			{
 				return true;
 			}
@@ -2884,7 +2888,7 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple>
 		struct check_one_argument<SlotsTuple,verbose_diagnostic_info>
 		{
-			static bool check( SlotsTuple const &, error_info const & ) noexcept
+			constexpr static bool check( SlotsTuple const &, error_info const & ) noexcept
 			{
 				return true;
 			}
@@ -2893,7 +2897,7 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple>
 		struct check_one_argument<SlotsTuple,std::error_code>
 		{
-			static bool check( SlotsTuple const &, error_info const & ) noexcept
+			constexpr static bool check( SlotsTuple const &, error_info const & ) noexcept
 			{
 				return true;
 			}
@@ -2902,7 +2906,7 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple, class T, typename match_traits<T>::enumerator... V>
 		struct check_one_argument<SlotsTuple,match<T,V...>>
 		{
-			static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				return match<T,V...>(match_traits<T>::read(tup,ei))();
 			}
@@ -2914,7 +2918,7 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple, class Car, class... Cdr>
 		struct check_arguments<SlotsTuple, Car, Cdr...>
 		{
-			static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				return check_one_argument<SlotsTuple,Car>::check(tup,ei) && check_arguments<SlotsTuple,Cdr...>::check(tup,ei);
 			}
@@ -2923,7 +2927,7 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple>
 		struct check_arguments<SlotsTuple>
 		{
-			static constexpr bool check( SlotsTuple const &, error_info const & ) noexcept
+			constexpr static bool check( SlotsTuple const &, error_info const & ) noexcept
 			{
 				return true;
 			}
@@ -2938,7 +2942,7 @@ namespace boost { namespace leaf {
 		struct get_one_argument
 		{
 			template <class SlotsTuple>
-			static T const & get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static T const & get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				T const * arg = peek<T>(tup, ei.error());
 				assert(arg!=0);
@@ -2950,7 +2954,7 @@ namespace boost { namespace leaf {
 		struct get_one_argument<T const *>
 		{
 			template <class SlotsTuple>
-			static T const * get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static T const * get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				return peek<T>(tup, ei.error());
 			}
@@ -2960,7 +2964,7 @@ namespace boost { namespace leaf {
 		struct get_one_argument<error_info>
 		{
 			template <class SlotsTuple>
-			static error_info const & get( SlotsTuple const &, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static error_info const & get( SlotsTuple const &, error_info const & ei ) noexcept
 			{
 				return ei;
 			}
@@ -2972,7 +2976,7 @@ namespace boost { namespace leaf {
 		struct get_one_argument<diagnostic_info>
 		{
 			template <class SlotsTuple>
-			static diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				return diagnostic_info(ei, peek<e_unexpected_count>(tup, ei.error()), tup);
 			}
@@ -2982,7 +2986,7 @@ namespace boost { namespace leaf {
 		struct get_one_argument<verbose_diagnostic_info>
 		{
 			template <class SlotsTuple>
-			static verbose_diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static verbose_diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				return verbose_diagnostic_info(ei, peek<e_unexpected_info>(tup, ei.error()), tup);
 			}
@@ -2994,7 +2998,7 @@ namespace boost { namespace leaf {
 		struct get_one_argument<diagnostic_info>
 		{
 			template <class SlotsTuple>
-			static diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				return diagnostic_info(ei);
 			}
@@ -3004,7 +3008,7 @@ namespace boost { namespace leaf {
 		struct get_one_argument<verbose_diagnostic_info>
 		{
 			template <class SlotsTuple>
-			static verbose_diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static verbose_diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				return verbose_diagnostic_info(ei);
 			}
@@ -3028,7 +3032,7 @@ namespace boost { namespace leaf {
 		struct get_one_argument<match<T,V...>>
 		{
 			template <class SlotsTuple>
-			static match<T,V...> get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static match<T,V...> get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				auto const * arg = match_traits<T>::read(tup, ei);
 				assert(arg!=0);
@@ -3070,7 +3074,7 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class Tup, class... T>
-		inline bool check_handler_( Tup const & e_objects, error_info const & ei, leaf_detail_mp11::mp_list<T...> ) noexcept
+		LEAF_CONSTEXPR inline bool check_handler_( Tup const & e_objects, error_info const & ei, leaf_detail_mp11::mp_list<T...> ) noexcept
 		{
 			return check_arguments<Tup,typename std::remove_cv<typename std::remove_reference<T>::type>::type...>::check(e_objects, ei);
 		}
@@ -3079,7 +3083,7 @@ namespace boost { namespace leaf {
 		struct handler_caller
 		{
 			template <class Tup, class... T>
-			static R call( Tup const & e_objects, error_info const & ei, F && f, leaf_detail_mp11::mp_list<T...> )
+			LEAF_CONSTEXPR static R call( Tup const & e_objects, error_info const & ei, F && f, leaf_detail_mp11::mp_list<T...> )
 			{
 				return std::forward<F>(f)( get_one_argument<typename std::remove_cv<typename std::remove_reference<T>::type>::type>::get(e_objects, ei)... );
 			}
@@ -3091,7 +3095,7 @@ namespace boost { namespace leaf {
 			using R = Result<void, E...>;
 
 			template <class Tup,class... T>
-			static R call( Tup const & e_objects, error_info const & ei, F && f, leaf_detail_mp11::mp_list<T...> )
+			LEAF_CONSTEXPR static R call( Tup const & e_objects, error_info const & ei, F && f, leaf_detail_mp11::mp_list<T...> )
 			{
 				std::forward<F>(f)( get_one_argument<typename std::remove_cv<typename std::remove_reference<T>::type>::type>::get(e_objects, ei)... );
 				return { };
@@ -3099,14 +3103,14 @@ namespace boost { namespace leaf {
 		};
 
 		template <class R, class Tup, class F>
-		inline R handle_error_( Tup const & e_objects, error_info const & ei, F && f )
+		LEAF_CONSTEXPR inline R handle_error_( Tup const & e_objects, error_info const & ei, F && f )
 		{
 			static_assert( handler_matches_any_error<fn_mp_args<F>>::value, "The last handler passed to handle_all must match any error." );
 			return handler_caller<R, F>::call( e_objects, ei, std::forward<F>(f), fn_mp_args<F>{ } );
 		}
 
 		template <class R, class Tup, class CarF, class... CdrF>
-		inline R handle_error_( Tup const & e_objects, error_info const & ei, CarF && car_f, CdrF && ... cdr_f )
+		LEAF_CONSTEXPR inline R handle_error_( Tup const & e_objects, error_info const & ei, CarF && car_f, CdrF && ... cdr_f )
 		{
 			if( handler_matches_any_error<fn_mp_args<CarF>>::value || check_handler_( e_objects, ei, fn_mp_args<CarF>{ } ) )
 				return handler_caller<R, CarF>::call( e_objects, ei, std::forward<CarF>(car_f), fn_mp_args<CarF>{ } );
@@ -3168,7 +3172,7 @@ namespace boost { namespace leaf {
 
 			R r;
 
-			R get() noexcept
+			LEAF_CONSTEXPR R get() noexcept
 			{
 				return std::move(r);
 			}
@@ -3177,7 +3181,7 @@ namespace boost { namespace leaf {
 		template <class... H>
 		struct handler_result_void
 		{
-			void get() noexcept
+			LEAF_CONSTEXPR void get() noexcept
 			{
 			}
 		};
@@ -3189,7 +3193,7 @@ namespace boost { namespace leaf {
 	{
 		template <class... E>
 		template <class R, class... H>
-		inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::handle_all( R & r, H && ... h ) const
+		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::handle_all( R & r, H && ... h ) const
 		{
 			using namespace leaf_detail;
 			using Ret = typename std::decay<decltype(std::declval<R>().value())>::type;
@@ -3199,7 +3203,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class R, class RemoteH>
-		inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::remote_handle_all( R & r, RemoteH && h ) const
+		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::remote_handle_all( R & r, RemoteH && h ) const
 		{
 			static_assert(is_result_type<R>::value, "The R type used with a handle_all function must be registered with leaf::is_result_type");
 			return std::forward<RemoteH>(h)(error_info(r.error(), this)).get();
@@ -3207,7 +3211,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class R, class... H>
-		inline R context_base<E...>::handle_some( R && r, H && ... h ) const
+		LEAF_CONSTEXPR inline R context_base<E...>::handle_some( R && r, H && ... h ) const
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<R>::value, "The R type used with a handle_some function must be registered with leaf::is_result_type");
@@ -3217,7 +3221,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class R, class RemoteH>
-		inline R context_base<E...>::remote_handle_some( R && r, RemoteH && h ) const
+		LEAF_CONSTEXPR inline R context_base<E...>::remote_handle_some( R && r, RemoteH && h ) const
 		{
 			static_assert(is_result_type<R>::value, "The R type used with a handle_some function must be registered with leaf::is_result_type");
 			return std::forward<RemoteH>(h)(error_info(r.error(), this)).get();
@@ -3227,7 +3231,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class TryBlock, class... H>
-		inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type context_base<E...>::try_handle_all_( TryBlock && try_block, H && ... h ) const
+		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type context_base<E...>::try_handle_all_( TryBlock && try_block, H && ... h ) const
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
@@ -3240,7 +3244,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class TryBlock, class RemoteH>
-		inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type context_base<E...>::remote_try_handle_all_( TryBlock && try_block, RemoteH && h ) const
+		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type context_base<E...>::remote_try_handle_all_( TryBlock && try_block, RemoteH && h ) const
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a remote_try_handle_all function must be registered with leaf::is_result_type");
@@ -3253,7 +3257,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class TryBlock, class... H, class Ctx>
-		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type context_base<E...>::try_handle_some_( context_activator<Ctx> & active_context, TryBlock && try_block, H && ... h ) const
+		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type context_base<E...>::try_handle_some_( context_activator<Ctx> & active_context, TryBlock && try_block, H && ... h ) const
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
@@ -3271,7 +3275,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class TryBlock, class RemoteH, class Ctx>
-		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type context_base<E...>::remote_try_handle_some_( context_activator<Ctx> & active_context, TryBlock && try_block, RemoteH && h ) const
+		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type context_base<E...>::remote_try_handle_some_( context_activator<Ctx> & active_context, TryBlock && try_block, RemoteH && h ) const
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a remote_try_handle_some function must be registered with leaf::is_result_type");
@@ -3301,7 +3305,7 @@ namespace boost { namespace leaf {
 			//versions internally need to add a match-all handler at the end, which we
 			//know is not going to affect the deduced context type Ctx.
 			template <class... HH>
-			static result_type handle( error_info const & err, HH && ... h )
+			LEAF_CONSTEXPR static result_type handle( error_info const & err, HH && ... h )
 			{
 				using Ctx = context_type_from_handlers<HH...>;
 				using CtxHH = context_type_from_handlers<HH...>;
@@ -3319,7 +3323,7 @@ namespace boost { namespace leaf {
 			//versions internally need to add a match-all handler at the end, which we
 			//know is not going to affect the deduced context type Ctx.
 			template <class... HH>
-			static result_type handle( error_info const & err, HH && ... h )
+			LEAF_CONSTEXPR static result_type handle( error_info const & err, HH && ... h )
 			{
 				using Ctx = context_type_from_handlers<HH...>;
 				using CtxHH = context_type_from_handlers<HH...>;
@@ -3334,13 +3338,13 @@ namespace boost { namespace leaf {
 	}
 
 	template <class... H>
-	inline typename leaf_detail::remote_error_dispatch<H...>::result_type remote_handle_all( error_info const & err, H && ... h )
+	LEAF_CONSTEXPR inline typename leaf_detail::remote_error_dispatch<H...>::result_type remote_handle_all( error_info const & err, H && ... h )
 	{
 		return leaf_detail::remote_error_dispatch<H...>::handle(err, std::forward<H>(h)... );
 	}
 
 	template <class... H>
-	inline typename leaf_detail::remote_error_dispatch<H...>::result_type remote_handle_some( error_info const & err, H && ... h )
+	LEAF_CONSTEXPR inline typename leaf_detail::remote_error_dispatch<H...>::result_type remote_handle_some( error_info const & err, H && ... h )
 	{
 		using R = decltype(std::declval<typename leaf_detail::remote_error_dispatch<H...>::result_type>().get());
 		return leaf_detail::remote_error_dispatch<H...>::handle(err, std::forward<H>(h)...,
@@ -3350,7 +3354,7 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////
 
 	template <class TryBlock, class... H>
-	inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock && try_block, H && ... h )
+	LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock && try_block, H && ... h )
 	{
 		// Creating a named temp on purpose, to avoid C++11 and C++14 zero-initializing the context.
 		context_type_from_handlers<H...> c;
@@ -3358,7 +3362,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class TryBlock, class RemoteH>
-	inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock && try_block, RemoteH && h )
+	LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock && try_block, RemoteH && h )
 	{
 		// Creating a named temp on purpose, to avoid C++11 and C++14 zero-initializing the context.
 		context_type_from_remote_handler<RemoteH> c;
@@ -3366,7 +3370,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class TryBlock, class... H>
-	inline typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock && try_block, H && ... h )
+	LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock && try_block, H && ... h )
 	{
 		// Creating a named temp on purpose, to avoid C++11 and C++14 zero-initializing the context.
 		context_type_from_handlers<H...> c;
@@ -3374,7 +3378,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class TryBlock, class RemoteH>
-	inline typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( TryBlock && try_block, RemoteH && h )
+	LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( TryBlock && try_block, RemoteH && h )
 	{
 		// Creating a named temp on purpose, to avoid C++11 and C++14 zero-initializing the context.
 		context_type_from_remote_handler<RemoteH> c;
@@ -3393,7 +3397,7 @@ namespace boost { namespace leaf {
 	{
 		template <class... E>
 		template <class TryBlock, class... H>
-		inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type nocatch_context<E...>::try_handle_all( TryBlock && try_block, H && ... h )
+		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE typename std::decay<decltype(std::declval<TryBlock>()().value())>::type nocatch_context<E...>::try_handle_all( TryBlock && try_block, H && ... h )
 		{
 			auto active_context = activate_context(*this, on_deactivation::do_not_propagate);
 			return this->try_handle_all_( std::forward<TryBlock>(try_block), std::forward<H>(h)... );
@@ -3401,7 +3405,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class TryBlock, class RemoteH>
-		inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type nocatch_context<E...>::remote_try_handle_all( TryBlock && try_block, RemoteH && h )
+		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE typename std::decay<decltype(std::declval<TryBlock>()().value())>::type nocatch_context<E...>::remote_try_handle_all( TryBlock && try_block, RemoteH && h )
 		{
 			auto active_context = activate_context(*this, on_deactivation::do_not_propagate);
 			return this->remote_try_handle_all_( std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
@@ -3409,7 +3413,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class TryBlock, class... H>
-		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type nocatch_context<E...>::try_handle_some( TryBlock && try_block, H && ... h )
+		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE typename std::decay<decltype(std::declval<TryBlock>()())>::type nocatch_context<E...>::try_handle_some( TryBlock && try_block, H && ... h )
 		{
 			auto active_context = activate_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			return this->try_handle_some_( active_context, std::forward<TryBlock>(try_block), std::forward<H>(h)... );
@@ -3417,7 +3421,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class TryBlock, class RemoteH>
-		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type nocatch_context<E...>::remote_try_handle_some( TryBlock && try_block, RemoteH && h )
+		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE typename std::decay<decltype(std::declval<TryBlock>()())>::type nocatch_context<E...>::remote_try_handle_some( TryBlock && try_block, RemoteH && h )
 		{
 			auto active_context = activate_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			return this->remote_try_handle_some_( active_context, std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
@@ -3573,18 +3577,18 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class Ex>
-		inline bool check_exception_pack( std::exception const * ex, Ex const * ) noexcept
+		LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * ex, Ex const * ) noexcept
 		{
 			return dynamic_cast<Ex const *>(ex)!=0;
 		}
 
 		template <class Ex, class... ExRest>
-		inline bool check_exception_pack( std::exception const * ex, Ex const *, ExRest const * ... ex_rest ) noexcept
+		LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * ex, Ex const *, ExRest const * ... ex_rest ) noexcept
 		{
 			return dynamic_cast<Ex const *>(ex)!=0 || check_exception_pack(ex, ex_rest...);
 		}
 
-		inline bool check_exception_pack( std::exception const * )
+		LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * )
 		{
 			return true;
 		}
@@ -3597,17 +3601,17 @@ namespace boost { namespace leaf {
 
 	public:
 
-		explicit catch_( std::exception const * value ) noexcept:
+		LEAF_CONSTEXPR explicit catch_( std::exception const * value ) noexcept:
 			value_(value)
 		{
 		}
 
-		bool operator()() const noexcept
+		LEAF_CONSTEXPR bool operator()() const noexcept
 		{
 			return value_ && leaf_detail::check_exception_pack(value_,static_cast<Ex const *>(0)...);
 		}
 
-		std::exception const & value() const noexcept
+		LEAF_CONSTEXPR std::exception const & value() const noexcept
 		{
 			assert(value_!=0);
 			return *value_;
@@ -3621,17 +3625,17 @@ namespace boost { namespace leaf {
 
 	public:
 
-		explicit catch_( std::exception const * value ) noexcept:
+		LEAF_CONSTEXPR explicit catch_( std::exception const * value ) noexcept:
 			value_(dynamic_cast<Ex const *>(value))
 		{
 		}
 
-		bool operator()() const noexcept
+		LEAF_CONSTEXPR bool operator()() const noexcept
 		{
 			return this->value_!=0;
 		}
 
-		Ex const & value() const noexcept
+		LEAF_CONSTEXPR Ex const & value() const noexcept
 		{
 			assert(this->value_!=0);
 			return *this->value_;
@@ -3648,7 +3652,7 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple, class... Ex>
 		struct check_one_argument<SlotsTuple,catch_<Ex...>>
 		{
-			static bool check( SlotsTuple const &, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static bool check( SlotsTuple const &, error_info const & ei ) noexcept
 			{
 				if( ei.exception_caught() )
 					return catch_<Ex...>(ei.exception())();
@@ -3661,7 +3665,7 @@ namespace boost { namespace leaf {
 		struct get_one_argument<catch_<Ex...>>
 		{
 			template <class SlotsTuple>
-			static catch_<Ex...> get( SlotsTuple const &, error_info const & ei ) noexcept
+			LEAF_CONSTEXPR static catch_<Ex...> get( SlotsTuple const &, error_info const & ei ) noexcept
 			{
 				std::exception const * ex = ei.exception();
 				assert(ex!=0);
@@ -3673,7 +3677,7 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////
 
 	template <class TryBlock, class... H>
-	inline decltype(std::declval<TryBlock>()()) try_catch( TryBlock && try_block, H && ... h )
+	LEAF_CONSTEXPR inline decltype(std::declval<TryBlock>()()) try_catch( TryBlock && try_block, H && ... h )
 	{
 		using namespace leaf_detail;
 		context_type_from_handlers<H...> ctx;
@@ -3687,7 +3691,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class TryBlock, class RemoteH>
-	inline decltype(std::declval<TryBlock>()()) remote_try_catch( TryBlock && try_block, RemoteH && h )
+	LEAF_CONSTEXPR inline decltype(std::declval<TryBlock>()()) remote_try_catch( TryBlock && try_block, RemoteH && h )
 	{
 		using namespace leaf_detail;
 		context_type_from_remote_handler<RemoteH> ctx;
@@ -3704,7 +3708,7 @@ namespace boost { namespace leaf {
 	{
 		template <class... E>
 		template <class R, class... H>
-		inline R context_base<E...>::handle_current_exception( H && ... h ) const
+		LEAF_CONSTEXPR inline R context_base<E...>::handle_current_exception( H && ... h ) const
 		{
 			return this->try_catch_(
 				[]{ throw; },
@@ -3713,7 +3717,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class R, class RemoteH>
-		inline R context_base<E...>::remote_handle_current_exception( RemoteH && h ) const
+		LEAF_CONSTEXPR inline R context_base<E...>::remote_handle_current_exception( RemoteH && h ) const
 		{
 			return this->remote_try_catch_(
 				[]() -> R { throw; },
@@ -3722,7 +3726,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class R, class... H>
-		inline R context_base<E...>::handle_exception( std::exception_ptr const & ep, H && ... h ) const
+		LEAF_CONSTEXPR inline R context_base<E...>::handle_exception( std::exception_ptr const & ep, H && ... h ) const
 		{
 			return this->try_catch_(
 				[&]{ std::rethrow_exception(ep); },
@@ -3731,7 +3735,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class R, class RemoteH>
-		inline R context_base<E...>::remote_handle_exception( std::exception_ptr const & ep, RemoteH && h  ) const
+		LEAF_CONSTEXPR inline R context_base<E...>::remote_handle_exception( std::exception_ptr const & ep, RemoteH && h  ) const
 		{
 			return this->remote_try_catch_(
 				[&]() -> R { std::rethrow_exception(ep); },
@@ -3742,7 +3746,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class TryBlock, class... H>
-		inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type catch_context<E...>::try_handle_all( TryBlock && try_block, H && ... h )
+		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type catch_context<E...>::try_handle_all( TryBlock && try_block, H && ... h )
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
@@ -3760,7 +3764,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class TryBlock, class RemoteH>
-		inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type catch_context<E...>::remote_try_handle_all( TryBlock && try_block, RemoteH && h )
+		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type catch_context<E...>::remote_try_handle_all( TryBlock && try_block, RemoteH && h )
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
@@ -3778,7 +3782,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class TryBlock, class... H>
-		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type catch_context<E...>::try_handle_some( TryBlock && try_block, H && ... h )
+		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type catch_context<E...>::try_handle_some( TryBlock && try_block, H && ... h )
 		{
 			using namespace leaf_detail;
 			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
@@ -3801,7 +3805,7 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class TryBlock, class RemoteH>
-		inline typename std::decay<decltype(std::declval<TryBlock>()())>::type catch_context<E...>::remote_try_handle_some( TryBlock && try_block, RemoteH && h )
+		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type catch_context<E...>::remote_try_handle_some( TryBlock && try_block, RemoteH && h )
 		{
 			auto active_context = activate_context(*this, on_deactivation::propagate_if_uncaught_exception);
 			if( auto r = this->remote_try_catch_(
@@ -3834,7 +3838,7 @@ namespace boost { namespace leaf {
 				os << "\nUnknown exception type (not a std::exception)";
 		}
 
-		inline exception_info_::exception_info_( std::exception const * ex ) noexcept:
+		LEAF_CONSTEXPR inline exception_info_::exception_info_( std::exception const * ex ) noexcept:
 			exception_info_base(ex)
 		{
 		}
@@ -3922,7 +3926,7 @@ namespace boost { namespace leaf {
 		{
 			using result_type = handler_result<H...>;
 
-			static result_type handle( error_info const & err, H && ... h )
+			LEAF_CONSTEXPR static result_type handle( error_info const & err, H && ... h )
 			{
 				using Ctx = context_type_from_handlers<H...>;
 				return { leaf_detail::handle_error_<R>(static_cast<Ctx const *>(err.remote_handling_ctx_)->tup(), err, std::forward<H>(h)...,
@@ -3935,7 +3939,7 @@ namespace boost { namespace leaf {
 		{
 			using result_type = handler_result_void<H...>;
 
-			static result_type handle( error_info const & err, H && ... h )
+			LEAF_CONSTEXPR static result_type handle( error_info const & err, H && ... h )
 			{
 				using Ctx = context_type_from_handlers<H...>;
 				leaf_detail::handle_error_<void>(static_cast<Ctx const *>(err.remote_handling_ctx_)->tup(), err, std::forward<H>(h)...,
@@ -3949,7 +3953,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class... H>
-	inline typename leaf_detail::remote_handle_exception_dispatch<H...>::result_type remote_handle_exception( error_info const & err, H && ... h )
+	LEAF_CONSTEXPR inline typename leaf_detail::remote_handle_exception_dispatch<H...>::result_type remote_handle_exception( error_info const & err, H && ... h )
 	{
 		using namespace leaf_detail;
 		return remote_handle_exception_dispatch<H...>::handle(err, std::forward<H>(h)...);
@@ -3971,7 +3975,7 @@ namespace boost { namespace leaf {
 				return next_error();
 		}
 
-		inline exception_info_base::exception_info_base( std::exception const * ex ) noexcept:
+		LEAF_CONSTEXPR inline exception_info_base::exception_info_base( std::exception const * ex ) noexcept:
 			ex_(ex)
 		{
 			assert(!dynamic_cast<capturing_exception const *>(ex_));
@@ -4013,7 +4017,7 @@ namespace boost { namespace leaf {
 		template <int I, class Tuple>
 		struct tuple_for_each_preload
 		{
-			static void trigger( Tuple & tup, int err_id ) noexcept
+			LEAF_CONSTEXPR static void trigger( Tuple & tup, int err_id ) noexcept
 			{
 				assert((err_id&3)==1);
 				tuple_for_each_preload<I-1,Tuple>::trigger(tup,err_id);
@@ -4024,7 +4028,7 @@ namespace boost { namespace leaf {
 		template <class Tuple>
 		struct tuple_for_each_preload<0, Tuple>
 		{
-			static void trigger( Tuple const &, int ) noexcept { }
+			LEAF_CONSTEXPR static void trigger( Tuple const &, int ) noexcept { }
 		};
 	} // leaf_detail
 
@@ -4040,13 +4044,13 @@ namespace boost { namespace leaf {
 
 		public:
 
-			explicit preloaded_item( E && e ) noexcept:
+			LEAF_CONSTEXPR explicit preloaded_item( E && e ) noexcept:
 				s_(tl_slot_ptr<E>()),
 				e_(std::forward<E>(e))
 			{
 			}
 
-			void trigger( int err_id ) noexcept
+			LEAF_CONSTEXPR void trigger( int err_id ) noexcept
 			{
 				assert((err_id&3)==1);
 				if( s_ )
@@ -4077,14 +4081,14 @@ namespace boost { namespace leaf {
 
 		public:
 
-			explicit preloaded( E && ... e ) noexcept:
+			LEAF_CONSTEXPR explicit preloaded( E && ... e ) noexcept:
 				p_(preloaded_item<E>(std::forward<E>(e))...),
 				moved_(false),
 				err_id_(last_id())
 			{
 			}
 
-			preloaded( preloaded && x ) noexcept:
+			LEAF_CONSTEXPR preloaded( preloaded && x ) noexcept:
 				p_(std::move(x.p_)),
 				moved_(false),
 				err_id_(x.err_id_)
@@ -4100,7 +4104,7 @@ namespace boost { namespace leaf {
 				if( err_id==err_id_ )
 				{
 #ifndef LEAF_NO_EXCEPTIONS
-					if( std::uncaught_exception() )
+					if( LEAF_UNCAUGHT_EXCEPTIONS() )
 						leaf_detail::tuple_for_each_preload<sizeof...(E),decltype(p_)>::trigger(p_,next_id());
 #endif
 				}
@@ -4111,7 +4115,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... E>
-	inline leaf_detail::preloaded<E...> preload( E && ... e ) noexcept
+	LEAF_CONSTEXPR inline leaf_detail::preloaded<E...> preload( E && ... e ) noexcept
 	{
 		return leaf_detail::preloaded<E...>(std::forward<E>(e)...);
 	}
@@ -4129,13 +4133,13 @@ namespace boost { namespace leaf {
 
 		public:
 
-			explicit deferred_item( F && f ) noexcept:
+			LEAF_CONSTEXPR explicit deferred_item( F && f ) noexcept:
 				s_(tl_slot_ptr<E>()),
 				f_(std::forward<F>(f))
 			{
 			}
 
-			void trigger( int err_id ) noexcept
+			LEAF_CONSTEXPR void trigger( int err_id ) noexcept
 			{
 				assert((err_id&3)==1);
 				if( s_ )
@@ -4165,14 +4169,14 @@ namespace boost { namespace leaf {
 
 		public:
 
-			explicit deferred( F && ... f ) noexcept:
+			LEAF_CONSTEXPR explicit deferred( F && ... f ) noexcept:
 				d_(deferred_item<F>(std::forward<F>(f))...),
 				moved_(false),
 				err_id_(last_id())
 			{
 			}
 
-			deferred( deferred && x ) noexcept:
+			LEAF_CONSTEXPR deferred( deferred && x ) noexcept:
 				d_(std::move(x.d_)),
 				moved_(false),
 				err_id_(x.err_id_)
@@ -4188,7 +4192,7 @@ namespace boost { namespace leaf {
 				if( err_id==err_id_ )
 				{
 #ifndef LEAF_NO_EXCEPTIONS
-					if( std::uncaught_exception() )
+					if( LEAF_UNCAUGHT_EXCEPTIONS() )
 						leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(d_)>::trigger(d_,next_id());
 #endif
 				}
@@ -4199,7 +4203,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... F>
-	inline leaf_detail::deferred<F...> defer( F && ... f ) noexcept
+	LEAF_CONSTEXPR inline leaf_detail::deferred<F...> defer( F && ... f ) noexcept
 	{
 		return leaf_detail::deferred<F...>(std::forward<F>(f)...);
 	}
@@ -4220,13 +4224,13 @@ namespace boost { namespace leaf {
 
 		public:
 
-			explicit accumulating_item( F && f ) noexcept:
+			LEAF_CONSTEXPR explicit accumulating_item( F && f ) noexcept:
 				s_(tl_slot_ptr<E>()),
 				f_(std::forward<F>(f))
 			{
 			}
 
-			void trigger( int err_id ) noexcept
+			LEAF_CONSTEXPR void trigger( int err_id ) noexcept
 			{
 				assert((err_id&3)==1);
 				if( s_ )
@@ -4247,14 +4251,14 @@ namespace boost { namespace leaf {
 
 		public:
 
-			explicit accumulating( F && ... f ) noexcept:
+			LEAF_CONSTEXPR explicit accumulating( F && ... f ) noexcept:
 				a_(accumulating_item<F>(std::forward<F>(f))...),
 				moved_(false),
 				err_id_(last_id())
 			{
 			}
 
-			accumulating( accumulating && x ) noexcept:
+			LEAF_CONSTEXPR accumulating( accumulating && x ) noexcept:
 				a_(std::move(x.a_)),
 				moved_(false),
 				err_id_(x.err_id_)
@@ -4270,7 +4274,7 @@ namespace boost { namespace leaf {
 				if( err_id==err_id_ )
 				{
 #ifndef LEAF_NO_EXCEPTIONS
-					if( std::uncaught_exception() )
+					if( LEAF_UNCAUGHT_EXCEPTIONS() )
 						leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(a_)>::trigger(a_,next_id());
 #endif
 				}
@@ -4281,7 +4285,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... F>
-	inline leaf_detail::accumulating<F...> accumulate( F && ... f ) noexcept
+	LEAF_CONSTEXPR inline leaf_detail::accumulating<F...> accumulate( F && ... f ) noexcept
 	{
 		return leaf_detail::accumulating<F...>(std::forward<F>(f)...);
 	}
@@ -4342,34 +4346,30 @@ namespace boost { namespace leaf {
 				val = 3
 			};
 
-			result_discriminant() noexcept
-			{
-			}
-
-			explicit result_discriminant( error_id id ) noexcept:
+			LEAF_CONSTEXPR explicit result_discriminant( error_id id ) noexcept:
 				state_(id.value())
 			{
 				assert(state_==0 || (state_&3)==1);
 			}
 
 			struct kind_val { };
-			explicit result_discriminant( kind_val ) noexcept:
+			LEAF_CONSTEXPR explicit result_discriminant( kind_val ) noexcept:
 				state_(val)
 			{
 			}
 
 			struct kind_ctx_ptr { };
-			explicit result_discriminant( kind_ctx_ptr ) noexcept:
+			LEAF_CONSTEXPR explicit result_discriminant( kind_ctx_ptr ) noexcept:
 				state_(ctx_ptr)
 			{
 			}
 
-			kind_t kind() const noexcept
+			LEAF_CONSTEXPR kind_t kind() const noexcept
 			{
 				return kind_t(state_&3);
 			}
 
-			error_id get_error_id() const noexcept
+			LEAF_CONSTEXPR error_id get_error_id() const noexcept
 			{
 				assert(kind()==no_error || kind()==err_id);
 				return leaf_detail::make_error_id(state_);
@@ -4391,7 +4391,7 @@ namespace boost { namespace leaf {
 			error_result( error_result const & ) = delete;
 			error_result & operator=( error_result const & ) = delete;
 
-			error_result( result & r ) noexcept:
+			LEAF_CONSTEXPR error_result( result & r ) noexcept:
 				r_(r)
 			{
 			}
@@ -4399,7 +4399,7 @@ namespace boost { namespace leaf {
 			result & r_;
 
 			template <class U>
-			operator result<U>() noexcept
+			LEAF_CONSTEXPR operator result<U>() noexcept
 			{
 				using leaf_detail::result_discriminant;
 				switch(r_.what_.kind())
@@ -4413,7 +4413,7 @@ namespace boost { namespace leaf {
 				}
 			}
 
-			operator error_id() noexcept
+			LEAF_CONSTEXPR operator error_id() noexcept
 			{
 				using leaf_detail::result_discriminant;
 				switch(r_.what_.kind())
@@ -4428,15 +4428,15 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		leaf_detail::result_discriminant what_;
-
 		union
 		{
 			T value_;
 			context_ptr ctx_;
 		};
 
-		void destroy() const noexcept
+		leaf_detail::result_discriminant what_;
+
+		LEAF_CONSTEXPR void destroy() const noexcept
 		{
 			using leaf_detail::result_discriminant;
 			switch(this->what_.kind())
@@ -4453,7 +4453,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class U>
-		void move_from( result<U> && x ) noexcept
+		LEAF_CONSTEXPR leaf_detail::result_discriminant move_from( result<U> && x ) noexcept
 		{
 			using leaf_detail::result_discriminant;
 			auto x_what = x.what_;
@@ -4468,10 +4468,10 @@ namespace boost { namespace leaf {
 			default:
 				break;
 			}
-			what_ = x_what;
+			return x_what;
 		}
 
-		result( leaf_detail::result_discriminant && what ) noexcept:
+		LEAF_CONSTEXPR result( leaf_detail::result_discriminant && what ) noexcept:
 			what_(std::move(what))
 		{
 			using leaf_detail::result_discriminant;
@@ -4487,73 +4487,74 @@ namespace boost { namespace leaf {
 			destroy();
 		}
 
-		result( result && x ) noexcept
+		LEAF_CONSTEXPR result( result && x ) noexcept:
+			what_(move_from(std::move(x)))
 		{
-			move_from(std::move(x));
 		}
 
 		template <class U>
-		result( result<U> && x ) noexcept
-		{
-			move_from(std::move(x));
-		}
+		LEAF_CONSTEXPR result( result<U> && x ) noexcept:
+			what_(move_from(std::move(x)))
 
-		result():
-			what_(leaf_detail::result_discriminant::kind_val{}),
-			value_(T())
 		{
 		}
 
-		result( T && v ) noexcept:
-			what_(leaf_detail::result_discriminant::kind_val{}),
-			value_(std::move(v))
+		LEAF_CONSTEXPR result():
+			value_(T()),
+			what_(leaf_detail::result_discriminant::kind_val{})
 		{
 		}
 
-		result( T const & v ):
-			what_(leaf_detail::result_discriminant::kind_val{}),
-			value_(v)
+		LEAF_CONSTEXPR result( T && v ) noexcept:
+			value_(std::move(v)),
+			what_(leaf_detail::result_discriminant::kind_val{})
 		{
 		}
 
-		result( error_id err ) noexcept:
+		LEAF_CONSTEXPR result( T const & v ):
+			value_(v),
+			what_(leaf_detail::result_discriminant::kind_val{})
+		{
+		}
+
+		LEAF_CONSTEXPR result( error_id err ) noexcept:
 			what_(err)
 		{
 		}
 
-		result( std::error_code const & ec ) noexcept:
+		LEAF_CONSTEXPR result( std::error_code const & ec ) noexcept:
 			what_(error_id(ec))
 		{
 		}
 
-		result( context_ptr && ctx ) noexcept:
-			what_(leaf_detail::result_discriminant::kind_ctx_ptr{}),
-			ctx_(std::move(ctx))
+		LEAF_CONSTEXPR result( context_ptr && ctx ) noexcept:
+			ctx_(std::move(ctx)),
+			what_(leaf_detail::result_discriminant::kind_ctx_ptr{})
 		{
 		}
 
-		result & operator=( result && x ) noexcept
+		LEAF_CONSTEXPR result & operator=( result && x ) noexcept
 		{
 			destroy();
-			move_from(std::move(x));
+			what_ = move_from(std::move(x));
 			return *this;
 		}
 
 		template <class U>
-		result & operator=( result<U> && x ) noexcept
+		LEAF_CONSTEXPR result & operator=( result<U> && x ) noexcept
 		{
 			destroy();
-			move_from(std::move(x));
+			what_ = move_from(std::move(x));
 			return *this;
 		}
 
-		explicit operator bool() const noexcept
+		LEAF_CONSTEXPR explicit operator bool() const noexcept
 		{
 			using leaf_detail::result_discriminant;
 			return what_.kind() == result_discriminant::val;
 		}
 
-		T const & value() const
+		LEAF_CONSTEXPR T const & value() const
 		{
 			if( what_.kind() == leaf_detail::result_discriminant::val )
 				return value_;
@@ -4561,7 +4562,7 @@ namespace boost { namespace leaf {
 				::boost::leaf::throw_exception(bad_result(get_error_id()));
 		}
 
-		T & value()
+		LEAF_CONSTEXPR T & value()
 		{
 			if( what_.kind() == leaf_detail::result_discriminant::val )
 				return value_;
@@ -4569,46 +4570,46 @@ namespace boost { namespace leaf {
 				::boost::leaf::throw_exception(bad_result(get_error_id()));
 		}
 
-		T const & operator*() const
+		LEAF_CONSTEXPR T const & operator*() const
 		{
 			return value();
 		}
 
-		T & operator*()
+		LEAF_CONSTEXPR T & operator*()
 		{
 			return value();
 		}
 
-		T const * operator->() const
+		LEAF_CONSTEXPR T const * operator->() const
 		{
 			return &value();
 		}
 
-		T * operator->()
+		LEAF_CONSTEXPR T * operator->()
 		{
 			return &value();
 		}
 
-		error_id get_error_id() const noexcept
+		LEAF_CONSTEXPR error_id get_error_id() const noexcept
 		{
 			using leaf_detail::result_discriminant;
 			assert(what_.kind()!=result_discriminant::val);
 			return what_.kind()==result_discriminant::ctx_ptr ? ctx_->captured_id_ : what_.get_error_id();
 		}
 
-		error_result error() noexcept
+		LEAF_CONSTEXPR error_result error() noexcept
 		{
 			return error_result{*this};
 		}
 
 		template <class... E>
-		error_id load( E && ... e ) noexcept
+		LEAF_CONSTEXPR error_id load( E && ... e ) noexcept
 		{
 			return error_id(error()).load(std::forward<E>(e)...);
 		}
 
 		template <class... F>
-		error_id accumulate( F && ... f ) noexcept
+		LEAF_CONSTEXPR error_id accumulate( F && ... f ) noexcept
 		{
 			return error_id(error()).accumulate(std::forward<F>(f)...);
 		}
@@ -4625,12 +4626,12 @@ namespace boost { namespace leaf {
 		template <class U>
 		friend class result;
 
-		result( result<bool> && rb ):
+		LEAF_CONSTEXPR result( result<bool> && rb ):
 			base(std::move(rb))
 		{
 		}
 
-		result( leaf_detail::result_discriminant && what ) noexcept:
+		LEAF_CONSTEXPR result( leaf_detail::result_discriminant && what ) noexcept:
 			base(std::move(what))
 		{
 		}
@@ -4643,42 +4644,42 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		result( result && x ) noexcept:
+		LEAF_CONSTEXPR result( result && x ) noexcept:
 			base(std::move(x))
 		{
 		}
 
-		result() noexcept
+		LEAF_CONSTEXPR result() noexcept
 		{
 		}
 
-		result( error_id err ) noexcept:
+		LEAF_CONSTEXPR result( error_id err ) noexcept:
 			base(err)
 		{
 		}
 
-		result( std::error_code const & ec ) noexcept:
+		LEAF_CONSTEXPR result( std::error_code const & ec ) noexcept:
 			base(ec)
 		{
 		}
 
-		result( context_ptr && ctx ) noexcept:
+		LEAF_CONSTEXPR result( context_ptr && ctx ) noexcept:
 			base(std::move(ctx))
 		{
 		}
 
-		void value() const
+		LEAF_CONSTEXPR void value() const
 		{
 			(void) base::value();
 		}
 
-		void operator*() const
+		LEAF_CONSTEXPR void operator*() const
 		{
 			return value();
 		}
 
 
-		void operator->() const
+		LEAF_CONSTEXPR void operator->() const
 		{
 			return value();
 		}
