@@ -295,18 +295,25 @@ The benchmark matrix has 2 dimensions:
 
 Godbolt has built-in support for Boost (Outcome), but LEAF and `tl::expected` both provide a single header, which makes it very easy to use them online as well. To see the generated code for the benchmark program, you can copy and paste the following into Godbolt:
 
-[LEAF](https://godbolt.org/z/DTk4N4):
+`leaf::result<T>` (https://godbolt.org/z/DTk4N4):
 
 ```c++
 #include "https://raw.githubusercontent.com/zajo/leaf/master/include/boost/leaf/all.hpp"
 #include "https://raw.githubusercontent.com/zajo/leaf/master/benchmark/> deep_stack_leaf.cpp"
 ```
 
-`tl::expected`:
+`tl::expected<T, E>` (https://godbolt.org/z/GDB43h):
 
 ```c++
 #include "https://raw.githubusercontent.com/TartanLlama/expected/master/include/tl/expected.hpp"
 #include "https://raw.githubusercontent.com/zajo/leaf/master/benchmark/> deep_stack_other.cpp"
+```
+
+`outcome::result<T, E>` (https://godbolt.org/z/-tqHfN):
+
+```c++
+#define BENCHMARK_WHAT 1
+#include "https://raw.githubusercontent.com/zajo/leaf/master/benchmark/deep_stack_other.cpp"
 ```
 
 ## Build options
@@ -332,33 +339,33 @@ Below is the output the benchmark programs running on a MacBook Pro. The tables 
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_error_code    |      742 |      561
-> e_system_error  |      689 |     1178
-> e_heavy_payload |      768 |     5947
+> e_error_code    |      692 |      543
+> e_system_error  |      676 |     1198
+> e_heavy_payload |      898 |     6927
 >
 > `tl::expected<T, E>`:
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_error_code    |     1078 |      842
-> e_system_error  |      842 |     6294
-> e_heavy_payload |     1270 |    24543
+> e_error_code    |     1204 |      870
+> e_system_error  |      871 |     5804
+> e_heavy_payload |     1113 |    22361
 >
 > `outcome::result<T, E>`:
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_error_code    |     1135 |      760
-> e_system_error  |      780 |     1275
-> e_heavy_payload |     9794 |    25182
+> e_error_code    |     1249 |      846
+> e_system_error  |      746 |     1331
+> e_heavy_payload |    10516 |    24120
 >
 > `outcome::outcome<T, E>`:
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_error_code    |      730 |     1097
-> e_system_error  |      883 |     2245
-> e_heavy_payload |     9782 |    27709
+> e_error_code    |      825 |     1267
+> e_system_error  |     1009 |     2528
+> e_heavy_payload |    10439 |    26361
 
 ### clang:
 
@@ -366,33 +373,33 @@ Below is the output the benchmark programs running on a MacBook Pro. The tables 
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_error_code    |      520 |      410
-> e_system_error  |      527 |      804
-> e_heavy_payload |      636 |     3774
+> e_error_code    |      613 |      485
+> e_system_error  |      629 |      993
+> e_heavy_payload |      754 |     4641
 >
 > `tl::expected<T, E>`:
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_error_code    |      492 |      292
-> e_system_error  |      570 |     2852
-> e_heavy_payload |      950 |    11385
+> e_error_code    |      817 |      489
+> e_system_error  |      936 |     3907
+> e_heavy_payload |     1202 |    13909
 >
 > `outcome::result<T, E>`:
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_error_code    |      523 |      482
-> e_system_error  |      607 |     1316
-> e_heavy_payload |     7392 |    11786
+> e_error_code    |      664 |      662
+> e_system_error  |      735 |     1815
+> e_heavy_payload |     9925 |    14216
 >
 > `outcome::outcome<T, E>`:
 >
 > Error type      |  2% (?s) | 98% (?s)
 > ----------------|---------:|--------:
-> e_error_code    |      633 |     1426
-> e_system_error  |      753 |     2170
-> e_heavy_payload |    10107 |    20561
+> e_error_code    |     1009 |     2232
+> e_system_error  |      874 |     2588
+> e_heavy_payload |     9803 |    21218
 
 ## Charts
 

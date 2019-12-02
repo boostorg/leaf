@@ -15,7 +15,7 @@
 #		include "tl/expected.hpp"
 #	endif
 #	define BENCHMARK_SUCCESS(e) e
-#	define BENCHMARK_FAILURE(e) tl::unexpected(e)
+#	define BENCHMARK_FAILURE(e) tl::make_unexpected(e)
 #	define BENCHMARK_TRY(v,r)\
 		auto && _r_##v = r;\
 		if( !_r_##v )\
