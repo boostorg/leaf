@@ -401,6 +401,42 @@ e_error_code    |     1009 |     2232
 e_system_error  |      874 |     2588
 e_heavy_payload |     9803 |    21218
 
+### msvc:
+
+> NOTE: tested on much older laptop than the gcc and clang runs (above), do not use to compare actual run times.
+
+`leaf::result<T>`:
+
+Error type      |  2% (μs) | 98% (μs)
+----------------|---------:|--------:
+e_error_code    |     1173 |     1522
+e_system_error  |     1273 |     3181
+e_heavy_payload |     1479 |    11860
+
+`tl::expected<T, E>`:
+
+Error type      |  2% (μs) | 98% (μs)
+----------------|---------:|--------:
+e_error_code    |     1010 |      953
+e_system_error  |     1325 |     6397
+e_heavy_payload |     2630 |    51386
+
+`outcome::result<T, E>`:
+
+Error type      |  2% (μs) | 98% (μs)
+----------------|---------:|--------:
+e_error_code    |      931 |     1167
+e_system_error  |     1461 |     2596
+e_heavy_payload |    17519 |    60679
+
+`outcome::outcome<T, E>`:
+
+Error type      |  2% (μs) | 98% (μs)
+----------------|---------:|--------:
+e_error_code    |     1379 |     4871
+e_system_error  |     2450 |     3660
+e_heavy_payload |    17224 |    66875
+
 ## Charts
 
 The charts below are generated from the results from the previous section, converted from elapsed time in microseconds to millions of calls per second.
@@ -420,6 +456,16 @@ The charts below are generated from the results from the previous section, conve
 ![](clang_e_system_error.png)
 
 ![](clang_e_heavy_payload.png)
+
+### msvc:
+
+> NOTE: tested on much older laptop than the gcc and clang runs (above), do not use to compare actual run times.
+
+![](msvc_e_error_code.png)
+
+![](msvc_e_system_error.png)
+
+![](msvc_e_heavy_payload.png)
 
 ## Thanks
 
