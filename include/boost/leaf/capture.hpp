@@ -67,8 +67,8 @@ namespace boost { namespace leaf {
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			try
 			{
-				if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
-					return r;
+				if( auto && r = std::forward<F>(f)(std::forward<A>(a)...) )
+					return std::move(r);
 				else
 				{
 					ctx->captured_id_ = r.error();

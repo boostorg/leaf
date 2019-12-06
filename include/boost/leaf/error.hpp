@@ -482,7 +482,7 @@ namespace boost { namespace leaf {
 			assert(!res || !ec.value() || ((ec.value()&3)==1));
 			return res;
 		}
-}
+	}
 
 	////////////////////////////////////////
 
@@ -495,7 +495,7 @@ namespace boost { namespace leaf {
 
 	class error_id
 	{
-		friend error_id LEAF_CONSTEXPR leaf_detail::make_error_id(int ) noexcept;
+		friend error_id LEAF_CONSTEXPR leaf_detail::make_error_id(int) noexcept;
 
 		int value_;
 

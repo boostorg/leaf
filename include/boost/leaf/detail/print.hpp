@@ -27,6 +27,7 @@ namespace boost { namespace leaf {
 	template <class Name>
 	LEAF_CONSTEXPR inline char const * type() noexcept
 	{
+		using leaf_detail::check_prefix;
 	char const * t =
 #ifdef __FUNCSIG__
 		__FUNCSIG__;
@@ -34,16 +35,16 @@ namespace boost { namespace leaf {
 		__PRETTY_FUNCTION__;
 #endif
 #if defined(__clang__)
-		assert(leaf_detail::check_prefix(t,"const char *boost::leaf::type() ")==t+32);
+		assert(check_prefix(t,"const char *boost::leaf::type() ")==t+32);
 		return t+32;
 #elif defined(__GNUC__)
-		assert(leaf_detail::check_prefix(t,"const char* boost::leaf::type() ")==t+32);
+		assert(check_prefix(t,"const char* boost::leaf::type() ")==t+32);
 		return t+32;
 #else
-		char const * clang_style = leaf_detail::check_prefix(t,"const char *boost::leaf::type() ");
+		char const * clang_style = check_prefix(t,"const char *boost::leaf::type() ");
 		if( clang_style!=t )
 			return clang_style;
-		char const * gcc_style = leaf_detail::check_prefix(t,"const char* boost::leaf::type() ");
+		char const * gcc_style = check_prefix(t,"const char* boost::leaf::type() ");
 		if( gcc_style!=t )
 			return gcc_style;
 #endif

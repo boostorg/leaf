@@ -11,13 +11,13 @@
 #include <cerrno>
 #include <cassert>
 #ifdef _WIN32
-#include <Windows.h>
-#include <cstring>
+#	include <Windows.h>
+#	include <cstring>
 #ifdef min
-#undef min
+#	undef min
 #endif
 #ifdef max
-#undef max
+#	undef max
 #endif
 #endif
 

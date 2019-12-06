@@ -777,6 +777,7 @@ namespace boost { namespace leaf {
 	template <class Name>
 	LEAF_CONSTEXPR inline char const * type() noexcept
 	{
+		using leaf_detail::check_prefix;
 	char const * t =
 #ifdef __FUNCSIG__
 		__FUNCSIG__;
@@ -784,16 +785,16 @@ namespace boost { namespace leaf {
 		__PRETTY_FUNCTION__;
 #endif
 #if defined(__clang__)
-		assert(leaf_detail::check_prefix(t,"const char *boost::leaf::type() ")==t+32);
+		assert(check_prefix(t,"const char *boost::leaf::type() ")==t+32);
 		return t+32;
 #elif defined(__GNUC__)
-		assert(leaf_detail::check_prefix(t,"const char* boost::leaf::type() ")==t+32);
+		assert(check_prefix(t,"const char* boost::leaf::type() ")==t+32);
 		return t+32;
 #else
-		char const * clang_style = leaf_detail::check_prefix(t,"const char *boost::leaf::type() ");
+		char const * clang_style = check_prefix(t,"const char *boost::leaf::type() ");
 		if( clang_style!=t )
 			return clang_style;
-		char const * gcc_style = leaf_detail::check_prefix(t,"const char* boost::leaf::type() ");
+		char const * gcc_style = check_prefix(t,"const char* boost::leaf::type() ");
 		if( gcc_style!=t )
 			return gcc_style;
 #endif
@@ -1367,7 +1368,7 @@ namespace boost { namespace leaf {
 			assert(!res || !ec.value() || ((ec.value()&3)==1));
 			return res;
 		}
-}
+	}
 
 	////////////////////////////////////////
 
@@ -1380,7 +1381,7 @@ namespace boost { namespace leaf {
 
 	class error_id
 	{
-		friend error_id LEAF_CONSTEXPR leaf_detail::make_error_id(int ) noexcept;
+		friend error_id LEAF_CONSTEXPR leaf_detail::make_error_id(int) noexcept;
 
 		int value_;
 
@@ -1787,8 +1788,8 @@ namespace boost { namespace leaf {
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			try
 			{
-				if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
-					return r;
+				if( auto && r = std::forward<F>(f)(std::forward<A>(a)...) )
+					return std::move(r);
 				else
 				{
 					ctx->captured_id_ = r.error();
@@ -1917,13 +1918,13 @@ namespace boost { namespace leaf {
 #include <cerrno>
 #include <cassert>
 #ifdef _WIN32
-#include <Windows.h>
-#include <cstring>
+#	include <Windows.h>
+#	include <cstring>
 #ifdef min
-#undef min
+#	undef min
 #endif
 #ifdef max
-#undef max
+#	undef max
 #endif
 #endif
 
@@ -3477,7 +3478,7 @@ namespace boost { namespace leaf {
 
 #if defined( LEAF_HAS_CXXABI_H )
 #	include <cxxabi.h>
-// For some archtectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
+// For some architectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
 // (https://android.googlesource.com/platform/ndk/+/master/sources/cxx-stl/gabi++/), which does not implement
 // abi::__cxa_demangle(). We detect this implementation by checking the include guard here.
 #	if defined( __GABIXX_CXXABI_H__ )
@@ -3498,9 +3499,11 @@ namespace boost { namespace leaf {
 		class scoped_demangled_name
 		{
 		private:
+
 			char const * m_p;
 
 		public:
+
 			explicit scoped_demangled_name( char const * name ) noexcept :
 				m_p( demangle_alloc( name ) )
 			{
@@ -4385,23 +4388,24 @@ namespace boost { namespace leaf {
 		template <class U>
 		friend class result;
 
+		using result_discriminant = leaf_detail::result_discriminant;
+
 		struct error_result
 		{
 			error_result( error_result && ) = default;
 			error_result( error_result const & ) = delete;
 			error_result & operator=( error_result const & ) = delete;
 
+			result & r_;
+
 			LEAF_CONSTEXPR error_result( result & r ) noexcept:
 				r_(r)
 			{
 			}
 
-			result & r_;
-
 			template <class U>
 			LEAF_CONSTEXPR operator result<U>() noexcept
 			{
-				using leaf_detail::result_discriminant;
 				switch(r_.what_.kind())
 				{
 				case result_discriminant::val:
@@ -4415,7 +4419,6 @@ namespace boost { namespace leaf {
 
 			LEAF_CONSTEXPR operator error_id() noexcept
 			{
-				using leaf_detail::result_discriminant;
 				switch(r_.what_.kind())
 				{
 				case result_discriminant::val:
@@ -4434,11 +4437,10 @@ namespace boost { namespace leaf {
 			context_ptr ctx_;
 		};
 
-		leaf_detail::result_discriminant what_;
+		result_discriminant what_;
 
 		LEAF_CONSTEXPR void destroy() const noexcept
 		{
-			using leaf_detail::result_discriminant;
 			switch(this->what_.kind())
 			{
 			case result_discriminant::val:
@@ -4453,9 +4455,8 @@ namespace boost { namespace leaf {
 		}
 
 		template <class U>
-		LEAF_CONSTEXPR leaf_detail::result_discriminant move_from( result<U> && x ) noexcept
+		LEAF_CONSTEXPR result_discriminant move_from( result<U> && x ) noexcept
 		{
-			using leaf_detail::result_discriminant;
 			auto x_what = x.what_;
 			switch(x_what.kind())
 			{
@@ -4471,21 +4472,21 @@ namespace boost { namespace leaf {
 			return x_what;
 		}
 
-		LEAF_CONSTEXPR result( leaf_detail::result_discriminant && what ) noexcept:
+		LEAF_CONSTEXPR result( result_discriminant && what ) noexcept:
 			what_(std::move(what))
 		{
-			using leaf_detail::result_discriminant;
 			assert(what_.kind()==result_discriminant::err_id || what_.kind()==result_discriminant::no_error);
+		}
+
+		LEAF_CONSTEXPR error_id get_error_id() const noexcept
+		{
+			assert(what_.kind()!=result_discriminant::val);
+			return what_.kind()==result_discriminant::ctx_ptr ? ctx_->captured_id_ : what_.get_error_id();
 		}
 
 	public:
 
-		typedef T value_type;
-
-		~result() noexcept
-		{
-			destroy();
-		}
+		using value_type = T;
 
 		LEAF_CONSTEXPR result( result && x ) noexcept:
 			what_(move_from(std::move(x)))
@@ -4501,19 +4502,19 @@ namespace boost { namespace leaf {
 
 		LEAF_CONSTEXPR result():
 			value_(T()),
-			what_(leaf_detail::result_discriminant::kind_val{})
+			what_(result_discriminant::kind_val{})
 		{
 		}
 
 		LEAF_CONSTEXPR result( T && v ) noexcept:
 			value_(std::move(v)),
-			what_(leaf_detail::result_discriminant::kind_val{})
+			what_(result_discriminant::kind_val{})
 		{
 		}
 
 		LEAF_CONSTEXPR result( T const & v ):
 			value_(v),
-			what_(leaf_detail::result_discriminant::kind_val{})
+			what_(result_discriminant::kind_val{})
 		{
 		}
 
@@ -4529,8 +4530,13 @@ namespace boost { namespace leaf {
 
 		LEAF_CONSTEXPR result( context_ptr && ctx ) noexcept:
 			ctx_(std::move(ctx)),
-			what_(leaf_detail::result_discriminant::kind_ctx_ptr{})
+			what_(result_discriminant::kind_ctx_ptr{})
 		{
+		}
+
+		~result() noexcept
+		{
+			destroy();
 		}
 
 		LEAF_CONSTEXPR result & operator=( result && x ) noexcept
@@ -4550,13 +4556,12 @@ namespace boost { namespace leaf {
 
 		LEAF_CONSTEXPR explicit operator bool() const noexcept
 		{
-			using leaf_detail::result_discriminant;
 			return what_.kind() == result_discriminant::val;
 		}
 
 		LEAF_CONSTEXPR T const & value() const
 		{
-			if( what_.kind() == leaf_detail::result_discriminant::val )
+			if( what_.kind() == result_discriminant::val )
 				return value_;
 			else
 				::boost::leaf::throw_exception(bad_result(get_error_id()));
@@ -4564,7 +4569,7 @@ namespace boost { namespace leaf {
 
 		LEAF_CONSTEXPR T & value()
 		{
-			if( what_.kind() == leaf_detail::result_discriminant::val )
+			if( what_.kind() == result_discriminant::val )
 				return value_;
 			else
 				::boost::leaf::throw_exception(bad_result(get_error_id()));
@@ -4590,13 +4595,6 @@ namespace boost { namespace leaf {
 			return &value();
 		}
 
-		LEAF_CONSTEXPR error_id get_error_id() const noexcept
-		{
-			using leaf_detail::result_discriminant;
-			assert(what_.kind()!=result_discriminant::val);
-			return what_.kind()==result_discriminant::ctx_ptr ? ctx_->captured_id_ : what_.get_error_id();
-		}
-
 		LEAF_CONSTEXPR error_result error() noexcept
 		{
 			return error_result{*this};
@@ -4617,32 +4615,30 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
+	namespace leaf_detail
+	{
+		struct void_ { };
+	}
+
 	template <>
 	class result<void>:
-		result<bool>
+		result<leaf_detail::void_>
 	{
-		typedef result<bool> base;
+		using result_discriminant = leaf_detail::result_discriminant;
+		using void_ = leaf_detail::void_;
+		using base = result<void_>;
 
 		template <class U>
 		friend class result;
 
-		LEAF_CONSTEXPR result( result<bool> && rb ):
-			base(std::move(rb))
-		{
-		}
-
-		LEAF_CONSTEXPR result( leaf_detail::result_discriminant && what ) noexcept:
+		LEAF_CONSTEXPR result( result_discriminant && what ) noexcept:
 			base(std::move(what))
 		{
 		}
 
 	public:
 
-		typedef void value_type;
-
-		~result() noexcept
-		{
-		}
+		using value_type = void;
 
 		LEAF_CONSTEXPR result( result && x ) noexcept:
 			base(std::move(x))
@@ -4668,20 +4664,13 @@ namespace boost { namespace leaf {
 		{
 		}
 
+		~result() noexcept
+		{
+		}
+
 		LEAF_CONSTEXPR void value() const
 		{
 			(void) base::value();
-		}
-
-		LEAF_CONSTEXPR void operator*() const
-		{
-			return value();
-		}
-
-
-		LEAF_CONSTEXPR void operator->() const
-		{
-			return value();
 		}
 
 		using base::operator=;
