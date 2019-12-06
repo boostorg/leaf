@@ -26,7 +26,7 @@ if not meson.is_subproject()
 	endif
 endif
 
-if get_option('all_hpp')
+if get_option('leaf_all_hpp')
 	prog_python = import('python').find_installation('python3')
 	custom_target(
 		'all_hpp',
@@ -47,12 +47,12 @@ endif
 boost_headers = declare_dependency(include_directories: '../..')
 
 exceptions = (get_option('cpp_eh')!='none')
-diagnostics = get_option('diagnostics')
+diagnostics = get_option('leaf_diagnostics')
 
 defines = [ '-DLEAF_DIAGNOSTICS='+diagnostics.to_string() ]
 
 mp11 = [ ]
-if get_option('use_boost_mp11')
+if get_option('leaf_use_boost_mp11')
 	mp11 = [ boost_headers ]
 	defines += [ '-DLEAF_USE_BOOST_MP11' ]
 endif
@@ -148,12 +148,12 @@ if exceptions
 		executable(e, 'examples/'+e+'.cpp', dependencies: [leaf,thread_dep]+mp11 )
 	endforeach
 
-	if get_option('boost_examples')
+	if get_option('leaf_boost_examples')
 		executable('asio_beast_leaf_rpc', 'examples/asio_beast_leaf_rpc.cpp', dependencies: [leaf,thread_dep,boost_headers], override_options: ['cpp_std=c++17'] )
 		executable('print_file_outcome_result', 'examples/print_file_outcome_result.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
 	endif
 
-	if get_option('lua_examples')
+	if get_option('leaf_lua_examples')
 		lua=subproject('lua').get_variable('all')
 		executable('lua_callback_result', 'examples/lua_callback_result.cpp', dependencies: [leaf,lua]+mp11 )
 		executable('lua_callback_eh', 'examples/lua_callback_eh.cpp', dependencies: [leaf,lua]+mp11 )
@@ -164,7 +164,7 @@ if not exceptions
 	if diagnostics == 0
 		executable('deep_stack_leaf', 'benchmark/deep_stack_leaf.cpp', dependencies: [leaf], override_options: ['cpp_std=c++17'])
 	endif
-	if get_option('boost_examples')
+	if get_option('leaf_boost_examples')
 		executable('deep_stack_tl', 'benchmark/deep_stack_other.cpp', override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=0' )
 		executable('deep_stack_result', 'benchmark/deep_stack_other.cpp', dependencies: [boost_headers], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=1' )
 		executable('deep_stack_outcome', 'benchmark/deep_stack_other.cpp', dependencies: [boost_headers], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=2' )
