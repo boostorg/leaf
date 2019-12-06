@@ -775,7 +775,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class Name>
-	LEAF_CONSTEXPR inline char const * type() noexcept
+	inline char const * type() noexcept
 	{
 		using leaf_detail::check_prefix;
 	char const * t =
