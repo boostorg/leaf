@@ -331,7 +331,7 @@ In addition, the LEAF version is compiled with:
 
 ## Results
 
-Below is the output the benchmark programs running on a MacBook Pro. The tables show the elapsed time for 10,000 iterations of returning a result across 10 stack frames, depending on the error type and the rate of failures. In addition, the programs generate a `benchmark.csv` file in the current working directory.
+Below is the output the benchmark programs running on an old MacBook Pro. The tables show the elapsed time for 10,000,000 iterations of returning a result across 10 stack frames, depending on the error type and the rate of failures. In addition, the programs generate a `benchmark.csv` file in the current working directory.
 
 ### gcc:
 
@@ -339,33 +339,33 @@ Below is the output the benchmark programs running on a MacBook Pro. The tables 
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |      692 |      543
-e_system_error  |      676 |     1198
-e_heavy_payload |      898 |     6927
+e_error_code    |   571264 |   504087
+e_system_error  |   596177 |  1015354
+e_heavy_payload |   742902 |  5062095
 
 `tl::expected<T, E>`:
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |     1204 |      870
-e_system_error  |      871 |     5804
-e_heavy_payload |     1113 |    22361
+e_error_code    |   462372 |   311949
+e_system_error  |   622985 |  3555247
+e_heavy_payload |  1036608 | 16026718
 
 `outcome::result<T, E>`:
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |     1249 |      846
-e_system_error  |      746 |     1331
-e_heavy_payload |    10516 |    24120
+e_error_code    |   434321 |   443866
+e_system_error  |   593449 |  1695077
+e_heavy_payload | 12337430 | 16197682
 
 `outcome::outcome<T, E>`:
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |      825 |     1267
-e_system_error  |     1009 |     2528
-e_heavy_payload |    10439 |    26361
+e_error_code    |   745583 |  1478587
+e_system_error  |   837275 |  2390770
+e_heavy_payload | 13085082 | 28257885
 
 ### clang:
 
@@ -373,37 +373,35 @@ e_heavy_payload |    10439 |    26361
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |      613 |      485
-e_system_error  |      629 |      993
-e_heavy_payload |      754 |     4641
+e_error_code    |   601454 |   576297
+e_system_error  |   614939 |  1241345
+e_heavy_payload |   742855 |  7205878
 
 `tl::expected<T, E>`:
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |      817 |      489
-e_system_error  |      936 |     3907
-e_heavy_payload |     1202 |    13909
+e_error_code    |   918897 |   819383
+e_system_error  |   662171 |  5560394
+e_heavy_payload |  1231025 | 31692228
 
 `outcome::result<T, E>`:
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |      664 |      662
-e_system_error  |      735 |     1815
-e_heavy_payload |     9925 |    14216
+e_error_code    |  1080678 |   771875
+e_system_error  |   574615 |  1191137
+e_heavy_payload | 13032715 | 32005260
 
 `outcome::outcome<T, E>`:
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |     1009 |     2232
-e_system_error  |      874 |     2588
-e_heavy_payload |     9803 |    21218
+e_error_code    |   829731 |  1203289
+e_system_error  |   950774 |  2327303
+e_heavy_payload | 13196489 | 33507276
 
 ### msvc:
-
-> NOTE: tested on much older laptop than the gcc and clang runs (above), do not use to compare actual run times.
 
 `leaf::result<T>`:
 
@@ -458,8 +456,6 @@ The charts below are generated from the results from the previous section, conve
 ![](clang_e_heavy_payload.png)
 
 ### msvc:
-
-> NOTE: tested on much older laptop than the gcc and clang runs (above), do not use to compare actual run times.
 
 ![](msvc_e_error_code.png)
 
