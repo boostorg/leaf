@@ -439,15 +439,15 @@ h5 code{color:#4101a7; font-size:113%}
 #toc ul code{font-size:111%}
 #toc a:hover code {color:#4101a7}
 a:focus{outline:0}
-.colist td{color:rgba(0,0,0,.6)}
-body{text-align:left; background:#fff;color:rgba(0,0,0,.6);padding:0;margin:0;font-family:"Istok Web","DejaVu Serif",serif;font-weight:400;font-style:normal;line-height:1;position:relative;cursor:auto;tab-size:4;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}
+.colist td{color:rgba(0,0,0,.67)}
+body{text-align:left; background:#fff;color:rgba(0,0,0,.67);padding:0;margin:0;font-family:"Istok Web","DejaVu Serif",serif;font-weight:400;font-style:normal;line-height:1;position:relative;cursor:auto;tab-size:4;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}
 .subheader,.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{line-height:1.45;color:#a0a0a0;font-weight:400;margin-top:0;margin-bottom:.25em}
 a{color:#000000;text-decoration:underline;line-height:inherit}
 a:hover{color:#4101a7}
 a:focus{color:#000000}
 h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{font-family:"Quicksand","DejaVu Sans",sans-serif;font-weight:300;font-style:normal;color:#4101a7;text-rendering:optimizeLegibility;margin-top:1em;margin-bottom:.5em;line-height:1.4em}
-code{font-family:"Anonymous Pro","DejaVu Sans Mono",monospace;font-weight:400;color:rgba(0,0,0,.9)}
-*:not(pre)>code{font-size:1.09em;font-style:normal!important;letter-spacing:0;padding:0 0;word-spacing:-.15em;background-color:transparent;-webkit-border-radius:0;border-radius:0;line-height:1.45;text-rendering:optimizeLegibility;word-wrap:break-word}
+code{font-family:"Anonymous Pro","DejaVu Sans Mono",monospace;font-weight:400;color:black}
+*:not(pre)>code{font-size:1.085em;font-style:normal!important;letter-spacing:0;padding:0 0;word-spacing:-.15em;background-color:transparent;-webkit-border-radius:0;border-radius:0;line-height:1.45;text-rendering:optimizeLegibility;word-wrap:break-word}
 pre,pre>code{line-height:1.45;color:rgba(0,0,0,.9);font-family:"Anonymous Pro","DejaVu Sans Mono",monospace;font-weight:400;text-rendering:optimizeLegibility;font-size:1.05em}
 kbd{font-family:"Anonymous Pro","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background-color:#f7f7f7;border:1px solid #ccc;-webkit-border-radius:3px;border-radius:3px;-webkit-box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em white inset;box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em #fff inset;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
 #header>h1:first-child{font-family:"Poiret One";color:#ff5100;margin-top:2.25rem;margin-bottom:0;letter-spacing:-.07em}
