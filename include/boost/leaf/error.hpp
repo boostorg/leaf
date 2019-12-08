@@ -364,11 +364,12 @@ namespace boost { namespace leaf {
 		{
 			static atomic_unsigned_int counter;
 			static LEAF_THREAD_LOCAL unsigned last_id;
-			static LEAF_THREAD_LOCAL unsigned next_id;
 
 			LEAF_CONSTEXPR static unsigned generate_next_id() noexcept
 			{
-				return counter+=4;
+				auto id = (counter+=4);
+				assert((id&3)==1);
+				return id;
 			}
 		};
 
@@ -378,55 +379,16 @@ namespace boost { namespace leaf {
 		template <class T>
 		LEAF_THREAD_LOCAL unsigned id_factory<T>::last_id(0);
 
-		template <class T>
-		LEAF_THREAD_LOCAL unsigned id_factory<T>::next_id(0);
-
 		inline int last_id() noexcept
 		{
-			if( auto id = id_factory<>::last_id )
-			{
-				assert((id&3)==1);
-				return (id&~3)|1;
-			}
-			else
-				return id;
-		}
-
-		inline int next_id() noexcept
-		{
-			if( auto id = id_factory<>::next_id )
-			{
-				assert((id&3)==1);
-				return (id&~3)|1;
-			}
-			else
-			{
-				id = id_factory<>::generate_next_id();
-				assert((id&3)==1);
-				id = (id&~3)|1;
-				id_factory<>::next_id = id;
-				return id;
-			}
+			auto id = id_factory<>::last_id;
+			assert(id==0 || (id&3)==1);
+			return id;
 		}
 
 		inline int new_id() noexcept
 		{
-			if( auto id = id_factory<>::next_id )
-			{
-				id_factory<>::next_id = 0;
-				assert((id&3)==1);
-				id = (id&~3)|1;
-				id_factory<>::last_id = id;
-				return id;
-			}
-			else
-			{
-				id = id_factory<>::generate_next_id();
-				assert((id&3)==1);
-				id = (id&~3)|1;
-				id_factory<>::last_id = id;
-				return id;
-			}
+			return id_factory<>::last_id = id_factory<>::generate_next_id();
 		}
 	}
 
@@ -463,13 +425,13 @@ namespace boost { namespace leaf {
 				if( &ec.category()==&cat )
 				{
 					assert((err_id&3)==1);
-					return err_id;
+					return (err_id&~3)|1;
 				}
 				else
 				{
 					err_id = leaf_detail::new_id();
 					leaf_detail::load_slot(err_id, leaf_detail::e_original_ec{ec});
-					return err_id;
+					return (err_id&~3)|1;
 				}
 			}
 			else
@@ -552,23 +514,28 @@ namespace boost { namespace leaf {
 
 		std::error_code to_error_code() const noexcept
 		{
-			return std::error_code(value(), leaf_detail::get_error_category<>::cat);
+			return std::error_code(value_, leaf_detail::get_error_category<>::cat);
 		}
 
 		LEAF_CONSTEXPR int value() const noexcept
 		{
-			assert(!value_ || ((value_&3)==1));
-			return value_;
+			if( int v = value_ )
+			{
+				assert((value_&3)==1);
+				return (value_&~3)|1;
+			}
+			else
+				return 0;
 		}
 
 		LEAF_CONSTEXPR explicit operator bool() const noexcept
 		{
-			return value() != 0;
+			return value_ != 0;
 		}
 
 		LEAF_CONSTEXPR friend bool operator==( error_id a, error_id b ) noexcept
 		{
-			return a.value() == b.value();
+			return a.value_ == b.value_;
 		}
 
 		LEAF_CONSTEXPR friend bool operator!=( error_id a, error_id b ) noexcept
@@ -578,12 +545,12 @@ namespace boost { namespace leaf {
 
 		LEAF_CONSTEXPR friend bool operator<( error_id a, error_id b ) noexcept
 		{
-			return a.value() < b.value();
+			return a.value_ < b.value_;
 		}
 
 		friend std::ostream & operator<<( std::ostream & os, error_id x )
 		{
-			return os << x.value();
+			return os << x.value_;
 		}
 	};
 
@@ -591,7 +558,8 @@ namespace boost { namespace leaf {
 	{
 		LEAF_CONSTEXPR inline error_id make_error_id( int err_id ) noexcept
 		{
-			return error_id(err_id);
+			assert(err_id==0 || (err_id&3)==1);
+			return error_id((err_id&~3)|1);
 		}
 	}
 
@@ -612,9 +580,9 @@ namespace boost { namespace leaf {
 		return error_id(make_error_code(e1)).load(std::forward<E>(e)...);
 	}
 
-	inline error_id next_error() noexcept
+	inline error_id last_error() noexcept
 	{
-		return leaf_detail::make_error_id(leaf_detail::next_id());
+		return leaf_detail::make_error_id(leaf_detail::last_id());
 	}
 
 	namespace leaf_detail

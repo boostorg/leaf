@@ -10,6 +10,55 @@
 
 namespace boost { namespace leaf {
 
+	class augment_id
+	{
+		int const err_id_;
+
+	public:
+
+		augment_id() noexcept:
+			err_id_(leaf_detail::last_id())
+		{
+		}
+
+		int check_id() const noexcept
+		{
+			int err_id = leaf_detail::last_id();
+			if( err_id != err_id_ )
+				return err_id;
+			else
+			{
+#ifndef LEAF_NO_EXCEPTIONS
+				if( LEAF_UNCAUGHT_EXCEPTIONS() )
+					return leaf_detail::new_id();
+#endif
+				return 0;
+			}
+		}
+
+		int get_id() const noexcept
+		{
+			int err_id = leaf_detail::last_id();
+			if( err_id != err_id_ )
+				return err_id;
+			else
+				return leaf_detail::new_id();
+		}
+
+		error_id check_error() const noexcept
+		{
+			return leaf_detail::make_error_id(check_id());
+		}
+
+		template <class... E>
+		error_id get_error( E && ... e ) const noexcept
+		{
+			return leaf_detail::make_error_id(get_id()).load(std::forward<E>(e)...);
+		}
+	};
+
+	////////////////////////////////////////////
+
 	namespace leaf_detail
 	{
 		template <int I, class Tuple>
@@ -75,21 +124,20 @@ namespace boost { namespace leaf {
 
 			std::tuple<preloaded_item<E>...> p_;
 			bool moved_;
-			int err_id_;
+			augment_id id_;
 
 		public:
 
 			LEAF_CONSTEXPR explicit preloaded( E && ... e ) noexcept:
 				p_(preloaded_item<E>(std::forward<E>(e))...),
-				moved_(false),
-				err_id_(last_id())
+				moved_(false)
 			{
 			}
 
 			LEAF_CONSTEXPR preloaded( preloaded && x ) noexcept:
 				p_(std::move(x.p_)),
 				moved_(false),
-				err_id_(x.err_id_)
+				id_(std::move(x.id_))
 			{
 				x.moved_ = true;
 			}
@@ -98,16 +146,8 @@ namespace boost { namespace leaf {
 			{
 				if( moved_ )
 					return;
-				int const err_id = last_id();
-				if( err_id==err_id_ )
-				{
-#ifndef LEAF_NO_EXCEPTIONS
-					if( LEAF_UNCAUGHT_EXCEPTIONS() )
-						leaf_detail::tuple_for_each_preload<sizeof...(E),decltype(p_)>::trigger(p_,next_id());
-#endif
-				}
-				else
-					leaf_detail::tuple_for_each_preload<sizeof...(E),decltype(p_)>::trigger(p_,err_id);
+				if( auto id = id_.check_id() )
+					leaf_detail::tuple_for_each_preload<sizeof...(E),decltype(p_)>::trigger(p_,id);
 			}
 		};
 	} // leaf_detail
@@ -163,21 +203,20 @@ namespace boost { namespace leaf {
 			deferred & operator=( deferred const & ) = delete;
 			std::tuple<deferred_item<F>...> d_;
 			bool moved_;
-			int err_id_;
+			augment_id id_;
 
 		public:
 
 			LEAF_CONSTEXPR explicit deferred( F && ... f ) noexcept:
 				d_(deferred_item<F>(std::forward<F>(f))...),
-				moved_(false),
-				err_id_(last_id())
+				moved_(false)
 			{
 			}
 
 			LEAF_CONSTEXPR deferred( deferred && x ) noexcept:
 				d_(std::move(x.d_)),
 				moved_(false),
-				err_id_(x.err_id_)
+				id_(std::move(x.id_))
 			{
 				x.moved_ = true;
 			}
@@ -186,16 +225,8 @@ namespace boost { namespace leaf {
 			{
 				if( moved_ )
 					return;
-				int const err_id = last_id();
-				if( err_id==err_id_ )
-				{
-#ifndef LEAF_NO_EXCEPTIONS
-					if( LEAF_UNCAUGHT_EXCEPTIONS() )
-						leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(d_)>::trigger(d_,next_id());
-#endif
-				}
-				else
-					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(d_)>::trigger(d_,err_id);
+				if( auto id = id_.check_id() )
+					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(d_)>::trigger(d_,id);
 			}
 		};
 	} // leaf_detail
@@ -245,21 +276,20 @@ namespace boost { namespace leaf {
 			accumulating & operator=( accumulating const & ) = delete;
 			std::tuple<accumulating_item<F>...> a_;
 			bool moved_;
-			int err_id_;
+			augment_id id_;
 
 		public:
 
 			LEAF_CONSTEXPR explicit accumulating( F && ... f ) noexcept:
 				a_(accumulating_item<F>(std::forward<F>(f))...),
-				moved_(false),
-				err_id_(last_id())
+				moved_(false)
 			{
 			}
 
 			LEAF_CONSTEXPR accumulating( accumulating && x ) noexcept:
 				a_(std::move(x.a_)),
 				moved_(false),
-				err_id_(x.err_id_)
+				id_(std::move(x.id_))
 			{
 				x.moved_ = true;
 			}
@@ -268,16 +298,8 @@ namespace boost { namespace leaf {
 			{
 				if( moved_ )
 					return;
-				int const err_id = last_id();
-				if( err_id==err_id_ )
-				{
-#ifndef LEAF_NO_EXCEPTIONS
-					if( LEAF_UNCAUGHT_EXCEPTIONS() )
-						leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(a_)>::trigger(a_,next_id());
-#endif
-				}
-				else
-					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(a_)>::trigger(a_,err_id);
+				if( auto id = id_.check_id() )
+					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(a_)>::trigger(a_,id);
 			}
 		};
 	} // leaf_detail

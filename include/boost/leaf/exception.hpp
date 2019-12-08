@@ -51,11 +51,29 @@ namespace boost { namespace leaf {
 	{
 		inline void enforce_std_exception( std::exception const & ) noexcept { }
 
+		class exception_base
+		{
+		public:
+
+			virtual error_id get_error_id() const = 0;
+
+		protected:
+
+			constexpr exception_base() noexcept { }
+			~exception_base() noexcept { }
+		};
+
 		template <class Ex>
 		class exception:
 			public Ex,
+			public exception_base,
 			public error_id
 		{
+			error_id get_error_id() const final override
+			{
+				return *this;
+			}
+
 		public:
 
 			exception( exception const & ) = default;

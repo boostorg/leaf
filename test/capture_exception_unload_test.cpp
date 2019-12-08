@@ -194,6 +194,12 @@ int main()
 		[]
 		{
 			auto load = leaf::preload( info<1>{1}, info<3>{3} );
+			throw leaf::exception(std::exception()); // Derives from leaf::leaf::error_id
+		} );
+	test<info<1>, info<2>, info<3>>(
+		[]
+		{
+			auto load = leaf::preload( info<1>{1}, info<3>{3} );
 			throw std::exception(); // Does not derive from leaf::leaf::error_id
 		} );
 	return boost::report_errors();

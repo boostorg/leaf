@@ -539,16 +539,16 @@ For example, the error may need to be communicated through uncooperative 3rd-par
 
 Further, it is sometimes necessary to communicate errors through an interface that does not even use `std::error_code`. An example of this is when an external lower-level library throws an exception, which is unlikely to be able to carry an `error_id`.
 
-To support this tricky use case, various LEAF functions that require an `error_id` are able to work with the error ID returned by the <<next_error>> function, which offers a preview of the `error_id` value that will be returned by the next call (from this thread) to `new_error`. For example, this is the case when E-objects need to be associated with exceptions thrown by the {CPP} standard library, which obviously are unable to carry `error_id` values. In a way, we can pretend that we have called `new_error`, even though we could not do it at the point of the `throw`; it is usually okay to do it later.
+To support this tricky use case, LEAF provides the function <<last_error>>, which returns the error ID returned by the most recent call (from this thrad) to <<new_error>>. One possible approach is to use the following logic (implemented by <<augment_id>>):
 
-[WARNING]
---
-The implication of working with exceptions that do not carry `error_id` is that if some E-objects get associated with the `error_id` returned by `next_error`, then the exception object is caught in third-party code, then (possibly much later) a new exception reaches a scope where it is handled with <<try_catch>>, LEAF will erroneously assume that the E-objects belong to the new exception.
+. Before calling the (possibly uncooperative) API, call <<last_error>> and store the returned value.
+. Call the API, then call `last_error` again:
+.. If this returns the same value as before, pass the error objects to `new_error` to associate them with a new `error_id`;
+.. else, associate the error objects with the `error_id` value returned by the second call to `last_error`.
 
-A possible workaround is to call <<new_error>> some time after the original exception was handled, if appropriate (LEAF does call `new_error` when it handles an exception that does not carry an `error_id`).
---
+Note that if the above logic is nested (e.g. one function calling another), `new_error` will be called only by the inner-most function, because that call guarantees that all calling functions will hit the `else` branch.
 
-TIP: To avoid this ambiguity, whenever possible, use the <<exception>> function template when throwing exceptions to ensure that the exception object transports a unique `error_id`; better yet, use the <<LEAF_THROW>> macro, which in addition will capture `pass:[__FILE__]` and `pass:[__LINE__]`.
+TIP: To avoid ambiguities, whenever possible, use the <<exception>> function template when throwing exceptions to ensure that the exception object transports a unique `error_id`; better yet, use the <<LEAF_THROW>> macro, which in addition will capture `pass:[__FILE__]` and `pass:[__LINE__]`.
 
 '''
 
@@ -736,34 +736,10 @@ leaf::result<info> parse_file( char const * file_name ) noexcept
 <1> `parse_info` parses `f`, communicating errors using `result<info>`.
 <2> Using `preload` ensures that the file name is included with any error reported out of `parse_file`. All we need to do is hold on to the returned object `load`: when it expires, if an error is being reported, the passed `e_file_name` value will be automatically associated with it.
 
-For `preload` to work, it must succeed in associating the passed E-objects with the correct `error_id`. The algorithm used to achieve this is intricate and imperfect:
+For `preload` to work, it must succeed in associating the passed E-objects with the correct `error_id`. The algorithm used to achieve this is as follows:
 
 * If the calling thread has invoked <<new_error>> since the call to `preload`, the E-objects are associated with the <<error_id>> returned by <<last_error>>. This association effectively targets the `error_id` value carried in the most recently created `result<T>` object *or* the exception object most recently returned by <<exception,`leaf::exception`>>.
-* Else, if `std::uncaught_exception()` is `true`, the E-objects are associated with the `error_id` returned by <<next_error>>. This association targets exception objects that were not created using `leaf::exception` and therefore do not carry an `error_id` (see <<tutorial-interoperability>>).
-
-[TIP]
---
-Because `preload` does not interact with exception objects directly, the above logic does not work correctly with exceptions that _do_ carry an `error_id` but originate in a thread other than the calling thread, e.g. thrown by a call to `std::future::get`. The workaround is to use `try`/`catch` instead of relying on `preload`:
-
-[source,c++]
-----
-try
-{
-  return fut.get(); <1>
-}
-catch( leaf::error_id const & err ) <2>
-{
-  err.load( leaf::e_file_name{file_name} ); <3>
-  throw; <4>
-}
-----
-<1> Call `std::future::get()`, which could throw;
-<2> `catch` exception objects that carry `error_id`;
-<3> associate an `e_file_name` with the correct `error_id`, effectively augmenting the caught exception;
-<4> re-throw the exception object.
-
-(This technique works even if the exception object originates in the calling thread, but of course in that case using `preload` is more elegant).
---
+* Else, if `std::uncaught_exception()` is `true`, the E-objects are associated with the `error_id` returned by <<new_error>>. This association targets exception objects that were not created using `leaf::exception` and therefore do not carry an `error_id` (see <<tutorial-interoperability>>).
 
 '''
 
@@ -1362,7 +1338,7 @@ NOTE: The complete program illustrating this technique is available https://gith
 '''
 
 [[tutorial-preload_in_c_callbacks]]
-=== Using `next_error` in (Lua) C-callbacks
+=== Using `augment_id` in (Lua) C-callbacks
 
 Communicating information pertaining to a failure detected in a C callback is tricky, because C callbacks are limited to a specific static signature, which may not use {CPP} types.
 
@@ -1396,7 +1372,7 @@ std::shared_ptr<lua_State> init_lua_state() noexcept
 }
 ----
 <1> Create a new `lua_State`. We'll use `std::shared_ptr` for automatic cleanup.
-<2> Register the `do_work` {CPP} function as a C callback, under the global name `do_work`. With this, calls from Lua programs to `do_work` will land in the `do_work` {CPP} function.
+<2> Register the `do_work` {CPP} function as a C callback, under the global name `"do_work"`. With this, calls from Lua programs to `do_work` will land in the `do_work` {CPP} function.
 <3> Pass some Lua code as a `C` string literal to Lua. This creates a global Lua function called `call_do_work`, which we will later ask Lua to execute.
 
 Next, let's define our `enum` used to communicate `do_work` failures:
@@ -1424,26 +1400,26 @@ We're now ready to define the `do_work` callback function:
 ----
 int do_work( lua_State * L ) noexcept
 {
-  bool success=rand()%2; //<1>
+  bool success=rand()%2; <1>
   if( success )
   {
-    lua_pushnumber(L,42); //<2>
+    lua_pushnumber(L,42); <2>
     return 1;
   }
   else
   {
-    leaf::next_error().load(ec1); //<3>
-    return luaL_error(L,"do_work_error"); //<4>
+    leaf::new_error(ec1); <3>
+    return luaL_error(L,"do_work_error"); <4>
   }
 }
 ----
 [.text-right]
-<<next_error>> | <<error_id::load>>
+<<new_error>> | <<error_id::load>>
 
 <1> "Sometimes" `do_work` fails.
 <2> In case of success, push the result on the Lua stack, return back to Lua.
-<3> Associate a `do_work_error_code` object with the *next* `leaf::error_id` object we will definitely return from the `call_lua` function...
-<4> ...once control reaches it, after we tell the Lua interpreter to abort the Lua program.
+<3> Generate a new `error_id` and associate a `do_work_error_code` with it. Normally, we'd return this in a `leaf::result<T>`, but the `do_work` function signature (required by Lua) does not permit this.
+<4> Tell the Lua interpreter to abort the Lua program.
 
 Now we'll write the function that calls the Lua interpreter to execute the Lua function `call_do_work`, which in turn calls `do_work`. We'll return `<<result,result>><int>`, so that our caller can get the answer in case of success, or an error:
 
@@ -1452,26 +1428,28 @@ Now we'll write the function that calls the Lua interpreter to execute the Lua f
 leaf::result<int> call_lua( lua_State * L )
 {
   lua_getfield( L, LUA_GLOBALSINDEX, "call_do_work" );
-  if( int err=lua_pcall(L,0,1,0) ) //<1>
+  augment_id augment;
+  if( int err=lua_pcall(L,0,1,0) ) <1>
   {
-    auto load = leaf::preload( e_lua_error_message{lua_tostring(L,1)} ); //<2>
+    auto load = leaf::preload( e_lua_error_message{lua_tostring(L,1)} ); <2>
     lua_pop(L,1);
-    return leaf::new_error( e_lua_pcall_error{err} );
+    return aughent.get_error( e_lua_pcall_error{err} ); <3>
   }
   else
   {
-    int answer=lua_tonumber(L,-1); //<3>
+    int answer=lua_tonumber(L,-1); <4>
     lua_pop(L,1);
     return answer;
   }
 }
 ----
 [.text-right]
-<<result>> | <<preload>> | <<new_error>>
+<<result>> | <<preload>> | <<augment_id>>
 
 <1> Ask the Lua interpreter to call the global Lua function `call_do_work`.
-<2> Something went wrong with the call, so we'll return a <<new_error>>. If this is a `do_work` failure, the `do_work_error_code` object prepared in `do_work` will become associated with this `leaf::error_id`. If not, we will still need to communicate that the `lua_pcall` failed with an error code and an error message.
-<3> Success! Just return the int answer.
+<2> `preload` works as usual.
+<3> `get_error` will return the `error_id` generated in our Lua callback. This is the same `error_id` the `preload` uses as well.
+<4> Success! Just return the `int` answer.
 
 Finally, here is the `main` function which exercises `call_lua`, each time handling any failure:
 
@@ -1642,8 +1620,6 @@ namespace boost { namespace leaf {
   template <class... E>
   error_id new_error( E && ... e ) noexcept;
 
-  error_id next_error() noexcept;
-
   error_id last_error() noexcept;
 
   //////////////////////////////////////////
@@ -1699,7 +1675,7 @@ context_activator<Ctx> activate_context( Ctx & ctx, on_deactivation on_deactivat
 ----
 
 [.text-right]
-<<is_e_type>> | <<error_id>> | <<is_error_id>> | <<new_error>> | <<next_error>> | <<last_error>> | <<polymorphic_context>> | <<context_activator>> | <<activate_context>> | <<LEAF_NEW_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
+<<is_e_type>> | <<error_id>> | <<is_error_id>> | <<new_error>> | <<last_error>> | <<polymorphic_context>> | <<context_activator>> | <<activate_context>> | <<LEAF_NEW_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
 
 '''
 
@@ -1801,6 +1777,8 @@ namespace boost { namespace leaf {
 
 This header defines functions for automatic inclusion of E-objects with any error exiting the scope in which they are invoked. See <<tutorial-preload>>, <<tutorial-defer>>, <<tutorial-accumulate>>.
 
+The `augment_id` type is used internally by `preload`, `defer` and `accumulate` to determine the correct <<error_id>> to associate error objects with.
+
 [source,c++]
 .#include <boost/leaf/preload.hpp>
 ----
@@ -1815,11 +1793,23 @@ namespace boost { namespace leaf {
   template <class... F>
   <<unspecified-type>> accumulate( F && ... f ) noexcept;
 
+  class augment_id
+  {
+  public:
+
+    augment_id() noexcept;
+
+    error_id check_error() const noexcept;
+
+    template <class... E>
+    error_id get_error( E && ... e ) const noexcept;
+  };
+
 } }
 ----
 
 [.text-right]
-<<preload>> | <<defer>> | <<accumulate>>
+<<preload>> | <<defer>> | <<accumulate>> | <<augment_id>>
 
 '''
 
@@ -2204,7 +2194,7 @@ Effects: :: All `f...` objects are forwarded and stored into the returned object
 +
 --
 * If <<new_error>> was invoked (by the calling thread) since the object returned by `accumulate` was created, each of the stored `f...` is called with the corresponding E-object currently uniquely associated with <<last_error>>, or with a new default-initialized instance of that E-type if no such E-object currently exists;
-* Otherwise, if `std::unhandled_exception()` returns `true`, each of the stored `f...` is called with the corresponding E-object currently uniquely associated with  <<next_error>>, or with a new default-initialized instance of that E-type if no such E-object currently exists.
+* Otherwise, if `std::unhandled_exception()` returns `true`, each of the stored `f...` is called with the corresponding E-object currently uniquely associated with the value returned by <<new_error>>, or with a new default-initialized instance of that E-type if no such E-object currently exists.
 --
 +
 The stored `f...` objects are discarded.
@@ -2359,7 +2349,7 @@ Effects: :: All `f...` objects are forwarded and stored into the returned object
 +
 --
 * If <<new_error>> was invoked (by the calling thread) since the object returned by `defer` was created, each of the stored `f...` is called, and each returned object is <<tutorial-loading,loaded>> and uniquely associated with  <<last_error>>;
-* Otherwise, if `std::unhandled_exception()` returns `true`, each of the stored `f...` is called, and each returned object is loaded and uniquely associated with  <<next_error>>.
+* Otherwise, if `std::unhandled_exception()` returns `true`, each of the stored `f...` is called, and each returned object is loaded and uniquely associated with the value returned by <<new_error>>.
 --
 +
 The stored `f...` objects are discarded.
@@ -2566,28 +2556,6 @@ Returns: :: A new `error_id` value, which is unique across the entire program.
 
 Ensures: :: `id.value()!=0`, where `id` is the returned `error_id`.
 
-
-'''
-
-[[next_error]]
-=== `next_error`
-
-.#include <boost/leaf/error.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  error_id next_error() noexcept;
-
-} }
-----
-
-Returns: :: The `error_id` value which will be returned the next time <<new_error>> is invoked from the calling thread.
-
-This function can be used to associate E-objects with the next `error_id` value to be reported. Use with caution, only when restricted to reporting errors via specific third-party types, incompatible with LEAF -- for example when reporting an error from a C callback. As soon as control exits this critical path, you should create a <<new_error>> (which will be equal to the `error_id` object returned by the earlier call to `next_error`).
-
-TIP: See <<tutorial-interoperability>> from the Tutorial.
-
 '''
 
 [[preload]]
@@ -2608,7 +2576,7 @@ Requirements: :: `<<is_e_type,is_e_type>><E>::value` must be `true` for each `E`
 
 Effects: :: All `e...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
 * If <<new_error>> was invoked (by the calling thread) since the object returned by `preload` was created, the stored `e...` objects are <<tutorial-loading,loaded>> and become uniquely associated with <<last_error>>;
-* Otherwise, if `std::unhandled_exception()` returns `true`, the stored `e...` objects are loaded and become uniquely associated with <<next_error>>;
+* Otherwise, if `std::unhandled_exception()` returns `true`, the stored `e...` objects are loaded and become uniquely associated with the value returned by <<new_error>>;
 * Otherwise, the stored `e...` objects are discarded.
 
 TIP: See <<tutorial-preload>> from the Tutorial.
@@ -2912,6 +2880,62 @@ NOTE: `try_handle_some` will catch and handle exceptions iff the handler pack `h
 == Reference: Types
 
 TIP: The contents of each Reference section are organized alphabetically.
+
+'''
+
+[[augment_id]]
+=== `augment_id`
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  class augment_id
+  {
+  public:
+
+    augment_id() noexcept;
+
+    error_id check_error() const noexcept;
+
+    template <class... E>
+    error_id get_error( E && ... e ) const noexcept;
+  };
+
+} }
+----
+
+This class helps obtain an <<error_id>> to associate error objects with, when augmenting failures communicated using LEAF through uncooperative APIs that do not use LEAF to report errors.
+
+The common usage of this class is as follows:
+
+[source,c++]
+----
+error_code compute_value( int * out_value ) noexcept; <1>
+
+leaf::error<int> augmenter() noexcept
+{
+  leaf::augment_id augment; <2>
+
+  int val;
+  auto ec = compute_value(&val);
+
+  if( failure(ec) )
+    return augment.get_error(e1, e2, ...); <3>
+  else
+    return val; <4>
+}
+----
+<1> Uncooperative third-party API that does not use LEAF, but results in calling a user callback that does use LEAF. In case our callback reports a failure, we'll augment it with error objects available in the calling scope, even though `compute_value` can not communicate an <<error_id>>.
+<2> Initialize an `augment_id` object.
+<3> The call to `compute_value` has failed:
+- If <<new_error>> was invoked (by the calling thread) after the `augment` object was initialized, `get_error` returns the last `error_id` returned by `new_error`. This would be the case if the failure originates in our callback (invoked internally by `compute_value`).
+- Else, `get_error` invokes `new_error` and returns that `error_id`.
+<4> The call was successful, return the computed value.
+
+The `check_error` function works similarly, but instead of invoking `new_error` it returns a defaul-initialized `error_id`.
+
+TIP: See <<tutorial-preload_in_c_callbacks>>.
 
 '''
 
@@ -3244,9 +3268,9 @@ Because each E-object stored in `*this` is uniquely associated with a specific <
 +
 When throwing, users are encouraged to pass the exception object through the <<exception>> function template -- and `throw` the object it returns. This guarantees that the thrown exception transports a unique `error_id` value, just like `<<result,result>><T>` does.
 +
-However, this isn't possible when we don't control the `throw` site, for example if the exception is thrown by a standard function. In this case, E-objects communicated to LEAF are associated with the `error_id` value returned by <<next_error>>, which is a preview of sorts, of the `error_id` value that would be returned by the next call to <<new_error>>.
+However, this isn't possible when we don't control the `throw` site, for example if the exception is thrown by a standard function. In this case, E-objects communicated to LEAF are associated with the `error_id` value returned by <<new_error>>.
 +
-To match that, if the current exception does not transports an `error_id` value, `handle_current_exception` looks up E-objects using the `error_id` value returned by <<next_error>>. If imperfect, this approach provides the needed association.
+To match that, if the current exception does not transports an `error_id` value, `handle_current_exception` looks up E-objects using the `error_id` value returned by <<last_error>>. If imperfect, this approach provides the needed association.
 +
 With the `error_id` value thus obtained, the `handler`-matching procedure works the same as in <<context::handle_some>>.
 
@@ -3942,15 +3966,13 @@ namespace boost { namespace leaf {
   template <class... E>
   error_id new_error( E && ... e ) noexcept;
 
-  error_id next_error() noexcept;
-
   error_id last_error() noexcept;
 
 } }
 ----
 
 [.text-right]
-<<error_id::error_id>> | <<error_id::value>> | <<error_id::operator_bool>> | <<error_id::to_error_code>> | <<error_id::comparison_operators>> | <<error_id::load>> | <<error_id::accumulate>> | <<is_error_id>> | <<new_error>> | <<next_error>> | <<last_error>>
+<<error_id::error_id>> | <<error_id::value>> | <<error_id::operator_bool>> | <<error_id::to_error_code>> | <<error_id::comparison_operators>> | <<error_id::load>> | <<error_id::accumulate>> | <<is_error_id>> | <<new_error>> | <<last_error>>
 
 Values of type `error_id` identify a specific occurrence of an error condition across the entire program. They can be copied, moved, assigned to, and compared to other `error_id` objects. They're as efficient as an `int`.
 

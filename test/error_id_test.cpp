@@ -20,18 +20,13 @@ std::vector<int> generate_ids()
 	ids.reserve(ids_per_thread);
 	for(int i=0; i!=ids_per_thread-1; ++i)
 	{
-		int next = leaf::leaf_detail::next_id();
-		BOOST_TEST_EQ(next, leaf::leaf_detail::next_id());
-		BOOST_TEST_NE(next&1, 0);
 		int id = leaf::leaf_detail::new_id();
 		BOOST_TEST_NE(id&1, 0);
 		int last = leaf::leaf_detail::last_id();
 		BOOST_TEST_EQ(last, leaf::leaf_detail::last_id());
 		BOOST_TEST_NE(last&1, 0);
-		BOOST_TEST_EQ(next, id);
 		BOOST_TEST_EQ(last, id);
 		ids.push_back(id);
-		BOOST_TEST_NE(leaf::leaf_detail::next_id(), id);
 	}
 	return ids;
 }

@@ -38,19 +38,20 @@ struct e_lua_error_message { std::string value; };
 // back into the C++ code which called it (see call_lua below).
 int do_work( lua_State * L ) noexcept
 {
-	bool success=rand()%2;
+	bool success=rand()%2; // "Sometimes" do_work fails.
 	if( success )
 	{
-		lua_pushnumber(L,42); // Return 42 to the calling Lua program.
+		lua_pushnumber(L,42); // Success, push the result on the Lua stack, return to Lua.
 		return 1;
 	}
 	else
 	{
-		// Associate a do_work_error_code object with the *next* leaf::error_id object we will
-		// definitely return from the call_lua function...
-		leaf::next_error().load(ec1);
+		// Generate a new error_id and associate a do_work_error_code with it. Normally, we'd
+		// return this in a leaf::result<T>, but the do_work function signature (required by Lua)
+		// does not permit this.
+		leaf::new_error(ec1);
 
-		//...once control reaches it, after we tell the Lua interpreter to abort the program.
+		// Tell the Lua interpreter to abort the Lua program.
 		return luaL_error(L,"do_work_error");
 	}
 }
@@ -87,16 +88,15 @@ leaf::result<int> call_lua( lua_State * L )
 {
 	// Ask the Lua interpreter to call the global Lua function call_do_work.
 	lua_getfield( L, LUA_GLOBALSINDEX, "call_do_work" );
-	if( int err=lua_pcall(L,0,1,0) )
+	leaf::augment_id augment;
+	if( int err=lua_pcall(L,0,1,0) ) // Ask Lua to call the global function call_do_work.
 	{
-		// Something went wrong with the call, so we'll return a new_error.
-		// If this is a do_work failure, the do_work_error_code object prepared in
-		// do_work will become associated with this leaf::error_id value. If not,
-		// we will still need to communicate that the lua_pcall failed with an
-		// error code and an error message.
 		auto load = leaf::preload( e_lua_error_message{lua_tostring(L,1)} );
 		lua_pop(L,1);
-		return leaf::new_error( e_lua_pcall_error{err} );
+
+		// get_error will return the error_id generated in our Lua callback. This is the
+		// same error_id the preload (above) uses as well.
+		return augment.get_error( e_lua_pcall_error{err} );
 	}
 	else
 	{

@@ -19,6 +19,7 @@ int main()
 #include <boost/leaf/capture.hpp>
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/preload.hpp>
 #include "lightweight_test.hpp"
 #include <vector>
 #include <future>
@@ -62,7 +63,7 @@ int main()
 	auto error_handler = []( leaf::error_info const & err, int a, int b )
 	{
 		return leaf::remote_handle_all( err,
-			[&]( info<1> const & x1, info<2> const & x2 )
+			[&]( info<1> const & x1, info<2> const & x2, info<4> const & x4 )
 			{
 				BOOST_TEST_EQ(x1.value, a);
 				BOOST_TEST_EQ(x2.value, b);
@@ -90,7 +91,8 @@ int main()
 		int r = leaf::remote_try_handle_all(
 			[&]
 			{
-				return f.fut.get();
+				auto propagate = leaf::preload( info<4>{} );
+				return leaf::future_get(f.fut);
 			},
 			[&]( leaf::error_info const & err )
 			{

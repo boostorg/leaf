@@ -7,6 +7,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/exception.hpp>
+#include <boost/leaf/preload.hpp>
 #include <memory>
 
 namespace boost { namespace leaf {
@@ -29,11 +30,14 @@ namespace boost { namespace leaf {
 			{
 				assert(ex_);
 				assert(ctx_);
+				assert(ctx_->captured_id_);
 			}
 
 			[[noreturn]] void unload_and_rethrow_original_exception() const
 			{
+				assert(ctx_->captured_id_);
 				auto active_context = activate_context(*ctx_, on_deactivation::propagate);
+				id_factory<>::last_id = ctx_->captured_id_.value();
 				std::rethrow_exception(ex_);
 			}
 
@@ -47,6 +51,7 @@ namespace boost { namespace leaf {
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr && ctx, F && f, A... a)
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
+			augment_id aug;
 			try
 			{
 				return std::forward<F>(f)(std::forward<A>(a)...);
@@ -55,8 +60,14 @@ namespace boost { namespace leaf {
 			{
 				throw;
 			}
+			catch( exception_base const & e )
+			{
+				ctx->captured_id_ = e.get_error_id();
+				throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
+			}
 			catch(...)
 			{
+				ctx->captured_id_ = aug.get_error();
 				throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
 			}
 		}
@@ -65,6 +76,7 @@ namespace boost { namespace leaf {
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr && ctx, F && f, A... a)
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
+			augment_id aug;
 			try
 			{
 				if( auto && r = std::forward<F>(f)(std::forward<A>(a)...) )
@@ -79,9 +91,44 @@ namespace boost { namespace leaf {
 			{
 				throw;
 			}
+			catch( exception_base const & e )
+			{
+				ctx->captured_id_ = e.get_error_id();
+				throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
+			}
 			catch(...)
 			{
+				ctx->captured_id_ = aug.get_error();
 				throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
+			}
+		}
+
+		template <class R, class Future>
+		inline decltype(std::declval<Future>().get()) future_get_impl(is_result_tag<R, false>, Future & fut )
+		{
+			try
+			{
+				return fut.get();
+			}
+			catch( leaf_detail::capturing_exception const & cap )
+			{
+				cap.unload_and_rethrow_original_exception();
+			}
+		}
+
+		template <class R, class Future>
+		inline decltype(std::declval<Future>().get()) future_get_impl(is_result_tag<R, true>, Future & fut )
+		{
+			try
+			{
+				if( auto r = fut.get() )
+					return r;
+				else
+					return error_id(r.error()); // unloads
+			}
+			catch( leaf_detail::capturing_exception const & cap )
+			{
+				cap.unload_and_rethrow_original_exception();
 			}
 		}
 	}
@@ -91,14 +138,14 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class R, class F, class... A>
-		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr && ctx, F && f, A... a)
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr && ctx, F && f, A... a) noexcept
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			return std::forward<F>(f)(std::forward<A>(a)...);
 		}
 
 		template <class R, class F, class... A>
-		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr && ctx, F && f, A... a)
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr && ctx, F && f, A... a) noexcept
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
@@ -109,6 +156,21 @@ namespace boost { namespace leaf {
 				return std::move(ctx);
 			}
 		}
+
+		template <class R, class Future>
+		inline decltype(std::declval<Future>().get()) future_get_impl(is_result_tag<R, false>, Future & fut ) noexcept
+		{
+			return fut.get();
+		}
+
+		template <class R, class Future>
+		inline decltype(std::declval<Future>().get()) future_get_impl(is_result_tag<R, true>, Future & fut ) noexcept
+		{
+			if( auto r = fut.get() )
+				return r;
+			else
+				return error_id(r.error()); // unloads
+		}
 	}
 
 #endif
@@ -118,6 +180,13 @@ namespace boost { namespace leaf {
 	{
 		using namespace leaf_detail;
 		return capture_impl(is_result_tag<decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))>(), std::move(ctx), std::forward<F>(f), std::forward<A>(a)...);
+	}
+
+	template <class Future>
+	inline decltype(std::declval<Future>().get()) future_get( Future & fut )
+	{
+		using namespace leaf_detail;
+		return future_get_impl(is_result_tag<decltype(std::declval<Future>().get())>(), fut);
 	}
 
 	////////////////////////////////////////
