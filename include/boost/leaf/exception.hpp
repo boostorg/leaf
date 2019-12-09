@@ -79,14 +79,22 @@ namespace boost { namespace leaf {
 			exception( exception const & ) = default;
 			exception( exception && ) = default;
 
-			template <class... E>
-			LEAF_CONSTEXPR exception( Ex && ex, E && ... e ) noexcept:
+			LEAF_CONSTEXPR exception( error_id id, Ex && ex ) noexcept:
 				Ex(std::move(ex)),
-				error_id(new_error(std::forward<E>(e)...))
+				error_id(id)
 			{
 				leaf_detail::enforce_std_exception(*this);
 			}
 		};
+
+		template <class Ex, class... E>
+		LEAF_CONSTEXPR inline exception<Ex> exception_at( char const * file, int line, char const * function, error_id id, Ex && ex, E && ... e ) noexcept
+		{
+			assert(file&&*file);
+			assert(line>0);
+			assert(function&&*function);
+			return exception<Ex>(id.load(e_source_location{file,line,function}, std::forward<E>(e)...), std::forward<Ex>(ex));
+		}
 
 		template <class Ex, class... E>
 		LEAF_CONSTEXPR inline exception<Ex> exception_at( char const * file, int line, char const * function, Ex && ex, E && ... e ) noexcept
@@ -94,14 +102,14 @@ namespace boost { namespace leaf {
 			assert(file&&*file);
 			assert(line>0);
 			assert(function&&*function);
-			return exception<Ex>( std::forward<Ex>(ex), e_source_location{file,line,function}, std::forward<E>(e)... );
+			return exception<Ex>(new_error(e_source_location{file,line,function}, std::forward<E>(e)...), std::forward<Ex>(ex));
 		}
 	}
 
 	template <class Ex, class... E>
 	LEAF_CONSTEXPR inline leaf_detail::exception<Ex> exception( Ex && ex, E && ... e ) noexcept
 	{
-		return leaf_detail::exception<Ex>( std::forward<Ex>(ex), std::forward<E>(e)... );
+		return leaf_detail::exception<Ex>(leaf::new_error(std::forward<E>(e)...), std::forward<Ex>(ex));
 	}
 
 } }

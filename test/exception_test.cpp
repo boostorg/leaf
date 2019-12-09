@@ -24,8 +24,18 @@ int main()
 namespace leaf = boost::leaf;
 
 struct info { int value; };
+struct extra_info { int value; };
 
 struct my_error: std::exception { };
+
+struct extra_info_exception:
+	std::exception
+{
+	extra_info_exception() noexcept
+	{
+		leaf::last_error().load(extra_info{42});
+	}
+};
 
 template <class F>
 int test( F && f )
@@ -122,6 +132,22 @@ int main()
 				wh = ex.value().what();
 			} );
 		BOOST_TEST(wh!=0 || !strcmp(wh,"Test"));
+	}
+
+	{
+		leaf::try_catch(
+			[]
+			{
+				auto id = leaf::new_error();
+				throw LEAF_EXCEPTION(id, extra_info_exception(), info{42});
+			},
+			[]( leaf::catch_<extra_info_exception>, leaf::match<extra_info, 42>, leaf::match<info, 42>, leaf::e_source_location )
+			{
+			},
+			[]
+			{
+				BOOST_ERROR("Missing info{42}!");
+			} );
 	}
 
 	return boost::report_errors();
