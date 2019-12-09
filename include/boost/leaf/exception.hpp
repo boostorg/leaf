@@ -93,7 +93,7 @@ namespace boost { namespace leaf {
 			assert(file&&*file);
 			assert(line>0);
 			assert(function&&*function);
-			return exception<Ex>(id.load(e_source_location{file,line,function}, std::forward<E>(e)...), std::forward<Ex>(ex));
+			return exception<Ex>(id.load(e_source_location{file,line,function},std::forward<E>(e)...), std::forward<Ex>(ex));
 		}
 
 		template <class Ex, class... E>
@@ -102,7 +102,7 @@ namespace boost { namespace leaf {
 			assert(file&&*file);
 			assert(line>0);
 			assert(function&&*function);
-			return exception<Ex>(new_error(e_source_location{file,line,function}, std::forward<E>(e)...), std::forward<Ex>(ex));
+			return exception<Ex>(new_error(e_source_location{file,line,function},std::forward<E>(e)...), std::forward<Ex>(ex));
 		}
 	}
 
