@@ -521,8 +521,8 @@ namespace boost { namespace leaf {
 		{
 			if( int v = value_ )
 			{
-				assert((value_&3)==1);
-				return (value_&~3)|1;
+				assert((v&3)==1);
+				return (v&~3)|1;
 			}
 			else
 				return 0;
