@@ -407,33 +407,33 @@ e_heavy_payload | 13289404 | 29785353
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |  1273262 |  1616375
-e_system_error  |  1324689 |  2495661
-e_heavy_payload |  1541474 | 13966280
+e_error_code    |  1205327 |  1449117
+e_system_error  |  1290277 |  2332414
+e_heavy_payload |  1503103 | 13682308
 
 `tl::expected<T, E>`:
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |   938925 |   876127
-e_system_error  |  1466393 |  8885512
-e_heavy_payload |  2683720 | 49447683
+e_error_code    |   938839 |   867296
+e_system_error  |  1455627 |  8943881
+e_heavy_payload |  2637494 | 49212901
 
 `outcome::result<T, E>`:
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |   947551 |  1218935
-e_system_error  |  1335490 |  5200505
-e_heavy_payload | 15528450 | 57321318
+e_error_code    |   935331 |  1202475
+e_system_error  |  1228944 |  2269680
+e_heavy_payload | 15239084 | 55618460
 
 `outcome::outcome<T, E>`:
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |  1666200 |  2839445
-e_system_error  |  2146175 |  7304310
-e_heavy_payload | 15781653 | 63170392
+e_error_code    |  1472035 |  2529057
+e_system_error  |  1997971 |  4004965
+e_heavy_payload | 16027423 | 64572924
 
 ## Charts
 
