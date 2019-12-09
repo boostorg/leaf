@@ -339,33 +339,33 @@ Below is the output the benchmark programs running on an old MacBook Pro. The ta
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |   601454 |   576297
-e_system_error  |   614939 |  1241345
-e_heavy_payload |   742855 |  7205878
+e_error_code    |   594965 |   545882
+e_system_error  |   614688 |  1203154
+e_heavy_payload |   736701 |  7397756
 
 `tl::expected<T, E>`:
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |   918897 |   819383
-e_system_error  |   662171 |  5560394
-e_heavy_payload |  1231025 | 31692228
+e_error_code    |   921410 |   820757
+e_system_error  |   670191 |  5593513
+e_heavy_payload |  1331724 | 31560432
 
 `outcome::result<T, E>`:
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |  1080678 |   771875
-e_system_error  |   574615 |  1191137
-e_heavy_payload | 13032715 | 32005260
+e_error_code    |  1080512 |   773206
+e_system_error  |   577403 |  1201693
+e_heavy_payload | 13222387 | 32104693
 
 `outcome::outcome<T, E>`:
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |   829731 |  1203289
-e_system_error  |   950774 |  2327303
-e_heavy_payload | 13196489 | 33507276
+e_error_code    |   832916 |  1170731
+e_system_error  |   947298 |  2330392
+e_heavy_payload | 13342292 | 33837583
 
 ### clang 11.0.0:
 
@@ -373,33 +373,33 @@ e_heavy_payload | 13196489 | 33507276
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |   571264 |   504087
-e_system_error  |   596177 |  1015354
-e_heavy_payload |   742902 |  5062095
+e_error_code    |   570847 |   493538
+e_system_error  |   592685 |   982799
+e_heavy_payload |   713966 |  5144523
 
 `tl::expected<T, E>`:
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |   462372 |   311949
-e_system_error  |   622985 |  3555247
-e_heavy_payload |  1036608 | 16026718
+e_error_code    |   461639 |   312849
+e_system_error  |   620479 |  3534689
+e_heavy_payload |  1037434 | 16078669
 
 `outcome::result<T, E>`:
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |   434321 |   443866
-e_system_error  |   593449 |  1695077
-e_heavy_payload | 12337430 | 16197682
+e_error_code    |   431219 |   446854
+e_system_error  |   589456 |  1712739
+e_heavy_payload | 12387405 | 16216894
 
 `outcome::outcome<T, E>`:
 
 Error type      |  2% (μs) | 98% (μs)
 ----------------|---------:|--------:
-e_error_code    |   745583 |  1478587
-e_system_error  |   837275 |  2390770
-e_heavy_payload | 13085082 | 28257885
+e_error_code    |   711412 |  1477505
+e_system_error  |   835691 |  2374919
+e_heavy_payload | 13289404 | 29785353
 
 ### msvc 19.24.28314:
 
