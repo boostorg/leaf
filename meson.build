@@ -14,14 +14,12 @@ if not meson.is_subproject()
 			'-Wno-non-virtual-dtor',
 			'-Wno-dangling-else',
 			'-Wno-delete-non-virtual-dtor',
-			'-std=c++17',
 			language:'cpp' )
 	elif compiler_id=='gcc'
 		add_global_arguments(
 			'-Wno-non-virtual-dtor',
 			'-Wno-dangling-else',
 			'-Wno-parentheses',
-			'-std=c++17',
 			language:'cpp' )
 	endif
 endif
