@@ -1250,11 +1250,12 @@ namespace boost { namespace leaf {
 		{
 			static atomic_unsigned_int counter;
 			static LEAF_THREAD_LOCAL unsigned last_id;
-			static LEAF_THREAD_LOCAL unsigned next_id;
 
 			LEAF_CONSTEXPR static unsigned generate_next_id() noexcept
 			{
-				return counter+=4;
+				auto id = (counter+=4);
+				assert((id&3)==1);
+				return id;
 			}
 		};
 
@@ -1264,55 +1265,16 @@ namespace boost { namespace leaf {
 		template <class T>
 		LEAF_THREAD_LOCAL unsigned id_factory<T>::last_id(0);
 
-		template <class T>
-		LEAF_THREAD_LOCAL unsigned id_factory<T>::next_id(0);
-
 		inline int last_id() noexcept
 		{
-			if( auto id = id_factory<>::last_id )
-			{
-				assert((id&3)==1);
-				return (id&~3)|1;
-			}
-			else
-				return id;
-		}
-
-		inline int next_id() noexcept
-		{
-			if( auto id = id_factory<>::next_id )
-			{
-				assert((id&3)==1);
-				return (id&~3)|1;
-			}
-			else
-			{
-				id = id_factory<>::generate_next_id();
-				assert((id&3)==1);
-				id = (id&~3)|1;
-				id_factory<>::next_id = id;
-				return id;
-			}
+			auto id = id_factory<>::last_id;
+			assert(id==0 || (id&3)==1);
+			return id;
 		}
 
 		inline int new_id() noexcept
 		{
-			if( auto id = id_factory<>::next_id )
-			{
-				id_factory<>::next_id = 0;
-				assert((id&3)==1);
-				id = (id&~3)|1;
-				id_factory<>::last_id = id;
-				return id;
-			}
-			else
-			{
-				id = id_factory<>::generate_next_id();
-				assert((id&3)==1);
-				id = (id&~3)|1;
-				id_factory<>::last_id = id;
-				return id;
-			}
+			return id_factory<>::last_id = id_factory<>::generate_next_id();
 		}
 	}
 
@@ -1349,13 +1311,13 @@ namespace boost { namespace leaf {
 				if( &ec.category()==&cat )
 				{
 					assert((err_id&3)==1);
-					return err_id;
+					return (err_id&~3)|1;
 				}
 				else
 				{
 					err_id = leaf_detail::new_id();
 					leaf_detail::load_slot(err_id, leaf_detail::e_original_ec{ec});
-					return err_id;
+					return (err_id&~3)|1;
 				}
 			}
 			else
@@ -1438,23 +1400,28 @@ namespace boost { namespace leaf {
 
 		std::error_code to_error_code() const noexcept
 		{
-			return std::error_code(value(), leaf_detail::get_error_category<>::cat);
+			return std::error_code(value_, leaf_detail::get_error_category<>::cat);
 		}
 
 		LEAF_CONSTEXPR int value() const noexcept
 		{
-			assert(!value_ || ((value_&3)==1));
-			return value_;
+			if( int v = value_ )
+			{
+				assert((value_&3)==1);
+				return (value_&~3)|1;
+			}
+			else
+				return 0;
 		}
 
 		LEAF_CONSTEXPR explicit operator bool() const noexcept
 		{
-			return value() != 0;
+			return value_ != 0;
 		}
 
 		LEAF_CONSTEXPR friend bool operator==( error_id a, error_id b ) noexcept
 		{
-			return a.value() == b.value();
+			return a.value_ == b.value_;
 		}
 
 		LEAF_CONSTEXPR friend bool operator!=( error_id a, error_id b ) noexcept
@@ -1464,12 +1431,12 @@ namespace boost { namespace leaf {
 
 		LEAF_CONSTEXPR friend bool operator<( error_id a, error_id b ) noexcept
 		{
-			return a.value() < b.value();
+			return a.value_ < b.value_;
 		}
 
 		friend std::ostream & operator<<( std::ostream & os, error_id x )
 		{
-			return os << x.value();
+			return os << x.value_;
 		}
 	};
 
@@ -1477,7 +1444,8 @@ namespace boost { namespace leaf {
 	{
 		LEAF_CONSTEXPR inline error_id make_error_id( int err_id ) noexcept
 		{
-			return error_id(err_id);
+			assert(err_id==0 || (err_id&3)==1);
+			return error_id((err_id&~3)|1);
 		}
 	}
 
@@ -1498,9 +1466,9 @@ namespace boost { namespace leaf {
 		return error_id(make_error_code(e1)).load(std::forward<E>(e)...);
 	}
 
-	inline error_id next_error() noexcept
+	inline error_id last_error() noexcept
 	{
-		return leaf_detail::make_error_id(leaf_detail::next_id());
+		return leaf_detail::make_error_id(leaf_detail::last_id());
 	}
 
 	namespace leaf_detail
@@ -1688,11 +1656,29 @@ namespace boost { namespace leaf {
 	{
 		inline void enforce_std_exception( std::exception const & ) noexcept { }
 
+		class exception_base
+		{
+		public:
+
+			virtual error_id get_error_id() const = 0;
+
+		protected:
+
+			constexpr exception_base() noexcept { }
+			~exception_base() noexcept { }
+		};
+
 		template <class Ex>
 		class exception:
 			public Ex,
+			public exception_base,
 			public error_id
 		{
+			error_id get_error_id() const final override
+			{
+				return *this;
+			}
+
 		public:
 
 			exception( exception const & ) = default;
@@ -1728,6 +1714,324 @@ namespace boost { namespace leaf {
 #endif
 // <<< #include <boost/leaf/exception.hpp>
 #line 10 "boost/leaf/capture.hpp"
+// >>> #include <boost/leaf/preload.hpp>
+#line 1 "boost/leaf/preload.hpp"
+#ifndef LEAF_25AF99F6DC6F11E8803DE9BC9723C688
+#define LEAF_25AF99F6DC6F11E8803DE9BC9723C688
+
+// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+
+namespace boost { namespace leaf {
+
+	class augment_id
+	{
+		int const err_id_;
+
+	public:
+
+		augment_id() noexcept:
+			err_id_(leaf_detail::last_id())
+		{
+		}
+
+		int check_id() const noexcept
+		{
+			int err_id = leaf_detail::last_id();
+			if( err_id != err_id_ )
+				return err_id;
+			else
+			{
+#ifndef LEAF_NO_EXCEPTIONS
+				if( LEAF_UNCAUGHT_EXCEPTIONS() )
+					return leaf_detail::new_id();
+#endif
+				return 0;
+			}
+		}
+
+		int get_id() const noexcept
+		{
+			int err_id = leaf_detail::last_id();
+			if( err_id != err_id_ )
+				return err_id;
+			else
+				return leaf_detail::new_id();
+		}
+
+		error_id check_error() const noexcept
+		{
+			return leaf_detail::make_error_id(check_id());
+		}
+
+		template <class... E>
+		error_id get_error( E && ... e ) const noexcept
+		{
+			return leaf_detail::make_error_id(get_id()).load(std::forward<E>(e)...);
+		}
+	};
+
+	////////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		template <int I, class Tuple>
+		struct tuple_for_each_preload
+		{
+			LEAF_CONSTEXPR static void trigger( Tuple & tup, int err_id ) noexcept
+			{
+				assert((err_id&3)==1);
+				tuple_for_each_preload<I-1,Tuple>::trigger(tup,err_id);
+				std::get<I-1>(tup).trigger(err_id);
+			}
+		};
+
+		template <class Tuple>
+		struct tuple_for_each_preload<0, Tuple>
+		{
+			LEAF_CONSTEXPR static void trigger( Tuple const &, int ) noexcept { }
+		};
+	} // leaf_detail
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		template <class E>
+		class preloaded_item
+		{
+			slot<E> * s_;
+			E e_;
+
+		public:
+
+			LEAF_CONSTEXPR explicit preloaded_item( E && e ) noexcept:
+				s_(tl_slot_ptr<E>()),
+				e_(std::forward<E>(e))
+			{
+			}
+
+			LEAF_CONSTEXPR void trigger( int err_id ) noexcept
+			{
+				assert((err_id&3)==1);
+				if( s_ )
+				{
+					if( !s_->has_value(err_id) )
+						s_->put(err_id, std::move(e_));
+				}
+#if LEAF_DIAGNOSTICS
+				else
+				{
+					int c = tl_unexpected_enabled_counter();
+					assert(c>=0);
+					if( c )
+						load_unexpected(err_id, std::forward<E>(e_));
+				}
+#endif
+			}
+		};
+
+		template <class... E>
+		class preloaded
+		{
+			preloaded & operator=( preloaded const & ) = delete;
+
+			std::tuple<preloaded_item<E>...> p_;
+			bool moved_;
+			augment_id id_;
+
+		public:
+
+			LEAF_CONSTEXPR explicit preloaded( E && ... e ) noexcept:
+				p_(preloaded_item<E>(std::forward<E>(e))...),
+				moved_(false)
+			{
+			}
+
+			LEAF_CONSTEXPR preloaded( preloaded && x ) noexcept:
+				p_(std::move(x.p_)),
+				moved_(false),
+				id_(std::move(x.id_))
+			{
+				x.moved_ = true;
+			}
+
+			~preloaded() noexcept
+			{
+				if( moved_ )
+					return;
+				if( auto id = id_.check_id() )
+					leaf_detail::tuple_for_each_preload<sizeof...(E),decltype(p_)>::trigger(p_,id);
+			}
+		};
+	} // leaf_detail
+
+	template <class... E>
+	LEAF_CONSTEXPR inline leaf_detail::preloaded<E...> preload( E && ... e ) noexcept
+	{
+		return leaf_detail::preloaded<E...>(std::forward<E>(e)...);
+	}
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		template <class F>
+		class deferred_item
+		{
+			typedef decltype(std::declval<F>()()) E;
+			slot<E> * s_;
+			F f_;
+
+		public:
+
+			LEAF_CONSTEXPR explicit deferred_item( F && f ) noexcept:
+				s_(tl_slot_ptr<E>()),
+				f_(std::forward<F>(f))
+			{
+			}
+
+			LEAF_CONSTEXPR void trigger( int err_id ) noexcept
+			{
+				assert((err_id&3)==1);
+				if( s_ )
+				{
+					if( !s_->has_value(err_id) )
+						s_->put(err_id, f_());
+				}
+#if LEAF_DIAGNOSTICS
+				else
+				{
+					int c = tl_unexpected_enabled_counter();
+					assert(c>=0);
+					if( c )
+						load_unexpected(err_id, std::forward<E>(f_()));
+				}
+#endif
+			}
+		};
+
+		template <class... F>
+		class deferred
+		{
+			deferred & operator=( deferred const & ) = delete;
+			std::tuple<deferred_item<F>...> d_;
+			bool moved_;
+			augment_id id_;
+
+		public:
+
+			LEAF_CONSTEXPR explicit deferred( F && ... f ) noexcept:
+				d_(deferred_item<F>(std::forward<F>(f))...),
+				moved_(false)
+			{
+			}
+
+			LEAF_CONSTEXPR deferred( deferred && x ) noexcept:
+				d_(std::move(x.d_)),
+				moved_(false),
+				id_(std::move(x.id_))
+			{
+				x.moved_ = true;
+			}
+
+			~deferred() noexcept
+			{
+				if( moved_ )
+					return;
+				if( auto id = id_.check_id() )
+					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(d_)>::trigger(d_,id);
+			}
+		};
+	} // leaf_detail
+
+	template <class... F>
+	LEAF_CONSTEXPR inline leaf_detail::deferred<F...> defer( F && ... f ) noexcept
+	{
+		return leaf_detail::deferred<F...>(std::forward<F>(f)...);
+	}
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		template <class F, class A0 = fn_arg_type<F,0>, int arity = function_traits<F>::arity>
+		class accumulating_item;
+
+		template <class F, class A0>
+		class accumulating_item<F, A0 &, 1>
+		{
+			using E = A0;
+			slot<E> * s_;
+			F f_;
+
+		public:
+
+			LEAF_CONSTEXPR explicit accumulating_item( F && f ) noexcept:
+				s_(tl_slot_ptr<E>()),
+				f_(std::forward<F>(f))
+			{
+			}
+
+			LEAF_CONSTEXPR void trigger( int err_id ) noexcept
+			{
+				assert((err_id&3)==1);
+				if( s_ )
+					if( E * e = s_->has_value(err_id) )
+						(void) f_(*e);
+					else
+						(void) f_(s_->put(err_id, E()));
+			}
+		};
+
+		template <class... F>
+		class accumulating
+		{
+			accumulating & operator=( accumulating const & ) = delete;
+			std::tuple<accumulating_item<F>...> a_;
+			bool moved_;
+			augment_id id_;
+
+		public:
+
+			LEAF_CONSTEXPR explicit accumulating( F && ... f ) noexcept:
+				a_(accumulating_item<F>(std::forward<F>(f))...),
+				moved_(false)
+			{
+			}
+
+			LEAF_CONSTEXPR accumulating( accumulating && x ) noexcept:
+				a_(std::move(x.a_)),
+				moved_(false),
+				id_(std::move(x.id_))
+			{
+				x.moved_ = true;
+			}
+
+			~accumulating() noexcept
+			{
+				if( moved_ )
+					return;
+				if( auto id = id_.check_id() )
+					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(a_)>::trigger(a_,id);
+			}
+		};
+	} // leaf_detail
+
+	template <class... F>
+	LEAF_CONSTEXPR inline leaf_detail::accumulating<F...> accumulate( F && ... f ) noexcept
+	{
+		return leaf_detail::accumulating<F...>(std::forward<F>(f)...);
+	}
+
+} }
+
+#endif
+// <<< #include <boost/leaf/preload.hpp>
+#line 11 "boost/leaf/capture.hpp"
 #include <memory>
 
 namespace boost { namespace leaf {
@@ -1750,11 +2054,14 @@ namespace boost { namespace leaf {
 			{
 				assert(ex_);
 				assert(ctx_);
+				assert(ctx_->captured_id_);
 			}
 
 			[[noreturn]] void unload_and_rethrow_original_exception() const
 			{
+				assert(ctx_->captured_id_);
 				auto active_context = activate_context(*ctx_, on_deactivation::propagate);
+				id_factory<>::last_id = ctx_->captured_id_.value();
 				std::rethrow_exception(ex_);
 			}
 
@@ -1768,6 +2075,7 @@ namespace boost { namespace leaf {
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr && ctx, F && f, A... a)
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
+			augment_id aug;
 			try
 			{
 				return std::forward<F>(f)(std::forward<A>(a)...);
@@ -1776,8 +2084,14 @@ namespace boost { namespace leaf {
 			{
 				throw;
 			}
+			catch( exception_base const & e )
+			{
+				ctx->captured_id_ = e.get_error_id();
+				throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
+			}
 			catch(...)
 			{
+				ctx->captured_id_ = aug.get_error();
 				throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
 			}
 		}
@@ -1786,6 +2100,7 @@ namespace boost { namespace leaf {
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr && ctx, F && f, A... a)
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
+			augment_id aug;
 			try
 			{
 				if( auto && r = std::forward<F>(f)(std::forward<A>(a)...) )
@@ -1800,9 +2115,44 @@ namespace boost { namespace leaf {
 			{
 				throw;
 			}
+			catch( exception_base const & e )
+			{
+				ctx->captured_id_ = e.get_error_id();
+				throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
+			}
 			catch(...)
 			{
+				ctx->captured_id_ = aug.get_error();
 				throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
+			}
+		}
+
+		template <class R, class Future>
+		inline decltype(std::declval<Future>().get()) future_get_impl(is_result_tag<R, false>, Future & fut )
+		{
+			try
+			{
+				return fut.get();
+			}
+			catch( leaf_detail::capturing_exception const & cap )
+			{
+				cap.unload_and_rethrow_original_exception();
+			}
+		}
+
+		template <class R, class Future>
+		inline decltype(std::declval<Future>().get()) future_get_impl(is_result_tag<R, true>, Future & fut )
+		{
+			try
+			{
+				if( auto r = fut.get() )
+					return r;
+				else
+					return error_id(r.error()); // unloads
+			}
+			catch( leaf_detail::capturing_exception const & cap )
+			{
+				cap.unload_and_rethrow_original_exception();
 			}
 		}
 	}
@@ -1812,14 +2162,14 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class R, class F, class... A>
-		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr && ctx, F && f, A... a)
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr && ctx, F && f, A... a) noexcept
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			return std::forward<F>(f)(std::forward<A>(a)...);
 		}
 
 		template <class R, class F, class... A>
-		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr && ctx, F && f, A... a)
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr && ctx, F && f, A... a) noexcept
 		{
 			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
 			if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
@@ -1830,6 +2180,21 @@ namespace boost { namespace leaf {
 				return std::move(ctx);
 			}
 		}
+
+		template <class R, class Future>
+		inline decltype(std::declval<Future>().get()) future_get_impl(is_result_tag<R, false>, Future & fut ) noexcept
+		{
+			return fut.get();
+		}
+
+		template <class R, class Future>
+		inline decltype(std::declval<Future>().get()) future_get_impl(is_result_tag<R, true>, Future & fut ) noexcept
+		{
+			if( auto r = fut.get() )
+				return r;
+			else
+				return error_id(r.error()); // unloads
+		}
 	}
 
 #endif
@@ -1839,6 +2204,13 @@ namespace boost { namespace leaf {
 	{
 		using namespace leaf_detail;
 		return capture_impl(is_result_tag<decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))>(), std::move(ctx), std::forward<F>(f), std::forward<A>(a)...);
+	}
+
+	template <class Future>
+	inline decltype(std::declval<Future>().get()) future_get( Future & fut )
+	{
+		using namespace leaf_detail;
+		return future_get_impl(is_result_tag<decltype(std::declval<Future>().get())>(), fut);
 	}
 
 	////////////////////////////////////////
@@ -3975,7 +4347,7 @@ namespace boost { namespace leaf {
 			else if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
 				return *err_id;
 			else
-				return next_error();
+				return last_error();
 		}
 
 		LEAF_CONSTEXPR inline exception_info_base::exception_info_base( std::exception const * ex ) noexcept:
@@ -4002,302 +4374,6 @@ namespace boost { namespace leaf {
 // <<< #	include <boost/leaf/handle_exception.hpp>
 #line 18 "../../include/boost/leaf/detail/all.hpp"
 #endif
-// >>> #include <boost/leaf/preload.hpp>
-#line 1 "boost/leaf/preload.hpp"
-#ifndef LEAF_25AF99F6DC6F11E8803DE9BC9723C688
-#define LEAF_25AF99F6DC6F11E8803DE9BC9723C688
-
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
-
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-
-namespace boost { namespace leaf {
-
-	namespace leaf_detail
-	{
-		template <int I, class Tuple>
-		struct tuple_for_each_preload
-		{
-			LEAF_CONSTEXPR static void trigger( Tuple & tup, int err_id ) noexcept
-			{
-				assert((err_id&3)==1);
-				tuple_for_each_preload<I-1,Tuple>::trigger(tup,err_id);
-				std::get<I-1>(tup).trigger(err_id);
-			}
-		};
-
-		template <class Tuple>
-		struct tuple_for_each_preload<0, Tuple>
-		{
-			LEAF_CONSTEXPR static void trigger( Tuple const &, int ) noexcept { }
-		};
-	} // leaf_detail
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		template <class E>
-		class preloaded_item
-		{
-			slot<E> * s_;
-			E e_;
-
-		public:
-
-			LEAF_CONSTEXPR explicit preloaded_item( E && e ) noexcept:
-				s_(tl_slot_ptr<E>()),
-				e_(std::forward<E>(e))
-			{
-			}
-
-			LEAF_CONSTEXPR void trigger( int err_id ) noexcept
-			{
-				assert((err_id&3)==1);
-				if( s_ )
-				{
-					if( !s_->has_value(err_id) )
-						s_->put(err_id, std::move(e_));
-				}
-#if LEAF_DIAGNOSTICS
-				else
-				{
-					int c = tl_unexpected_enabled_counter();
-					assert(c>=0);
-					if( c )
-						load_unexpected(err_id, std::forward<E>(e_));
-				}
-#endif
-			}
-		};
-
-		template <class... E>
-		class preloaded
-		{
-			preloaded & operator=( preloaded const & ) = delete;
-
-			std::tuple<preloaded_item<E>...> p_;
-			bool moved_;
-			int err_id_;
-
-		public:
-
-			LEAF_CONSTEXPR explicit preloaded( E && ... e ) noexcept:
-				p_(preloaded_item<E>(std::forward<E>(e))...),
-				moved_(false),
-				err_id_(last_id())
-			{
-			}
-
-			LEAF_CONSTEXPR preloaded( preloaded && x ) noexcept:
-				p_(std::move(x.p_)),
-				moved_(false),
-				err_id_(x.err_id_)
-			{
-				x.moved_ = true;
-			}
-
-			~preloaded() noexcept
-			{
-				if( moved_ )
-					return;
-				int const err_id = last_id();
-				if( err_id==err_id_ )
-				{
-#ifndef LEAF_NO_EXCEPTIONS
-					if( LEAF_UNCAUGHT_EXCEPTIONS() )
-						leaf_detail::tuple_for_each_preload<sizeof...(E),decltype(p_)>::trigger(p_,next_id());
-#endif
-				}
-				else
-					leaf_detail::tuple_for_each_preload<sizeof...(E),decltype(p_)>::trigger(p_,err_id);
-			}
-		};
-	} // leaf_detail
-
-	template <class... E>
-	LEAF_CONSTEXPR inline leaf_detail::preloaded<E...> preload( E && ... e ) noexcept
-	{
-		return leaf_detail::preloaded<E...>(std::forward<E>(e)...);
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		template <class F>
-		class deferred_item
-		{
-			typedef decltype(std::declval<F>()()) E;
-			slot<E> * s_;
-			F f_;
-
-		public:
-
-			LEAF_CONSTEXPR explicit deferred_item( F && f ) noexcept:
-				s_(tl_slot_ptr<E>()),
-				f_(std::forward<F>(f))
-			{
-			}
-
-			LEAF_CONSTEXPR void trigger( int err_id ) noexcept
-			{
-				assert((err_id&3)==1);
-				if( s_ )
-				{
-					if( !s_->has_value(err_id) )
-						s_->put(err_id, f_());
-				}
-#if LEAF_DIAGNOSTICS
-				else
-				{
-					int c = tl_unexpected_enabled_counter();
-					assert(c>=0);
-					if( c )
-						load_unexpected(err_id, std::forward<E>(f_()));
-				}
-#endif
-			}
-		};
-
-		template <class... F>
-		class deferred
-		{
-			deferred & operator=( deferred const & ) = delete;
-			std::tuple<deferred_item<F>...> d_;
-			bool moved_;
-			int err_id_;
-
-		public:
-
-			LEAF_CONSTEXPR explicit deferred( F && ... f ) noexcept:
-				d_(deferred_item<F>(std::forward<F>(f))...),
-				moved_(false),
-				err_id_(last_id())
-			{
-			}
-
-			LEAF_CONSTEXPR deferred( deferred && x ) noexcept:
-				d_(std::move(x.d_)),
-				moved_(false),
-				err_id_(x.err_id_)
-			{
-				x.moved_ = true;
-			}
-
-			~deferred() noexcept
-			{
-				if( moved_ )
-					return;
-				int const err_id = last_id();
-				if( err_id==err_id_ )
-				{
-#ifndef LEAF_NO_EXCEPTIONS
-					if( LEAF_UNCAUGHT_EXCEPTIONS() )
-						leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(d_)>::trigger(d_,next_id());
-#endif
-				}
-				else
-					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(d_)>::trigger(d_,err_id);
-			}
-		};
-	} // leaf_detail
-
-	template <class... F>
-	LEAF_CONSTEXPR inline leaf_detail::deferred<F...> defer( F && ... f ) noexcept
-	{
-		return leaf_detail::deferred<F...>(std::forward<F>(f)...);
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		template <class F, class A0 = fn_arg_type<F,0>, int arity = function_traits<F>::arity>
-		class accumulating_item;
-
-		template <class F, class A0>
-		class accumulating_item<F, A0 &, 1>
-		{
-			using E = A0;
-			slot<E> * s_;
-			F f_;
-
-		public:
-
-			LEAF_CONSTEXPR explicit accumulating_item( F && f ) noexcept:
-				s_(tl_slot_ptr<E>()),
-				f_(std::forward<F>(f))
-			{
-			}
-
-			LEAF_CONSTEXPR void trigger( int err_id ) noexcept
-			{
-				assert((err_id&3)==1);
-				if( s_ )
-					if( E * e = s_->has_value(err_id) )
-						(void) f_(*e);
-					else
-						(void) f_(s_->put(err_id, E()));
-			}
-		};
-
-		template <class... F>
-		class accumulating
-		{
-			accumulating & operator=( accumulating const & ) = delete;
-			std::tuple<accumulating_item<F>...> a_;
-			bool moved_;
-			int err_id_;
-
-		public:
-
-			LEAF_CONSTEXPR explicit accumulating( F && ... f ) noexcept:
-				a_(accumulating_item<F>(std::forward<F>(f))...),
-				moved_(false),
-				err_id_(last_id())
-			{
-			}
-
-			LEAF_CONSTEXPR accumulating( accumulating && x ) noexcept:
-				a_(std::move(x.a_)),
-				moved_(false),
-				err_id_(x.err_id_)
-			{
-				x.moved_ = true;
-			}
-
-			~accumulating() noexcept
-			{
-				if( moved_ )
-					return;
-				int const err_id = last_id();
-				if( err_id==err_id_ )
-				{
-#ifndef LEAF_NO_EXCEPTIONS
-					if( LEAF_UNCAUGHT_EXCEPTIONS() )
-						leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(a_)>::trigger(a_,next_id());
-#endif
-				}
-				else
-					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(a_)>::trigger(a_,err_id);
-			}
-		};
-	} // leaf_detail
-
-	template <class... F>
-	LEAF_CONSTEXPR inline leaf_detail::accumulating<F...> accumulate( F && ... f ) noexcept
-	{
-		return leaf_detail::accumulating<F...>(std::forward<F>(f)...);
-	}
-
-} }
-
-#endif
-// <<< #include <boost/leaf/preload.hpp>
-#line 20 "../../include/boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/result.hpp>
 #line 1 "boost/leaf/result.hpp"
 #ifndef LEAF_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
@@ -4424,7 +4500,11 @@ namespace boost { namespace leaf {
 				case result_discriminant::val:
 					return error_id();
 				case result_discriminant::ctx_ptr:
-					return r_.ctx_->propagate_captured_errors();
+				{
+					error_id captured_id = r_.ctx_->propagate_captured_errors();
+					leaf_detail::id_factory<>::last_id = captured_id.value();
+					return captured_id;
+				}
 				default:
 					return r_.what_.get_error_id();
 				}
