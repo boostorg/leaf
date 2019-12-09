@@ -29,16 +29,16 @@ The most common check-only use case looks almost identically in LEAF and in Boos
 ```c++
 // Outcome
 {
-	BOOST_OUTCOME_TRY(v, f()); // Check for errors, forward failures to the caller
-	// If control reaches here, v is the successful result (the call succeeded).
+  BOOST_OUTCOME_TRY(v, f()); // Check for errors, forward failures to the caller
+  // If control reaches here, v is the successful result (the call succeeded).
 }
 ```
 
 ```c++
 // LEAF
 {
-	LEAF_AUTO(v, f()); // Check for errors, forward failures to the caller
-	// If control reaches here, v is the successful result (the call succeeded).
+  LEAF_AUTO(v, f()); // Check for errors, forward failures to the caller
+  // If control reaches here, v is the successful result (the call succeeded).
 }
 ```
 
@@ -47,22 +47,22 @@ However, when we want to handle failures, in Boost Outcome and in `tl::expected`
 ```c++
 // Outcome, tl::expected
 if( auto r = f() )
-	return r.value()+1; // No error
+  return r.value()+1; // No error
 else
 {	// Error!
-	switch( r.error() )
-	{
-	error_enum::error1:
-		/* handle error_enum::error1 */
-		break;
+  switch( r.error() )
+  {
+  error_enum::error1:
+    /* handle error_enum::error1 */
+    break;
 
-	error_enum::error2:
-		/* handle error_enum::error2 */
-		break;
+  error_enum::error2:
+    /* handle error_enum::error2 */
+    break;
 
-	default:
-		/* handle any other failure */
-	}
+  default:
+    /* handle any other failure */
+  }
 }
 ```
 
@@ -71,23 +71,23 @@ When using LEAF, we must explicitly state our intention to handle errors, not ju
 ```c++
 // LEAF
 leaf::try_handle_all
-	[]() -> leaf::result<T>
-	{
-		LEAF_AUTO(v, f());
-		// No error, use v
-	},
-	[]( leaf::match<error_enum, error_enum::error1> )
-	{
-		/* handle error_enum::error1 */
-	},
-	[]( leaf::match<error_enum, error_enum::error2> )
-	{
-		/* handle error_enum::error2 */
-	},
-	[]()
-	{
-		/* handle any other failure */
-	} );
+  []() -> leaf::result<T>
+  {
+    LEAF_AUTO(v, f());
+    // No error, use v
+  },
+  []( leaf::match<error_enum, error_enum::error1> )
+  {
+    /* handle error_enum::error1 */
+  },
+  []( leaf::match<error_enum, error_enum::error2> )
+  {
+    /* handle error_enum::error2 */
+  },
+  []()
+  {
+    /* handle any other failure */
+  } );
 ```
 
 The use of `try_handle_all` reserves storage on the stack for the error object types being handled (in this case, `error_enum`). If the failure is either `error_enum::error1` or `error_enum::error2`, the matching error handling lambda is invoked.
@@ -105,8 +105,9 @@ The technique used to disable inlining in this benchmark is to mark functions as
 ```c++
 __attribute__((noinline)) int val() {return 42;}
 
-int main() {
-    return val();
+int main()
+{
+  return val();
 }
 ```
 
@@ -114,11 +115,11 @@ Which on clang 9 outputs:
 
 ```x86asm
 val():
-	mov     eax, 42
-	ret
+    mov     eax, 42
+    ret
 main:
-	mov     eax, 42
-	ret
+    mov     eax, 42
+    ret
 ```
 
 It does not appear that anything like this is occurring in our case, but it is still a possibility.
@@ -137,8 +138,8 @@ leaf::result<int> f();
 
 leaf::result<int> g()
 {
-    LEAF_AUTO(x, f());
-    return x+1;
+  LEAF_AUTO(x, f());
+  return x+1;
 }
 ```
 
@@ -146,42 +147,42 @@ Generates this code on clang ([Godbolt](https://godbolt.org/z/4AtHMk)):
 
 ```x86asm
 g():                                  # @g()
-	push    rbx
-	sub     rsp, 32
-	mov     rbx, rdi
-	lea     rdi, [rsp + 8]
-	call    f()
-	mov     eax, dword ptr [rsp + 8]
-	mov     ecx, eax
-	and     ecx, 3
-	cmp     ecx, 2
-	je      .LBB0_4
-	cmp     ecx, 3
-	jne     .LBB0_2
-	mov     eax, dword ptr [rsp + 16]
-	add     eax, 1
-	mov     dword ptr [rbx], 3
-	mov     dword ptr [rbx + 8], eax
-	mov     rax, rbx
-	add     rsp, 32
-	pop     rbx
-	ret
+    push    rbx
+    sub     rsp, 32
+    mov     rbx, rdi
+    mov     rdi, rsp
+    call    f()
+    mov     eax, dword ptr [rsp + 16]
+    mov     ecx, eax
+    and     ecx, 3
+    cmp     ecx, 2
+    je      .LBB0_4
+    cmp     ecx, 3
+    jne     .LBB0_2
+    mov     eax, dword ptr [rsp]
+    add     eax, 1
+    mov     dword ptr [rbx], eax
+    mov     dword ptr [rbx + 16], 3
+    mov     rax, rbx
+    add     rsp, 32
+    pop     rbx
+    ret
 .LBB0_4:
-	mov     dword ptr [rbx], 2
-	movups  xmm0, xmmword ptr [rsp + 16]
-	mov     qword ptr [rsp + 24], 0
-	movups  xmmword ptr [rbx + 8], xmm0
-	mov     qword ptr [rsp + 16], 0
-	mov     rax, rbx
-	add     rsp, 32
-	pop     rbx
-	ret
+    movaps  xmm0, xmmword ptr [rsp]
+    mov     qword ptr [rsp + 8], 0
+    movups  xmmword ptr [rbx], xmm0
+    mov     qword ptr [rsp], 0
+    mov     dword ptr [rbx + 16], 2
+    mov     rax, rbx
+    add     rsp, 32
+    pop     rbx
+    ret
 .LBB0_2:
-	mov     dword ptr [rbx], eax
-	mov     rax, rbx
-	add     rsp, 32
-	pop     rbx
-	ret
+    mov     dword ptr [rbx + 16], eax
+    mov     rax, rbx
+    add     rsp, 32
+    pop     rbx
+    ret
 ```
 
 > Description:
@@ -197,13 +198,13 @@ Note that `f` is undefined, hence the `call` instruction. Predictably, if we pro
 ```C++
 leaf::result<int> f()
 {
-    return 42;
+  return 42;
 }
 
 leaf::result<int> g()
 {
-    LEAF_AUTO(x, f());
-    return x+1;
+  LEAF_AUTO(x, f());
+  return x+1;
 }
 ```
 
@@ -211,10 +212,10 @@ We get:
 
 ```x86asm
 g():                                  # @g()
-	mov     rax, rdi
-	mov     dword ptr [rdi], 3
-	mov     dword ptr [rdi + 8], 43
-	ret
+    mov     rax, rdi
+    mov     dword ptr [rdi], 43
+    mov     dword ptr [rdi + 16], 3
+    ret
 ```
 
 With a less trivial definition of `f`:
@@ -222,16 +223,16 @@ With a less trivial definition of `f`:
 ```C++
 leaf::result<int> f()
 {
-    if( rand()%2 )
-	return 42;
-    else
-	return leaf::new_error();
+  if( rand()%2 )
+    return 42;
+  else
+    return leaf::new_error();
 }
 
 leaf::result<int> g()
 {
-    LEAF_AUTO(x, f());
-    return x+1;
+  LEAF_AUTO(x, f());
+  return x+1;
 }
 ```
 
@@ -239,37 +240,34 @@ We get ([Godbolt](https://godbolt.org/z/4P7Jvv)):
 
 ```x86asm
 g():                                  # @g()
-	push    rbx
-	mov     rbx, rdi
-	call    rand
-	test    al, 1
-	jne     .LBB1_5
-	mov     eax, dword ptr fs:[boost::leaf::leaf_detail::id_factory<void>::next_id@TPOFF]
-	test    eax, eax
-	je      .LBB1_3
-	mov     dword ptr fs:[boost::leaf::leaf_detail::id_factory<void>::next_id@TPOFF], 0
-	jmp     .LBB1_4
-.LBB1_5:
-	mov     dword ptr [rbx], 3
-	mov     dword ptr [rbx + 8], 43
-	mov     rax, rbx
-	pop     rbx
-	ret
-.LBB1_3:
-	mov     eax, 4
-	lock            xadd    dword ptr [rip + boost::leaf::leaf_detail::id_factory<void>::counter], eax
-	add     eax, 4
-.LBB1_4:
-	and     eax, -4
-	or      eax, 1
-	mov     dword ptr fs:[boost::leaf::leaf_detail::id_factory<void>::last_id@TPOFF], eax
-	mov     dword ptr [rbx], eax
-	mov     rax, rbx
-	pop     rbx
-	ret
+    push    rbx
+    mov     rbx, rdi
+    call    rand
+    test    al, 1
+    jne     .LBB1_2
+    mov     eax, 4
+    lock            xadd    dword ptr [rip + boost::leaf::leaf_detail::id_factory<void>::counter], eax
+    add     eax, 4
+    mov     dword ptr fs:[boost::leaf::leaf_detail::id_factory<void>::last_id@TPOFF], eax
+    and     eax, -4
+    or      eax, 1
+    mov     dword ptr [rbx + 16], eax
+    mov     rax, rbx
+    pop     rbx
+    ret
+.LBB1_2:
+    mov     dword ptr [rbx], 43
+    mov     dword ptr [rbx + 16], 3
+    mov     rax, rbx
+    pop     rbx
+    ret
 ```
 
-Above, the call to `f()` is inlined, most of the code is from the initial error reporting machinery in LEAF.
+Above, the call to `f()` is inlined:
+
+* `.LBB1_2`: Success
+* The atomic `add` is from the initial error reporting machinery in LEAF, generating a unique error ID for the error being reported.
+
 
 ## Benchmark matrix dimensions
 
@@ -277,11 +275,11 @@ The benchmark matrix has 2 dimensions:
 
 1. Error object type:
 
-	a. The error object transported in case of a failure is of type `e_error_code`, which is a simple `enum`.
+    a. The error object transported in case of a failure is of type `e_error_code`, which is a simple `enum`.
 
-	b. The error object transported in case of a failure is of type `struct e_system_error { e_error_code value; std::string what; }`.
+    b. The error object transported in case of a failure is of type `struct e_system_error { e_error_code value; std::string what; }`.
 
-	c. The error object transported in case of a failure is of type `e_heavy_payload`, a `struct` of size 4096.
+    c. The error object transported in case of a failure is of type `e_heavy_payload`, a `struct` of size 4096.
 
 2. Error rate: 2%, 98%
 
