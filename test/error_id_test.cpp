@@ -22,8 +22,8 @@ std::vector<int> generate_ids()
 	{
 		int id = leaf::leaf_detail::new_id();
 		BOOST_TEST_NE(id&1, 0);
-		int last = leaf::leaf_detail::last_id();
-		BOOST_TEST_EQ(last, leaf::leaf_detail::last_id());
+		int last = leaf::leaf_detail::current_id();
+		BOOST_TEST_EQ(last, leaf::leaf_detail::current_id());
 		BOOST_TEST_NE(last&1, 0);
 		BOOST_TEST_EQ(last, id);
 		ids.push_back(id);

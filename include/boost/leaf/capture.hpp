@@ -37,7 +37,7 @@ namespace boost { namespace leaf {
 			{
 				assert(ctx_->captured_id_);
 				auto active_context = activate_context(*ctx_, on_deactivation::propagate);
-				id_factory<>::last_id = ctx_->captured_id_.value();
+				id_factory<>::current_id = ctx_->captured_id_.value();
 				std::rethrow_exception(ex_);
 			}
 

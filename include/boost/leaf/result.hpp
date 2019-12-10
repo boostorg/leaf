@@ -125,7 +125,7 @@ namespace boost { namespace leaf {
 				case result_discriminant::ctx_ptr:
 				{
 					error_id captured_id = r_.ctx_->propagate_captured_errors();
-					leaf_detail::id_factory<>::last_id = captured_id.value();
+					leaf_detail::id_factory<>::current_id = captured_id.value();
 					return captured_id;
 				}
 				default:

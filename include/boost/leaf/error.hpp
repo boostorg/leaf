@@ -363,7 +363,7 @@ namespace boost { namespace leaf {
 		struct id_factory
 		{
 			static atomic_unsigned_int counter;
-			static LEAF_THREAD_LOCAL unsigned last_id;
+			static LEAF_THREAD_LOCAL unsigned current_id;
 
 			LEAF_CONSTEXPR static unsigned generate_next_id() noexcept
 			{
@@ -377,18 +377,18 @@ namespace boost { namespace leaf {
 		atomic_unsigned_int id_factory<T>::counter(-3);
 
 		template <class T>
-		LEAF_THREAD_LOCAL unsigned id_factory<T>::last_id(0);
+		LEAF_THREAD_LOCAL unsigned id_factory<T>::current_id(0);
 
-		inline int last_id() noexcept
+		inline int current_id() noexcept
 		{
-			auto id = id_factory<>::last_id;
+			auto id = id_factory<>::current_id;
 			assert(id==0 || (id&3)==1);
 			return id;
 		}
 
 		inline int new_id() noexcept
 		{
-			return id_factory<>::last_id = id_factory<>::generate_next_id();
+			return id_factory<>::current_id = id_factory<>::generate_next_id();
 		}
 	}
 
@@ -580,9 +580,9 @@ namespace boost { namespace leaf {
 		return error_id(make_error_code(e1)).load(std::forward<E>(e)...);
 	}
 
-	inline error_id last_error() noexcept
+	inline error_id current_error() noexcept
 	{
-		return leaf_detail::make_error_id(leaf_detail::last_id());
+		return leaf_detail::make_error_id(leaf_detail::current_id());
 	}
 
 	namespace leaf_detail

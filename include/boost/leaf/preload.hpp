@@ -17,13 +17,13 @@ namespace boost { namespace leaf {
 	public:
 
 		augment_id() noexcept:
-			err_id_(leaf_detail::last_id())
+			err_id_(leaf_detail::current_id())
 		{
 		}
 
 		int check_id() const noexcept
 		{
-			int err_id = leaf_detail::last_id();
+			int err_id = leaf_detail::current_id();
 			if( err_id != err_id_ )
 				return err_id;
 			else
@@ -38,7 +38,7 @@ namespace boost { namespace leaf {
 
 		int get_id() const noexcept
 		{
-			int err_id = leaf_detail::last_id();
+			int err_id = leaf_detail::current_id();
 			if( err_id != err_id_ )
 				return err_id;
 			else

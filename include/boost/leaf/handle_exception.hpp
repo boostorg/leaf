@@ -415,7 +415,7 @@ namespace boost { namespace leaf {
 			else if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
 				return *err_id;
 			else
-				return last_error();
+				return current_error();
 		}
 
 		LEAF_CONSTEXPR inline exception_info_base::exception_info_base( std::exception const * ex ) noexcept:

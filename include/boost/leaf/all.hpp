@@ -1249,7 +1249,7 @@ namespace boost { namespace leaf {
 		struct id_factory
 		{
 			static atomic_unsigned_int counter;
-			static LEAF_THREAD_LOCAL unsigned last_id;
+			static LEAF_THREAD_LOCAL unsigned current_id;
 
 			LEAF_CONSTEXPR static unsigned generate_next_id() noexcept
 			{
@@ -1263,18 +1263,18 @@ namespace boost { namespace leaf {
 		atomic_unsigned_int id_factory<T>::counter(-3);
 
 		template <class T>
-		LEAF_THREAD_LOCAL unsigned id_factory<T>::last_id(0);
+		LEAF_THREAD_LOCAL unsigned id_factory<T>::current_id(0);
 
-		inline int last_id() noexcept
+		inline int current_id() noexcept
 		{
-			auto id = id_factory<>::last_id;
+			auto id = id_factory<>::current_id;
 			assert(id==0 || (id&3)==1);
 			return id;
 		}
 
 		inline int new_id() noexcept
 		{
-			return id_factory<>::last_id = id_factory<>::generate_next_id();
+			return id_factory<>::current_id = id_factory<>::generate_next_id();
 		}
 	}
 
@@ -1466,9 +1466,9 @@ namespace boost { namespace leaf {
 		return error_id(make_error_code(e1)).load(std::forward<E>(e)...);
 	}
 
-	inline error_id last_error() noexcept
+	inline error_id current_error() noexcept
 	{
-		return leaf_detail::make_error_id(leaf_detail::last_id());
+		return leaf_detail::make_error_id(leaf_detail::current_id());
 	}
 
 	namespace leaf_detail
@@ -1742,13 +1742,13 @@ namespace boost { namespace leaf {
 	public:
 
 		augment_id() noexcept:
-			err_id_(leaf_detail::last_id())
+			err_id_(leaf_detail::current_id())
 		{
 		}
 
 		int check_id() const noexcept
 		{
-			int err_id = leaf_detail::last_id();
+			int err_id = leaf_detail::current_id();
 			if( err_id != err_id_ )
 				return err_id;
 			else
@@ -1763,7 +1763,7 @@ namespace boost { namespace leaf {
 
 		int get_id() const noexcept
 		{
-			int err_id = leaf_detail::last_id();
+			int err_id = leaf_detail::current_id();
 			if( err_id != err_id_ )
 				return err_id;
 			else
@@ -2069,7 +2069,7 @@ namespace boost { namespace leaf {
 			{
 				assert(ctx_->captured_id_);
 				auto active_context = activate_context(*ctx_, on_deactivation::propagate);
-				id_factory<>::last_id = ctx_->captured_id_.value();
+				id_factory<>::current_id = ctx_->captured_id_.value();
 				std::rethrow_exception(ex_);
 			}
 
@@ -4355,7 +4355,7 @@ namespace boost { namespace leaf {
 			else if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
 				return *err_id;
 			else
-				return last_error();
+				return current_error();
 		}
 
 		LEAF_CONSTEXPR inline exception_info_base::exception_info_base( std::exception const * ex ) noexcept:
@@ -4510,7 +4510,7 @@ namespace boost { namespace leaf {
 				case result_discriminant::ctx_ptr:
 				{
 					error_id captured_id = r_.ctx_->propagate_captured_errors();
-					leaf_detail::id_factory<>::last_id = captured_id.value();
+					leaf_detail::id_factory<>::current_id = captured_id.value();
 					return captured_id;
 				}
 				default:
