@@ -13,6 +13,8 @@
 
 namespace leaf = boost::leaf;
 
+struct test_info { int value;};
+
 enum class error_code
 {
 	error1=1,
@@ -169,6 +171,39 @@ int main()
 		BOOST_TEST_EQ(r, 2);
 	}
 #endif
+
+	///////////////////////////
+
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				return leaf::new_error( test_info{42} );
+			},
+			[]( test_info const & x )
+			{
+				BOOST_TEST_EQ(x.value, 42);
+				int r = leaf::try_handle_all(
+					[]() -> leaf::result<int>
+					{
+						return leaf::new_error( test_info{43} );
+					},
+					[]()
+					{
+						return -1;
+					} );
+				BOOST_TEST_EQ(r, -1);
+				BOOST_TEST_EQ(x.value, 42);
+				return 0;
+			},
+			[]()
+			{
+				return -1;
+			} );
+		BOOST_TEST_EQ(r, 0);
+	}
+
+	///////////////////////////
 
 	return boost::report_errors();
 }

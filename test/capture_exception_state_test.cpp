@@ -55,6 +55,11 @@ int main()
 		return leaf::remote_handle_exception( err,
 			[]( info<1>, info<3> )
 			{
+				return 1;
+			},
+			[]
+			{
+				return 2;
 			} );
 	};
 	BOOST_TEST_EQ(count, 0);
@@ -74,8 +79,8 @@ int main()
 		ep = std::current_exception();
 	}
 	BOOST_TEST_EQ(count, 2);
-	leaf::remote_try_catch(
-		[&]
+	int r = leaf::remote_try_catch(
+		[&]() -> int
 		{
 			std::rethrow_exception(ep);
 		},
@@ -83,6 +88,7 @@ int main()
 		{
 			return error_handler(err);
 		} );
+	BOOST_TEST_EQ(r, 1);
 	ep = std::exception_ptr();
 	BOOST_TEST_EQ(count, 0);
 	return boost::report_errors();

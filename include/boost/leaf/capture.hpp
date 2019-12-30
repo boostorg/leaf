@@ -36,7 +36,7 @@ namespace boost { namespace leaf {
 			[[noreturn]] void unload_and_rethrow_original_exception() const
 			{
 				assert(ctx_->captured_id_);
-				auto active_context = activate_context(*ctx_, on_deactivation::propagate);
+				auto active_context = activate_context(*ctx_);
 				id_factory<>::current_id = ctx_->captured_id_.value();
 				std::rethrow_exception(ex_);
 			}
@@ -50,7 +50,7 @@ namespace boost { namespace leaf {
 		template <class R, class F, class... A>
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr && ctx, F && f, A... a)
 		{
-			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
+			auto active_context = activate_context(*ctx);
 			augment_id aug;
 			try
 			{
@@ -75,7 +75,7 @@ namespace boost { namespace leaf {
 		template <class R, class F, class... A>
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr && ctx, F && f, A... a)
 		{
-			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
+			auto active_context = activate_context(*ctx);
 			augment_id aug;
 			try
 			{
@@ -140,14 +140,14 @@ namespace boost { namespace leaf {
 		template <class R, class F, class... A>
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr && ctx, F && f, A... a) noexcept
 		{
-			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
+			auto active_context = activate_context(*ctx);
 			return std::forward<F>(f)(std::forward<A>(a)...);
 		}
 
 		template <class R, class F, class... A>
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr && ctx, F && f, A... a) noexcept
 		{
-			auto active_context = activate_context(*ctx, on_deactivation::do_not_propagate);
+			auto active_context = activate_context(*ctx);
 			if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
 				return r;
 			else

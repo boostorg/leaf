@@ -168,6 +168,33 @@
 			}
 		},
 		{
+			"label": "ctx_handle_all_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test ctx_handle_all_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test ctx_handle_all_test"
+			}
+		},
+		{
+			"label": "ctx_handle_exception_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test ctx_handle_exception_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test ctx_handle_exception_test"
+			}
+		},
+		{
+			"label": "ctx_handle_some_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test ctx_handle_some_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test ctx_handle_some_test"
+			}
+		},
+		{
 			"label": "ctx_remote_handle_all_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test ctx_remote_handle_all_test",

@@ -7,6 +7,7 @@
 #include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/result.hpp>
 #include "lightweight_test.hpp"
+#include <iostream>
 
 namespace leaf = boost::leaf;
 
@@ -25,34 +26,26 @@ leaf::result<int> f( Ctx & ctx )
 
 int main()
 {
-	auto handle_error = []( leaf::error_info const & error )
+	leaf::context<info<1>, leaf::verbose_diagnostic_info const &> ctx;
+
 	{
-		return leaf::remote_handle_all( error,
+		leaf::result<int> r1 = f(ctx);
+		BOOST_TEST(!r1);
+
+		int r2 = ctx.handle_all(
+			r1,
 			[]( info<1> x )
 			{
 				BOOST_TEST(x.value==1);
 				return 1;
 			},
-			[]
+			[]( leaf::verbose_diagnostic_info const & info )
 			{
+				std::cout << info;
 				return 2;
 			} );
-	};
-
-	int r = leaf::remote_try_handle_all(
-		[&]
-		{
-			auto ctx = leaf::make_context(&handle_error);
-			auto active_context = activate_context(ctx);
-			auto r = f(ctx);
-			ctx.propagate();
-			return r;
-		},
-		[&]( leaf::error_info const & error )
-		{
-			return handle_error(error);
-		} );
-	BOOST_TEST_EQ(r, 1);
+		BOOST_TEST_EQ(r2, 1);
+	}
 
 	return boost::report_errors();
 }

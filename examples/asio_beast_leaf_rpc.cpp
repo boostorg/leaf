@@ -124,7 +124,7 @@ auto async_demo_rpc(AsyncStream &stream, ErrorContext &error_context, Completion
         void operator()(error_code ec, std::size_t /*bytes_transferred*/ = 0) {
             leaf::result<bool> result_continue_execution;
             {
-                auto active_context = activate_context(m_error_context, leaf::on_deactivation::do_not_propagate);
+                auto active_context = activate_context(m_error_context);
                 auto load = leaf::preload(e_last_operation{m_data.response ? "async_demo_rpc::continuation-write"
                                                                            : "async_demo_rpc::continuation-read"});
                 if (ec == http::error::end_of_stream) {
@@ -539,7 +539,7 @@ int main(int argc, char **argv) {
             async_demo_rpc(socket, error_context, [&](leaf::result<void> result) {
                 // Note: In case we wanted to add some additional information to the error associated with the result
                 // we would need to activate the error-context
-                auto active_context = activate_context(error_context, leaf::on_deactivation::do_not_propagate);
+                auto active_context = activate_context(error_context);
                 if (result) {
                     std::cout << "Server: Client work completed successfully" << std::endl;
                     rv = 0;

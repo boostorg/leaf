@@ -25,10 +25,15 @@ leaf::result<int> f( Ctx & ctx )
 
 int main()
 {
-	auto handle_error = []( leaf::error_info const & error )
+	leaf::context<info<1>> ctx;
+
 	{
-		return leaf::remote_handle_all( error,
-			[]( info<1> x )
+		leaf::result<int> r1 = f(ctx);
+		BOOST_TEST(!r1);
+
+		leaf::result<int> r2 = ctx.handle_some(
+			std::move(r1),
+			[]( info<1> x ) -> leaf::result<int>
 			{
 				BOOST_TEST(x.value==1);
 				return 1;
@@ -37,22 +42,8 @@ int main()
 			{
 				return 2;
 			} );
-	};
-
-	int r = leaf::remote_try_handle_all(
-		[&]
-		{
-			auto ctx = leaf::make_context(&handle_error);
-			auto active_context = activate_context(ctx);
-			auto r = f(ctx);
-			ctx.propagate();
-			return r;
-		},
-		[&]( leaf::error_info const & error )
-		{
-			return handle_error(error);
-		} );
-	BOOST_TEST_EQ(r, 1);
+		BOOST_TEST_EQ(r2.value(), 1);
+	}
 
 	return boost::report_errors();
 }

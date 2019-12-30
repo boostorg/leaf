@@ -1634,20 +1634,15 @@ namespace boost { namespace leaf {
   public:
 
     virtual void activate() noexcept = 0;
-    virtual void deactivate( bool propagate_errors ) noexcept = 0;
+    virtual void deactivate() noexcept = 0;
     virtual bool is_active() const noexcept = 0;
+
+    virtual void propagate() noexcept = 0;
 
     virtual void print( std::ostream & ) const = 0;
   };
 
   //////////////////////////////////////////
-
-  enum class on_deactivation
-  {
-    propagate,
-    propagate_if_uncaught_exception,
-    capture_do_not_propagate
-  };
 
   template <class Ctx>
   class context_activator
@@ -1657,17 +1652,15 @@ namespace boost { namespace leaf {
 
   public:
 
-    context_activator( Ctx & ctx, on_deactivation on_deactivate ) noexcept;
+    explicit context_activator( Ctx & ctx ) noexcept;
     context_activator( context_activator && ) noexcept;
     ~context_activator() noexcept;
-
-    void set_on_deactivate( on_deactivation on_deactivate ) noexcept;
   };
 
 } }
 
 template <class Ctx>
-context_activator<Ctx> activate_context( Ctx & ctx, on_deactivation on_deactivate ) noexcept;
+context_activator<Ctx> activate_context( Ctx & ctx ) noexcept;
 
 #define LEAF_NEW_ERROR(...) ....
 #define LEAF_AUTO(v,r) ....
@@ -1936,8 +1929,10 @@ namespace boost { namespace leaf {
     ~context() noexcept;
 
     void activate() noexcept;
-    void deactivate( bool propagate_errors ) noexcept;
+    void deactivate() noexcept;
     bool is_active() const noexcept;
+
+    void propagate () noexcept;
 
     void print( std::ostream & os ) const;
 
@@ -1949,29 +1944,29 @@ namespace boost { namespace leaf {
 
     template <class R, class... H>
     typename std::decay<decltype(std::declval<R>().value())>::type
-    handle_all( R &, H && ... ) const;
+    handle_all( R &, H && ... );
 
     template <class R, class RemoteH>
     typename std::decay<decltype(std::declval<R>().value())>::type
-    remote_handle_all( R &, RemoteH && ) const;
+    remote_handle_all( R &, RemoteH && );
 
     template <class R, class... H>
-    R handle_some( R &&, H && ... ) const;
+    R handle_some( R &&, H && ... );
 
     template <class R, class RemoteH>
-    R remote_handle_some( R &&, RemoteH && ) const;
+    R remote_handle_some( R &&, RemoteH && );
 
     template <class R, class... H>
-    R handle_current_exception( H && ... ) const;
+    R handle_current_exception( H && ... );
 
     template <class R, class RemoteH>
-    R remote_handle_current_exception( RemoteH && ) const;
+    R remote_handle_current_exception( RemoteH && );
 
     template <class R, class... H>
-    R handle_exception( std::exception_ptr const &, H && ... ) const;
+    R handle_exception( std::exception_ptr const &, H && ... );
 
     template <class R, class RemoteH>
-    R remote_handle_exception( std::exception_ptr const &, RemoteH &&  ) const;
+    R remote_handle_exception( std::exception_ptr const &, RemoteH &&  );
 
   };
 
@@ -2216,9 +2211,9 @@ TIP: See also <<tutorial-accumulate>> from the Tutorial.
 namespace boost { namespace leaf {
 
   template <class Ctx>
-  context_activator<Ctx> activate_context( Ctx & ctx, on_deactivation on_deactivate ) noexcept
+  context_activator<Ctx> activate_context( Ctx & ctx ) noexcept
   {
-    return context_activator<Ctx>(ctx, on_deactivate);
+    return context_activator<Ctx>(ctx);
   }
 
 } }
@@ -3043,39 +3038,41 @@ namespace boost { namespace leaf {
 
     context() noexcept;
     context( context && x ) noexcept;
-    ~context() noexcept final override;
+    ~context() noexcept;
 
-    void activate() noexcept final override;
-    void deactivate( bool propagate_errors ) noexcept final override;
-    virtual bool is_active() const noexcept = 0;
+    void activate() noexcept;
+    void deactivate() noexcept;
+    bool is_active() const noexcept = 0;
 
-    void print( std::ostream & os ) const final override;
+    void propagate() noexcept = 0;
+
+    void print( std::ostream & os ) const;
 
     template <class R, class... H>
     typename std::decay<decltype(std::declval<R>().value())>::type
-    handle_all( R &, H && ... ) const;
+    handle_all( R &, H && ... );
 
     template <class R, class RemoteH>
     typename std::decay<decltype(std::declval<R>().value())>::type
-    remote_handle_all( R &, RemoteH && ) const;
+    remote_handle_all( R &, RemoteH && );
 
     template <class R, class... H>
-    R handle_some( R &&, H && ... ) const;
+    R handle_some( R &&, H && ... );
 
     template <class R, class RemoteH>
-    R remote_handle_some( R &&, RemoteH && ) const;
+    R remote_handle_some( R &&, RemoteH && );
 
     template <class R, class... H>
-    R handle_current_exception( H && ... ) const;
+    R handle_current_exception( H && ... );
 
     template <class R, class RemoteH>
-    R remote_handle_current_exception( RemoteH && ) const;
+    R remote_handle_current_exception( RemoteH && );
 
     template <class R, class... H>
-    R handle_exception( std::exception_ptr const &, H && ... ) const;
+    R handle_exception( std::exception_ptr const &, H && ... );
 
     template <class R, class RemoteH>
-    R remote_handle_exception( std::exception_ptr const &, RemoteH &&  ) const;
+    R remote_handle_exception( std::exception_ptr const &, RemoteH &&  );
   };
 
   template <class RemoteH>
@@ -3096,7 +3093,7 @@ To be able to load up error objects in a `context` object, it must be activated.
 
 To handle an error, call one of the error handling member functions, which match E-objects currently stored in `*this` to the user-supplied handler functions. See <<context::handle_some>> for a description of the handler matching procedure (this works regardless of whether or not the `context` is currently `active`).
 
-When a `context` is deactivated, it detaches from the calling thread, restoring the thread-local pointers to their pre-`activate` values. Typically, at this point the stored E-objects, if any, are either moved to corresponding storage in other `context` objects active in the calling thread (if available) -- or discarded, depending on the `propagate_errors` argument passed to <<context::activate>>.
+When a `context` is deactivated, it detaches from the calling thread, restoring the thread-local pointers to their pre-`activate` values. Typically, at this point the stored E-objects, if any, are either discarded (by default) or moved to corresponding storage in other `context` objects active in the calling thread (if available), by calling <<context::propagate>>.
 
 TIP: `context` objects can be moved, as long as they aren't active. Moving an active `context` results in undefined behavior.
 
@@ -3162,7 +3159,7 @@ When an E-object is <<tutorial-loading,loaded>>, it is moved in the last activat
 namespace boost { namespace leaf {
 
   template <class... E>
-  void context<E...>::deactivate( bool propagate_errors ) noexcept final override;
+  void context<E...>::deactivate() noexcept;
 
 } }
 ----
@@ -3176,11 +3173,6 @@ Effects: :: De-associates `*this` with the calling thread.
 Ensures: :: * `!<<context::is_active,is_active>>()`.
 
 When a context is deactivated, the thread-local pointers that currently point to each individual E-object storage in it are restored to their original value prior to calling <<context::activate>>.
-
-What happens to the E-objects currently stored in `*this` depends on `propagate_errors`:
-
-* If `propagate_errors` is `false`, any stored E-objects are discarded.
-* If `propagate_errors` is `true`, each stored E-object is moved to the storage pointed by the restored corresponding thread-local pointer. If that pointer is `0`, the stored E-object is discarded.
 
 '''
 
@@ -3202,6 +3194,29 @@ Returns: :: `true` if the `*this` is active in any thread, `false` otherwise.
 
 '''
 
+[[context::propagate]]
+==== `propagate`
+
+.#include <boost/leaf/context.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class... E>
+  void context<E...>::propagate() noexcept;
+
+} }
+----
+
+Preconditions: ::
+`<<context::is_active,is_active>>()` or `*this` must be the last deactivated `context` object in the calling thread. That is, it is valid to call `propagate` while `is_active()` is true, or immediately after calling `<<context::deactivate,deactivate>>()`.
+
+Effects: ::
+
+Each stored E-object is moved to the storage (within other active `context` objects) pointed by the corresponding thread-local pointer, set when a `context` is activated -- or discarded, if the corresponding thread-local pointer is null.
+
+'''
+
 [[context::handle_all]]
 ==== `handle_all`
 
@@ -3213,7 +3228,7 @@ namespace boost { namespace leaf {
   template <class... E>
   template <class R, class... H>
   typename std::decay<decltype(std::declval<R>().value())>::type
-  context<E...>::handle_all( R && r, H && ... h ) const;
+  context<E...>::handle_all( R && r, H && ... h );
 
 } }
 ----
@@ -3251,7 +3266,7 @@ namespace boost { namespace leaf {
 
   template <class... E>
   template <class R, class... H>
-  R context<E...>::handle_current_exception( H && ... h ) const;
+  R context<E...>::handle_current_exception( H && ... h );
 
 } }
 ----
@@ -3287,7 +3302,7 @@ namespace boost { namespace leaf {
 
   template <class... E>
   template <class R, class... H>
-  R context<E...>::handle_exception( std::exception_ptr const & ep, H && ... h ) const
+  R context<E...>::handle_exception( std::exception_ptr const & ep, H && ... h )
   {
     try
     {
@@ -3317,7 +3332,7 @@ namespace boost { namespace leaf {
 
   template <class... E>
   template <class R, class... H>
-  R context<E...>::handle_some( R && r, H && ... h ) const;
+  R context<E...>::handle_some( R && r, H && ... h );
 
 } }
 ----
@@ -3613,7 +3628,7 @@ else
 namespace boost { namespace leaf {
 
   template <class... E>
-  void context<E...>::print( std::ostream & os ) const final override;
+  void context<E...>::print( std::ostream & os ) const;
 
 } }
 ----
@@ -3633,7 +3648,7 @@ namespace boost { namespace leaf {
   template <class... E>
   template <class R, class RemoteH>
   typename std::decay<decltype(std::declval<R>().value())>::type
-  context<E...>::remote_handle_all( R & r, RemoteH && h ) const;
+  context<E...>::remote_handle_all( R & r, RemoteH && h );
 
 } }
 ----
@@ -3699,7 +3714,7 @@ namespace boost { namespace leaf {
 
   template <class... E>
   template <class R, class RemoteH>
-  R context<E...>::remote_handle_current_exception( RemoteH && h ) const;
+  R context<E...>::remote_handle_current_exception( RemoteH && h );
 
 } }
 ----
@@ -3760,7 +3775,7 @@ namespace boost { namespace leaf {
 
   template <class... E>
   template <class R, class RemoteH>
-  R context<E...>::remote_handle_exception( std::exception_ptr const & ep, RemoteH && h ) const;
+  R context<E...>::remote_handle_exception( std::exception_ptr const & ep, RemoteH && h );
 
 } }
 ----
@@ -3794,7 +3809,7 @@ namespace boost { namespace leaf {
 
   template <class... E>
   template <class R, class RemoteH>
-  R context<E...>::remote_handle_some( R && r, RemoteH && h ) const;
+  R context<E...>::remote_handle_some( R && r, RemoteH && h );
 
 } }
 ----
@@ -3857,13 +3872,6 @@ TIP: Because LEAF does not invoke the user-defined `handle_error` function direc
 ----
 namespace boost { namespace leaf {
 
-  enum class on_deactivation
-  {
-    propagate,
-    propagate_if_uncaught_exception,
-    capture_do_not_propagate
-  };
-
   template <class Ctx>
   class context_activator
   {
@@ -3872,11 +3880,9 @@ namespace boost { namespace leaf {
 
   public:
 
-    context_activator( Ctx & ctx, on_deactivation on_deactivate ) noexcept;
+    explicit context_activator( Ctx & ctx ) noexcept;
     context_activator( context_activator && ) noexcept;
     ~context_activator() noexcept;
-
-    void set_on_deactivate( on_deactivation on_deactivate ) noexcept;
   };
 
 } }
@@ -3884,11 +3890,12 @@ namespace boost { namespace leaf {
 
 `context_activator` is a simple class that activates and deactivates a <<context>> using RAII:
 
-* The constructor stores a reference to `ctx` and calls <<context::activate>>.
-* The destructor behavior depends on the `on_deactivation` state:
-** `on_deactivation::propagate` instructs `~context_activator` to call <<context::deactivate>> with `true`;
-** `on_deactivation::propagate_if_uncaught_exception` instructs `~context_activator` to call `deactivate` with the value returned from `std::uncaught_exception()`;
-** `on_deactivation::capture_do_not_propagate` instructs `~context_activator` to call `deactivate` with `false`.
+If `<<context::is_active,ctx.is_active>>`() is `true` at the time the `context_activator` is initialized, the constructor and the destructor have no effects. Otherwise:
+
+* The constructor stores a reference to `ctx` and calls `<<context::activate,ctx.activate>>`().
+* The destructor:
+** If `ctx.is_active()` is false, has no effects (that is, it is valid to call <<context::deactivate>> manually, before the `context_activator` object expires);
+** Otherwise, calls `<<context::deactivate,ctx.deactivate>>`() and, if there are new uncaught exceptions since the constructor was called, the destructor calls `<<context::propagate,ctx.propagate>>`().
 
 For automatic deduction of `Ctx`, use <<activate_context>>.
 
@@ -4412,8 +4419,10 @@ namespace boost { namespace leaf {
   public:
 
     virtual void activate() noexcept = 0;
-    virtual void deactivate( bool propagate_errors ) noexcept = 0;
+    virtual void deactivate() noexcept = 0;
     virtual bool is_active() const noexcept = 0;
+
+    virtual void propagate() noexcept = 0;
 
     virtual void print( std::ostream & ) const = 0;
   };

@@ -708,102 +708,80 @@ namespace boost { namespace leaf {
 	{
 		template <class... E>
 		template <class R, class... H>
-		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::handle_all( R & r, H && ... h ) const
+		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::handle_all_( R & r, H && ... h )
 		{
-			using namespace leaf_detail;
 			using Ret = typename std::decay<decltype(std::declval<R>().value())>::type;
 			static_assert(is_result_type<R>::value, "The R type used with a handle_all function must be registered with leaf::is_result_type");
-			return handle_error_<Ret>(tup(), error_info(r.error()), std::forward<H>(h)...);
+			assert(is_active());
+			error_info const ei(r.error());
+			deactivate();
+			return handle_error_<Ret>(tup(), ei, std::forward<H>(h)...);
 		}
 
 		template <class... E>
 		template <class R, class RemoteH>
-		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::remote_handle_all( R & r, RemoteH && h ) const
+		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::remote_handle_all_( R & r, RemoteH && h )
 		{
 			static_assert(is_result_type<R>::value, "The R type used with a handle_all function must be registered with leaf::is_result_type");
-			return std::forward<RemoteH>(h)(error_info(r.error(), this)).get();
+			assert(is_active());
+			error_info const ei(r.error(), this);
+			deactivate();
+			return std::forward<RemoteH>(h)(ei).get();
 		}
 
 		template <class... E>
 		template <class R, class... H>
-		LEAF_CONSTEXPR inline R context_base<E...>::handle_some( R && r, H && ... h ) const
+		LEAF_CONSTEXPR inline R context_base<E...>::handle_some_( R && r, H && ... h )
 		{
-			using namespace leaf_detail;
 			static_assert(is_result_type<R>::value, "The R type used with a handle_some function must be registered with leaf::is_result_type");
-			return handle_error_<R>(tup(), error_info(r.error()), std::forward<H>(h)...,
+			assert(is_active());
+			error_info const ei(r.error());
+			deactivate();
+			return handle_error_<R>(tup(), ei, std::forward<H>(h)...,
 				[&r]()->R { return std::move(r); });
 		}
 
 		template <class... E>
 		template <class R, class RemoteH>
-		LEAF_CONSTEXPR inline R context_base<E...>::remote_handle_some( R && r, RemoteH && h ) const
+		LEAF_CONSTEXPR inline R context_base<E...>::remote_handle_some_( R && r, RemoteH && h )
 		{
 			static_assert(is_result_type<R>::value, "The R type used with a handle_some function must be registered with leaf::is_result_type");
-			return std::forward<RemoteH>(h)(error_info(r.error(), this)).get();
-		}
-
-		////////////////////////////////////////////
-
-		template <class... E>
-		template <class TryBlock, class... H>
-		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type context_base<E...>::try_handle_all_( TryBlock && try_block, H && ... h ) const
-		{
-			using namespace leaf_detail;
-			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
-			assert(this->is_active());
-			if( auto r = std::forward<TryBlock>(try_block)() )
-				return r.value();
-			else
-				return handle_all(r, std::forward<H>(h)...);
+			assert(is_active());
+			error_info const ei(r.error(), this);
+			deactivate();
+			return std::forward<RemoteH>(h)(ei).get();
 		}
 
 		template <class... E>
-		template <class TryBlock, class RemoteH>
-		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type context_base<E...>::remote_try_handle_all_( TryBlock && try_block, RemoteH && h ) const
+		template <class R, class... H>
+		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::handle_all( R & r, H && ... h )
 		{
-			using namespace leaf_detail;
-			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a remote_try_handle_all function must be registered with leaf::is_result_type");
-			assert(this->is_active());
-			if( auto r = std::forward<TryBlock>(try_block)() )
-				return r.value();
-			else
-				return remote_handle_all(r, std::forward<RemoteH>(h));
+			auto active_context = activate_context(*this);
+			return handle_all_(r, std::forward<H>(h)...);
 		}
 
 		template <class... E>
-		template <class TryBlock, class... H, class Ctx>
-		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type context_base<E...>::try_handle_some_( context_activator<Ctx> & active_context, TryBlock && try_block, H && ... h ) const
+		template <class R, class RemoteH>
+		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::remote_handle_all( R & r, RemoteH && h )
 		{
-			using namespace leaf_detail;
-			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
-			assert(this->is_active());
-			if( auto r = std::forward<TryBlock>(try_block)() )
-				return r;
-			else
-			{
-				auto rr = handle_some(std::move(r), std::forward<H>(h)...);
-				if( !rr )
-					active_context.set_on_deactivate(on_deactivation::propagate);
-				return rr;
-			}
+			auto active_context = activate_context(*this);
+			return remote_handle_all_(r, std::forward<RemoteH>(h));
 		}
 
 		template <class... E>
-		template <class TryBlock, class RemoteH, class Ctx>
-		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type context_base<E...>::remote_try_handle_some_( context_activator<Ctx> & active_context, TryBlock && try_block, RemoteH && h ) const
+		template <class R, class... H>
+		LEAF_CONSTEXPR inline R context_base<E...>::handle_some( R && r, H && ... h )
 		{
-			using namespace leaf_detail;
-			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a remote_try_handle_some function must be registered with leaf::is_result_type");
-			assert(this->is_active());
-			if( auto r = std::forward<TryBlock>(try_block)() )
-				return r;
-			else
-			{
-				auto rr = remote_handle_some(std::move(r), std::forward<RemoteH>(h));
-				if( !rr )
-					active_context.set_on_deactivate(on_deactivation::propagate);
-				return rr;
-			}
+			auto active_context = activate_context(*this);
+			return handle_some_(std::forward<R>(r), std::forward<H>(h)...);
+		}
+
+		template <class... E>
+		template <class R, class RemoteH>
+		LEAF_CONSTEXPR inline R context_base<E...>::remote_handle_some( R && r, RemoteH && h )
+		{
+			auto active_context = activate_context(*this);
+			return remote_handle_some_(std::forward<R>(r), std::forward<RemoteH>(h));
 		}
 	}
 

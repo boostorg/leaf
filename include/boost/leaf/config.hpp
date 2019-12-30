@@ -109,10 +109,10 @@
 
 #if __cplusplus > 201402L
 #	define LEAF_CONSTEXPR constexpr
-#	define LEAF_UNCAUGHT_EXCEPTIONS std::uncaught_exceptions
+#	define LEAF_STD_UNCAUGHT_EXCEPTIONS 1
 #else
 #	define LEAF_CONSTEXPR
-#	define LEAF_UNCAUGHT_EXCEPTIONS std::uncaught_exception
+#	define LEAF_STD_UNCAUGHT_EXCEPTIONS 0
 #endif
 
 #endif

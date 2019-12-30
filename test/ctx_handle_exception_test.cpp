@@ -38,50 +38,48 @@ void f( Ctx & ctx )
 int main()
 {
 	{
-		auto handle_error = []( leaf::error_info const & error )
-		{
-			return leaf::remote_handle_exception( error,
-				[]( leaf::catch_<std::exception>, info<1> x )
-				{
-					BOOST_TEST(x.value==1);
-					return 1;
-				},
-				[]
-				{
-					return 2;
-				} );
-		};
+		using Ctx = leaf::context<leaf::catch_<std::exception>, info<1>>;
 
 		{
-			auto ctx = leaf::make_context(&handle_error);
+			Ctx ctx;
 			try
 			{
 				f(ctx);
 			}
 			catch(...)
 			{
-				int r = ctx.remote_handle_current_exception<int>(
-					[&]( leaf::error_info const & error )
+				int r = ctx.handle_current_exception<int>(
+					[]( leaf::catch_<std::exception>, info<1> x )
 					{
-						return handle_error(error);
+						BOOST_TEST(x.value==1);
+						return 1;
+					},
+					[]
+					{
+						return 2;
 					} );
 				BOOST_TEST_EQ(r, 1);
 			}
 		}
 
 		{
-			auto ctx = leaf::make_context(&handle_error);
+			Ctx ctx;
 			try
 			{
 				f(ctx);
 			}
 			catch(...)
 			{
-				int r = ctx.remote_handle_exception<int>(
+				int r = ctx.handle_exception<int>(
 					std::current_exception(),
-					[&]( leaf::error_info const & error )
+					[]( leaf::catch_<std::exception>, info<1> x )
 					{
-						return handle_error(error);
+						BOOST_TEST(x.value==1);
+						return 1;
+					},
+					[]
+					{
+						return 2;
 					} );
 				BOOST_TEST_EQ(r, 1);
 			}
@@ -89,22 +87,10 @@ int main()
 	}
 
 	{
-		auto handle_error = []( leaf::error_info const & error, int & r )
-		{
-			return leaf::remote_handle_exception( error,
-				[&]( leaf::catch_<std::exception>, info<1> x )
-				{
-					BOOST_TEST(x.value==1);
-					r = 1;
-				},
-				[&]
-				{
-					r = 2;
-				} );
-		};
+		using Ctx = leaf::context<leaf::catch_<std::exception>, info<1>>;
 
 		{
-			auto ctx = leaf::make_context(&handle_error);
+			Ctx ctx;
 			try
 			{
 				f(ctx);
@@ -112,17 +98,22 @@ int main()
 			catch(...)
 			{
 				int r = 0;
-				ctx.remote_handle_current_exception<void>(
-					[&]( leaf::error_info const & error )
+				ctx.handle_current_exception<void>(
+					[&]( leaf::catch_<std::exception>, info<1> x )
 					{
-						return handle_error(error, r);
+						BOOST_TEST(x.value==1);
+						r = 1;
+					},
+					[&]
+					{
+						r = 2;
 					} );
 				BOOST_TEST_EQ(r, 1);
 			}
 		}
 
 		{
-			auto ctx = leaf::make_context(&handle_error);
+			Ctx ctx;
 			try
 			{
 				f(ctx);
@@ -130,11 +121,16 @@ int main()
 			catch(...)
 			{
 				int r = 0;
-				ctx.remote_handle_exception<void>(
+				ctx.handle_exception<void>(
 					std::current_exception(),
-					[&]( leaf::error_info const & error )
+					[&]( leaf::catch_<std::exception>, info<1> x )
 					{
-						return handle_error(error, r);
+						BOOST_TEST(x.value==1);
+						r = 1;
+					},
+					[&]
+					{
+						r = 2;
 					} );
 				BOOST_TEST_EQ(r, 1);
 			}

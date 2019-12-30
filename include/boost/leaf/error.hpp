@@ -243,20 +243,22 @@ namespace boost { namespace leaf {
 				assert(x.top_==0);
 			}
 
-			~slot() noexcept
-			{
-				assert(top_==0);
-			}
-
 			LEAF_CONSTEXPR void activate() noexcept
 			{
-				assert(top_==0);
+				assert(top_==0 || *top_!=this);
 				top_ = &tl_slot_ptr<E>();
 				prev_ = *top_;
 				*top_ = this;
 			}
 
-			LEAF_CONSTEXPR void deactivate( bool propagate_errors ) noexcept;
+
+			LEAF_CONSTEXPR void deactivate() noexcept
+			{
+				assert(top_!=0 && *top_==this);
+				*top_ = prev_;
+			}
+
+			LEAF_CONSTEXPR void propagate() noexcept;
 
 			using impl::put;
 			using impl::has_value;
@@ -296,28 +298,25 @@ namespace boost { namespace leaf {
 #endif
 
 		template <class E>
-		LEAF_CONSTEXPR inline void slot<E>::deactivate( bool propagate_errors ) noexcept
+		LEAF_CONSTEXPR inline void slot<E>::propagate() noexcept
 		{
-			assert(top_!=0);
-			if( propagate_errors )
-				if( prev_ )
-				{
-					impl & this_ = *this;
-					impl & that_ = *prev_;
-					that_ = std::move(this_);
-				}
+			assert(top_!=0 && (*top_==prev_ || *top_==this));
+			if( prev_ )
+			{
+				impl & this_ = *this;
+				impl & that_ = *prev_;
+				that_ = std::move(this_);
+			}
 #if LEAF_DIAGNOSTICS
-				else
-				{
-					int c = tl_unexpected_enabled_counter();
-					assert(c>=0);
-					if( c )
-						if( int err_id = impl::key() )
-							load_unexpected(err_id, std::move(*this).value(err_id));
-				}
+			else
+			{
+				int c = tl_unexpected_enabled_counter();
+				assert(c>=0);
+				if( c )
+					if( int err_id = impl::key() )
+						load_unexpected(err_id, std::move(*this).value(err_id));
+			}
 #endif
-			*top_ = prev_;
-			top_ = 0;
 		}
 
 		template <class E>
@@ -608,7 +607,8 @@ namespace boost { namespace leaf {
 	public:
 		virtual error_id propagate_captured_errors() noexcept = 0;
 		virtual void activate() noexcept = 0;
-		virtual void deactivate( bool propagate_errors ) noexcept = 0;
+		virtual void deactivate() noexcept = 0;
+		virtual void propagate() noexcept = 0;
 		virtual bool is_active() const noexcept = 0;
 		virtual void print( std::ostream & ) const = 0;
 		error_id captured_id_;
@@ -618,77 +618,61 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////////
 
-	enum class on_deactivation
-	{
-		propagate,
-		do_not_propagate,
-		propagate_if_uncaught_exception
-	};
-
 	template <class Ctx>
 	class context_activator
 	{
 		context_activator( context_activator const & ) = delete;
 		context_activator & operator=( context_activator const & ) = delete;
 
+#if !defined(LEAF_NO_EXCEPTIONS) && LEAF_STD_UNCAUGHT_EXCEPTIONS
+		int const uncaught_exceptions_;
+#endif
 		Ctx * ctx_;
-		bool const ctx_was_active_;
-		on_deactivation on_deactivate_;
 
 	public:
 
-		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE context_activator(Ctx & ctx, on_deactivation on_deactivate) noexcept:
-			ctx_(&ctx),
-			ctx_was_active_(ctx.is_active()),
-			on_deactivate_(on_deactivate)
+		explicit LEAF_CONSTEXPR LEAF_ALWAYS_INLINE context_activator(Ctx & ctx) noexcept:
+#if !defined(LEAF_NO_EXCEPTIONS) && LEAF_STD_UNCAUGHT_EXCEPTIONS
+			uncaught_exceptions_(std::uncaught_exceptions()),
+#endif
+			ctx_(ctx.is_active() ? 0 : &ctx)
 		{
-			if( !ctx_was_active_ )
-				ctx.activate();
+			if( ctx_ )
+				ctx_->activate();
 		}
 
 		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE context_activator( context_activator && x ) noexcept:
-			ctx_(x.ctx_),
-			ctx_was_active_(x.ctx_was_active_),
-			on_deactivate_(x.on_deactivate_)
+#if !defined(LEAF_NO_EXCEPTIONS) && LEAF_STD_UNCAUGHT_EXCEPTIONS
+			uncaught_exceptions_(x.uncaught_exceptions_),
+#endif
+			ctx_(x.ctx_)
 		{
 			x.ctx_ = 0;
 		}
 
 		LEAF_ALWAYS_INLINE ~context_activator() noexcept
 		{
-			if( ctx_ )
-			{
-				assert(
-					on_deactivate_ == on_deactivation::propagate ||
-					on_deactivate_ == on_deactivation::do_not_propagate ||
-					on_deactivate_ == on_deactivation::propagate_if_uncaught_exception);
-				if( !ctx_was_active_ )
-					if( on_deactivate_ == on_deactivation::propagate_if_uncaught_exception )
-					{
-#ifdef LEAF_NO_EXCEPTIONS
-						ctx_->deactivate(false);
-#else
-						bool has_exception = LEAF_UNCAUGHT_EXCEPTIONS();
-						ctx_->deactivate(has_exception);
-						if( !has_exception )
-							(void) leaf_detail::new_id();
+			if( !ctx_ )
+				return;
+			if( ctx_->is_active() )
+				ctx_->deactivate();
+#ifndef LEAF_NO_EXCEPTIONS
+#	if LEAF_STD_UNCAUGHT_EXCEPTIONS
+			if( std::uncaught_exceptions() > uncaught_exceptions_ )
+#	else
+			if( std::uncaught_exception() )
+#	endif
+				ctx_->propagate();
+			else
+				(void) leaf_detail::new_id();
 #endif
-					}
-					else
-						ctx_->deactivate(on_deactivate_ == on_deactivation::propagate);
-			}
-		}
-
-		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE void set_on_deactivate( on_deactivation on_deactivate ) noexcept
-		{
-			on_deactivate_ = on_deactivate;
 		}
 	};
 
 	template <class Ctx>
-	LEAF_CONSTEXPR LEAF_ALWAYS_INLINE context_activator<Ctx> activate_context( Ctx & ctx, on_deactivation on_deactivate ) noexcept
+	LEAF_CONSTEXPR LEAF_ALWAYS_INLINE context_activator<Ctx> activate_context(Ctx & ctx) noexcept
 	{
-		return context_activator<Ctx>(ctx, on_deactivate);
+		return context_activator<Ctx>(ctx);
 	}
 
 	////////////////////////////////////////////

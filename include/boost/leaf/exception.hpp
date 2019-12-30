@@ -55,7 +55,7 @@ namespace boost { namespace leaf {
 		{
 		public:
 
-			virtual error_id get_error_id() const = 0;
+			virtual error_id get_error_id() const noexcept = 0;
 
 		protected:
 
@@ -69,7 +69,7 @@ namespace boost { namespace leaf {
 			public exception_base,
 			public error_id
 		{
-			error_id get_error_id() const final override
+			error_id get_error_id() const noexcept final override
 			{
 				return *this;
 			}

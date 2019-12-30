@@ -78,6 +78,9 @@ tests = [
 	'context_activator_test',
 	'context_deduction_test',
 	'capture_result_unload_test',
+	'ctx_handle_all_test',
+	'ctx_handle_exception_test',
+	'ctx_handle_some_test',
 	'ctx_remote_handle_all_test',
 	'ctx_remote_handle_exception_test',
 	'ctx_remote_handle_some_test',
@@ -127,8 +130,9 @@ tests = [
 	'_hpp_result_test',
 	'_hpp_all_test',
 ]
+ubsan_args = [ '-fsanitize=undefined', '-fno-sanitize-recover=undefined' ]
 foreach t : tests
-	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf,thread_dep]+mp11 ) )
+	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf,thread_dep]+mp11, cpp_args: ubsan_args, link_args: ubsan_args) )
 endforeach
 
 if exceptions

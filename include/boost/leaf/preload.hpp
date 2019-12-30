@@ -29,7 +29,11 @@ namespace boost { namespace leaf {
 			else
 			{
 #ifndef LEAF_NO_EXCEPTIONS
-				if( LEAF_UNCAUGHT_EXCEPTIONS() )
+#	if LEAF_STD_UNCAUGHT_EXCEPTIONS
+				if( std::uncaught_exceptions() )
+#	else
+				if( std::uncaught_exception() )
+#	endif
 					return leaf_detail::new_id();
 #endif
 				return 0;
