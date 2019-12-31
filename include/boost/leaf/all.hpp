@@ -1189,9 +1189,12 @@ namespace boost { namespace leaf {
 			assert(top_!=0 && (*top_==prev_ || *top_==this));
 			if( prev_ )
 			{
-				impl & this_ = *this;
 				impl & that_ = *prev_;
-				that_ = std::move(this_);
+				if( that_.empty() )
+				{
+					impl & this_ = *this;
+					that_ = std::move(this_);
+				}
 			}
 #if LEAF_DIAGNOSTICS
 			else

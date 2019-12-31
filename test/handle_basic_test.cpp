@@ -13,7 +13,7 @@
 
 namespace leaf = boost::leaf;
 
-struct test_info { int value;};
+template <int Tag> struct info { int value;};
 
 enum class error_code
 {
@@ -178,22 +178,121 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				return leaf::new_error( test_info{42} );
+				return leaf::new_error( info<1>{42} );
 			},
-			[]( test_info const & x )
+			[]( info<1> const & i1 )
 			{
-				BOOST_TEST_EQ(x.value, 42);
+				BOOST_TEST_EQ(i1.value, 42);
 				int r = leaf::try_handle_all(
 					[]() -> leaf::result<int>
 					{
-						return leaf::new_error( test_info{43} );
+						return leaf::new_error( info<1>{43} );
 					},
 					[]()
 					{
 						return -1;
 					} );
 				BOOST_TEST_EQ(r, -1);
-				BOOST_TEST_EQ(x.value, 42);
+				BOOST_TEST_EQ(i1.value, 42);
+				return 0;
+			},
+			[]()
+			{
+				return -1;
+			} );
+		BOOST_TEST_EQ(r, 0);
+	}
+
+	///////////////////////////
+
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				return leaf::new_error( info<1>{42} );
+			},
+			[]( info<1> const & i1 )
+			{
+				BOOST_TEST_EQ(i1.value, 42);
+				int r = leaf::try_handle_all(
+					[]() -> leaf::result<int>
+					{
+						return leaf::new_error( info<1>{43} );
+					},
+					[]( info<1> const & i1 )
+					{
+						BOOST_TEST_EQ(i1.value, 43);
+						return -1;
+					},
+					[]()
+					{
+						return -2;
+					} );
+				BOOST_TEST_EQ(r, -1);
+				BOOST_TEST_EQ(i1.value, 42);
+				return 0;
+			},
+			[]()
+			{
+				return -1;
+			} );
+		BOOST_TEST_EQ(r, 0);
+	}
+
+	///////////////////////////
+
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				return leaf::try_handle_some(
+					[]() -> leaf::result<int>
+					{
+						return leaf::new_error( info<1>{1} );
+					},
+					[]( leaf::error_info const & err, info<1> const & i1, info<2> const * i2 )
+					{
+						//We have space for info<2> in the context but i2 is null.
+						BOOST_TEST_EQ(i1.value, 1);
+						BOOST_TEST(!i2);
+						return err.error().load(info<2>{2});
+					} );
+			},
+			[]( info<1> const & i1, info<2> const & i2 )
+			{
+				BOOST_TEST_EQ(i1.value, 1);
+				BOOST_TEST_EQ(i2.value, 2);
+				return 0;
+			},
+			[]()
+			{
+				return -1;
+			} );
+		BOOST_TEST_EQ(r, 0);
+	}
+
+	///////////////////////////
+
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				return leaf::try_handle_some(
+					[]() -> leaf::result<int>
+					{
+						return leaf::new_error( info<1>{1}, info<2>{-2} );
+					},
+					[]( leaf::error_info const & err, info<1> const & i1, info<2> const & i2 )
+					{
+						BOOST_TEST_EQ(i1.value, 1);
+						BOOST_TEST_EQ(i2.value, -2);
+						return err.error().load(info<2>{2});
+					} );
+			},
+			[]( info<1> const & i1, info<2> const & i2 )
+			{
+				BOOST_TEST_EQ(i1.value, 1);
+				BOOST_TEST_EQ(i2.value, 2);
 				return 0;
 			},
 			[]()
