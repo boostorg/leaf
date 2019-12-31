@@ -52,7 +52,7 @@ matrix:
 
   include:
 
-   - os: linux
+    - os: linux
       env: DOC=1
       script:
         - |-
