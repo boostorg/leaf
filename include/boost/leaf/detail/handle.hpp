@@ -708,80 +708,18 @@ namespace boost { namespace leaf {
 	{
 		template <class... E>
 		template <class R, class... H>
-		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::handle_all_( R & r, H && ... h )
+		LEAF_CONSTEXPR inline R context_base<E...>::handle_error( error_id id, H && ... h ) const
 		{
-			using Ret = typename std::decay<decltype(std::declval<R>().value())>::type;
-			static_assert(is_result_type<R>::value, "The R type used with a handle_all function must be registered with leaf::is_result_type");
-			assert(is_active());
-			error_info const ei(r.error());
-			deactivate();
-			return handle_error_<Ret>(tup(), ei, std::forward<H>(h)...);
+			assert(!is_active());
+			return handle_error_<R>(tup(), error_info(id), std::forward<H>(h)...);
 		}
 
 		template <class... E>
 		template <class R, class RemoteH>
-		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::remote_handle_all_( R & r, RemoteH && h )
+		LEAF_CONSTEXPR inline R context_base<E...>::remote_handle_error( error_id id, RemoteH && h ) const
 		{
-			static_assert(is_result_type<R>::value, "The R type used with a handle_all function must be registered with leaf::is_result_type");
-			assert(is_active());
-			error_info const ei(r.error(), this);
-			deactivate();
-			return std::forward<RemoteH>(h)(ei).get();
-		}
-
-		template <class... E>
-		template <class R, class... H>
-		LEAF_CONSTEXPR inline R context_base<E...>::handle_some_( R && r, H && ... h )
-		{
-			static_assert(is_result_type<R>::value, "The R type used with a handle_some function must be registered with leaf::is_result_type");
-			assert(is_active());
-			error_info const ei(r.error());
-			deactivate();
-			return handle_error_<R>(tup(), ei, std::forward<H>(h)...,
-				[&r]()->R { return std::move(r); });
-		}
-
-		template <class... E>
-		template <class R, class RemoteH>
-		LEAF_CONSTEXPR inline R context_base<E...>::remote_handle_some_( R && r, RemoteH && h )
-		{
-			static_assert(is_result_type<R>::value, "The R type used with a handle_some function must be registered with leaf::is_result_type");
-			assert(is_active());
-			error_info const ei(r.error(), this);
-			deactivate();
-			return std::forward<RemoteH>(h)(ei).get();
-		}
-
-		template <class... E>
-		template <class R, class... H>
-		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::handle_all( R & r, H && ... h )
-		{
-			auto active_context = activate_context(*this);
-			return handle_all_(r, std::forward<H>(h)...);
-		}
-
-		template <class... E>
-		template <class R, class RemoteH>
-		LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<R>().value())>::type context_base<E...>::remote_handle_all( R & r, RemoteH && h )
-		{
-			auto active_context = activate_context(*this);
-			return remote_handle_all_(r, std::forward<RemoteH>(h));
-		}
-
-		template <class... E>
-		template <class R, class... H>
-		LEAF_CONSTEXPR inline R context_base<E...>::handle_some( R && r, H && ... h )
-		{
-			auto active_context = activate_context(*this);
-			return handle_some_(std::forward<R>(r), std::forward<H>(h)...);
-		}
-
-		template <class... E>
-		template <class R, class RemoteH>
-		LEAF_CONSTEXPR inline R context_base<E...>::remote_handle_some( R && r, RemoteH && h )
-		{
-			auto active_context = activate_context(*this);
-			return remote_handle_some_(std::forward<R>(r), std::forward<RemoteH>(h));
+			assert(!is_active());
+			return std::forward<RemoteH>(h)(error_info(id, this)).get();
 		}
 	}
 

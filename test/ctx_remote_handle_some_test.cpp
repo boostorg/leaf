@@ -25,17 +25,17 @@ leaf::result<int> f( Ctx & ctx )
 
 int main()
 {
-	auto handle_error = []( leaf::error_info const & error )
+	auto handle_error = []( leaf::error_info const & error, leaf::result<int> && r )
 	{
 		return leaf::remote_handle_some( error,
-			[]( info<1> x ) -> leaf::result<int>
+			[]( info<1> x )
 			{
 				BOOST_TEST(x.value==1);
 				return 1;
 			},
-			[]
+			[&]
 			{
-				return 2;
+				return std::move(r);
 			} );
 	};
 
@@ -45,10 +45,11 @@ int main()
 		leaf::result<int> r1 = f(ctx);
 		BOOST_TEST(!r1);
 
-		leaf::result<int> r2 = ctx.remote_handle_some( std::move(r1),
+		leaf::result<int> r2 = ctx.remote_handle_error<leaf::result<int>>(
+			r1.error(),
 			[&]( leaf::error_info const & error )
 			{
-				return handle_error(error);
+				return handle_error(error, std::move(r1));
 			} );
 		BOOST_TEST_EQ(r2.value(), 1);
 	}

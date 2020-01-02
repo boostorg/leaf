@@ -309,28 +309,10 @@ namespace boost { namespace leaf {
 		public:
 
 			template <class R, class... H>
-			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<R>().value())>::type handle_all( R &, H && ... );
+			LEAF_CONSTEXPR R handle_error( error_id, H && ... ) const;
 
 			template <class R, class RemoteH>
-			LEAF_CONSTEXPR typename std::decay<decltype(std::declval<R>().value())>::type remote_handle_all( R &, RemoteH && );
-
-			template <class R, class... H>
-			LEAF_CONSTEXPR R handle_some( R &&, H && ... );
-
-			template <class R, class RemoteH>
-			LEAF_CONSTEXPR R remote_handle_some( R &&, RemoteH && );
-
-			template <class R, class... H>
-			LEAF_CONSTEXPR R handle_current_exception( H && ... );
-
-			template <class R, class RemoteH>
-			LEAF_CONSTEXPR R remote_handle_current_exception( RemoteH && );
-
-			template <class R, class... H>
-			LEAF_CONSTEXPR R handle_exception( std::exception_ptr const &, H && ... );
-
-			template <class R, class RemoteH>
-			LEAF_CONSTEXPR R remote_handle_exception( std::exception_ptr const &, RemoteH &&  );
+			LEAF_CONSTEXPR R remote_handle_error( error_id, RemoteH && ) const;
 		};
 
 		template <class... E>

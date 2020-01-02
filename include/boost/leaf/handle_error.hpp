@@ -22,7 +22,12 @@ namespace boost { namespace leaf {
 			if( auto r = std::forward<TryBlock>(try_block)() )
 				return r.value();
 			else
-				return this->handle_all_(r, std::forward<H>(h)...);
+			{
+				error_id id = r.error();
+				this->deactivate();
+				using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
+				return this->template handle_error<R>(std::move(id), std::forward<H>(h)...);
+			}
 		}
 
 		template <class... E>
@@ -35,7 +40,12 @@ namespace boost { namespace leaf {
 			if( auto r = std::forward<TryBlock>(try_block)() )
 				return r.value();
 			else
-				return this->remote_handle_all_(r, std::forward<RemoteH>(h));
+			{
+				error_id id = r.error();
+				this->deactivate();
+				using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
+				return this->template remote_handle_error<R>(std::move(id), std::forward<RemoteH>(h));
+			}
 		}
 
 		template <class... E>
@@ -49,7 +59,10 @@ namespace boost { namespace leaf {
 				return r;
 			else
 			{
-				auto rr = this->handle_some_(std::move(r), std::forward<H>(h)...);
+				error_id id = r.error();
+				this->deactivate();
+				using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
+				auto rr = this->template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
 				if( !rr )
 					this->propagate();
 				return rr;
@@ -67,7 +80,10 @@ namespace boost { namespace leaf {
 				return r;
 			else
 			{
-				auto rr = remote_handle_some_(std::move(r), std::forward<RemoteH>(h));
+				error_id id = r.error();
+				this->deactivate();
+				using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
+				auto rr = this->template remote_handle_error<R>(std::move(id), std::forward<RemoteH>(h));
 				if( !rr )
 					this->propagate();
 				return rr;

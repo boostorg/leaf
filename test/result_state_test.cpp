@@ -278,8 +278,9 @@ int main()
 
 	{ // error move -> assign move
 		context_type ctx;
-		auto active_context = activate_context(ctx);
+		ctx.activate();
 		leaf::result<val> r1 = leaf::new_error( e_err { } );
+		ctx.deactivate();
 		BOOST_TEST(!r1);
 		BOOST_TEST_EQ(err::count, 1);
 		BOOST_TEST_EQ(val::count, 0);
@@ -290,7 +291,7 @@ int main()
 		BOOST_TEST(!r2);
 		{
 			val x;
-			BOOST_TEST(ctx.handle_all(r2, [&]{ return x; }) == x);
+			BOOST_TEST(ctx.handle_error<val>(r2.error(), [&]{ return x; }) == x);
 		}
 		BOOST_TEST_EQ(err::count, 1);
 		BOOST_TEST_EQ(val::count, 0);
@@ -439,8 +440,9 @@ int main()
 
 	{ // void error move -> assign move
 		context_type ctx;
-		auto active_context = activate_context(ctx);
+		ctx.activate();
 		leaf::result<void> r1 = leaf::new_error( e_err { } );
+		ctx.deactivate();
 		BOOST_TEST(!r1);
 		BOOST_TEST_EQ(err::count, 1);
 		leaf::error_id r1e = r1.error();
@@ -448,7 +450,7 @@ int main()
 		leaf::error_id r2e = r2.error();
 		BOOST_TEST_EQ(r1e, r2e);
 		BOOST_TEST(!r2);
-		ctx.handle_all(r2, []{ });
+		ctx.handle_error<void>(r2.error(), []{ });
 		BOOST_TEST_EQ(err::count, 1);
 	}
 	BOOST_TEST_EQ(err::count, 0);

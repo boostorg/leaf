@@ -32,8 +32,8 @@ int main()
 		leaf::result<int> r1 = f(ctx);
 		BOOST_TEST(!r1);
 
-		int r2 = ctx.handle_all(
-			r1,
+		int r2 = ctx.handle_error<int>(
+			r1.error(),
 			[]( info<1> x )
 			{
 				BOOST_TEST(x.value==1);

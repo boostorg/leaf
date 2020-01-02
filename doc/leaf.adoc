@@ -1085,7 +1085,7 @@ return leaf::remote_try_handle_some(
 
   [&]( leaf::error_info const & error )
   {
-    return handle_error(error); //Invoke the remote handler we captured earlier.
+    return handle_error(error); // Invoke the remote handler we captured earlier.
   } );
 ----
 
@@ -1164,13 +1164,13 @@ return leaf::remote_try_catch(
 
   [&]
   {
-    task_result r = fut.get(); //Throws on error
+    task_result r = fut.get(); // Throws on error
     //Success!
   },
 
   [&]( leaf::error_info const & error )
   {
-    return handle_error(error); //Invoke the remote handler we captured earlier.
+    return handle_error(error); // Invoke the remote handler we captured earlier.
   } );
 ----
 
@@ -1867,29 +1867,13 @@ Error-handling headers are designed to minimize coupling:
 * Translation units that handle errors but *do not* catch exceptions should `#include <boost/leaf/handle_error.hpp>`;
 * Translation units that *do* catch exceptions should `#include <boost/leaf/handle_exception.hpp>`.
 
-Error-handling functions use the following conventions:
+Namespace-scope error-handling functions contain the word `try_` in their name and use the following conventions:
 
 * Functions that *do not* use the `remote_` prefix take a list of error handlers; functions that *do*, take a single error-handling function, which internally captures the list of error handlers. See <<tutorial-remote_handlers>>.
 * Functions that are designed to work with a `result<T>` type (see <<is_result_type>>) use the `_all` or `_some` suffix; the former require (at compile time) the user-supplied set of handlers to definitely handle any reported error, while the latter allow for handlers to recognize and handle some errors, forwarding others to the caller.
 * An `pass:[_all]` or a `pass:[_some]` function does not catch or handle exceptions unless at least one of the user-supplied handlers uses the <<catch_>> template. All other error-handling functions catch or can handle exceptions.
 
-Error-handling members of the `context` template match the error objects currently stored in `*this`, to one of the specified handlers:
-
-.Error-Handling Functions, Members of the context Template:
-[cols="<,^,^", stripes=none]
-|====
-| | Handles `result<T>` Errors | Handles Exceptions
-| [`<<context::remote_handle_all,remote_>>`]<<context::handle_all>> | ✅ | ✱
-| [`<<context::remote_handle_some,remote_>>`]<<context::handle_some>> | ✅ | ✱
-| [`<<context::remote_handle_current_exception,remote_>>`]<<context::handle_current_exception>> | ❌ | ✅
-| [`<<context::remote_handle_exception,remote_>>`]<<context::handle_exception>> | ❌ | ✅
-|====
-
-Namespace-scope error-handling functions contain the word `try_` in their name. These functions:
-
-. Create an internal `context<E...>` object `ctx`, deducing the `E...` types automatically from the arguments of the supplied handlers;
-. Attempt the set of operations contained in the passed `TryBlock` function;
-. If that fails, they call a `ctx` member function (see above) to handle the error.
+This is summarized in the table below:
 
 .Namespace-Scope Error-Handling Functions
 [cols="<,^,^", stripes=none]
@@ -1903,6 +1887,14 @@ Namespace-scope error-handling functions contain the word `try_` in their name. 
 [.text-right]
 ✱ Handles exceptions iff at least one of the supplied handlers uses <<catch_>> +
 (Dispatched statically; please `#include <boost/leaf/handle_exception.hpp>`)
+
+The above error-handling functions:
+
+. Create an internal `context<E...>` object `ctx`, deducing the `E...` types automatically from the arguments of the supplied handlers;
+. Attempt the set of operations contained in the passed `TryBlock` function;
+. If that fails, they invoke an appropriate error handler to handle the error.
+
+In addition, the `context` template provides lower-level error handling member functions, <<context::handle_error>> and <<context::remote_handle_error>>, which select an error handler based on available error objects in `*this`, associated with a supplied <<error_id>>. These functions are designed to be called after the caller has detected a failure; they do not use a `result` type and can not deal with exceptions. Use one of the `try_` functions (above) for these cases.
 
 '''
 
@@ -1936,38 +1928,11 @@ namespace boost { namespace leaf {
 
     void print( std::ostream & os ) const;
 
-    // Note: <boost/leaf/context.hpp> leaves the rest of the member functions undefined.
-
-    // They are defined, as appropriate, in either:
-    // <boost/leaf/handle_error.hpp> or
-    // <boost_leaf/handle_exception.hpp>
-
     template <class R, class... H>
-    typename std::decay<decltype(std::declval<R>().value())>::type
-    handle_all( R &, H && ... );
+    R handle_error( R &, H && ... ) const;
 
     template <class R, class RemoteH>
-    typename std::decay<decltype(std::declval<R>().value())>::type
-    remote_handle_all( R &, RemoteH && );
-
-    template <class R, class... H>
-    R handle_some( R &&, H && ... );
-
-    template <class R, class RemoteH>
-    R remote_handle_some( R &&, RemoteH && );
-
-    template <class R, class... H>
-    R handle_current_exception( H && ... );
-
-    template <class R, class RemoteH>
-    R remote_handle_current_exception( RemoteH && );
-
-    template <class R, class... H>
-    R handle_exception( std::exception_ptr const &, H && ... );
-
-    template <class R, class RemoteH>
-    R remote_handle_exception( std::exception_ptr const &, RemoteH &&  );
-
+    R remote_handle_error( R &, RemoteH && ) const;
   };
 
   //////////////////////////////////////////
@@ -1995,7 +1960,7 @@ namespace boost { namespace leaf {
 [[handle_error.hpp]]
 ==== `handle_error.hpp`
 
-This header defines functions and types that can be used to handle errors but not catch exceptions. It also defines relevant member functions of the `context` template left undefined by <<context.hpp>>.
+This header defines functions and types that can be used to handle errors but not catch exceptions.
 
 .#include <boost/leaf/handle_error.hpp>
 [source,c++]
@@ -2072,7 +2037,6 @@ namespace boost { namespace leaf {
 This header:
 
 * Defines namespace-scope functions and types that can be used to catch exceptions.
-* Provides definitions of all exception-handling member functions of the `context` template (they are left undefined by <<context.hpp>>).
 * Enables all functions using the `_some` or `_all` suffix (defined in <<handle_error.hpp>>) to handle exceptions, not only failures communicated by `result<T>`.
 
 .#include <boost/leaf/handle_exception.hpp>
@@ -2274,7 +2238,7 @@ NOTE: An object of type `leaf::<<result,result>><T>` can be initialized with a `
 ** otherwise, it is initialized with `r`.
 --
 +
-In case `f` throws, `capture` catches the exception in a `std::exception_ptr`, and throws a different exception of unspecified type that transports both the `std::exception_ptr` as well as `ctx`. This exception type is recognized by <<try_catch>>, <<context::handle_exception>> and <<context::handle_current_exception>>, which automatically unpack the original exception and propagate the contents of `*ctx` (presumably, in a different thread).
+In case `f` throws, `capture` catches the exception in a `std::exception_ptr`, and throws a different exception of unspecified type that transports both the `std::exception_ptr` as well as `ctx`. This exception type is recognized by <<try_catch>>, which automatically unpacks the original exception and propagates the contents of `*ctx` (presumably, in a different thread).
 
 TIP: See also <<tutorial-async>> from the Tutorial.
 
@@ -2625,6 +2589,7 @@ return leaf::remote_try_catch(
   {
     // Code which may throw
   },
+
   [&]( leaf::error_info const & error )
   {
     return remote_handlers(error);
@@ -2734,6 +2699,7 @@ return leaf::remote_try_handle_some(
   {
     // Code which may fail
   },
+
   [&]( leaf::error_info const & error )
   {
     return remote_handlers(error);
@@ -2782,7 +2748,7 @@ return leaf::remote_try_handle_some(
   },
   [&]( leaf::error_info const & error )
   {
-    return remote_handlers(error, 42); //Pass 42 for a
+    return remote_handlers(error, 42); // Pass 42 for a
   } );
 ----
 
@@ -2799,8 +2765,6 @@ TIP: See also <<tutorial-remote_handlers>> from the Tutorial.
 .#include <boost/leaf/handle_exception.hpp>
 [source,c++]
 ----
-#include <boost/leaf/handle_error.hpp>
-
 namespace boost { namespace leaf {
 
   template <class TryBlock, class... H>
@@ -2847,6 +2811,7 @@ TIP: See also Five Minute Introduction <<introduction-result>>.
 === `try_handle_some`
 
 .#include <boost/leaf/handle_error.hpp>
+
 [source,c++]
 ----
 namespace boost { namespace leaf {
@@ -2859,16 +2824,276 @@ namespace boost { namespace leaf {
 ----
 
 Requirements: ::
-* `try_block` must return a `result<T>` object (see <<is_result_type>>). It is valid for the `try_block` to return `leaf::<<result,result>><T>`, however this is not a requirement.
-* `h...` must satisfy the same requirements as the handlers passed to <<context::handle_some>>.
+* The `try_block` function may not take any arguments.
+* The type `R` returned by the `try_block` function must be a `result<T>` type (see <<is_result_type>>). It is valid for the `try_block` to return `leaf::<<result,result>><T>`, however this is not a requirement.
+* Each of the `h...` functions:
+** may take arguments of <<E-types>>, either by value or by `const &`, or as a `const *`;
+** may take arguments, either by value or by `const &`, of the predicate type `<<match,match>><E, V...>`, where `E` is an E-type or an instance of the <<condition>> class template.
+** may take arguments, either by value or by `const &`, of the predicate type `<<catch_,catch_>><Ex...>`, where each of the `Ex` types derives from `std::exception` (in this case, please also `#include <boost/leaf/handle_exception.hpp>`);
+** may take an <<error_info>> argument by `const &`;
+** may take a <<diagnostic_info>> argument by `const &`;
+** may take a <<verbose_diagnostic_info>> argument by `const &`;
+** may not take any other types of arguments.
+** Must return a type that can be used to initialize an object of the type `R`; in case R is a `result<void>` (that is, in case of success it does not communicate a value), handlers that return `void` are permitted. If such a handler matches the failure, the `try_handle_some` return value is initialized by `{}`.
 
 Effects: ::
 
-* Creates a local <<context>> object `ctx` of type that is automatically deduced from the passed handler pack `h...`, which guarantees that it is able to store all of the types required to handle errors.
-* Invokes the `try_block`; if the returned object `r` indicates success, it is forwarded to the caller. Otherwise, `try_handle_some` calls `ctx.<<context::handle_some,handle_some>>`, forwarding `r` and `h...`, to handle the error.
-* If the call to `ctx.handle_some` indicates success, all error objects stored in `ctx` are discarded.
+* Creates a local `<<context,context>><E...>` object `ctx`, where the `E...` types are automatically deduced from the types of arguments taken by each `h...`, which guarantees that it is able to store all of the types required to handle errors.
+* Invokes the `try_block`:
+** if the returned object `r` indicates success, it is forwarded to the caller.
+** otherwise, LEAF  considers each of the `h...` handlers, in order, until it finds one that matches the reported `r.error()`. The first matching handler is invoked and its return value is used to initialize the return value of `try_handle_some`, which can indicate success if the handler was able to handle the error, or failure if it was not.
+** if `try_handle_some` is unable to find a matching handler, it returns `r`.
 
-NOTE: `try_handle_some` will catch and handle exceptions iff the handler pack `h...` contains a handler that takes an argument of type that is an instance of the <<catch_>> template. This behavior is dispatched statically; please `#include <boost/leaf/handle_exception.hpp>`.
+NOTE: `try_handle_some` is exception-neutral: it does not throw exceptions, however the user-supplied handlers are permitted to throw.
+
+Handler Matching Procedure: ::
++
+A handler `h` matches the failure reported by `r` iff `try_handle_some` is able to produce values to pass as its arguments, using the E-types stored in `ctx`, associated with the error ID obtained by calling `r.error()`. As soon as it is determined that an argument value can not be produced, the current handler is dropped and the matching procedure continues with the next handler, if any.
++
+The return value of `r.error()` must be implicitly convertible to <<error_id>>. Naturally, the `leaf::result` template satisfies this requirement. If an external `result` type is used instead, usually `r.error()` would return a `std::error_code`, which is able to communicate LEAF error IDs; see <<tutorial-interoperability>>.
++
+If `err` is the error ID obtained from `r.error()`, each argument value `a`~i~ to be passed to the handler currently under consideration is produced as follows:
++
+--
+* If `a`~i~ is taken as `A`~i~ `const &` or by value:
+** If an E-object of type `A`~i~, associated with `err`, is currently stored in `ctx`, `a`~i~ is initialized with a reference to the stored object; otherwise the handler is dropped.
++
+.Example:
+[source,c++]
+----
+....
+auto r = leaf::try_handle_some(
+  []
+  {
+    return f(); // returns leaf::result<int>
+  },
+
+  []( leaf::e_file_name const & fn ) <1>
+  {
+    std::cerr << "File Name: \"" << fn.value << '"' << std::endl; <2>
+    return 1;
+  } );
+----
++
+[.text-right]
+<<result>> | <<e_file_name>>
++
+<1> In case the `try_block` (the first lambda) indicates a failure, this handler will be matched if `ctx` stores an `e_file_name` associated with the error. Because this is the only supplied handler, if an `e_file_name` is not available, `try_handle_some` will return the `leaf::result<int>` returned by `f`.
+<2> Print the file name, handle the error.
++
+** If `A`~i~ is of the predicate type `<<match,match>><E,V...>`, if an object of type `E`, associated with `err`, is currently stored in `ctx`, `a`~i~ is initialized with a reference to the stored object; otherwise the handler is dropped. The handler is also dropped if the expression `a`~i~`()` evaluates to `false` (see `<<match,match>><E,V...>`).
++
+.Example:
+[source,c++]
+----
+enum class errors
+{
+  ec1=1,
+  ec2,
+  ec3
+};
+
+....
+
+try_handle_some(
+  []
+  {
+    return f();
+  },
+
+  []( leaf::match<errors, errors::ec1> ) <1>
+  {
+    ....
+  },
+
+  []( errors ec ) <2>
+  {
+    ....
+  } );
+}
+----
++
+[.text-right]
+<<result>> | <<match>>
++
+<1> This handler is matched if the error includes an object of type `errors` with value `ec1`.
+<2> This handler is matched if the error includes an object of type `errors` regardless of its value.
++
+In particular, the `E` type used to instantiate the `match` template may be an instance of the <<condition>> class template, which is used to match a `std::error_condition` enumerated value:
++
+.Example:
+[source,c++]
+----
+enum class cond_x { x00, x11, x22, x33 };
+
+namespace std { template <> struct is_error_condition_enum<cond_x>: true_type { }; };
+
+....
+
+try_handle_some(
+  []
+  {
+    return f();
+  },
+
+  [&c]( leaf::match<leaf::condition<cond_x>, cond_x::x11> ) <1>
+  {
+    ....
+  },
+
+  []( std::error_code const & ec ) <2>
+  {
+    ....
+  } );
+}
+----
++
+[.text-right]
+<<result>> | <<match>> | <<condition>>
++
+<1> This handler is matched if the error includes an object of type `std::error_code` equivalent to the error condition `cond_x::x11`.
+<2> This handler is matched if the error includes any object of type `std::error_code`.
++
+** If `A`~i~ is of the predicate type `<<catch_,catch_>><Ex...>`, and the `try_block` throws, `a`~i~ is initialized with the current `std::exception`. The handler is dropped if the expression `a`~i~`()` evaluates to `false` (see `<<catch_,catch_>><Ex...>`).
++
+.Example:
+[source,c++]
+----
+struct exception1: std::exception { };
+struct exception2: std::exception { };
+struct exception3: std::exception { };
+
+....
+
+try_handle_some(
+  []
+  {
+    return f(); // throws
+  },
+
+  []( leaf::catch_<exception1, exception2> ) <1>
+  {
+    ....
+  },
+
+  []( leaf::error_info const & info ) <2>
+  {
+    ....
+  } );
+----
++
+[.text-right]
+<<result>> | <<catch_>> | <<error_info>>
++
+<1> This handler is matched if the current exception is either of type `exception1` or `exception2`.
+<2> This handler is matched any error. Use `info.<<error_info,exception>>()` to access the caught `std::exception` object.
++
+NOTE: Using <<catch_>> requires `#include <boost/leaf/handle_exception.hpp>`.
++
+* If `a`~i~ is of type `A`~i~ `const pass:[*]`, `try_handle_some` is always able to produce it: first it attempts to match it as if it is taken by `const &`; if that fails, `a`~i~ is initialized with `0`.
++
+.Example:
+[source,c++]
+----
+....
+try_handle_some(
+  []
+  {
+    return f(); // throws
+  },
+
+  []( leaf::e_file_name const * fn ) -> leaf::result<void> <1>
+  {
+    if( fn ) <2>
+      std::cerr << "File Name: \"" << fn->value << '"' << std::endl;
+  } );
+}
+----
++
+[.text-right]
+<<result>> | <<e_file_name>>
++
+<1> This handler matches any error, because it takes `e_file_name` as a `const *` (and nothing by `const &`).
+<2> If an `e_file_name` is available with the current error, print it.
++
+* If `a`~i~ is of type `error_info const &`,  `try_handle_some` is always able to produce it.
++
+.Example:
+[source,c++]
+----
+....
+try_handle_some(
+  []
+  {
+    return f(); // returns leaf::result<T>
+  },
+
+  []( leaf::error_info const & info ) <1>
+  {
+    std::cerr << "leaf::error_info:" << std::endl << info; <2>
+    return info.error(); <3>
+  } );
+----
++
+[.text-right]
+<<result>> | <<error_info>>
++
+<1> This handler matches any error.
+<2> Print error information.
+<3> Return the original error, which will be returned out of `try_handle_some`.
++
+* If `a`~i~ is of type `diagnostic_info const &`,  `try_handle_some` is always able to produce it.
++
+.Example:
+[source,c++]
+----
+....
+try_handle_some(
+  []
+  {
+    return f(); // throws
+  },
+
+  []( leaf::diagnostic_info const & info ) <1>
+  {
+    std::cerr << "leaf::diagnostic_information:" << std::endl << info; <2>
+    return info.error(); <3>
+  } );
+----
++
+[.text-right]
+<<result>> | <<diagnostic_info>>
++
+<1> This handler matches any error.
+<2> Print diagnostic information, including limited information about dropped error objects.
+<3> Return the original error, which will be returned out of `try_handle_some`.
++
+* If `a`~i~ is of type `verbose_diagnostic_info const &`,  `try_handle_some` is always able to produce it.
++
+.Example:
+[source,c++]
+----
+....
+try_handle_some(
+  []
+  {
+    return f(); // throws
+  },
+
+  []( leaf::verbose_diagnostic_info const & info ) <1>
+  {
+    std::cerr << "leaf::verbose_diagnostic_information:" << std::endl << info; <2>
+    return info.error(); <3>
+  } );
+----
++
+[.text-right]
+<<result>> | <<verbose_diagnostic_info>>
++
+<1> This handler matches any error.
+<2> Print verbose diagnostic information, including values of dropped error objects.
+<3> Return the original error, which will be returned out of `try_handle_some`.
+--
 
 [[types]]
 
@@ -3049,30 +3274,11 @@ namespace boost { namespace leaf {
     void print( std::ostream & os ) const;
 
     template <class R, class... H>
-    typename std::decay<decltype(std::declval<R>().value())>::type
-    handle_all( R &, H && ... );
+    R handle_error( error_id, H && ... ) const;
 
     template <class R, class RemoteH>
-    typename std::decay<decltype(std::declval<R>().value())>::type
-    remote_handle_all( R &, RemoteH && );
+    R remote_handle_error( error_id, RemoteH && ) const;
 
-    template <class R, class... H>
-    R handle_some( R &&, H && ... );
-
-    template <class R, class RemoteH>
-    R remote_handle_some( R &&, RemoteH && );
-
-    template <class R, class... H>
-    R handle_current_exception( H && ... );
-
-    template <class R, class RemoteH>
-    R remote_handle_current_exception( RemoteH && );
-
-    template <class R, class... H>
-    R handle_exception( std::exception_ptr const &, H && ... );
-
-    template <class R, class RemoteH>
-    R remote_handle_exception( std::exception_ptr const &, RemoteH &&  );
   };
 
   template <class RemoteH>
@@ -3081,9 +3287,9 @@ namespace boost { namespace leaf {
 } }
 ----
 [.text-right]
-<<context::context>> | <<context::activate>> | <<context::deactivate>> | <<context::is_active>> | <<context::print>> | [<<context::remote_handle_all,`remote_`>>]<<context::handle_all>> | [<<context::remote_handle_some,`remote_`>>]<<context::handle_some>> | [<<context::remote_handle_current_exception,`remote_`>>]<<context::handle_current_exception>>  | [<<context::remote_handle_exception,`remote_`>>]<<context::handle_exception>> | <<context_type_from_remote_handler>>
+<<context::context>> | <<context::activate>> | <<context::deactivate>> | <<context::is_active>> | <<context::print>> | <<context::propagate>> | <<context::handle_error>> | <<context::remote_handle_error>> | <<context_type_from_remote_handler>>
 
-The `context` class template provides storage for each of the specified E-types. Typically, `context` objects are not used directly, but are created local to the scope of <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> functions, instantiated with E-types automatically deduced from the arguments of the passed handlers.
+The `context` class template provides storage for each of the specified E-types. Typically, `context` objects are not used directly; they're created internally when the <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> functions are called, instantiated with E-types automatically deduced from the arguments of the passed handlers.
 
 Independently, users can create `context` objects if they need to capture E-objects and then transport them, by moving the `context` object itself.
 
@@ -3091,9 +3297,9 @@ Even in that case it is recommended that users do not instantiate the `context` 
 
 To be able to load up error objects in a `context` object, it must be activated. Activating a `context` object `ctx` binds it to the calling thread, setting thread-local pointers of the stored `E...` types to point to the corresponding storage within `ctx`. It is possible, even likely, to have more than one active `context` in any given thread. In this case, activation/deactivation must happen in a LIFO manner. For this reason, it is best to use a <<context_activator>>, which relies on RAII to activate and deactivate a `context`.
 
-To handle an error, call one of the error handling member functions, which match E-objects currently stored in `*this` to the user-supplied handler functions. See <<context::handle_some>> for a description of the handler matching procedure (this works regardless of whether or not the `context` is currently `active`).
-
 When a `context` is deactivated, it detaches from the calling thread, restoring the thread-local pointers to their pre-`activate` values. Typically, at this point the stored E-objects, if any, are either discarded (by default) or moved to corresponding storage in other `context` objects active in the calling thread (if available), by calling <<context::propagate>>.
+
+While error handling typically uses <<try_handle_some>>, <<try_handle_all>> or <<try_catch>>, it is also possible to handle errors by calling the member functions <<context::handle_error>> and <<context::remote_handle_error>>. They take an <<error_id>>, and attempt to match an error handler with E-objects stored in `*this`.
 
 TIP: `context` objects can be moved, as long as they aren't active. Moving an active `context` results in undefined behavior.
 
@@ -3120,7 +3326,7 @@ The default constructor initializes an empty `context` object: it provides stora
 
 The move constructor moves the stored E-objects from one `context` to the other.
 
-WARNING: Moving an active `context` object results in undefined behavior. To avoid this situation it is recommended that the active state of a `context` object is managed by a <<context_activator>>, which relies on RAII instead of on calling <<context::activate>> and <<context::deactivate>> directly.
+WARNING: Moving an active `context` object results in undefined behavior.
 
 '''
 
@@ -3170,9 +3376,30 @@ Preconditions: ::
 
 Effects: :: De-associates `*this` with the calling thread.
 
-Ensures: :: * `!<<context::is_active,is_active>>()`.
+Ensures: :: `!<<context::is_active,is_active>>()`.
 
 When a context is deactivated, the thread-local pointers that currently point to each individual E-object storage in it are restored to their original value prior to calling <<context::activate>>.
+
+'''
+
+[[context::handle_error]]
+==== `handle_error`
+
+[source,c++]
+.#include <boost/leaf/handle_error.hpp>
+----
+namespace boost { namespace leaf {
+
+  template <class... E>
+  template <class R, class... H>
+  R context<E...>::handle_error( error_id err, H && ... h ) const;
+
+} }
+----
+
+This function works similarly to <<try_handle_all>>, but rather than calling a `try_block` and obtaining the <<error_id>> from the returned `result` type, it matches error objects (stored in `*this`, associated with `err`) with a suitable error handler from the `h...` pack.
+
+NOTE: The caller is required to specify the return type `R`. This is because in general the supplied handlers may return different types (which must all be convertible to `R`).
 
 '''
 
@@ -3180,7 +3407,7 @@ When a context is deactivated, the thread-local pointers that currently point to
 ==== `is_active`
 
 [source,c++]
-.#include <boost/leaf/handle_error.hpp>
+.#include <boost/leaf/context.hpp>
 ----
 namespace boost { namespace leaf {
 
@@ -3191,431 +3418,6 @@ namespace boost { namespace leaf {
 ----
 
 Returns: :: `true` if the `*this` is active in any thread, `false` otherwise.
-
-'''
-
-[[context::propagate]]
-==== `propagate`
-
-.#include <boost/leaf/context.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  void context<E...>::propagate() noexcept;
-
-} }
-----
-
-Preconditions: ::
-`<<context::is_active,is_active>>()` or `*this` must be the last deactivated `context` object in the calling thread. That is, it is valid to call `propagate` while `is_active()` is true, or immediately after calling `<<context::deactivate,deactivate>>()`.
-
-Effects: ::
-
-Each stored E-object is moved to the storage (within other active `context` objects) pointed by the corresponding thread-local pointer, set when a `context` is activated -- or discarded, if the corresponding thread-local pointer is null.
-
-'''
-
-[[context::handle_all]]
-==== `handle_all`
-
-[source,c++]
-.#include <boost/leaf/handle_error.hpp>
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  template <class R, class... H>
-  typename std::decay<decltype(std::declval<R>().value())>::type
-  context<E...>::handle_all( R && r, H && ... h );
-
-} }
-----
-
-Requirements: ::
-
-`handle_all` has the same requirements as <<context::handle_some>>, with the following change:
-+
---
-* Each of the `h...` functions must return a type that can be used to initialize an object of type `T`, where `T` is the type returned by `r.value()`, passed through `std::decay`.
---
-And the following addition:
-* At least one handler function (usually the last) must match any error. This is enforced at compile-time.
-
-Effects: :: `handle_all` is equivalent to `handle_some`, except that the handlers `h...` are not permitted to fail. Therefore, `handle_all` returns `T` rather than `result<T>`, and so each of the `h...` handlers is required to return an object that can be used to initialize a value of type `T`.
-
-[NOTE]
---
-* `handle_all` is exception-neutral: it does not throw exceptions, however the user-supplied handlers are permitted to throw.
-
-* Handlers passed to `handle_all` may be matched to the current exception using <<catch_>>. In this case please also `#include <boost/leaf/handle_exception.hpp>`.
---
-
-TIP: It is not typical to call `handle_all` directly; it is usually preferable to automate the instantiation of the <<context>> template, by using <<try_handle_all>> instead.
-
-'''
-
-[[context::handle_current_exception]]
-==== `handle_current_exception`
-
-.#include <boost/leaf/handle_exception.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  template <class R, class... H>
-  R context<E...>::handle_current_exception( H && ... h );
-
-} }
-----
-
-`handle_current_exception` is similar to <<context::handle_some>>, but instead of handling errors communicated by a `result<T>` object, it expects to be invoked from a `catch` block and works with the current exception. Note that the caller is required to provide the return type `R`, since it can not be inferred.
-
-Requirements: ::
-
-The requirements for the passed `h...` are same as in <<context::handle_some>>, except that the return type of each `h` must be suitable for initializing the specified return value `R`.
-
-Handler Matching Procedure: ::
-
-Because each E-object stored in `*this` is uniquely associated with a specific <<error_id>>, `handle_current_exception` needs to extract an `error_id` value from the current exception in order to access any E-object currently stored in `*this`.
-+
-When throwing, users are encouraged to pass the exception object through the <<exception>> function template -- and `throw` the object it returns. This guarantees that the thrown exception transports a unique `error_id` value, just like `<<result,result>><T>` does.
-+
-However, this isn't possible when we don't control the `throw` site, for example if the exception is thrown by a standard function. In this case, E-objects communicated to LEAF are associated with the `error_id` value returned by <<new_error>>.
-+
-To match that, if the current exception does not transports an `error_id` value, `handle_current_exception` looks up E-objects using the `error_id` value returned by <<current_error>>. If imperfect, this approach provides the needed association.
-+
-With the `error_id` value thus obtained, the `handler`-matching procedure works the same as in <<context::handle_some>>.
-
-'''
-
-[[context::handle_exception]]
-
-==== `handle_exception`
-
-.#include <boost/leaf/handle_exception.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  template <class R, class... H>
-  R context<E...>::handle_exception( std::exception_ptr const & ep, H && ... h )
-  {
-    try
-    {
-      std::rethrow_exception(ep);
-    }
-    catch(...)
-    {
-      return handle_current_exception<R>(std::forward<H>(h)...);
-    }
-  }
-
-} }
-----
-
-[.text-right]
-<<context::handle_current_exception>>
-
-'''
-
-[[context::handle_some]]
-.#include <boost/leaf/handle_error.hpp>
-==== `handle_some`
-
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  template <class R, class... H>
-  R context<E...>::handle_some( R && r, H && ... h );
-
-} }
-----
-
-The `handle_some` function template attempts to match the E-objects stored in `*this`, associated with the error reported by `r`, to a handler from the `h...` list.
-
-TIP: It is not typical to call `handle_some` directly; it is usually preferable to automate the instantiation of the <<context>> template, by using <<try_handle_some>> instead.
-
-Requirements: ::
-
-* `<<is_result_type,is_result_type>><R>::value` must be `true`;
-* Each of the `h...` functions:
-** may take arguments of <<E-types>>, either by value or by `const &`, or as a `const *`;
-** may take arguments, either by value or by `const &`, of the predicate type `<<match,match>><E, V...>`, where `E` is an E-type or an instance of the <<condition>> class template.
-** may take arguments, either by value or by `const &`, of the predicate type `<<catch_,catch_>><Ex...>`, where each of the `Ex` types derives from `std::exception` (in this case, please also `#include <boost/leaf/handle_exception.hpp>`);
-** may take an <<error_info>> argument by `const &`;
-** may take a <<diagnostic_info>> argument by `const &`;
-** may take a <<verbose_diagnostic_info>> argument by `const &`;
-** may not take any other types of arguments.
-** Must return a type that can be used to initialize an object of the type `R`; in case R is a `result<void>` (that is, in case of success it does not communicate a value), handlers that return `void` are permitted. If such a handler matches the failure, the `handle_some` return value is initialized by `{}`.
-
-Effects: ::
-
-`handle_some` considers each of the `h...` handlers, in order, until it finds one that matches the reported `r.error()`. The first matching handler is invoked and its return value is used to initialize the return value of `handle_some`, which can indicate success if the handler was able to handle the error, or failure if it was not.
-+
-If `handle_some` is unable to find a matching handler, it returns `r`.
-+
-NOTE: `handle_some` is exception-neutral: it does not throw exceptions, however the user-supplied handlers are permitted to throw.
-
-Handler Matching Procedure: ::
-+
-A handler `h` matches the failure reported by `r` iff `handle_some` is able to produce values to pass as its arguments, using the E-types stored in `*this`, associated with the error ID returned by `r.error()`. As soon as it is determined that an argument value can not be produced, the current handler is dropped and the matching procedure continues with the next handler, if any.
-+
-TIP: If `R` is an instance of the `leaf::result` template, `r.error()` would return a proxy object that converts to either <<error_id>> or `std::error_code`. However, it is permissible for `r.error()` to simply return `std::error_code`, because that type can also communicate LEAF error IDs; see <<tutorial-interoperability>>.
-+
-NOTE: If `r.error().value()` is zero (which would be the case, for example, if `r` is in value state) then only handlers that match any error will be selected (if available).
-+
-If `err` is the error ID obtained from `r.error()`, each argument value `a`~i~ to be passed to the handler currently under consideration is produced as follows:
-+
---
-* If `a`~i~ is taken as `A`~i~ `const &` or by value:
-** If an E-object of type `A`~i~, associated with `err`, is currently stored in `*this`, `a`~i~ is initialized with a reference to the stored object; otherwise the handler is dropped.
-+
-.Example:
-[source,c++]
-----
-....
-if( result<void> r = f() )
-  return r;
-else
-{
-  return ctx.handle_some(r,
-
-    []( leaf::e_file_name const & fn ) <1>
-    {
-      std::cerr << "File Name: \"" << fn.value << '"' << std::endl; <2>
-    } );
-}
-----
-+
-[.text-right]
-<<result>> | <<e_file_name>>
-+
-<1> This handler will match only if `ctx` stores an `e_file_name` associated with the error.
-<2> Print the file name.
-+
-** If `A`~i~ is of the predicate type `<<match,match>><E,V...>`, if an object of type `E`, associated with `err`, is currently stored in `*this`, `a`~i~ is initialized with a reference to the stored object; otherwise the handler is dropped. The handler is also dropped if the expression `a`~i~`()` evaluates to `false`.
-+
-.Example:
-[source,c++]
-----
-enum class errors
-{
-  ec1=1,
-  ec2,
-  ec3
-};
-
-....
-
-if( result<void> r = f() )
-  return r;
-else
-{
-  return ctx.handle_some(r,
-
-    []( leaf::match<errors, errors::ec1> ) <1>
-    {
-      ....
-    },
-
-    []( errors ec ) <2>
-    {
-      ....
-    } );
-}
-----
-+
-[.text-right]
-<<result>> | <<match>>
-+
-<1> This handler matches if the error includes an object of type `errors` with value `ec1`.
-<2> This handler matches if the error includes an object of type `errors` regardless of its value.
-+
-In particular, the `E` type used to instantiate the `match` template may be an instance of the <<condition>> class template, which is used to match a `std::error_condition` enumerated value:
-+
-.Example:
-[source,c++]
-----
-enum class cond_x { x00, x11, x22, x33 };
-
-namespace std { template <> struct is_error_condition_enum<cond_x>: true_type { }; };
-
-....
-
-if( result<void> r = f() )
-  return r;
-else
-{
-  return ctx.handle_some(r,
-
-    [&c]( leaf::match<leaf::condition<cond_x>, cond_x::x11> ) <1>
-    {
-      ....
-    },
-
-    []( std::error_code const & ec ) <2>
-    {
-      ....
-    } );
-}
-----
-+
-[.text-right]
-<<result>> | <<match>> | <<condition>>
-+
-<1> This handler matches if the error includes an object of type `std::error_code` equivalent to the error condition `cond_x::x11`.
-<2> This handler matches if the error includes any object of type `std::error_code`.
-+
-** If `A`~i~ is of the predicate type `<<catch_,catch_>><Ex...>`, `a`~i~ is initialized with the current `std::exception`. The handler is dropped if the expression `a`~i~`()` evaluates to `false`.
-+
-.Example:
-[source,c++]
-----
-struct exception1: std::exception { };
-struct exception2: std::exception { };
-struct exception3: std::exception { };
-
-....
-
-if( result<void> r = f() )
-  return r;
-else
-{
-  return ctx.handle_some(r,
-
-      []( leaf::catch_<exception1, exception2> ) <1>
-      {
-        ....
-      },
-
-      []( leaf::error_info const & info ) <2>
-      {
-        ....
-      } );
-}
-----
-+
-[.text-right]
-<<result>> | <<catch_>> | <<error_info>>
-+
-<1> This handler matches if the current exception is either of type `exception1` or `exception2`.
-<2> This handler matches any error. Use `info.<<error_info,exception>>()` to access the caught `std::exception` object.
-+
-NOTE: Using <<catch_>> requires `#include <boost/leaf/handle_exception.hpp>`.
-+
-* If `a`~i~ is of type `A`~i~ `const pass:[*]`, `handle_some` is always able to produce it: first it attempts to match it as if it is taken by `const &`; if that fails, `a`~i~ is initialized with `0`.
-+
-.Example:
-[source,c++]
-----
-....
-if( result<void> r = f() )
-  return r;
-else
-{
-  return ctx.handle_some(r,
-
-    []( leaf::e_file_name const * fn ) -> leaf::result<void> <1>
-    {
-      if( fn ) <2>
-        std::cerr << "File Name: \"" << fn->value << '"' << std::endl;
-    } );
-}
-----
-+
-[.text-right]
-<<result>> | <<e_file_name>>
-+
-<1> This handler matches any error, because it takes `e_file_name` as a `const *` (and nothing by `const &`).
-<2> If an `e_file_name` is available with the current error, print it.
-+
-* If `a`~i~ is of type `error_info const &`,  `handle_some` is always able to produce it.
-+
-.Example:
-[source,c++]
-----
-....
-if( result<void> r = f() )
-  return r;
-else
-{
-  return ctx.handle_some(r,
-
-    []( leaf::error_info const & info ) <1>
-    {
-      std::cerr << "leaf::error_info:" << std::endl << info; <2>
-      return info.error(); <3>
-    } );
-}
-----
-+
-[.text-right]
-<<result>> | <<error_info>>
-+
-<1> This handler matches any error.
-<2> Print error information.
-<3> Return the original error, which will be returned out of `handle_some`.
-+
-* If `a`~i~ is of type `diagnostic_info const &`,  `handle_some` is always able to produce it.
-+
-.Example:
-[source,c++]
-----
-....
-if( result<void> r = f() )
-  return r;
-else
-{
-  return ctx.handle_some(r,
-
-    []( leaf::diagnostic_info const & info ) <1>
-    {
-      std::cerr << "leaf::diagnostic_information:" << std::endl << info; <2>
-      return info.error(); <3>
-    } );
-}
-----
-+
-[.text-right]
-<<result>> | <<diagnostic_info>>
-+
-<1> This handler matches any error.
-<2> Print diagnostic information, including limited information about dropped error objects.
-<3> Return the original error, which will be returned out of `handle_some`.
-+
-* If `a`~i~ is of type `verbose_diagnostic_info const &`,  `handle_some` is always able to produce it.
-+
-.Example:
-[source,c++]
-----
-....
-if( result<void> r = f() )
-  return r;
-else
-{
-  return ctx.handle_some(r,
-
-    []( leaf::verbose_diagnostic_info const & info ) <1>
-    {
-      std::cerr << "leaf::verbose_diagnostic_information:" << std::endl << info; <2>
-      return info.error(); <3>
-    } );
-}
-----
-+
-[.text-right]
-<<result>> | <<verbose_diagnostic_info>>
-+
-<1> This handler matches any error.
-<2> Print verbose diagnostic information, including values of dropped error objects.
-<3> Return the original error, which will be returned out of `handle_some`.
---
 
 '''
 
@@ -3637,231 +3439,47 @@ Effects: :: Prints all E-objects currently stored in `*this`, together with the 
 
 '''
 
-[[context::remote_handle_all]]
+[[context::propagate]]
+==== `propagate`
 
-==== `remote_handle_all`
-
+.#include <boost/leaf/context.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
 
   template <class... E>
-  template <class R, class RemoteH>
-  typename std::decay<decltype(std::declval<R>().value())>::type
-  context<E...>::remote_handle_all( R & r, RemoteH && h );
+  void context<E...>::propagate() noexcept;
 
 } }
 ----
 
-Effects: :: This member function is similar to <<context::handle_all>>, but instead of taking a list of handlers, it takes a single function which internally captures the list of handlers, using the following procedure.
-+
-First, we create a handler capture (see the tutorial on <<tutorial-remote_handlers>>):
-+
-[source,c++]
-----
-auto handle_error = []( leaf::error_info const & error )
-{
-  return leaf::remote_handle_all( error,
-    ....handlers.... );
-};
-----
-+
-[.text-right]
-<<error_info>>
-+
-Above, the namespace-scope function `remote_handle_all` invoked from the user-defined `handle_error` is a helper function which serves no purpose other than to make `context::remote_handle_all` (or <<remote_try_handle_all>>) work.
-+
-The return value of `leaf::remote_handle_all` (and, consequently, the return value of `handle_error` above) is of unspecified type; `handle_error` should be called from inside the lambda function passed to `context::remote_handle_all` (or `remote_try_handle_all`), which is required to forward the return value to its caller, e.g.:
-+
-[source,c++]
-----
-ctx.remote_handle_all(r,
-  [&]( leaf::error_info const & error )
-  {
-    return handle_error(error);
-  } );
-----
-+
-[.text-right]
-<<error_info>>
-+
-Which works similarly to:
-+
-[source,c++]
-----
-ctx.handle_all(r,
-  ....handlers.... );
-----
+Preconditions: ::
+`<<context::is_active,is_active>>()` or `*this` must be the last deactivated `context` object in the calling thread. That is, it is valid to call `propagate` while `is_active()` is `true`, or immediately after calling `<<context::deactivate,deactivate>>()`.
 
-[.text-right]
-<<context::handle_all>>
+Effects: ::
 
-Returns: :: `r.value()` if `r` indicates success; otherwise returns the value returned by the matching handler from the list of handlers used in the handler capture.
-
-CAUTION: It is critical that the lambda passed to `context::remote_handle_all` returns the value returned by the handler capture function (in this case, `handle_error`), even if the error handlers it contains return `void`.
-
-TIP: Because LEAF does not invoke the user-defined `handle_error` function directly, it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
+Each stored E-object is moved to the storage (within other active `context` objects) pointed by the corresponding thread-local pointer, captured when `*this` was activated -- or discarded, if the corresponding thread-local pointer is null.
 
 '''
 
-[[context::remote_handle_current_exception]]
-
-==== `remote_handle_current_exception`
+[[context::remote_handle_error]]
+==== `remote_handle_error`
 
 [source,c++]
+.#include <boost/leaf/handle_error.hpp>
 ----
 namespace boost { namespace leaf {
 
   template <class... E>
   template <class R, class RemoteH>
-  R context<E...>::remote_handle_current_exception( RemoteH && h );
+  R context<E...>::remote_handle_error( R &, RemoteH && ) const;
 
 } }
 ----
 
-Effects: :: This function is similar to <<context::handle_current_exception>>, but instead of taking a list of handlers, it takes a single function which internally captures the list of handlers, using the following procedure.
-+
-First, we create a handler capture (see the tutorial on <<tutorial-remote_handlers>>):
-+
-[source,c++]
-----
-auto handle_error = []( leaf::error_info const & error )
-{
-  return leaf::remote_handle_exception( error,
-    ....handlers.... );
-};
-----
-+
-[.text-right]
-<<error_info>>
-+
-Above, the namespace-scope function `remote_handle_exception` invoked from the user-defined `handle_error` is a helper function which serves no purpose other than to make `context::remote_handle_current_exception` (or `remote_try_catch`) work.
-+
-The return value of `leaf::remote_handle_exception` (and, consequently, the return value of `handle_error` above) is of unspecified type; `handle_error` should be called from inside the lambda function passed to `context::remote_handle_current_exception` (or `remote_try_catch`), which is required to forward the return value to its caller, e.g.:
-+
-[source,c++]
-----
-ctx.remote_handle_current_exception(
-  [&]( leaf::error_info const & error )
-  {
-    return handle_error(error);
-  } );
-----
-+
-Which works similarly to:
-+
-[source,c++]
-----
-ctx.handle_current_exception(
-  ....handlers.... );
-----
+This function works similarly to <<remote_try_handle_all>>, but rather than calling a `try_block` and obtaining the <<error_id>> from the returned `result` type, it matches error objects (stored in `*this`, associated with `err`) with a suitable error handler from the `h...` pack.
 
-[.text-right]
-<<context::handle_current_exception>>
-
-CAUTION: It is critical that the lambda passed to `context::remote_handle_current_exception` returns the value returned by the handler capture function (in this case, `handle_error`), even if the error handlers it contains return `void`.
-
-TIP: Because LEAF does not invoke the user-defined `handle_error` function directly, it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
-
-'''
-
-[[context::remote_handle_exception]]
-
-==== `remote_handle_exception`
-
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  template <class R, class RemoteH>
-  R context<E...>::remote_handle_exception( std::exception_ptr const & ep, RemoteH && h );
-
-} }
-----
-
-Effects: :: As if:
-+
-[source,c++]
-----
-try
-{
-  std::rethrow_exception(ep);
-}
-catch(...)
-{
-  return this->remote_handle_current_exception(std::forward<RemoteH>(h));
-}
-----
-+
-[.text-right]
-<<context::remote_handle_current_exception>>
-
-'''
-
-[[context::remote_handle_some]]
-
-==== `remote_handle_some`
-
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  template <class R, class RemoteH>
-  R context<E...>::remote_handle_some( R && r, RemoteH && h );
-
-} }
-----
-
-Effects: :: This member function is similar to <<context::handle_some>>, but instead of taking a list of handlers, it takes a single function which internally captures the list of handlers, using the following procedure.
-+
-First, we create a handler capture (see the tutorial on <<tutorial-remote_handlers>>):
-+
-[source,c++]
-----
-auto handle_error = []( leaf::error_info const & error )
-{
-  return leaf::remote_handle_some( error,
-    ....handlers.... );
-};
-----
-+
-[.text-right]
-<<error_info>>
-+
-Above, the namespace-scope function `remote_handle_some` invoked from the user-defined `handle_error` is a helper function which serves no purpose other than to make `context::remote_handle_some` (or <<remote_try_handle_some>>) work.
-+
-The return value of `leaf::remote_handle_some` (and, consequently, the return value of `handle_error` above) is of unspecified type; `handle_error` should be called from inside the lambda function passed to `context::remote_handle_some` (or `remote_try_handle_some`), which is required to forward the return value to its caller, e.g.:
-+
-[source,c++]
-----
-ctx.remote_handle_some(r,
-  [&]( leaf::error_info const & error )
-  {
-    return handle_error(error);
-  } );
-----
-+
-[.text-right]
-<<error_info>>
-+
-Which works similarly to:
-+
-[source,c++]
-----
-ctx.handle_some(r,
-  ....handlers.... );
-----
-
-[.text-right]
-<<context::handle_some>>
-
-Returns: :: If `r` indicates success, returns `r`. Otherwise returns the value returned by the matching handler from the list of handlers used in the handler capture.
-
-CAUTION: It is critical that the lambda passed to `context::remote_handle_some` returns the value returned by the handler capture function (in this case, `handle_error`).
-
-TIP: Because LEAF does not invoke the user-defined `handle_error` function directly, it can take any number of arguments in addition to the required argument of type `leaf::error_info const &`.
+NOTE: The caller is required to specify the return type `R`. This is because in general the supplied handlers may return different types (which must all be convertible to `R`).
 
 '''
 
@@ -3892,9 +3510,9 @@ namespace boost { namespace leaf {
 
 If `<<context::is_active,ctx.is_active>>`() is `true` at the time the `context_activator` is initialized, the constructor and the destructor have no effects. Otherwise:
 
-* The constructor stores a reference to `ctx` and calls `<<context::activate,ctx.activate>>`().
+* The constructor stores a reference to `ctx` in `*this` and calls `<<context::activate,ctx.activate>>`().
 * The destructor:
-** If `ctx.is_active()` is false, has no effects (that is, it is valid to call <<context::deactivate>> manually, before the `context_activator` object expires);
+** Has no effects if `ctx.is_active()` is `false` (that is, it is valid to call <<context::deactivate>> manually, before the `context_activator` object expires);
 ** Otherwise, calls `<<context::deactivate,ctx.deactivate>>`() and, if there are new uncaught exceptions since the constructor was called, the destructor calls `<<context::propagate,ctx.propagate>>`().
 
 For automatic deduction of `Ctx`, use <<activate_context>>.

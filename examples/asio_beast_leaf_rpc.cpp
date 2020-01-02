@@ -546,8 +546,8 @@ int main(int argc, char **argv) {
                 } else {
                     // Handle errors from running the server logic
                     leaf::result<int> result_int{result.error()};
-                    rv = error_context.remote_handle_all(
-                        result_int, [&](leaf::error_info const &error) { return error_handler(error); });
+                    rv = error_context.remote_handle_error<int>(
+                        result_int.error(), [&](leaf::error_info const &error) { return error_handler(error); });
                 }
             });
             io_context.run();
