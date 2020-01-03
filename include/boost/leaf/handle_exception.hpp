@@ -56,7 +56,7 @@ namespace boost { namespace leaf {
 
 		LEAF_CONSTEXPR std::exception const & value() const noexcept
 		{
-			assert(value_!=0);
+			BOOST_LEAF_ASSERT(value_!=0);
 			return *value_;
 		}
 	};
@@ -80,7 +80,7 @@ namespace boost { namespace leaf {
 
 		LEAF_CONSTEXPR Ex const & value() const noexcept
 		{
-			assert(this->value_!=0);
+			BOOST_LEAF_ASSERT(this->value_!=0);
 			return *this->value_;
 		}
 	};
@@ -111,7 +111,7 @@ namespace boost { namespace leaf {
 			LEAF_CONSTEXPR static catch_<Ex...> get( SlotsTuple const &, error_info const & ei ) noexcept
 			{
 				std::exception const * ex = ei.exception();
-				assert(ex!=0);
+				BOOST_LEAF_ASSERT(ex!=0);
 				return catch_<Ex...>(ex);
 			}
 		};
@@ -243,7 +243,7 @@ namespace boost { namespace leaf {
 		inline decltype(std::declval<TryBlock>()()) context_base<E...>::try_catch_( TryBlock && try_block, H && ... h )
 		{
 			using namespace leaf_detail;
-			assert(is_active());
+			BOOST_LEAF_ASSERT(is_active());
 			using R = decltype(std::declval<TryBlock>()());
 			try
 			{
@@ -287,7 +287,7 @@ namespace boost { namespace leaf {
 		inline decltype(std::declval<TryBlock>()()) context_base<E...>::remote_try_catch_( TryBlock && try_block, RemoteH && h )
 		{
 			using namespace leaf_detail;
-			assert(is_active());
+			BOOST_LEAF_ASSERT(is_active());
 			try
 			{
 				return std::forward<TryBlock>(try_block)();
@@ -383,7 +383,7 @@ namespace boost { namespace leaf {
 		LEAF_CONSTEXPR inline exception_info_base::exception_info_base( std::exception const * ex ) noexcept:
 			ex_(ex)
 		{
-			assert(!dynamic_cast<capturing_exception const *>(ex_));
+			BOOST_LEAF_ASSERT(!dynamic_cast<capturing_exception const *>(ex_));
 		}
 
 		inline exception_info_base::~exception_info_base() noexcept

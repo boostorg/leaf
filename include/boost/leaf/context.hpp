@@ -44,7 +44,7 @@ namespace boost { namespace leaf {
 
 			static void print( std::ostream & os, void const * tup, int key_to_print )
 			{
-				assert(tup!=0);
+				BOOST_LEAF_ASSERT(tup!=0);
 				tuple_for_each<I-1,Tuple>::print(os, tup, key_to_print);
 				std::get<I-1>(*static_cast<Tuple const *>(tup)).print(os, key_to_print);
 			}
@@ -209,12 +209,12 @@ namespace boost { namespace leaf {
 				tup_(std::move(x.tup_)),
 				is_active_(false)
 			{
-				assert(!x.is_active());
+				BOOST_LEAF_ASSERT(!x.is_active());
 			}
 
 			~context_base() noexcept
 			{
-				assert(!is_active());
+				BOOST_LEAF_ASSERT(!is_active());
 			}
 
 			LEAF_CONSTEXPR Tup const & tup() const noexcept
@@ -225,7 +225,7 @@ namespace boost { namespace leaf {
 			LEAF_CONSTEXPR void activate() noexcept
 			{
 				using namespace leaf_detail;
-				assert(!is_active());
+				BOOST_LEAF_ASSERT(!is_active());
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
 #if LEAF_DIAGNOSTICS
 				if( unexpected_requested<Tup>::value )
@@ -240,10 +240,10 @@ namespace boost { namespace leaf {
 			LEAF_CONSTEXPR void deactivate() noexcept
 			{
 				using namespace leaf_detail;
-				assert(is_active());
+				BOOST_LEAF_ASSERT(is_active());
 				is_active_ = false;
 #if !defined(LEAF_NO_THREADS) && !defined(NDEBUG)
-				assert(std::this_thread::get_id() == thread_id_);
+				BOOST_LEAF_ASSERT(std::this_thread::get_id() == thread_id_);
 				thread_id_ = std::thread::id();
 #endif
 #if LEAF_DIAGNOSTICS

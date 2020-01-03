@@ -26,7 +26,7 @@ namespace boost { namespace leaf {
 		explicit bad_result( error_id id ) noexcept:
 			error_id(id)
 		{
-			assert(value());
+			BOOST_LEAF_ASSERT(value());
 		}
 	};
 
@@ -51,7 +51,7 @@ namespace boost { namespace leaf {
 			LEAF_CONSTEXPR explicit result_discriminant( error_id id ) noexcept:
 				state_(id.value())
 			{
-				assert(state_==0 || (state_&3)==1);
+				BOOST_LEAF_ASSERT(state_==0 || (state_&3)==1);
 			}
 
 			struct kind_val { };
@@ -73,7 +73,7 @@ namespace boost { namespace leaf {
 
 			LEAF_CONSTEXPR error_id get_error_id() const noexcept
 			{
-				assert(kind()==no_error || kind()==err_id);
+				BOOST_LEAF_ASSERT(kind()==no_error || kind()==err_id);
 				return leaf_detail::make_error_id(state_);
 			}
 		};
@@ -150,7 +150,7 @@ namespace boost { namespace leaf {
 				value_.~T();
 				break;
 			case result_discriminant::ctx_ptr:
-				assert(!ctx_ || ctx_->captured_id_);
+				BOOST_LEAF_ASSERT(!ctx_ || ctx_->captured_id_);
 				ctx_.~context_ptr();
 			default:
 				break;
@@ -167,7 +167,7 @@ namespace boost { namespace leaf {
 				(void) new(&value_) T(std::move(x.value_));
 				break;
 			case result_discriminant::ctx_ptr:
-				assert(!x.ctx_ || x.ctx_->captured_id_);
+				BOOST_LEAF_ASSERT(!x.ctx_ || x.ctx_->captured_id_);
 				(void) new(&ctx_) context_ptr(std::move(x.ctx_));
 			default:
 				break;
@@ -178,12 +178,12 @@ namespace boost { namespace leaf {
 		LEAF_CONSTEXPR result( result_discriminant && what ) noexcept:
 			what_(std::move(what))
 		{
-			assert(what_.kind()==result_discriminant::err_id || what_.kind()==result_discriminant::no_error);
+			BOOST_LEAF_ASSERT(what_.kind()==result_discriminant::err_id || what_.kind()==result_discriminant::no_error);
 		}
 
 		LEAF_CONSTEXPR error_id get_error_id() const noexcept
 		{
-			assert(what_.kind()!=result_discriminant::val);
+			BOOST_LEAF_ASSERT(what_.kind()!=result_discriminant::val);
 			return what_.kind()==result_discriminant::ctx_ptr ? ctx_->captured_id_ : what_.get_error_id();
 		}
 

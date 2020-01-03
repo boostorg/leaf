@@ -37,7 +37,7 @@ leaf::result<int> compute_answer( int what_to_do ) noexcept
 	case 2:
 		return leaf::new_error(error_code::error2);
 	default:
-		assert(what_to_do==3);
+		BOOST_LEAF_ASSERT(what_to_do==3);
 		return leaf::new_error(error_code::error3);
 	}
 }

@@ -6,12 +6,10 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/config.hpp>
 #include <boost/leaf/detail/optional.hpp>
 #include <exception>
 #include <ostream>
 #include <cstring>
-#include <cassert>
 
 namespace boost { namespace leaf {
 
@@ -35,10 +33,10 @@ namespace boost { namespace leaf {
 		__PRETTY_FUNCTION__;
 #endif
 #if defined(__clang__)
-		assert(check_prefix(t,"const char *boost::leaf::type() ")==t+32);
+		BOOST_LEAF_ASSERT(check_prefix(t,"const char *boost::leaf::type() ")==t+32);
 		return t+32;
 #elif defined(__GNUC__)
-		assert(check_prefix(t,"const char* boost::leaf::type() ")==t+32);
+		BOOST_LEAF_ASSERT(check_prefix(t,"const char* boost::leaf::type() ")==t+32);
 		return t+32;
 #else
 		char const * clang_style = check_prefix(t,"const char *boost::leaf::type() ");

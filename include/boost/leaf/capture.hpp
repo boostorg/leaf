@@ -28,14 +28,14 @@ namespace boost { namespace leaf {
 				ex_(std::move(ex)),
 				ctx_(std::move(ctx))
 			{
-				assert(ex_);
-				assert(ctx_);
-				assert(ctx_->captured_id_);
+				BOOST_LEAF_ASSERT(ex_);
+				BOOST_LEAF_ASSERT(ctx_);
+				BOOST_LEAF_ASSERT(ctx_->captured_id_);
 			}
 
 			[[noreturn]] void unload_and_rethrow_original_exception() const
 			{
-				assert(ctx_->captured_id_);
+				BOOST_LEAF_ASSERT(ctx_->captured_id_);
 				auto active_context = activate_context(*ctx_);
 				id_factory<>::current_id = ctx_->captured_id_.value();
 				std::rethrow_exception(ex_);

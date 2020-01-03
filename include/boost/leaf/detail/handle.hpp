@@ -81,7 +81,7 @@ namespace boost { namespace leaf {
 
 		LEAF_CONSTEXPR std::exception const * exception() const noexcept
 		{
-			assert(exception_caught());
+			BOOST_LEAF_ASSERT(exception_caught());
 			return xi_->ex_;
 		}
 
@@ -347,7 +347,7 @@ namespace boost { namespace leaf {
 
 		LEAF_CONSTEXPR type const & value() const noexcept
 		{
-			assert(value_!=0);
+			BOOST_LEAF_ASSERT(value_!=0);
 			return *value_;
 		}
 	};
@@ -460,7 +460,7 @@ namespace boost { namespace leaf {
 			LEAF_CONSTEXPR static T const & get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				T const * arg = peek<T>(tup, ei.error());
-				assert(arg!=0);
+				BOOST_LEAF_ASSERT(arg!=0);
 				return *arg;
 			}
 		};
@@ -538,7 +538,7 @@ namespace boost { namespace leaf {
 			static std::error_code get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				leaf_detail::e_original_ec const * org = peek<e_original_ec>(tup, ei.error());
-				assert(org!=0);
+				BOOST_LEAF_ASSERT(org!=0);
 				return org->value;
 			}
 		};
@@ -550,7 +550,7 @@ namespace boost { namespace leaf {
 			LEAF_CONSTEXPR static match<T,V...> get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				auto const * arg = match_traits<T>::read(tup, ei);
-				assert(arg!=0);
+				BOOST_LEAF_ASSERT(arg!=0);
 				return match<T,V...>(arg);
 			}
 		};
@@ -710,7 +710,7 @@ namespace boost { namespace leaf {
 		template <class R, class... H>
 		LEAF_CONSTEXPR inline R context_base<E...>::handle_error( error_id id, H && ... h ) const
 		{
-			assert(!is_active());
+			BOOST_LEAF_ASSERT(!is_active());
 			return handle_error_<R>(tup(), error_info(id), std::forward<H>(h)...);
 		}
 
@@ -718,7 +718,7 @@ namespace boost { namespace leaf {
 		template <class R, class RemoteH>
 		LEAF_CONSTEXPR inline R context_base<E...>::remote_handle_error( error_id id, RemoteH && h ) const
 		{
-			assert(!is_active());
+			BOOST_LEAF_ASSERT(!is_active());
 			return std::forward<RemoteH>(h)(error_info(id, this)).get();
 		}
 	}

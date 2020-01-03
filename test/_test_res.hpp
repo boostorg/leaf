@@ -38,12 +38,12 @@ public:
 	}
 	T const & value() const
 	{
-		assert(which_==variant::value);
+		BOOST_LEAF_ASSERT(which_==variant::value);
 		return value_;
 	}
 	E const & error() const
 	{
-		assert(which_==variant::error);
+		BOOST_LEAF_ASSERT(which_==variant::error);
 		return error_;
 	}
 };

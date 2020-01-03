@@ -41,7 +41,7 @@ struct fut_info
 template <class H, class F>
 std::vector<fut_info> launch_tasks( int task_count, F f )
 {
-	assert(task_count>0);
+	BOOST_LEAF_ASSERT(task_count>0);
 	std::vector<fut_info> fut;
 	std::generate_n( std::inserter(fut,fut.end()), task_count,
 		[=]

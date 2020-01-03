@@ -90,18 +90,18 @@ namespace boost { namespace leaf {
 		template <class Ex, class... E>
 		LEAF_CONSTEXPR inline exception<Ex> exception_at( char const * file, int line, char const * function, error_id id, Ex && ex, E && ... e ) noexcept
 		{
-			assert(file&&*file);
-			assert(line>0);
-			assert(function&&*function);
+			BOOST_LEAF_ASSERT(file&&*file);
+			BOOST_LEAF_ASSERT(line>0);
+			BOOST_LEAF_ASSERT(function&&*function);
 			return exception<Ex>(id.load(e_source_location{file,line,function},std::forward<E>(e)...), std::forward<Ex>(ex));
 		}
 
 		template <class Ex, class... E>
 		LEAF_CONSTEXPR inline exception<Ex> exception_at( char const * file, int line, char const * function, Ex && ex, E && ... e ) noexcept
 		{
-			assert(file&&*file);
-			assert(line>0);
-			assert(function&&*function);
+			BOOST_LEAF_ASSERT(file&&*file);
+			BOOST_LEAF_ASSERT(line>0);
+			BOOST_LEAF_ASSERT(function&&*function);
 			return exception<Ex>(new_error(e_source_location{file,line,function},std::forward<E>(e)...), std::forward<Ex>(ex));
 		}
 	}

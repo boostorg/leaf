@@ -9,7 +9,6 @@
 #include <boost/leaf/detail/print.hpp>
 #include <string>
 #include <cerrno>
-#include <cassert>
 #ifdef _WIN32
 #	include <Windows.h>
 #	include <cstring>
@@ -66,7 +65,7 @@ namespace boost { namespace leaf {
 					0,
 					0) )
 				{
-					assert(mb.p!=0);
+					BOOST_LEAF_ASSERT(mb.p!=0);
 					char * z = std::strchr((LPSTR)mb.p,0);
 					if( z[-1] == '\n' )
 						*--z = 0;

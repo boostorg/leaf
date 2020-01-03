@@ -6,9 +6,9 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <boost/leaf/config.hpp>
 #include <utility>
 #include <new>
-#include <cassert>
 #include <ostream>
 
 namespace boost { namespace leaf {
@@ -51,14 +51,14 @@ namespace boost { namespace leaf {
 				key_(key),
 				value_(v)
 			{
-				assert(!empty());
+				BOOST_LEAF_ASSERT(!empty());
 			}
 
 			LEAF_CONSTEXPR optional( int key, T && v ) noexcept:
 				key_(key),
 				value_(std::move(v))
 			{
-				assert(!empty());
+				BOOST_LEAF_ASSERT(!empty());
 			}
 
 			LEAF_CONSTEXPR optional & operator=( optional const & x )
@@ -100,7 +100,7 @@ namespace boost { namespace leaf {
 
 			LEAF_CONSTEXPR void set_key( int key ) noexcept
 			{
-				assert(!empty());
+				BOOST_LEAF_ASSERT(!empty());
 				key_ = key;
 			}
 
@@ -115,7 +115,7 @@ namespace boost { namespace leaf {
 
 			LEAF_CONSTEXPR T & put( int key, T const & v )
 			{
-				assert(key);
+				BOOST_LEAF_ASSERT(key);
 				reset();
 				(void) new(&value_) T(v);
 				key_=key;
@@ -124,7 +124,7 @@ namespace boost { namespace leaf {
 
 			LEAF_CONSTEXPR T & put( int key, T && v ) noexcept
 			{
-				assert(key);
+				BOOST_LEAF_ASSERT(key);
 				reset();
 				(void) new(&value_) T(std::move(v));
 				key_=key;
@@ -133,37 +133,37 @@ namespace boost { namespace leaf {
 
 			LEAF_CONSTEXPR T const * has_value(int key) const noexcept
 			{
-				assert(key);
+				BOOST_LEAF_ASSERT(key);
 				return key_==key ? &value_ : 0;
 			}
 
 			LEAF_CONSTEXPR T * has_value(int key) noexcept
 			{
-				assert(key);
+				BOOST_LEAF_ASSERT(key);
 				return key_==key ? &value_ : 0;
 			}
 
 			LEAF_CONSTEXPR T const & value(int key) const & noexcept
 			{
-				assert(has_value(key)!=0);
+				BOOST_LEAF_ASSERT(has_value(key)!=0);
 				return value_;
 			}
 
 			LEAF_CONSTEXPR T & value(int key) & noexcept
 			{
-				assert(has_value(key)!=0);
+				BOOST_LEAF_ASSERT(has_value(key)!=0);
 				return value_;
 			}
 
 			LEAF_CONSTEXPR T const && value(int key) const && noexcept
 			{
-				assert(has_value(key)!=0);
+				BOOST_LEAF_ASSERT(has_value(key)!=0);
 				return value_;
 			}
 
 			LEAF_CONSTEXPR T value(int key) && noexcept
 			{
-				assert(has_value(key)!=0);
+				BOOST_LEAF_ASSERT(has_value(key)!=0);
 				T tmp(std::move(value_));
 				reset();
 				return tmp;

@@ -12,6 +12,8 @@
 // (C) Copyright Martin Wille 2003.
 // (C) Copyright Guillaume Melquiond 2003.
 
+#include <cassert>
+
 ////////////////////////////////////////
 
 // Configure LEAF_NO_EXCEPTIONS, unless already #defined
@@ -93,6 +95,8 @@
 
 #endif
 
+////////////////////////////////////////
+
 #ifndef LEAF_DIAGNOSTICS
 #	define LEAF_DIAGNOSTICS 1
 #endif
@@ -101,11 +105,15 @@
 #	error LEAF_DIAGNOSTICS must be 0 or 1.
 #endif
 
+////////////////////////////////////////
+
 #ifdef _MSC_VER
 #	define LEAF_ALWAYS_INLINE __forceinline
 #else
 #	define LEAF_ALWAYS_INLINE __attribute__((always_inline)) inline
 #endif
+
+////////////////////////////////////////
 
 #if __cplusplus > 201402L
 #	define LEAF_CONSTEXPR constexpr
@@ -113,6 +121,16 @@
 #else
 #	define LEAF_CONSTEXPR
 #	define LEAF_STD_UNCAUGHT_EXCEPTIONS 0
+#endif
+
+////////////////////////////////////////
+
+#ifndef BOOST_LEAF_ASSERT
+#	ifdef BOOST_ASSERT
+#		define BOOST_LEAF_ASSERT BOOST_ASSERT
+#	else
+#		define BOOST_LEAF_ASSERT assert
+#	endif
 #endif
 
 #endif
