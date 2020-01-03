@@ -3,6 +3,19 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <boost/leaf/config.hpp>
+#if defined(LEAF_NO_EXCEPTIONS) || defined(LEAF_NO_THREADS)
+
+#include <iostream>
+
+int main()
+{
+	std::cout << "Unit test not applicable." << std::endl;
+	return 0;
+}
+
+#else
+
 #include <boost/leaf/preload.hpp>
 #include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/result.hpp>
@@ -130,3 +143,5 @@ int main()
 
 	return boost::report_errors();
 }
+
+#endif
