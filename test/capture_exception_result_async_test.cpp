@@ -63,7 +63,7 @@ int main()
 	auto error_handler = []( leaf::error_info const & err, int a, int b )
 	{
 		return leaf::remote_handle_exception( err,
-			[&]( info<1> const & x1, info<2> const & x2 )
+			[&]( info<1> const & x1, info<2> const & x2, info<4> const & )
 			{
 				BOOST_TEST_EQ(x1.value, a);
 				BOOST_TEST_EQ(x2.value, b);
@@ -75,31 +75,79 @@ int main()
 			} );
 	};
 
-	std::vector<fut_info> fut = launch_tasks<decltype(error_handler)>( 42,
-		[]( int a, int b, int res ) -> leaf::result<int>
-		{
-			if( res>=0 )
-				return res;
-			else
-				return leaf::new_error( info<1>{a}, info<2>{b}, info<3>{} );
-		} );
-
-	for( auto & f : fut )
 	{
-		f.fut.wait();
-		int r = leaf::remote_try_handle_all(
-			[&]
+		std::vector<fut_info> fut = launch_tasks<decltype(error_handler)>(
+			42,
+			[]( int a, int b, int res ) -> leaf::result<int>
 			{
-				return f.fut.get();
-			},
-			[&]( leaf::error_info const & err )
-			{
-				return error_handler(err, f.a, f.b);
+				if( res >= 0 )
+					return res;
+				else
+					return leaf::new_error( info<1>{a}, info<2>{b}, info<3>{} );
 			} );
-		if( f.result>=0 )
-			BOOST_TEST_EQ(r, f.result);
-		else
-			BOOST_TEST_EQ(r, -1);
+
+		for( auto & f : fut )
+		{
+			f.fut.wait();
+			int r = leaf::remote_try_handle_all(
+				[&]
+				{
+					auto propagate = leaf::preload( info<4>{} );
+
+					// Calling future_get is required in order to make the preload (above) work.
+					return leaf::future_get(f.fut);
+				},
+				[&]( leaf::error_info const & err )
+				{
+					return error_handler(err, f.a, f.b);
+				} );
+			if( f.result>=0 )
+				BOOST_TEST_EQ(r, f.result);
+			else
+				BOOST_TEST_EQ(r, -1);
+		}
+	}
+
+	{
+		std::vector<fut_info> fut = launch_tasks<decltype(error_handler)>(
+			42,
+			[]( int a, int b, int res ) -> leaf::result<int>
+			{
+				if( res >= 0 )
+					return res;
+				else
+					return leaf::new_error( info<1>{a}, info<2>{b}, info<3>{} );
+			} );
+
+		for( auto & f : fut )
+		{
+			f.fut.wait();
+			int r = leaf::remote_try_handle_all(
+				[&]
+				{
+					auto propagate = leaf::preload( info<4>{} );
+
+					return leaf::try_handle_some(
+						[&]
+						{
+							// Not calling future_get, a preload in this scope won't work correctly.
+							// This is to verify that the preload in the outer scope (above) works.
+							return f.fut.get();
+						},
+						[]( leaf::error_info const & err )
+						{
+							return err.error();
+						} );
+				},
+				[&]( leaf::error_info const & err )
+				{
+					return error_handler(err, f.a, f.b);
+				} );
+			if( f.result>=0 )
+				BOOST_TEST_EQ(r, f.result);
+			else
+				BOOST_TEST_EQ(r, -1);
+		}
 	}
 
 	return boost::report_errors();

@@ -104,6 +104,7 @@ tests = [
 	'multiple_errors_test',
 	'optional_test',
 	'preload_basic_test',
+	'preload_exception_test',
 	'preload_nested_error_exception_test',
 	'preload_nested_error_result_test',
 	'preload_nested_new_error_exception_test',

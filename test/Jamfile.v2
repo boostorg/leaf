@@ -71,6 +71,7 @@ run is_error_type_test.cpp ;
 run multiple_errors_test.cpp ;
 run optional_test.cpp ;
 run preload_basic_test.cpp ;
+run preload_exception_test.cpp ;
 run preload_nested_error_exception_test.cpp ;
 run preload_nested_error_result_test.cpp ;
 run preload_nested_new_error_exception_test.cpp ;

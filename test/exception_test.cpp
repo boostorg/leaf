@@ -84,15 +84,6 @@ int main()
 		int const id = leaf::leaf_detail::current_id();
 		BOOST_TEST_EQ( 5, test( []
 		{
-			throw my_error();
-		} ) );
-		BOOST_TEST_NE(id, leaf::leaf_detail::current_id());
-	}
-
-	{
-		int const id = leaf::leaf_detail::current_id();
-		BOOST_TEST_EQ( 5, test( []
-		{
 			int const id = leaf::leaf_detail::current_id();
 			try
 			{
@@ -108,7 +99,6 @@ int main()
 				throw;
 			}
 		} ) );
-		BOOST_TEST_NE(id, leaf::leaf_detail::current_id());
 	}
 
 	BOOST_TEST_EQ( 5, test( [] { throw leaf::exception(my_error()); } ) );

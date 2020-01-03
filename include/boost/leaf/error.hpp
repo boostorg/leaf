@@ -666,8 +666,6 @@ namespace boost { namespace leaf {
 			if( std::uncaught_exception() )
 #	endif
 				ctx_->propagate();
-			else
-				(void) leaf_detail::new_id();
 #endif
 		}
 	};

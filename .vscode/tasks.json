@@ -402,6 +402,15 @@
 			}
 		},
 		{
+			"label": "preload_exception_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_exception_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test preload_exception_test"
+			}
+		},
+		{
 			"label": "preload_nested_error_exception_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test preload_nested_error_exception_test",
