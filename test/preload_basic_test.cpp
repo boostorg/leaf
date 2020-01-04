@@ -16,23 +16,19 @@ struct info
 	int value;
 };
 
-leaf::error_id g()
+template <class G>
+leaf::error_id f( G && g )
 {
-	auto load = leaf::preload( info<42>{42}, info<-42>{-42} );
-	return leaf::new_error();
+	return std::forward<G>(g)();
 }
 
-leaf::error_id f()
-{
-	return g();
-}
-
-int main()
+template <class G>
+void test( G && g )
 {
 	int r = leaf::try_handle_all(
-		[]() -> leaf::result<int>
+		[&]() -> leaf::result<int>
 		{
-			return f();
+			return f(std::move(g));
 		},
 		[]( info<42> const & i42, leaf::diagnostic_info const & di )
 		{
@@ -52,5 +48,30 @@ int main()
 			return 2;
 		} );
 	BOOST_TEST_EQ(r, 1);
+}
+
+int main()
+{
+	test(
+		[]
+		{
+			auto load = leaf::preload( info<42>{42}, info<-42>{-42} );
+			return leaf::new_error();
+		});
+	test(
+		[]
+		{
+			info<42> inf1{42};
+			info<-42> const inf2{-42};
+			auto load = leaf::preload( inf1, inf2 );
+			return leaf::new_error();
+		});
+	test(
+		[]
+		{
+			info<42> inf1{42};
+			auto load = leaf::preload( inf1, info<-42>{-42} );
+			return leaf::new_error();
+		});
 	return boost::report_errors();
 }

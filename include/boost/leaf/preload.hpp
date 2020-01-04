@@ -90,13 +90,14 @@ namespace boost { namespace leaf {
 		template <class E>
 		class preloaded_item
 		{
-			slot<E> * s_;
-			E e_;
+			using decay_E = typename std::decay<E>::type;
+			slot<decay_E> * s_;
+			decay_E e_;
 
 		public:
 
-			LEAF_CONSTEXPR explicit preloaded_item( E && e ) noexcept:
-				s_(tl_slot_ptr<E>()),
+			LEAF_CONSTEXPR explicit preloaded_item( E && e ):
+				s_(tl_slot_ptr<decay_E>()),
 				e_(std::forward<E>(e))
 			{
 			}
@@ -115,7 +116,7 @@ namespace boost { namespace leaf {
 					int c = tl_unexpected_enabled_counter();
 					BOOST_LEAF_ASSERT(c>=0);
 					if( c )
-						load_unexpected(err_id, std::forward<E>(e_));
+						load_unexpected(err_id, std::move(e_));
 				}
 #endif
 			}
@@ -132,7 +133,7 @@ namespace boost { namespace leaf {
 
 		public:
 
-			LEAF_CONSTEXPR explicit preloaded( E && ... e ) noexcept:
+			LEAF_CONSTEXPR explicit preloaded( E && ... e ):
 				p_(preloaded_item<E>(std::forward<E>(e))...),
 				moved_(false)
 			{
@@ -157,7 +158,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... E>
-	LEAF_CONSTEXPR inline leaf_detail::preloaded<E...> preload( E && ... e ) noexcept
+	LEAF_CONSTEXPR inline leaf_detail::preloaded<E...> preload( E && ... e )
 	{
 		return leaf_detail::preloaded<E...>(std::forward<E>(e)...);
 	}
