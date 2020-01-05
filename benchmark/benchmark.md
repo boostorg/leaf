@@ -13,12 +13,12 @@ LEAF serves a similar purpose to other error handling libraries, but its design 
 
 The main design difference is that when using LEAF, error objects are not communicated in return values. In case of a failure, the `leaf::result<T>` object transports only an `int`, the unique error ID.
 
-Error objects skip the error-neutral functions in the call stack and get moved directly to the relevant error-handling scope. This mechanism does not depend on RVO or any other optimization: as soon as the program passes an error object to LEAF, it moves it to the correct error handling scope.
+Error objects skip the error-neutral functions in the call stack and get moved directly to the the error-handling scope that needs them. This mechanism does not depend on RVO or any other optimization: as soon as the program passes an error object to LEAF, it moves it to the correct error handling scope.
 
 Other error-handling libraries instead couple the static type of the return value of *all* error-neutral functions with the error type an error-reporting function may return. This approach suffers from the same problems as statically-enforced exception specifications:
 
-* It's difficult or impossible to use in generic contexts, and
-* It  impedes interoperability between the many different error types a non-trivial program must deal with.
+* It's difficult to use in generic contexts, and
+* It  impedes interoperability between the many different error types any non-trivial program must handle.
 
 (The Boost Outcome library is also capable of avoiding such excessive coupling, by passing for the third `P` argument in the `outcome<T, E, P>` template a pointer that erases the exact static type of the object being transported. However, this would require a dynamic memory allocation).
 
@@ -282,6 +282,12 @@ The benchmark matrix has 2 dimensions:
     c. The error object transported in case of a failure is of type `e_heavy_payload`, a `struct` of size 4096.
 
 2. Error rate: 2%, 98%
+
+Now, transporting a large error object might seem unusual, but this is only because it is impractical to return a large object as *the* the return value in case of an error. LEAF has two features that make communicating any, even large error objects, practical:
+
+* The return type of error-neutral functions is not coupled with the error object types that may be reported. This means that in case of a failure, any function can easily contribute any error information it has available.
+
+* LEAF will only bother to transport an error object if an active error handling scope needs it. This means that library functions can and should contribute any and all relevant information when reporting a failure, because if the program doesn't need it, it will simply be discarded.
 
 ## Source code
 
