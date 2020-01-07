@@ -71,19 +71,23 @@ When using LEAF, we must explicitly state our intention to handle errors, not ju
 ```c++
 // LEAF
 leaf::try_handle_all
+
   []() -> leaf::result<T>
   {
     LEAF_AUTO(v, f());
     // No error, use v
   },
+
   []( leaf::match<error_enum, error_enum::error1> )
   {
     /* handle error_enum::error1 */
   },
+
   []( leaf::match<error_enum, error_enum::error2> )
   {
     /* handle error_enum::error2 */
   },
+
   []()
   {
     /* handle any other failure */
