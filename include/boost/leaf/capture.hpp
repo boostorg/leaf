@@ -12,7 +12,47 @@
 
 namespace boost { namespace leaf {
 
-#ifndef LEAF_NO_EXCEPTIONS
+#ifdef LEAF_NO_EXCEPTIONS
+
+	namespace leaf_detail
+	{
+		template <class R, class F, class... A>
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr && ctx, F && f, A... a) noexcept
+		{
+			auto active_context = activate_context(*ctx);
+			return std::forward<F>(f)(std::forward<A>(a)...);
+		}
+
+		template <class R, class F, class... A>
+		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr && ctx, F && f, A... a) noexcept
+		{
+			auto active_context = activate_context(*ctx);
+			if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
+				return r;
+			else
+			{
+				ctx->captured_id_ = r.error();
+				return std::move(ctx);
+			}
+		}
+
+		template <class R, class Future>
+		inline decltype(std::declval<Future>().get()) future_get_impl(is_result_tag<R, false>, Future & fut ) noexcept
+		{
+			return fut.get();
+		}
+
+		template <class R, class Future>
+		inline decltype(std::declval<Future>().get()) future_get_impl(is_result_tag<R, true>, Future & fut ) noexcept
+		{
+			if( auto r = fut.get() )
+				return r;
+			else
+				return error_id(r.error()); // unloads
+		}
+	}
+
+#else
 
 	namespace leaf_detail
 	{
@@ -130,46 +170,6 @@ namespace boost { namespace leaf {
 			{
 				cap.unload_and_rethrow_original_exception();
 			}
-		}
-	}
-
-#else
-
-	namespace leaf_detail
-	{
-		template <class R, class F, class... A>
-		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr && ctx, F && f, A... a) noexcept
-		{
-			auto active_context = activate_context(*ctx);
-			return std::forward<F>(f)(std::forward<A>(a)...);
-		}
-
-		template <class R, class F, class... A>
-		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr && ctx, F && f, A... a) noexcept
-		{
-			auto active_context = activate_context(*ctx);
-			if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
-				return r;
-			else
-			{
-				ctx->captured_id_ = r.error();
-				return std::move(ctx);
-			}
-		}
-
-		template <class R, class Future>
-		inline decltype(std::declval<Future>().get()) future_get_impl(is_result_tag<R, false>, Future & fut ) noexcept
-		{
-			return fut.get();
-		}
-
-		template <class R, class Future>
-		inline decltype(std::declval<Future>().get()) future_get_impl(is_result_tag<R, true>, Future & fut ) noexcept
-		{
-			if( auto r = fut.get() )
-				return r;
-			else
-				return error_id(r.error()); // unloads
 		}
 	}
 
