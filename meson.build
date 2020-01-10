@@ -129,7 +129,13 @@ tests = [
 	'_hpp_result_test',
 	'_hpp_all_test',
 ]
-ubsan_args = [ '-fsanitize=undefined', '-fno-sanitize-recover=undefined' ]
+ubsan_args = [ ]
+if compiler_id=='clang' or compiler_id=='gcc'
+	ubsan_args = [
+		'-fsanitize=undefined',
+		'-fno-sanitize-recover=undefined'
+	]
+endif
 foreach t : tests
 	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf,thread_dep]+mp11, cpp_args: ubsan_args, link_args: ubsan_args) )
 endforeach
