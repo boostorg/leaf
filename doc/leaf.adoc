@@ -31,7 +31,7 @@ LEAF is a lightweight error handling library for {CPP}11. Features:
 
 [grid=none, frame=none]
 |====
-| <<introduction,Introduction>> \| <<tutorial>> \| <<synopsis>> \| <<rationale,Design Rationale>> \| https://github.com/zajo/leaf/blob/master/doc/whitepaper.md[Whitepaper] \| https://github.com/zajo/leaf/blob/master/benchmark/benchmark.md[Benchmark] >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<traits,Traits>> \| <<macros,Macros>>
+| <<introduction,Introduction>> \| <<tutorial>> \| <<synopsis>> \| https://github.com/zajo/leaf/blob/master/doc/whitepaper.md[Whitepaper] \| https://github.com/zajo/leaf/blob/master/benchmark/benchmark.md[Benchmark] >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<traits,Traits>> \| <<macros,Macros>>
 |====
 
 LEAF is designed with a strong bias towards the common use case where callers of functions which may fail check for success and forward errors up the call chain but do not handle them. When a function fails, the only data transported in the `leaf::result<T>` object is a simple discriminant. In this case, LEAF does not bother to make the actual error object(s) available to the caller. This saves a lot of cycles and results in very efficient code.
