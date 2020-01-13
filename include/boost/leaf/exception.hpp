@@ -93,7 +93,8 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_ASSERT(file&&*file);
 			BOOST_LEAF_ASSERT(line>0);
 			BOOST_LEAF_ASSERT(function&&*function);
-			return exception<Ex>(id.load(e_source_location{file,line,function},std::forward<E>(e)...), std::forward<Ex>(ex));
+			e_source_location sl {file,line,function}; // Named temp workaround for msvc
+			return exception<Ex>(id.load(std::move(sl),std::forward<E>(e)...), std::forward<Ex>(ex));
 		}
 
 		template <class Ex, class... E>
@@ -102,7 +103,8 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_ASSERT(file&&*file);
 			BOOST_LEAF_ASSERT(line>0);
 			BOOST_LEAF_ASSERT(function&&*function);
-			return exception<Ex>(new_error(e_source_location{file,line,function},std::forward<E>(e)...), std::forward<Ex>(ex));
+			e_source_location sl {file,line,function}; // Named temp workaround for msvc
+			return exception<Ex>(new_error(std::move(sl),std::forward<E>(e)...), std::forward<Ex>(ex));
 		}
 	}
 
