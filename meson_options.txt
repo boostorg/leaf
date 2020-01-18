@@ -3,3 +3,4 @@ option('leaf_boost_examples',type:'boolean',value:false,description:'Enable or d
 option('leaf_all_hpp',type:'boolean',value:false,description:'Enable or disable the automatic generation of include/boost/leaf/all.hpp')
 option('leaf_use_boost_mp11',type:'boolean',value:false,description:'Use <boost/mp11.hpp> instead of internal copied&pasted mp11 code')
 option('leaf_diagnostics',type:'integer',value:1,description:'LEAF_DIAGNOSTICS value')
+option('leaf_suppress_warnings',type:'boolean',value:true,description:'Suppress compiler warnings (#pragma system_header)')

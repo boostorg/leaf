@@ -9,17 +9,25 @@ compiler = meson.get_compiler('cpp')
 compiler_id = compiler.get_id()
 if not meson.is_subproject()
 	if compiler_id=='clang'
+		if get_option('buildtype')!='debug'
+			add_global_arguments(
+				'-Wno-unused-variable',
+				language:'cpp' )
+		endif
 		add_global_arguments(
-			'-Wno-unused-variable',
-			'-Wno-non-virtual-dtor',
 			'-Wno-dangling-else',
-			'-Wno-delete-non-virtual-dtor',
+			'-Wno-non-virtual-dtor',
 			language:'cpp' )
 	elif compiler_id=='gcc'
+		if get_option('buildtype')!='debug'
+			add_global_arguments(
+				'-Wno-unused-variable',
+				language:'cpp' )
+		endif
 		add_global_arguments(
-			'-Wno-non-virtual-dtor',
 			'-Wno-dangling-else',
-			'-Wno-parentheses',
+			'-Wno-non-virtual-dtor',
+			'-Wno-misleading-indentation',
 			language:'cpp' )
 	endif
 endif
@@ -48,6 +56,10 @@ exceptions = (get_option('cpp_eh')!='none')
 diagnostics = get_option('leaf_diagnostics')
 
 defines = [ '-DLEAF_DIAGNOSTICS='+diagnostics.to_string() ]
+
+if not get_option('leaf_suppress_warnings')
+	defines += '-DLEAF_ENABLE_WARNINGS'
+endif
 
 mp11 = [ ]
 if get_option('leaf_use_boost_mp11')
