@@ -251,7 +251,6 @@ namespace boost { namespace leaf {
 				*top_ = this;
 			}
 
-
 			LEAF_CONSTEXPR void deactivate() noexcept
 			{
 				BOOST_LEAF_ASSERT(top_!=0 && *top_==this);
