@@ -130,7 +130,6 @@ namespace boost { namespace leaf {
 					}
 					else
 						os << '[' << k << ']';
-					os << type<T>() << ": ";
 					diagnostic<T>::print(os, value_);
 					os << std::endl;
 				}
