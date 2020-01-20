@@ -321,7 +321,7 @@ leaf::handle_all(
   },
 
   // This handler is invoked in all other cases, similarly to catch(...)
-  []()
+  []
   {
     ....
   }
@@ -399,7 +399,7 @@ Logically, this behavior is identical to the compiler-generated code when callin
 
 * The formal ~~exception-safety~~ failure-safety guarantees are applicable to *error-neutral* functions responding to failures generically, even when not using exception handling.
 
-* Exception-handling overhead can be virtually eliminated by ABI changes that require no changes in the C++ standard.
+* Exception-handling overhead can be virtually eliminated by ABI changes that require no changes in the C++ standard; in the case when exception-neutral functions are inlined, all overhead may be removed even without ABI changes.
 
 ## Reference
 

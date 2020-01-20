@@ -17,7 +17,7 @@ Error objects skip the error-neutral functions in the call stack and get moved d
 
 Other error-handling libraries instead couple the static type of the return value of *all* error-neutral functions with the error type an error-reporting function may return. This approach suffers from the same problems as statically-enforced exception specifications:
 
-* It's difficult to use in generic contexts, and
+* It's difficult to use in polymorphic function calls, and
 * It  impedes interoperability between the many different error types any non-trivial program must handle.
 
 (The Boost Outcome library is also capable of avoiding such excessive coupling, by passing for the third `P` argument in the `outcome<T, E, P>` template a pointer that erases the exact static type of the object being transported. However, this would require a dynamic memory allocation).
@@ -88,7 +88,7 @@ leaf::try_handle_all
     /* handle error_enum::error2 */
   },
 
-  []()
+  []
   {
     /* handle any other failure */
   } );
@@ -100,7 +100,7 @@ The use of `try_handle_all` reserves storage on the stack for the error object t
 
 Benchmarking C++ programs is tricky, because we want to prevent the compiler from optimizing out things it shouldn't normally be able to optimize in a real program, yet we don't want to interfere with "legitimate" optimizations.
 
-The primary approach we use to prevent the compiler from optimizing everything out to nothing is to base all computations on a call to `std::rand()`. This adds cycles, but it also makes the benchmark more realistic, since functions which may legitimately fail should do _some_ real work.
+The primary approach we use to prevent the compiler from optimizing everything out to nothing is to base all computations on a call to `std::rand()`.
 
 When benchmarking error handling, it makes sense to measure the time it takes to return a result or error across multiple stack frames. This calls for disabling inlining.
 

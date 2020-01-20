@@ -4798,8 +4798,6 @@ result<config,config_error> read_config();
 
 This looks nice, until we realize what the `config_error` type means for the automatic mapping API we wanted to define: an `enum` can not represent a `struct`. It is a fact that we can not assume that all error conditions can be fully specified by an `enum`; an error handling library must be able to transport arbitrary static types efficiently.
 
-Conclusion: :: Transporting error objects in return values works great if the failure is handled by the immediate caller of the function that reports it, but most error objects must be communicated across multiple layers of function calls and APIs, which would lead to excessive physical coupling between these interfaces.
-
 NOTE: While the `leaf::<<result,result>><T>` class template does have value-or-error semantics, it does not carry the actual error objects. Instead, they are forwarded directly to the appropriate error-handling scope and their types do not participate in function signatures.
 
 [[errors_are_not_implementation_details]]
@@ -4851,8 +4849,8 @@ Therefore, we're left with *2)*. There's almost nothing wrong with this option, 
 
 * https://www.boost.org/doc/libs/release/libs/exception/doc/boost-exception.html[Boost Exception]
 * https://ned14.github.io/outcome[Boost Outcome]
-* https://github.com/pdimov/variant2[variant2 / `expected<T,E...>`]
-* https://zajo.github.io/boost-noexcept[Noexcept]
+* https://github.com/pdimov/variant2[`variant2` / `expected<T,E...>`]
+* https://github.com/TartanLlama/expected[`tl::expected`]
 
 Below we offer a comparison of LEAF to Boost Exception and to Boost Outcome.
 
