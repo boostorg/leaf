@@ -52,6 +52,7 @@
 #include <iomanip>
 #include <numeric>
 #include <algorithm>
+#include <system_error>
 #include <array>
 
 namespace boost
@@ -60,6 +61,12 @@ namespace boost
 	{
 		std::cerr << "Terminating due to a C++ exception under BOOST_NO_EXCEPTIONS: " << e.what();
 		std::terminate();
+	}
+
+	struct source_location;
+	void throw_exception( std::exception const & e, boost::source_location const & )
+	{
+		throw_exception(e);
 	}
 }
 
@@ -124,6 +131,12 @@ inline e_error_code make_error<e_error_code>() noexcept
 }
 
 template <>
+inline std::error_code make_error<std::error_code>() noexcept
+{
+	return std::error_code(std::rand(), std::system_category());
+}
+
+template <>
 inline e_system_error make_error<e_system_error>() noexcept
 {
 	return { std::rand(), std::string(std::rand()%32, ' ') };
@@ -147,6 +160,11 @@ inline bool should_fail( int failure_rate ) noexcept
 inline int handle_error( e_error_code e ) noexcept
 {
 	return int(e);
+}
+
+inline int handle_error( std::error_code const & e ) noexcept
+{
+	return e.value();
 }
 
 inline int handle_error( e_system_error const & e ) noexcept
@@ -281,6 +299,7 @@ int main()
 		"----------------|----------|---------";
 	int r = 0;
 	r += benchmark_type<depth, e_error_code>("e_error_code", iteration_count);
+	r += benchmark_type<depth, std::error_code>("std::error_code", iteration_count);
 	r += benchmark_type<depth, e_system_error>("e_system_error", iteration_count);
 	r += benchmark_type<depth, e_heavy_payload>("e_heavy_payload", iteration_count);
 	std::cout << '\n';
