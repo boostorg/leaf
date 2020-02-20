@@ -3,7 +3,13 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/handle_exception.hpp>
+#include <boost/leaf/config.hpp>
+#ifndef LEAF_NO_EXCEPTIONS
+#	include <boost/leaf/handle_exception.hpp>
+#else
+#	include <boost/leaf/handle_error.hpp>
+#endif
+
 #include <boost/leaf/result.hpp>
 #include <exception>
 #include "lightweight_test.hpp"
@@ -53,6 +59,8 @@ int main()
 			} );
 		BOOST_TEST_EQ(r, 2);
 	}
+
+#ifndef LEAF_NO_EXCEPTIONS
 	{
 		int r = leaf::try_catch(
 			[]() -> int
@@ -76,5 +84,7 @@ int main()
 			} );
 		BOOST_TEST_EQ(r, 2);
 	}
+#endif
+
 	return boost::report_errors();
 }
