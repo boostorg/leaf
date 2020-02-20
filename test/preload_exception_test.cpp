@@ -91,7 +91,7 @@ int main()
 			},
 			[]( leaf::error_info const & err, info<2> )
 			{
-				BOOST_TEST_EQ(err.error().value(), 5);
+				BOOST_TEST_EQ(err.error().value(), 9);
 				return 2;
 			},
 			[]( info<1>, info<2> )
@@ -108,7 +108,7 @@ int main()
 			},
 			[]( leaf::error_info const & err, info<1> )
 			{
-				BOOST_TEST_EQ(err.error().value(), 9);
+				BOOST_TEST_EQ(err.error().value(), 17);
 				return 1;
 			},
 			[]( info<2> )
@@ -133,7 +133,7 @@ int main()
 			},
 			[]( leaf::error_info const & err, info<2> )
 			{
-				BOOST_TEST_EQ(err.error().value(), 13);
+				BOOST_TEST_EQ(err.error().value(), 21);
 				return 2;
 			},
 			[]( info<1>, info<2> )

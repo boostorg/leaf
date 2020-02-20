@@ -397,7 +397,8 @@ namespace boost { namespace leaf {
 
 		inline int new_id() noexcept
 		{
-			return id_factory<>::current_id = id_factory<>::generate_next_id();
+			auto id = id_factory<>::generate_next_id();
+			return id_factory<>::current_id = id;
 		}
 	}
 

@@ -1346,7 +1346,8 @@ namespace boost { namespace leaf {
 
 		inline int new_id() noexcept
 		{
-			return id_factory<>::current_id = id_factory<>::generate_next_id();
+			auto id = id_factory<>::generate_next_id();
+			return id_factory<>::current_id = id;
 		}
 	}
 
@@ -1713,13 +1714,18 @@ namespace boost { namespace leaf {
 
 		class exception_base
 		{
+			std::shared_ptr<void const> auto_id_bump_;
 		public:
 
 			virtual error_id get_error_id() const noexcept = 0;
 
 		protected:
 
-			constexpr exception_base() noexcept { }
+			constexpr exception_base() noexcept:
+				auto_id_bump_(0, [](void const *) { (void) new_id(); })
+			{
+			}
+
 			~exception_base() noexcept { }
 		};
 
