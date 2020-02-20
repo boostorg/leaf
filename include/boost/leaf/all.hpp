@@ -1721,7 +1721,7 @@ namespace boost { namespace leaf {
 
 		protected:
 
-			constexpr exception_base() noexcept:
+			exception_base():
 				auto_id_bump_(0, [](void const *) { (void) new_id(); })
 			{
 			}
