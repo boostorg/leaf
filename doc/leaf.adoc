@@ -721,7 +721,7 @@ leaf::result<info> parse_file( char const * file_name ) noexcept
 
   if( FILE * f = fopen(file_name,"r") )
   {
-    auto r = parse_file(f);
+    auto r = parse_info(f);
     fclose(f);
     return r;
   }
