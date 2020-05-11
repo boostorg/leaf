@@ -5129,4 +5129,4 @@ Special thanks to Peter Dimov and Sorin Fetche.
 
 Ivo Belchev, Sean Palmer, Jason King, Vinnie Falco, Glen Fernandes, Nir Friedman, Augustín Bergé -- thanks for the valuable feedback.
 
-Documentation rendered by https://asciidoctor.org/[Asciidoctor].
+Documentation rendered by https://asciidoctor.org/[Asciidoctor] with https://github.com/zajo/asciidoctor_skin[these customizations].
