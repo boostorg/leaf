@@ -465,6 +465,7 @@ kbd{font-family:"Anonymous Pro","DejaVu Sans Mono",monospace;display:inline-bloc
 .exampleblock>.content{background-color:#ffffff;border-color:#e0e0dc;-webkit-box-shadow:0 1px 4px #e0e0dc;box-shadow:0 1px 4px #e0e0dc}
 .quoteblock blockquote::before{margin-left:-.8em;color:#4101a7}
 .quoteblock blockquote{font-family:"Istok Web","DejaVu Serif"; font-size:1.0625rem; padding:0.5em}
+.text-right{margin-top:-1em}
 
 /*
 Barlow Semi Condensed
