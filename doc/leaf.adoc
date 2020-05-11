@@ -1,23 +1,20 @@
 :last-update-label!:
 :icons: font
 :prewrap!:
-:source-highlighter: coderay
 :docinfo: shared
 :stylesheet: zajo-dark.css
 
 = LEAF
 Lightweight Error Augmentation Framework
-:toclevels: 3
-:toc: left
-ifdef::backend-pdf[]
-:toc-title:
-endif::[]
 ifndef::backend-pdf[]
+:source-highlighter: coderay
+:toc: left
+:toclevels: 3
 :toc-title: pass:[<div style="float:right"><button type="button" style="border-color:white;background-color:black;color:white;font-size:.6em;" onclick="this.blur();switch_style('dark');return false;"><b>Dark</b></button>&nbsp;<button type="button" style="border-color:black;background-color:white;color:black;font-size:.6em;" onclick="this.blur();switch_style('light');return false;"><b>Light</b></button></div>]
-endif::[]
 
 [.text-right]
 https://github.com/zajo/leaf[GitHub] | https://travis-ci.org/zajo/leaf[Travis] | https://ci.appveyor.com/project/zajo/leaf[AppVeyor] | link:./leaf.pdf[PDF]
+endif::[]
 
 [abstract]
 == Abstract
@@ -36,10 +33,12 @@ LEAF is a lightweight error handling library for {CPP}11. Features:
 * Support for multi-thread programming.
 ====
 
+ifndef::backend-pdf[]
 [grid=none, frame=none]
 |====
 | <<introduction,Introduction>> \| <<tutorial>> \| <<synopsis>> \| https://github.com/zajo/leaf/blob/master/doc/whitepaper.md[Whitepaper] \| https://github.com/zajo/leaf/blob/master/benchmark/benchmark.md[Benchmark] >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<traits,Traits>> \| <<macros,Macros>>
 |====
+endif::[]
 
 LEAF is designed with a strong bias towards the common use case where callers of functions which may fail check for success and forward errors up the call chain but do not handle them. When a function fails, the only data transported in the `leaf::result<T>` object is a simple discriminant. In this case, LEAF does not bother to make the actual error object(s) available to the caller. This saves a lot of cycles and results in very efficient code.
 
