@@ -6,18 +6,13 @@
 # http://www.boost.org/LICENSE_1_0.txt)
 
 project doc/leaf ;
-
 import asciidoctor ;
 
-html index.html : leaf.adoc ;
-
-install html_ : index.html LEAF-1.png LEAF-2.png : <location>html ;
+html index.html : leaf.adoc : <asciidoctor-attribute>stylesheet=zajo-dark.css <asciidoctor-attribute>linkcss ;
+install html_ : index.html LEAF-1.png LEAF-2.png zajo-dark.css zajo-light.css : <location>out ;
 
 pdf leaf.pdf : leaf.adoc ;
-explicit leaf.pdf ;
-
-install pdf_ : leaf.pdf : <location>pdf ;
-explicit pdf_ ;
+install pdf_ : leaf.pdf : <location>out ;
 
 alias boostdoc ;
 explicit boostdoc ;

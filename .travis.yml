@@ -59,7 +59,7 @@ matrix:
           echo "using asciidoctor ;" > ~/user-config.jam
         - ../../b2 doc
       deploy:
-        local-dir: ../boost-root/libs/leaf/doc/html
+        local-dir: ../boost-root/libs/leaf/doc/out
         provider: pages
         skip-cleanup: true
         github-token: $GH_PAGES_TOKEN
@@ -368,6 +368,7 @@ matrix:
 install:
   - gem install asciidoctor
   - gem install coderay
+  - gem install asciidoctor-pdf --pre
 #  - pip3 install meson
   - cd ..
   - git clone -b master --depth 1 https://github.com/boostorg/boost.git boost-root

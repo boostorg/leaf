@@ -2,15 +2,22 @@
 :icons: font
 :prewrap!:
 :source-highlighter: coderay
-:stylesheet: zajo.css
+:docinfo: shared
+:stylesheet: zajo-dark.css
+
 = LEAF
 Lightweight Error Augmentation Framework
 :toclevels: 3
 :toc: left
+ifdef::backend-pdf[]
 :toc-title:
+endif::[]
+ifndef::backend-pdf[]
+:toc-title: pass:[<div style="float:right"><button type="button" style="border-color:white;background-color:black;color:white;font-size:.6em;" onclick="this.blur();switch_style('dark');return false;"><b>Dark</b></button>&nbsp;<button type="button" style="border-color:black;background-color:white;color:black;font-size:.6em;" onclick="this.blur();switch_style('light');return false;"><b>Light</b></button></div>]
+endif::[]
 
 [.text-right]
-https://github.com/zajo/leaf[GitHub] | https://travis-ci.org/zajo/leaf[Travis] | https://ci.appveyor.com/project/zajo/leaf[AppVeyor]
+https://github.com/zajo/leaf[GitHub] | https://travis-ci.org/zajo/leaf[Travis] | https://ci.appveyor.com/project/zajo/leaf[AppVeyor] | link:./leaf.pdf[PDF]
 
 [abstract]
 == Abstract
@@ -505,15 +512,15 @@ The following figure illustrates how error objects are transported when using LE
 .LEAF noexcept Error Communication Model
 image::LEAF-1.png[]
 
-The black arrows indicate the call stack order: higher level functions calling lower level functions.
+The arrows pointing down indicate the call stack order for the functions `f1` through `f5`: higher level functions calling lower level functions.
 
 Note the call to `preload` in `f3`: it caches the passed E-objects of types `E1` and `E3` in the returned object `load`, where they stay ready to be communicated in case any function downstream from `f3` reports an error. Presumably these objects are relevant to any such failure, but are conveniently accessible only in this scope.
 
-_Figure 1_ depicts the condition where `f5` has detected an error. It calls `leaf::new_error` to create a new, unique `error_id`. The passed E-object of type `E2` is immediately loaded in the first active `context` object that provides static storage for it, found in any calling scope (in this case `f1`), and is associated with the newly-generated `error_id` (purple arrow);
+_Figure 1_ depicts the condition where `f5` has detected an error. It calls `leaf::new_error` to create a new, unique `error_id`. The passed E-object of type `E2` is immediately loaded in the first active `context` object that provides static storage for it, found in any calling scope (in this case `f1`), and is associated with the newly-generated `error_id` (solid arrow);
 
-The `error_id` itself is returned to the immediate caller `f4`, usually stored in a `result<T>` object `r`. That object takes the path shown in orange, as each error-neutral function, unable to handle the failure, forwards it to its immediate caller -- until an error-handling scope is reached.
+The `error_id` itself is returned to the immediate caller `f4`, usually stored in a `result<T>` object `r`. That object takes the path shown by dashed arrows, as each error-neutral function, unable to handle the failure, forwards it to its immediate caller in the returned value -- until an error-handling scope is reached.
 
-When the destructor of the `load` object in `f3` executes, it detects that `new_error` was invoked after its initialization, loads the cached objects of types `E1` and `E3` in the first active `context` object that provides static storage for them, found in any calling scope (in this case `f1`), and associates them with the last generated `error_id` (purple arrow).
+When the destructor of the `load` object in `f3` executes, it detects that `new_error` was invoked after its initialization, loads the cached objects of types `E1` and `E3` in the first active `context` object that provides static storage for them, found in any calling scope (in this case `f1`), and associates them with the last generated `error_id` (solid arrow).
 
 When the error-handling scope `f1` is reached, it probes `ctx` for any E-objects associated with the `error_id` it received from `f2`, and processes a list of user-provided error handlers (almost always lambda functions), in order, until it finds a handler with arguments that match the available E-objects. That handler is called to deal with the failure.
 
@@ -4713,9 +4720,6 @@ Most {CPP} programs use multiple C and {CPP} libraries, and each library may pro
 
 For example, if we have --
 
-[cols="1a,1a",stripes=none,frame="none",grid="none",width=1%]
-|====
-|
 [source,c++,options="nowrap"]
 ----
 namespace lib_a
@@ -4728,10 +4732,7 @@ namespace lib_a
     ....
   };
 }
-----
-|
-[source,c++,options="nowrap"]
-----
+
 namespace lib_b
 {
   enum error
@@ -4743,7 +4744,6 @@ namespace lib_b
   };
 }
 ----
-|====
 
 -- we could define:
 
@@ -5121,7 +5121,7 @@ meson test
 The following configuration macros are recognized:
 
 * `LEAF_DIAGNOSTICS`: Defining this macro to `0` stubs out both <<diagnostic_info>> and <<verbose_diagnostic_info>>, which could improve the performance of the error path in some programs (if the macro is left undefined, LEAF defines it as `1`).
-* `LEAF_NO_EXCEPTIONS`: Disable all exception handling support. If left undefined, LEAF defines it based on the compiler configuration (e.g. `-fno-exceptions`).
+* `LEAF_NO_EXCEPTIONS`: Disables all exception handling support. If left undefined, LEAF defines it based on the compiler configuration (e.g. `-fno-exceptions`).
 * `LEAF_NO_THREADS`: Disable all multi-thread support.
 
 == Acknowledgements
@@ -5129,3 +5129,5 @@ The following configuration macros are recognized:
 Special thanks to Peter Dimov and Sorin Fetche.
 
 Ivo Belchev, Sean Palmer, Jason King, Vinnie Falco, Glen Fernandes, Nir Friedman, Augustín Bergé -- thanks for the valuable feedback.
+
+Documentation rendered by https://asciidoctor.org/[Asciidoctor].
