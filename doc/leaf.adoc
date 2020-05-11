@@ -10,7 +10,7 @@ ifndef::backend-pdf[]
 :source-highlighter: coderay
 :toc: left
 :toclevels: 3
-:toc-title: pass:[<div style="float:right"><button type="button" style="border-color:white;background-color:black;color:white;font-size:.6em;" onclick="this.blur();switch_style('dark');return false;"><b>Dark</b></button>&nbsp;<button type="button" style="border-color:black;background-color:white;color:black;font-size:.6em;" onclick="this.blur();switch_style('light');return false;"><b>Light</b></button></div>]
+:toc-title: pass:[<div style="float:right"><input width="32" height="32" type="image" alt="Skin" src="./skin.png" onclick="this.blur();switch_style();return false;"/></div>]
 
 [.text-right]
 https://github.com/zajo/leaf[GitHub] | https://travis-ci.org/zajo/leaf[Travis] | https://ci.appveyor.com/project/zajo/leaf[AppVeyor] | link:./leaf.pdf[PDF]
