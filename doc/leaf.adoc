@@ -6,7 +6,6 @@
 
 = LEAF
 Lightweight Error Augmentation Framework
-:source-highlighter: coderay
 ifndef::backend-pdf[]
 :toc: left
 :toclevels: 3
