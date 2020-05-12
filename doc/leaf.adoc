@@ -484,7 +484,7 @@ The following terms are used throughout this documentation:
 
 Error types, or E-types: :: User-defined value types that describe or pertain to a failure. Objects of these types may carry `std::error_code`, error enums, relevant file names, and any other information that is required by an error-handling scope in case of a failure. E-types must define no-throw move, but need not be copyable.
 
-error_id: :: This is a value type that acts as a program-wide unique identifier of a particular occurrence of a failure. It is as efficient as an 'int'. In addition the `error_id` type is implicitly convertible to `std::error_code`. This enables LEAF error IDs to be communicated through any compatible API in plain `std::error_code` objects, which LEAF recognizes by its own specific `std::error_category`.
+error_id: :: This is a value type that acts as a program-wide unique identifier of a particular occurrence of a failure. It is as efficient as an `int`. In addition the `error_id` type is implicitly convertible to `std::error_code`. This enables LEAF error IDs to be communicated through any compatible API in plain `std::error_code` objects, which LEAF recognizes by its own specific `std::error_category`.
 
 context<E...>: :: A `context` is an associative container of E-types, which it stores statically in a `std::tuple`. A `context` object may store at most a single object of each of the `E...` types. When an E-object is stored in a `context`, it is always associated with a specific `error_id` value. Typically, `context` objects are local to the `try_handle_some`, `try_handle_all` or `try_catch` function invoked by an error-handling scope.
 
@@ -494,9 +494,17 @@ Error-neutral function: :: A function which, in case a lower level function fail
 
 Error-handling function: :: A function that recognizes and recovers from at least some errors reported by lower level functions. Error-handling functions typically call `try_handle_some`, `try_handle_all` or `try_catch`, passing a list of handlers.
 
-Handler: :: A function (almost always a lambda), which is able to handle a specific error condition identified by its arguments (usually of E-types). In typical use, if a low-level function attempts to communicate an E-object, it is immediately discarded unless at least one error-handling scope up the call chain contains a handler that takes an argument of that E-type.
+Handler: :: A function (almost always a lambda), which is able to handle a specific error condition identified by its arguments (usually of E-types). In typical use, if a low-level function attempts to communicate an E-object, it is discarded unless at least one error-handling scope up the call chain contains a handler that takes an argument of that E-type.
 +
-Scopes that handle errors require an error ID and a list of handlers, which they typically pass to `try_handle_some`, `try_handle_all` or `try_catch`. To handle an error, LEAF calls the first of the specified handlers whose arguments can be supplied by the E-objects loaded in a local `context` that are associated with the specified `error_id`.
+Scopes that handle errors require an `error_id` and a list of handlers, which they typically pass to `try_handle_some`, `try_handle_all` or `try_catch`. The `error_id` is transported in one of the following ways:
++
+--
+* in a <<result,`leaf::result<T>`>> object,
+* in a `std::error_code` object, or
+* in an exception object returned by <<exception,`leaf::exception`>>.
+--
++
+To handle an error, LEAF calls the first of the specified handlers whose arguments can be supplied by the E-objects loaded in a local `context` that are associated with the delivered `error_id`.
 
 '''
 
