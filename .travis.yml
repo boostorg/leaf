@@ -54,6 +54,9 @@ matrix:
 
     - os: linux
       env: DOC=1
+      install:
+        - gem install asciidoctor
+        - gem install asciidoctor-pdf --pre
       script:
         - |-
           echo "using asciidoctor ;" > ~/user-config.jam
@@ -366,10 +369,6 @@ matrix:
             - llvm-toolchain-trusty-8
 
 install:
-  - gem install asciidoctor
-  - gem install coderay
-  - gem install asciidoctor-pdf --pre
-#  - pip3 install meson
   - cd ..
   - git clone -b master --depth 1 https://github.com/boostorg/boost.git boost-root
   - cd boost-root
@@ -383,7 +382,6 @@ install:
   - ./bootstrap.sh
   - ./b2 headers
   - cd libs/leaf
-#  - meson bld/debug
 
 script:
   - |-
