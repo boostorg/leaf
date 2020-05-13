@@ -60,6 +60,7 @@ matrix:
         - git clone -b master --depth 1 https://github.com/boostorg/boost.git boost-root
         - cd boost-root
         - git submodule update --init tools/build
+        - git submodule update --init libs/config
         - mkdir libs/leaf
         - cp -r $TRAVIS_BUILD_DIR/* libs/leaf
         - ./bootstrap.sh
