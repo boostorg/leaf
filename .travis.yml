@@ -35,7 +35,6 @@ addons:
       - clang-3.7
       - clang-3.8
       - ruby-full
-#      - python-3.6
       - ninja-build
 
     sources:
@@ -57,6 +56,14 @@ matrix:
       install:
         - gem install asciidoctor
         - gem install asciidoctor-pdf --pre
+        - cd ..
+        - git clone -b master --depth 1 https://github.com/boostorg/boost.git boost-root
+        - cd boost-root
+        - git submodule update --init tools/build
+        - mkdir libs/leaf
+        - cp -r $TRAVIS_BUILD_DIR/* libs/leaf
+        - ./bootstrap.sh
+        - cd libs/leaf
       script:
         - |-
           echo "using asciidoctor ;" > ~/user-config.jam
