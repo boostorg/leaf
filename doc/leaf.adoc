@@ -1892,13 +1892,13 @@ This is summarized in the table below:
 [cols="<,^,^", stripes=none]
 |====
 | | Handles `result<T>` Errors | Handles Exceptions
-| [`<<remote_try_handle_all,remote_>>`]<<try_handle_all>> | ✅ | ✱
-| [`<<remote_try_handle_some,remote_>>`]<<try_handle_some>> | ✅ | ✱
-| [`<<remote_try_catch,remote_>>`]<<try_catch>> | ❌ | ✅
+| [`<<remote_try_handle_all,remote_>>`]<<try_handle_all>> | Yes | *
+| [`<<remote_try_handle_some,remote_>>`]<<try_handle_some>> | Yes | *
+| [`<<remote_try_catch,remote_>>`]<<try_catch>> | No | Yes
 |====
 
 [.text-right]
-✱ Handles exceptions iff at least one of the supplied handlers uses <<catch_>> +
+pass:[*] Handles exceptions iff at least one of the supplied handlers uses <<catch_>> +
 (Dispatched statically; please `#include <boost/leaf/handle_exception.hpp>`)
 
 The above error-handling functions:
