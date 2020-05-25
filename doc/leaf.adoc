@@ -55,6 +55,8 @@ We'll implement two versions of the same simple program: one using error codes t
 
 We'll write a short but complete program that reads a text file in a buffer and prints it to `std::cout`, using LEAF to handle errors without exception handling.
 
+NOTE: This part of the introduction is about using LEAF without exception handling. LEAF works great <<introduction-eh>> as well.
+
 Let's jump ahead and start with the `main` function: it will try several operations as needed and handle all the errors that occur. Did I say *all* the errors? I did, so we'll use `leaf::try_handle_all`. It has the following signature:
 
 [source,c++]
