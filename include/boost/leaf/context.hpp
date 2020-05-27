@@ -122,12 +122,6 @@ namespace boost { namespace leaf {
 		template <> struct translate_type_impl<verbose_diagnostic_info const *>;
 		template <> struct translate_type_impl<verbose_diagnostic_info const &> { using type = e_unexpected_info; };
 
-		struct e_original_ec;
-		template <> struct translate_type_impl<std::error_code> { using type = e_original_ec; };
-		template <> struct translate_type_impl<std::error_code const> { using type = e_original_ec; };
-		template <> struct translate_type_impl<std::error_code const *> { using type = e_original_ec; };
-		template <> struct translate_type_impl<std::error_code const &> { using type = e_original_ec; };
-
 		template <class T>
 		using translate_type = typename translate_type_impl<T>::type;
 
@@ -144,7 +138,6 @@ namespace boost { namespace leaf {
 
 		template <class T> struct does_not_participate_in_context_deduction: std::false_type { };
 		template <> struct does_not_participate_in_context_deduction<error_info>: std::true_type { };
-		template <> struct does_not_participate_in_context_deduction<std::error_code>: std::true_type { };
 		template <> struct does_not_participate_in_context_deduction<void>: std::true_type { };
 #if !LEAF_DIAGNOSTICS
 		template <> struct does_not_participate_in_context_deduction<e_unexpected_count>: std::true_type { };

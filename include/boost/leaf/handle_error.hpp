@@ -286,14 +286,14 @@ namespace boost { namespace leaf {
 			static_assert(std::is_error_condition_enum<ErrorConditionEnum>::value, "If leaf::condition is instantiated with one type, that type must be a std::error_condition_enum");
 
 			using enumerator = ErrorConditionEnum;
-			using e_type = e_original_ec;
+			using e_type = std::error_code;
 			using match_type = std::error_code;
 
 			template <class SlotsTuple>
 			LEAF_CONSTEXPR static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				if( e_type const * ec = peek<e_type>(tup, ei.error()) )
-					return &ec->value;
+					return ec;
 				else
 					return 0;
 			}
@@ -543,11 +543,11 @@ namespace boost { namespace leaf {
 		struct get_one_argument<std::error_code>
 		{
 			template <class SlotsTuple>
-			static std::error_code get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			static std::error_code const & get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				leaf_detail::e_original_ec const * org = peek<e_original_ec>(tup, ei.error());
-				BOOST_LEAF_ASSERT(org!=0);
-				return org->value;
+				std::error_code const * ec = peek<std::error_code>(tup, ei.error());
+				BOOST_LEAF_ASSERT(ec!=0);
+				return *ec;
 			}
 		};
 

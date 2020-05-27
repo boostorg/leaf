@@ -83,7 +83,7 @@ namespace boost { namespace leaf {
 	template <class T> struct is_e_type<T const>: is_e_type<T> { };
 	template <class T> struct is_e_type<T const &>: is_e_type<T> { };
 	template <class T> struct is_e_type<T &>: is_e_type<T> { };
-	template <> struct is_e_type<std::error_code>: std::false_type { };
+	template <> struct is_e_type<std::error_code>: std::true_type { };
 
 	////////////////////////////////////////
 
@@ -406,8 +406,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		struct e_original_ec { std::error_code value; };
-
 		class leaf_category: public std::error_category
 		{
 			bool equivalent( int,  std::error_condition const & ) const noexcept final override { return false; }
@@ -440,7 +438,7 @@ namespace boost { namespace leaf {
 				else
 				{
 					err_id = leaf_detail::new_id();
-					leaf_detail::load_slot(err_id, leaf_detail::e_original_ec{ec});
+					leaf_detail::load_slot(err_id,ec);
 					return (err_id&~3)|1;
 				}
 			}

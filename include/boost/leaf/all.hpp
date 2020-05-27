@@ -1032,7 +1032,7 @@ namespace boost { namespace leaf {
 	template <class T> struct is_e_type<T const>: is_e_type<T> { };
 	template <class T> struct is_e_type<T const &>: is_e_type<T> { };
 	template <class T> struct is_e_type<T &>: is_e_type<T> { };
-	template <> struct is_e_type<std::error_code>: std::false_type { };
+	template <> struct is_e_type<std::error_code>: std::true_type { };
 
 	////////////////////////////////////////
 
@@ -1355,8 +1355,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		struct e_original_ec { std::error_code value; };
-
 		class leaf_category: public std::error_category
 		{
 			bool equivalent( int,  std::error_condition const & ) const noexcept final override { return false; }
@@ -1389,7 +1387,7 @@ namespace boost { namespace leaf {
 				else
 				{
 					err_id = leaf_detail::new_id();
-					leaf_detail::load_slot(err_id, leaf_detail::e_original_ec{ec});
+					leaf_detail::load_slot(err_id,ec);
 					return (err_id&~3)|1;
 				}
 			}
@@ -2582,12 +2580,6 @@ namespace boost { namespace leaf {
 		template <> struct translate_type_impl<verbose_diagnostic_info const *>;
 		template <> struct translate_type_impl<verbose_diagnostic_info const &> { using type = e_unexpected_info; };
 
-		struct e_original_ec;
-		template <> struct translate_type_impl<std::error_code> { using type = e_original_ec; };
-		template <> struct translate_type_impl<std::error_code const> { using type = e_original_ec; };
-		template <> struct translate_type_impl<std::error_code const *> { using type = e_original_ec; };
-		template <> struct translate_type_impl<std::error_code const &> { using type = e_original_ec; };
-
 		template <class T>
 		using translate_type = typename translate_type_impl<T>::type;
 
@@ -2604,7 +2596,6 @@ namespace boost { namespace leaf {
 
 		template <class T> struct does_not_participate_in_context_deduction: std::false_type { };
 		template <> struct does_not_participate_in_context_deduction<error_info>: std::true_type { };
-		template <> struct does_not_participate_in_context_deduction<std::error_code>: std::true_type { };
 		template <> struct does_not_participate_in_context_deduction<void>: std::true_type { };
 #if !LEAF_DIAGNOSTICS
 		template <> struct does_not_participate_in_context_deduction<e_unexpected_count>: std::true_type { };
@@ -3185,14 +3176,14 @@ namespace boost { namespace leaf {
 			static_assert(std::is_error_condition_enum<ErrorConditionEnum>::value, "If leaf::condition is instantiated with one type, that type must be a std::error_condition_enum");
 
 			using enumerator = ErrorConditionEnum;
-			using e_type = e_original_ec;
+			using e_type = std::error_code;
 			using match_type = std::error_code;
 
 			template <class SlotsTuple>
 			LEAF_CONSTEXPR static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				if( e_type const * ec = peek<e_type>(tup, ei.error()) )
-					return &ec->value;
+					return ec;
 				else
 					return 0;
 			}
@@ -3442,11 +3433,11 @@ namespace boost { namespace leaf {
 		struct get_one_argument<std::error_code>
 		{
 			template <class SlotsTuple>
-			static std::error_code get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			static std::error_code const & get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				leaf_detail::e_original_ec const * org = peek<e_original_ec>(tup, ei.error());
-				BOOST_LEAF_ASSERT(org!=0);
-				return org->value;
+				std::error_code const * ec = peek<std::error_code>(tup, ei.error());
+				BOOST_LEAF_ASSERT(ec!=0);
+				return *ec;
 			}
 		};
 
