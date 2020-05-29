@@ -50,13 +50,6 @@ namespace {
 using error_code = boost::system::error_code;
 } // namespace
 
-namespace boost {
-namespace leaf {
-// Ensure the error_code is an E-type.
-template <> struct is_e_type<error_code> : std::true_type {};
-} // namespace leaf
-} // namespace boost
-
 // The operation being performed when an error occurs.
 struct e_last_operation {
     std::string_view value;

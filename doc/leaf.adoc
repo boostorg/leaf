@@ -201,17 +201,6 @@ enum error_code
 };
 ----
 
-Looks good, but how does LEAF know that this `enum` represents error codes and not, say, types of cold cuts sold at Bay Cities Italian Deli? It doesn't, unless we tell it:
-
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template<> struct is_e_type<error_code>: std::true_type { };
-
-} }
-----
-
 We're now ready to look at the `TryBlock` we'll pass to `try_handle_all`. It does all the work, bails out if it encounters an error:
 
 [source,c++]
@@ -568,20 +557,80 @@ TIP: To avoid ambiguities, whenever possible, use the <<exception>> function tem
 '''
 
 [[E-types]]
-[[tutorial-is_e_type]]
 === E-types
 
-With LEAF, users can efficiently associate with errors or with exceptions any number of values that pertain to a failure. These values may be of any no-throw movable type `E` for which `<<is_e_type,is_e_type>><E>::value` is `true`. The expectation is that this template will be specialized as needed for e.g. all user-defined error code enums.
+LEAF allows users to efficiently associate with a failure any number of relevant error values. These values may be of any no-throw movable type. This of course includes simple enums:
 
-Formally, types `E` for which `is_e_type<E>::value` is `true` are called E-types. Objects of those types are called error objects or E-objects.
+[source,c++]
+----
+enum class my_error_code
+{
+  ok,
+  failure_a,
+  failure_b,
+  failure_c
+};
+----
 
-The main `is_e_type` template is defined so that `is_e_type<E>::value` is `true` when `E` is:
+Error handlers recognize error objects associated with a failure by their static type. For example:
 
-* any type which defines an accessible data member `value`.
-* any type `E` for which `std::is_base_of<std::exception, E>::value` is `true`,
-* `std::exception_ptr`,
+[source,c++]
+----
+leaf::result<void> f()
+{
+  ....
+  if( err )
+    return leaf::new_error(my_error_code::failure_a);
+}
 
-Often, error values that need to be communicated are of generic types (e.g. `std::string`). Such values should be enclosed in a C-`struct` that acts as their compile-time identifier and gives them semantic meaning. Examples:
+leaf::result<void> g()
+{
+  return leaf::try_handle_some(
+    []() -> leaf::result<void>
+    {
+      LEAF_CHECk(f());
+    },
+    []( my_error_code ec ) <1>
+    {
+      ....
+    } );
+}
+----
+[.text-right]
+<<result>> | <<new_error>> | <<try_handle_all>> | <<LEAF_CHECK>>
+
+<1> This handler is selected based on the static type of `ec`. If another error is reported, it will be returned to the caller.
+
+If `f` communicates failures by throwing, the above becomes:
+
+[source,c++]
+----
+void f()
+{
+  ....
+  if( err )
+    throw leaf::exception(my_error_code::failure_a);
+}
+
+void g()
+{
+  leaf::try_catch(
+    [
+    {
+      f();
+    },
+    []( my_error_code ec ) <1>
+    {
+      ....
+    } );
+}
+----
+[.text-right]
+<<result>> | <<exception>> | <<try_catch>> | <<LEAF_CHECK>>
+
+<1> This handler is selected based on the static type of `ec`, after catching `std::exception` (which <<try_catch>> always does).
+
+Because error handlers are matched based on the static type of their arguments, when we need to communicate objects of generic types (e.g. `int` or `std::string`), they should be enclosed in a C-`struct` that acts as their compile-time identifier and gives them semantic meaning. Examples:
 
 [source,c++]
 ----
@@ -592,49 +641,73 @@ struct e_minimum_temperature { float value; };
 struct e_maximum_temperature { float value; };
 ----
 
-By convention, the enclosing C-`struct` names use the `e_` prefix.
+By convention, the enclosing C-`struct` names use the `e_` prefix, and define a data member called `value`.
 
 '''
 
-[[tutorial-context_deduction]]
-=== Automatic Deduction of `context` Types
+=== Hierarchy-Free Classification of Errors
 
-In LEAF, E-objects are always stored in `<<context,context>><E...>` objects, typically created in the local scope of an error handling function.
-
-While it is possible to instantiate the `context` class template directly with a list of E-types, this is prone to errors. Consider that attempts to communicate an E-object of a type for which no active `context` provides storage lead to that object being discarded; therefore, it is critical that any E-type required by a handler in order to deal with a given failure participates in the instantiation of the `context` template.
-
-The possibility of this mismatch can be eliminated by automatically deducing the `E...` types used to instantiate the `context` template from the list of handlers that actually recognize and recover from various error conditions. This, in fact, is how <<try_handle_all>>, <<try_handle_some>> and <<try_catch>> work. For example:
+Traditionally, exception types are organized in a hierarchy in order to classify failures:
 
 [source,c++]
 ----
-leaf::try_handle_all(
+struct io_error: virtual std::exception { };
+struct read_error: virtual io_error { };
+struct file_error: virtual io_error { };
+struct file_read_error: virtual read_error, virtual file_error { };
+----
 
-  [&]
-  {
-    // Operations which may fail <1>
-  },
+Using LEAF, we can classify errors without having to organize them in a hierarchy. We could simply say:
 
-  []( my_error_enum x ) <2>
-  {
-    ...
-  },
+[source,c++]
+----
+struct io_error { };
+struct read_error { };
+struct file_error { };
+----
 
-  []( read_file_error_enum y, e_file_name const & fn ) <3>
-  {
-    ...
-  },
+And then:
 
-  []
-  {
-    ...
-  });
+[source,c++]
+----
+void read_file( FILE * f, void * buffer, size_t buffer_size )
+{
+  ....
+  if( error )
+    throw leaf::exception(io_error{}, read_error{}, file_error{});
+}
 ----
 [.text-right]
-<<try_handle_all>>
+<<exception>>
 
-<1> The `try_handle_all` scope that invoked this lambda contains a local object of automatically deduced type `context<my_error_enum, read_file_error_enum, e_file_name>`. Reported E-objects of any other type are discarded, because they are not needed in order to recover from errors.
-<2> Reported E-objects of type `my_error_enum` will be loaded in the `context` (rather than discarded), because they are needed by this handler.
-<3> Reported E-objects of type `read_file_error_enum` or `e_file_name` will be loaded in the `context` (rather than discarded), because they are needed by this handler.
+The above `throw` statement will throw a `std::exception`, and will associate the passed objects with it, which now act as a simple dynamic tagging mechanism to help classify the error.
+
+The error handlers can simply pick and choose what kind of errors they want to handle:
+
+[source,c++]
+----
+leaf::try_catch(
+  []
+  {
+    .... <1>
+  },
+  []( file_error, read_error ) <2>
+  {
+    ....
+  },
+  []( read_error ) <3>
+  {
+    ....
+  } );
+----
+[.text-right]
+<<try_catch>>
+
+<1> The try block calls functions which throw `std::exception` objects, associating additional objects with them using `leaf::exception`. The error handlers that follow are processed in order.
+<2> If the error has been classified as both `file_error` and `read_error` (that is, it is a file read error), it'll be handled here.
+<3> Else, if the error has been classified as `read_error`, it will be handled here.
+
+TIP: This programming technique works similarly when errors are communicated by a `result` type, rather than by throwing exceptions.
 
 '''
 
@@ -1399,15 +1472,7 @@ enum do_work_error_code
   ec1=1,
   ec2
 };
-
-namespace boost { namespace leaf {
-
-  template<> struct is_e_type<do_work_error_code>: std::true_type { };
-
-} }
 ----
-[.text-right]
-<<is_e_type>>
 
 We're now ready to define the `do_work` callback function:
 
@@ -1596,14 +1661,6 @@ The header `<boost/leaf/error.hpp>` contains definitions needed by translation u
 ----
 namespace boost { namespace leaf {
 
-  template <class T>
-  struct is_e_type
-  {
-    static constexpr bool value = <<unspecified>>;
-  };
-
-  //////////////////////////////////////////
-
   class error_id
   {
   public:
@@ -1683,7 +1740,7 @@ context_activator<Ctx> activate_context( Ctx & ctx ) noexcept;
 ----
 
 [.text-right]
-<<is_e_type>> | <<error_id>> | <<is_error_id>> | <<new_error>> | <<current_error>> | <<polymorphic_context>> | <<context_activator>> | <<activate_context>> | <<LEAF_NEW_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
+<<error_id>> | <<is_error_id>> | <<new_error>> | <<current_error>> | <<polymorphic_context>> | <<context_activator>> | <<activate_context>> | <<LEAF_NEW_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
 
 '''
 
@@ -2084,33 +2141,6 @@ namespace boost { namespace leaf {
 
 == Reference: Traits
 
-[[is_e_type]]
-=== `is_e_type`
-
-.#include <boost/leaf/error.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class E>
-  struct is_e_type
-  {
-    static constexpr bool value = <<exact_definition_unspecified>>;
-  };
-
-} }
-----
-
-Users specialize the `is_e_type` template to register error types with LEAF; see <<E-types>>.
-
-The default `is_e_type` template defines `value` as `true` for:
-
-* Any type which defines an accessible data member `value`;
-* Any type `E` for which `std::is_base_of<std::exception, E>::value` is `true` (see <<exception_to_result>>);
-* `std::exception_ptr`.
-
-'''
-
 [[is_result_type]]
 
 === `is_result_type`
@@ -2159,10 +2189,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-Requirements: :: Each of `f~i~` in `f...` must be a function that does not throw exceptions and takes a single argument of type `E~i~` such that:
-+
-* `E~i~` defines an accessible no-throw default constructor, and
-* `<<is_e_type,is_e_type>><E~i~>::value` is `true`.
+Requirements: :: Each of `f~i~` in `f...` must be a function that does not throw exceptions and takes a single argument of type `E~i~` such that `E~i~` defines an accessible no-throw default constructor.
 
 Effects: :: All `f...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
 +
@@ -2336,7 +2363,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-Requirements: :: Each of `f~i~` in `f...` must be a function that does not throw exceptions, takes no arguments and returns an object of a no-throw movable type `E~i~` for which `<<is_e_type,is_e_type>><E~i~>::value` is `true`.
+Requirements: :: Each of `f~i~` in `f...` must be a function that does not throw exceptions, takes no arguments and returns an object of a no-throw movable type `E~i~`.
 
 Effects: :: All `f...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
 +
@@ -2362,20 +2389,21 @@ TIP: See also <<tutorial-defer>> from the tutorial.
 namespace boost { namespace leaf {
 
   template <class Ex, class... E>
-  <<unspecified>> exception( Ex && ex, E && ... e ) noexcept;
+  <<unspecified>> exception( Ex && ex, E && ... e ) noexcept; <1>
+
+  template <class... E>
+  <<unspecified>> exception( E && ... e ) noexcept; <2>
 
 } }
 ----
+The `exception` function provides two kinds of overloads, selected automatically based on the type of the first argument:
 
-Requirements: ::
-* `Ex` must derive from `std::exception`.
-* For each `E`~i~ in `E...`, `<<is_e_type,is_e_type>><E~i~>::value` is `true`.
-
-Returns: :: An object of unspecified type which derives publicly from `Ex` *and* from class <<error_id>> such that:
+<1> Selected if the first argument is an exception object, that is, `Ex` derives publicly from `std::exception`. In this case the return value is of unspecified type which derives publicly from `Ex` *and* from class <<error_id>>, such that:
 * its `Ex` subobject is initialized by `std::forward<Ex>(ex)`;
 * its `error_id` subobject is initialized by `<<new_error,new_error>>(std::forward<E>(e)...`).
-
-TIP: If thrown, the returned object can be caught as `Ex &` or as `leaf::<<error_id,error_id>> &`.
+<2> Selected otherwise. In this case the return value is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
+** its `std::exception` subobject is default-initialized;
+** its `error_id` subobject is initialized by `<<new_error,new_error>>(std::forward<E>(e)...`).
 
 NOTE: To automatically capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` with the returned object, use <<LEAF_EXCEPTION>> instead of `leaf::exception`.
 
@@ -2522,7 +2550,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-Requirements: :: `<<is_e_type,is_e_type>><E>::value` must be `true` for each `E`.
+Requirements: :: `E` must be no-throw movable.
 
 Effects: :: Each of the `e...` objects is <<tutorial-loading,loaded>> and uniquely associated with the returned value.
 
@@ -2546,7 +2574,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-Requirements: :: `<<is_e_type,is_e_type>><E>::value` must be `true` for each `E`.
+Requirements: :: `E` must be no-throw movable.
 
 Effects: :: All `e...` objects are forwarded and stored into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed:
 * If <<new_error>> was invoked (by the calling thread) since the object returned by `preload` was created, the stored `e...` objects are <<tutorial-loading,loaded>> and become uniquely associated with <<current_error>>;

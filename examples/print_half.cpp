@@ -22,10 +22,6 @@ enum class ConversionErrc
 	TooLong
 };
 
-namespace boost { namespace leaf {
-	template <> struct is_e_type<ConversionErrc>: public std::true_type { };
-} }
-
 leaf::result<int> convert(const std::string& str) noexcept
 {
 	if (str.empty())

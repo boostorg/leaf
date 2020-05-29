@@ -17,7 +17,7 @@
 #include <boost/leaf/error.hpp>
 #include <exception>
 
-#define LEAF_EXCEPTION(...) ::boost::leaf::leaf_detail::exception_at(__FILE__,__LINE__,__FUNCTION__,__VA_ARGS__)
+#define LEAF_EXCEPTION(...) ::boost::leaf::exception(__VA_ARGS__).at(__FILE__,__LINE__,__FUNCTION__)
 #define LEAF_THROW(...) ::boost::leaf::throw_exception(LEAF_EXCEPTION(__VA_ARGS__))
 
 #ifdef LEAF_NO_EXCEPTIONS
@@ -98,33 +98,56 @@ namespace boost { namespace leaf {
 			{
 				leaf_detail::enforce_std_exception(*this);
 			}
+
+			explicit LEAF_CONSTEXPR exception( error_id id ) noexcept:
+				error_id(id)
+			{
+				leaf_detail::enforce_std_exception(*this);
+			}
+
+			LEAF_CONSTEXPR exception & at( char const * file, int line, char const * function ) noexcept
+			{
+				BOOST_LEAF_ASSERT(file&&*file);
+				BOOST_LEAF_ASSERT(line>0);
+				BOOST_LEAF_ASSERT(function&&*function);
+				this->load(e_source_location {file,line,function});
+				return *this;
+			}
 		};
-
-		template <class Ex, class... E>
-		LEAF_CONSTEXPR inline exception<Ex> exception_at( char const * file, int line, char const * function, error_id id, Ex && ex, E && ... e ) noexcept
-		{
-			BOOST_LEAF_ASSERT(file&&*file);
-			BOOST_LEAF_ASSERT(line>0);
-			BOOST_LEAF_ASSERT(function&&*function);
-			e_source_location sl {file,line,function}; // Named temp workaround for msvc
-			return exception<Ex>(id.load(std::move(sl),std::forward<E>(e)...), std::forward<Ex>(ex));
-		}
-
-		template <class Ex, class... E>
-		LEAF_CONSTEXPR inline exception<Ex> exception_at( char const * file, int line, char const * function, Ex && ex, E && ... e ) noexcept
-		{
-			BOOST_LEAF_ASSERT(file&&*file);
-			BOOST_LEAF_ASSERT(line>0);
-			BOOST_LEAF_ASSERT(function&&*function);
-			e_source_location sl {file,line,function}; // Named temp workaround for msvc
-			return exception<Ex>(new_error(std::move(sl),std::forward<E>(e)...), std::forward<Ex>(ex));
-		}
 	}
 
 	template <class Ex, class... E>
-	LEAF_CONSTEXPR inline leaf_detail::exception<Ex> exception( Ex && ex, E && ... e ) noexcept
+	LEAF_CONSTEXPR inline typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type exception( Ex && ex, E && ... e ) noexcept
 	{
 		return leaf_detail::exception<Ex>(leaf::new_error(std::forward<E>(e)...), std::forward<Ex>(ex));
+	}
+
+	template <class E1, class... E>
+	LEAF_CONSTEXPR inline typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type exception( E1 && car, E && ... cdr )
+	{
+		return leaf_detail::exception<std::exception>(leaf::new_error(std::forward<E1>(car), std::forward<E>(cdr)...));
+	}
+
+	inline leaf_detail::exception<std::exception> exception()
+	{
+		return leaf_detail::exception<std::exception>(leaf::new_error());
+	}
+
+	template <class Ex, class... E>
+	LEAF_CONSTEXPR inline typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type exception( error_id id, Ex && ex, E && ... e ) noexcept
+	{
+		return leaf_detail::exception<Ex>(id.load(std::forward<E>(e)...), std::forward<Ex>(ex));
+	}
+
+	template <class E1, class... E>
+	LEAF_CONSTEXPR inline typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type exception( error_id id, E1 && car, E && ... cdr )
+	{
+		return leaf_detail::exception<std::exception>(id.load(std::forward<E1>(car), std::forward<E>(cdr)...));
+	}
+
+	inline leaf_detail::exception<std::exception> exception(error_id id)
+	{
+		return leaf_detail::exception<std::exception>(id);
 	}
 
 } }

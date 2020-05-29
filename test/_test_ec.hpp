@@ -98,22 +98,32 @@ inline std::error_category const & cat_cond_x()
 		{
 			switch( cond_x(cond) )
 			{
-				case cond_x::x00: return "x00";
-				case cond_x::x11: return "x11";
-				case cond_x::x22: return "x22";
-				case cond_x::x33: return "x33";
-				default: return "error";
+				case cond_x::x00:
+					return "x00";
+				case cond_x::x11:
+					return "x11";
+				case cond_x::x22:
+					return "x22";
+				case cond_x::x33:
+					return "x33";
+				default:
+					return "error";
 			}
 		}
 		bool equivalent(std::error_code const & code, int cond) const noexcept
 		{
 			switch( cond_x(cond) )
 			{
-				case cond_x::x00: return code==make_error_code(errc_a::a0) || code==make_error_code(errc_b::b0);
-				case cond_x::x11: return code==make_error_code(errc_a::a1) || code==make_error_code(errc_b::b1);
-				case cond_x::x22: return code==make_error_code(errc_a::a2) || code==make_error_code(errc_b::b2);
-				case cond_x::x33: return code==make_error_code(errc_a::a3) || code==make_error_code(errc_b::b3);
-				default: return false;
+				case cond_x::x00:
+					return code==make_error_code(errc_a::a0) || code==make_error_code(errc_b::b0);
+				case cond_x::x11:
+					return code==make_error_code(errc_a::a1) || code==make_error_code(errc_b::b1);
+				case cond_x::x22:
+					return code==make_error_code(errc_a::a2) || code==make_error_code(errc_b::b2);
+				case cond_x::x33:
+					return code==make_error_code(errc_a::a3) || code==make_error_code(errc_b::b3);
+				default:
+					return false;
 			}
 		}
 	};
@@ -146,22 +156,32 @@ inline std::error_category const & cat_cond_y()
 		{
 			switch( cond_y(cond) )
 			{
-				case cond_y::y03: return "y03";
-				case cond_y::y12: return "y12";
-				case cond_y::y21: return "y21";
-				case cond_y::y30: return "y30";
-				default: return "error";
+				case cond_y::y03:
+					return "y03";
+				case cond_y::y12:
+					return "y12";
+				case cond_y::y21:
+					return "y21";
+				case cond_y::y30:
+					return "y30";
+				default:
+					return "error";
 			}
 		}
 		bool equivalent(std::error_code const & code, int cond) const noexcept
 		{
 			switch( cond_y(cond) )
 			{
-				case cond_y::y03: return code==make_error_code(errc_a::a0) || code==make_error_code(errc_b::b0);
-				case cond_y::y12: return code==make_error_code(errc_a::a1) || code==make_error_code(errc_b::b1);
-				case cond_y::y21: return code==make_error_code(errc_a::a2) || code==make_error_code(errc_b::b2);
-				case cond_y::y30: return code==make_error_code(errc_a::a3) || code==make_error_code(errc_b::b3);
-				default: return false;
+				case cond_y::y03:
+					return code==make_error_code(errc_a::a0) || code==make_error_code(errc_b::b0);
+				case cond_y::y12:
+					return code==make_error_code(errc_a::a1) || code==make_error_code(errc_b::b1);
+				case cond_y::y21:
+					return code==make_error_code(errc_a::a2) || code==make_error_code(errc_b::b2);
+				case cond_y::y30:
+					return code==make_error_code(errc_a::a3) || code==make_error_code(errc_b::b3);
+				default:
+					return false;
 			}
 		}
 	};

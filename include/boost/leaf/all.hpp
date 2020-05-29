@@ -1012,27 +1012,15 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template<class T> using has_value_impl = decltype( std::declval<T>().value );
-
-		template <class T> using has_value = leaf_detail_mp11::mp_valid<has_value_impl, T>;
+		template <class T> using has_value_impl = decltype( std::declval<T>().value );
+		template <class T> using has_value_fn_impl = decltype( std::declval<T>().value() );
 
 		template <class T>
-		struct is_error_type_default
+		struct has_value
 		{
-			static constexpr bool value = has_value<T>::value || std::is_base_of<std::exception,T>::value;
-		};
-
-		template <>
-		struct is_error_type_default<std::exception_ptr>: std::true_type
-		{
+			enum { value = leaf_detail_mp11::mp_valid<has_value_impl, T>::value && !leaf_detail_mp11::mp_valid<has_value_fn_impl, T>::value };
 		};
 	}
-
-	template <class T> struct is_e_type: leaf_detail::is_error_type_default<T> { };
-	template <class T> struct is_e_type<T const>: is_e_type<T> { };
-	template <class T> struct is_e_type<T const &>: is_e_type<T> { };
-	template <class T> struct is_e_type<T &>: is_e_type<T> { };
-	template <> struct is_e_type<std::error_code>: std::true_type { };
 
 	////////////////////////////////////////
 
@@ -1046,11 +1034,6 @@ namespace boost { namespace leaf {
 		{
 			return os << leaf::type<e_source_location>() << ": " << x.file << '(' << x.line << ") in function " << x.function;
 		}
-	};
-
-	template <>
-	struct is_e_type<e_source_location>: std::true_type
-	{
 	};
 
 	////////////////////////////////////////
@@ -1083,11 +1066,6 @@ namespace boost { namespace leaf {
 					os << count << " attempts to communicate unexpected error objects, the first one";
 				os << " of type " << first_type() << std::endl;
 			}
-		};
-
-		template <>
-		struct is_error_type_default<e_unexpected_count>: std::true_type
-		{
 		};
 
 		template <>
@@ -1138,11 +1116,6 @@ namespace boost { namespace leaf {
 		};
 
 		template <>
-		struct is_error_type_default<e_unexpected_info>: std::true_type
-		{
-		};
-
-		template <>
 		struct diagnostic<e_unexpected_info,false,false>
 		{
 			static constexpr bool is_invisible = true;
@@ -1184,7 +1157,6 @@ namespace boost { namespace leaf {
 			typedef optional<E> impl;
 			slot<E> * * top_;
 			slot<E> * prev_;
-			static_assert(is_e_type<E>::value,"Not an error type");
 
 		public:
 
@@ -1302,7 +1274,6 @@ namespace boost { namespace leaf {
 		{
 			static_assert(function_traits<F>::arity==1, "Lambdas passed to accumulate must take a single e-type argument by reference");
 			using E = typename std::decay<fn_arg_type<F,0>>::type;
-			static_assert(is_e_type<E>::value, "Lambdas passed to accumulate must take a single e-type argument by reference");
 			BOOST_LEAF_ASSERT((err_id&3)==1);
 			if( auto sl = tl_slot_ptr<E>() )
 				if( auto v = sl->has_value(err_id) )
@@ -1525,16 +1496,10 @@ namespace boost { namespace leaf {
 		return leaf_detail::make_error_id(leaf_detail::new_id());
 	}
 
-	template <class E1, class... E>
-	inline typename std::enable_if<is_e_type<E1>::value, error_id>::type new_error( E1 && e1, E && ... e ) noexcept
+	template <class... E>
+	inline error_id new_error( E && ... e ) noexcept
 	{
-		return leaf_detail::make_error_id(leaf_detail::new_id()).load(std::forward<E1>(e1), std::forward<E>(e)...);
-	}
-
-	template <class E1, class... E>
-	inline typename std::enable_if<std::is_same<std::error_code, decltype(make_error_code(std::declval<E1>()))>::value, error_id>::type new_error( E1 const & e1, E && ... e ) noexcept
-	{
-		return error_id(make_error_code(e1)).load(std::forward<E>(e)...);
+		return leaf_detail::make_error_id(leaf_detail::new_id()).load(std::forward<E>(e)...);
 	}
 
 	inline error_id current_error() noexcept
@@ -1668,7 +1633,7 @@ namespace boost { namespace leaf {
 #line 18 "boost/leaf/exception.hpp"
 #include <exception>
 
-#define LEAF_EXCEPTION(...) ::boost::leaf::leaf_detail::exception_at(__FILE__,__LINE__,__FUNCTION__,__VA_ARGS__)
+#define LEAF_EXCEPTION(...) ::boost::leaf::exception(__VA_ARGS__).at(__FILE__,__LINE__,__FUNCTION__)
 #define LEAF_THROW(...) ::boost::leaf::throw_exception(LEAF_EXCEPTION(__VA_ARGS__))
 
 #ifdef LEAF_NO_EXCEPTIONS
@@ -1749,33 +1714,56 @@ namespace boost { namespace leaf {
 			{
 				leaf_detail::enforce_std_exception(*this);
 			}
+
+			explicit LEAF_CONSTEXPR exception( error_id id ) noexcept:
+				error_id(id)
+			{
+				leaf_detail::enforce_std_exception(*this);
+			}
+
+			LEAF_CONSTEXPR exception & at( char const * file, int line, char const * function ) noexcept
+			{
+				BOOST_LEAF_ASSERT(file&&*file);
+				BOOST_LEAF_ASSERT(line>0);
+				BOOST_LEAF_ASSERT(function&&*function);
+				this->load(e_source_location {file,line,function});
+				return *this;
+			}
 		};
-
-		template <class Ex, class... E>
-		LEAF_CONSTEXPR inline exception<Ex> exception_at( char const * file, int line, char const * function, error_id id, Ex && ex, E && ... e ) noexcept
-		{
-			BOOST_LEAF_ASSERT(file&&*file);
-			BOOST_LEAF_ASSERT(line>0);
-			BOOST_LEAF_ASSERT(function&&*function);
-			e_source_location sl {file,line,function}; // Named temp workaround for msvc
-			return exception<Ex>(id.load(std::move(sl),std::forward<E>(e)...), std::forward<Ex>(ex));
-		}
-
-		template <class Ex, class... E>
-		LEAF_CONSTEXPR inline exception<Ex> exception_at( char const * file, int line, char const * function, Ex && ex, E && ... e ) noexcept
-		{
-			BOOST_LEAF_ASSERT(file&&*file);
-			BOOST_LEAF_ASSERT(line>0);
-			BOOST_LEAF_ASSERT(function&&*function);
-			e_source_location sl {file,line,function}; // Named temp workaround for msvc
-			return exception<Ex>(new_error(std::move(sl),std::forward<E>(e)...), std::forward<Ex>(ex));
-		}
 	}
 
 	template <class Ex, class... E>
-	LEAF_CONSTEXPR inline leaf_detail::exception<Ex> exception( Ex && ex, E && ... e ) noexcept
+	LEAF_CONSTEXPR inline typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type exception( Ex && ex, E && ... e ) noexcept
 	{
 		return leaf_detail::exception<Ex>(leaf::new_error(std::forward<E>(e)...), std::forward<Ex>(ex));
+	}
+
+	template <class E1, class... E>
+	LEAF_CONSTEXPR inline typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type exception( E1 && car, E && ... cdr )
+	{
+		return leaf_detail::exception<std::exception>(leaf::new_error(std::forward<E1>(car), std::forward<E>(cdr)...));
+	}
+
+	inline leaf_detail::exception<std::exception> exception()
+	{
+		return leaf_detail::exception<std::exception>(leaf::new_error());
+	}
+
+	template <class Ex, class... E>
+	LEAF_CONSTEXPR inline typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type exception( error_id id, Ex && ex, E && ... e ) noexcept
+	{
+		return leaf_detail::exception<Ex>(id.load(std::forward<E>(e)...), std::forward<Ex>(ex));
+	}
+
+	template <class E1, class... E>
+	LEAF_CONSTEXPR inline typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type exception( error_id id, E1 && car, E && ... cdr )
+	{
+		return leaf_detail::exception<std::exception>(id.load(std::forward<E1>(car), std::forward<E>(cdr)...));
+	}
+
+	inline leaf_detail::exception<std::exception> exception(error_id id)
+	{
+		return leaf_detail::exception<std::exception>(id);
 	}
 
 } }
@@ -3140,7 +3128,10 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class Enum, bool HasValue = has_value<Enum>::value>
-		struct match_traits
+		struct match_traits;
+
+		template <class Enum>
+		struct match_traits<Enum, false>
 		{
 			using enumerator = Enum;
 			using e_type = enumerator;
@@ -3192,7 +3183,7 @@ namespace boost { namespace leaf {
 		template <class E, class ErrorConditionEnum>
 		struct match_traits<condition<E, ErrorConditionEnum>, false>
 		{
-			static_assert(leaf_detail::has_value<E>::value, "If leaf::condition is instantiated with two types, the first one must have a member std::error_code value");
+			static_assert(std::is_same<std::error_code, decltype(std::declval<E>().value)>::value, "If leaf::condition is instantiated with two types, the first one must have a data member value of type std::error_code");
 			static_assert(std::is_error_condition_enum<ErrorConditionEnum>::value, "If leaf::condition is instantiated with two types, the second one must be a std::error_condition_enum");
 
 			using enumerator = ErrorConditionEnum;
@@ -3459,7 +3450,7 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class T> struct argument_matches_any_error: std::false_type { };
-		template <class T> struct argument_matches_any_error<T const *>: is_e_type<T> { };
+		template <class T> struct argument_matches_any_error<T const *>: std::true_type { };
 		template <> struct argument_matches_any_error<error_info const &>: std::true_type { };
 		template <> struct argument_matches_any_error<diagnostic_info const &>: std::true_type { };
 		template <> struct argument_matches_any_error<verbose_diagnostic_info const &>: std::true_type { };

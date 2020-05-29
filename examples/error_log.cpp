@@ -49,11 +49,6 @@ struct e_error_log
 	}
 };
 
-// Specializing leaf::is_e_type for e_error_log enables its use with LEAF.
-namespace boost { namespace leaf {
-	template <> struct is_e_type<e_error_log>: std::true_type { };
-} }
-
 // The ERROR_LOG macro is designed for use in functions that detect or forward errors
 // up the call stack. If an error occurs, and if an error-handling scope provides a handler
 // for e_error_log, the supplied lambda is executed as the error bubbles up.

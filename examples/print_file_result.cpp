@@ -30,11 +30,6 @@ enum error_code
 	cout_error
 };
 
-// To enable LEAF to work with our error_code enum, we need to specialize the is_e_type template:
-namespace boost { namespace leaf {
-	template<> struct is_e_type<error_code>: std::true_type { };
-} }
-
 
 // We will handle all failures in our main function, but first, here are the declarations of the functions it calls, each
 // communicating failures using leaf::result<T>:

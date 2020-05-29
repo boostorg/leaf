@@ -250,7 +250,10 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class Enum, bool HasValue = has_value<Enum>::value>
-		struct match_traits
+		struct match_traits;
+
+		template <class Enum>
+		struct match_traits<Enum, false>
 		{
 			using enumerator = Enum;
 			using e_type = enumerator;
@@ -302,7 +305,7 @@ namespace boost { namespace leaf {
 		template <class E, class ErrorConditionEnum>
 		struct match_traits<condition<E, ErrorConditionEnum>, false>
 		{
-			static_assert(leaf_detail::has_value<E>::value, "If leaf::condition is instantiated with two types, the first one must have a member std::error_code value");
+			static_assert(std::is_same<std::error_code, decltype(std::declval<E>().value)>::value, "If leaf::condition is instantiated with two types, the first one must have a data member value of type std::error_code");
 			static_assert(std::is_error_condition_enum<ErrorConditionEnum>::value, "If leaf::condition is instantiated with two types, the second one must be a std::error_condition_enum");
 
 			using enumerator = ErrorConditionEnum;
@@ -569,7 +572,7 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class T> struct argument_matches_any_error: std::false_type { };
-		template <class T> struct argument_matches_any_error<T const *>: is_e_type<T> { };
+		template <class T> struct argument_matches_any_error<T const *>: std::true_type { };
 		template <> struct argument_matches_any_error<error_info const &>: std::true_type { };
 		template <> struct argument_matches_any_error<diagnostic_info const &>: std::true_type { };
 		template <> struct argument_matches_any_error<verbose_diagnostic_info const &>: std::true_type { };

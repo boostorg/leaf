@@ -31,10 +31,6 @@ struct info
 	}
 };
 
-namespace boost { namespace leaf {
-	template <int I> struct is_e_type<info<I>>: public std::true_type { };
-} }
-
 int main()
 {
 	auto error_handler = []( leaf::error_info const & err )

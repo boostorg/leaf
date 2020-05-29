@@ -62,9 +62,21 @@ int test( F && f )
 		{
 			return 5;
 		},
-		[]
+		[]( leaf::match<info,42>, leaf::e_source_location )
 		{
 			return 6;
+		},
+		[]( leaf::match<info,42>, info x )
+		{
+			return 7;
+		},
+		[]( leaf::e_source_location )
+		{
+			return 8;
+		},
+		[]
+		{
+			return 9;
 		} );
 }
 
@@ -100,6 +112,12 @@ int main()
 		} ) );
 	}
 
+	BOOST_TEST_EQ( 9, test( [] { throw leaf::exception(); } ) );
+	BOOST_TEST_EQ( 7, test( [] { throw leaf::exception(info{42}); } ) );
+
+	BOOST_TEST_EQ( 8, test( [] { throw LEAF_EXCEPTION(); } ) );
+	BOOST_TEST_EQ( 6, test( [] { throw LEAF_EXCEPTION(info{42}); } ) );
+
 	BOOST_TEST_EQ( 5, test( [] { throw leaf::exception(my_error()); } ) );
 	BOOST_TEST_EQ( 3, test( [] { throw leaf::exception(my_error(),info{42}); } ) );
 
@@ -128,9 +146,57 @@ int main()
 			[]
 			{
 				auto id = leaf::new_error();
+				throw leaf::exception(id, extra_info_exception(), info{42});
+			},
+			[]( leaf::catch_<extra_info_exception>, leaf::match<extra_info, 42>, leaf::match<info, 42> )
+			{
+			},
+			[]
+			{
+				BOOST_ERROR("Missing info{42}!");
+			} );
+	}
+
+	{
+		leaf::try_catch(
+			[]
+			{
+				auto id = leaf::new_error(extra_info{42});
+				throw leaf::exception(id, info{42});
+			},
+			[]( leaf::match<extra_info, 42>, leaf::match<info, 42> )
+			{
+			},
+			[]
+			{
+				BOOST_ERROR("Missing info{42}!");
+			} );
+	}
+
+	{
+		leaf::try_catch(
+			[]
+			{
+				auto id = leaf::new_error();
 				throw LEAF_EXCEPTION(id, extra_info_exception(), info{42});
 			},
 			[]( leaf::catch_<extra_info_exception>, leaf::match<extra_info, 42>, leaf::match<info, 42>, leaf::e_source_location )
+			{
+			},
+			[]
+			{
+				BOOST_ERROR("Missing info{42}!");
+			} );
+	}
+
+	{
+		leaf::try_catch(
+			[]
+			{
+				auto id = leaf::new_error(extra_info{42});
+				throw LEAF_EXCEPTION(id, info{42});
+			},
+			[]( leaf::match<extra_info, 42>, leaf::match<info, 42>, leaf::e_source_location )
 			{
 			},
 			[]

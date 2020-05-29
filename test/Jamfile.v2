@@ -67,7 +67,6 @@ run handle_all_test.cpp ;
 run handle_basic_test.cpp ;
 run handle_some_other_result_test.cpp ;
 run handle_some_test.cpp ;
-run is_error_type_test.cpp ;
 run multiple_errors_test.cpp ;
 run optional_test.cpp ;
 run preload_basic_test.cpp ;
@@ -87,7 +86,6 @@ run try_catch_error_id_test.cpp ;
 run try_catch_test.cpp ;
 run try_exception_and_result_test.cpp ;
 
-compile-fail is_error_type_fail_test.cpp ;
 compile-fail result_fail_test.cpp ;
 
 exe capture_in_exception : ../examples/capture_in_exception.cpp : <threading>single:<build>no <exception-handling>off:<build>no ;

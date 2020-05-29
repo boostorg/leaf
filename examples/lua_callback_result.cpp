@@ -24,9 +24,6 @@ enum do_work_error_code
 	ec1=1,
 	ec2
 };
-namespace boost { namespace leaf {
-	template<> struct is_e_type<do_work_error_code>: std::true_type { };
-} }
 
 struct e_lua_pcall_error { int value; };
 struct e_lua_error_message { std::string value; };

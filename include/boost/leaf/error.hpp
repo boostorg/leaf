@@ -63,27 +63,15 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template<class T> using has_value_impl = decltype( std::declval<T>().value );
-
-		template <class T> using has_value = leaf_detail_mp11::mp_valid<has_value_impl, T>;
+		template <class T> using has_value_impl = decltype( std::declval<T>().value );
+		template <class T> using has_value_fn_impl = decltype( std::declval<T>().value() );
 
 		template <class T>
-		struct is_error_type_default
+		struct has_value
 		{
-			static constexpr bool value = has_value<T>::value || std::is_base_of<std::exception,T>::value;
-		};
-
-		template <>
-		struct is_error_type_default<std::exception_ptr>: std::true_type
-		{
+			enum { value = leaf_detail_mp11::mp_valid<has_value_impl, T>::value && !leaf_detail_mp11::mp_valid<has_value_fn_impl, T>::value };
 		};
 	}
-
-	template <class T> struct is_e_type: leaf_detail::is_error_type_default<T> { };
-	template <class T> struct is_e_type<T const>: is_e_type<T> { };
-	template <class T> struct is_e_type<T const &>: is_e_type<T> { };
-	template <class T> struct is_e_type<T &>: is_e_type<T> { };
-	template <> struct is_e_type<std::error_code>: std::true_type { };
 
 	////////////////////////////////////////
 
@@ -97,11 +85,6 @@ namespace boost { namespace leaf {
 		{
 			return os << leaf::type<e_source_location>() << ": " << x.file << '(' << x.line << ") in function " << x.function;
 		}
-	};
-
-	template <>
-	struct is_e_type<e_source_location>: std::true_type
-	{
 	};
 
 	////////////////////////////////////////
@@ -134,11 +117,6 @@ namespace boost { namespace leaf {
 					os << count << " attempts to communicate unexpected error objects, the first one";
 				os << " of type " << first_type() << std::endl;
 			}
-		};
-
-		template <>
-		struct is_error_type_default<e_unexpected_count>: std::true_type
-		{
 		};
 
 		template <>
@@ -189,11 +167,6 @@ namespace boost { namespace leaf {
 		};
 
 		template <>
-		struct is_error_type_default<e_unexpected_info>: std::true_type
-		{
-		};
-
-		template <>
 		struct diagnostic<e_unexpected_info,false,false>
 		{
 			static constexpr bool is_invisible = true;
@@ -235,7 +208,6 @@ namespace boost { namespace leaf {
 			typedef optional<E> impl;
 			slot<E> * * top_;
 			slot<E> * prev_;
-			static_assert(is_e_type<E>::value,"Not an error type");
 
 		public:
 
@@ -353,7 +325,6 @@ namespace boost { namespace leaf {
 		{
 			static_assert(function_traits<F>::arity==1, "Lambdas passed to accumulate must take a single e-type argument by reference");
 			using E = typename std::decay<fn_arg_type<F,0>>::type;
-			static_assert(is_e_type<E>::value, "Lambdas passed to accumulate must take a single e-type argument by reference");
 			BOOST_LEAF_ASSERT((err_id&3)==1);
 			if( auto sl = tl_slot_ptr<E>() )
 				if( auto v = sl->has_value(err_id) )
@@ -576,16 +547,10 @@ namespace boost { namespace leaf {
 		return leaf_detail::make_error_id(leaf_detail::new_id());
 	}
 
-	template <class E1, class... E>
-	inline typename std::enable_if<is_e_type<E1>::value, error_id>::type new_error( E1 && e1, E && ... e ) noexcept
+	template <class... E>
+	inline error_id new_error( E && ... e ) noexcept
 	{
-		return leaf_detail::make_error_id(leaf_detail::new_id()).load(std::forward<E1>(e1), std::forward<E>(e)...);
-	}
-
-	template <class E1, class... E>
-	inline typename std::enable_if<std::is_same<std::error_code, decltype(make_error_code(std::declval<E1>()))>::value, error_id>::type new_error( E1 const & e1, E && ... e ) noexcept
-	{
-		return error_id(make_error_code(e1)).load(std::forward<E>(e)...);
+		return leaf_detail::make_error_id(leaf_detail::new_id()).load(std::forward<E>(e)...);
 	}
 
 	inline error_id current_error() noexcept

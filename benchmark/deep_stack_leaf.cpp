@@ -65,12 +65,6 @@ enum class e_error_code
 	ec0, ec1, ec2, ec3
 };
 
-namespace boost { namespace leaf {
-
-	template <> struct is_e_type<e_error_code>: std::true_type { };
-
-} }
-
 struct e_system_error
 {
 	int value;
