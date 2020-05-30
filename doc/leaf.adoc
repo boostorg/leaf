@@ -599,7 +599,7 @@ leaf::result<void> g()
 [.text-right]
 <<result>> | <<new_error>> | <<try_handle_all>> | <<LEAF_CHECK>>
 
-<1> This handler is selected based on the static type of `ec`. If another error is reported, it will be returned to the caller.
+<1> This handler is selected based on the static type of `ec`. If another error is reported, it will be returned to the caller (because this is the only error-handling lambda provided).
 
 If `f` communicates failures by throwing, the above becomes:
 
@@ -2398,7 +2398,7 @@ namespace boost { namespace leaf {
 ----
 The `exception` function provides two kinds of overloads, selected automatically based on the type of the first argument:
 
-<1> Selected if the first argument is an exception object, that is, `Ex` derives publicly from `std::exception`. In this case the return value is of unspecified type which derives publicly from `Ex` *and* from class <<error_id>>, such that:
+<1> Selected if the first argument is an exception object, that is, iff `Ex` derives publicly from `std::exception`. In this case the return value is of unspecified type which derives publicly from `Ex` *and* from class <<error_id>>, such that:
 * its `Ex` subobject is initialized by `std::forward<Ex>(ex)`;
 * its `error_id` subobject is initialized by `<<new_error,new_error>>(std::forward<E>(e)...`).
 <2> Selected otherwise. In this case the return value is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
