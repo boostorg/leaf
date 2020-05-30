@@ -1954,7 +1954,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... E>
-	LEAF_CONSTEXPR inline leaf_detail::preloaded<E...> preload( E && ... e )
+	[[nodiscard]] LEAF_CONSTEXPR inline leaf_detail::preloaded<E...> preload( E && ... e )
 	{
 		return leaf_detail::preloaded<E...>(std::forward<E>(e)...);
 	}
@@ -2033,7 +2033,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... F>
-	LEAF_CONSTEXPR inline leaf_detail::deferred<F...> defer( F && ... f ) noexcept
+	[[nodiscard]] LEAF_CONSTEXPR inline leaf_detail::deferred<F...> defer( F && ... f ) noexcept
 	{
 		return leaf_detail::deferred<F...>(std::forward<F>(f)...);
 	}
@@ -2106,7 +2106,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... F>
-	LEAF_CONSTEXPR inline leaf_detail::accumulating<F...> accumulate( F && ... f ) noexcept
+	[[nodiscard]] LEAF_CONSTEXPR inline leaf_detail::accumulating<F...> accumulate( F && ... f ) noexcept
 	{
 		return leaf_detail::accumulating<F...>(std::forward<F>(f)...);
 	}
