@@ -1448,7 +1448,7 @@ leaf::result<int> call_lua( lua_State * L )
   {
     auto load = leaf::preload( e_lua_error_message{lua_tostring(L,1)} ); <2>
     lua_pop(L,1);
-    return aughent.get_error( e_lua_pcall_error{err} ); <3>
+    return augment.get_error( e_lua_pcall_error{err} ); <3>
   }
   else
   {
