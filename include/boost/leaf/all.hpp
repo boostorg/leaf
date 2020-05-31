@@ -133,12 +133,24 @@
 
 ////////////////////////////////////////
 
-#if __cplusplus > 201402L
-#	define LEAF_CONSTEXPR constexpr
-#	define LEAF_STD_UNCAUGHT_EXCEPTIONS 1
-#else
-#	define LEAF_CONSTEXPR
-#	define LEAF_STD_UNCAUGHT_EXCEPTIONS 0
+#ifndef lEAF_NODISCARD
+#	if __cplusplus >= 201703L
+#		define LEAF_NODISCARD [[nodiscard]]
+#	else
+#		define LEAF_NODISCARD
+#	endif
+#endif
+
+////////////////////////////////////////
+
+#ifndef LEAF_CONSTEXPR
+#	if __cplusplus > 201402L
+#		define LEAF_CONSTEXPR constexpr
+#		define LEAF_STD_UNCAUGHT_EXCEPTIONS 1
+#	else
+#		define LEAF_CONSTEXPR
+#		define LEAF_STD_UNCAUGHT_EXCEPTIONS 0
+#	endif
 #endif
 
 ////////////////////////////////////////
@@ -1954,7 +1966,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... E>
-	[[nodiscard]] LEAF_CONSTEXPR inline leaf_detail::preloaded<E...> preload( E && ... e )
+	LEAF_NODISCARD LEAF_CONSTEXPR inline leaf_detail::preloaded<E...> preload( E && ... e )
 	{
 		return leaf_detail::preloaded<E...>(std::forward<E>(e)...);
 	}
@@ -2033,7 +2045,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... F>
-	[[nodiscard]] LEAF_CONSTEXPR inline leaf_detail::deferred<F...> defer( F && ... f ) noexcept
+	LEAF_NODISCARD LEAF_CONSTEXPR inline leaf_detail::deferred<F...> defer( F && ... f ) noexcept
 	{
 		return leaf_detail::deferred<F...>(std::forward<F>(f)...);
 	}
@@ -2106,7 +2118,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... F>
-	[[nodiscard]] LEAF_CONSTEXPR inline leaf_detail::accumulating<F...> accumulate( F && ... f ) noexcept
+	LEAF_NODISCARD LEAF_CONSTEXPR inline leaf_detail::accumulating<F...> accumulate( F && ... f ) noexcept
 	{
 		return leaf_detail::accumulating<F...>(std::forward<F>(f)...);
 	}
