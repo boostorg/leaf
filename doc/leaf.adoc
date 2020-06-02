@@ -154,6 +154,8 @@ pass:[•] an object of type `leaf::e_errno` (regardless of its `.value`),
 
 <6> This last handler is a catch-all for any error, in case no other handler could be matched: it prints diagnostic information to help debug logic errors in the program, since it failed to match an appropriate error handler to the error condition it encountered.
 
+WARNING: It is critical to understand that the error handlers are considered in order, rather than by finding a "best match". No error handler is "better" than the others: LEAF will call the first one for which all of the arguments can be supplied using the available error objects. See <<handler_matching_procedure,handler matching procedure>> for details.
+
 Now, reading and printing a file may not seem like a complex job, but let's split it into several functions, each communicating failures using `leaf::result<T>`:
 
 [source,c++]
@@ -2861,6 +2863,7 @@ Effects: ::
 
 NOTE: `try_handle_some` is exception-neutral: it does not throw exceptions, however the user-supplied handlers are permitted to throw.
 
+[[handler_matching_procedure]]
 Handler Matching Procedure: ::
 +
 A handler `h` matches the failure reported by `r` iff `try_handle_some` is able to produce values to pass as its arguments, using the E-types stored in `ctx`, associated with the error ID obtained by calling `r.error()`. As soon as it is determined that an argument value can not be produced, the current handler is dropped and the matching procedure continues with the next handler, if any.
