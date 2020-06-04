@@ -1593,6 +1593,7 @@ LEAF supports reporting errors via a `result<T>` type or by throwing exceptions.
 
 The header `<boost/leaf/error.hpp>` contains definitions needed by translation units that report errors but do not throw exceptions.
 
+====
 .#include <boost/leaf/error.hpp>
 [source,c++]
 ----
@@ -1686,6 +1687,7 @@ context_activator<Ctx> activate_context( Ctx & ctx ) noexcept;
 
 [.text-right]
 <<is_e_type>> | <<error_id>> | <<is_error_id>> | <<new_error>> | <<current_error>> | <<polymorphic_context>> | <<context_activator>> | <<activate_context>> | <<LEAF_NEW_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
+====
 
 '''
 
@@ -1694,6 +1696,7 @@ context_activator<Ctx> activate_context( Ctx & ctx ) noexcept;
 
 This header contains definitions of commonly-used E-types.
 
+====
 .#include <boost/leaf/common.hpp>
 [source,c++]
 ----
@@ -1716,6 +1719,7 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<e_api_function>> | <<e_file_name>> | <<e_errno>> | <<e_at_line>> | <<e_type_info_name>> | <<e_source_location>> | <<e_LastError>>
+====
 
 '''
 
@@ -1724,6 +1728,7 @@ namespace boost { namespace leaf {
 
 This header defines a lightweight `result<T>` template. Note that LEAF error-handling functions can work any external type for which the <<is_result_type>> template is specialized, that has value-or-error variant semantics similar to `leaf::result<T>`.
 
+====
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
@@ -1779,6 +1784,7 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<result>>
+====
 
 '''
 
@@ -1789,6 +1795,7 @@ This header defines functions for automatic inclusion of E-objects with any erro
 
 The `augment_id` type is used internally by `preload`, `defer` and `accumulate` to determine the correct <<error_id>> to associate error objects with.
 
+====
 [source,c++]
 .#include <boost/leaf/preload.hpp>
 ----
@@ -1820,6 +1827,7 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<preload>> | <<defer>> | <<accumulate>> | <<augment_id>>
+====
 
 '''
 
@@ -1828,6 +1836,7 @@ namespace boost { namespace leaf {
 
 This header provides support for throwing exceptions.
 
+====
 .#include <boost/leaf/exception.hpp>
 [source,c++]
 ----
@@ -1847,6 +1856,7 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<exception>> | <<LEAF_EXCEPTION>> | <<LEAF_THROW>>
+====
 
 '''
 
@@ -1854,6 +1864,7 @@ namespace boost { namespace leaf {
 
 This header is used when transporting E-objects between threads, or to convert exceptions to `<<result,result>><T>`.
 
+====
 [source,c++]
 .#include <boost/leaf/capture_exception.hpp>
 ----
@@ -1871,6 +1882,7 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<capture>> | <<exception_to_result>>
+====
 
 '''
 
@@ -1920,6 +1932,7 @@ In addition, the `context` template provides lower-level error handling member f
 
 This header defines the `context` template, which is used in error-handling scopes to provide storage for the error objects needed by user-defined error-handling functions, and to handle errors.
 
+====
 .#include <boost/leaf/context.hpp>
 [source,c++]
 ----
@@ -1971,6 +1984,7 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<context>> | <<context_type_from_remote_handler>> | <<make_context>> | <<make_shared_context>> | <<allocate_shared_context>>
+====
 
 '''
 
@@ -1979,6 +1993,7 @@ namespace boost { namespace leaf {
 
 This header defines functions and types that can be used to handle errors but not catch exceptions.
 
+====
 .#include <boost/leaf/handle_error.hpp>
 [source,c++]
 ----
@@ -2045,6 +2060,7 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<context.hpp>> | [<<remote_try_handle_all,`remote_`>>]<<try_handle_all>> | [<<remote_try_handle_some,`remote_`>>]<<try_handle_some>> | <<match>> | <<condition>> | <<error_info>> | <<diagnostic_info>> | <<verbose_diagnostic_info>>
+====
 
 '''
 
@@ -2056,6 +2072,7 @@ This header:
 * Defines namespace-scope functions and types that can be used to catch exceptions.
 * Enables all functions using the `_some` or `_all` suffix (defined in <<handle_error.hpp>>) to handle exceptions, not only failures communicated by `result<T>`.
 
+====
 .#include <boost/leaf/handle_exception.hpp>
 [source,c++]
 ----
@@ -2081,6 +2098,7 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<handle_error.hpp>> | [<<remote_try_catch,`remote_`>>]<<try_catch>> | <<catch_>>
+====
 
 [[traits]]
 
