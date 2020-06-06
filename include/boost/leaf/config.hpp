@@ -123,12 +123,24 @@
 
 ////////////////////////////////////////
 
-#if __cplusplus > 201402L
-#	define LEAF_CONSTEXPR constexpr
-#	define LEAF_STD_UNCAUGHT_EXCEPTIONS 1
-#else
-#	define LEAF_CONSTEXPR
-#	define LEAF_STD_UNCAUGHT_EXCEPTIONS 0
+#ifndef lEAF_NODISCARD
+#	if __cplusplus >= 201703L
+#		define LEAF_NODISCARD [[nodiscard]]
+#	else
+#		define LEAF_NODISCARD
+#	endif
+#endif
+
+////////////////////////////////////////
+
+#ifndef LEAF_CONSTEXPR
+#	if __cplusplus > 201402L
+#		define LEAF_CONSTEXPR constexpr
+#		define LEAF_STD_UNCAUGHT_EXCEPTIONS 1
+#	else
+#		define LEAF_CONSTEXPR
+#		define LEAF_STD_UNCAUGHT_EXCEPTIONS 0
+#	endif
 #endif
 
 ////////////////////////////////////////

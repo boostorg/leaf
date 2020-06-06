@@ -154,6 +154,8 @@ pass:[•] an object of type `leaf::e_errno` (regardless of its `.value`),
 
 <6> This last handler is a catch-all for any error, in case no other handler could be matched: it prints diagnostic information to help debug logic errors in the program, since it failed to match an appropriate error handler to the error condition it encountered.
 
+WARNING: It is critical to understand that the error handlers are considered in order, rather than by finding a "best match". No error handler is "better" than the others: LEAF will call the first one for which all of the arguments can be supplied using the available error objects. See <<handler_matching_procedure,handler matching procedure>> for details.
+
 Now, reading and printing a file may not seem like a complex job, but let's split it into several functions, each communicating failures using `leaf::result<T>`:
 
 [source,c++]
@@ -1513,7 +1515,7 @@ leaf::result<int> call_lua( lua_State * L )
   {
     auto load = leaf::preload( e_lua_error_message{lua_tostring(L,1)} ); <2>
     lua_pop(L,1);
-    return aughent.get_error( e_lua_pcall_error{err} ); <3>
+    return augment.get_error( e_lua_pcall_error{err} ); <3>
   }
   else
   {
@@ -1656,6 +1658,7 @@ LEAF supports reporting errors via a `result<T>` type or by throwing exceptions.
 
 The header `<boost/leaf/error.hpp>` contains definitions needed by translation units that report errors but do not throw exceptions.
 
+====
 .#include <boost/leaf/error.hpp>
 [source,c++]
 ----
@@ -1741,14 +1744,14 @@ context_activator<Ctx> activate_context( Ctx & ctx ) noexcept;
 
 [.text-right]
 <<error_id>> | <<is_error_id>> | <<new_error>> | <<current_error>> | <<polymorphic_context>> | <<context_activator>> | <<activate_context>> | <<LEAF_NEW_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
-
-'''
+====
 
 [[common.hpp]]
 ==== `common.hpp`
 
 This header contains definitions of commonly-used E-types.
 
+====
 .#include <boost/leaf/common.hpp>
 [source,c++]
 ----
@@ -1771,14 +1774,14 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<e_api_function>> | <<e_file_name>> | <<e_errno>> | <<e_at_line>> | <<e_type_info_name>> | <<e_source_location>> | <<e_LastError>>
-
-'''
+====
 
 [[result.hpp]]
 ==== `result.hpp`
 
 This header defines a lightweight `result<T>` template. Note that LEAF error-handling functions can work any external type for which the <<is_result_type>> template is specialized, that has value-or-error variant semantics similar to `leaf::result<T>`.
 
+====
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
@@ -1834,8 +1837,7 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<result>>
-
-'''
+====
 
 [[preload.hpp]]
 ==== `preload.hpp`
@@ -1844,6 +1846,7 @@ This header defines functions for automatic inclusion of E-objects with any erro
 
 The `augment_id` type is used internally by `preload`, `defer` and `accumulate` to determine the correct <<error_id>> to associate error objects with.
 
+====
 [source,c++]
 .#include <boost/leaf/preload.hpp>
 ----
@@ -1875,14 +1878,14 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<preload>> | <<defer>> | <<accumulate>> | <<augment_id>>
-
-'''
+====
 
 [[exception.hpp]]
 ==== `exception.hpp`
 
 This header provides support for throwing exceptions.
 
+====
 .#include <boost/leaf/exception.hpp>
 [source,c++]
 ----
@@ -1902,13 +1905,14 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<exception>> | <<LEAF_EXCEPTION>> | <<LEAF_THROW>>
+====
 
-'''
 
 ==== `capture.hpp`
 
 This header is used when transporting E-objects between threads, or to convert exceptions to `<<result,result>><T>`.
 
+====
 [source,c++]
 .#include <boost/leaf/capture_exception.hpp>
 ----
@@ -1926,6 +1930,7 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<capture>> | <<exception_to_result>>
+====
 
 '''
 
@@ -1968,13 +1973,12 @@ The above error-handling functions:
 
 In addition, the `context` template provides lower-level error handling member functions, <<context::handle_error>> and <<context::remote_handle_error>>, which select an error handler based on available error objects in `*this`, associated with a supplied <<error_id>>. These functions are designed to be called after the caller has detected a failure; they do not use a `result` type and can not deal with exceptions. Use one of the `try_` functions (above) for these cases.
 
-'''
-
 [[context.hpp]]
 ==== `context.hpp`
 
 This header defines the `context` template, which is used in error-handling scopes to provide storage for the error objects needed by user-defined error-handling functions, and to handle errors.
 
+====
 .#include <boost/leaf/context.hpp>
 [source,c++]
 ----
@@ -2026,14 +2030,14 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<context>> | <<context_type_from_remote_handler>> | <<make_context>> | <<make_shared_context>> | <<allocate_shared_context>>
-
-'''
+====
 
 [[handle_error.hpp]]
 ==== `handle_error.hpp`
 
 This header defines functions and types that can be used to handle errors but not catch exceptions.
 
+====
 .#include <boost/leaf/handle_error.hpp>
 [source,c++]
 ----
@@ -2100,8 +2104,7 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<context.hpp>> | [<<remote_try_handle_all,`remote_`>>]<<try_handle_all>> | [<<remote_try_handle_some,`remote_`>>]<<try_handle_some>> | <<match>> | <<condition>> | <<error_info>> | <<diagnostic_info>> | <<verbose_diagnostic_info>>
-
-'''
+====
 
 [[handle_exception.hpp]]
 ==== `handle_exception.hpp`
@@ -2111,6 +2114,7 @@ This header:
 * Defines namespace-scope functions and types that can be used to catch exceptions.
 * Enables all functions using the `_some` or `_all` suffix (defined in <<handle_error.hpp>>) to handle exceptions, not only failures communicated by `result<T>`.
 
+====
 .#include <boost/leaf/handle_exception.hpp>
 [source,c++]
 ----
@@ -2136,9 +2140,9 @@ namespace boost { namespace leaf {
 
 [.text-right]
 <<handle_error.hpp>> | [<<remote_try_catch,`remote_`>>]<<try_catch>> | <<catch_>>
+====
 
 [[traits]]
-
 == Reference: Traits
 
 [[is_result_type]]
@@ -2889,6 +2893,7 @@ Effects: ::
 
 NOTE: `try_handle_some` is exception-neutral: it does not throw exceptions, however the user-supplied handlers are permitted to throw.
 
+[[handler_matching_procedure]]
 Handler Matching Procedure: ::
 +
 A handler `h` matches the failure reported by `r` iff `try_handle_some` is able to produce values to pass as its arguments, using the E-types stored in `ctx`, associated with the error ID obtained by calling `r.error()`. As soon as it is determined that an argument value can not be produced, the current handler is dropped and the matching procedure continues with the next handler, if any.
