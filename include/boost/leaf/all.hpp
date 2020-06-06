@@ -133,7 +133,7 @@
 
 ////////////////////////////////////////
 
-#ifndef lEAF_NODISCARD
+#ifndef LEAF_NODISCARD
 #	if __cplusplus >= 201703L
 #		define LEAF_NODISCARD [[nodiscard]]
 #	else
