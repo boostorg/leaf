@@ -1689,8 +1689,6 @@ context_activator<Ctx> activate_context( Ctx & ctx ) noexcept;
 <<is_e_type>> | <<error_id>> | <<is_error_id>> | <<new_error>> | <<current_error>> | <<polymorphic_context>> | <<context_activator>> | <<activate_context>> | <<LEAF_NEW_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
 ====
 
-'''
-
 [[common.hpp]]
 ==== `common.hpp`
 
@@ -1720,8 +1718,6 @@ namespace boost { namespace leaf {
 [.text-right]
 <<e_api_function>> | <<e_file_name>> | <<e_errno>> | <<e_at_line>> | <<e_type_info_name>> | <<e_source_location>> | <<e_LastError>>
 ====
-
-'''
 
 [[result.hpp]]
 ==== `result.hpp`
@@ -1786,8 +1782,6 @@ namespace boost { namespace leaf {
 <<result>>
 ====
 
-'''
-
 [[preload.hpp]]
 ==== `preload.hpp`
 
@@ -1829,8 +1823,6 @@ namespace boost { namespace leaf {
 <<preload>> | <<defer>> | <<accumulate>> | <<augment_id>>
 ====
 
-'''
-
 [[exception.hpp]]
 ==== `exception.hpp`
 
@@ -1858,7 +1850,6 @@ namespace boost { namespace leaf {
 <<exception>> | <<LEAF_EXCEPTION>> | <<LEAF_THROW>>
 ====
 
-'''
 
 ==== `capture.hpp`
 
@@ -1925,8 +1916,6 @@ The above error-handling functions:
 
 In addition, the `context` template provides lower-level error handling member functions, <<context::handle_error>> and <<context::remote_handle_error>>, which select an error handler based on available error objects in `*this`, associated with a supplied <<error_id>>. These functions are designed to be called after the caller has detected a failure; they do not use a `result` type and can not deal with exceptions. Use one of the `try_` functions (above) for these cases.
 
-'''
-
 [[context.hpp]]
 ==== `context.hpp`
 
@@ -1985,8 +1974,6 @@ namespace boost { namespace leaf {
 [.text-right]
 <<context>> | <<context_type_from_remote_handler>> | <<make_context>> | <<make_shared_context>> | <<allocate_shared_context>>
 ====
-
-'''
 
 [[handle_error.hpp]]
 ==== `handle_error.hpp`
@@ -2062,8 +2049,6 @@ namespace boost { namespace leaf {
 <<context.hpp>> | [<<remote_try_handle_all,`remote_`>>]<<try_handle_all>> | [<<remote_try_handle_some,`remote_`>>]<<try_handle_some>> | <<match>> | <<condition>> | <<error_info>> | <<diagnostic_info>> | <<verbose_diagnostic_info>>
 ====
 
-'''
-
 [[handle_exception.hpp]]
 ==== `handle_exception.hpp`
 
@@ -2101,7 +2086,6 @@ namespace boost { namespace leaf {
 ====
 
 [[traits]]
-
 == Reference: Traits
 
 [[is_e_type]]
