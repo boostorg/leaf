@@ -13,7 +13,7 @@ extern "C" {
 }
 #include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/result.hpp>
-#include <boost/leaf/preload.hpp>
+#include <boost/leaf/on_error.hpp>
 #include <iostream>
 #include <stdlib.h>
 
@@ -88,7 +88,7 @@ leaf::result<int> call_lua( lua_State * L )
 	leaf::augment_id augment;
 	if( int err=lua_pcall(L,0,1,0) ) // Ask Lua to call the global function call_do_work.
 	{
-		auto load = leaf::preload( e_lua_error_message{lua_tostring(L,1)} );
+		auto load = leaf::on_error( e_lua_error_message{lua_tostring(L,1)} );
 		lua_pop(L,1);
 
 		// get_error will return the error_id generated in our Lua callback. This is the

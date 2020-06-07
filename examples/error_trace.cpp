@@ -3,7 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// This program demonstrates the use of leaf::accumulate to capture the path an error takes
+// This program demonstrates the use of leaf::on_error to capture the path an error takes
 // as is bubbles up the call stack. The error path-capturing code only runs if:
 // - An error occurs, and
 // - A handler that takes e_error_trace argument is present.
@@ -12,7 +12,7 @@
 // This example is similar to error_log, except the path the error takes is captured and
 // recorded in a std::deque, rather than just printed in-place.
 
-#include <boost/leaf/preload.hpp>
+#include <boost/leaf/on_error.hpp>
 #include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/result.hpp>
 #include <iostream>
@@ -24,7 +24,6 @@
 namespace leaf = boost::leaf;
 
 // The error trace is activated only if an error-handling scope provides a handler for e_error_trace.
-// This activation logic applies to any type passed to leaf::accumulate.
 struct e_error_trace
 {
 	struct rec
@@ -50,7 +49,7 @@ struct e_error_trace
 // The ERROR_TRACE macro is designed for use in functions that detect or forward errors
 // up the call stack. If an error occurs, and if an error-handling scope provides a handler
 // for e_error_trace, the supplied lambda is executed as the error bubbles up.
-#define ERROR_TRACE auto _trace = leaf::accumulate( []( e_error_trace & tr ) { tr.value.emplace_front(e_error_trace::rec{__FILE__, __LINE__}); } )
+#define ERROR_TRACE auto _trace = leaf::on_error( []( e_error_trace & tr ) { tr.value.emplace_front(e_error_trace::rec{__FILE__, __LINE__}); } )
 
 // Each function in the sequence below calls the previous function, and each function has
 // failure_percent chance of failing. If a failure occurs, the ERROR_TRACE macro will cause

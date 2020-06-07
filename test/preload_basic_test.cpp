@@ -3,7 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/preload.hpp>
+#include <boost/leaf/on_error.hpp>
 #include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/result.hpp>
 #include "lightweight_test.hpp"
@@ -55,7 +55,7 @@ int main()
 	test(
 		[]
 		{
-			auto load = leaf::preload( info<42>{42}, info<-42>{-42} );
+			auto load = leaf::on_error( info<42>{42}, info<-42>{-42} );
 			return leaf::new_error();
 		});
 	test(
@@ -63,14 +63,14 @@ int main()
 		{
 			info<42> inf1{42};
 			info<-42> const inf2{-42};
-			auto load = leaf::preload( inf1, inf2 );
+			auto load = leaf::on_error( inf1, inf2 );
 			return leaf::new_error();
 		});
 	test(
 		[]
 		{
 			info<42> inf1{42};
-			auto load = leaf::preload( inf1, info<-42>{-42} );
+			auto load = leaf::on_error( inf1, info<-42>{-42} );
 			return leaf::new_error();
 		});
 	return boost::report_errors();

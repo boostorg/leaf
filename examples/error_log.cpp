@@ -3,7 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// This program demonstrates the use of leaf::accumulate to print the path an error takes
+// This program demonstrates the use of leaf::on_error to print the path an error takes
 // as is bubbles up the call stack. The printing code only runs if:
 // - An error occurs, and
 // - A handler that takes e_error_log argument is present.
@@ -12,7 +12,7 @@
 // This example is similar to error_trace, except the path the error takes is not captured,
 // only printed.
 
-#include <boost/leaf/preload.hpp>
+#include <boost/leaf/on_error.hpp>
 #include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/result.hpp>
 #include <iostream>
@@ -23,7 +23,6 @@
 namespace leaf = boost::leaf;
 
 // The error log is activated only if an error-handling scope provides a handler for e_error_log.
-// This activation logic applies to any type passed to leaf::accumulate.
 struct e_error_log
 {
 	struct rec
@@ -52,7 +51,7 @@ struct e_error_log
 // The ERROR_LOG macro is designed for use in functions that detect or forward errors
 // up the call stack. If an error occurs, and if an error-handling scope provides a handler
 // for e_error_log, the supplied lambda is executed as the error bubbles up.
-#define ERROR_LOG auto _log = leaf::accumulate( []( e_error_log & log ) { log << e_error_log::rec{__FILE__, __LINE__}; } )
+#define ERROR_LOG auto _log = leaf::on_error( []( e_error_log & log ) { log << e_error_log::rec{__FILE__, __LINE__}; } )
 
 // Each function in the sequence below calls the previous function, and each function has
 // failure_percent chance of failing. If a failure occurs, the ERROR_LOG macro will cause

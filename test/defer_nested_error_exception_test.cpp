@@ -16,7 +16,7 @@ int main()
 
 #else
 
-#include <boost/leaf/preload.hpp>
+#include <boost/leaf/on_error.hpp>
 #include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
 #include "lightweight_test.hpp"
@@ -31,13 +31,13 @@ struct info
 
 void f0()
 {
-	auto load = leaf::defer( [] { return info<0>{0}; } );
+	auto load = leaf::on_error( [] { return info<0>{0}; } );
 	throw leaf::exception(std::exception(), info<2>{2} );
 }
 
 void f1()
 {
-	auto load = leaf::defer( [] { return info<0>{-1}; }, [] { return info<1>{1}; }, [] { return info<2>{-1}; } );
+	auto load = leaf::on_error( [] { return info<0>{-1}; }, [] { return info<1>{1}; }, [] { return info<2>{-1}; } );
 	f0();
 }
 

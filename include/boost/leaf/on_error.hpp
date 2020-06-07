@@ -89,12 +89,7 @@ namespace boost { namespace leaf {
 		{
 			LEAF_CONSTEXPR static void trigger( Tuple const &, int ) noexcept { }
 		};
-	} // leaf_detail
 
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
 		template <class E>
 		class preloaded_item
 		{
@@ -104,7 +99,7 @@ namespace boost { namespace leaf {
 
 		public:
 
-			LEAF_CONSTEXPR explicit preloaded_item( E && e ):
+			LEAF_CONSTEXPR preloaded_item( E && e ):
 				s_(tl_slot_ptr<decay_E>()),
 				e_(std::forward<E>(e))
 			{
@@ -130,51 +125,6 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		template <class... E>
-		class preloaded
-		{
-			preloaded & operator=( preloaded const & ) = delete;
-
-			std::tuple<preloaded_item<E>...> p_;
-			bool moved_;
-			augment_id id_;
-
-		public:
-
-			LEAF_CONSTEXPR explicit preloaded( E && ... e ):
-				p_(preloaded_item<E>(std::forward<E>(e))...),
-				moved_(false)
-			{
-			}
-
-			LEAF_CONSTEXPR preloaded( preloaded && x ) noexcept:
-				p_(std::move(x.p_)),
-				moved_(false),
-				id_(std::move(x.id_))
-			{
-				x.moved_ = true;
-			}
-
-			~preloaded() noexcept
-			{
-				if( moved_ )
-					return;
-				if( auto id = id_.check_id() )
-					leaf_detail::tuple_for_each_preload<sizeof...(E),decltype(p_)>::trigger(p_,id);
-			}
-		};
-	} // leaf_detail
-
-	template <class... E>
-	LEAF_NODISCARD LEAF_CONSTEXPR inline leaf_detail::preloaded<E...> preload( E && ... e )
-	{
-		return leaf_detail::preloaded<E...>(std::forward<E>(e)...);
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
 		template <class F>
 		class deferred_item
 		{
@@ -184,7 +134,7 @@ namespace boost { namespace leaf {
 
 		public:
 
-			LEAF_CONSTEXPR explicit deferred_item( F && f ) noexcept:
+			LEAF_CONSTEXPR deferred_item( F && f ) noexcept:
 				s_(tl_slot_ptr<E>()),
 				f_(std::forward<F>(f))
 			{
@@ -210,50 +160,6 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		template <class... F>
-		class deferred
-		{
-			deferred & operator=( deferred const & ) = delete;
-			std::tuple<deferred_item<F>...> d_;
-			bool moved_;
-			augment_id id_;
-
-		public:
-
-			LEAF_CONSTEXPR explicit deferred( F && ... f ) noexcept:
-				d_(deferred_item<F>(std::forward<F>(f))...),
-				moved_(false)
-			{
-			}
-
-			LEAF_CONSTEXPR deferred( deferred && x ) noexcept:
-				d_(std::move(x.d_)),
-				moved_(false),
-				id_(std::move(x.id_))
-			{
-				x.moved_ = true;
-			}
-
-			~deferred() noexcept
-			{
-				if( moved_ )
-					return;
-				if( auto id = id_.check_id() )
-					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(d_)>::trigger(d_,id);
-			}
-		};
-	} // leaf_detail
-
-	template <class... F>
-	LEAF_NODISCARD LEAF_CONSTEXPR inline leaf_detail::deferred<F...> defer( F && ... f ) noexcept
-	{
-		return leaf_detail::deferred<F...>(std::forward<F>(f)...);
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
 		template <class F, class A0 = fn_arg_type<F,0>, int arity = function_traits<F>::arity>
 		class accumulating_item;
 
@@ -266,7 +172,7 @@ namespace boost { namespace leaf {
 
 		public:
 
-			LEAF_CONSTEXPR explicit accumulating_item( F && f ) noexcept:
+			LEAF_CONSTEXPR accumulating_item( F && f ) noexcept:
 				s_(tl_slot_ptr<E>()),
 				f_(std::forward<F>(f))
 			{
@@ -283,44 +189,66 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		template <class... F>
-		class accumulating
+		template <class... Item>
+		class preloaded
 		{
-			accumulating & operator=( accumulating const & ) = delete;
-			std::tuple<accumulating_item<F>...> a_;
+			preloaded & operator=( preloaded const & ) = delete;
+
+			std::tuple<Item...> p_;
 			bool moved_;
 			augment_id id_;
 
 		public:
 
-			LEAF_CONSTEXPR explicit accumulating( F && ... f ) noexcept:
-				a_(accumulating_item<F>(std::forward<F>(f))...),
+			LEAF_CONSTEXPR explicit preloaded( Item && ... i ):
+				p_(std::forward<Item>(i)...),
 				moved_(false)
 			{
 			}
 
-			LEAF_CONSTEXPR accumulating( accumulating && x ) noexcept:
-				a_(std::move(x.a_)),
+			LEAF_CONSTEXPR preloaded( preloaded && x ) noexcept:
+				p_(std::move(x.p_)),
 				moved_(false),
 				id_(std::move(x.id_))
 			{
 				x.moved_ = true;
 			}
 
-			~accumulating() noexcept
+			~preloaded() noexcept
 			{
 				if( moved_ )
 					return;
 				if( auto id = id_.check_id() )
-					leaf_detail::tuple_for_each_preload<sizeof...(F),decltype(a_)>::trigger(a_,id);
+					leaf_detail::tuple_for_each_preload<sizeof...(Item),decltype(p_)>::trigger(p_,id);
 			}
+		};
+
+		template <class T, int arity = function_traits<T>::arity>
+		struct deduce_item_type;
+
+		template <class T>
+		struct deduce_item_type<T, -1>
+		{
+			using type = preloaded_item<T>;
+		};
+
+		template <class F>
+		struct deduce_item_type<F, 0>
+		{
+			using type = deferred_item<F>;
+		};
+
+		template <class F>
+		struct deduce_item_type<F, 1>
+		{
+			using type = accumulating_item<F>;
 		};
 	} // leaf_detail
 
-	template <class... F>
-	LEAF_NODISCARD LEAF_CONSTEXPR inline leaf_detail::accumulating<F...> accumulate( F && ... f ) noexcept
+	template <class... Item>
+	LEAF_NODISCARD LEAF_CONSTEXPR inline leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...> on_error( Item && ... i )
 	{
-		return leaf_detail::accumulating<F...>(std::forward<F>(f)...);
+		return leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...>(std::forward<Item>(i)...);
 	}
 
 } }

@@ -18,7 +18,7 @@ int main()
 
 #include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
-#include <boost/leaf/preload.hpp>
+#include <boost/leaf/on_error.hpp>
 #include "lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
@@ -86,7 +86,7 @@ int main()
 		int const id = leaf::leaf_detail::current_id();
 		BOOST_TEST_EQ( 3, test( []
 		{
-			auto load = leaf::preload(info{42});
+			auto load = leaf::on_error(info{42});
 			throw my_error();
 		} ) );
 		BOOST_TEST_NE(id, leaf::leaf_detail::current_id());

@@ -16,7 +16,7 @@ int main()
 
 #else
 
-#include <boost/leaf/preload.hpp>
+#include <boost/leaf/on_error.hpp>
 #include <boost/leaf/handle_exception.hpp>
 #include "lightweight_test.hpp"
 
@@ -26,7 +26,7 @@ struct info { int value; };
 
 void g1()
 {
-	auto load = leaf::preload( info{1} );
+	auto load = leaf::on_error( info{1} );
 }
 
 void g2()
@@ -36,7 +36,7 @@ void g2()
 
 void f()
 {
-	auto load = leaf::preload( info{2} );
+	auto load = leaf::on_error( info{2} );
 	g1();
 	g2();
 }

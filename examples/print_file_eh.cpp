@@ -11,7 +11,7 @@
 
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/handle_exception.hpp>
-#include <boost/leaf/preload.hpp>
+#include <boost/leaf/on_error.hpp>
 #include <boost/leaf/common.hpp>
 #include <iostream>
 #include <memory>
@@ -58,7 +58,7 @@ int main( int argc, char const * argv[] )
 		{
 			char const * file_name = parse_command_line(argc,argv);
 
-			auto load = leaf::preload( leaf::e_file_name{file_name} );
+			auto load = leaf::on_error( leaf::e_file_name{file_name} );
 
 			std::shared_ptr<FILE> f = file_open( file_name );
 
@@ -67,7 +67,7 @@ int main( int argc, char const * argv[] )
 			std::string buffer( 1 + s, '\0' );
 			file_read(*f,&buffer[0],buffer.size()-1);
 
-			auto propagate2 = leaf::defer([] { return leaf::e_errno{errno}; } );
+			auto propagate2 = leaf::on_error([] { return leaf::e_errno{errno}; } );
 			std::cout << buffer;
 			std::cout.flush();
 
@@ -164,7 +164,7 @@ std::shared_ptr<FILE> file_open( char const * file_name )
 int file_size( FILE & f )
 {
 	// All exceptions escaping this function will automatically load errno.
-	auto load = leaf::defer( [] { return leaf::e_errno{errno}; } );
+	auto load = leaf::on_error( [] { return leaf::e_errno{errno}; } );
 
 	if( fseek(&f,0,SEEK_END) )
 		throw leaf::exception(input_file_size_error());

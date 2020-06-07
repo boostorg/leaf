@@ -118,7 +118,7 @@ auto async_demo_rpc(AsyncStream &stream, ErrorContext &error_context, Completion
             leaf::result<bool> result_continue_execution;
             {
                 auto active_context = activate_context(m_error_context);
-                auto load = leaf::preload(e_last_operation{m_data.response ? "async_demo_rpc::continuation-write"
+                auto load = leaf::on_error(e_last_operation{m_data.response ? "async_demo_rpc::continuation-write"
                                                                            : "async_demo_rpc::continuation-read"});
                 if (ec == http::error::end_of_stream) {
                     // The remote side closed the connection.
@@ -175,7 +175,7 @@ auto async_demo_rpc(AsyncStream &stream, ErrorContext &error_context, Completion
     };
 
     // We are in the "initiation" part of the async operation.
-    [[maybe_unused]] auto load = leaf::preload(e_last_operation{"async_demo_rpc::initiation"});
+    [[maybe_unused]] auto load = leaf::on_error(e_last_operation{"async_demo_rpc::initiation"});
     return net::async_initiate<CompletionToken, void(leaf::result<void>)>(initiation, token, &stream, &error_context);
 }
 
@@ -310,8 +310,7 @@ leaf::result<std::string> execute_command(std::string_view line) {
     auto command = words.front();
     words.pop_front();
 
-    auto load_cmd = leaf::preload(e_command{command});
-    auto load_http_status = leaf::preload(e_http_status{http::status::bad_request});
+    auto load_cmd = leaf::on_error(e_command{command}, e_http_status{http::status::bad_request});
     std::string response;
 
     if (command == "error-quit") {
@@ -496,7 +495,7 @@ int main(int argc, char **argv) {
     // (e.g. ports less than 1024 if not running as root)
     return leaf::remote_try_handle_all(
         [&]() -> leaf::result<int> {
-            auto load = leaf::preload(e_last_operation{"main"});
+            auto load = leaf::on_error(e_last_operation{"main"});
             if (argc != 3) {
                 std::cerr << "Usage: " << argv[0] << " <address> <port>" << std::endl;
                 std::cerr << "Example:\n    " << argv[0] << " 0.0.0.0 8080" << std::endl;

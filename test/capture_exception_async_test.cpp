@@ -19,7 +19,7 @@ int main()
 #include <boost/leaf/capture.hpp>
 #include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
-#include <boost/leaf/preload.hpp>
+#include <boost/leaf/on_error.hpp>
 #include "lightweight_test.hpp"
 #include <vector>
 #include <future>
@@ -92,7 +92,7 @@ int main()
 			int r = leaf::remote_try_catch(
 				[&]
 				{
-					auto propagate = leaf::preload( info<4>{} );
+					auto propagate = leaf::on_error( info<4>{} );
 
 					// Calling future_get is required in order to make the preload (above) work.
 					return leaf::future_get(f.fut);
@@ -125,7 +125,7 @@ int main()
 			int r = leaf::remote_try_catch(
 				[&]
 				{
-					auto propagate = leaf::preload( info<4>{} );
+					auto propagate = leaf::on_error( info<4>{} );
 
 					return leaf::try_catch(
 						[&]

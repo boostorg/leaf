@@ -15,7 +15,7 @@
 #endif
 
 #include <boost/leaf/exception.hpp>
-#include <boost/leaf/preload.hpp>
+#include <boost/leaf/on_error.hpp>
 #include <memory>
 
 namespace boost { namespace leaf {

@@ -377,6 +377,41 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
+		template <class T, int arity = function_traits<T>::arity>
+		struct load_item;
+
+		template <class E>
+		struct load_item<E, -1>
+		{
+			LEAF_CONSTEXPR static int load( int err_id, E && e ) noexcept
+			{
+				return load_slot(err_id, std::forward<E>(e));
+			}
+		};
+
+		template <class F, int arity>
+		struct load_item<F, 0>
+		{
+			LEAF_CONSTEXPR static int load( int err_id, F && f ) noexcept
+			{
+				return load_slot(err_id, std::forward<F>(f)());
+			}
+		};
+
+		template <class F>
+		struct load_item<F, 1>
+		{
+			LEAF_CONSTEXPR static int load( int err_id, F && f ) noexcept
+			{
+				return accumulate_slot(err_id, std::forward<F>(f));
+			}
+		};
+	}
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
 		class leaf_category: public std::error_category
 		{
 			bool equivalent( int,  std::error_condition const & ) const noexcept final override { return false; }
@@ -400,7 +435,7 @@ namespace boost { namespace leaf {
 		{
 			if( int err_id = ec.value() )
 			{
-				std::error_category const & cat = leaf_detail::get_error_category<>::cat;
+				std::error_category const & cat = get_error_category<>::cat;
 				if( &ec.category()==&cat )
 				{
 					BOOST_LEAF_ASSERT((err_id&3)==1);
@@ -408,8 +443,8 @@ namespace boost { namespace leaf {
 				}
 				else
 				{
-					err_id = leaf_detail::new_id();
-					leaf_detail::load_slot(err_id,ec);
+					err_id = new_id();
+					(void) load_slot(err_id, ec);
 					return (err_id&~3)|1;
 				}
 			}
@@ -419,7 +454,7 @@ namespace boost { namespace leaf {
 
 		inline bool is_error_id( std::error_code const & ec ) noexcept
 		{
-			bool res = (&ec.category() == &leaf_detail::get_error_category<>::cat);
+			bool res = (&ec.category() == &get_error_category<>::cat);
 			BOOST_LEAF_ASSERT(!res || !ec.value() || ((ec.value()&3)==1));
 			return res;
 		}
@@ -464,28 +499,12 @@ namespace boost { namespace leaf {
 			return *this;
 		}
 
-		template <class... E>
-		LEAF_CONSTEXPR error_id load( E && ... e ) const noexcept
+		template <class... Item>
+		LEAF_CONSTEXPR error_id load( Item && ... item ) const noexcept
 		{
 			if( int err_id = value() )
 			{
-				auto _ = { leaf_detail::load_slot(err_id, std::forward<E>(e))... };
-				(void) _;
-			}
-			return *this;
-		}
-
-		LEAF_CONSTEXPR error_id accumulate() const noexcept
-		{
-			return *this;
-		}
-
-		template <class... F>
-		LEAF_CONSTEXPR error_id accumulate( F && ... f ) const noexcept
-		{
-			if( int err_id = value() )
-			{
-				auto _ = { leaf_detail::accumulate_slot(err_id, std::forward<F>(f))... };
+				auto _ = { leaf_detail::load_item<Item>::load(err_id, std::forward<Item>(item))... };
 				(void) _;
 			}
 			return *this;

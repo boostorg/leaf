@@ -3,7 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/preload.hpp>
+#include <boost/leaf/on_error.hpp>
 #include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/result.hpp>
 #include "lightweight_test.hpp"
@@ -26,7 +26,7 @@ struct info
 leaf::error_id g()
 {
 	global = 0;
-	auto load = leaf::defer( []{ return info<42>{get_global()}; }, []{ return info<-42>{-42}; } );
+	auto load = leaf::on_error( []{ return info<42>{get_global()}; }, []{ return info<-42>{-42}; } );
 	global = 42;
 	return leaf::new_error();
 }

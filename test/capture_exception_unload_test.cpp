@@ -19,7 +19,7 @@ int main()
 #include <boost/leaf/capture.hpp>
 #include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
-#include <boost/leaf/preload.hpp>
+#include <boost/leaf/on_error.hpp>
 #include "lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
@@ -193,13 +193,13 @@ int main()
 	test<info<1>, info<2>, info<3>>(
 		[]
 		{
-			auto load = leaf::preload( info<1>{1}, info<3>{3} );
+			auto load = leaf::on_error( info<1>{1}, info<3>{3} );
 			throw leaf::exception(std::exception()); // Derives from leaf::leaf::error_id
 		} );
 	test<info<1>, info<2>, info<3>>(
 		[]
 		{
-			auto load = leaf::preload( info<1>{1}, info<3>{3} );
+			auto load = leaf::on_error( info<1>{1}, info<3>{3} );
 			throw std::exception(); // Does not derive from leaf::leaf::error_id
 		} );
 	return boost::report_errors();

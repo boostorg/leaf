@@ -11,7 +11,7 @@
 
 #include <boost/outcome/result.hpp>
 #include <boost/leaf/handle_error.hpp>
-#include <boost/leaf/preload.hpp>
+#include <boost/leaf/on_error.hpp>
 #include <boost/leaf/common.hpp>
 #include <iostream>
 #include <memory>
@@ -65,7 +65,7 @@ int main( int argc, char const * argv[] )
 		{
 			LEAF_AUTO(file_name, parse_command_line(argc,argv));
 
-			auto load = leaf::preload( leaf::e_file_name{file_name} );
+			auto load = leaf::on_error( leaf::e_file_name{file_name} );
 
 			LEAF_AUTO(f, file_open(file_name));
 
@@ -172,7 +172,7 @@ result<std::shared_ptr<FILE>> file_open( char const * file_name )
 result<int> file_size( FILE & f )
 {
 	// All exceptions escaping this function will automatically load errno.
-	auto load = leaf::defer([] { return leaf::e_errno{errno}; });
+	auto load = leaf::on_error([] { return leaf::e_errno{errno}; });
 
 	if( fseek(&f,0,SEEK_END) )
 		return leaf::new_error(input_file_size_error).to_error_code();

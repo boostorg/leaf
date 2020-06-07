@@ -311,16 +311,10 @@ namespace boost { namespace leaf {
 			return error_result{*this};
 		}
 
-		template <class... E>
-		LEAF_CONSTEXPR error_id load( E && ... e ) noexcept
+		template <class... Item>
+		LEAF_CONSTEXPR error_id load( Item && ... item ) noexcept
 		{
-			return error_id(error()).load(std::forward<E>(e)...);
-		}
-
-		template <class... F>
-		LEAF_CONSTEXPR error_id accumulate( F && ... f ) noexcept
-		{
-			return error_id(error()).accumulate(std::forward<F>(f)...);
+			return error_id(error()).load(std::forward<Item>(item)...);
 		}
 	};
 
@@ -389,7 +383,6 @@ namespace boost { namespace leaf {
 		using base::get_error_id;
 		using base::error;
 		using base::load;
-		using base::accumulate;
 	};
 
 	////////////////////////////////////////

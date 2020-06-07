@@ -13,7 +13,7 @@ extern "C" {
 }
 #include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
-#include <boost/leaf/preload.hpp>
+#include <boost/leaf/on_error.hpp>
 #include <iostream>
 #include <stdlib.h>
 
@@ -84,7 +84,7 @@ int call_lua( lua_State * L )
 	{
 		// Something went wrong with the call, so we'll throw std::exception.
 		// This is definitely not a do_work failure, because it throws on error.
-		auto load = leaf::preload( e_lua_error_message{lua_tostring(L,1)} );
+		auto load = leaf::on_error( e_lua_error_message{lua_tostring(L,1)} );
 		lua_pop(L,1);
 		throw leaf::exception( std::exception(), e_lua_pcall_error{err} );
 	}
