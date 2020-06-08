@@ -389,7 +389,7 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		template <class F, int arity>
+		template <class F>
 		struct load_item<F, 0>
 		{
 			LEAF_CONSTEXPR static int load( int err_id, F && f ) noexcept
