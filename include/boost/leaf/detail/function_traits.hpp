@@ -21,8 +21,14 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class...>
-		using void_t = void;
+		template<class...>
+		struct gcc49_workaround //Thanks Glen Fernandes
+		{
+			typedef void type;
+		};
+
+		template<class... T>
+		using void_t = typename gcc49_workaround<T...>::type;
 
 		template<class F,class V=void>
 		struct function_traits
@@ -35,19 +41,18 @@ namespace boost { namespace leaf {
 		{
 		private:
 
-			template <class...>
 			using tr = function_traits<decltype(&F::operator())>;
 
 		public:
 
-			using return_type = typename tr<>::return_type;
-			static constexpr int arity = tr<>::arity - 1;
+			using return_type = typename tr::return_type;
+			static constexpr int arity = tr::arity - 1;
 
-			using mp_args = typename leaf_detail_mp11::mp_rest<typename tr<>::mp_args>;
+			using mp_args = typename leaf_detail_mp11::mp_rest<typename tr::mp_args>;
 
 			template <int I>
 			struct arg:
-				tr<>::template arg<I+1>
+				tr::template arg<I+1>
 			{
 			};
 		};
