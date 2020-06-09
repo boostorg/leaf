@@ -31,22 +31,23 @@ namespace boost { namespace leaf {
 		};
 
 		template<class F>
-		struct function_traits<F,void_t<decltype(&F::operator(), void())>>
+		struct function_traits<F, void_t<decltype(&F::operator())>>
 		{
 		private:
 
-			typedef function_traits<decltype(&F::operator())> tr;
+			template <class...>
+			using tr = function_traits<decltype(&F::operator())>;
 
 		public:
 
-			typedef typename tr::return_type return_type;
-			static constexpr int arity = tr::arity - 1;
+			using return_type = typename tr<>::return_type;
+			static constexpr int arity = tr<>::arity - 1;
 
-			using mp_args = typename leaf_detail_mp11::mp_rest<typename tr::mp_args>;
+			using mp_args = typename leaf_detail_mp11::mp_rest<typename tr<>::mp_args>;
 
 			template <int I>
 			struct arg:
-				tr::template arg<I+1>
+				tr<>::template arg<I+1>
 			{
 			};
 		};
@@ -54,7 +55,7 @@ namespace boost { namespace leaf {
 		template<class R, class... A>
 		struct function_traits<R(A...)>
 		{
-			typedef R return_type;
+			using return_type = R;
 			static constexpr int arity = sizeof...(A);
 
 			using mp_args = leaf_detail_mp11::mp_list<A...>;
@@ -63,7 +64,7 @@ namespace boost { namespace leaf {
 			struct arg
 			{
 				static_assert(I < arity, "I out of range");
-				typedef typename std::tuple_element<I,std::tuple<A...>>::type type;
+				using type = typename std::tuple_element<I,std::tuple<A...>>::type;
 			};
 		};
 

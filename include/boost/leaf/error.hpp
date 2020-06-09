@@ -377,8 +377,11 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class T, int arity = function_traits<T>::arity>
-		struct load_item;
+		template <class T, int Arity = function_traits<T>::arity>
+		struct load_item
+		{
+			static_assert(Arity==0 || Arity==1, "If a functions is passed to new_error or load, it must take zero or one argument");
+		};
 
 		template <class E>
 		struct load_item<E, -1>
@@ -566,10 +569,10 @@ namespace boost { namespace leaf {
 		return leaf_detail::make_error_id(leaf_detail::new_id());
 	}
 
-	template <class... E>
-	inline error_id new_error( E && ... e ) noexcept
+	template <class... Item>
+	inline error_id new_error( Item && ... item ) noexcept
 	{
-		return leaf_detail::make_error_id(leaf_detail::new_id()).load(std::forward<E>(e)...);
+		return leaf_detail::make_error_id(leaf_detail::new_id()).load(std::forward<Item>(item)...);
 	}
 
 	inline error_id current_error() noexcept

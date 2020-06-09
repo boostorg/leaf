@@ -575,22 +575,23 @@ namespace boost { namespace leaf {
 		};
 
 		template<class F>
-		struct function_traits<F,void_t<decltype(&F::operator(), void())>>
+		struct function_traits<F, void_t<decltype(&F::operator())>>
 		{
 		private:
 
-			typedef function_traits<decltype(&F::operator())> tr;
+			template <class...>
+			using tr = function_traits<decltype(&F::operator())>;
 
 		public:
 
-			typedef typename tr::return_type return_type;
-			static constexpr int arity = tr::arity - 1;
+			using return_type = typename tr<>::return_type;
+			static constexpr int arity = tr<>::arity - 1;
 
-			using mp_args = typename leaf_detail_mp11::mp_rest<typename tr::mp_args>;
+			using mp_args = typename leaf_detail_mp11::mp_rest<typename tr<>::mp_args>;
 
 			template <int I>
 			struct arg:
-				tr::template arg<I+1>
+				tr<>::template arg<I+1>
 			{
 			};
 		};
@@ -598,7 +599,7 @@ namespace boost { namespace leaf {
 		template<class R, class... A>
 		struct function_traits<R(A...)>
 		{
-			typedef R return_type;
+			using return_type = R;
 			static constexpr int arity = sizeof...(A);
 
 			using mp_args = leaf_detail_mp11::mp_list<A...>;
@@ -607,7 +608,7 @@ namespace boost { namespace leaf {
 			struct arg
 			{
 				static_assert(I < arity, "I out of range");
-				typedef typename std::tuple_element<I,std::tuple<A...>>::type type;
+				using type = typename std::tuple_element<I,std::tuple<A...>>::type;
 			};
 		};
 
@@ -1338,8 +1339,11 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class T, int arity = function_traits<T>::arity>
-		struct load_item;
+		template <class T, int Arity = function_traits<T>::arity>
+		struct load_item
+		{
+			static_assert(Arity==0 || Arity==1, "If a functions is passed to new_error or load, it must take zero or one argument");
+		};
 
 		template <class E>
 		struct load_item<E, -1>
@@ -1527,10 +1531,10 @@ namespace boost { namespace leaf {
 		return leaf_detail::make_error_id(leaf_detail::new_id());
 	}
 
-	template <class... E>
-	inline error_id new_error( E && ... e ) noexcept
+	template <class... Item>
+	inline error_id new_error( Item && ... item ) noexcept
 	{
-		return leaf_detail::make_error_id(leaf_detail::new_id()).load(std::forward<E>(e)...);
+		return leaf_detail::make_error_id(leaf_detail::new_id()).load(std::forward<Item>(item)...);
 	}
 
 	inline error_id current_error() noexcept
