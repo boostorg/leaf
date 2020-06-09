@@ -575,7 +575,7 @@ namespace boost { namespace leaf {
 		};
 
 		template<class F>
-		struct function_traits<F,void_t<decltype(&F::operator())>>
+		struct function_traits<F,void_t<decltype(&F::operator(), void())>>
 		{
 		private:
 
