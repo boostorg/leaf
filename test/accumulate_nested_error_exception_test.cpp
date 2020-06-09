@@ -37,7 +37,7 @@ void f0()
 
 void f1()
 {
-	auto propagate = leaf::on_error( info<0>{-1}, info<2>{-1}, []( info<1> & x ) {++x.value;} );
+	auto load = leaf::on_error( info<0>{-1}, info<2>{-1}, []( info<1> & x ) {++x.value;} );
 	f0();
 }
 

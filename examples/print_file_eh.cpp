@@ -67,7 +67,7 @@ int main( int argc, char const * argv[] )
 			std::string buffer( 1 + s, '\0' );
 			file_read(*f,&buffer[0],buffer.size()-1);
 
-			auto propagate2 = leaf::on_error([] { return leaf::e_errno{errno}; } );
+			auto load2 = leaf::on_error([] { return leaf::e_errno{errno}; } );
 			std::cout << buffer;
 			std::cout.flush();
 

@@ -92,7 +92,7 @@ int main()
 			int r = leaf::remote_try_handle_all(
 				[&]
 				{
-					auto propagate = leaf::on_error( info<4>{} );
+					auto load = leaf::on_error( info<4>{} );
 
 					// Calling future_get is required in order to make the preload (above) work.
 					return leaf::future_get(f.fut);
@@ -125,7 +125,7 @@ int main()
 			int r = leaf::remote_try_handle_all(
 				[&]
 				{
-					auto propagate = leaf::on_error( info<4>{} );
+					auto load = leaf::on_error( info<4>{} );
 
 					return leaf::try_handle_some(
 						[&]

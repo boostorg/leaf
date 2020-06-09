@@ -1351,6 +1351,15 @@ namespace boost { namespace leaf {
 		};
 
 		template <class F>
+		struct load_item<F, 0>
+		{
+			LEAF_CONSTEXPR static int load( int err_id, F && f ) noexcept
+			{
+				return load_slot(err_id, std::forward<F>(f)());
+			}
+		};
+
+		template <class F>
 		struct load_item<F, 1>
 		{
 			LEAF_CONSTEXPR static int load( int err_id, F && f ) noexcept
@@ -1761,12 +1770,12 @@ namespace boost { namespace leaf {
 	}
 
 	template <class E1, class... E>
-	LEAF_CONSTEXPR inline typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type exception( E1 && car, E && ... cdr )
+	LEAF_CONSTEXPR inline typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type exception( E1 && car, E && ... cdr ) noexcept
 	{
 		return leaf_detail::exception<std::exception>(leaf::new_error(std::forward<E1>(car), std::forward<E>(cdr)...));
 	}
 
-	inline leaf_detail::exception<std::exception> exception()
+	inline leaf_detail::exception<std::exception> exception() noexcept
 	{
 		return leaf_detail::exception<std::exception>(leaf::new_error());
 	}
@@ -1778,12 +1787,12 @@ namespace boost { namespace leaf {
 	}
 
 	template <class E1, class... E>
-	LEAF_CONSTEXPR inline typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type exception( error_id id, E1 && car, E && ... cdr )
+	LEAF_CONSTEXPR inline typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type exception( error_id id, E1 && car, E && ... cdr ) noexcept
 	{
 		return leaf_detail::exception<std::exception>(id.load(std::forward<E1>(car), std::forward<E>(cdr)...));
 	}
 
-	inline leaf_detail::exception<std::exception> exception(error_id id)
+	inline leaf_detail::exception<std::exception> exception(error_id id) noexcept
 	{
 		return leaf_detail::exception<std::exception>(id);
 	}

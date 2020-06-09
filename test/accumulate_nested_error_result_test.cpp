@@ -24,7 +24,7 @@ leaf::error_id f0()
 
 leaf::error_id f1()
 {
-	auto propagate = leaf::on_error( info<0>{-1}, info<2>{-1}, []( info<1> & x ) {++x.value;} );
+	auto load = leaf::on_error( info<0>{-1}, info<2>{-1}, []( info<1> & x ) {++x.value;} );
 	return f0();
 }
 
