@@ -21,12 +21,14 @@ struct unexpected_test
 	int value;
 };
 
-struct my_error:
+struct my_error { };
+
+struct my_exception:
 	virtual std::exception
 {
 	char const * what() const noexcept
 	{
-		return "my_error";
+		return "my_exception";
 	}
 };
 
@@ -77,7 +79,7 @@ int main()
 	leaf::try_handle_all(
 		[]() -> leaf::result<void>
 		{
-			return LEAF_NEW_ERROR(
+			return LEAF_NEW_ERROR<my_error>(
 				printable_info_printable_payload(),
 				printable_info_non_printable_payload(),
 				non_printable_info_printable_payload(),
@@ -87,6 +89,7 @@ int main()
 				leaf::e_errno{ENOENT} );
 		},
 		[](
+			my_error,
 			leaf::e_source_location,
 			printable_info_printable_payload,
 			printable_info_non_printable_payload,
@@ -211,7 +214,7 @@ int main()
 	leaf::try_catch(
 		[]
 		{
-			LEAF_THROW( my_error(),
+			LEAF_THROW( my_exception(),
 				printable_info_printable_payload(),
 				printable_info_non_printable_payload(),
 				non_printable_info_printable_payload(),
@@ -234,7 +237,7 @@ int main()
 			std::string s = st.str();
 			BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
 			BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
-			BOOST_TEST_NE(s.find("std::exception::what(): my_error"), s.npos);
+			BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
 			std::cout << s;
 		} );
 
@@ -243,7 +246,7 @@ int main()
 	leaf::try_catch(
 		[]
 		{
-			LEAF_THROW( my_error(),
+			LEAF_THROW( my_exception(),
 				printable_info_printable_payload(),
 				printable_info_non_printable_payload(),
 				non_printable_info_printable_payload(),
@@ -267,7 +270,7 @@ int main()
 #if LEAF_DIAGNOSTICS
 			BOOST_TEST_NE(s.find("leaf::diagnostic_info for Error ID = "), s.npos);
 			BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
-			BOOST_TEST_NE(s.find("std::exception::what(): my_error"), s.npos);
+			BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
 			BOOST_TEST_NE(s.find("e_source_location"), s.npos);
 			BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
 			BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
@@ -280,7 +283,7 @@ int main()
 			BOOST_TEST_NE(s.find("leaf::diagnostic_info requires #define LEAF_DIAGNOSTICS 1"), s.npos);
 			BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
 			BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
-			BOOST_TEST_NE(s.find("std::exception::what(): my_error"), s.npos);
+			BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
 #endif
 			std::cout << s;
 		} );
@@ -290,7 +293,7 @@ int main()
 	leaf::try_catch(
 		[]
 		{
-			LEAF_THROW( my_error(),
+			LEAF_THROW( my_exception(),
 				printable_info_printable_payload(),
 				printable_info_non_printable_payload(),
 				non_printable_info_printable_payload(),
@@ -314,7 +317,7 @@ int main()
 #if LEAF_DIAGNOSTICS
 			BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info for Error ID = "), s.npos);
 			BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
-			BOOST_TEST_NE(s.find("std::exception::what(): my_error"), s.npos);
+			BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
 			BOOST_TEST_NE(s.find("e_source_location"), s.npos);
 			BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
 			BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
@@ -329,7 +332,7 @@ int main()
 			BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info requires #define LEAF_DIAGNOSTICS 1"), s.npos);
 			BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
 			BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
-			BOOST_TEST_NE(s.find("std::exception::what(): my_error"), s.npos);
+			BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
 #endif
 			std::cout << s;
 		} );
