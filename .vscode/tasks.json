@@ -483,12 +483,12 @@
 			}
 		},
 		{
-			"label": "result_load_accumulate_test",
+			"label": "result_load_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test result_load_accumulate_test",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test result_load_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test result_load_accumulate_test"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test result_load_test"
 			}
 		},
 		{

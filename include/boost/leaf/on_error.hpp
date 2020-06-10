@@ -245,10 +245,10 @@ namespace boost { namespace leaf {
 		};
 	} // leaf_detail
 
-	template <class... Item>
+	template <class... Tag, class... Item>
 	LEAF_NODISCARD LEAF_CONSTEXPR inline leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...> on_error( Item && ... i )
 	{
-		return leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...>(std::forward<Item>(i)...);
+		return leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...>(Tag{}..., std::forward<Item>(i)...);
 	}
 
 } }

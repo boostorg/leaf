@@ -484,6 +484,17 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_ASSERT(value_==0 || ((value_&3)==1));
 		}
 
+		template <class... Item>
+		LEAF_CONSTEXPR error_id load_( Item && ... item ) const noexcept
+		{
+			if( int err_id = value() )
+			{
+				int const unused[ ] = { leaf_detail::load_item<Item>::load(err_id, std::forward<Item>(item))... };
+				(void) unused;
+			}
+			return *this;
+		}
+
 	public:
 
 		LEAF_CONSTEXPR error_id() noexcept:
@@ -502,15 +513,10 @@ namespace boost { namespace leaf {
 			return *this;
 		}
 
-		template <class... Item>
+		template <class... Tag, class... Item>
 		LEAF_CONSTEXPR error_id load( Item && ... item ) const noexcept
 		{
-			if( int err_id = value() )
-			{
-				auto _ = { leaf_detail::load_item<Item>::load(err_id, std::forward<Item>(item))... };
-				(void) _;
-			}
-			return *this;
+			return load_(Tag{}..., item...);
 		}
 
 		std::error_code to_error_code() const noexcept
@@ -569,10 +575,10 @@ namespace boost { namespace leaf {
 		return leaf_detail::make_error_id(leaf_detail::new_id());
 	}
 
-	template <class... Item>
+	template <class... Tag, class... Item>
 	inline error_id new_error( Item && ... item ) noexcept
 	{
-		return leaf_detail::make_error_id(leaf_detail::new_id()).load(std::forward<Item>(item)...);
+		return leaf_detail::make_error_id(leaf_detail::new_id()).load<Tag...>(std::forward<Item>(item)...);
 	}
 
 	inline error_id current_error() noexcept

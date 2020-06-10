@@ -1451,6 +1451,17 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_ASSERT(value_==0 || ((value_&3)==1));
 		}
 
+		template <class... Item>
+		LEAF_CONSTEXPR error_id load_( Item && ... item ) const noexcept
+		{
+			if( int err_id = value() )
+			{
+				int const unused[ ] = { leaf_detail::load_item<Item>::load(err_id, std::forward<Item>(item))... };
+				(void) unused;
+			}
+			return *this;
+		}
+
 	public:
 
 		LEAF_CONSTEXPR error_id() noexcept:
@@ -1469,15 +1480,10 @@ namespace boost { namespace leaf {
 			return *this;
 		}
 
-		template <class... Item>
+		template <class... Tag, class... Item>
 		LEAF_CONSTEXPR error_id load( Item && ... item ) const noexcept
 		{
-			if( int err_id = value() )
-			{
-				auto _ = { leaf_detail::load_item<Item>::load(err_id, std::forward<Item>(item))... };
-				(void) _;
-			}
-			return *this;
+			return load_(Tag{}..., item...);
 		}
 
 		std::error_code to_error_code() const noexcept
@@ -1536,10 +1542,10 @@ namespace boost { namespace leaf {
 		return leaf_detail::make_error_id(leaf_detail::new_id());
 	}
 
-	template <class... Item>
+	template <class... Tag, class... Item>
 	inline error_id new_error( Item && ... item ) noexcept
 	{
-		return leaf_detail::make_error_id(leaf_detail::new_id()).load(std::forward<Item>(item)...);
+		return leaf_detail::make_error_id(leaf_detail::new_id()).load<Tag...>(std::forward<Item>(item)...);
 	}
 
 	inline error_id current_error() noexcept
@@ -1772,16 +1778,18 @@ namespace boost { namespace leaf {
 		};
 	}
 
-	template <class Ex, class... E>
+	template <class... Tag, class Ex, class... E>
 	LEAF_CONSTEXPR inline typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type exception( Ex && ex, E && ... e ) noexcept
 	{
-		return leaf_detail::exception<Ex>(leaf::new_error(std::forward<E>(e)...), std::forward<Ex>(ex));
+		auto id = leaf::new_error<Tag...>(std::forward<E>(e)...);
+		return leaf_detail::exception<Ex>(id, std::forward<Ex>(ex));
 	}
 
-	template <class E1, class... E>
+	template <class... Tag, class E1, class... E>
 	LEAF_CONSTEXPR inline typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type exception( E1 && car, E && ... cdr ) noexcept
 	{
-		return leaf_detail::exception<std::exception>(leaf::new_error(std::forward<E1>(car), std::forward<E>(cdr)...));
+		auto id = leaf::new_error<Tag...>(std::forward<E1>(car), std::forward<E>(cdr)...);
+		return leaf_detail::exception<std::exception>(id);
 	}
 
 	inline leaf_detail::exception<std::exception> exception() noexcept
@@ -1789,16 +1797,16 @@ namespace boost { namespace leaf {
 		return leaf_detail::exception<std::exception>(leaf::new_error());
 	}
 
-	template <class Ex, class... E>
+	template <class... Tag, class Ex, class... E>
 	LEAF_CONSTEXPR inline typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type exception( error_id id, Ex && ex, E && ... e ) noexcept
 	{
-		return leaf_detail::exception<Ex>(id.load(std::forward<E>(e)...), std::forward<Ex>(ex));
+		return leaf_detail::exception<Ex>(id.load<Tag...>(std::forward<E>(e)...), std::forward<Ex>(ex));
 	}
 
-	template <class E1, class... E>
+	template <class... Tag, class E1, class... E>
 	LEAF_CONSTEXPR inline typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type exception( error_id id, E1 && car, E && ... cdr ) noexcept
 	{
-		return leaf_detail::exception<std::exception>(id.load(std::forward<E1>(car), std::forward<E>(cdr)...));
+		return leaf_detail::exception<std::exception>(id.load<Tag...>(std::forward<E1>(car), std::forward<E>(cdr)...));
 	}
 
 	inline leaf_detail::exception<std::exception> exception(error_id id) noexcept
@@ -2059,10 +2067,10 @@ namespace boost { namespace leaf {
 		};
 	} // leaf_detail
 
-	template <class... Item>
+	template <class... Tag, class... Item>
 	LEAF_NODISCARD LEAF_CONSTEXPR inline leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...> on_error( Item && ... i )
 	{
-		return leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...>(std::forward<Item>(i)...);
+		return leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...>(Tag{}..., std::forward<Item>(i)...);
 	}
 
 } }
@@ -4653,10 +4661,10 @@ namespace boost { namespace leaf {
 			return error_result{*this};
 		}
 
-		template <class... Item>
+		template <class... Tag, class... Item>
 		LEAF_CONSTEXPR error_id load( Item && ... item ) noexcept
 		{
-			return error_id(error()).load(std::forward<Item>(item)...);
+			return error_id(error()).load<Tag...>(std::forward<Item>(item)...);
 		}
 	};
 

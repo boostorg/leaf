@@ -22,6 +22,10 @@ enum class error_code
 	error3
 };
 
+struct error1_tag { };
+struct error2_tag { };
+struct error3_tag { };
+
 leaf::result<int> compute_answer( int what_to_do ) noexcept
 {
 	switch( what_to_do )
@@ -32,9 +36,15 @@ leaf::result<int> compute_answer( int what_to_do ) noexcept
 		return leaf::new_error(error_code::error1);
 	case 2:
 		return leaf::new_error(error_code::error2);
-	default:
-		BOOST_LEAF_ASSERT(what_to_do==3);
+	case 3:
 		return leaf::new_error(error_code::error3);
+	case 4:
+		return leaf::new_error<error1_tag>(error_code::error1);
+	case 5:
+		return leaf::new_error<error2_tag>(error_code::error2);
+	default:
+		BOOST_LEAF_ASSERT(what_to_do==6);
+		return leaf::new_error<error3_tag>(error_code::error3);
 	}
 }
 
@@ -45,9 +55,13 @@ leaf::result<int> handle_some_errors( int what_to_do )
 		{
 			return compute_answer(what_to_do);
 		},
+		[]( error1_tag, leaf::match<error_code,error_code::error1> )
+		{
+			return -1;
+		},
 		[]( leaf::match<error_code,error_code::error1> )
 		{
-			return -42;
+			return -2;
 		} );
 }
 
@@ -58,9 +72,13 @@ leaf::result<float> handle_some_errors_float( int what_to_do )
 		{
 			return compute_answer(what_to_do);
 		},
-		[]( leaf::match<error_code,error_code::error2>  )
+		[]( error2_tag, leaf::match<error_code,error_code::error2> )
 		{
-			return -42.0f;
+			return -1.0f;
+		},
+		[]( leaf::match<error_code,error_code::error2> )
+		{
+			return -2.0f;
 		} );
 }
 
@@ -81,7 +99,8 @@ leaf::result<void> handle_some_errors_void( int what_to_do )
 int main()
 {
 	BOOST_TEST_EQ(handle_some_errors(0).value(), 42);
-	BOOST_TEST_EQ(handle_some_errors(1).value(), -42);
+	BOOST_TEST_EQ(handle_some_errors(1).value(), -2);
+	BOOST_TEST_EQ(handle_some_errors(4).value(), -1);
 	{
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
@@ -104,7 +123,8 @@ int main()
 	///////////////////////////
 
 	BOOST_TEST_EQ(handle_some_errors_float(0).value(), 42.0f);
-	BOOST_TEST_EQ(handle_some_errors_float(2).value(), -42.0f);
+	BOOST_TEST_EQ(handle_some_errors_float(2).value(), -2.0f);
+	BOOST_TEST_EQ(handle_some_errors_float(5).value(), -1.0f);
 	{
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
