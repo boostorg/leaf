@@ -42,7 +42,7 @@
 	} }
 #endif
 
-#define LEAF_NEW_ERROR(...) ::boost::leaf::leaf_detail::new_error_at(__FILE__,__LINE__,__FUNCTION__).load(__VA_ARGS__)
+#define LEAF_NEW_ERROR ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
 
 #define LEAF_AUTO(v,r)\
 	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "LEAF_AUTO requires a result type");\
@@ -58,6 +58,31 @@
 		if( !_r )\
 			return _r.error();\
 	}
+
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
+
+	namespace leaf_detail
+	{
+		struct inject_loc
+		{
+			char const * const file;
+			int const line;
+			char const * const fn;
+
+			template <class T>
+			friend T operator+( inject_loc loc, T && x ) noexcept
+			{
+				x.load_source_location_(loc.file, loc.line, loc.fn);
+				return x;
+			}
+		};
+	}
+
+} }
+
+////////////////////////////////////////
 
 namespace boost { namespace leaf {
 
@@ -558,6 +583,15 @@ namespace boost { namespace leaf {
 		friend std::ostream & operator<<( std::ostream & os, error_id x )
 		{
 			return os << x.value_;
+		}
+
+		LEAF_CONSTEXPR void load_source_location_( char const * file, int line, char const * function ) const noexcept
+		{
+			BOOST_LEAF_ASSERT(file&&*file);
+			BOOST_LEAF_ASSERT(line>0);
+			BOOST_LEAF_ASSERT(function&&*function);
+			BOOST_LEAF_ASSERT(value_);
+			(void) load(e_source_location {file,line,function});
 		}
 	};
 

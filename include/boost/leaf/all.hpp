@@ -1009,7 +1009,7 @@ namespace boost { namespace leaf {
 	} }
 #endif
 
-#define LEAF_NEW_ERROR(...) ::boost::leaf::leaf_detail::new_error_at(__FILE__,__LINE__,__FUNCTION__).load(__VA_ARGS__)
+#define LEAF_NEW_ERROR ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
 
 #define LEAF_AUTO(v,r)\
 	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "LEAF_AUTO requires a result type");\
@@ -1025,6 +1025,31 @@ namespace boost { namespace leaf {
 		if( !_r )\
 			return _r.error();\
 	}
+
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
+
+	namespace leaf_detail
+	{
+		struct inject_loc
+		{
+			char const * const file;
+			int const line;
+			char const * const fn;
+
+			template <class T>
+			friend T operator+( inject_loc loc, T && x ) noexcept
+			{
+				x.load_source_location_(loc.file, loc.line, loc.fn);
+				return x;
+			}
+		};
+	}
+
+} }
+
+////////////////////////////////////////
 
 namespace boost { namespace leaf {
 
@@ -1456,7 +1481,7 @@ namespace boost { namespace leaf {
 		{
 			if( int err_id = value() )
 			{
-				int const unused[ ] = { leaf_detail::load_item<Item>::load(err_id, std::forward<Item>(item))... };
+				int const unused[ ] = { 42, leaf_detail::load_item<Item>::load(err_id, std::forward<Item>(item))... };
 				(void) unused;
 			}
 			return *this;
@@ -1525,6 +1550,15 @@ namespace boost { namespace leaf {
 		friend std::ostream & operator<<( std::ostream & os, error_id x )
 		{
 			return os << x.value_;
+		}
+
+		LEAF_CONSTEXPR void load_source_location_( char const * file, int line, char const * function ) const noexcept
+		{
+			BOOST_LEAF_ASSERT(file&&*file);
+			BOOST_LEAF_ASSERT(line>0);
+			BOOST_LEAF_ASSERT(function&&*function);
+			BOOST_LEAF_ASSERT(value_);
+			(void) load(e_source_location {file,line,function});
 		}
 	};
 
@@ -1679,8 +1713,8 @@ namespace boost { namespace leaf {
 #line 18 "boost/leaf/exception.hpp"
 #include <exception>
 
-#define LEAF_EXCEPTION(...) ::boost::leaf::exception(__VA_ARGS__).at(__FILE__,__LINE__,__FUNCTION__)
-#define LEAF_THROW(...) ::boost::leaf::throw_exception(LEAF_EXCEPTION(__VA_ARGS__))
+#define LEAF_EXCEPTION ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
+#define LEAF_THROW ::leaf::leaf_detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
 
 #ifdef LEAF_NO_EXCEPTIONS
 
@@ -1712,6 +1746,29 @@ namespace boost { namespace leaf {
 } }
 
 #endif
+
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
+
+	namespace leaf_detail
+	{
+		struct throw_with_loc
+		{
+			char const * const file;
+			int const line;
+			char const * const fn;
+
+			template <class Ex>
+			[[noreturn]] friend void operator+( throw_with_loc loc, Ex const & ex )
+			{
+				ex.load_source_location_(loc.file, loc.line, loc.fn);
+				::boost::leaf::throw_exception(ex);
+			}
+		};
+	}
+
+} }
 
 ////////////////////////////////////////
 
@@ -1766,52 +1823,45 @@ namespace boost { namespace leaf {
 			{
 				leaf_detail::enforce_std_exception(*this);
 			}
-
-			LEAF_CONSTEXPR exception & at( char const * file, int line, char const * function ) noexcept
-			{
-				BOOST_LEAF_ASSERT(file&&*file);
-				BOOST_LEAF_ASSERT(line>0);
-				BOOST_LEAF_ASSERT(function&&*function);
-				this->load(e_source_location {file,line,function});
-				return *this;
-			}
 		};
 	}
 
 	template <class... Tag, class Ex, class... E>
-	LEAF_CONSTEXPR inline typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type exception( Ex && ex, E && ... e ) noexcept
+	inline typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type exception( Ex && ex, E && ... e ) noexcept
 	{
 		auto id = leaf::new_error<Tag...>(std::forward<E>(e)...);
 		return leaf_detail::exception<Ex>(id, std::forward<Ex>(ex));
 	}
 
 	template <class... Tag, class E1, class... E>
-	LEAF_CONSTEXPR inline typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type exception( E1 && car, E && ... cdr ) noexcept
+	inline typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type exception( E1 && car, E && ... cdr ) noexcept
 	{
 		auto id = leaf::new_error<Tag...>(std::forward<E1>(car), std::forward<E>(cdr)...);
 		return leaf_detail::exception<std::exception>(id);
 	}
 
+	template <class... Tag>
 	inline leaf_detail::exception<std::exception> exception() noexcept
 	{
-		return leaf_detail::exception<std::exception>(leaf::new_error());
+		return leaf_detail::exception<std::exception>(leaf::new_error<Tag...>());
 	}
 
 	template <class... Tag, class Ex, class... E>
-	LEAF_CONSTEXPR inline typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type exception( error_id id, Ex && ex, E && ... e ) noexcept
+	inline typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type exception( error_id id, Ex && ex, E && ... e ) noexcept
 	{
 		return leaf_detail::exception<Ex>(id.load<Tag...>(std::forward<E>(e)...), std::forward<Ex>(ex));
 	}
 
 	template <class... Tag, class E1, class... E>
-	LEAF_CONSTEXPR inline typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type exception( error_id id, E1 && car, E && ... cdr ) noexcept
+	inline typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type exception( error_id id, E1 && car, E && ... cdr ) noexcept
 	{
 		return leaf_detail::exception<std::exception>(id.load<Tag...>(std::forward<E1>(car), std::forward<E>(cdr)...));
 	}
 
+	template <class... Tag>
 	inline leaf_detail::exception<std::exception> exception(error_id id) noexcept
 	{
-		return leaf_detail::exception<std::exception>(id);
+		return leaf_detail::exception<std::exception>(id.load<Tag...>());
 	}
 
 } }
