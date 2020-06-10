@@ -1,7 +1,7 @@
 #ifndef LEAF_ALL_HPP_INCLUDED
 #define LEAF_ALL_HPP_INCLUDED
 
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -11,7 +11,7 @@
 #ifndef LEAF_13D3591AFC6811E9883D0A836044C98A
 #define LEAF_13D3591AFC6811E9883D0A836044C98A
 
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -171,7 +171,7 @@
 #ifndef LEAF_BC24FB98B2DE11E884419CF5AD35F1A2
 #define LEAF_BC24FB98B2DE11E884419CF5AD35F1A2
 
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -189,7 +189,7 @@
 #ifndef LEAF_75F38740D98D11E881DDB244C82C3C47
 #define LEAF_75F38740D98D11E881DDB244C82C3C47
 
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -207,7 +207,7 @@
 #ifndef LEAF_BA049396D0D411E8B45DF7D4A759E189
 #define LEAF_BA049396D0D411E8B45DF7D4A759E189
 
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -225,7 +225,7 @@
 #ifndef LEAF_14440B9CF07011E88377FD4B0ABE8030
 #define LEAF_14440B9CF07011E88377FD4B0ABE8030
 
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -646,7 +646,7 @@ namespace boost { namespace leaf {
 #ifndef LEAF_3BAB50A2B87E11E89EEB30600C39171A
 #define LEAF_3BAB50A2B87E11E89EEB30600C39171A
 
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -664,7 +664,7 @@ namespace boost { namespace leaf {
 #ifndef LEAF_47258FCCB6B411E8A1F35AA00C39171A
 #define LEAF_47258FCCB6B411E8A1F35AA00C39171A
 
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -1871,7 +1871,7 @@ namespace boost { namespace leaf {
 #ifndef LEAF_25AF99F6DC6F11E8803DE9BC9723C688
 #define LEAF_25AF99F6DC6F11E8803DE9BC9723C688
 
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -2374,7 +2374,7 @@ namespace boost { namespace leaf {
 #ifndef LEAF_EBA7EF10B6F311E8AAD493990D39171A
 #define LEAF_EBA7EF10B6F311E8AAD493990D39171A
 
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -2471,7 +2471,7 @@ namespace boost { namespace leaf {
 #ifndef LEAF_E72958AC28C711E9998B3465EBB1FB94
 #define LEAF_E72958AC28C711E9998B3465EBB1FB94
 
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -2903,7 +2903,7 @@ namespace boost { namespace leaf {
 #ifndef LEAF_539464A021D411E9BC8A79361E29EE6E
 #define LEAF_539464A021D411E9BC8A79361E29EE6E
 
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -3824,7 +3824,7 @@ namespace boost { namespace leaf {
 #ifndef LEAF_87F274C4D4BA11E89928D55AC82C3C47
 #define LEAF_87F274C4D4BA11E89928D55AC82C3C47
 
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -3846,7 +3846,7 @@ namespace boost { namespace leaf {
 #ifndef LEAF_E7999136FCD911E8B7F308A7642D5A5F
 #define LEAF_E7999136FCD911E8B7F308A7642D5A5F
 
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -4399,7 +4399,7 @@ namespace boost { namespace leaf {
 #ifndef LEAF_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
 #define LEAF_2CD8E6B8CA8D11E8BD3B80D66CE5B91B
 
-// Copyright (c) 2018-2019 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
