@@ -107,11 +107,14 @@ int main( int argc, char const * argv[] )
 
 		// This handler will be called if the error includes:
 		// - an object of type error_code equal to any of input_file_size_error, input_file_read_error, input_eof_error, and
-		// - an object of type leaf::e_errno (regardless of its .value), and
+		// - an optional object of type leaf::e_errno (regardless of its .value), and
 		// - an object of type leaf::e_file_name.
-		[]( leaf::match<error_code, input_file_size_error, input_file_read_error, input_eof_error>, leaf::e_errno const & errn, leaf::e_file_name const & fn )
+		[]( leaf::match<error_code, input_file_size_error, input_file_read_error, input_eof_error>, leaf::e_errno const * errn, leaf::e_file_name const & fn )
 		{
-			std::cerr << "Failed to access " << fn.value << ", errno=" << errn << std::endl;
+			std::cerr << "Failed to access " << fn.value;
+			if( errn )
+				std::cerr << ", errno=" << *errn;
+			std::cerr << std::endl;
 			return 3;
 		},
 
