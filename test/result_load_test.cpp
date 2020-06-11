@@ -15,7 +15,7 @@ template <class T>
 leaf::result<T> test()
 {
 	leaf::result<T> r1 = leaf::new_error(info<42>{40});
-	leaf::result<T> r2 = r1.template load<info<1>>();
+	leaf::result<T> r2 = r1.template load(info<1>{});
 	leaf::result<T> r3 = r2.load(info<2>{2}, []{ return info<3>{3}; });
 	leaf::result<T> r4 = r3.load([](info<42> & x){ ++x.value; });
 	leaf::result<T> r5 = r4.load([](info<42> & x){ ++x.value; }, [](info<1> & x){ ++x.value; });

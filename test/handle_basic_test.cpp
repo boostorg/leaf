@@ -39,12 +39,12 @@ leaf::result<int> compute_answer( int what_to_do ) noexcept
 	case 3:
 		return leaf::new_error(error_code::error3);
 	case 4:
-		return leaf::new_error<error1_tag>(error_code::error1);
+		return leaf::new_error(error1_tag{}, error_code::error1);
 	case 5:
-		return leaf::new_error<error2_tag>(error_code::error2);
+		return leaf::new_error(error2_tag{}, error_code::error2);
 	default:
 		BOOST_LEAF_ASSERT(what_to_do==6);
-		return leaf::new_error<error3_tag>(error_code::error3);
+		return leaf::new_error(error3_tag{}, error_code::error3);
 	}
 }
 

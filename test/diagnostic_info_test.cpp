@@ -21,8 +21,6 @@ struct unexpected_test
 	int value;
 };
 
-struct my_error { };
-
 struct my_exception:
 	virtual std::exception
 {
@@ -79,7 +77,7 @@ int main()
 	leaf::try_handle_all(
 		[]() -> leaf::result<void>
 		{
-			return LEAF_NEW_ERROR<my_error>(
+			return LEAF_NEW_ERROR(
 				printable_info_printable_payload(),
 				printable_info_non_printable_payload(),
 				non_printable_info_printable_payload(),
@@ -89,7 +87,6 @@ int main()
 				leaf::e_errno{ENOENT} );
 		},
 		[](
-			my_error,
 			leaf::e_source_location,
 			printable_info_printable_payload,
 			printable_info_non_printable_payload,

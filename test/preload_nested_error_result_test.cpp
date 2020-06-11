@@ -18,7 +18,7 @@ struct info
 
 leaf::error_id f0()
 {
-	auto load = leaf::on_error( info<0>{0} );
+	auto load = leaf::on_error(info<0>{});
 	return leaf::new_error( info<2>{2} );
 }
 

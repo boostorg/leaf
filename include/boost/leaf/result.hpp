@@ -311,10 +311,10 @@ namespace boost { namespace leaf {
 			return error_result{*this};
 		}
 
-		template <class... Tag, class... Item>
+		template <class... Item>
 		LEAF_CONSTEXPR error_id load( Item && ... item ) noexcept
 		{
-			return error_id(error()).load<Tag...>(std::forward<Item>(item)...);
+			return error_id(error()).load(std::forward<Item>(item)...);
 		}
 	};
 

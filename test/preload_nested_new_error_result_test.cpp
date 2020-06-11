@@ -24,7 +24,7 @@ leaf::error_id f0()
 
 leaf::error_id f1()
 {
-	auto load = leaf::on_error( info<0>{0}, info<1>{1}, info<2>{2} );
+	auto load = leaf::on_error(info<0>{}, info<1>{1}, info<2>{2} );
 	(void) f0();
 	return leaf::new_error();
 }

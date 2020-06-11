@@ -27,7 +27,6 @@ struct info { int value; };
 struct extra_info { int value; };
 
 struct my_exception: std::exception { };
-struct my_error { };
 
 struct extra_info_exception:
 	std::exception
@@ -47,22 +46,6 @@ int test( F && f )
 			f();
 			return 0;
 		},
-		[]( my_error, leaf::catch_<my_exception>, leaf::match<info,42>, leaf::e_source_location )
-		{
-			return 10;
-		},
-		[]( my_error, leaf::catch_<my_exception>, leaf::match<info,42>, info x )
-		{
-			return 11;
-		},
-		[]( my_error, leaf::catch_<my_exception>, leaf::e_source_location )
-		{
-			return 12;
-		},
-		[]( my_error, leaf::catch_<my_exception> )
-		{
-			return 13;
-		},
 
 		[]( leaf::catch_<my_exception>, leaf::match<info,42>, leaf::e_source_location )
 		{
@@ -79,22 +62,6 @@ int test( F && f )
 		[]( leaf::catch_<my_exception> )
 		{
 			return 23;
-		},
-		[]( my_error, leaf::match<info,42>, leaf::e_source_location )
-		{
-			return 30;
-		},
-		[]( my_error, leaf::match<info,42>, info x )
-		{
-			return 31;
-		},
-		[]( my_error, leaf::e_source_location )
-		{
-			return 32;
-		},
-		[]( my_error )
-		{
-			return 33;
 		},
 		[]( leaf::match<info,42>, leaf::e_source_location )
 		{
@@ -116,26 +83,12 @@ int test( F && f )
 
 int main()
 {
-	BOOST_TEST_EQ(10, test([]{ LEAF_THROW<my_error>(my_exception{}, info{42}); }));
-	BOOST_TEST_EQ(10, test([]{ throw LEAF_EXCEPTION<my_error>(my_exception{}, info{42}); }));
-	BOOST_TEST_EQ(11, test([]{ throw leaf::exception<my_error>(my_exception{}, info{42}); }));
-	BOOST_TEST_EQ(12, test([]{ LEAF_THROW<my_error>(my_exception{}); }));
-	BOOST_TEST_EQ(12, test([]{ throw LEAF_EXCEPTION<my_error>(my_exception{}); }));
-	BOOST_TEST_EQ(13, test([]{ throw leaf::exception<my_error>(my_exception{}); }));
-
 	BOOST_TEST_EQ(20, test([]{ LEAF_THROW(my_exception{}, info{42}); }));
 	BOOST_TEST_EQ(20, test([]{ throw LEAF_EXCEPTION(my_exception{}, info{42}); }));
 	BOOST_TEST_EQ(21, test([]{ throw leaf::exception(my_exception{}, info{42}); }));
 	BOOST_TEST_EQ(22, test([]{ LEAF_THROW(my_exception{}); }));
 	BOOST_TEST_EQ(22, test([]{ throw LEAF_EXCEPTION(my_exception{}); }));
 	BOOST_TEST_EQ(23, test([]{ throw leaf::exception(my_exception{}); }));
-
-	BOOST_TEST_EQ(30, test([]{ LEAF_THROW<my_error>(info{42}); }));
-	BOOST_TEST_EQ(30, test([]{ throw LEAF_EXCEPTION<my_error>(info{42}); }));
-	BOOST_TEST_EQ(31, test([]{ throw leaf::exception<my_error>(info{42}); }));
-	BOOST_TEST_EQ(32, test([]{ LEAF_THROW<my_error>(); }));
-	BOOST_TEST_EQ(32, test([]{ throw LEAF_EXCEPTION<my_error>(); }));
-	BOOST_TEST_EQ(33, test([]{ throw leaf::exception<my_error>(); }));
 
 	BOOST_TEST_EQ(40, test([]{ LEAF_THROW(info{42}); }));
 	BOOST_TEST_EQ(40, test([]{ throw LEAF_EXCEPTION(info{42}); }));

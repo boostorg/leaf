@@ -37,7 +37,7 @@ void f0()
 
 void f1()
 {
-	auto load = leaf::on_error( info<0>{0}, info<1>{1}, info<2>{2} );
+	auto load = leaf::on_error( info<0>{}, info<1>{1}, info<2>{2} );
 	try { f0(); } catch(...) { }
 	throw leaf::exception(std::exception());
 }

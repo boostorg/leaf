@@ -39,7 +39,7 @@ void g1( Thrower th )
 template <class Thrower>
 void g2( Thrower th )
 {
-	auto load = leaf::on_error( info<2>{} );
+	auto load = leaf::on_error(info<3>{}, info<2>{} );
 	th();
 }
 
@@ -89,7 +89,7 @@ int main()
 			{
 				return 1;
 			},
-			[]( leaf::error_info const & err, info<2> )
+			[]( leaf::error_info const & err, info<2>, info<3> )
 			{
 				BOOST_TEST_EQ(err.error().value(), 9);
 				return 2;
@@ -131,7 +131,7 @@ int main()
 			{
 				return 1;
 			},
-			[]( leaf::error_info const & err, info<2> )
+			[]( leaf::error_info const & err, info<2>, info<3> )
 			{
 				BOOST_TEST_EQ(err.error().value(), 21);
 				return 2;
