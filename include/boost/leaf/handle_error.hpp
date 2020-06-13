@@ -15,6 +15,7 @@
 #endif
 
 #include <boost/leaf/context.hpp>
+#include <utility>
 
 namespace boost { namespace leaf {
 
