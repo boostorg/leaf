@@ -33,37 +33,34 @@ struct info
 
 int main()
 {
-	auto error_handler = []( leaf::error_info const & err )
-	{
-		return leaf::remote_handle_all( err,
-			[]( info<1>, info<3> )
-			{
-				return 42;
-			},
-			[]
-			{
-				return -42;
-			} );
-	};
+	auto error_handlers = std::make_tuple(
+		[]( info<1>, info<3> )
+		{
+			return 42;
+		},
+		[]
+		{
+			return -42;
+		} );
+
 	{
 		auto r = leaf::capture(
-			leaf::make_shared_context(&error_handler),
+			leaf::make_shared_context(error_handlers),
 			[]() -> leaf::result<int>
 			{
 				return leaf::new_error( info<1>{}, info<3>{} );
 			} );
 		BOOST_TEST_EQ(count, 2);
-		int answer = leaf::remote_try_handle_all(
+
+		int answer = leaf::try_handle_all(
 			[&r]
 			{
 				return std::move(r);
 			},
-			[&]( leaf::error_info const & err )
-			{
-				return error_handler(err);
-			} );
+			error_handlers);
 		BOOST_TEST_EQ(answer, 42);
 	}
 	BOOST_TEST_EQ(count, 0);
+
 	return boost::report_errors();
 }

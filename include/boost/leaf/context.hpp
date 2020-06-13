@@ -377,10 +377,34 @@ namespace boost { namespace leaf {
 			using type = deduce_context<leaf_detail_mp11::mp_append<fn_mp_args<H>...>>;
 		};
 
+		template <class HandlersTuple>
+		struct context_type_from_handlers_tuple;
+
+		template <class... H>
+		struct context_type_from_handlers_tuple<std::tuple<H...>>
+		{
+			using type = deduce_context<leaf_detail_mp11::mp_append<fn_mp_args<H>...>>;
+		};
+
+		template <class T>
+		struct tuplefy_type
+		{
+			using type = std::tuple<T>;
+		};
+
+		template <class... T>
+		struct tuplefy_type<std::tuple<T...>>
+		{
+			using type = std::tuple<T...>;
+		};
+
+
+
 		template <class... H>
 		struct context_type_from_handlers_impl
 		{
-			using type = deduce_context<leaf_detail_mp11::mp_append<fn_mp_args<H>...>>;
+			using flattened = decltype(std::tuple_cat(std::declval<typename tuplefy_type<typename std::decay<H>::type>::type>()...));
+			using type = typename context_type_from_handlers_tuple<flattened>::type;
 		};
 
 		template <class Ctx>
@@ -407,10 +431,22 @@ namespace boost { namespace leaf {
 		return { };
 	}
 
+	template <class...  H>
+	LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( std::tuple<H...> const & )
+	{
+		return { };
+	}
+
 	template <class RemoteH>
 	LEAF_CONSTEXPR inline context_type_from_remote_handler<RemoteH> make_context( RemoteH const * = 0 )
 	{
 		return { };
+	}
+
+	template <class...  H>
+	inline context_ptr make_shared_context( std::tuple<H...> const & )
+	{
+		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_handlers<H...>>>();
 	}
 
 	template <class RemoteH>

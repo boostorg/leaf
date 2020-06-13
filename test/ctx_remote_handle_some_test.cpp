@@ -25,32 +25,26 @@ leaf::result<int> f( Ctx & ctx )
 
 int main()
 {
-	auto handle_error = []( leaf::error_info const & error, leaf::result<int> && r )
-	{
-		return leaf::remote_handle_some( error,
-			[]( info<1> x )
-			{
-				BOOST_TEST(x.value==1);
-				return 1;
-			},
-			[&]
-			{
-				return std::move(r);
-			} );
-	};
+	auto handle_error = std::make_tuple(
+		[]( info<1> x )
+		{
+			BOOST_TEST(x.value==1);
+			return 1;
+		},
+		[]( leaf::error_info const & ei )
+		{
+			return ei.error();
+		});
 
-	auto ctx = leaf::make_context(&handle_error);
+	auto ctx = leaf::make_context(handle_error);
 
 	{
 		leaf::result<int> r1 = f(ctx);
 		BOOST_TEST(!r1);
 
-		leaf::result<int> r2 = ctx.remote_handle_error<leaf::result<int>>(
+		leaf::result<int> r2 = ctx.handle_error<leaf::result<int>>(
 			r1.error(),
-			[&]( leaf::error_info const & error )
-			{
-				return handle_error(error, std::move(r1));
-			} );
+			handle_error );
 		BOOST_TEST_EQ(r2.value(), 1);
 	}
 
