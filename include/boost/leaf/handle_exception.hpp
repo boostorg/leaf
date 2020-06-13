@@ -54,28 +54,6 @@ namespace boost { namespace leaf {
 				}
 			}
 
-			template <class TryBlock, class RemoteH>
-			LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock && try_block, RemoteH && h )
-			{
-				using namespace leaf_detail;
-				static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
-				auto active_context = activate_context(*this);
-				if(	auto r = this->remote_try_catch_(
-						[&]
-						{
-							return std::forward<TryBlock>(try_block)();
-						},
-						std::forward<RemoteH>(h)) )
-					return r.value();
-				else
-				{
-					error_id id = r.error();
-					this->deactivate();
-					using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
-					return this->template remote_handle_error<R>(std::move(id), std::forward<RemoteH>(h));
-				}
-			}
-
 			template <class TryBlock, class... H>
 			LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock && try_block, H && ... h )
 			{
@@ -95,31 +73,6 @@ namespace boost { namespace leaf {
 					this->deactivate();
 					using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
 					auto rr = this->template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
-					if( !rr )
-						this->propagate();
-					return rr;
-				}
-			}
-
-			template <class TryBlock, class RemoteH>
-			LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( TryBlock && try_block, RemoteH && h )
-			{
-				using namespace leaf_detail;
-				static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a remote_try_handle_some function must be registered with leaf::is_result_type");
-				auto active_context = activate_context(*this);
-				if( auto r = this->remote_try_catch_(
-						[&]
-						{
-							return std::forward<TryBlock>(try_block)();
-						},
-						std::forward<RemoteH>(h)) )
-					return r;
-				else
-				{
-					error_id id = r.error();
-					this->deactivate();
-					using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
-					auto rr = this->template remote_handle_error<R>(std::move(id), std::forward<RemoteH>(h));
 					if( !rr )
 						this->propagate();
 					return rr;
@@ -289,87 +242,6 @@ namespace boost { namespace leaf {
 					[]() -> R { throw; } );
 			}
 		}
-
-		template <class... E>
-		template <class TryBlock, class RemoteH>
-		inline decltype(std::declval<TryBlock>()()) context_base<E...>::remote_try_catch_( TryBlock && try_block, RemoteH && h )
-		{
-			using namespace leaf_detail;
-			BOOST_LEAF_ASSERT(is_active());
-			try
-			{
-				return std::forward<TryBlock>(try_block)();
-			}
-			catch( capturing_exception const & cap )
-			{
-				try
-				{
-					cap.unload_and_rethrow_original_exception();
-				}
-				catch( std::exception const & ex )
-				{
-					deactivate();
-					return std::forward<RemoteH>(h)(error_info(exception_info_(&ex), this)).get();
-				}
-				catch(...)
-				{
-					deactivate();
-					return std::forward<RemoteH>(h)(error_info(exception_info_(0), this)).get();
-				}
-			}
-			catch( std::exception const & ex )
-			{
-				deactivate();
-				return std::forward<RemoteH>(h)(error_info(exception_info_(&ex), this)).get();
-			}
-			catch(...)
-			{
-				deactivate();
-				return std::forward<RemoteH>(h)(error_info(exception_info_(0), this)).get();
-			}
-		}
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		template <class R, class... H>
-		struct remote_handle_exception_dispatch_impl
-		{
-			using result_type = handler_result<H...>;
-
-			LEAF_CONSTEXPR static result_type handle( error_info const & err, H && ... h )
-			{
-				using Ctx = context_type_from_handlers<H...>;
-				return { leaf_detail::handle_error_<R>(static_cast<Ctx const *>(err.remote_handling_ctx_)->tup(), err, std::forward<H>(h)...,
-					[]() -> R { throw; } ) };
-			}
-		};
-
-		template <class... H>
-		struct remote_handle_exception_dispatch_impl<void, H...>
-		{
-			using result_type = handler_result_void<H...>;
-
-			LEAF_CONSTEXPR static result_type handle( error_info const & err, H && ... h )
-			{
-				using Ctx = context_type_from_handlers<H...>;
-				leaf_detail::handle_error_<void>(static_cast<Ctx const *>(err.remote_handling_ctx_)->tup(), err, std::forward<H>(h)...,
-					[]{ throw; } );
-				return { };
-			}
-		};
-
-		template <class... H>
-		using remote_handle_exception_dispatch = remote_handle_exception_dispatch_impl<handler_pack_return<H...>, H...>;
-	}
-
-	template <class... H>
-	LEAF_CONSTEXPR inline typename leaf_detail::remote_handle_exception_dispatch<H...>::result_type remote_handle_exception( error_info const & err, H && ... h )
-	{
-		using namespace leaf_detail;
-		return remote_handle_exception_dispatch<H...>::handle(err, std::forward<H>(h)...);
 	}
 
 	////////////////////////////////////////
@@ -399,8 +271,7 @@ namespace boost { namespace leaf {
 		}
 	}
 
-	inline error_info::error_info( leaf_detail::exception_info_ const & xi, void const * remote_handling_ctx ) noexcept:
-		remote_handling_ctx_(remote_handling_ctx),
+	inline error_info::error_info( leaf_detail::exception_info_ const & xi ) noexcept:
 		xi_(&xi),
 		err_id_(leaf_detail::unpack_error_id(xi_->ex_))
 	{
@@ -420,20 +291,6 @@ namespace boost { namespace leaf {
 				return std::forward<TryBlock>(try_block)();
 			},
 			std::forward<H>(h)...);
-	}
-
-	template <class TryBlock, class RemoteH>
-	LEAF_CONSTEXPR inline decltype(std::declval<TryBlock>()()) remote_try_catch( TryBlock && try_block, RemoteH && h )
-	{
-		using namespace leaf_detail;
-		context_type_from_remote_handler<RemoteH> ctx;
-		auto active_context = activate_context(ctx);
-		return ctx.remote_try_catch_(
-			[&]
-			{
-				return std::forward<TryBlock>(try_block)();
-			},
-			std::forward<RemoteH>(h));
 	}
 
 } }

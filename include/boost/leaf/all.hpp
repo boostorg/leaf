@@ -2741,14 +2741,8 @@ namespace boost { namespace leaf {
 			template <class R, class... H>
 			LEAF_CONSTEXPR R handle_error( error_id, H && ... ) const;
 
-			template <class R, class RemoteH>
-			LEAF_CONSTEXPR R remote_handle_error( error_id, RemoteH && ) const;
-
 			template <class TryBlock, class... H>
 			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... );
-
-			template <class TryBlock, class RemoteH>
-			decltype(std::declval<TryBlock>()()) remote_try_catch_( TryBlock &&, RemoteH && );
 		};
 
 		template <class T> struct requires_catch { constexpr static bool value = false; };
@@ -2829,15 +2823,6 @@ namespace boost { namespace leaf {
 		template <class TypeList>
 		using deduce_context = typename deduce_context_impl<TypeList>::type;
 
-		template <class RemoteH>
-		struct context_type_from_remote_handler_impl;
-
-		template <template <class...> class L, class... H>
-		struct context_type_from_remote_handler_impl<L<H...>>
-		{
-			using type = deduce_context<leaf_detail_mp11::mp_append<fn_mp_args<H>...>>;
-		};
-
 		template <class HandlersTuple>
 		struct context_type_from_handlers_tuple;
 
@@ -2858,8 +2843,6 @@ namespace boost { namespace leaf {
 		{
 			using type = std::tuple<T...>;
 		};
-
-
 
 		template <class... H>
 		struct context_type_from_handlers_impl
@@ -2883,44 +2866,46 @@ namespace boost { namespace leaf {
 	template <class... H>
 	using context_type_from_handlers = typename leaf_detail::context_type_from_handlers_impl<H...>::type;
 
-	template <class RemoteH>
-	using context_type_from_remote_handler = typename leaf_detail::context_type_from_remote_handler_impl<leaf_detail::fn_return_type<RemoteH>>::type;
+	////////////////////////////////////////////
 
 	template <class...  H>
-	LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context()
+	LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context() noexcept
 	{
 		return { };
 	}
 
 	template <class...  H>
-	LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( std::tuple<H...> const & )
-	{
-		return { };
-	}
-
-	template <class RemoteH>
-	LEAF_CONSTEXPR inline context_type_from_remote_handler<RemoteH> make_context( RemoteH const * = 0 )
+	LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && ... ) noexcept
 	{
 		return { };
 	}
 
 	template <class...  H>
-	inline context_ptr make_shared_context( std::tuple<H...> const & )
+	LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( std::tuple<H...> const & ) noexcept
+	{
+		return { };
+	}
+
+	////////////////////////////////////////////
+
+	template <class...  H>
+	inline context_ptr make_shared_context() noexcept
 	{
 		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_handlers<H...>>>();
 	}
 
-	template <class RemoteH>
-	inline context_ptr make_shared_context( RemoteH const * = 0 )
+	template <class...  H>
+	inline context_ptr make_shared_context( H && ... ) noexcept
 	{
-		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_remote_handler<RemoteH>>>();
+		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_handlers<H...>>>();
 	}
 
-	template <class RemoteH, class Alloc>
-	inline context_ptr allocate_shared_context( Alloc alloc, RemoteH const * = 0 )
+	template <class...  H>
+	inline context_ptr make_shared_context( std::tuple<H...> const & ) noexcept
 	{
-		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_remote_handler<RemoteH>>>(alloc);
+		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_handlers<H...>>>();
 	}
+
 } }
 
 #endif
@@ -2993,18 +2978,16 @@ namespace boost { namespace leaf {
 
 	public:
 
-		void const * remote_handling_ctx_;
 		leaf_detail::exception_info_base const * const xi_;
 		error_id const err_id_;
 
-		LEAF_CONSTEXPR explicit error_info( error_id id, void const * remote_handling_ctx = 0 ) noexcept:
-			remote_handling_ctx_(remote_handling_ctx),
+		LEAF_CONSTEXPR explicit error_info( error_id id ) noexcept:
 			xi_(0),
 			err_id_(id)
 		{
 		}
 
-		explicit error_info( leaf_detail::exception_info_ const &, void const * remote_handling_ctx = 0 ) noexcept;
+		explicit error_info( leaf_detail::exception_info_ const & ) noexcept;
 
 		LEAF_CONSTEXPR error_id error() const noexcept
 		{
@@ -3699,73 +3682,6 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_ASSERT(!is_active());
 			return handle_error_<R>(tup(), error_info(id), std::forward<H>(h)...);
 		}
-
-		template <class... E>
-		template <class R, class RemoteH>
-		LEAF_CONSTEXPR inline R context_base<E...>::remote_handle_error( error_id id, RemoteH && h ) const
-		{
-			BOOST_LEAF_ASSERT(!is_active());
-			return std::forward<RemoteH>(h)(error_info(id, this)).get();
-		}
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		template <class R, class... H>
-		struct remote_error_dispatch_impl
-		{
-			using result_type = handler_result<H...>;
-
-			//When can HH... be different than H...? It isn't, except that the _some
-			//versions internally need to add a match-all handler at the end, which we
-			//know is not going to affect the deduced context type Ctx.
-			template <class... HH>
-			LEAF_CONSTEXPR static result_type handle( error_info const & err, HH && ... h )
-			{
-				using Ctx = context_type_from_handlers<HH...>;
-				using CtxHH = context_type_from_handlers<HH...>;
-				static_assert(std::is_same<Ctx,CtxHH>::value, "Buggy context deduction logic");
-				return { handle_error_<R>(static_cast<Ctx const *>(err.remote_handling_ctx_)->tup(), err, std::forward<HH>(h)...) };
-			}
-		};
-
-		template <class... H>
-		struct remote_error_dispatch_impl<void, H...>
-		{
-			using result_type = handler_result_void<H...>;
-
-			//When can HH... be different than H...? It isn't, except that the _some
-			//versions internally need to add a match-all handler at the end, which we
-			//know is not going to affect the deduced context type Ctx.
-			template <class... HH>
-			LEAF_CONSTEXPR static result_type handle( error_info const & err, HH && ... h )
-			{
-				using Ctx = context_type_from_handlers<HH...>;
-				using CtxHH = context_type_from_handlers<HH...>;
-				static_assert(std::is_same<Ctx,CtxHH>::value, "Buggy context deduction logic");
-				handle_error_<void>(static_cast<Ctx const *>(err.remote_handling_ctx_)->tup(), err, std::forward<HH>(h)...);
-				return { };
-			}
-		};
-
-		template <class... H>
-		using remote_error_dispatch = remote_error_dispatch_impl<handler_pack_return<H...>, H...>;
-	}
-
-	template <class... H>
-	LEAF_CONSTEXPR inline typename leaf_detail::remote_error_dispatch<H...>::result_type remote_handle_all( error_info const & err, H && ... h )
-	{
-		return leaf_detail::remote_error_dispatch<H...>::handle(err, std::forward<H>(h)... );
-	}
-
-	template <class... H>
-	LEAF_CONSTEXPR inline typename leaf_detail::remote_error_dispatch<H...>::result_type remote_handle_some( error_info const & err, H && ... h )
-	{
-		using R = decltype(std::declval<typename leaf_detail::remote_error_dispatch<H...>::result_type>().get());
-		return leaf_detail::remote_error_dispatch<H...>::handle(err, std::forward<H>(h)...,
-			[&err]() -> R { return err.error(); } );
 	}
 
 	////////////////////////////////////////
@@ -3794,23 +3710,6 @@ namespace boost { namespace leaf {
 				}
 			}
 
-			template <class TryBlock, class RemoteH>
-			LEAF_CONSTEXPR LEAF_ALWAYS_INLINE typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock && try_block, RemoteH && h )
-			{
-				using namespace leaf_detail;
-				static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a remote_try_handle_all function must be registered with leaf::is_result_type");
-				auto active_context = activate_context(*this);
-				if( auto r = std::forward<TryBlock>(try_block)() )
-					return r.value();
-				else
-				{
-					error_id id = r.error();
-					this->deactivate();
-					using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
-					return this->template remote_handle_error<R>(std::move(id), std::forward<RemoteH>(h));
-				}
-			}
-
 			template <class TryBlock, class... H>
 			LEAF_CONSTEXPR LEAF_ALWAYS_INLINE typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock && try_block, H && ... h )
 			{
@@ -3830,26 +3729,6 @@ namespace boost { namespace leaf {
 					return rr;
 				}
 			}
-
-			template <class TryBlock, class RemoteH>
-			LEAF_CONSTEXPR LEAF_ALWAYS_INLINE typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( TryBlock && try_block, RemoteH && h )
-			{
-				using namespace leaf_detail;
-				static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a remote_try_handle_some function must be registered with leaf::is_result_type");
-				auto active_context = activate_context(*this);
-				if( auto r = std::forward<TryBlock>(try_block)() )
-					return r;
-				else
-				{
-					error_id id = r.error();
-					this->deactivate();
-					using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
-					auto rr = this->template remote_handle_error<R>(std::move(id), std::forward<RemoteH>(h));
-					if( !rr )
-						this->propagate();
-					return rr;
-				}
-			}
 		};
 	}
 
@@ -3863,28 +3742,12 @@ namespace boost { namespace leaf {
 		return c.try_handle_all( std::forward<TryBlock>(try_block), std::forward<H>(h)... );
 	}
 
-	template <class TryBlock, class RemoteH>
-	LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock && try_block, RemoteH && h )
-	{
-		// Creating a named temp on purpose, to avoid C++11 and C++14 zero-initializing the context.
-		context_type_from_remote_handler<RemoteH> c;
-		return c.remote_try_handle_all( std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
-	}
-
 	template <class TryBlock, class... H>
 	LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock && try_block, H && ... h )
 	{
 		// Creating a named temp on purpose, to avoid C++11 and C++14 zero-initializing the context.
 		context_type_from_handlers<H...> c;
 		return c.try_handle_some( std::forward<TryBlock>(try_block), std::forward<H>(h)... );
-	}
-
-	template <class TryBlock, class RemoteH>
-	LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( TryBlock && try_block, RemoteH && h )
-	{
-		// Creating a named temp on purpose, to avoid C++11 and C++14 zero-initializing the context.
-		context_type_from_remote_handler<RemoteH> c;
-		return c.remote_try_handle_some( std::forward<TryBlock>(try_block), std::forward<RemoteH>(h) );
 	}
 
 } }
@@ -4080,28 +3943,6 @@ namespace boost { namespace leaf {
 				}
 			}
 
-			template <class TryBlock, class RemoteH>
-			LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type remote_try_handle_all( TryBlock && try_block, RemoteH && h )
-			{
-				using namespace leaf_detail;
-				static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
-				auto active_context = activate_context(*this);
-				if(	auto r = this->remote_try_catch_(
-						[&]
-						{
-							return std::forward<TryBlock>(try_block)();
-						},
-						std::forward<RemoteH>(h)) )
-					return r.value();
-				else
-				{
-					error_id id = r.error();
-					this->deactivate();
-					using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
-					return this->template remote_handle_error<R>(std::move(id), std::forward<RemoteH>(h));
-				}
-			}
-
 			template <class TryBlock, class... H>
 			LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock && try_block, H && ... h )
 			{
@@ -4121,31 +3962,6 @@ namespace boost { namespace leaf {
 					this->deactivate();
 					using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
 					auto rr = this->template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
-					if( !rr )
-						this->propagate();
-					return rr;
-				}
-			}
-
-			template <class TryBlock, class RemoteH>
-			LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type remote_try_handle_some( TryBlock && try_block, RemoteH && h )
-			{
-				using namespace leaf_detail;
-				static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a remote_try_handle_some function must be registered with leaf::is_result_type");
-				auto active_context = activate_context(*this);
-				if( auto r = this->remote_try_catch_(
-						[&]
-						{
-							return std::forward<TryBlock>(try_block)();
-						},
-						std::forward<RemoteH>(h)) )
-					return r;
-				else
-				{
-					error_id id = r.error();
-					this->deactivate();
-					using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
-					auto rr = this->template remote_handle_error<R>(std::move(id), std::forward<RemoteH>(h));
 					if( !rr )
 						this->propagate();
 					return rr;
@@ -4315,87 +4131,6 @@ namespace boost { namespace leaf {
 					[]() -> R { throw; } );
 			}
 		}
-
-		template <class... E>
-		template <class TryBlock, class RemoteH>
-		inline decltype(std::declval<TryBlock>()()) context_base<E...>::remote_try_catch_( TryBlock && try_block, RemoteH && h )
-		{
-			using namespace leaf_detail;
-			BOOST_LEAF_ASSERT(is_active());
-			try
-			{
-				return std::forward<TryBlock>(try_block)();
-			}
-			catch( capturing_exception const & cap )
-			{
-				try
-				{
-					cap.unload_and_rethrow_original_exception();
-				}
-				catch( std::exception const & ex )
-				{
-					deactivate();
-					return std::forward<RemoteH>(h)(error_info(exception_info_(&ex), this)).get();
-				}
-				catch(...)
-				{
-					deactivate();
-					return std::forward<RemoteH>(h)(error_info(exception_info_(0), this)).get();
-				}
-			}
-			catch( std::exception const & ex )
-			{
-				deactivate();
-				return std::forward<RemoteH>(h)(error_info(exception_info_(&ex), this)).get();
-			}
-			catch(...)
-			{
-				deactivate();
-				return std::forward<RemoteH>(h)(error_info(exception_info_(0), this)).get();
-			}
-		}
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		template <class R, class... H>
-		struct remote_handle_exception_dispatch_impl
-		{
-			using result_type = handler_result<H...>;
-
-			LEAF_CONSTEXPR static result_type handle( error_info const & err, H && ... h )
-			{
-				using Ctx = context_type_from_handlers<H...>;
-				return { leaf_detail::handle_error_<R>(static_cast<Ctx const *>(err.remote_handling_ctx_)->tup(), err, std::forward<H>(h)...,
-					[]() -> R { throw; } ) };
-			}
-		};
-
-		template <class... H>
-		struct remote_handle_exception_dispatch_impl<void, H...>
-		{
-			using result_type = handler_result_void<H...>;
-
-			LEAF_CONSTEXPR static result_type handle( error_info const & err, H && ... h )
-			{
-				using Ctx = context_type_from_handlers<H...>;
-				leaf_detail::handle_error_<void>(static_cast<Ctx const *>(err.remote_handling_ctx_)->tup(), err, std::forward<H>(h)...,
-					[]{ throw; } );
-				return { };
-			}
-		};
-
-		template <class... H>
-		using remote_handle_exception_dispatch = remote_handle_exception_dispatch_impl<handler_pack_return<H...>, H...>;
-	}
-
-	template <class... H>
-	LEAF_CONSTEXPR inline typename leaf_detail::remote_handle_exception_dispatch<H...>::result_type remote_handle_exception( error_info const & err, H && ... h )
-	{
-		using namespace leaf_detail;
-		return remote_handle_exception_dispatch<H...>::handle(err, std::forward<H>(h)...);
 	}
 
 	////////////////////////////////////////
@@ -4425,8 +4160,7 @@ namespace boost { namespace leaf {
 		}
 	}
 
-	inline error_info::error_info( leaf_detail::exception_info_ const & xi, void const * remote_handling_ctx ) noexcept:
-		remote_handling_ctx_(remote_handling_ctx),
+	inline error_info::error_info( leaf_detail::exception_info_ const & xi ) noexcept:
 		xi_(&xi),
 		err_id_(leaf_detail::unpack_error_id(xi_->ex_))
 	{
@@ -4446,20 +4180,6 @@ namespace boost { namespace leaf {
 				return std::forward<TryBlock>(try_block)();
 			},
 			std::forward<H>(h)...);
-	}
-
-	template <class TryBlock, class RemoteH>
-	LEAF_CONSTEXPR inline decltype(std::declval<TryBlock>()()) remote_try_catch( TryBlock && try_block, RemoteH && h )
-	{
-		using namespace leaf_detail;
-		context_type_from_remote_handler<RemoteH> ctx;
-		auto active_context = activate_context(ctx);
-		return ctx.remote_try_catch_(
-			[&]
-			{
-				return std::forward<TryBlock>(try_block)();
-			},
-			std::forward<RemoteH>(h));
 	}
 
 } }

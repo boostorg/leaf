@@ -280,14 +280,8 @@ namespace boost { namespace leaf {
 			template <class R, class... H>
 			LEAF_CONSTEXPR R handle_error( error_id, H && ... ) const;
 
-			template <class R, class RemoteH>
-			LEAF_CONSTEXPR R remote_handle_error( error_id, RemoteH && ) const;
-
 			template <class TryBlock, class... H>
 			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... );
-
-			template <class TryBlock, class RemoteH>
-			decltype(std::declval<TryBlock>()()) remote_try_catch_( TryBlock &&, RemoteH && );
 		};
 
 		template <class T> struct requires_catch { constexpr static bool value = false; };
@@ -368,15 +362,6 @@ namespace boost { namespace leaf {
 		template <class TypeList>
 		using deduce_context = typename deduce_context_impl<TypeList>::type;
 
-		template <class RemoteH>
-		struct context_type_from_remote_handler_impl;
-
-		template <template <class...> class L, class... H>
-		struct context_type_from_remote_handler_impl<L<H...>>
-		{
-			using type = deduce_context<leaf_detail_mp11::mp_append<fn_mp_args<H>...>>;
-		};
-
 		template <class HandlersTuple>
 		struct context_type_from_handlers_tuple;
 
@@ -397,8 +382,6 @@ namespace boost { namespace leaf {
 		{
 			using type = std::tuple<T...>;
 		};
-
-
 
 		template <class... H>
 		struct context_type_from_handlers_impl
@@ -422,44 +405,46 @@ namespace boost { namespace leaf {
 	template <class... H>
 	using context_type_from_handlers = typename leaf_detail::context_type_from_handlers_impl<H...>::type;
 
-	template <class RemoteH>
-	using context_type_from_remote_handler = typename leaf_detail::context_type_from_remote_handler_impl<leaf_detail::fn_return_type<RemoteH>>::type;
+	////////////////////////////////////////////
 
 	template <class...  H>
-	LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context()
+	LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context() noexcept
 	{
 		return { };
 	}
 
 	template <class...  H>
-	LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( std::tuple<H...> const & )
-	{
-		return { };
-	}
-
-	template <class RemoteH>
-	LEAF_CONSTEXPR inline context_type_from_remote_handler<RemoteH> make_context( RemoteH const * = 0 )
+	LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && ... ) noexcept
 	{
 		return { };
 	}
 
 	template <class...  H>
-	inline context_ptr make_shared_context( std::tuple<H...> const & )
+	LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( std::tuple<H...> const & ) noexcept
+	{
+		return { };
+	}
+
+	////////////////////////////////////////////
+
+	template <class...  H>
+	inline context_ptr make_shared_context() noexcept
 	{
 		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_handlers<H...>>>();
 	}
 
-	template <class RemoteH>
-	inline context_ptr make_shared_context( RemoteH const * = 0 )
+	template <class...  H>
+	inline context_ptr make_shared_context( H && ... ) noexcept
 	{
-		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_remote_handler<RemoteH>>>();
+		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_handlers<H...>>>();
 	}
 
-	template <class RemoteH, class Alloc>
-	inline context_ptr allocate_shared_context( Alloc alloc, RemoteH const * = 0 )
+	template <class...  H>
+	inline context_ptr make_shared_context( std::tuple<H...> const & ) noexcept
 	{
-		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_remote_handler<RemoteH>>>(alloc);
+		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_handlers<H...>>>();
 	}
+
 } }
 
 #endif

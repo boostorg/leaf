@@ -60,23 +60,21 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
 
 int main()
 {
-	auto error_handler = []( leaf::error_info const & err, int a, int b )
-	{
-		return leaf::remote_handle_exception( err,
-			[&]( info<1> const & x1, info<2> const & x2, info<4> const & )
-			{
-				BOOST_TEST_EQ(x1.value, a);
-				BOOST_TEST_EQ(x2.value, b);
-				return -1;
-			},
-			[]
-			{
-				return -2;
-			} );
-	};
+	int received_a, received_b;
+	auto error_handlers = std::make_tuple(
+		[&]( info<1> const & x1, info<2> const & x2, info<4> const & )
+		{
+			received_a = x1.value;
+			received_b = x2.value;
+			return -1;
+		},
+		[]
+		{
+			return -2;
+		} );
 
 	{
-		std::vector<fut_info> fut = launch_tasks<decltype(error_handler)>(
+		std::vector<fut_info> fut = launch_tasks<decltype(error_handlers)>(
 			42,
 			[]( int a, int b, int res ) -> leaf::result<int>
 			{
@@ -89,7 +87,8 @@ int main()
 		for( auto & f : fut )
 		{
 			f.fut.wait();
-			int r = leaf::remote_try_handle_all(
+			received_a = received_b = 0;
+			int r = leaf::try_handle_all(
 				[&]
 				{
 					auto load = leaf::on_error( info<4>{} );
@@ -97,19 +96,20 @@ int main()
 					// Calling future_get is required in order to make the preload (above) work.
 					return leaf::future_get(f.fut);
 				},
-				[&]( leaf::error_info const & err )
-				{
-					return error_handler(err, f.a, f.b);
-				} );
+				error_handlers );
 			if( f.result>=0 )
 				BOOST_TEST_EQ(r, f.result);
 			else
+			{
 				BOOST_TEST_EQ(r, -1);
+				BOOST_TEST_EQ(received_a, f.a);
+				BOOST_TEST_EQ(received_b, f.b);
+			}
 		}
 	}
 
 	{
-		std::vector<fut_info> fut = launch_tasks<decltype(error_handler)>(
+		std::vector<fut_info> fut = launch_tasks<decltype(error_handlers)>(
 			42,
 			[]( int a, int b, int res ) -> leaf::result<int>
 			{
@@ -122,7 +122,8 @@ int main()
 		for( auto & f : fut )
 		{
 			f.fut.wait();
-			int r = leaf::remote_try_handle_all(
+			received_a = received_b = 0;
+			int r = leaf::try_handle_all(
 				[&]
 				{
 					auto load = leaf::on_error( info<4>{} );
@@ -139,14 +140,15 @@ int main()
 							return err.error();
 						} );
 				},
-				[&]( leaf::error_info const & err )
-				{
-					return error_handler(err, f.a, f.b);
-				} );
+				error_handlers );
 			if( f.result>=0 )
 				BOOST_TEST_EQ(r, f.result);
 			else
+			{
 				BOOST_TEST_EQ(r, -1);
+				BOOST_TEST_EQ(received_a, f.a);
+				BOOST_TEST_EQ(received_b, f.b);
+			}
 		}
 	}
 

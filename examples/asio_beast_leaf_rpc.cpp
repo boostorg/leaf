@@ -460,40 +460,37 @@ int main(int argc, char **argv) {
     };
 
     // Error handler for internal server internal errors (not communicated to the remote client).
-    auto error_handler = [&](leaf::error_info const &error) {
-        return leaf::remote_handle_all(
-            error,
-            [&](std::exception_ptr const &ep, e_last_operation const *op) {
-                return leaf::try_handle_all(
-                    [&]() -> leaf::result<int> { std::rethrow_exception(ep); },
-                    [&](leaf::catch_<std::exception> e, leaf::verbose_diagnostic_info const &diag) {
-                        std::cerr << msg_prefix(op) << e.value().what() << " (captured)" << diagnostic_to_str(diag)
-                                  << std::endl;
-                        return -11;
-                    },
-                    [&](leaf::verbose_diagnostic_info const &diag) {
-                        std::cerr << msg_prefix(op) << "unknown (captured)" << diagnostic_to_str(diag) << std::endl;
-                        return -12;
-                    });
-            },
-            [&](leaf::catch_<std::exception> e, e_last_operation const *op, leaf::verbose_diagnostic_info const &diag) {
-                std::cerr << msg_prefix(op) << e.value().what() << diagnostic_to_str(diag) << std::endl;
-                return -21;
-            },
-            [&](error_code ec, leaf::verbose_diagnostic_info const &diag, e_last_operation const *op) {
-                std::cerr << msg_prefix(op) << ec << ":" << ec.message() << diagnostic_to_str(diag) << std::endl;
-                return -22;
-            },
-            [&](leaf::verbose_diagnostic_info const &diag, e_last_operation const *op) {
-                std::cerr << msg_prefix(op) << "unknown" << diagnostic_to_str(diag) << std::endl;
-                return -23;
-            });
-    };
+    auto error_handlers = std::make_tuple(
+        [&](std::exception_ptr const &ep, e_last_operation const *op) {
+            return leaf::try_handle_all(
+                [&]() -> leaf::result<int> { std::rethrow_exception(ep); },
+                [&](leaf::catch_<std::exception> e, leaf::verbose_diagnostic_info const &diag) {
+                    std::cerr << msg_prefix(op) << e.value().what() << " (captured)" << diagnostic_to_str(diag)
+                                << std::endl;
+                    return -11;
+                },
+                [&](leaf::verbose_diagnostic_info const &diag) {
+                    std::cerr << msg_prefix(op) << "unknown (captured)" << diagnostic_to_str(diag) << std::endl;
+                    return -12;
+                });
+        },
+        [&](leaf::catch_<std::exception> e, e_last_operation const *op, leaf::verbose_diagnostic_info const &diag) {
+            std::cerr << msg_prefix(op) << e.value().what() << diagnostic_to_str(diag) << std::endl;
+            return -21;
+        },
+        [&](error_code ec, leaf::verbose_diagnostic_info const &diag, e_last_operation const *op) {
+            std::cerr << msg_prefix(op) << ec << ":" << ec.message() << diagnostic_to_str(diag) << std::endl;
+            return -22;
+        },
+        [&](leaf::verbose_diagnostic_info const &diag, e_last_operation const *op) {
+            std::cerr << msg_prefix(op) << "unknown" << diagnostic_to_str(diag) << std::endl;
+            return -23;
+        });
 
     // Top level try block and error handler.
     // It will handle errors from starting the server for example failure to bind to a given port
     // (e.g. ports less than 1024 if not running as root)
-    return leaf::remote_try_handle_all(
+    return leaf::try_handle_all(
         [&]() -> leaf::result<int> {
             auto load = leaf::on_error(e_last_operation{"main"});
             if (argc != 3) {
@@ -526,7 +523,7 @@ int main(int argc, char **argv) {
             std::cout << "Server: Client connected: " << socket.remote_endpoint() << std::endl;
 
             // The error context for the async operation.
-            auto error_context = leaf::make_context(&error_handler);
+            auto error_context = leaf::make_context(error_handlers);
             int rv = 0;
             async_demo_rpc(socket, error_context, [&](leaf::result<void> result) {
                 // Note: In case we wanted to add some additional information to the error associated with the result
@@ -538,8 +535,7 @@ int main(int argc, char **argv) {
                 } else {
                     // Handle errors from running the server logic
                     leaf::result<int> result_int{result.error()};
-                    rv = error_context.remote_handle_error<int>(
-                        result_int.error(), [&](leaf::error_info const &error) { return error_handler(error); });
+                    rv = error_context.handle_error<int>(result_int.error(), error_handlers);
                 }
             });
             io_context.run();
@@ -549,5 +545,5 @@ int main(int argc, char **argv) {
             socket.shutdown(net::ip::tcp::socket::shutdown_both, ignored);
             return rv;
         },
-        [&](leaf::error_info const &error) { return error_handler(error); });
+        error_handlers);
 }

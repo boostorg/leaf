@@ -20,7 +20,7 @@
 
 namespace leaf = boost::leaf;
 
-// Define several e-types.
+// Define several error types.
 struct e_thread_id { std::thread::id value; };
 struct e_failure_info1 { std::string value; };
 struct e_failure_info2 { int value; };
@@ -45,33 +45,30 @@ int main()
 {
 	int const task_count = 42;
 
-	// The error_handler is called in this thread (see leaf::remote_try_catch below). The
-	// arguments passed to individual lambdas are transported from the worker thread to
-	// the main thread automatically.
-	auto error_handler = []( leaf::error_info const & error )
-	{
-		return leaf::remote_handle_exception( error,
-			[]( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
-			{
-				std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
-			},
-			[]( leaf::diagnostic_info const & unmatched )
-			{
-				std::cerr <<
-					"Unknown failure detected" << std::endl <<
-					"Cryptic diagnostic information follows" << std::endl <<
-					unmatched;
-			} );
-	};
+	// The error_handlers are used in this thread (see leaf::try_catch below). The
+	// arguments passed to individual lambdas are transported from the worker thread
+	// to the main thread automatically.
+	auto error_handlers = std::make_tuple(
+		[]( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
+		{
+			std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
+		},
+		[]( leaf::diagnostic_info const & unmatched )
+		{
+			std::cerr <<
+				"Unknown failure detected" << std::endl <<
+				"Cryptic diagnostic information follows" << std::endl <<
+				unmatched;
+		} );
 
 	// Container to collect the generated std::future objects.
 	std::vector<std::future<task_result>> fut;
 
 	// Launch the tasks, but rather than launching the task function directly, we launch a
 	// wrapper function which calls leaf::capture, passing a context object that will hold
-	// the E-objects loaded from the task in case it throws. The E-types the context is
-	// able to hold statically are automatically deduced from the type of the error_handler
-	// function.
+	// the error objects reported from the task in case it throws. The error types the
+	// context is able to hold statically are automatically deduced from the type of the
+	// error_handlers function.
 	std::generate_n( std::inserter(fut,fut.end()), task_count,
 		[&]
 		{
@@ -79,7 +76,7 @@ int main()
 				std::launch::async,
 				[&]
 				{
-					return leaf::capture(leaf::make_shared_context(&error_handler), &task);
+					return leaf::capture(leaf::make_shared_context(error_handlers), &task);
 				} );
 		} );
 
@@ -88,7 +85,7 @@ int main()
 	{
 		f.wait();
 
-		leaf::remote_try_catch(
+		leaf::try_catch(
 			[&]
 			{
 				task_result r = f.get();
@@ -97,9 +94,6 @@ int main()
 				std::cout << "Success!" << std::endl;
 				(void) r;
 			},
-			[&]( leaf::error_info const & error )
-			{
-				return error_handler(error);
-			} );
+			error_handlers );
 	}
 }
