@@ -15,7 +15,6 @@
 #endif
 
 #include <boost/leaf/context.hpp>
-#include <utility>
 
 namespace boost { namespace leaf {
 
@@ -644,7 +643,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class R, class Tup, class HandlersTuple, size_t ... I>
-		LEAF_CONSTEXPR inline R handle_error_using_handlers_tuple_helper_( Tup const & e_objects, error_info const & ei, HandlersTuple && handlers, std::index_sequence<I...>)
+		LEAF_CONSTEXPR inline R handle_error_using_handlers_tuple_helper_( Tup const & e_objects, error_info const & ei, HandlersTuple && handlers, leaf_detail_mp11::index_sequence<I...>)
 		{
 			return handle_error_using_handlers_list_<R>(e_objects, ei, std::get<I>(std::forward<HandlersTuple>(handlers))...);
 		}
@@ -656,7 +655,7 @@ namespace boost { namespace leaf {
 				e_objects,
 				ei,
 				std::forward<std::tuple<H...>>(handlers),
-				std::make_index_sequence<sizeof...(H)>());
+				leaf_detail_mp11::make_index_sequence<sizeof...(H)>());
 		}
 
 		template <class T> struct is_tuple: std::false_type { };
