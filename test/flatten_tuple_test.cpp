@@ -11,22 +11,22 @@ using boost::leaf::leaf_detail::flatten_tuple;
 static_assert(std::is_same<
 	decltype(flatten_tuple(int{}, float{})),
 	std::tuple<int, float>>
-::value);
+::value, "flatten_tuple_failure");
 
 static_assert(std::is_same<
 	decltype(flatten_tuple(std::tuple<int,float>{}, std::tuple<short,long>{})),
 	std::tuple<int, float, short, long>>
-::value);
+::value, "flatten_tuple_failure");
 
 static_assert(std::is_same<
 	decltype(flatten_tuple(std::tuple<int,float>{}, short{}, long{})),
 	std::tuple<int, float, short, long>>
-::value);
+::value, "flatten_tuple_failure");
 
 static_assert(std::is_same<
 	decltype(flatten_tuple(int{}, std::tuple<float, short>{}, long{})),
 	std::tuple<int, float, short, long>>
-::value);
+::value, "flatten_tuple_failure");
 
 int main()
 {
