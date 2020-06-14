@@ -403,7 +403,7 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...>> { using type = typename match_traits<T>::e_type; };
-		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const>;
+		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const> { static_assert(sizeof(match<T,V...>)==0, "Handlers should take match<> by value, not as match<> const"); };
 		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const *> { static_assert(sizeof(match<T,V...>)==0, "Handlers should take match<> by value, not as match<> const *"); };
 		template <class T, typename match_traits<T>::enumerator... V> struct translate_type_impl<match<T,V...> const &> { static_assert(sizeof(match<T,V...>)==0, "Handlers should take match<> by value, not as match<> const &"); };
 	}
@@ -678,12 +678,6 @@ namespace boost { namespace leaf {
 			static_assert( handler_matches_any_error<fn_mp_args<H>>::value, "The last handler passed to handle_all must match any error." );
 			return handler_caller<R, H>::call( tup, ei, std::forward<H>(h), fn_mp_args<H>{ } );
 		}
-
-		template <class R, class Tup, class H>
-		LEAF_CONSTEXPR inline typename std::enable_if<is_tuple<H>::value, R>::type handle_error_( Tup &, error_info const &, H && );
-
-		template <class R, class Tup, class Car, class... Cdr>
-		LEAF_CONSTEXPR inline typename std::enable_if<is_tuple<Car>::value, R>::type handle_error_( Tup &, error_info const &, Car &&, Cdr && ... );
 
 		template <class R, class Tup, class Car, class... Cdr>
 		LEAF_CONSTEXPR inline typename std::enable_if<!is_tuple<Car>::value, R>::type handle_error_( Tup & tup, error_info const & ei, Car && car, Cdr && ... cdr )
