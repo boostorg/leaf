@@ -329,6 +329,7 @@ namespace boost { namespace leaf {
 		template <class E>
 		LEAF_CONSTEXPR inline int load_slot( int err_id, E && e ) noexcept
 		{
+			static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not supported");
 			using T = typename std::decay<E>::type;
 			BOOST_LEAF_ASSERT((err_id&3)==1);
 			if( slot<T> * p = tl_slot_ptr<T>() )
@@ -350,6 +351,7 @@ namespace boost { namespace leaf {
 		{
 			static_assert(function_traits<F>::arity==1, "Lambdas passed to accumulate must take a single e-type argument by reference");
 			using E = typename std::decay<fn_arg_type<F,0>>::type;
+			static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not supported");
 			BOOST_LEAF_ASSERT((err_id&3)==1);
 			if( auto sl = tl_slot_ptr<E>() )
 				if( auto v = sl->has_value(err_id) )
@@ -479,13 +481,13 @@ namespace boost { namespace leaf {
 			else
 				return 0;
 		}
+	}
 
-		inline bool is_error_id( std::error_code const & ec ) noexcept
-		{
-			bool res = (&ec.category() == &get_error_category<>::cat);
-			BOOST_LEAF_ASSERT(!res || !ec.value() || ((ec.value()&3)==1));
-			return res;
-		}
+	inline bool is_error_id( std::error_code const & ec ) noexcept
+	{
+		bool res = (&ec.category() == &leaf_detail::get_error_category<>::cat);
+		BOOST_LEAF_ASSERT(!res || !ec.value() || ((ec.value()&3)==1));
+		return res;
 	}
 
 	////////////////////////////////////////

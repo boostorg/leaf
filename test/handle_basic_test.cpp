@@ -98,6 +98,79 @@ leaf::result<void> handle_some_errors_void( int what_to_do )
 
 int main()
 {
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				return leaf::try_handle_some(
+					[]() -> leaf::result<int>
+					{
+						return leaf::try_handle_some(
+							[]() -> leaf::result<int>
+							{
+								return leaf::new_error(40);
+							},
+							[]( leaf::error_info const & ei, int & v )
+							{
+								++v;
+								return ei.error();
+							});
+					},
+					[]( leaf::error_info const & ei, int & v )
+					{
+						++v;
+						return ei.error();
+					});
+			},
+			[]( int v )
+			{
+				BOOST_TEST_EQ(v, 42);
+				return 1;
+			},
+			[]
+			{
+				return 2;
+			});
+		BOOST_TEST_EQ(r, 1);
+	}
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				return leaf::try_handle_some(
+					[]() -> leaf::result<int>
+					{
+						return leaf::try_handle_some(
+							[]() -> leaf::result<int>
+							{
+								return leaf::new_error(40);
+							},
+							[]( leaf::error_info const & ei, int * v )
+							{
+								++*v;
+								return ei.error();
+							});
+					},
+					[]( leaf::error_info const & ei, int * v )
+					{
+						++*v;
+						return ei.error();
+					});
+			},
+			[]( int v )
+			{
+				BOOST_TEST_EQ(v, 42);
+				return 1;
+			},
+			[]
+			{
+				return 2;
+			});
+		BOOST_TEST_EQ(r, 1);
+	}
+
+	///////////////////////////
+
 	BOOST_TEST_EQ(handle_some_errors(0).value(), 42);
 	BOOST_TEST_EQ(handle_some_errors(1).value(), -2);
 	BOOST_TEST_EQ(handle_some_errors(4).value(), -1);

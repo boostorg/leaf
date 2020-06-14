@@ -111,6 +111,8 @@ namespace boost { namespace leaf {
 		template <class T> struct translate_type_impl<T const> { using type = T; };
 		template <class T> struct translate_type_impl<T const *> { using type = T; };
 		template <class T> struct translate_type_impl<T const &> { using type = T; };
+		template <class T> struct translate_type_impl<T *> { using type = T; };
+		template <class T> struct translate_type_impl<T &> { using type = T; };
 
 		template <> struct translate_type_impl<diagnostic_info>;
 		template <> struct translate_type_impl<diagnostic_info const>;
@@ -121,6 +123,8 @@ namespace boost { namespace leaf {
 		template <> struct translate_type_impl<verbose_diagnostic_info const>;
 		template <> struct translate_type_impl<verbose_diagnostic_info const *>;
 		template <> struct translate_type_impl<verbose_diagnostic_info const &> { using type = e_unexpected_info; };
+
+		template <> struct translate_type_impl<std::error_code &>;
 
 		template <class T>
 		using translate_type = typename translate_type_impl<T>::type;
@@ -231,6 +235,11 @@ namespace boost { namespace leaf {
 				return tup_;
 			}
 
+			LEAF_CONSTEXPR Tup & tup() noexcept
+			{
+				return tup_;
+			}
+
 			LEAF_CONSTEXPR void activate() noexcept
 			{
 				using namespace leaf_detail;
@@ -280,13 +289,14 @@ namespace boost { namespace leaf {
 			template <class R, class... H>
 			LEAF_CONSTEXPR R handle_error( error_id, H && ... ) const;
 
+			template <class R, class... H>
+			LEAF_CONSTEXPR R handle_error( error_id, H && ... );
+
 			template <class TryBlock, class... H>
 			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... );
 		};
 
-		template <class T> struct requires_catch { constexpr static bool value = std::is_base_of<std::exception, T>::value; };
-		template <class T> struct requires_catch<T const>: requires_catch<T> { };
-		template <class T> struct requires_catch<T const &>: requires_catch<T> { };
+		template <class T> struct requires_catch { constexpr static bool value = std::is_base_of<std::exception, typename std::decay<T>::type>::value; };
 		template <class... Ex> struct requires_catch<catch_<Ex...>>: std::true_type { };
 
 		template <class... E>

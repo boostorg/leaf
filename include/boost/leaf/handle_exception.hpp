@@ -194,7 +194,7 @@ namespace boost { namespace leaf {
 				os << "\nUnknown exception type (not a std::exception)";
 		}
 
-		LEAF_CONSTEXPR inline exception_info_::exception_info_( std::exception const * ex ) noexcept:
+		LEAF_CONSTEXPR inline exception_info_::exception_info_( std::exception * ex ) noexcept:
 			exception_info_base(ex)
 		{
 		}
@@ -216,7 +216,7 @@ namespace boost { namespace leaf {
 				{
 					cap.unload_and_rethrow_original_exception();
 				}
-				catch( std::exception const & ex )
+				catch( std::exception & ex )
 				{
 					deactivate();
 					return leaf_detail::handle_error_<R>(this->tup(), error_info(exception_info_(&ex)), std::forward<H>(h)...,
@@ -229,7 +229,7 @@ namespace boost { namespace leaf {
 						[]() -> R { throw; } );
 				}
 			}
-			catch( std::exception const & ex )
+			catch( std::exception & ex )
 			{
 				deactivate();
 				return leaf_detail::handle_error_<R>(this->tup(), error_info(exception_info_(&ex)), std::forward<H>(h)...,
@@ -248,7 +248,7 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		inline error_id unpack_error_id( std::exception const * ex )
+		inline error_id unpack_error_id( std::exception const * ex ) noexcept
 		{
 			if( std::system_error const * se = dynamic_cast<std::system_error const *>(ex) )
 				return error_id(se->code());
@@ -260,7 +260,7 @@ namespace boost { namespace leaf {
 				return current_error();
 		}
 
-		LEAF_CONSTEXPR inline exception_info_base::exception_info_base( std::exception const * ex ) noexcept:
+		LEAF_CONSTEXPR inline exception_info_base::exception_info_base( std::exception * ex ) noexcept:
 			ex_(ex)
 		{
 			BOOST_LEAF_ASSERT(!dynamic_cast<capturing_exception const *>(ex_));
