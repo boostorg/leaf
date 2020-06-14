@@ -61,7 +61,6 @@ run error_code_test.cpp ;
 run error_id_test.cpp ;
 run exception_test.cpp ;
 run exception_to_result_test.cpp ;
-run flatten_tuple_test.cpp ;
 run function_traits_test.cpp ;
 run handle_all_other_result_test.cpp ;
 run handle_all_test.cpp ;

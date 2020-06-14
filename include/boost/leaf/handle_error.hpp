@@ -663,66 +663,68 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		template <class R, class Tup, class F>
-		LEAF_CONSTEXPR inline R handle_error_using_handlers_list_( Tup & e_objects, error_info const & ei, F && f )
+		template <class T>
+		struct is_tuple: std::false_type { };
+
+		template <class T>
+		struct is_tuple<T &>: is_tuple<T> { };
+
+		template <class... T>
+		struct is_tuple<std::tuple<T...>>: std::true_type { };
+
+		template <class R, class Tup, class H>
+		LEAF_CONSTEXPR inline typename std::enable_if<!is_tuple<H>::value, R>::type handle_error_( Tup & tup, error_info const & ei, H && h )
 		{
-			static_assert( handler_matches_any_error<fn_mp_args<F>>::value, "The last handler passed to handle_all must match any error." );
-			return handler_caller<R, F>::call( e_objects, ei, std::forward<F>(f), fn_mp_args<F>{ } );
+			static_assert( handler_matches_any_error<fn_mp_args<H>>::value, "The last handler passed to handle_all must match any error." );
+			return handler_caller<R, H>::call( tup, ei, std::forward<H>(h), fn_mp_args<H>{ } );
 		}
 
-		template <class R, class Tup, class CarF, class... CdrF>
-		LEAF_CONSTEXPR inline R handle_error_using_handlers_list_( Tup & e_objects, error_info const & ei, CarF && car_f, CdrF && ... cdr_f )
+		template <class R, class Tup, class H>
+		LEAF_CONSTEXPR inline typename std::enable_if<is_tuple<H>::value, R>::type handle_error_( Tup &, error_info const &, H && );
+
+		template <class R, class Tup, class Car, class... Cdr>
+		LEAF_CONSTEXPR inline typename std::enable_if<is_tuple<Car>::value, R>::type handle_error_( Tup &, error_info const &, Car &&, Cdr && ... );
+
+		template <class R, class Tup, class Car, class... Cdr>
+		LEAF_CONSTEXPR inline typename std::enable_if<!is_tuple<Car>::value, R>::type handle_error_( Tup & tup, error_info const & ei, Car && car, Cdr && ... cdr )
 		{
-			if( handler_matches_any_error<fn_mp_args<CarF>>::value || check_handler_( e_objects, ei, fn_mp_args<CarF>{ } ) )
-				return handler_caller<R, CarF>::call( e_objects, ei, std::forward<CarF>(car_f), fn_mp_args<CarF>{ } );
+			if( handler_matches_any_error<fn_mp_args<Car>>::value || check_handler_( tup, ei, fn_mp_args<Car>{ } ) )
+				return handler_caller<R, Car>::call( tup, ei, std::forward<Car>(car), fn_mp_args<Car>{ } );
 			else
-				return handle_error_using_handlers_list_<R>( e_objects, ei, std::forward<CdrF>(cdr_f)...);
+				return handle_error_<R>( tup, ei, std::forward<Cdr>(cdr)...);
 		}
 
-		template <class R, class Tup, class HandlersTuple, size_t ... I>
-		LEAF_CONSTEXPR inline R handle_error_using_handlers_tuple_helper_( Tup & e_objects, error_info const & ei, HandlersTuple && handlers, leaf_detail_mp11::index_sequence<I...>)
+		template <class R, class Tup, class HTup, size_t ... I>
+		LEAF_CONSTEXPR inline R handle_error_tuple_( Tup & tup, error_info const & ei, leaf_detail_mp11::index_sequence<I...>, HTup && htup )
 		{
-			return handle_error_using_handlers_list_<R>(e_objects, ei, std::get<I>(std::forward<HandlersTuple>(handlers))...);
+			return handle_error_<R>(tup, ei, std::get<I>(std::forward<HTup>(htup))...);
 		}
 
-		template <class R, class Tup, class... H>
-		LEAF_CONSTEXPR inline R handle_error_using_handlers_tuple_( Tup & e_objects, error_info const & ei, std::tuple<H...> && handlers )
+		template <class R, class Tup, class HTup, class... Cdr, size_t ... I>
+		LEAF_CONSTEXPR inline R handle_error_tuple_( Tup & tup, error_info const & ei, leaf_detail_mp11::index_sequence<I...>, HTup && htup, Cdr && ... cdr )
 		{
-			return handle_error_using_handlers_tuple_helper_<R>(
-				e_objects,
+			return handle_error_<R>(tup, ei, std::get<I>(std::forward<HTup>(htup))..., std::forward<Cdr>(cdr)...);
+		}
+
+		template <class R, class Tup, class H>
+		LEAF_CONSTEXPR inline typename std::enable_if<is_tuple<H>::value, R>::type handle_error_( Tup & tup, error_info const & ei, H && h )
+		{
+			return handle_error_tuple_<R>(
+				tup,
 				ei,
-				std::forward<std::tuple<H...>>(handlers),
-				leaf_detail_mp11::make_index_sequence<sizeof...(H)>());
+				leaf_detail_mp11::make_index_sequence<std::tuple_size<typename std::decay<H>::type>::value>(),
+				std::forward<H>(h));
 		}
 
-		template <class T> struct is_tuple: std::false_type { };
-		template <class... T> struct is_tuple<std::tuple<T...>>: std::true_type { };
-
-		template <class H>
-		constexpr std::tuple<H> inline tuplefy( H h ) noexcept
+		template <class R, class Tup, class Car, class... Cdr>
+		LEAF_CONSTEXPR inline typename std::enable_if<is_tuple<Car>::value, R>::type handle_error_( Tup & tup, error_info const & ei, Car && car, Cdr && ... cdr )
 		{
-			return std::make_tuple(h);
-		}
-
-		template <class... H>
-		constexpr std::tuple<H...> inline tuplefy( std::tuple<H...> h ) noexcept
-		{
-			return h;
-		}
-
-		template <class... H>
-		constexpr decltype(std::tuple_cat(tuplefy(std::declval<typename std::decay<H>::type>())...)) flatten_tuple( H && ... h ) noexcept
-		{
-			return std::tuple_cat(tuplefy(std::forward<H>(h))...);
-		}
-
-		template <class R, class Tup, class... H>
-		LEAF_CONSTEXPR inline R handle_error_( Tup & e_objects, error_info const & ei, H && ... h )
-		{
-			return handle_error_using_handlers_tuple_<R>(
-				e_objects,
+			return handle_error_tuple_<R>(
+				tup,
 				ei,
-				flatten_tuple(std::forward<H>(h)...));
+				leaf_detail_mp11::make_index_sequence<std::tuple_size<typename std::decay<Car>::type>::value>(),
+				std::forward<Car>(car),
+				std::forward<Cdr>(cdr)...);
 		}
 	}
 

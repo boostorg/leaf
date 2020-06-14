@@ -106,7 +106,6 @@ tests = [
 	'error_id_test',
 	'exception_test',
 	'exception_to_result_test',
-	'flatten_tuple_test',
 	'function_traits_test',
 	'handle_all_other_result_test',
 	'handle_all_test',
