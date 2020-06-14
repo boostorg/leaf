@@ -284,10 +284,10 @@ namespace boost { namespace leaf {
 			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... );
 		};
 
-		template <class T> struct requires_catch { constexpr static bool value = false; };
-		template <class T> struct requires_catch<T const> { constexpr static bool value = requires_catch<T>::value; };
-		template <class T> struct requires_catch<T const &> { constexpr static bool value = requires_catch<T>::value; };
-		template <class... Ex> struct requires_catch<catch_<Ex...>> { constexpr static bool value = true; };
+		template <class T> struct requires_catch { constexpr static bool value = std::is_base_of<std::exception, T>::value; };
+		template <class T> struct requires_catch<T const>: requires_catch<T> { };
+		template <class T> struct requires_catch<T const &>: requires_catch<T> { };
+		template <class... Ex> struct requires_catch<catch_<Ex...>>: std::true_type { };
 
 		template <class... E>
 		struct catch_requested;

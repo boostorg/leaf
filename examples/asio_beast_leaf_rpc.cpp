@@ -432,9 +432,9 @@ response_t handle_request(request_t &&request) {
                                               msg_prefix(cmd) % e.value) +
                                        diagnostic_to_str(diag));
         },
-        [&](leaf::catch_<std::exception> e, e_http_status const *status, e_command const *cmd,
+        [&](std::exception const & e, e_http_status const *status, e_command const *cmd,
             leaf::verbose_diagnostic_info const &diag) {
-            return make_sr(status, boost::str(boost::format("%1% %2%") % msg_prefix(cmd) % e.value().what()) +
+            return make_sr(status, boost::str(boost::format("%1% %2%") % msg_prefix(cmd) % e.what()) +
                                        diagnostic_to_str(diag));
         },
         [&](e_http_status const *status, e_command const *cmd, leaf::verbose_diagnostic_info const &diag) {
@@ -464,8 +464,8 @@ int main(int argc, char **argv) {
         [&](std::exception_ptr const &ep, e_last_operation const *op) {
             return leaf::try_handle_all(
                 [&]() -> leaf::result<int> { std::rethrow_exception(ep); },
-                [&](leaf::catch_<std::exception> e, leaf::verbose_diagnostic_info const &diag) {
-                    std::cerr << msg_prefix(op) << e.value().what() << " (captured)" << diagnostic_to_str(diag)
+                [&](std::exception const & e, leaf::verbose_diagnostic_info const &diag) {
+                    std::cerr << msg_prefix(op) << e.what() << " (captured)" << diagnostic_to_str(diag)
                                 << std::endl;
                     return -11;
                 },
@@ -474,8 +474,8 @@ int main(int argc, char **argv) {
                     return -12;
                 });
         },
-        [&](leaf::catch_<std::exception> e, e_last_operation const *op, leaf::verbose_diagnostic_info const &diag) {
-            std::cerr << msg_prefix(op) << e.value().what() << diagnostic_to_str(diag) << std::endl;
+        [&](std::exception const & e, e_last_operation const *op, leaf::verbose_diagnostic_info const &diag) {
+            std::cerr << msg_prefix(op) << e.what() << diagnostic_to_str(diag) << std::endl;
             return -21;
         },
         [&](error_code ec, leaf::verbose_diagnostic_info const &diag, e_last_operation const *op) {

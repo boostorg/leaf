@@ -176,7 +176,7 @@ int main()
 				LEAF_CHECK(handle_some_errors_void(2));
 				return 0;
 			},
-			[]( leaf::catch_<std::exception> )
+			[]( std::exception const & )
 			{
 				return 1;
 			},

@@ -2745,10 +2745,10 @@ namespace boost { namespace leaf {
 			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... );
 		};
 
-		template <class T> struct requires_catch { constexpr static bool value = false; };
-		template <class T> struct requires_catch<T const> { constexpr static bool value = requires_catch<T>::value; };
-		template <class T> struct requires_catch<T const &> { constexpr static bool value = requires_catch<T>::value; };
-		template <class... Ex> struct requires_catch<catch_<Ex...>> { constexpr static bool value = true; };
+		template <class T> struct requires_catch { constexpr static bool value = std::is_base_of<std::exception, T>::value; };
+		template <class T> struct requires_catch<T const>: requires_catch<T> { };
+		template <class T> struct requires_catch<T const &>: requires_catch<T> { };
+		template <class... Ex> struct requires_catch<catch_<Ex...>>: std::true_type { };
 
 		template <class... E>
 		struct catch_requested;
@@ -3145,10 +3145,37 @@ namespace boost { namespace leaf {
 			static const int value = type_index<T,TupleTypes...>::value;
 		};
 
-		template <class E, class SlotsTuple>
-		LEAF_CONSTEXPR inline E const * peek( SlotsTuple const & tup, error_id err ) noexcept
+		template <class E, bool=std::is_base_of<std::exception, E>::value>
+		struct peek_exception;
+
+		template <class E>
+		struct peek_exception<E, true>
 		{
-			return err ? std::get<tuple_type_index<slot<E>,SlotsTuple>::value>(tup).has_value(err.value()) : 0;
+			LEAF_CONSTEXPR static E const * peek( error_info const & ei ) noexcept
+			{
+				return ei.exception_caught() ? dynamic_cast<E const *>(ei.exception()) : 0;
+			}
+		};
+
+		template <class E>
+		struct peek_exception<E, false>
+		{
+			LEAF_CONSTEXPR static E const * peek( error_info const & ) noexcept
+			{
+				return 0;
+			}
+		};
+
+		template <class E, class SlotsTuple>
+		LEAF_CONSTEXPR inline E const * peek( SlotsTuple const & tup, error_info const & ei ) noexcept
+		{
+			if( error_id err = ei.error() )
+				if( E const * e = std::get<tuple_type_index<slot<E>,SlotsTuple>::value>(tup).has_value(err.value()) )
+					return e;
+				else
+					return peek_exception<E>::peek(ei);
+			else
+				return 0;
 		}
 	}
 
@@ -3174,7 +3201,7 @@ namespace boost { namespace leaf {
 			template <class SlotsTuple>
 			LEAF_CONSTEXPR static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				return peek<e_type>(tup, ei.error());
+				return peek<e_type>(tup, ei);
 			}
 		};
 
@@ -3188,7 +3215,7 @@ namespace boost { namespace leaf {
 			template <class SlotsTuple>
 			LEAF_CONSTEXPR static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				if( auto pv = peek<e_type>(tup, ei.error()) )
+				if( auto pv = peek<e_type>(tup, ei) )
 					return &pv->value;
 				else
 					return 0;
@@ -3207,7 +3234,7 @@ namespace boost { namespace leaf {
 			template <class SlotsTuple>
 			LEAF_CONSTEXPR static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				if( e_type const * ec = peek<e_type>(tup, ei.error()) )
+				if( e_type const * ec = peek<e_type>(tup, ei) )
 					return ec;
 				else
 					return 0;
@@ -3227,7 +3254,7 @@ namespace boost { namespace leaf {
 			template <class SlotsTuple>
 			LEAF_CONSTEXPR static match_type const * read( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				if( auto pv = peek<e_type>(tup, ei.error()) )
+				if( auto pv = peek<e_type>(tup, ei) )
 					return &pv->value;
 				else
 					return 0;
@@ -3292,7 +3319,7 @@ namespace boost { namespace leaf {
 		{
 			LEAF_CONSTEXPR static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				return peek<T>(tup, ei.error())!=0;
+				return peek<T>(tup, ei)!=0;
 			}
 		};
 
@@ -3382,7 +3409,7 @@ namespace boost { namespace leaf {
 			template <class SlotsTuple>
 			LEAF_CONSTEXPR static T const & get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				T const * arg = peek<T>(tup, ei.error());
+				T const * arg = peek<T>(tup, ei);
 				BOOST_LEAF_ASSERT(arg!=0);
 				return *arg;
 			}
@@ -3394,7 +3421,7 @@ namespace boost { namespace leaf {
 			template <class SlotsTuple>
 			LEAF_CONSTEXPR static T const * get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				return peek<T>(tup, ei.error());
+				return peek<T>(tup, ei);
 			}
 		};
 
@@ -3416,7 +3443,7 @@ namespace boost { namespace leaf {
 			template <class SlotsTuple>
 			LEAF_CONSTEXPR static diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				return diagnostic_info(ei, peek<e_unexpected_count>(tup, ei.error()), tup);
+				return diagnostic_info(ei, peek<e_unexpected_count>(tup, ei), tup);
 			}
 		};
 
@@ -3426,7 +3453,7 @@ namespace boost { namespace leaf {
 			template <class SlotsTuple>
 			LEAF_CONSTEXPR static verbose_diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				return verbose_diagnostic_info(ei, peek<e_unexpected_info>(tup, ei.error()), tup);
+				return verbose_diagnostic_info(ei, peek<e_unexpected_info>(tup, ei), tup);
 			}
 		};
 
@@ -3460,7 +3487,7 @@ namespace boost { namespace leaf {
 			template <class SlotsTuple>
 			static std::error_code const & get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				std::error_code const * ec = peek<std::error_code>(tup, ei.error());
+				std::error_code const * ec = peek<std::error_code>(tup, ei);
 				BOOST_LEAF_ASSERT(ec!=0);
 				return *ec;
 			}

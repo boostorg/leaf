@@ -47,7 +47,7 @@ int main()
 			{
 				throw leaf::exception( my_exception(), info<1>{1} );
 			},
-			[]( leaf::catch_<my_exception>, info<1> const & x )
+			[]( my_exception const &, info<1> const & x )
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				return 42;
@@ -72,7 +72,7 @@ int main()
 
 	{
 		auto error_handlers = std::make_tuple(
-			[]( leaf::catch_<my_exception>, info<1> const & x ) -> leaf::result<int>
+			[]( my_exception const &, info<1> const & x ) -> leaf::result<int>
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				return 42;
@@ -132,7 +132,7 @@ int main()
 			{
 				throw leaf::exception( my_exception(), info<1>{1} );
 			},
-			[]( leaf::catch_<my_exception>, info<1> const & x )
+			[]( my_exception const &, info<1> const & x )
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				return 42;
@@ -163,7 +163,7 @@ int main()
 
 	{
 		auto error_handlers = std::make_tuple(
-			[]( leaf::catch_<my_exception>, info<1> const & x )
+			[]( my_exception const &, info<1> const & x )
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				return 42;

@@ -65,12 +65,12 @@ int main()
 			{
 				c = f<int>(error1());
 			},
-			[&c]( leaf::catch_<error2> )
+			[&c]( error2 const & )
 			{
 				BOOST_TEST_EQ(c, 0);
 				c = 1;
 			},
-			[&c]( leaf::catch_<error1>, info<1> const & x, info<2> y )
+			[&c]( error1 const &, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
@@ -93,7 +93,7 @@ int main()
 			{
 				c = f<int>(error1());
 			},
-			[&c]( leaf::catch_<error2> )
+			[&c]( error2 const & )
 			{
 				BOOST_TEST_EQ(c, 0);
 				c = 1;
@@ -121,12 +121,12 @@ int main()
 			{
 				c = f<int>(error1());
 			},
-			[&c]( leaf::catch_<error2> )
+			[&c]( error2 const & )
 			{
 				BOOST_TEST_EQ(c, 0);
 				c = 1;
 			},
-			[&c]( leaf::catch_<error1>, info<1> const & x, info<2> y )
+			[&c]( error1 const &, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
@@ -149,7 +149,7 @@ int main()
 			{
 				c = f<int>(error1());
 			},
-			[&c]( leaf::catch_<error2> )
+			[&c]( error2 const & )
 			{
 				BOOST_TEST_EQ(c, 0);
 				c = 1;
@@ -182,14 +182,14 @@ int main()
 					{
 						c = f<int>(error1());
 					},
-					[&c]( leaf::catch_<error2> )
+					[&c]( error2 const & )
 					{
 						BOOST_TEST_EQ(c, 0);
 						c = 1;
 					} );
 				BOOST_TEST(false);
 			},
-			[&c]( leaf::catch_<error1>, info<1> const & x, info<2> y )
+			[&c]( error1 const &, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
@@ -215,7 +215,7 @@ int main()
 					{
 						c = f<int>(error1());
 					},
-					[&c]( leaf::catch_<error2> )
+					[&c]( error2 const & )
 					{
 						BOOST_TEST_EQ(c, 0);
 						c = 1;
@@ -248,7 +248,7 @@ int main()
 					{
 						c = f<int>(error1());
 					},
-					[&c]( leaf::catch_<error1> ec, info<1> const & x, info<2> y )
+					[&c]( error1 const &, info<1> const & x, info<2> y )
 					{
 						BOOST_TEST_EQ(x.value, 1);
 						BOOST_TEST_EQ(y.value, 2);
@@ -256,7 +256,7 @@ int main()
 						c = 1;
 					} );
 			},
-			[&c]( leaf::catch_<error2> )
+			[&c]( error2 const & )
 			{
 				BOOST_TEST_EQ(c, 0);
 				c = 2;
@@ -288,7 +288,7 @@ int main()
 						c = 1;
 					} );
 			},
-			[&c]( leaf::catch_<error2> )
+			[&c]( error2 const & )
 			{
 				BOOST_TEST_EQ(c, 0);
 				c = 2;
@@ -324,11 +324,11 @@ int main()
 			{
 				return f<int>(error1());
 			},
-			[]( leaf::catch_<error2> )
+			[]( error2 const & )
 			{
 				return 1;
 			},
-			[]( leaf::catch_<error1>, info<1> const & x, info<2> y )
+			[]( error1 const &, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
@@ -348,7 +348,7 @@ int main()
 			{
 				return f<int>(error1());
 			},
-			[]( leaf::catch_<error2> )
+			[]( error2 const & )
 			{
 				return 1;
 			},
@@ -374,11 +374,11 @@ int main()
 			{
 				return f<int>(error1());
 			},
-			[]( leaf::catch_<error2> )
+			[]( error2 const & )
 			{
 				return 1;
 			},
-			[]( leaf::catch_<error1>, info<1> const & x, info<2> y )
+			[]( error1 const &, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
@@ -394,7 +394,7 @@ int main()
 			{
 				return f<int>(error1());
 			},
-			[]( leaf::catch_<error2> )
+			[]( error2 const & )
 			{
 				return 1;
 			},
@@ -417,14 +417,14 @@ int main()
 					{
 						return f<int>(error1());
 					},
-					[]( leaf::catch_<error2> )
+					[]( error2 const & )
 					{
 						return 1;
 					} );
 				BOOST_TEST(false);
 				return r;
 			},
-			[]( leaf::catch_<error1>, info<1> const & x, info<2> y )
+			[]( error1 const &, info<1> const & x, info<2> y )
 			{
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
@@ -447,7 +447,7 @@ int main()
 					{
 						return f<int>(error1());
 					},
-					[]( leaf::catch_<error2> )
+					[]( error2 const & )
 					{
 						return 1;
 					} );
@@ -477,7 +477,7 @@ int main()
 					{
 						return f<int>(error1());
 					},
-					[]( leaf::catch_<error1>, info<1> const & x, info<2> y )
+					[]( error1 const &, info<1> const & x, info<2> y )
 					{
 						BOOST_TEST_EQ(x.value, 1);
 						BOOST_TEST_EQ(y.value, 2);
@@ -486,7 +486,7 @@ int main()
 				BOOST_TEST_EQ(r, 1);
 				return r;
 			},
-			[]( leaf::catch_<error1> )
+			[]( error1 const & )
 			{
 				return 2;
 			},
@@ -516,7 +516,7 @@ int main()
 				BOOST_TEST_EQ(r, 1);
 				return r;
 			},
-			[]( leaf::catch_<error1> )
+			[](error1 const &  )
 			{
 				return 2;
 			},

@@ -24,7 +24,7 @@ namespace leaf = boost::leaf;
 
 struct e_test { int value; };
 
-int check( leaf::catch_<leaf::bad_result>, leaf::match<e_test, 42> )
+int check( leaf::bad_result const &, leaf::match<e_test, 42> )
 {
 	return 1;
 }

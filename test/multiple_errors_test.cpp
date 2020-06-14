@@ -74,11 +74,11 @@ int main()
 				}
 				throw std::exception{};
 			},
-			[]( leaf::catch_<std::exception>, info<4> )
+			[]( std::exception const &, info<4> )
 			{
 				return 1;
 			},
-			[]( leaf::catch_<std::exception> )
+			[]( std::exception const & )
 			{
 				return 2;
 			} );

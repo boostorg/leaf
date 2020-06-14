@@ -59,9 +59,9 @@ leaf::result<void> print_answer() noexcept
 
 int main()
 {
-	// Exercise print_answer a few times and handle errors. Note that the exception objects that
-	// compute_answer_throws throws are not handled with leaf::catch_<>, but as regular LEAF
-	// error objects...
+	// Exercise print_answer a few times and handle errors. Note that the exception objects
+	// that compute_answer_throws throws are not handled as exceptions, but as regular
+	// LEAF error error objects...
 	for( int i=0; i!=42; ++i )
 	{
 		leaf::try_handle_all(

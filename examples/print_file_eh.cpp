@@ -81,7 +81,7 @@ int main( int argc, char const * argv[] )
 		// - a caught exception of type input_file_open_error, and
 		// - an object of type leaf::e_errno that has .value equal to ENOENT, and
 		// - an object of type leaf::e_file_name.
-		[]( leaf::catch_<input_file_open_error>, leaf::match<leaf::e_errno,ENOENT>, leaf::e_file_name const & fn )
+		[]( input_file_open_error const &, leaf::match<leaf::e_errno,ENOENT>, leaf::e_file_name const & fn )
 		{
 			std::cerr << "File not found: " << fn.value << std::endl;
 			return 1;
@@ -91,7 +91,7 @@ int main( int argc, char const * argv[] )
 		// - a caught exception of type input_file_open_error, and
 		// - an object of type leaf::e_errno (regardless of its .value), and
 		// - an object of type leaf::e_file_name.
-		[]( leaf::catch_<input_file_open_error>, leaf::e_errno const & errn, leaf::e_file_name const & fn )
+		[]( input_file_open_error const &, leaf::e_errno const & errn, leaf::e_file_name const & fn )
 		{
 			std::cerr << "Failed to open " << fn.value << ", errno=" << errn << std::endl;
 			return 2;
@@ -101,7 +101,7 @@ int main( int argc, char const * argv[] )
 		// - a caught exception of type input_error, and
 		// - an optional object of type leaf::e_errno (regardless of its .value), and
 		// - an object of type leaf::e_file_name.
-		[]( leaf::catch_<input_error>, leaf::e_errno const * errn, leaf::e_file_name const & fn )
+		[]( input_error const &, leaf::e_errno const * errn, leaf::e_file_name const & fn )
 		{
 			std::cerr << "Failed to access " << fn.value;
 			if( errn )
@@ -113,14 +113,14 @@ int main( int argc, char const * argv[] )
 		// This handler will be called if the error includes:
 		// - a caught exception of type std::ostream::failure, and
 		// - an object of type leaf::e_errno (regardless of its .value),
-		[]( leaf::catch_<std::ostream::failure>, leaf::e_errno const & errn )
+		[]( std::ostream::failure const &, leaf::e_errno const & errn )
 		{
 			std::cerr << "Output error, errno=" << errn << std::endl;
 			return 4;
 		},
 
 		// This handler will be called if the error includes a caught exception of type bad_command_line.
-		[]( leaf::catch_<bad_command_line> )
+		[]( bad_command_line const & )
 		{
 			std::cout << "Bad command line argument" << std::endl;
 			return 5;
