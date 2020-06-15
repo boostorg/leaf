@@ -217,7 +217,7 @@ int main()
 					},
 					[]( info<1> const & ) -> int
 					{
-						BOOST_LEAF_THROW(my_exception());
+						BOOST_LEAF_THROW_EXCEPTION(my_exception());
 					},
 					[]( leaf::catch_<> )
 					{
@@ -244,7 +244,7 @@ int main()
 		auto error_handlers = std::make_tuple(
 			[]( info<1> const & ) -> int
 			{
-				BOOST_LEAF_THROW(my_exception());
+				BOOST_LEAF_THROW_EXCEPTION(my_exception());
 			},
 			[]( leaf::catch_<> )
 			{
@@ -287,7 +287,7 @@ int main()
 					},
 					[]( info<1> const & ) -> int
 					{
-						BOOST_LEAF_THROW(my_exception());
+						BOOST_LEAF_THROW_EXCEPTION(my_exception());
 					},
 					[]( leaf::catch_<> )
 					{
@@ -310,7 +310,7 @@ int main()
 		auto error_handlers = std::make_tuple(
 			[]( info<1> const & ) -> leaf::result<int>
 			{
-				BOOST_LEAF_THROW(my_exception());
+				BOOST_LEAF_THROW_EXCEPTION(my_exception());
 			},
 			[]( leaf::catch_<> ) -> leaf::result<int>
 			{

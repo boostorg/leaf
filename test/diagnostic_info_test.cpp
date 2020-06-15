@@ -211,7 +211,7 @@ int main()
 	leaf::try_catch(
 		[]
 		{
-			BOOST_LEAF_THROW( my_exception(),
+			BOOST_LEAF_THROW_EXCEPTION( my_exception(),
 				printable_info_printable_payload(),
 				printable_info_non_printable_payload(),
 				non_printable_info_printable_payload(),
@@ -243,7 +243,7 @@ int main()
 	leaf::try_catch(
 		[]
 		{
-			BOOST_LEAF_THROW( my_exception(),
+			BOOST_LEAF_THROW_EXCEPTION( my_exception(),
 				printable_info_printable_payload(),
 				printable_info_non_printable_payload(),
 				non_printable_info_printable_payload(),
@@ -290,7 +290,7 @@ int main()
 	leaf::try_catch(
 		[]
 		{
-			BOOST_LEAF_THROW( my_exception(),
+			BOOST_LEAF_THROW_EXCEPTION( my_exception(),
 				printable_info_printable_payload(),
 				printable_info_non_printable_payload(),
 				non_printable_info_printable_payload(),

@@ -1710,7 +1710,7 @@ namespace boost { namespace leaf {
 #include <exception>
 
 #define BOOST_LEAF_EXCEPTION ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
-#define BOOST_LEAF_THROW ::leaf::leaf_detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
+#define BOOST_LEAF_THROW_EXCEPTION ::leaf::leaf_detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
 
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
 
@@ -2874,23 +2874,9 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////////
 
 	template <class...  H>
-	BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context() noexcept
-	{
-		return { };
-	}
-
-	template <class...  H>
 	BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && ... ) noexcept
 	{
 		return { };
-	}
-
-	////////////////////////////////////////////
-
-	template <class...  H>
-	inline context_ptr make_shared_context() noexcept
-	{
-		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_handlers<H...>>>();
 	}
 
 	template <class...  H>

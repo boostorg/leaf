@@ -92,9 +92,11 @@ exe capture_in_exception : ../examples/capture_in_exception.cpp : <threading>sin
 exe capture_in_result : ../examples/capture_in_result.cpp : <threading>single:<build>no <exception-handling>off:<build>no ;
 exe error_log : ../examples/error_log.cpp : <exception-handling>off:<build>no ;
 exe error_trace : ../examples/error_trace.cpp : <exception-handling>off:<build>no ;
-exe exception_to_result : ../examples/exception_to_result.cpp : <exception-handling>off:<build>no <exception-handling>off:<build>no ;
-# exe lua_callback_result : ../examples/exception_to_result.cpp : <exception-handling>off:<build>no <exception-handling>off:<build>no ;
+exe exception_to_result : ../examples/exception_to_result.cpp : <exception-handling>off:<build>no ;
+# exe lua_callback_result : ../examples/exception_to_result.cpp : <exception-handling>off:<build>no ;
 # exe lua_callback_eh : ../examples/lua_callback_eh.cpp : <exception-handling>off:<build>no ;
-exe print_file_eh : ../examples/print_file_eh.cpp : <exception-handling>off:<build>no <exception-handling>off:<build>no ;
-exe print_file_result : ../examples/print_file_result.cpp : <exception-handling>off:<build>no ;
+exe print_file_eh : ../examples/print_file_eh.cpp : <exception-handling>off:<build>no ;
+exe print_file_eh_error_tags : ../examples/print_file_eh_error_tags.cpp : <exception-handling>off:<build>no ;
+exe print_file_result : ../examples/print_file_result.cpp ;
+exe print_file_result_error_tags : ../examples/print_file_result_error_tags.cpp ;
 exe print_half : ../examples/print_half.cpp : <exception-handling>off:<build>no ;

@@ -118,7 +118,7 @@ int main( int argc, char const * argv[] )
 			return 4;
 		},
 
-		// This handler will be called if the error includes an object of type error_code equal to bad_command_line.
+		// This handler will be called if we've got a bad_command_line
 		[]( leaf::match<error_code, bad_command_line> )
 		{
 			std::cout << "Bad command line argument" << std::endl;

@@ -152,7 +152,9 @@ if exceptions
 		'error_trace',
 		'exception_to_result',
 		'print_file_eh',
+		'print_file_eh_error_tags',
 		'print_file_result',
+		'print_file_result_error_tags',
 		'print_half'
 	]
 	foreach e : examples

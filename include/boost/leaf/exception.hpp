@@ -18,7 +18,7 @@
 #include <exception>
 
 #define BOOST_LEAF_EXCEPTION ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
-#define BOOST_LEAF_THROW ::leaf::leaf_detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
+#define BOOST_LEAF_THROW_EXCEPTION ::leaf::leaf_detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
 
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
 

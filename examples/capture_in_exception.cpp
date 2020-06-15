@@ -6,8 +6,6 @@
 // This is a simple program that demonstrates the use of LEAF to transport E-objects between threads,
 // without using exception handling. See capture_eh.cpp for the exception-handling variant.
 
-// See also
-
 #include <boost/leaf/capture.hpp>
 #include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
@@ -25,7 +23,7 @@ struct e_thread_id { std::thread::id value; };
 struct e_failure_info1 { std::string value; };
 struct e_failure_info2 { int value; };
 
-// The type our tasks return.
+// A type that represents a successfully returned result from a task.
 struct task_result { };
 
  // This is our task function. It produces objects of type task_result, but it may fail...

@@ -18,7 +18,7 @@
 
 namespace leaf = boost::leaf;
 
-// Define several e-types.
+// Define several error types.
 struct e_thread_id { std::thread::id value; };
 struct e_failure_info1 { std::string value; };
 struct e_failure_info2 { int value; };
@@ -43,7 +43,7 @@ int main()
 {
 	int const task_count = 42;
 
-	// The error_handlers are called in this thread (see leaf::try_handle_all below). The
+	// The error_handlers are used in this thread (see leaf::try_handle_all below). The
 	// arguments passed to individual lambdas are transported from the worker thread
 	// to the main thread automatically.
 	auto error_handlers = std::make_tuple(
@@ -64,9 +64,9 @@ int main()
 
 	// Launch the tasks, but rather than launching the task function directly, we launch a
 	// wrapper function which calls leaf::capture, passing a context object that will hold
-	// the E-objects loaded from the task in case of an error. The E-types the context is
-	// able to hold statically are automatically deduced from the type of the error_handlers
-	// function.
+	// the error objects reported from the task in case of an error. The error types the
+	// context is able to hold statically are automatically deduced from the type of the
+	// error_handlers function.
 	std::generate_n( std::back_inserter(fut), task_count,
 		[&]
 		{

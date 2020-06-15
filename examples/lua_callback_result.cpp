@@ -31,33 +31,27 @@ struct e_lua_error_message { std::string value; };
 
 // This is a C callback with a specific signature, callable from programs written in Lua.
 // If it succeeds, it returns an int answer, by pushing it onto the Lua stack. But "sometimes"
-// it fails, in which case it calls luaL_error. This causes the Lua interpreter to abort and pop
-// back into the C++ code which called it (see call_lua below).
-int do_work( lua_State * L ) noexcept
+// it fails, in which case it calls luaL_error. This causes the Lua interpreter to abort and
+// pop back into the C++ code which called it (see call_lua below).
+int do_work( lua_State * L )
 {
-	bool success=rand()%2; // "Sometimes" do_work fails.
+	bool success = rand()%2; // "Sometimes" do_work fails.
 	if( success )
 	{
-		lua_pushnumber(L,42); // Success, push the result on the Lua stack, return to Lua.
+		lua_pushnumber(L, 42); // Success, push the result on the Lua stack, return to Lua.
 		return 1;
 	}
 	else
 	{
-		// Generate a new error_id and associate a do_work_error_code with it. Normally, we'd
-		// return this in a leaf::result<T>, but the do_work function signature (required by Lua)
-		// does not permit this.
-		leaf::new_error(ec1);
-
-		// Tell the Lua interpreter to abort the Lua program.
-		return luaL_error(L,"do_work_error");
+		return leaf::new_error(ec1), luaL_error(L,"do_work_error"); // luaL_error does not return (longjmp).
 	}
 }
 
 
-std::shared_ptr<lua_State> init_lua_state() noexcept
+std::shared_ptr<lua_State> init_lua_state()
 {
 	// Create a new lua_State, we'll use std::shared_ptr for automatic cleanup.
-	std::shared_ptr<lua_State> L(lua_open(),&lua_close);
+	std::shared_ptr<lua_State> L(lua_open(), &lua_close);
 
 	// Register the do_work function (above) as a C callback, under the global
 	// Lua name "do_work". With this, calls from Lua programs to do_work
@@ -79,26 +73,27 @@ std::shared_ptr<lua_State> init_lua_state() noexcept
 // in Lua, and returns the value from do_work, which is written in C++ and
 // registered with the Lua interpreter as a C callback.
 
-// If do_work succeeds, we return the resulting int answer in leaf::result<int>.
+// If do_work succeeds, we return the resulting int answer.
 // If it fails, we'll communicate that failure to our caller.
 leaf::result<int> call_lua( lua_State * L )
 {
+	leaf::augment_id augment;
+
 	// Ask the Lua interpreter to call the global Lua function call_do_work.
 	lua_getfield( L, LUA_GLOBALSINDEX, "call_do_work" );
-	leaf::augment_id augment;
-	if( int err=lua_pcall(L,0,1,0) ) // Ask Lua to call the global function call_do_work.
+	if( int err = lua_pcall(L, 0, 1, 0) ) // Ask Lua to call the global function call_do_work.
 	{
-		auto load = leaf::on_error( e_lua_error_message{lua_tostring(L,1)} );
 		lua_pop(L,1);
 
-		// get_error will return the error_id generated in our Lua callback. This is the
-		// same error_id the preload (above) uses as well.
-		return augment.get_error( e_lua_pcall_error{err} );
+		// We got a Lua error which may be the error we're reporting from do_work, or some other error.
+		// If it is another error, augment.get_error() will return a new leaf::error_id, otherwise
+		// we'll be working with the original value returned by leaf::new_error in do_work.
+		return augment.get_error( e_lua_pcall_error{err}, e_lua_error_message{lua_tostring(L, 1)} );
 	}
 	else
 	{
 		// Success! Just return the int answer.
-		int answer=lua_tonumber(L,-1);
+		int answer=lua_tonumber(L, -1);
 		lua_pop(L,1);
 		return answer;
 	}
