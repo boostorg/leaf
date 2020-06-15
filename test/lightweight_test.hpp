@@ -6,12 +6,12 @@
 #include "boost/core/lightweight_test.hpp"
 #include <exception>
 
-#ifdef LEAF_NO_EXCEPTIONS
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
 namespace boost
 {
 	[[noreturn]] void throw_exception( std::exception const & e )
 	{
-		std::cerr << "Terminating due to a C++ exception under LEAF_NO_EXCEPTIONS: " << e.what();
+		std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
 		std::terminate();
 	}
 }

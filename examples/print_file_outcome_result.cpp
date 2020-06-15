@@ -63,16 +63,16 @@ int main( int argc, char const * argv[] )
 
 		[&]() -> result<int>
 		{
-			LEAF_AUTO(file_name, parse_command_line(argc,argv));
+			BOOST_LEAF_AUTO(file_name, parse_command_line(argc,argv));
 
 			auto load = leaf::on_error( leaf::e_file_name{file_name} );
 
-			LEAF_AUTO(f, file_open(file_name));
+			BOOST_LEAF_AUTO(f, file_open(file_name));
 
-			LEAF_AUTO(s, file_size(*f));
+			BOOST_LEAF_AUTO(s, file_size(*f));
 
 			std::string buffer( 1 + s, '\0' );
-			LEAF_CHECK(file_read(*f, &buffer[0], buffer.size()-1));
+			BOOST_LEAF_CHECK(file_read(*f, &buffer[0], buffer.size()-1));
 
 			std::cout << buffer;
 			std::cout.flush();

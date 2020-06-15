@@ -93,7 +93,7 @@ int main()
 		BOOST_TEST(!(e1<e2));
 		BOOST_TEST(!(e2<e1));
 	}
-#ifdef LEAF_NO_THREADS
+#ifdef BOOST_LEAF_NO_THREADS
 	std::vector<int> all_ids = generate_ids();
 #else
 	constexpr int thread_count = 100;

@@ -1,5 +1,5 @@
-#ifndef LEAF_75F38740D98D11E881DDB244C82C3C47
-#define LEAF_75F38740D98D11E881DDB244C82C3C47
+#ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
+#define BOOST_LEAF_EXCEPTION_HPP_INCLUDED
 
 // Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -8,19 +8,19 @@
 
 #if defined(__clang__)
 #	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(LEAF_ENABLE_WARNINGS)
+#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(LEAF_ENABLE_WARNINGS)
+#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma warning(push,1)
 #endif
 
 #include <boost/leaf/error.hpp>
 #include <exception>
 
-#define LEAF_EXCEPTION ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
-#define LEAF_THROW ::leaf::leaf_detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
+#define BOOST_LEAF_EXCEPTION ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
+#define BOOST_LEAF_THROW ::leaf::leaf_detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
 
-#ifdef LEAF_NO_EXCEPTIONS
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
 
 namespace boost
 {
@@ -115,14 +115,14 @@ namespace boost { namespace leaf {
 			exception( exception const & ) = default;
 			exception( exception && ) = default;
 
-			LEAF_CONSTEXPR exception( error_id id, Ex && ex ) noexcept:
+			BOOST_LEAF_CONSTEXPR exception( error_id id, Ex && ex ) noexcept:
 				Ex(std::move(ex)),
 				error_id(id)
 			{
 				leaf_detail::enforce_std_exception(*this);
 			}
 
-			explicit LEAF_CONSTEXPR exception( error_id id ) noexcept:
+			explicit BOOST_LEAF_CONSTEXPR exception( error_id id ) noexcept:
 				error_id(id)
 			{
 				leaf_detail::enforce_std_exception(*this);

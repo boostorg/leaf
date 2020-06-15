@@ -1,5 +1,5 @@
-#ifndef LEAF_14440B9CF07011E88377FD4B0ABE8030
-#define LEAF_14440B9CF07011E88377FD4B0ABE8030
+#ifndef BOOST_LEAF_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED
+#define BOOST_LEAF_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED
 
 // Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -8,9 +8,9 @@
 
 #if defined(__clang__)
 #	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(LEAF_ENABLE_WARNINGS)
+#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(LEAF_ENABLE_WARNINGS)
+#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma warning(push,1)
 #endif
 

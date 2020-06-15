@@ -1,5 +1,5 @@
-#ifndef LEAF_47258FCCB6B411E8A1F35AA00C39171A
-#define LEAF_47258FCCB6B411E8A1F35AA00C39171A
+#ifndef BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
+#define BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
 
 // Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -8,9 +8,9 @@
 
 #if defined(__clang__)
 #	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(LEAF_ENABLE_WARNINGS)
+#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(LEAF_ENABLE_WARNINGS)
+#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma warning(push,1)
 #endif
 
@@ -33,19 +33,19 @@ namespace boost { namespace leaf {
 
 			typedef T value_type;
 
-			LEAF_CONSTEXPR optional() noexcept:
+			BOOST_LEAF_CONSTEXPR optional() noexcept:
 				key_(0)
 			{
 			}
 
-			LEAF_CONSTEXPR optional( optional const & x ):
+			BOOST_LEAF_CONSTEXPR optional( optional const & x ):
 				key_(x.key_)
 			{
 				if( x.key_ )
 					(void) new (&value_) T( x.value_ );
 			}
 
-			LEAF_CONSTEXPR optional( optional && x ) noexcept:
+			BOOST_LEAF_CONSTEXPR optional( optional && x ) noexcept:
 				key_(x.key_)
 			{
 				if( x.key_ )
@@ -55,21 +55,21 @@ namespace boost { namespace leaf {
 				}
 			}
 
-			LEAF_CONSTEXPR optional( int key, T const & v ):
+			BOOST_LEAF_CONSTEXPR optional( int key, T const & v ):
 				key_(key),
 				value_(v)
 			{
 				BOOST_LEAF_ASSERT(!empty());
 			}
 
-			LEAF_CONSTEXPR optional( int key, T && v ) noexcept:
+			BOOST_LEAF_CONSTEXPR optional( int key, T && v ) noexcept:
 				key_(key),
 				value_(std::move(v))
 			{
 				BOOST_LEAF_ASSERT(!empty());
 			}
 
-			LEAF_CONSTEXPR optional & operator=( optional const & x )
+			BOOST_LEAF_CONSTEXPR optional & operator=( optional const & x )
 			{
 				reset();
 				if( int key = x.key() )
@@ -80,7 +80,7 @@ namespace boost { namespace leaf {
 				return *this;
 			}
 
-			LEAF_CONSTEXPR optional & operator=( optional && x ) noexcept
+			BOOST_LEAF_CONSTEXPR optional & operator=( optional && x ) noexcept
 			{
 				reset();
 				if( int key = x.key() )
@@ -96,23 +96,23 @@ namespace boost { namespace leaf {
 				reset();
 			}
 
-			LEAF_CONSTEXPR bool empty() const noexcept
+			BOOST_LEAF_CONSTEXPR bool empty() const noexcept
 			{
 				return key_==0;
 			}
 
-			LEAF_CONSTEXPR int key() const noexcept
+			BOOST_LEAF_CONSTEXPR int key() const noexcept
 			{
 				return key_;
 			}
 
-			LEAF_CONSTEXPR void set_key( int key ) noexcept
+			BOOST_LEAF_CONSTEXPR void set_key( int key ) noexcept
 			{
 				BOOST_LEAF_ASSERT(!empty());
 				key_ = key;
 			}
 
-			LEAF_CONSTEXPR void reset() noexcept
+			BOOST_LEAF_CONSTEXPR void reset() noexcept
 			{
 				if( key_ )
 				{
@@ -121,7 +121,7 @@ namespace boost { namespace leaf {
 				}
 			}
 
-			LEAF_CONSTEXPR T & put( int key, T const & v )
+			BOOST_LEAF_CONSTEXPR T & put( int key, T const & v )
 			{
 				BOOST_LEAF_ASSERT(key);
 				reset();
@@ -130,7 +130,7 @@ namespace boost { namespace leaf {
 				return value_;
 			}
 
-			LEAF_CONSTEXPR T & put( int key, T && v ) noexcept
+			BOOST_LEAF_CONSTEXPR T & put( int key, T && v ) noexcept
 			{
 				BOOST_LEAF_ASSERT(key);
 				reset();
@@ -139,37 +139,37 @@ namespace boost { namespace leaf {
 				return value_;
 			}
 
-			LEAF_CONSTEXPR T const * has_value(int key) const noexcept
+			BOOST_LEAF_CONSTEXPR T const * has_value(int key) const noexcept
 			{
 				BOOST_LEAF_ASSERT(key);
 				return key_==key ? &value_ : 0;
 			}
 
-			LEAF_CONSTEXPR T * has_value(int key) noexcept
+			BOOST_LEAF_CONSTEXPR T * has_value(int key) noexcept
 			{
 				BOOST_LEAF_ASSERT(key);
 				return key_==key ? &value_ : 0;
 			}
 
-			LEAF_CONSTEXPR T const & value(int key) const & noexcept
+			BOOST_LEAF_CONSTEXPR T const & value(int key) const & noexcept
 			{
 				BOOST_LEAF_ASSERT(has_value(key)!=0);
 				return value_;
 			}
 
-			LEAF_CONSTEXPR T & value(int key) & noexcept
+			BOOST_LEAF_CONSTEXPR T & value(int key) & noexcept
 			{
 				BOOST_LEAF_ASSERT(has_value(key)!=0);
 				return value_;
 			}
 
-			LEAF_CONSTEXPR T const && value(int key) const && noexcept
+			BOOST_LEAF_CONSTEXPR T const && value(int key) const && noexcept
 			{
 				BOOST_LEAF_ASSERT(has_value(key)!=0);
 				return value_;
 			}
 
-			LEAF_CONSTEXPR T value(int key) && noexcept
+			BOOST_LEAF_CONSTEXPR T value(int key) && noexcept
 			{
 				BOOST_LEAF_ASSERT(has_value(key)!=0);
 				T tmp(std::move(value_));

@@ -54,7 +54,7 @@ int main()
 		leaf::result<void> r = leaf::try_handle_some(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f<int>(not_error_code_enum::ok));
+				BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::ok));
 				c = answer;
 				return { };
 			},
@@ -74,7 +74,7 @@ int main()
 		leaf::result<void> r = leaf::try_handle_some(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 				c = answer;
 				return { };
 			},
@@ -96,7 +96,7 @@ int main()
 		leaf::result<void> r = leaf::try_handle_some(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
+				BOOST_LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
 				c = answer;
 				return { };
 			},
@@ -118,7 +118,7 @@ int main()
 		leaf::result<void> r = leaf::try_handle_some(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f_errc_wrapped<int>(errc_a::a0));
+				BOOST_LEAF_AUTO(answer, f_errc_wrapped<int>(errc_a::a0));
 				c = answer;
 				return { };
 			},
@@ -140,7 +140,7 @@ int main()
 		leaf::result<void> r = leaf::try_handle_some(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 				c = answer;
 				return { };
 			},
@@ -167,7 +167,7 @@ int main()
 		leaf::result<void> r = leaf::try_handle_some(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 				c = answer;
 				return { };
 			},
@@ -194,7 +194,7 @@ int main()
 		leaf::result<void> r = leaf::try_handle_some(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 				c = answer;
 				return { };
 			},
@@ -221,7 +221,7 @@ int main()
 		leaf::result<void> r = leaf::try_handle_some(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 				c = answer;
 				return { };
 			},
@@ -251,7 +251,7 @@ int main()
 				leaf::result<void> r = leaf::try_handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						c = answer;
 						return { };
 					},
@@ -289,7 +289,7 @@ int main()
 				leaf::result<void> r = leaf::try_handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
+						BOOST_LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
 						c = answer;
 						return { };
 					},
@@ -327,7 +327,7 @@ int main()
 				leaf::result<void> r = leaf::try_handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f_errc_wrapped<int>(errc_a::a0));
+						BOOST_LEAF_AUTO(answer, f_errc_wrapped<int>(errc_a::a0));
 						c = answer;
 						return { };
 					},
@@ -365,7 +365,7 @@ int main()
 				leaf::result<void> r = leaf::try_handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						c = answer;
 						return { };
 					},
@@ -403,7 +403,7 @@ int main()
 				leaf::result<void> r = leaf::try_handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						c = answer;
 						return { };
 					},
@@ -441,7 +441,7 @@ int main()
 				leaf::result<void> r = leaf::try_handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						c = answer;
 						return { };
 					},
@@ -479,7 +479,7 @@ int main()
 				leaf::result<void> r = leaf::try_handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						c = answer;
 						return { };
 					},
@@ -517,7 +517,7 @@ int main()
 				leaf::result<void> r = leaf::try_handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						c = answer;
 						return { };
 					},
@@ -555,7 +555,7 @@ int main()
 				leaf::result<void> r = leaf::try_handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
+						BOOST_LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
 						c = answer;
 						return { };
 					},
@@ -593,7 +593,7 @@ int main()
 				leaf::result<void> r = leaf::try_handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f_errc_wrapped<int>(errc_a::a0));
+						BOOST_LEAF_AUTO(answer, f_errc_wrapped<int>(errc_a::a0));
 						c = answer;
 						return { };
 					},
@@ -630,7 +630,7 @@ int main()
 				leaf::result<void> r = leaf::try_handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						c = answer;
 						return { };
 					},
@@ -668,7 +668,7 @@ int main()
 				leaf::result<void> r = leaf::try_handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						c = answer;
 						return { };
 					},
@@ -706,7 +706,7 @@ int main()
 				leaf::result<void> r = leaf::try_handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						c = answer;
 						return { };
 					},
@@ -744,7 +744,7 @@ int main()
 				leaf::result<void> r = leaf::try_handle_some(
 					[&c]() -> leaf::result<void>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						c = answer;
 						return { };
 					},
@@ -780,7 +780,7 @@ int main()
 		leaf::result<int> r = leaf::try_handle_some(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f<int>(not_error_code_enum::ok));
+				BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::ok));
 				return answer;
 			},
 			[]( leaf::error_info const & unmatched )
@@ -795,7 +795,7 @@ int main()
 		leaf::result<int> r = leaf::try_handle_some(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 				return answer;
 			},
 			[]( not_error_code_enum ec, info<1> const & x, info<2> y )
@@ -814,7 +814,7 @@ int main()
 		leaf::result<int> r = leaf::try_handle_some(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
+				BOOST_LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
 				return answer;
 			},
 			[]( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
@@ -837,7 +837,7 @@ int main()
 		leaf::result<int> r = leaf::try_handle_some(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 				return answer;
 			},
 			[]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
@@ -860,7 +860,7 @@ int main()
 		leaf::result<int> r = leaf::try_handle_some(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 				return answer;
 			},
 			[]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
@@ -883,7 +883,7 @@ int main()
 		leaf::result<int> r = leaf::try_handle_some(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 				return answer;
 			},
 			[]( leaf::match<e_error_code,not_error_code_enum::error2> )
@@ -906,7 +906,7 @@ int main()
 		leaf::result<int> r = leaf::try_handle_some(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 				return answer;
 			},
 			[]( leaf::match<e_error_code,not_error_code_enum::error2> )
@@ -932,7 +932,7 @@ int main()
 				leaf::result<int> r = leaf::try_handle_some(
 					[]() -> leaf::result<int>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
 					[]( info<4> )
@@ -964,7 +964,7 @@ int main()
 				leaf::result<int> r = leaf::try_handle_some(
 					[]() -> leaf::result<int>
 					{
-						LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
+						BOOST_LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
 						return answer;
 					},
 					[]( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
@@ -996,7 +996,7 @@ int main()
 				leaf::result<int> r = leaf::try_handle_some(
 					[]() -> leaf::result<int>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
 					[]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
@@ -1028,7 +1028,7 @@ int main()
 				leaf::result<int> r = leaf::try_handle_some(
 					[]() -> leaf::result<int>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
 					[]( leaf::match<not_error_code_enum,not_error_code_enum::error2> )
@@ -1060,7 +1060,7 @@ int main()
 				leaf::result<int> r = leaf::try_handle_some(
 					[]() -> leaf::result<int>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
 					[]( leaf::match<e_error_code,not_error_code_enum::error2> )
@@ -1092,7 +1092,7 @@ int main()
 				leaf::result<int> r = leaf::try_handle_some(
 					[]() -> leaf::result<int>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
 					[]( leaf::match<e_error_code,not_error_code_enum::error2> )
@@ -1124,7 +1124,7 @@ int main()
 				leaf::result<int> r = leaf::try_handle_some(
 					[]() -> leaf::result<int>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
 					[]( not_error_code_enum ec, info<1> const & x, info<2> y )
@@ -1156,7 +1156,7 @@ int main()
 				leaf::result<int> r = leaf::try_handle_some(
 					[]() -> leaf::result<int>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
 					[]( leaf::match<not_error_code_enum,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
@@ -1188,7 +1188,7 @@ int main()
 				leaf::result<int> r = leaf::try_handle_some(
 					[]() -> leaf::result<int>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
 					[]( leaf::match<not_error_code_enum,not_error_code_enum::error2,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
@@ -1220,7 +1220,7 @@ int main()
 				leaf::result<int> r = leaf::try_handle_some(
 					[]() -> leaf::result<int>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
 					[]( leaf::match<e_error_code,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )
@@ -1252,7 +1252,7 @@ int main()
 				leaf::result<int> r = leaf::try_handle_some(
 					[]() -> leaf::result<int>
 					{
-						LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
+						BOOST_LEAF_AUTO(answer, f<int>(not_error_code_enum::error1));
 						return answer;
 					},
 					[]( leaf::match<e_error_code,not_error_code_enum::error2,not_error_code_enum::error1> ec, info<1> const & x, info<2> y )

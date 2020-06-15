@@ -4,7 +4,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#if defined(LEAF_NO_EXCEPTIONS) || defined(LEAF_NO_THREADS)
+#if defined(BOOST_LEAF_NO_EXCEPTIONS) || defined(BOOST_LEAF_NO_THREADS)
 
 #include <iostream>
 

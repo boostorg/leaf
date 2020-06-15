@@ -44,7 +44,7 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				LEAF_CHECK(test<void>());
+				BOOST_LEAF_CHECK(test<void>());
 				return 0;
 			},
 			[]( leaf::match<info<42>, 42>, leaf::match<info<1>, 1>, leaf::match<info<2>, 2>, leaf::match<info<3>, 3> )

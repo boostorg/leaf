@@ -5,15 +5,15 @@
 
 // See benchmark.md
 
-#ifndef LEAF_ALL_HPP_INCLUDED
+#ifndef BOOST_LEAF_ALL_HPP_INCLUDED
 #	include <boost/leaf/all.hpp>
 #endif
 
-#ifndef LEAF_NO_EXCEPTIONS
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 #	error Please disable exception handling.
 #endif
 
-#if LEAF_DIAGNOSTICS
+#if BOOST_LEAF_DIAGNOSTICS
 #	error Please disable diagnostics.
 #endif
 
@@ -41,7 +41,7 @@ namespace boost
 {
 	void throw_exception( std::exception const & e )
 	{
-		std::cerr << "Terminating due to a C++ exception under LEAF_NO_EXCEPTIONS: " << e.what();
+		std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
 		std::terminate();
 	}
 
@@ -169,7 +169,7 @@ struct benchmark
 
 	NOINLINE static select_result_t<N, E> f( int failure_rate ) noexcept
 	{
-		LEAF_AUTO(x, (benchmark<N-1, E>::f(failure_rate)));
+		BOOST_LEAF_AUTO(x, (benchmark<N-1, E>::f(failure_rate)));
 		return x+1;
 	}
 };

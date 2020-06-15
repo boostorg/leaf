@@ -55,16 +55,16 @@ boost_headers = declare_dependency(include_directories: '../..')
 exceptions = (get_option('cpp_eh')!='none')
 diagnostics = get_option('leaf_diagnostics')
 
-defines = [ '-DLEAF_DIAGNOSTICS='+diagnostics.to_string() ]
+defines = [ '-DBOOST_LEAF_DIAGNOSTICS='+diagnostics.to_string() ]
 
 if not get_option('leaf_suppress_warnings')
-	defines += '-DLEAF_ENABLE_WARNINGS'
+	defines += '-DBOOST_LEAF_ENABLE_WARNINGS'
 endif
 
 mp11 = [ ]
 if get_option('leaf_use_boost_mp11')
 	mp11 = [ boost_headers ]
-	defines += [ '-DLEAF_USE_BOOST_MP11' ]
+	defines += [ '-DBOOST_LEAF_USE_BOOST_MP11' ]
 endif
 
 thread_dep = dependency('threads')

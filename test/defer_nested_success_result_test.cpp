@@ -26,7 +26,7 @@ leaf::result<void> g2()
 leaf::result<void> f()
 {
 	auto load = leaf::on_error( [] { return info{2}; } );
-	LEAF_CHECK(g1());
+	BOOST_LEAF_CHECK(g1());
 	return g2();
 }
 
@@ -35,7 +35,7 @@ int main()
 	int r = leaf::try_handle_all(
 		[]() -> leaf::result<int>
 		{
-			LEAF_CHECK(f());
+			BOOST_LEAF_CHECK(f());
 			return 1;
 		},
 		[]( info x )

@@ -4,7 +4,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#ifndef LEAF_NO_EXCEPTIONS
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 #	include <boost/leaf/handle_exception.hpp>
 #endif
 #include <boost/leaf/handle_error.hpp>
@@ -87,7 +87,7 @@ leaf::result<void> handle_some_errors_void( int what_to_do )
 	return leaf::try_handle_some(
 		[=]() -> leaf::result<void>
 		{
-			LEAF_AUTO(answer, compute_answer(what_to_do));
+			BOOST_LEAF_AUTO(answer, compute_answer(what_to_do));
 			(void) answer;
 			return { };
 		},
@@ -178,7 +178,7 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer,handle_some_errors(3));
+				BOOST_LEAF_AUTO(answer,handle_some_errors(3));
 				(void) answer;
 				return 0;
 			},
@@ -202,7 +202,7 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer,handle_some_errors_float(1));
+				BOOST_LEAF_AUTO(answer,handle_some_errors_float(1));
 				(void) answer;
 				return 0;
 			},
@@ -225,7 +225,7 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				LEAF_CHECK(handle_some_errors_void(2));
+				BOOST_LEAF_CHECK(handle_some_errors_void(2));
 				return 0;
 			},
 			[]( leaf::match<error_code,error_code::error2> )
@@ -241,12 +241,12 @@ int main()
 
 	///////////////////////////
 
-#ifndef LEAF_NO_EXCEPTIONS
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 	{
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				LEAF_CHECK(handle_some_errors_void(2));
+				BOOST_LEAF_CHECK(handle_some_errors_void(2));
 				return 0;
 			},
 			[]( std::exception const & )

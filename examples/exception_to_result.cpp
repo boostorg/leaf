@@ -51,7 +51,7 @@ leaf::result<int> compute_answer() noexcept
 // Print the answer if the call to compute_answer is successful.
 leaf::result<void> print_answer() noexcept
 {
-	LEAF_AUTO( answer, compute_answer());
+	BOOST_LEAF_AUTO( answer, compute_answer());
 	std::cout << "Answer: " << answer << std::endl;
 	return { };
 }
@@ -67,7 +67,7 @@ int main()
 		leaf::try_handle_all(
 			[]() -> leaf::result<void>
 			{
-				LEAF_CHECK(print_answer());
+				BOOST_LEAF_CHECK(print_answer());
 				return { };
 			},
 

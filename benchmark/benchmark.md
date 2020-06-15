@@ -37,7 +37,7 @@ The most common check-only use case looks almost identically in LEAF and in Boos
 ```c++
 // LEAF
 {
-  LEAF_AUTO(v, f()); // Check for errors, forward failures to the caller
+  BOOST_LEAF_AUTO(v, f()); // Check for errors, forward failures to the caller
   // If control reaches here, v is the successful result (the call succeeded).
 }
 ```
@@ -74,7 +74,7 @@ leaf::try_handle_all
 
   []() -> leaf::result<T>
   {
-    LEAF_AUTO(v, f());
+    BOOST_LEAF_AUTO(v, f());
     // No error, use v
   },
 
@@ -142,7 +142,7 @@ leaf::result<int> f();
 
 leaf::result<int> g()
 {
-  LEAF_AUTO(x, f());
+  BOOST_LEAF_AUTO(x, f());
   return x+1;
 }
 ```
@@ -207,7 +207,7 @@ leaf::result<int> f()
 
 leaf::result<int> g()
 {
-  LEAF_AUTO(x, f());
+  BOOST_LEAF_AUTO(x, f());
   return x+1;
 }
 ```
@@ -235,7 +235,7 @@ leaf::result<int> f()
 
 leaf::result<int> g()
 {
-  LEAF_AUTO(x, f());
+  BOOST_LEAF_AUTO(x, f());
   return x+1;
 }
 ```
@@ -335,7 +335,7 @@ To build both versions of the benchmark program, the compilers are invoked using
 
 In addition, the LEAF version is compiled with:
 
-* `-DLEAF_DIAGNOSTICS=0`: Disable diagnostic information for error objects not recognized by the program. This is a debugging feature, see [Configuration Macros](https://zajo.github.io/leaf/#_configuration_macros).
+* `-DBOOST_LEAF_DIAGNOSTICS=0`: Disable diagnostic information for error objects not recognized by the program. This is a debugging feature, see [Configuration Macros](https://zajo.github.io/leaf/#_configuration_macros).
 
 ## Results
 

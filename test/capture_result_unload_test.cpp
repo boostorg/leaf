@@ -22,7 +22,7 @@ void test( F f )
 		leaf::try_handle_all(
 			[&r]() -> leaf::result<void>
 			{
-				LEAF_CHECK(std::move(r));
+				BOOST_LEAF_CHECK(std::move(r));
 				return { };
 			},
 			[&c]( info<1> const & x )
@@ -45,7 +45,7 @@ void test( F f )
 		leaf::try_handle_all(
 			[&r]() -> leaf::result<void>
 			{
-				LEAF_CHECK(std::move(r));
+				BOOST_LEAF_CHECK(std::move(r));
 				return { };
 			},
 			[&c]( info<2> const & x )
@@ -67,7 +67,7 @@ void test( F f )
 		int what = leaf::try_handle_all(
 			[&r]() -> leaf::result<int>
 			{
-				LEAF_CHECK(std::move(r));
+				BOOST_LEAF_CHECK(std::move(r));
 				return 0;
 			},
 			[]( info<1> const & x )
@@ -87,7 +87,7 @@ void test( F f )
 		int what = leaf::try_handle_all(
 			[&r]() -> leaf::result<int>
 			{
-				LEAF_CHECK(std::move(r));
+				BOOST_LEAF_CHECK(std::move(r));
 				return 0;
 			},
 			[]( info<2> const & x )

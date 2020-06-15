@@ -1,5 +1,5 @@
-#ifndef LEAF_BC24FB98B2DE11E884419CF5AD35F1A2
-#define LEAF_BC24FB98B2DE11E884419CF5AD35F1A2
+#ifndef BOOST_LEAF_CAPTURE_HPP_INCLUDED
+#define BOOST_LEAF_CAPTURE_HPP_INCLUDED
 
 // Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -8,9 +8,9 @@
 
 #if defined(__clang__)
 #	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(LEAF_ENABLE_WARNINGS)
+#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(LEAF_ENABLE_WARNINGS)
+#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma warning(push,1)
 #endif
 
@@ -20,7 +20,7 @@
 
 namespace boost { namespace leaf {
 
-#ifdef LEAF_NO_EXCEPTIONS
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
 
 	namespace leaf_detail
 	{
@@ -199,7 +199,7 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-#ifndef LEAF_NO_EXCEPTIONS
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 
 	template <class T>
 	class result;

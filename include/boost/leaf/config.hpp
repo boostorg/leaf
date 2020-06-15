@@ -1,5 +1,5 @@
-#ifndef LEAF_13D3591AFC6811E9883D0A836044C98A
-#define LEAF_13D3591AFC6811E9883D0A836044C98A
+#ifndef BOOST_LEAF_CONFIG_HPP_INCLUDED
+#define BOOST_LEAF_CONFIG_HPP_INCLUDED
 
 // Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -14,9 +14,9 @@
 
 #if defined(__clang__)
 #	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(LEAF_ENABLE_WARNINGS)
+#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(LEAF_ENABLE_WARNINGS)
+#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma warning(push,1)
 #endif
 
@@ -24,70 +24,70 @@
 
 ////////////////////////////////////////
 
-// Configure LEAF_NO_EXCEPTIONS, unless already #defined
-#ifndef LEAF_NO_EXCEPTIONS
+// Configure BOOST_LEAF_NO_EXCEPTIONS, unless already #defined
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 
 #	if defined __clang__ && !defined(__ibmxl__)
 //	Clang C++ emulates GCC, so it has to appear early.
 
 #		if !__has_feature(cxx_exceptions)
-#			define LEAF_NO_EXCEPTIONS
+#			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
 #	elif defined __DMC__
 //	Digital Mars C++
 
 #		if !defined(_CPPUNWIND)
-#			define LEAF_NO_EXCEPTIONS
+#			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
 #	elif defined(__GNUC__) && !defined(__ibmxl__)
 //	GNU C++:
 
 #		if !defined(__EXCEPTIONS)
-#			define LEAF_NO_EXCEPTIONS
+#			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
 #	elif defined __KCC
 //	Kai C++
 
 #		if !defined(_EXCEPTIONS)
-#			define LEAF_NO_EXCEPTIONS
+#			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
 #	elif defined __CODEGEARC__
 //	CodeGear - must be checked for before Borland
 
 #		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
-#			define LEAF_NO_EXCEPTIONS
+#			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
 #	elif defined __BORLANDC__
 //	Borland
 
 #		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
-# 			define LEAF_NO_EXCEPTIONS
+# 			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
 #	elif defined  __MWERKS__
 //	Metrowerks CodeWarrior
 
 #		if !__option(exceptions)
-#			define LEAF_NO_EXCEPTIONS
+#			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
 #	elif defined(__IBMCPP__) && defined(__COMPILER_VER__) && defined(__MVS__)
 //	IBM z/OS XL C/C++
 
 #		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
-#			define LEAF_NO_EXCEPTIONS
+#			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
 #	elif defined(__ibmxl__)
 //	IBM XL C/C++ for Linux (Little Endian)
 
 #		if !__has_feature(cxx_exceptions)
-#			define LEAF_NO_EXCEPTIONS
+#			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
 #	elif defined _MSC_VER
@@ -97,7 +97,7 @@
 //	example) also #define _MSC_VER
 
 #		if !defined(_CPPUNWIND)
-#			define LEAF_NO_EXCEPTIONS
+#			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 #	endif
 
@@ -105,41 +105,41 @@
 
 ////////////////////////////////////////
 
-#ifndef LEAF_DIAGNOSTICS
-#	define LEAF_DIAGNOSTICS 1
+#ifndef BOOST_LEAF_DIAGNOSTICS
+#	define BOOST_LEAF_DIAGNOSTICS 1
 #endif
 
-#if LEAF_DIAGNOSTICS!=0 && LEAF_DIAGNOSTICS!=1
-#	error LEAF_DIAGNOSTICS must be 0 or 1.
+#if BOOST_LEAF_DIAGNOSTICS!=0 && BOOST_LEAF_DIAGNOSTICS!=1
+#	error BOOST_LEAF_DIAGNOSTICS must be 0 or 1.
 #endif
 
 ////////////////////////////////////////
 
 #ifdef _MSC_VER
-#	define LEAF_ALWAYS_INLINE __forceinline
+#	define BOOST_LEAF_ALWAYS_INLINE __forceinline
 #else
-#	define LEAF_ALWAYS_INLINE __attribute__((always_inline)) inline
+#	define BOOST_LEAF_ALWAYS_INLINE __attribute__((always_inline)) inline
 #endif
 
 ////////////////////////////////////////
 
-#ifndef LEAF_NODISCARD
+#ifndef BOOST_LEAF_NODISCARD
 #	if __cplusplus >= 201703L
-#		define LEAF_NODISCARD [[nodiscard]]
+#		define BOOST_LEAF_NODISCARD [[nodiscard]]
 #	else
-#		define LEAF_NODISCARD
+#		define BOOST_LEAF_NODISCARD
 #	endif
 #endif
 
 ////////////////////////////////////////
 
-#ifndef LEAF_CONSTEXPR
+#ifndef BOOST_LEAF_CONSTEXPR
 #	if __cplusplus > 201402L
-#		define LEAF_CONSTEXPR constexpr
-#		define LEAF_STD_UNCAUGHT_EXCEPTIONS 1
+#		define BOOST_LEAF_CONSTEXPR constexpr
+#		define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 1
 #	else
-#		define LEAF_CONSTEXPR
-#		define LEAF_STD_UNCAUGHT_EXCEPTIONS 0
+#		define BOOST_LEAF_CONSTEXPR
+#		define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 0
 #	endif
 #endif
 

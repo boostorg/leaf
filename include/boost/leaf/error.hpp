@@ -1,5 +1,5 @@
-#ifndef LEAF_BA049396D0D411E8B45DF7D4A759E189
-#define LEAF_BA049396D0D411E8B45DF7D4A759E189
+#ifndef BOOST_LEAF_ERROR_HPP_INCLUDED
+#define BOOST_LEAF_ERROR_HPP_INCLUDED
 
 // Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -8,9 +8,9 @@
 
 #if defined(__clang__)
 #	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(LEAF_ENABLE_WARNINGS)
+#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(LEAF_ENABLE_WARNINGS)
+#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma warning(push,1)
 #endif
 
@@ -22,8 +22,8 @@
 #include <memory>
 #include <set>
 
-#ifdef LEAF_NO_THREADS
-#	define LEAF_THREAD_LOCAL
+#ifdef BOOST_LEAF_NO_THREADS
+#	define BOOST_LEAF_THREAD_LOCAL
 	namespace boost { namespace leaf {
 		namespace leaf_detail
 		{
@@ -33,7 +33,7 @@
 #else
 #	include <atomic>
 #	include <thread>
-#	define LEAF_THREAD_LOCAL thread_local
+#	define BOOST_LEAF_THREAD_LOCAL thread_local
 	namespace boost { namespace leaf {
 		namespace leaf_detail
 		{
@@ -42,18 +42,18 @@
 	} }
 #endif
 
-#define LEAF_NEW_ERROR ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
+#define BOOST_LEAF_NEW_ERROR ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
 
-#define LEAF_AUTO(v,r)\
-	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "LEAF_AUTO requires a result type");\
+#define BOOST_LEAF_AUTO(v,r)\
+	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "BOOST_LEAF_AUTO requires a result type");\
 	auto && _r_##v = r;\
 	if( !_r_##v )\
 		return _r_##v.error();\
 	auto && v = _r_##v.value()
 
-#define LEAF_CHECK(r)\
+#define BOOST_LEAF_CHECK(r)\
 	{\
-		static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "LEAF_CHECK requires a result type");\
+		static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "BOOST_LEAF_CHECK requires a result type");\
 		auto && _r = r;\
 		if( !_r )\
 			return _r.error();\
@@ -114,7 +114,7 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-#if LEAF_DIAGNOSTICS
+#if BOOST_LEAF_DIAGNOSTICS
 
 	namespace leaf_detail
 	{
@@ -125,7 +125,7 @@ namespace boost { namespace leaf {
 			char const * (*first_type)();
 			int count;
 
-			LEAF_CONSTEXPR explicit e_unexpected_count( char const * (*first_type)() ) noexcept:
+			BOOST_LEAF_CONSTEXPR explicit e_unexpected_count( char const * (*first_type)() ) noexcept:
 				first_type(first_type),
 				count(1)
 			{
@@ -148,7 +148,7 @@ namespace boost { namespace leaf {
 		struct diagnostic<e_unexpected_count,false,false>
 		{
 			static constexpr bool is_invisible = true;
-			LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_count const & ) noexcept
+			BOOST_LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_count const & ) noexcept
 			{
 			}
 		};
@@ -195,14 +195,14 @@ namespace boost { namespace leaf {
 		struct diagnostic<e_unexpected_info,false,false>
 		{
 			static constexpr bool is_invisible = true;
-			LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_info const & ) noexcept
+			BOOST_LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_info const & ) noexcept
 			{
 			}
 		};
 
 		inline int & tl_unexpected_enabled_counter() noexcept
 		{
-			static LEAF_THREAD_LOCAL int c;
+			static BOOST_LEAF_THREAD_LOCAL int c;
 			return c;
 		}
 	}
@@ -219,7 +219,7 @@ namespace boost { namespace leaf {
 		template <class E>
 		inline slot<E> * & tl_slot_ptr() noexcept
 		{
-			static LEAF_THREAD_LOCAL slot<E> * s;
+			static BOOST_LEAF_THREAD_LOCAL slot<E> * s;
 			return s;
 		}
 
@@ -236,19 +236,19 @@ namespace boost { namespace leaf {
 
 		public:
 
-			LEAF_CONSTEXPR slot() noexcept:
+			BOOST_LEAF_CONSTEXPR slot() noexcept:
 				top_(0)
 			{
 			}
 
-			LEAF_CONSTEXPR slot( slot && x ) noexcept:
+			BOOST_LEAF_CONSTEXPR slot( slot && x ) noexcept:
 				optional<E>(std::move(x)),
 				top_(0)
 			{
 				BOOST_LEAF_ASSERT(x.top_==0);
 			}
 
-			LEAF_CONSTEXPR void activate() noexcept
+			BOOST_LEAF_CONSTEXPR void activate() noexcept
 			{
 				BOOST_LEAF_ASSERT(top_==0 || *top_!=this);
 				top_ = &tl_slot_ptr<E>();
@@ -256,13 +256,13 @@ namespace boost { namespace leaf {
 				*top_ = this;
 			}
 
-			LEAF_CONSTEXPR void deactivate() noexcept
+			BOOST_LEAF_CONSTEXPR void deactivate() noexcept
 			{
 				BOOST_LEAF_ASSERT(top_!=0 && *top_==this);
 				*top_ = prev_;
 			}
 
-			LEAF_CONSTEXPR void propagate() noexcept;
+			BOOST_LEAF_CONSTEXPR void propagate() noexcept;
 
 			using impl::put;
 			using impl::has_value;
@@ -270,10 +270,10 @@ namespace boost { namespace leaf {
 			using impl::print;
 		};
 
-#if LEAF_DIAGNOSTICS
+#if BOOST_LEAF_DIAGNOSTICS
 
 		template <class E>
-		LEAF_CONSTEXPR inline void load_unexpected_count( int err_id ) noexcept
+		BOOST_LEAF_CONSTEXPR inline void load_unexpected_count( int err_id ) noexcept
 		{
 			if( slot<e_unexpected_count> * sl = tl_slot_ptr<e_unexpected_count>() )
 				if( e_unexpected_count * unx = sl->has_value(err_id) )
@@ -283,7 +283,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		LEAF_CONSTEXPR inline void load_unexpected_info( int err_id, E && e ) noexcept
+		BOOST_LEAF_CONSTEXPR inline void load_unexpected_info( int err_id, E && e ) noexcept
 		{
 			if( slot<e_unexpected_info> * sl = tl_slot_ptr<e_unexpected_info>() )
 				if( e_unexpected_info * unx = sl->has_value(err_id) )
@@ -293,7 +293,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		LEAF_CONSTEXPR inline void load_unexpected( int err_id, E && e  ) noexcept
+		BOOST_LEAF_CONSTEXPR inline void load_unexpected( int err_id, E && e  ) noexcept
 		{
 			load_unexpected_count<E>(err_id);
 			load_unexpected_info(err_id, std::move(e));
@@ -302,7 +302,7 @@ namespace boost { namespace leaf {
 #endif
 
 		template <class E>
-		LEAF_CONSTEXPR inline void slot<E>::propagate() noexcept
+		BOOST_LEAF_CONSTEXPR inline void slot<E>::propagate() noexcept
 		{
 			BOOST_LEAF_ASSERT(top_!=0 && (*top_==prev_ || *top_==this));
 			if( prev_ )
@@ -314,7 +314,7 @@ namespace boost { namespace leaf {
 					that_ = std::move(this_);
 				}
 			}
-#if LEAF_DIAGNOSTICS
+#if BOOST_LEAF_DIAGNOSTICS
 			else
 			{
 				int c = tl_unexpected_enabled_counter();
@@ -327,14 +327,14 @@ namespace boost { namespace leaf {
 		}
 
 		template <class E>
-		LEAF_CONSTEXPR inline int load_slot( int err_id, E && e ) noexcept
+		BOOST_LEAF_CONSTEXPR inline int load_slot( int err_id, E && e ) noexcept
 		{
 			static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not supported");
 			using T = typename std::decay<E>::type;
 			BOOST_LEAF_ASSERT((err_id&3)==1);
 			if( slot<T> * p = tl_slot_ptr<T>() )
 				(void) p->put(err_id, std::forward<E>(e));
-#if LEAF_DIAGNOSTICS
+#if BOOST_LEAF_DIAGNOSTICS
 			else
 			{
 				int c = tl_unexpected_enabled_counter();
@@ -347,7 +347,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class F>
-		LEAF_CONSTEXPR inline int accumulate_slot( int err_id, F && f ) noexcept
+		BOOST_LEAF_CONSTEXPR inline int accumulate_slot( int err_id, F && f ) noexcept
 		{
 			static_assert(function_traits<F>::arity==1, "Lambdas passed to accumulate must take a single e-type argument by reference");
 			using E = typename std::decay<fn_arg_type<F,0>>::type;
@@ -370,9 +370,9 @@ namespace boost { namespace leaf {
 		struct id_factory
 		{
 			static atomic_unsigned_int counter;
-			static LEAF_THREAD_LOCAL unsigned current_id;
+			static BOOST_LEAF_THREAD_LOCAL unsigned current_id;
 
-			LEAF_CONSTEXPR static unsigned generate_next_id() noexcept
+			BOOST_LEAF_CONSTEXPR static unsigned generate_next_id() noexcept
 			{
 				auto id = (counter+=4);
 				BOOST_LEAF_ASSERT((id&3)==1);
@@ -384,7 +384,7 @@ namespace boost { namespace leaf {
 		atomic_unsigned_int id_factory<T>::counter(-3);
 
 		template <class T>
-		LEAF_THREAD_LOCAL unsigned id_factory<T>::current_id(0);
+		BOOST_LEAF_THREAD_LOCAL unsigned id_factory<T>::current_id(0);
 
 		inline int current_id() noexcept
 		{
@@ -413,7 +413,7 @@ namespace boost { namespace leaf {
 		template <class E>
 		struct load_item<E, -1>
 		{
-			LEAF_CONSTEXPR static int load( int err_id, E && e ) noexcept
+			BOOST_LEAF_CONSTEXPR static int load( int err_id, E && e ) noexcept
 			{
 				return load_slot(err_id, std::forward<E>(e));
 			}
@@ -422,7 +422,7 @@ namespace boost { namespace leaf {
 		template <class F>
 		struct load_item<F, 0>
 		{
-			LEAF_CONSTEXPR static int load( int err_id, F && f ) noexcept
+			BOOST_LEAF_CONSTEXPR static int load( int err_id, F && f ) noexcept
 			{
 				return load_slot(err_id, std::forward<F>(f)());
 			}
@@ -431,7 +431,7 @@ namespace boost { namespace leaf {
 		template <class F>
 		struct load_item<F, 1>
 		{
-			LEAF_CONSTEXPR static int load( int err_id, F && f ) noexcept
+			BOOST_LEAF_CONSTEXPR static int load( int err_id, F && f ) noexcept
 			{
 				return accumulate_slot(err_id, std::forward<F>(f));
 			}
@@ -496,16 +496,16 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		LEAF_CONSTEXPR error_id make_error_id(int) noexcept;
+		BOOST_LEAF_CONSTEXPR error_id make_error_id(int) noexcept;
 	}
 
 	class error_id
 	{
-		friend error_id LEAF_CONSTEXPR leaf_detail::make_error_id(int) noexcept;
+		friend error_id BOOST_LEAF_CONSTEXPR leaf_detail::make_error_id(int) noexcept;
 
 		int value_;
 
-		LEAF_CONSTEXPR explicit error_id( int value ) noexcept:
+		BOOST_LEAF_CONSTEXPR explicit error_id( int value ) noexcept:
 			value_(value)
 		{
 			BOOST_LEAF_ASSERT(value_==0 || ((value_&3)==1));
@@ -513,7 +513,7 @@ namespace boost { namespace leaf {
 
 	public:
 
-		LEAF_CONSTEXPR error_id() noexcept:
+		BOOST_LEAF_CONSTEXPR error_id() noexcept:
 			value_(0)
 		{
 		}
@@ -524,13 +524,13 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_ASSERT(!value_ || ((value_&3)==1));
 		}
 
-		LEAF_CONSTEXPR error_id load() const noexcept
+		BOOST_LEAF_CONSTEXPR error_id load() const noexcept
 		{
 			return *this;
 		}
 
 		template <class... Item>
-		LEAF_CONSTEXPR error_id load( Item && ... item ) const noexcept
+		BOOST_LEAF_CONSTEXPR error_id load( Item && ... item ) const noexcept
 		{
 			if( int err_id = value() )
 			{
@@ -545,7 +545,7 @@ namespace boost { namespace leaf {
 			return std::error_code(value_, leaf_detail::get_error_category<>::cat);
 		}
 
-		LEAF_CONSTEXPR int value() const noexcept
+		BOOST_LEAF_CONSTEXPR int value() const noexcept
 		{
 			if( int v = value_ )
 			{
@@ -556,22 +556,22 @@ namespace boost { namespace leaf {
 				return 0;
 		}
 
-		LEAF_CONSTEXPR explicit operator bool() const noexcept
+		BOOST_LEAF_CONSTEXPR explicit operator bool() const noexcept
 		{
 			return value_ != 0;
 		}
 
-		LEAF_CONSTEXPR friend bool operator==( error_id a, error_id b ) noexcept
+		BOOST_LEAF_CONSTEXPR friend bool operator==( error_id a, error_id b ) noexcept
 		{
 			return a.value_ == b.value_;
 		}
 
-		LEAF_CONSTEXPR friend bool operator!=( error_id a, error_id b ) noexcept
+		BOOST_LEAF_CONSTEXPR friend bool operator!=( error_id a, error_id b ) noexcept
 		{
 			return !(a == b);
 		}
 
-		LEAF_CONSTEXPR friend bool operator<( error_id a, error_id b ) noexcept
+		BOOST_LEAF_CONSTEXPR friend bool operator<( error_id a, error_id b ) noexcept
 		{
 			return a.value_ < b.value_;
 		}
@@ -581,7 +581,7 @@ namespace boost { namespace leaf {
 			return os << x.value_;
 		}
 
-		LEAF_CONSTEXPR void load_source_location_( char const * file, int line, char const * function ) const noexcept
+		BOOST_LEAF_CONSTEXPR void load_source_location_( char const * file, int line, char const * function ) const noexcept
 		{
 			BOOST_LEAF_ASSERT(file&&*file);
 			BOOST_LEAF_ASSERT(line>0);
@@ -593,7 +593,7 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		LEAF_CONSTEXPR inline error_id make_error_id( int err_id ) noexcept
+		BOOST_LEAF_CONSTEXPR inline error_id make_error_id( int err_id ) noexcept
 		{
 			BOOST_LEAF_ASSERT(err_id==0 || (err_id&3)==1);
 			return error_id((err_id&~3)|1);
@@ -656,15 +656,15 @@ namespace boost { namespace leaf {
 		context_activator( context_activator const & ) = delete;
 		context_activator & operator=( context_activator const & ) = delete;
 
-#if !defined(LEAF_NO_EXCEPTIONS) && LEAF_STD_UNCAUGHT_EXCEPTIONS
+#if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
 		int const uncaught_exceptions_;
 #endif
 		Ctx * ctx_;
 
 	public:
 
-		explicit LEAF_CONSTEXPR LEAF_ALWAYS_INLINE context_activator(Ctx & ctx) noexcept:
-#if !defined(LEAF_NO_EXCEPTIONS) && LEAF_STD_UNCAUGHT_EXCEPTIONS
+		explicit BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE context_activator(Ctx & ctx) noexcept:
+#if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
 			uncaught_exceptions_(std::uncaught_exceptions()),
 #endif
 			ctx_(ctx.is_active() ? 0 : &ctx)
@@ -673,8 +673,8 @@ namespace boost { namespace leaf {
 				ctx_->activate();
 		}
 
-		LEAF_CONSTEXPR LEAF_ALWAYS_INLINE context_activator( context_activator && x ) noexcept:
-#if !defined(LEAF_NO_EXCEPTIONS) && LEAF_STD_UNCAUGHT_EXCEPTIONS
+		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE context_activator( context_activator && x ) noexcept:
+#if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
 			uncaught_exceptions_(x.uncaught_exceptions_),
 #endif
 			ctx_(x.ctx_)
@@ -682,14 +682,14 @@ namespace boost { namespace leaf {
 			x.ctx_ = 0;
 		}
 
-		LEAF_ALWAYS_INLINE ~context_activator() noexcept
+		BOOST_LEAF_ALWAYS_INLINE ~context_activator() noexcept
 		{
 			if( !ctx_ )
 				return;
 			if( ctx_->is_active() )
 				ctx_->deactivate();
-#ifndef LEAF_NO_EXCEPTIONS
-#	if LEAF_STD_UNCAUGHT_EXCEPTIONS
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+#	if BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
 			if( std::uncaught_exceptions() > uncaught_exceptions_ )
 #	else
 			if( std::uncaught_exception() )
@@ -700,7 +700,7 @@ namespace boost { namespace leaf {
 	};
 
 	template <class Ctx>
-	LEAF_CONSTEXPR LEAF_ALWAYS_INLINE context_activator<Ctx> activate_context(Ctx & ctx) noexcept
+	BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE context_activator<Ctx> activate_context(Ctx & ctx) noexcept
 	{
 		return context_activator<Ctx>(ctx);
 	}
@@ -735,6 +735,6 @@ namespace boost { namespace leaf {
 
 } }
 
-#undef LEAF_THREAD_LOCAL
+#undef BOOST_LEAF_THREAD_LOCAL
 
 #endif

@@ -108,7 +108,7 @@ int main()
 			[&]() -> leaf::result<void>
 			{
 				std::cout << "Run # " << i << ": ";
-				LEAF_CHECK(f5());
+				BOOST_LEAF_CHECK(f5());
 				std::cout << "Success!" << std::endl;
 				return { };
 			},

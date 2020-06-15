@@ -51,13 +51,13 @@ leaf::result<void> print_half(const std::string& text)
 	return leaf::try_handle_some(
 		[&]() -> leaf::result<void>
 		{
-			LEAF_AUTO(r,convert(text));
+			BOOST_LEAF_AUTO(r,convert(text));
 			std::cout << r / 2 << std::endl;
 			return { };
 		},
 		[&]( leaf::match<ConversionErrc,ConversionErrc::TooLong> ) -> leaf::result<void>
 		{
-			LEAF_AUTO(i, BigInt::fromString(text));
+			BOOST_LEAF_AUTO(i, BigInt::fromString(text));
 			std::cout << i.half() << std::endl;
 			return { };
 		} );
@@ -68,7 +68,7 @@ int main( int argc, char const * argv[] )
 	return leaf::try_handle_all(
 		[&]() -> leaf::result<int>
 		{
-			LEAF_CHECK( print_half(argc<2 ? "" : argv[1]) );
+			BOOST_LEAF_CHECK( print_half(argc<2 ? "" : argv[1]) );
 			std::cout << "ok" << std::endl;
 			return 0;
 		},

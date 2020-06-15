@@ -48,7 +48,7 @@ public:
 	}
 };
 
-#ifndef LEAF_NO_EXCEPTIONS
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 class throws_on_copy
 {
 	throws_on_copy & operator=( throws_on_copy const & )=delete;
@@ -102,7 +102,7 @@ void run_tests()
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
-#ifndef LEAF_NO_EXCEPTIONS
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 	{
 		throws_on_copy a;
 		BOOST_TEST_EQ(object_count, 1);
@@ -224,7 +224,7 @@ void run_tests()
 	}
 	BOOST_TEST(!object_count);
 	BOOST_TEST(!value_count);
-#ifndef LEAF_NO_EXCEPTIONS
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 	{
 		optional<throws_on_copy> x(10, throws_on_copy());
 		BOOST_TEST_EQ(object_count, 1);

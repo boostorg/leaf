@@ -220,7 +220,7 @@ int main( int argc, char const * argv[] )
         return file_name.error();
 ----
 
-Wait, what's this, if "error" return "error"? There is a better way: we'll use `LEAF_AUTO`. It takes a `result<T>` and bails out in case of a failure (control leaves the calling function), otherwise defines a local variable to access the `T` value stored in the `result` object.
+Wait, what's this, if "error" return "error"? There is a better way: we'll use `BOOST_LEAF_AUTO`. It takes a `result<T>` and bails out in case of a failure (control leaves the calling function), otherwise defines a local variable to access the `T` value stored in the `result` object.
 
 This is what our `TryBlock` really looks like:
 
@@ -232,16 +232,16 @@ int main( int argc, char const * argv[] )
 
     [&]() -> leaf::result<int> <1>
     {
-      LEAF_AUTO(file_name, parse_command_line(argc,argv)); <2>
+      BOOST_LEAF_AUTO(file_name, parse_command_line(argc,argv)); <2>
 
       auto load = leaf::on_error( leaf::e_file_name{file_name} ); <3>
 
-      LEAF_AUTO(f, file_open(file_name)); <4>
+      BOOST_LEAF_AUTO(f, file_open(file_name)); <4>
 
-      LEAF_AUTO(s, file_size(*f)); <4>
+      BOOST_LEAF_AUTO(s, file_size(*f)); <4>
 
       std::string buffer( 1 + s, '\0' );
-      LEAF_CHECK(file_read(*f, &buffer[0], buffer.size()-1)); <4>
+      BOOST_LEAF_CHECK(file_read(*f, &buffer[0], buffer.size()-1)); <4>
 
       std::cout << buffer;
       std::cout.flush();
@@ -258,7 +258,7 @@ int main( int argc, char const * argv[] )
 ----
 
 <1> Our `TryBlock` returns a `result<int>`. In case of success, it will hold `0`, which will be returned from `main` to the OS.
-<2> If `parse_command_line` returns an error, we forward that error to `try_handle_all` (which invoked us) verbatim. Otherwise, `LEAF_AUTO` gets us a local variable `file_name` to access the `char const *` result.
+<2> If `parse_command_line` returns an error, we forward that error to `try_handle_all` (which invoked us) verbatim. Otherwise, `BOOST_LEAF_AUTO` gets us a local variable `file_name` to access the `char const *` result.
 <3> From now on, all errors escaping this scope will automatically communicate the (now successfully parsed from the command line) file name (LEAF defines `struct e_file_name {std::string value;}`). It's as if every time one of the following functions wants to report an error, `on_error` says "wait, associate this `e_file_name` object with the error, it's important!"
 <4> Call more functions, forward each failure to the caller...
 <5> ...but this is slightly different: we didn't get a failure via `result<T>` from another function, this is our own error we've detected! We return a `new_error`, passing the `cout_error` error code and the system `errno` (LEAF defines `struct e_errno {int value;}`).
@@ -531,7 +531,7 @@ To support this tricky use case, LEAF provides the function <<current_error>>, w
 
 Note that if the above logic is nested (e.g. one function calling another), `new_error` will be called only by the inner-most function, because that call guarantees that all calling functions will hit the `else` branch.
 
-TIP: To avoid ambiguities, whenever possible, use the <<exception>> function template when throwing exceptions to ensure that the exception object transports a unique `error_id`; better yet, use the <<LEAF_THROW>> macro, which in addition will capture `pass:[__FILE__]` and `pass:[__LINE__]`.
+TIP: To avoid ambiguities, whenever possible, use the <<exception>> function template when throwing exceptions to ensure that the exception object transports a unique `error_id`; better yet, use the <<BOOST_LEAF_THROW>> macro, which in addition will capture `pass:[__FILE__]` and `pass:[__LINE__]`.
 
 '''
 
@@ -566,7 +566,7 @@ leaf::result<void> g() noexcept
   return leaf::try_handle_some(
     []() -> leaf::result<void>
     {
-      LEAF_CHECk(f());
+      BOOST_LEAF_CHECK(f());
     },
     []( my_error_code ec ) <1>
     {
@@ -575,7 +575,7 @@ leaf::result<void> g() noexcept
 }
 ----
 [.text-right]
-<<result>> | <<new_error>> | <<try_handle_all>> | <<LEAF_CHECK>>
+<<result>> | <<new_error>> | <<try_handle_all>> | <<BOOST_LEAF_CHECK>>
 
 <1> This handler is selected based on the static type of `ec`. If an error is reported that does not have a `my_error_code` associated with it, it will be returned to the caller (because this is the only error-handling lambda provided).
 
@@ -604,7 +604,7 @@ void g()
 }
 ----
 [.text-right]
-<<result>> | <<exception>> | <<try_catch>> | <<LEAF_CHECK>>
+<<result>> | <<exception>> | <<try_catch>> | <<BOOST_LEAF_CHECK>>
 
 <1> This handler is selected based on the static type of `ec`, after catching `std::exception` (which <<try_catch>> always does).
 
@@ -976,7 +976,7 @@ return leaf::remote_try_handle_some(
 
   [&]() -> leaf::result<void>
   {
-    LEAF_AUTO(r, fut.get());
+    BOOST_LEAF_AUTO(r, fut.get());
     //Success!
     return { }
   },
@@ -988,7 +988,7 @@ return leaf::remote_try_handle_some(
 ----
 
 [.text-right]
-<<remote_try_handle_some>> | <<result>> | <<LEAF_AUTO>> | <<error_info>>
+<<remote_try_handle_some>> | <<result>> | <<BOOST_LEAF_AUTO>> | <<error_info>>
 
 The reason this works is that in case it communicates a failure, `leaf::result<T>` is able to hold a `shared_ptr<polymorphic_context>` object. That is why earlier instead of calling `task()` directly, we called `leaf::capture`: it calls the passed function, and in case it fails it stores the `shared_ptr<polymorphic_context>` we created in the returned `result<T>`, which now doesn't just communicate the fact that an error has occurred, but also holds the `context` object that `remote_try_handle_some` needs in order to supply a matching handler with arguments.
 
@@ -1369,7 +1369,7 @@ return try_handle_some(
 
   []() -> leaf::result<void> <1>
   {
-    LEAF_CHECK(g()); <2>
+    BOOST_LEAF_CHECK(g()); <2>
   },
 
   []( std::error_code const & e )
@@ -1444,14 +1444,14 @@ Here is a simple function which prints successfully computed answers, forwarding
 ----
 leaf::result<void> print_answer() noexcept
 {
-  LEAF_AUTO(answer, compute_answer());
+  BOOST_LEAF_AUTO(answer, compute_answer());
   std::cout << "Answer: " << answer << std::endl;
   return { };
 }
 ----
 
 [.text-right]
-<<result>> | <<LEAF_AUTO>>
+<<result>> | <<BOOST_LEAF_AUTO>>
 
 Finally, here is a scope that handles the errors (which used to be exception objects):
 
@@ -1461,7 +1461,7 @@ leaf::try_handle_all(
 
   []() -> leaf::result<void>
   {
-    LEAF_CHECK(print_answer());
+    BOOST_LEAF_CHECK(print_answer());
     return { };
   },
 
@@ -1482,7 +1482,7 @@ leaf::try_handle_all(
 ----
 
 [.text-right]
-<<try_handle_all>> | <<result>> | <<LEAF_CHECK>>
+<<try_handle_all>> | <<result>> | <<BOOST_LEAF_CHECK>>
 
 NOTE: The complete program illustrating this technique is available https://github.com/zajo/leaf/blob/master/examples/exception_to_result.cpp?ts=4[here].
 
@@ -1608,7 +1608,7 @@ int main() noexcept
 
       [&]() -> leaf::result<void>
       {
-        LEAF_AUTO(answer, call_lua(&*L));
+        BOOST_LEAF_AUTO(answer, call_lua(&*L));
         std::cout << "do_work succeeded, answer=" << answer << '\n'; <1>
         return { };
       },
@@ -1633,7 +1633,7 @@ int main() noexcept
   }
 ----
 [.text-right]
-<<try_handle_all>> | <<result>> | <<LEAF_AUTO>> | <<error_info>>
+<<try_handle_all>> | <<result>> | <<BOOST_LEAF_AUTO>> | <<error_info>>
 
 <1> If the call to `call_lua` succeeded, just print the answer.
 <2> Handle `do_work` failures.
@@ -1792,13 +1792,13 @@ namespace boost { namespace leaf {
 template <class Ctx>
 context_activator<Ctx> activate_context( Ctx & ctx ) noexcept;
 
-#define LEAF_NEW_ERROR(...) ....
-#define LEAF_AUTO(v,r) ....
-#define LEAF_CHECK(r) ....
+#define BOOST_LEAF_NEW_ERROR(...) ....
+#define BOOST_LEAF_AUTO(v,r) ....
+#define BOOST_LEAF_CHECK(r) ....
 ----
 
 [.text-right]
-<<error_id>> | <<is_error_id>> | <<new_error>> | <<current_error>> | <<polymorphic_context>> | <<context_activator>> | <<activate_context>> | <<LEAF_NEW_ERROR>> | <<LEAF_AUTO>> | <<LEAF_CHECK>>
+<<error_id>> | <<is_error_id>> | <<new_error>> | <<current_error>> | <<polymorphic_context>> | <<context_activator>> | <<activate_context>> | <<BOOST_LEAF_NEW_ERROR>> | <<BOOST_LEAF_AUTO>> | <<BOOST_LEAF_CHECK>>
 ====
 
 [[common.hpp]]
@@ -1960,13 +1960,13 @@ namespace boost { namespace leaf {
 
 } }
 
-#define LEAF_EXCEPTION(...) ....
+#define BOOST_LEAF_EXCEPTION(...) ....
 
-#define LEAF_THROW(...) ....
+#define BOOST_LEAF_THROW(...) ....
 ----
 
 [.text-right]
-<<exception>> | <<LEAF_EXCEPTION>> | <<LEAF_THROW>>
+<<exception>> | <<BOOST_LEAF_EXCEPTION>> | <<BOOST_LEAF_THROW>>
 
 <1> Only enabled if std::is_base_of<std::exception, Ex>::value.
 <2> Only enabled if !std::is_base_of<std::exception,E1>::value.
@@ -2411,7 +2411,7 @@ The `exception` function is overloaded: it can be invoked with no arguments, or 
 ** its `std::exception` subobject is default-initialized;
 ** its `error_id` subobject is initialized by `<<new_error,new_error>>(std::forward<E1>(e1), std::forward<E>(e)...`).
 
-NOTE: To automatically capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` with the returned object, use <<LEAF_EXCEPTION>> instead of `leaf::exception`.
+NOTE: To automatically capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` with the returned object, use <<BOOST_LEAF_EXCEPTION>> instead of `leaf::exception`.
 
 '''
 
@@ -2461,7 +2461,7 @@ return leaf::try_handle_some(
 
   [] -> leaf::result<void>
   {
-    LEAF_AUTO(answer, compute_answer());
+    BOOST_LEAF_AUTO(answer, compute_answer());
     //Use answer
     ....
     return { };
@@ -2490,7 +2490,7 @@ return leaf::try_handle_some(
 ----
 
 [.text-right]
-<<try_handle_some>> | <<result>> | <<LEAF_AUTO>>
+<<try_handle_some>> | <<result>> | <<BOOST_LEAF_AUTO>>
 
 TIP: See also <<tutorial-exception_to_result>> from the tutorial.
 
@@ -3629,7 +3629,7 @@ The additional information is limited to the type name of the first such error o
 
 [NOTE]
 --
-The behavior of `diagnostic_info` (and <<verbose_diagnostic_info>>) is affected by the value of the macro `LEAF_DIAGNOSTICS`:
+The behavior of `diagnostic_info` (and <<verbose_diagnostic_info>>) is affected by the value of the macro `BOOST_LEAF_DIAGNOSTICS`:
 
 * If it is 1 (the default), LEAF produces `diagnostic_info` but only if an active error handling context on the call stack takes an argument of type `diagnostic_info`;
 * If it is 0, the `diagnostic_info` functionality is stubbed out even for error handling contexts that take an argument of type `diagnostic_info`. This could shave a few cycles off the error path in some programs (but it is probably not worth it).
@@ -3953,7 +3953,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-The <<LEAF_NEW_ERROR>>, <<LEAF_EXCEPTION>> and <<LEAF_THROW>> macros capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `e_source_location` object.
+The <<BOOST_LEAF_NEW_ERROR>>, <<BOOST_LEAF_EXCEPTION>> and <<BOOST_LEAF_THROW>> macros capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `e_source_location` object.
 
 '''
 
@@ -4409,7 +4409,7 @@ The additional information includes the types and the values of all such error o
 
 [NOTE]
 --
-The behavior of `verbose_diagnostic_info` (and <<diagnostic_info>>) is affected by the value of the macro `LEAF_DIAGNOSTICS`:
+The behavior of `verbose_diagnostic_info` (and <<diagnostic_info>>) is affected by the value of the macro `BOOST_LEAF_DIAGNOSTICS`:
 
 * If it is 1 (the default), LEAF produces `verbose_diagnostic_info` but only if an active error handling context on the call stack takes an argument of type `verbose_diagnostic_info`;
 * If it is 0, the `verbose_diagnostic_info` functionality is stubbed out even for error handling contexts that take an argument of type `verbose_diagnostic_info`. This could save some cycles on the error path in some programs (but is probably not worth it).
@@ -4424,32 +4424,32 @@ TIP: The contents of each Reference section are organized alphabetically.
 
 '''
 
-[[LEAF_AUTO]]
-=== `LEAF_AUTO`
+[[BOOST_LEAF_AUTO]]
+=== `BOOST_LEAF_AUTO`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
-#define LEAF_AUTO(v,r)\
+#define BOOST_LEAF_AUTO(v,r)\
   auto && _r_##v = r;\
   if( !_r_##v )\
     return _r_##v.error();\
   auto & v = _r_##v.value()
 ----
 
-`LEAF_AUTO` is useful when calling a function that returns `result<T>` (other than `result<void>`), if the desired behavior is to forward any errors to the caller verbatim.
+`BOOST_LEAF_AUTO` is useful when calling a function that returns `result<T>` (other than `result<void>`), if the desired behavior is to forward any errors to the caller verbatim.
 
 Example:
 
-.Compute two int values, return their sum as a float, using LEAF_AUTO:
+.Compute two int values, return their sum as a float, using BOOST_LEAF_AUTO:
 [source,c++]
 ----
 leaf::result<int> compute_value();
 
 leaf::result<float> add_values()
 {
-  LEAF_AUTO(v1, compute_value());
-  LEAF_AUTO(v2, compute_value());
+  BOOST_LEAF_AUTO(v1, compute_value());
+  BOOST_LEAF_AUTO(v2, compute_value());
   return v1 + v2;
 }
 ----
@@ -4457,9 +4457,9 @@ leaf::result<float> add_values()
 [.text-right]
 <<result>>
 
-Of course, we could write `add_value` without using `LEAF_AUTO`. This is equivalent:
+Of course, we could write `add_value` without using `BOOST_LEAF_AUTO`. This is equivalent:
 
-.Compute two int values, return their sum as a float, without LEAF_AUTO:
+.Compute two int values, return their sum as a float, without BOOST_LEAF_AUTO:
 ----
 leaf::result<float> add_values()
 {
@@ -4477,13 +4477,13 @@ leaf::result<float> add_values()
 
 '''
 
-[[LEAF_CHECK]]
-=== `LEAF_CHECK`
+[[BOOST_LEAF_CHECK]]
+=== `BOOST_LEAF_CHECK`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
-#define LEAF_CHECK(r)\
+#define BOOST_LEAF_CHECK(r)\
   {\
     auto && _r = r;\
     if(!_r)\
@@ -4491,11 +4491,11 @@ leaf::result<float> add_values()
   }
 ----
 
-`LEAF_CHECK` is useful when calling a function that returns `result<void>`, if the desired behavior is to forward any errors to the caller verbatim.
+`BOOST_LEAF_CHECK` is useful when calling a function that returns `result<void>`, if the desired behavior is to forward any errors to the caller verbatim.
 
 Example:
 
-.Try to send a message, then compute a value, report errors using LEAF_CHECK:
+.Try to send a message, then compute a value, report errors using BOOST_LEAF_CHECK:
 [source,c++]
 ----
 leaf::result<void> send_message( char const * msg );
@@ -4504,7 +4504,7 @@ leaf::result<int> compute_value();
 
 leaf::result<int> say_hello_and_compute_value()
 {
-  LEAF_CHECK(send_message("Hello!"));
+  BOOST_LEAF_CHECK(send_message("Hello!"));
   return compute_value();
 }
 ----
@@ -4512,9 +4512,9 @@ leaf::result<int> say_hello_and_compute_value()
 [.text-right]
 <<result>>
 
-Equivalent implementation without `LEAF_CHECK`:
+Equivalent implementation without `BOOST_LEAF_CHECK`:
 
-.Try to send a message, then compute a value, report errors without LEAF_CHECK:
+.Try to send a message, then compute a value, report errors without BOOST_LEAF_CHECK:
 ----
 leaf::result<float> add_values()
 {
@@ -4528,42 +4528,42 @@ leaf::result<float> add_values()
 
 '''
 
-[[LEAF_NEW_ERROR]]
-=== `LEAF_NEW_ERROR`
+[[BOOST_LEAF_NEW_ERROR]]
+=== `BOOST_LEAF_NEW_ERROR`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
-#define LEAF_NEW_ERROR(...) <<unspecified>>
+#define BOOST_LEAF_NEW_ERROR(...) <<unspecified>>
 ----
 
-Effects: :: `LEAF_NEW_ERROR(e...)` is equivalent to `leaf::<<new_error,new_error>>(e...)`, except the current source location is automatically passed to `new_error` in a `<<common,e_source_location>>` object (in addition to all `e...` objects).
+Effects: :: `BOOST_LEAF_NEW_ERROR(e...)` is equivalent to `leaf::<<new_error,new_error>>(e...)`, except the current source location is automatically passed to `new_error` in a `<<common,e_source_location>>` object (in addition to all `e...` objects).
 
 '''
 
-[[LEAF_EXCEPTION]]
-=== `LEAF_EXCEPTION`
+[[BOOST_LEAF_EXCEPTION]]
+=== `BOOST_LEAF_EXCEPTION`
 
 [source,c++]
 .#include <boost/leaf/exception.hpp>
 ----
-#define LEAF_EXCEPTION(...) <<unspecified>>
+#define BOOST_LEAF_EXCEPTION(...) <<unspecified>>
 ----
 
 Effects: :: This is a variadic macro which forwards its arguments to the function template <<exception>>, in addition capturing `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]`, in a `<<common,e_source_location>>` object.
 
 '''
 
-[[LEAF_THROW]]
-=== `LEAF_THROW`
+[[BOOST_LEAF_THROW]]
+=== `BOOST_LEAF_THROW`
 
 [source,c++]
 .#include <boost/leaf/exception.hpp>
 ----
-#define LEAF_THROW(...) throw LEAF_EXCEPTION(__VA_ARGS__)
+#define BOOST_LEAF_THROW(...) throw BOOST_LEAF_EXCEPTION(__VA_ARGS__)
 ----
 
-Effects: :: Throws the exception object returned by <<LEAF_EXCEPTION>>.
+Effects: :: Throws the exception object returned by <<BOOST_LEAF_EXCEPTION>>.
 
 [[rationale]]
 == Design
@@ -4683,7 +4683,7 @@ return leaf::try_handle_some(
 
   []() -> leaf::result<void>
   {
-    LEAF_AUTO(r, process_file()); //In case of errors, error objects are stored inside the try_handle_some scope
+    BOOST_LEAF_AUTO(r, process_file()); //In case of errors, error objects are stored inside the try_handle_some scope
 
     //Success, use r:
     ....
@@ -4857,13 +4857,13 @@ leaf::result<parsed_line> parse_line( std::string const & line );
 
 leaf::result<parsed_line> read_and_parse_line( reader & r )
 {
-  LEAF_AUTO(line, read_line(r)); <1>
-  LEAF_AUTO(parsed, parse_line(line)); <2>
+  BOOST_LEAF_AUTO(line, read_line(r)); <1>
+  BOOST_LEAF_AUTO(parsed, parse_line(line)); <2>
   return parsed;
 }
 ----
 [.text-right]
-<<result>> | <<LEAF_AUTO>>
+<<result>> | <<BOOST_LEAF_AUTO>>
 
 <1> Read a line, forward errors to the caller.
 <2> Parse the line, forward errors to the caller.
@@ -5165,9 +5165,9 @@ meson test
 
 The following configuration macros are recognized:
 
-* `LEAF_DIAGNOSTICS`: Defining this macro to `0` stubs out both <<diagnostic_info>> and <<verbose_diagnostic_info>>, which could improve the performance of the error path in some programs (if the macro is left undefined, LEAF defines it as `1`).
-* `LEAF_NO_EXCEPTIONS`: Disables all exception handling support. If left undefined, LEAF defines it based on the compiler configuration (e.g. `-fno-exceptions`).
-* `LEAF_NO_THREADS`: Disable all multi-thread support.
+* `BOOST_LEAF_DIAGNOSTICS`: Defining this macro to `0` stubs out both <<diagnostic_info>> and <<verbose_diagnostic_info>>, which could improve the performance of the error path in some programs (if the macro is left undefined, LEAF defines it as `1`).
+* `BOOST_LEAF_NO_EXCEPTIONS`: Disables all exception handling support. If left undefined, LEAF defines it based on the compiler configuration (e.g. `-fno-exceptions`).
+* `BOOST_LEAF_NO_THREADS`: Disable all multi-thread support.
 
 == Acknowledgements
 

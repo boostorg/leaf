@@ -53,7 +53,7 @@ int main()
 		leaf::try_handle_all(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f<int>(error_code::ok));
+				BOOST_LEAF_AUTO(answer, f<int>(error_code::ok));
 				c = answer;
 				return { };
 			},
@@ -71,7 +71,7 @@ int main()
 		leaf::try_handle_all(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f<int>(error_code::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(error_code::error1));
 				c = answer;
 				return { };
 			},
@@ -97,7 +97,7 @@ int main()
 		leaf::try_handle_all(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
+				BOOST_LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
 				c = answer;
 				return { };
 			},
@@ -128,7 +128,7 @@ int main()
 		leaf::try_handle_all(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f_errc_wrapped<int>(errc_a::a0));
+				BOOST_LEAF_AUTO(answer, f_errc_wrapped<int>(errc_a::a0));
 				c = answer;
 				return { };
 			},
@@ -159,7 +159,7 @@ int main()
 		leaf::try_handle_all(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f<int>(error_code::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(error_code::error1));
 				c = answer;
 				return { };
 			},
@@ -190,7 +190,7 @@ int main()
 		leaf::try_handle_all(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f<int>(error_code::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(error_code::error1));
 				c = answer;
 				return { };
 			},
@@ -221,7 +221,7 @@ int main()
 		leaf::try_handle_all(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f<int>(error_code::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(error_code::error1));
 				c = answer;
 				return { };
 			},
@@ -252,7 +252,7 @@ int main()
 		leaf::try_handle_all(
 			[&c]() -> leaf::result<void>
 			{
-				LEAF_AUTO(answer, f<int>(error_code::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(error_code::error1));
 				c = answer;
 				return { };
 			},
@@ -284,7 +284,7 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f<int>(error_code::ok));
+				BOOST_LEAF_AUTO(answer, f<int>(error_code::ok));
 				return answer;
 			},
 			[]
@@ -299,7 +299,7 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f<int>(error_code::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(error_code::error1));
 				return answer;
 			},
 			[]( error_code ec, info<1> const & x, info<2> y )
@@ -321,7 +321,7 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
+				BOOST_LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
 				return answer;
 			},
 			[]( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
@@ -347,7 +347,7 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f_errc_wrapped<int>(errc_a::a0));
+				BOOST_LEAF_AUTO(answer, f_errc_wrapped<int>(errc_a::a0));
 				return answer;
 			},
 			[]( leaf::match<leaf::condition<e_wrapped_error_code, cond_x>, cond_x::x11> )
@@ -373,7 +373,7 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f<int>(error_code::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(error_code::error1));
 				return answer;
 			},
 			[]( leaf::match<error_code, error_code::error2> )
@@ -399,7 +399,7 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f<int>(error_code::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(error_code::error1));
 				return answer;
 			},
 			[]( leaf::match<error_code, error_code::error2> )
@@ -425,7 +425,7 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f<int>(error_code::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(error_code::error1));
 				return answer;
 			},
 			[]( leaf::match<e_error_code, error_code::error2> )
@@ -451,7 +451,7 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				LEAF_AUTO(answer, f<int>(error_code::error1));
+				BOOST_LEAF_AUTO(answer, f<int>(error_code::error1));
 				return answer;
 			},
 			[]( leaf::match<e_error_code, error_code::error2> )

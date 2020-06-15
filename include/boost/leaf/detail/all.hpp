@@ -1,5 +1,5 @@
-#ifndef LEAF_ALL_HPP_INCLUDED
-#define LEAF_ALL_HPP_INCLUDED
+#ifndef BOOST_LEAF_ALL_HPP_INCLUDED
+#define BOOST_LEAF_ALL_HPP_INCLUDED
 
 // Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -13,7 +13,7 @@
 #include <boost/leaf/error.hpp>
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/handle_error.hpp>
-#ifndef LEAF_NO_EXCEPTIONS
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 #	include <boost/leaf/handle_exception.hpp>
 #endif
 #include <boost/leaf/on_error.hpp>

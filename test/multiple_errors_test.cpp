@@ -4,7 +4,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#ifdef LEAF_NO_EXCEPTIONS
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
 #	include <boost/leaf/handle_error.hpp>
 #else
 #	include <boost/leaf/handle_exception.hpp>
@@ -60,7 +60,7 @@ int main()
 		BOOST_TEST_EQ(r, 2);
 	}
 
-#ifndef LEAF_NO_EXCEPTIONS
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 	{
 		int r = leaf::try_catch(
 			[]() -> int

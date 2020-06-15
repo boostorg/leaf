@@ -4,7 +4,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#ifdef LEAF_NO_EXCEPTIONS
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
 
 #include <iostream>
 
@@ -217,7 +217,7 @@ int main()
 					},
 					[]( info<1> const & ) -> int
 					{
-						LEAF_THROW(my_exception());
+						BOOST_LEAF_THROW(my_exception());
 					},
 					[]( leaf::catch_<> )
 					{
@@ -244,7 +244,7 @@ int main()
 		auto error_handlers = std::make_tuple(
 			[]( info<1> const & ) -> int
 			{
-				LEAF_THROW(my_exception());
+				BOOST_LEAF_THROW(my_exception());
 			},
 			[]( leaf::catch_<> )
 			{
@@ -287,7 +287,7 @@ int main()
 					},
 					[]( info<1> const & ) -> int
 					{
-						LEAF_THROW(my_exception());
+						BOOST_LEAF_THROW(my_exception());
 					},
 					[]( leaf::catch_<> )
 					{
@@ -310,7 +310,7 @@ int main()
 		auto error_handlers = std::make_tuple(
 			[]( info<1> const & ) -> leaf::result<int>
 			{
-				LEAF_THROW(my_exception());
+				BOOST_LEAF_THROW(my_exception());
 			},
 			[]( leaf::catch_<> ) -> leaf::result<int>
 			{

@@ -439,7 +439,7 @@ The idea of `OUTCOME_TRY` is to support generic response to failures in *error-n
 1. That the [*failure flag* can be observed generically](#1-the-semantics-of-a-failure), and
 2. That it is safe to simply return from an [*error-neutral* function](#2-classification-of-functions-based-on-their-affinity-to-errors) in case of a failure, forwarding error objects to the caller.
 
-Logically, this behavior is equivalent to the compiler-generated code when calling a function which may throw an exception. Consequently, all reasoning applicable to object invariants when throwing exceptions applies equally when using `OUTCOME_TRY` (or the [LEAF](https://zajo.github.io/leaf) analog, `LEAF_AUTO`).
+Logically, this behavior is equivalent to the compiler-generated code when calling a function which may throw an exception. Consequently, all reasoning applicable to object invariants when throwing exceptions applies equally when using `OUTCOME_TRY` (or the [LEAF](https://zajo.github.io/leaf) analog, `BOOST_LEAF_AUTO`).
 
 > **NOTE:** Lately there seems to be a debate in the C++ community whether the *basic guarantee* should be the minimum requirement for all user-defined types, that is, whether it should be required that even when operations fail, the basic object invariants are in place. Arguably this is beyond the scope of this paper, but the previous paragraph holds regardless: *safety-guarantees* are equally applicable, with or without exception handling.
 
@@ -459,7 +459,7 @@ Logically, this behavior is equivalent to the compiler-generated code when calli
 
 * Error-handling is a dynamic process, so the static type system is of limited assistance; for example, `ENOENT` is a *value* and not a *type*, and therefore the appropriate error-handler has to be matched dynamically rather than statically.
 
-* Because most of the functions in a program are *error-neutral*, the ability to automatically (e.g. when using exception handling) or at least generically (e.g. `OUTCOME_TRY`, `LEAF_AUTO`) forward errors to the caller is critical for correctness.
+* Because most of the functions in a program are *error-neutral*, the ability to automatically (e.g. when using exception handling) or at least generically (e.g. `OUTCOME_TRY`, `BOOST_LEAF_AUTO`) forward errors to the caller is critical for correctness.
 
 * The formal ~~exception-safety~~ failure-safety guarantees are applicable to *error-neutral* functions responding to failures generically, even when not using exception handling.
 

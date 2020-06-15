@@ -1,5 +1,5 @@
-#ifndef LEAF_87F274C4D4BA11E89928D55AC82C3C47
-#define LEAF_87F274C4D4BA11E89928D55AC82C3C47
+#ifndef BOOST_LEAF_HANDLE_EXCEPTION_HPP_INCLUDED
+#define BOOST_LEAF_HANDLE_EXCEPTION_HPP_INCLUDED
 
 // Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -8,14 +8,14 @@
 
 #if defined(__clang__)
 #	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(LEAF_ENABLE_WARNINGS)
+#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(LEAF_ENABLE_WARNINGS)
+#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma warning(push,1)
 #endif
 
 #include <boost/leaf/config.hpp>
-#ifdef LEAF_NO_EXCEPTIONS
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
 #	error This header requires exception handling
 #endif
 
@@ -33,7 +33,7 @@ namespace boost { namespace leaf {
 		public:
 
 			template <class TryBlock, class... H>
-			LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock && try_block, H && ... h )
+			BOOST_LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock && try_block, H && ... h )
 			{
 				using namespace leaf_detail;
 				static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
@@ -55,7 +55,7 @@ namespace boost { namespace leaf {
 			}
 
 			template <class TryBlock, class... H>
-			LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock && try_block, H && ... h )
+			BOOST_LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock && try_block, H && ... h )
 			{
 				using namespace leaf_detail;
 				static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
@@ -81,18 +81,18 @@ namespace boost { namespace leaf {
 		};
 
 		template <class Ex>
-		LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * ex, Ex const * ) noexcept
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * ex, Ex const * ) noexcept
 		{
 			return dynamic_cast<Ex const *>(ex)!=0;
 		}
 
 		template <class Ex, class... ExRest>
-		LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * ex, Ex const *, ExRest const * ... ex_rest ) noexcept
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * ex, Ex const *, ExRest const * ... ex_rest ) noexcept
 		{
 			return dynamic_cast<Ex const *>(ex)!=0 || check_exception_pack(ex, ex_rest...);
 		}
 
-		LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * )
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * )
 		{
 			return true;
 		}
@@ -105,17 +105,17 @@ namespace boost { namespace leaf {
 
 	public:
 
-		LEAF_CONSTEXPR explicit catch_( std::exception const * value ) noexcept:
+		BOOST_LEAF_CONSTEXPR explicit catch_( std::exception const * value ) noexcept:
 			value_(value)
 		{
 		}
 
-		LEAF_CONSTEXPR bool operator()() const noexcept
+		BOOST_LEAF_CONSTEXPR bool operator()() const noexcept
 		{
 			return value_ && leaf_detail::check_exception_pack(value_,static_cast<Ex const *>(0)...);
 		}
 
-		LEAF_CONSTEXPR std::exception const & value() const noexcept
+		BOOST_LEAF_CONSTEXPR std::exception const & value() const noexcept
 		{
 			BOOST_LEAF_ASSERT(value_!=0);
 			return *value_;
@@ -129,17 +129,17 @@ namespace boost { namespace leaf {
 
 	public:
 
-		LEAF_CONSTEXPR explicit catch_( std::exception const * value ) noexcept:
+		BOOST_LEAF_CONSTEXPR explicit catch_( std::exception const * value ) noexcept:
 			value_(dynamic_cast<Ex const *>(value))
 		{
 		}
 
-		LEAF_CONSTEXPR bool operator()() const noexcept
+		BOOST_LEAF_CONSTEXPR bool operator()() const noexcept
 		{
 			return this->value_!=0;
 		}
 
-		LEAF_CONSTEXPR Ex const & value() const noexcept
+		BOOST_LEAF_CONSTEXPR Ex const & value() const noexcept
 		{
 			BOOST_LEAF_ASSERT(this->value_!=0);
 			return *this->value_;
@@ -156,7 +156,7 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple, class... Ex>
 		struct check_one_argument<SlotsTuple,catch_<Ex...>>
 		{
-			LEAF_CONSTEXPR static bool check( SlotsTuple const &, error_info const & ei ) noexcept
+			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple const &, error_info const & ei ) noexcept
 			{
 				if( ei.exception_caught() )
 					return catch_<Ex...>(ei.exception())();
@@ -169,7 +169,7 @@ namespace boost { namespace leaf {
 		struct get_one_argument<catch_<Ex...>>
 		{
 			template <class SlotsTuple>
-			LEAF_CONSTEXPR static catch_<Ex...> get( SlotsTuple const &, error_info const & ei ) noexcept
+			BOOST_LEAF_CONSTEXPR static catch_<Ex...> get( SlotsTuple const &, error_info const & ei ) noexcept
 			{
 				std::exception const * ex = ei.exception();
 				BOOST_LEAF_ASSERT(ex!=0);
@@ -194,7 +194,7 @@ namespace boost { namespace leaf {
 				os << "\nUnknown exception type (not a std::exception)";
 		}
 
-		LEAF_CONSTEXPR inline exception_info_::exception_info_( std::exception * ex ) noexcept:
+		BOOST_LEAF_CONSTEXPR inline exception_info_::exception_info_( std::exception * ex ) noexcept:
 			exception_info_base(ex)
 		{
 		}
@@ -260,7 +260,7 @@ namespace boost { namespace leaf {
 				return current_error();
 		}
 
-		LEAF_CONSTEXPR inline exception_info_base::exception_info_base( std::exception * ex ) noexcept:
+		BOOST_LEAF_CONSTEXPR inline exception_info_base::exception_info_base( std::exception * ex ) noexcept:
 			ex_(ex)
 		{
 			BOOST_LEAF_ASSERT(!dynamic_cast<capturing_exception const *>(ex_));
@@ -280,7 +280,7 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////
 
 	template <class TryBlock, class... H>
-	LEAF_CONSTEXPR inline decltype(std::declval<TryBlock>()()) try_catch( TryBlock && try_block, H && ... h )
+	BOOST_LEAF_CONSTEXPR inline decltype(std::declval<TryBlock>()()) try_catch( TryBlock && try_block, H && ... h )
 	{
 		using namespace leaf_detail;
 		context_type_from_handlers<H...> ctx;

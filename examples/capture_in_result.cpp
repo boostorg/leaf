@@ -86,7 +86,7 @@ int main()
 		leaf::try_handle_all(
 			[&]() -> leaf::result<void>
 			{
-				LEAF_AUTO(r,f.get());
+				BOOST_LEAF_AUTO(r,f.get());
 
 				// Success! Use r to access task_result.
 				std::cout << "Success!" << std::endl;

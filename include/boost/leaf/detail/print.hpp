@@ -1,5 +1,5 @@
-#ifndef LEAF_3BAB50A2B87E11E89EEB30600C39171A
-#define LEAF_3BAB50A2B87E11E89EEB30600C39171A
+#ifndef BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
+#define BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
 
 // Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -8,9 +8,9 @@
 
 #if defined(__clang__)
 #	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(LEAF_ENABLE_WARNINGS)
+#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(LEAF_ENABLE_WARNINGS)
+#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma warning(push,1)
 #endif
 
@@ -24,7 +24,7 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <int N>
-		LEAF_CONSTEXPR inline char const * check_prefix( char const * t, char const (&prefix)[N] )
+		BOOST_LEAF_CONSTEXPR inline char const * check_prefix( char const * t, char const (&prefix)[N] )
 		{
 			return std::strncmp(t,prefix,sizeof(prefix)-1)==0 ? t+sizeof(prefix)-1 : t;
 		}
@@ -120,7 +120,7 @@ namespace boost { namespace leaf {
 		struct diagnostic<std::exception_ptr, false, false>
 		{
 			static constexpr bool is_invisible = true;
-			LEAF_CONSTEXPR static void print( std::ostream &, std::exception_ptr const & )
+			BOOST_LEAF_CONSTEXPR static void print( std::ostream &, std::exception_ptr const & )
 			{
 			}
 		};

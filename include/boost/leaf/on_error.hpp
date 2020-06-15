@@ -1,5 +1,5 @@
-#ifndef LEAF_25AF99F6DC6F11E8803DE9BC9723C688
-#define LEAF_25AF99F6DC6F11E8803DE9BC9723C688
+#ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
+#define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 
 // Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -8,9 +8,9 @@
 
 #if defined(__clang__)
 #	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(LEAF_ENABLE_WARNINGS)
+#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(LEAF_ENABLE_WARNINGS)
+#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma warning(push,1)
 #endif
 
@@ -36,8 +36,8 @@ namespace boost { namespace leaf {
 				return err_id;
 			else
 			{
-#ifndef LEAF_NO_EXCEPTIONS
-#	if LEAF_STD_UNCAUGHT_EXCEPTIONS
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+#	if BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
 				if( std::uncaught_exceptions() )
 #	else
 				if( std::uncaught_exception() )
@@ -76,7 +76,7 @@ namespace boost { namespace leaf {
 		template <int I, class Tuple>
 		struct tuple_for_each_preload
 		{
-			LEAF_CONSTEXPR static void trigger( Tuple & tup, int err_id ) noexcept
+			BOOST_LEAF_CONSTEXPR static void trigger( Tuple & tup, int err_id ) noexcept
 			{
 				BOOST_LEAF_ASSERT((err_id&3)==1);
 				tuple_for_each_preload<I-1,Tuple>::trigger(tup,err_id);
@@ -87,7 +87,7 @@ namespace boost { namespace leaf {
 		template <class Tuple>
 		struct tuple_for_each_preload<0, Tuple>
 		{
-			LEAF_CONSTEXPR static void trigger( Tuple const &, int ) noexcept { }
+			BOOST_LEAF_CONSTEXPR static void trigger( Tuple const &, int ) noexcept { }
 		};
 
 		template <class E>
@@ -99,13 +99,13 @@ namespace boost { namespace leaf {
 
 		public:
 
-			LEAF_CONSTEXPR preloaded_item( E && e ):
+			BOOST_LEAF_CONSTEXPR preloaded_item( E && e ):
 				s_(tl_slot_ptr<decay_E>()),
 				e_(std::forward<E>(e))
 			{
 			}
 
-			LEAF_CONSTEXPR void trigger( int err_id ) noexcept
+			BOOST_LEAF_CONSTEXPR void trigger( int err_id ) noexcept
 			{
 				BOOST_LEAF_ASSERT((err_id&3)==1);
 				if( s_ )
@@ -113,7 +113,7 @@ namespace boost { namespace leaf {
 					if( !s_->has_value(err_id) )
 						s_->put(err_id, std::move(e_));
 				}
-#if LEAF_DIAGNOSTICS
+#if BOOST_LEAF_DIAGNOSTICS
 				else
 				{
 					int c = tl_unexpected_enabled_counter();
@@ -134,13 +134,13 @@ namespace boost { namespace leaf {
 
 		public:
 
-			LEAF_CONSTEXPR deferred_item( F && f ) noexcept:
+			BOOST_LEAF_CONSTEXPR deferred_item( F && f ) noexcept:
 				s_(tl_slot_ptr<E>()),
 				f_(std::forward<F>(f))
 			{
 			}
 
-			LEAF_CONSTEXPR void trigger( int err_id ) noexcept
+			BOOST_LEAF_CONSTEXPR void trigger( int err_id ) noexcept
 			{
 				BOOST_LEAF_ASSERT((err_id&3)==1);
 				if( s_ )
@@ -148,7 +148,7 @@ namespace boost { namespace leaf {
 					if( !s_->has_value(err_id) )
 						s_->put(err_id, f_());
 				}
-#if LEAF_DIAGNOSTICS
+#if BOOST_LEAF_DIAGNOSTICS
 				else
 				{
 					int c = tl_unexpected_enabled_counter();
@@ -172,13 +172,13 @@ namespace boost { namespace leaf {
 
 		public:
 
-			LEAF_CONSTEXPR accumulating_item( F && f ) noexcept:
+			BOOST_LEAF_CONSTEXPR accumulating_item( F && f ) noexcept:
 				s_(tl_slot_ptr<E>()),
 				f_(std::forward<F>(f))
 			{
 			}
 
-			LEAF_CONSTEXPR void trigger( int err_id ) noexcept
+			BOOST_LEAF_CONSTEXPR void trigger( int err_id ) noexcept
 			{
 				BOOST_LEAF_ASSERT((err_id&3)==1);
 				if( s_ )
@@ -200,13 +200,13 @@ namespace boost { namespace leaf {
 
 		public:
 
-			LEAF_CONSTEXPR explicit preloaded( Item && ... i ):
+			BOOST_LEAF_CONSTEXPR explicit preloaded( Item && ... i ):
 				p_(std::forward<Item>(i)...),
 				moved_(false)
 			{
 			}
 
-			LEAF_CONSTEXPR preloaded( preloaded && x ) noexcept:
+			BOOST_LEAF_CONSTEXPR preloaded( preloaded && x ) noexcept:
 				p_(std::move(x.p_)),
 				moved_(false),
 				id_(std::move(x.id_))
@@ -246,7 +246,7 @@ namespace boost { namespace leaf {
 	} // leaf_detail
 
 	template <class... Item>
-	LEAF_NODISCARD LEAF_CONSTEXPR inline leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...> on_error( Item && ... i )
+	BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR inline leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...> on_error( Item && ... i )
 	{
 		return leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...>(std::forward<Item>(i)...);
 	}
