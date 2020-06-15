@@ -2577,14 +2577,14 @@ namespace boost { namespace leaf {
 		template <class T> struct translate_type_impl<T *> { using type = T; };
 		template <class T> struct translate_type_impl<T &> { using type = T; };
 
-		template <> struct translate_type_impl<diagnostic_info>;
-		template <> struct translate_type_impl<diagnostic_info const>;
-		template <> struct translate_type_impl<diagnostic_info const *>;
+		template <> struct translate_type_impl<diagnostic_info>; // Only take leaf::diagnostic_info by const &
+		template <> struct translate_type_impl<diagnostic_info const>; // Only take leaf::diagnostic_info by const &
+		template <> struct translate_type_impl<diagnostic_info const *>; // Only take leaf::diagnostic_info by const &
 		template <> struct translate_type_impl<diagnostic_info const &> { using type = e_unexpected_count; };
 
-		template <> struct translate_type_impl<verbose_diagnostic_info>;
-		template <> struct translate_type_impl<verbose_diagnostic_info const>;
-		template <> struct translate_type_impl<verbose_diagnostic_info const *>;
+		template <> struct translate_type_impl<verbose_diagnostic_info>; // Only take leaf::verbose_diagnostic_info by const &
+		template <> struct translate_type_impl<verbose_diagnostic_info const>; // Only take leaf::verbose_diagnostic_info by const &
+		template <> struct translate_type_impl<verbose_diagnostic_info const *>; // Only take leaf::verbose_diagnostic_info by const &
 		template <> struct translate_type_impl<verbose_diagnostic_info const &> { using type = e_unexpected_info; };
 
 		template <> struct translate_type_impl<std::error_code &>;
@@ -2835,32 +2835,25 @@ namespace boost { namespace leaf {
 		template <class TypeList>
 		using deduce_context = typename deduce_context_impl<TypeList>::type;
 
-		template <class HandlersTuple>
-		struct context_type_from_handlers_tuple;
+		template <class H>
+		struct fn_mp_args_fwd
+		{
+			using type = fn_mp_args<H>;
+		};
 
 		template <class... H>
-		struct context_type_from_handlers_tuple<std::tuple<H...>>
-		{
-			using type = deduce_context<leaf_detail_mp11::mp_append<fn_mp_args<H>...>>;
-		};
+		struct fn_mp_args_fwd<std::tuple<H...> &>: fn_mp_args_fwd<std::tuple<H...>> { };
 
-		template <class T>
-		struct tuplefy_type
+		template <class... H>
+		struct fn_mp_args_fwd<std::tuple<H...>>
 		{
-			using type = std::tuple<T>;
-		};
-
-		template <class... T>
-		struct tuplefy_type<std::tuple<T...>>
-		{
-			using type = std::tuple<T...>;
+			using type = leaf_detail_mp11::mp_append<typename fn_mp_args_fwd<H>::type...>;
 		};
 
 		template <class... H>
 		struct context_type_from_handlers_impl
 		{
-			using flattened = decltype(std::tuple_cat(std::declval<typename tuplefy_type<typename std::decay<H>::type>::type>()...));
-			using type = typename context_type_from_handlers_tuple<flattened>::type;
+			using type = deduce_context<leaf_detail_mp11::mp_append<typename fn_mp_args_fwd<H>::type...>>;
 		};
 
 		template <class Ctx>
@@ -2892,12 +2885,6 @@ namespace boost { namespace leaf {
 		return { };
 	}
 
-	template <class...  H>
-	BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( std::tuple<H...> const & ) noexcept
-	{
-		return { };
-	}
-
 	////////////////////////////////////////////
 
 	template <class...  H>
@@ -2908,12 +2895,6 @@ namespace boost { namespace leaf {
 
 	template <class...  H>
 	inline context_ptr make_shared_context( H && ... ) noexcept
-	{
-		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_handlers<H...>>>();
-	}
-
-	template <class...  H>
-	inline context_ptr make_shared_context( std::tuple<H...> const & ) noexcept
 	{
 		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_handlers<H...>>>();
 	}
@@ -3592,11 +3573,11 @@ namespace boost { namespace leaf {
 		template <class T>
 		struct is_tuple: std::false_type { };
 
-		template <class T>
-		struct is_tuple<T &>: is_tuple<T> { };
-
 		template <class... T>
 		struct is_tuple<std::tuple<T...>>: std::true_type { };
+
+		template <class... T>
+		struct is_tuple<std::tuple<T...> &>: std::true_type { };
 
 		template <class R, class Tup, class H>
 		BOOST_LEAF_CONSTEXPR inline typename std::enable_if<!is_tuple<H>::value, R>::type handle_error_( Tup & tup, error_info const & ei, H && h )

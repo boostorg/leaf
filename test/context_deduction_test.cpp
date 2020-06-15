@@ -104,6 +104,31 @@ void not_called_on_purpose()
 	test< std::tuple<info<1>,info<2>> >( expd([]( info<1>, info<2> ){ }, []( info<1>, leaf::verbose_diagnostic_info const &, info<2> ){ }) );
 	test< std::tuple<info<1>,info<2>> >( expd([]( info<1>, info<2>, leaf::diagnostic_info const & ){ }, []( info<1>, leaf::verbose_diagnostic_info const &, info<2> ){ }) );
 #endif
+
+	{
+		auto error_handlers = std::make_tuple(
+			[]( info<2> ) { },
+			[]( info<3> ) { } );
+		test< std::tuple<info<1>, info<2>, info<3>, info<4>, info<5>>>( expd(
+			[]( info<1> ) { },
+			error_handlers,
+			[]( info<4>, info<5> ) { } ) );
+	}
+
+	{
+		auto error_handlers1 = std::make_tuple(
+			[]( info<4> ) { },
+			[]( info<5> ) { } );
+		auto error_handlers2 = std::make_tuple(
+			[]( info<2> ) { },
+			[]( info<3> ) { },
+			error_handlers1 );
+		test< std::tuple<info<1>, info<2>, info<3>, info<4>, info<5>, info<6>>>( expd(
+			[]( info<1> ) { },
+			error_handlers2,
+			[]( info<4>, info<5> ) { },
+			[]( info<6> ) { } ) );
+	}
 }
 
 int main()
