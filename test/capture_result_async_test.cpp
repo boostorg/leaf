@@ -43,7 +43,7 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
 {
 	BOOST_LEAF_ASSERT(task_count>0);
 	std::vector<fut_info> fut;
-	std::generate_n( std::inserter(fut,fut.end()), task_count,
+	std::generate_n( std::back_inserter(fut), task_count,
 		[=]
 		{
 			int const a = rand();
@@ -75,7 +75,7 @@ int main()
 
 	{
 		std::vector<fut_info> fut = launch_tasks<decltype(error_handlers)>(
-			42,
+			100,
 			[]( int a, int b, int res ) -> leaf::result<int>
 			{
 				if( res >= 0 )
@@ -109,7 +109,7 @@ int main()
 
 	{
 		std::vector<fut_info> fut = launch_tasks<decltype(error_handlers)>(
-			42,
+			100,
 			[]( int a, int b, int res ) -> leaf::result<int>
 			{
 				if( res >= 0 )

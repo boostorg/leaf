@@ -101,7 +101,7 @@ int main()
 	std::vector<thread_ids> fut;
 	fut.reserve(thread_count);
 	std::generate_n(
-		std::inserter(fut,fut.end()),
+		std::back_inserter(fut),
 		thread_count,
 		[=]
 		{

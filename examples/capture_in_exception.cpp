@@ -69,7 +69,7 @@ int main()
 	// the error objects reported from the task in case it throws. The error types the
 	// context is able to hold statically are automatically deduced from the type of the
 	// error_handlers function.
-	std::generate_n( std::inserter(fut,fut.end()), task_count,
+	std::generate_n( std::back_inserter(fut), task_count,
 		[&]
 		{
 			return std::async(
