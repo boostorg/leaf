@@ -1127,7 +1127,7 @@ leaf::try_catch(
 <1> Handle file read errors.
 <2> Handle read errors that are not file errors.
 
-TIP: We don't bother to use <<catch_>>, because `try_catch` always catches exceptions, and we've chosen to not dispatch based on the exception type.
+TIP: In our handlers there is no need to specify what exception types we're catching, because `try_catch` always catches exceptions, and we've chosen to not dispatch based on the exception type.
 
 This style enables us to use `on_error` to add further classification dynamically, after the initial reporting of the error, as it bubbles up the call stack. For example;
 
