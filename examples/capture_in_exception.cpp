@@ -3,8 +3,9 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// This is a simple program that demonstrates the use of LEAF to transport E-objects between threads,
-// without using exception handling. See capture_eh.cpp for the exception-handling variant.
+// This is a simple program that demonstrates the use of LEAF to transport error
+// objects between threads, using exception handling. See capture_in_result.cpp
+// for the version that does not use exception handling.
 
 #include <boost/leaf/capture.hpp>
 #include <boost/leaf/handle_exception.hpp>
@@ -33,7 +34,7 @@ task_result task()
 	if( succeed )
 		return { };
 	else
-		throw leaf::exception( std::exception(),
+		throw leaf::exception(
 			e_thread_id{std::this_thread::get_id()},
 			e_failure_info1{"info"},
 			e_failure_info2{42} );
@@ -66,7 +67,7 @@ int main()
 	// wrapper function which calls leaf::capture, passing a context object that will hold
 	// the error objects reported from the task in case it throws. The error types the
 	// context is able to hold statically are automatically deduced from the type of the
-	// error_handlers function.
+	// error_handlers tuple.
 	std::generate_n( std::back_inserter(fut), task_count,
 		[&]
 		{
@@ -90,7 +91,7 @@ int main()
 
 				// Success! Use r to access task_result.
 				std::cout << "Success!" << std::endl;
-				(void) r;
+				(void) r; // Presumably we'll somehow use the task_result.
 			},
 			error_handlers );
 	}

@@ -20,14 +20,18 @@
 namespace leaf = boost::leaf;
 
 
-// Error tags
 struct bad_command_line { };
+
+// Input errors:
 struct input_error { };
 struct open_error { };
 struct read_error { };
 struct size_error { };
 struct eof_error { };
+
+// Output errors:
 struct output_error { };
+struct cout_error { };
 
 
 // We will handle all failures in our main function, but first, here are the declarations of the functions it calls, each
@@ -67,7 +71,7 @@ int main( int argc, char const * argv[] )
 			std::string buffer( 1 + s, '\0' );
 			file_read(*f,&buffer[0],buffer.size()-1);
 
-			auto load2 = leaf::on_error( output_error{}, [] { return leaf::e_errno{errno}; } );
+			auto load2 = leaf::on_error( output_error{}, cout_error{}, [] { return leaf::e_errno{errno}; } );
 			std::cout << buffer;
 			std::cout.flush();
 
