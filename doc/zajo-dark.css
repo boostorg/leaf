@@ -468,7 +468,7 @@ h5 code{color:#00cc99; font-size:113%}
 .admonitionblock td.icon .icon-caution::before{content:"\f06d";color:#a366ff}
 .admonitionblock td.icon .icon-important::before{content:"\f06a";color:#a366ff}
 .admonitionblock>table td.content{padding-left:1.125em;padding-right:1.25em;border-left:1px solid #dddddf;color:rgba(255,255,255,.67)}
-.conum[data-value]{display:inline-block;color:black!important;background-color:#00cc99;-webkit-border-radius:100px;border-radius:100px;text-align:center;font-size:.75em;width:1.67em;height:1.67em;line-height:1.67em;font-family:"Open Sans","DejaVu Sans",sans-serif;font-style:normal;font-weight:bold}
+.conum[data-value]{display:inline-block;color:black!important;background-color:#d9d9d9;-webkit-border-radius:100px;border-radius:100px;text-align:center;font-size:.75em;width:1.67em;height:1.67em;line-height:1.67em;font-family:"Open Sans","DejaVu Sans",sans-serif;font-style:normal;font-weight:bold}
 .exampleblock>.content{background-color:#404040;border-color:#e0e0dc;-webkit-box-shadow:0 1px 4px #e0e0dc;box-shadow:0 1px 4px #e0e0dc}
 .quoteblock {background-color:#404040}
 .quoteblock blockquote,.quoteblock p{color:rgba(255,255,255,.67);font-size:1.15rem;line-height:1.75;word-spacing:.1em;letter-spacing:0;font-style:italic;text-align:justify;background-color:#404040}
