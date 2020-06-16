@@ -67,7 +67,7 @@ int main()
 			{
 				try
 				{
-					throw leaf::exception(std::exception{}, info<4>{4});
+					throw leaf::exception(info<4>{4});
 				}
 				catch(...)
 				{

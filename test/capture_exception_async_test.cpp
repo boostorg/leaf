@@ -81,7 +81,7 @@ int main()
 				if( res >= 0 )
 					return res;
 				else
-					throw leaf::exception( std::exception(), info<1>{a}, info<2>{b}, info<3>{} );
+					throw leaf::exception(info<1>{a}, info<2>{b}, info<3>{});
 			} );
 
 		for( auto & f : fut )
@@ -116,7 +116,7 @@ int main()
 				if( res >= 0 )
 					return res;
 				else
-					throw leaf::exception( std::exception(), info<1>{a}, info<2>{b}, info<3>{} );
+					throw leaf::exception(info<1>{a}, info<2>{b}, info<3>{});
 			} );
 
 		for( auto & f : fut )

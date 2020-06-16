@@ -32,7 +32,7 @@ struct info
 void f0()
 {
 	auto load = leaf::on_error( []( info<0> & ) { } );
-	throw leaf::exception(std::exception(), info<2>{2} );
+	throw leaf::exception(info<2>{2});
 }
 
 void f1()

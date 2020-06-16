@@ -2874,9 +2874,23 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////////
 
 	template <class...  H>
+	BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context() noexcept
+	{
+		return { };
+	}
+
+	template <class...  H>
 	BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && ... ) noexcept
 	{
 		return { };
+	}
+
+	////////////////////////////////////////////
+
+	template <class...  H>
+	inline context_ptr make_shared_context() noexcept
+	{
+		return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_handlers<H...>>>();
 	}
 
 	template <class...  H>

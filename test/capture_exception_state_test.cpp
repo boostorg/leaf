@@ -63,7 +63,7 @@ int main()
 			leaf::make_shared_context(error_handlers),
 			[]
 			{
-				throw leaf::exception( std::exception(), info<1>{}, info<3>{} );
+				throw leaf::exception(info<1>{}, info<3>{});
 			} );
 		BOOST_TEST(false);
 	}
