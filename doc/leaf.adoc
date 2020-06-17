@@ -3,7 +3,7 @@
 :prewrap!:
 :docinfo: shared
 :stylesheet: zajo-dark.css
-:source-highlighter: rouge
+// :source-highlighter: rouge
 
 = LEAF
 Lightweight Error Augmentation Framework
@@ -1053,134 +1053,11 @@ NOTE: Follow this link to see a complete example program: https://github.com/zaj
 
 '''
 
-=== Classifying Errors Without Exception Type Hierarchy
+=== Classification of Failures
 
-Traditionally, exception types are organized in a hierarchy in order to classify failures:
+It is common for any given interface to define an `enum` that lists all possible error codes that the API reports. The benefit of this approach is that the list is complete and usually contains comments, so we know where to go for reference.
 
-[source,c++]
-----
-struct read_error      : virtual std::exception { };
-struct file_error      : virtual std::exception { };
-struct file_read_error : virtual read_error, virtual file_error { };
-----
-
-What's the point of this? It is to enable us to handle errors like so:
-
-[source,c++]
-----
-try
-{
-  f();
-}
-catch( file_read_error const & )
-{
-  ....; <1>
-}
-catch( read_error const & )
-{
-  ....; <2>
-}
-----
-<1> Handle file read errors.
-<2> Handle read errors that are not file errors.
-
-LEAF supports a style of error handling where all exceptions thrown are of type `std::exception`. In that case, instead of the hierarchy above, we could simply define:
-
-[source,c++]
-----
-struct read_error { };
-struct file_error { };
-----
-
-Then, to indicate a file read error, we could say:
-
-[source,c++]
-----
-throw leaf::exception(file_error{}, read_error{}); <1>
-----
-[.text-right]
-<<exception>>
-
-<1> In this invocation we are not passing an exception object to `leaf::exception`. In this case it returns an object of unspecified type that derives from `std::exception`.
-
-To handle errors:
-
-[source,c++]
-----
-leaf::try_catch(
-  []
-  {
-    f();
-  },
-  []( file_error, read_error )
-  {
-    ....; <1>
-  },
-  []( read_error )
-  {
-    ....; <2>
-  } );
-----
-[.text-right]
-<<try_catch>>
-
-<1> Handle file read errors.
-<2> Handle read errors that are not file errors.
-
-TIP: In our handlers there is no need to specify what exception types we're catching, because `try_catch` always catches exceptions, and we've chosen to not dispatch based on the exception type.
-
-This style enables us to use `on_error` to add further classification dynamically, after the initial reporting of the error, as it bubbles up the call stack. For example;
-
-[source,c++]
-----
-config read_config(....);
-{
-  auto load = leaf::on_error(read_config_error{}); <1>
-
-  ....; <2>
-}
-----
-[.text-right]
-<<on_error>>
-
-<1> Mark *any* failure that occurs inside `read_config` as `read_config_error`.
-<2> Call functions which throw on error.
-
-Then:
-
-[source,c++]
-----
-leaf::try_catch(
-  []
-  {
-    auto c = read_config();
-    ....; <1>
-  },
-  []( read_config_error, json_parse_error )
-  {
-    ....; <2>
-  },
-  []( read_config_error )
-  {
-    ....; <3>
-  } );
-----
-[.text-right]
-<<try_catch>>
-
-<1> Call more functions which may fail.
-<2> Handle `read_config` failures due to a json parse error.
-<3> Handle any other `read_config` failure.
-
-TIP: This programming technique works similarly when errors are communicated by a `result` type, rather than by throwing exceptions; see below.
-
-'''
-
-=== Classifying Errors Without Enums
-
-It is common for a library to define an `enum` that lists all possible error codes that any of the library functions may report. The benefit of this approach is that the list is complete and usually contains comments, so we know where to go for reference.
-
-The disadvantage of such flat lists is that they do not support handling a whole class of errors. Consider this error handler lambda from the <<introduction-result,introduction section>>:
+The disadvantage of such flat enums is that they do not support handling a whole class of failures. Consider this error handler from the <<introduction-result,introduction section>>:
 
 [source,c++]
 ----
@@ -1198,22 +1075,48 @@ The disadvantage of such flat lists is that they do not support handling a whole
 ....
 ----
 
-It will get called if the value of the `error_code` enum communicated with the error is one of `input_file_size_error`, `input_file_read_error` or `input_eof_error`. In short, the idea is to handle an input error.
+It will get called if the value of the `error_code` enum communicated with the failure is one of `input_file_size_error`, `input_file_read_error` or `input_eof_error`. In short, the idea is to handle any input error.
 
-But what if later we add support for detecting and reporting a new type of input error, e.g. `input_permissions_error`? We would add that to the `error_code` enum. And this would break our error handling.
+But what if later we add support for detecting and reporting a new type of input error, e.g. `input_permissions_error`? It is easy to add that to the `error_code` enum; but now our input error handler won't recognize this new input error -- and we have a bug.
 
-LEAF supports an error handling model where the different error conditions are represented by individual static types, which act as a simple tagging system. If we go back to the introduction section, instead of defining:
+If we can use exceptions, the situation is better because exception types can be organized in a hierarchy in order to classify failures:
+
+[source,c++]
+----
+struct error: std::exception { };
+struct input_error : virtual error { };
+struct input_file_size_error : virtual input_error { };
+struct input_file_read_error : virtual input_error { };
+struct input_eof_error : virtual input_error { };
+----
+
+In terms of LEAF, our input error exception handler now looks like this:
+
+[source,c++]
+----
+[]( input_error &, leaf::e_errno const * errn, leaf::e_file_name const & fn )
+{
+  std::cerr << "Failed to access " << fn.value;
+  if( errn )
+    std::cerr << ", errno=" << *errn;
+  std::cerr << std::endl;
+  return 3;
+},
+----
+
+This is future-proof, but still not ideal, because it is not possible to refine the classification of the failure after the exception object has been thrown.
+
+LEAF supports a novel style of error handling where the classification of failures does not use error code values or exception type hierarchies. If we go back to the introduction section, instead of defining:
 
 [source,c++]
 ----
 enum error_code
 {
-  bad_command_line = 1,
-  input_file_open_error,
+  ....
   input_file_size_error,
   input_file_read_error,
   input_eof_error,
-  cout_error
+  ....
 };
 ----
 
@@ -1221,33 +1124,27 @@ We could define:
 
 [source,c++]
 ----
-struct bad_command_line { };
-
-// Input errors:
+....
 struct input_error { };
-struct open_error { };
 struct size_error { };
 struct read_error { };
 struct eof_error { };
-
-// Output errors:
-struct output_error { };
-struct cout_error { };
+....
 ----
 
-With this in place, `file_read` can be implemented like this:
+With this in place, `file_read` from the https://github.com/zajo/leaf/blob/master/examples/print_file_result.cpp?ts=4[print_file_result.cpp] example can be rewritten like this:
 
 [source,c++]
 ----
 leaf::result<void> file_read( FILE & f, void * buf, int size )
 {
-  int n = fread(buf,1,size,&f);
+  int n = fread(buf, 1, size, &f);
 
   if( ferror(&f) )
     return leaf::new_error(input_error{}, read_error{}, leaf::e_errno{errno}); <1>
 
   if( n!=size )
-    return leaf::new_error(input_error{}, eof_error{}); <2>
+    return leaf::new_error(input_error{}, read_error{}, eof_error{}); <2>
 
   return { };
 }
@@ -1255,8 +1152,8 @@ leaf::result<void> file_read( FILE & f, void * buf, int size )
 [.text-right]
 <<result>> | <<new_error>> | <<e_errno>>
 
-<1> This error is classified as both `input_error` and `read_error`.
-<2> This error is classified as both `input_error` and `eof_error`.
+<1> This error is classified as `input_error` and `read_error`.
+<2> This error is classified as `input_error`, `read_error` and `eof_error`.
 
 Or, even better:
 
@@ -1264,15 +1161,15 @@ Or, even better:
 ----
 leaf::result<void> file_read( FILE & f, void * buf, int size )
 {
-  auto load = leaf::on_error(input_error{}); <1>
+  auto load = leaf::on_error( input_error{}, read_error{} ); <1>
 
-  int n = fread(buf,1,size,&f);
+  int n = fread(buf, 1, size, &f);
 
   if( ferror(&f) )
-    return leaf::new_error(read_error{}, leaf::e_errno{errno}); <2>
+    return leaf::new_error(leaf::e_errno{errno});
 
   if( n!=size )
-    return leaf::new_error(eof_error{}); <3>
+    return leaf::new_error(eof_error{}); <2>
 
   return { };
 }
@@ -1281,8 +1178,32 @@ leaf::result<void> file_read( FILE & f, void * buf, int size )
 <<result>> | <<on_error>> | <<new_error>> | <<e_errno>>
 
 <1> Any error escaping this scope will be classified as `input_error`
-<2> In addition, this error is classified as `read_error`.
-<3> In addition, this error is classified as `eof_error`.
+<2> In addition, this error is classified as `eof_error`.
+
+This technique works just as well if we choose to use exception handling:
+
+[source,c++]
+----
+void file_read( FILE & f, void * buf, int size )
+{
+  auto load = leaf::on_error( input_error{}, read_error{} ); <1>
+
+  int n = fread(buf, 1, size, &f);
+
+  if( ferror(&f) )
+    throw leaf::exception(leaf::e_errno{errno});
+
+  if( n!=size )
+    throw leaf::exception(eof_error{}); <2>
+}
+----
+[.text-right]
+<<on_error>> | <<exception>> | <<e_errno>>
+
+<1> Any error escaping this scope will be classified as `input_error`
+<2> In addition, this error is classified as `eof_error`.
+
+NOTE: If the type of the first argument passed to `leaf::exception` derives from `std::exception`, it will be used to initialize the returned exception object taken by `throw`. Here this is not the case, so the function returns a default-initialized `std::exception` object, while the first (and any other) argument is associated with the failure.
 
 And now we can write a future-proof handler that can handle any `input_error`:
 
@@ -1299,6 +1220,11 @@ And now we can write a future-proof handler that can handle any `input_error`:
 },
 ....
 ----
+
+Remarkably, because the classification of the failure does not depend on error codes or on exception types, this error handler can be used with `try_catch` if we use exception handling, or with `try_handle_some`/`try_handle_all` if we do not. Here is the complete example from the introduction section, rewritten to use this novel technique:
+
+* https://github.com/zajo/leaf/blob/master/examples/print_file_result_error_tags.cpp?ts=4[print_file_result_error_tags.cpp] (using `leaf::result<T>`).
+* https://github.com/zajo/leaf/blob/master/examples/print_file_eh_error_tags.cpp?ts=4[print_file_eh_error_tags.cpp] (using exception handling).
 
 '''
 
@@ -4110,10 +4036,12 @@ WARNING: Using `verbose_diagnostic_info` will likely allocate memory dynamically
 
 TIP: The contents of each Reference section are organized alphabetically.
 
+=== `BOOST_LEAF_`
+
 '''
 
 [[BOOST_LEAF_AUTO]]
-=== `BOOST_LEAF_AUTO`
+==== `AUTO`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
@@ -4166,7 +4094,7 @@ leaf::result<float> add_values()
 '''
 
 [[BOOST_LEAF_CHECK]]
-=== `BOOST_LEAF_CHECK`
+==== `CHECK`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
@@ -4217,7 +4145,7 @@ leaf::result<float> add_values()
 '''
 
 [[BOOST_LEAF_NEW_ERROR]]
-=== `BOOST_LEAF_NEW_ERROR`
+==== `NEW_ERROR`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
@@ -4230,7 +4158,7 @@ Effects: :: `BOOST_LEAF_NEW_ERROR(e...)` is equivalent to `leaf::<<new_error,new
 '''
 
 [[BOOST_LEAF_EXCEPTION]]
-=== `BOOST_LEAF_EXCEPTION`
+==== `EXCEPTION`
 
 [source,c++]
 .#include <boost/leaf/exception.hpp>
@@ -4243,7 +4171,7 @@ Effects: :: This is a variadic macro which forwards its arguments to the functio
 '''
 
 [[BOOST_LEAF_THROW_EXCEPTION]]
-=== `BOOST_LEAF_THROW_EXCEPTION`
+==== `THROW_EXCEPTION`
 
 [source,c++]
 .#include <boost/leaf/exception.hpp>
