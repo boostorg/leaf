@@ -145,16 +145,22 @@ foreach t : tests
 endforeach
 
 if exceptions
+	print_file_examples = [
+		'print_file_eh',
+		'print_file_eh_error_tags',
+		'print_file_result',
+		'print_file_result_error_tags'
+	]
+	foreach e : print_file_examples
+		executable(e, 'examples/print_file/'+e+'.cpp', dependencies: [leaf,thread_dep]+mp11 )
+	endforeach
+
 	examples = [
 		'capture_in_exception',
 		'capture_in_result',
 		'error_log',
 		'error_trace',
 		'exception_to_result',
-		'print_file_eh',
-		'print_file_eh_error_tags',
-		'print_file_result',
-		'print_file_result_error_tags',
 		'print_half'
 	]
 	foreach e : examples
@@ -163,7 +169,7 @@ if exceptions
 
 	if get_option('leaf_boost_examples')
 		executable('asio_beast_leaf_rpc', 'examples/asio_beast_leaf_rpc.cpp', dependencies: [leaf,thread_dep,boost_headers], override_options: ['cpp_std=c++17'] )
-		executable('print_file_outcome_result', 'examples/print_file_outcome_result.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
+		executable('print_file_outcome_result', 'examples/print_file/print_file_outcome_result.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
 	endif
 
 	if get_option('leaf_lua_examples')

@@ -9,8 +9,8 @@
 // - A handler that takes e_error_trace argument is present.
 // Otherwise none of the error trace machinery will be invoked by LEAF.
 
-// This example is similar to error_log, except the path the error takes is captured and
-// recorded in a std::deque, rather than just printed in-place.
+// This example is similar to error_log, except the path the error takes is recorded in
+// a std::deque, rather than just printed in-place.
 
 #include <boost/leaf/on_error.hpp>
 #include <boost/leaf/handle_error.hpp>

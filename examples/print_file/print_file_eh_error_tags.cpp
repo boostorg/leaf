@@ -20,16 +20,14 @@
 namespace leaf = boost::leaf;
 
 
-// Exception type hierarchy.
-struct print_file_error : virtual std::exception { };
-struct command_line_error : virtual print_file_error { };
-struct bad_command_line : virtual command_line_error { };
-struct input_error : virtual print_file_error { };
-struct input_file_error : virtual input_error { };
-struct input_file_open_error : virtual input_file_error { };
-struct input_file_size_error : virtual input_file_error { };
-struct input_file_read_error : virtual input_file_error { };
-struct input_eof_error : virtual input_file_error { };
+// Error types
+struct bad_command_line { };
+struct input_error { };
+struct open_error { };
+struct read_error { };
+struct size_error { };
+struct eof_error { };
+struct output_error { };
 
 
 // We will handle all failures in our main function, but first, here are the declarations of the functions it calls, each
@@ -51,9 +49,6 @@ void file_read( FILE & f, void * buf, int size );
 // The main function, which handles all errors.
 int main( int argc, char const * argv[] )
 {
-	// Configure std::cout to throw on error.
-	std::cout.exceptions(std::ostream::failbit | std::ostream::badbit);
-
 	return leaf::try_catch(
 
 		[&]
@@ -62,16 +57,17 @@ int main( int argc, char const * argv[] )
 
 			auto load = leaf::on_error( leaf::e_file_name{file_name} );
 
-			std::shared_ptr<FILE> f = file_open( file_name );
+			std::shared_ptr<FILE> f = file_open(file_name);
 
 			int s = file_size(*f);
 
-			std::string buffer( 1 + s, '\0' );
-			file_read(*f,&buffer[0],buffer.size()-1);
+			std::string buffer(1 + s, '\0');
+			file_read(*f, &buffer[0], buffer.size()-1);
 
-			auto load2 = leaf::on_error([] { return leaf::e_errno{errno}; } );
 			std::cout << buffer;
 			std::cout.flush();
+			if( std::cout.fail() )
+				throw leaf::exception(output_error{}, leaf::e_errno{errno});
 
 			return 0;
 		},
@@ -80,30 +76,30 @@ int main( int argc, char const * argv[] )
 		// the available error objects.
 
 		// This handler will be called if the error includes:
-		// - a caught exception of type input_file_open_error, and
+		// - an object of type open_error, and
 		// - an object of type leaf::e_errno that has .value equal to ENOENT, and
 		// - an object of type leaf::e_file_name.
-		[]( input_file_open_error const &, leaf::match<leaf::e_errno,ENOENT>, leaf::e_file_name const & fn )
+		[]( open_error &, leaf::match<leaf::e_errno,ENOENT>, leaf::e_file_name const & fn )
 		{
 			std::cerr << "File not found: " << fn.value << std::endl;
 			return 1;
 		},
 
 		// This handler will be called if the error includes:
-		// - a caught exception of type input_file_open_error, and
+		// - an object of type open_error, and
 		// - an object of type leaf::e_errno (regardless of its .value), and
 		// - an object of type leaf::e_file_name.
-		[]( input_file_open_error const &, leaf::e_errno const & errn, leaf::e_file_name const & fn )
+		[]( open_error &, leaf::e_errno const & errn, leaf::e_file_name const & fn )
 		{
 			std::cerr << "Failed to open " << fn.value << ", errno=" << errn << std::endl;
 			return 2;
 		},
 
 		// This handler will be called if the error includes:
-		// - a caught exception of type input_error, and
+		// - an object of type input_error, and
 		// - an optional object of type leaf::e_errno (regardless of its .value), and
 		// - an object of type leaf::e_file_name.
-		[]( input_error const &, leaf::e_errno const * errn, leaf::e_file_name const & fn )
+		[]( input_error &, leaf::e_errno const * errn, leaf::e_file_name const & fn )
 		{
 			std::cerr << "Failed to access " << fn.value;
 			if( errn )
@@ -113,16 +109,16 @@ int main( int argc, char const * argv[] )
 		},
 
 		// This handler will be called if the error includes:
-		// - a caught exception of type std::ostream::failure, and
+		// - an object of type output_error, and
 		// - an object of type leaf::e_errno (regardless of its .value),
-		[]( std::ostream::failure const &, leaf::e_errno const & errn )
+		[]( output_error &, leaf::e_errno const & errn )
 		{
 			std::cerr << "Output error, errno=" << errn << std::endl;
 			return 4;
 		},
 
 		// This handler will be called if we've got a bad_command_line
-		[]( bad_command_line )
+		[]( bad_command_line & )
 		{
 			std::cout << "Bad command line argument" << std::endl;
 			return 5;
@@ -151,35 +147,36 @@ char const * parse_command_line( int argc, char const * argv[] )
 	if( argc==2 )
 		return argv[1];
 	else
-		throw leaf::exception(bad_command_line());
+		throw leaf::exception(bad_command_line{});
 }
 
 
 // Open a file for reading.
 std::shared_ptr<FILE> file_open( char const * file_name )
 {
-	if( FILE * f = fopen(file_name,"rb") )
-		return std::shared_ptr<FILE>(f,&fclose);
+	auto load = leaf::on_error(input_error{});
+
+	if( FILE * f = fopen(file_name, "rb") )
+		return std::shared_ptr<FILE>(f, &fclose);
 	else
-		throw leaf::exception(input_file_open_error(), leaf::e_errno{errno});
+		throw leaf::exception(open_error{}, leaf::e_errno{errno});
 }
 
 
 // Return the size of the file.
 int file_size( FILE & f )
 {
-	// All exceptions escaping this function will automatically load errno.
-	auto load = leaf::on_error( [] { return leaf::e_errno{errno}; } );
+	auto load = leaf::on_error(input_error{}, size_error{}, []{ return leaf::e_errno{errno}; });
 
-	if( fseek(&f,0,SEEK_END) )
-		throw leaf::exception(input_file_size_error());
+	if( fseek(&f, 0, SEEK_END) )
+		throw leaf::exception();
 
 	int s = ftell(&f);
 	if( s==-1L )
-		throw leaf::exception(input_file_size_error());
+		throw leaf::exception();
 
 	if( fseek(&f,0,SEEK_SET) )
-		throw leaf::exception(input_file_size_error());
+		throw leaf::exception();
 
 	return s;
 }
@@ -188,11 +185,13 @@ int file_size( FILE & f )
 // Read size bytes from f into buf.
 void file_read( FILE & f, void * buf, int size )
 {
-	int n = fread(buf,1,size,&f);
+	auto load = leaf::on_error(input_error{});
+
+	int n = fread(buf, 1, size, &f);
 
 	if( ferror(&f) )
-		throw leaf::exception( input_file_read_error(), leaf::e_errno{errno} );
+		throw leaf::exception(read_error{}, leaf::e_errno{errno});
 
 	if( n!=size )
-		throw leaf::exception(input_eof_error());
+		throw leaf::exception(eof_error{});
 }

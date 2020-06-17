@@ -4,8 +4,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // This example demonstrates how to transport exceptions thrown by a low level function
-// through an intermediate context that is not exception-safe, to be handled in a high level
-// function which may or may not be exception-safe.
+// through an intermediate scopes that are not exception-safe, to be handled in a high
+// level function which may or may not be exception-safe.
 
 #include <boost/leaf/capture.hpp>
 #include <boost/leaf/result.hpp>
