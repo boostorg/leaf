@@ -870,7 +870,7 @@ leaf::try_handle_all(
     // Different operations which may fail <2>
   },
 
-  error_handlers );
+  error_handlers ); <3>
 ----
 [.text-right]
 <<try_handle_all>> | <<error_info>>
@@ -2585,8 +2585,9 @@ namespace boost { namespace leaf {
 
 The `try_handle_all` function works similarly to <<try_handle_some>>, except:
 
-* In addition, it requires the passed handler pack `h...` to be able to handle any error, which is enforced at compile time, and
-* because it is required to handle all errors, `try_handle_all` unwraps the `result<T>` object `r` returned by the `try_block`, returning `r.value()` instead of `r`.
+* In addition, it requires that at least one of  `h...` matches any error (this requirement is enforced at compile time);
+* If the `try_block` return some `result<T>` type, it must be possible to initialize a value of type `T` with the value returned by each of `h...`, and
+* Because it is required to handle all errors, `try_handle_all` unwraps the `result<T>` object `r` returned by the `try_block`, returning `r.value()` instead of `r`.
 
 TIP: See also Five Minute Introduction <<introduction-result>>.
 
@@ -2612,7 +2613,7 @@ Requires: ::
 * The `try_block` function may not take any arguments.
 * The type `R` returned by the `try_block` function must be a `result<T>` type (see <<is_result_type>>). It is valid for the `try_block` to return `leaf::<<result,result>><T>`, however this is not a requirement.
 * Each of the `h...` functions:
-** may take any error objects, but only by value or by `const &`, or as a `const *`;
+** may take any error objects, by value, by (`const`) reference, or as pointer (to `const`);
 ** may take arguments, either by value or by `const &`, of the predicate type `<<match,match>><E, V...>`, where `E` is enumerator or an instance of the <<condition>> class template.
 ** may take arguments, either by value or by `const &`, of the predicate type `<<catch_,catch_>><Ex...>`, where each of the `Ex` types derives from `std::exception` (in this case, please also `#include <boost/leaf/handle_exception.hpp>`);
 ** may take an <<error_info>> argument by `const &`;
@@ -2641,11 +2642,17 @@ A handler `h` matches the failure reported by `r` iff `try_handle_some` is able 
 +
 The return value of `r.error()` must be implicitly convertible to <<error_id>>. Naturally, the `leaf::result` template satisfies this requirement. If an external `result` type is used instead, usually `r.error()` would return a `std::error_code`, which is able to communicate LEAF error IDs; see <<tutorial-interoperability>>.
 +
-If `err` is the `error_id` obtained from `r.error()`, each argument value `a~i~` to be passed to the handler currently under consideration is produced as follows:
+If `err` is the `error_id` obtained from `r.error()`, each argument `a~i~` taken by the handler currently under consideration is produced as follows:
++
+* If `a~i~` is of type `A~i~`, `A~i~ const &` or `A~i~ &`:
 +
 --
-* If `a~i~` is taken as `A~i~` `const &` or by value:
-** If an error object of type `A~i~`, associated with `err`, is currently stored in `ctx`, `a~i~` is initialized with a reference to the stored object; otherwise the handler is dropped.
+** If an error object of type `A~i~`, associated with `err`, is currently stored in `ctx`, `a~i~` is initialized with a reference to the stored object; otherwise
+** If `A~i~` derives from `std::exception`, and the `try_block` throws a type that derives from `std::exception` which can be converted by `dynamic_cast` to `A~i~`, `a~i~` is initialized with a reference to the exception object;
+** Otherwise the handler is dropped.
+--
++
+CAUTION: Handling of types that derive from `std::exception` requires `#include <boost/leaf/handle_exception.hpp>`.
 +
 .Example:
 [source,c++]
@@ -2670,7 +2677,33 @@ auto r = leaf::try_handle_some(
 <1> In case the `try_block` (the first lambda) indicates a failure, this handler will be matched if `ctx` stores an `e_file_name` associated with the error. Because this is the only supplied handler, if an `e_file_name` is not available, `try_handle_some` will return the `leaf::result<int>` returned by `f`.
 <2> Print the file name, handle the error.
 +
-** If `A~i~` is of the predicate type `<<match,match>><E,V...>`, if an object of type `E`, associated with `err`, is currently stored in `ctx`, `a~i~` is initialized with a reference to the stored object; otherwise the handler is dropped. The handler is also dropped if the expression `a~i~()` evaluates to `false` (see `<<match,match>><E,V...>`).
+* If `a~i~` is of type `A~i~` `const pass:[*]` or `A~i~` `pass:[*]`, `try_handle_some` is always able to produce it: first it attempts to match it as if it is taken by reference; if that fails, `a~i~` is initialized with `0`.
++
+.Example:
+[source,c++]
+----
+....
+try_handle_some(
+  []
+  {
+    return f(); // throws
+  },
+
+  []( leaf::e_file_name const * fn ) -> leaf::result<void> <1>
+  {
+    if( fn ) <2>
+      std::cerr << "File Name: \"" << fn->value << '"' << std::endl;
+  } );
+}
+----
++
+[.text-right]
+<<result>> | <<e_file_name>>
++
+<1> This handler matches any error, because it takes `e_file_name` as a `const *` (and nothing by `const &`).
+<2> If an `e_file_name` is available with the current error, print it.
++
+* If `A~i~` is of the predicate type `<<match,match>><E,V...>`, if an object of type `E`, associated with `err`, is currently stored in `ctx`, `a~i~` is initialized with a reference to the stored object; otherwise the handler is dropped. The handler is also dropped if the expression `a~i~()` evaluates to `false` (see `<<match,match>><E,V...>`).
 +
 .Example:
 [source,c++]
@@ -2746,7 +2779,7 @@ try_handle_some(
 <1> This handler is matched if the error includes an object of type `std::error_code` equivalent to the error condition `cond_x::x11`.
 <2> This handler is matched if the error includes any object of type `std::error_code`.
 +
-** If `A~i~` is of the predicate type `<<catch_,catch_>><Ex...>`, and the `try_block` throws, `a~i~` is initialized with the current `std::exception`. The handler is dropped if the expression `a~i~()` evaluates to `false` (see `<<catch_,catch_>><Ex...>`).
+* If `A~i~` is of the predicate type `<<catch_,catch_>><Ex...>`, and the `try_block` throws, `a~i~` is initialized with the current `std::exception`. The handler is dropped if the expression `a~i~()` evaluates to `false` (see `<<catch_,catch_>><Ex...>`).
 +
 .Example:
 [source,c++]
@@ -2780,33 +2813,9 @@ try_handle_some(
 <1> This handler is matched if the current exception is either of type `exception1` or `exception2`.
 <2> This handler is matched any error. Use `info.<<error_info,exception>>()` to access the caught `std::exception` object.
 +
-NOTE: Using <<catch_>> requires `#include <boost/leaf/handle_exception.hpp>`.
+CAUTION: Using <<catch_>> with `try_handle_some` requires `#include <boost/leaf/handle_exception.hpp>`.
 +
-* If `a~i~` is of type `A~i~` `const pass:[*]`, `try_handle_some` is always able to produce it: first it attempts to match it as if it is taken by `const &`; if that fails, `a~i~` is initialized with `0`.
-+
-.Example:
-[source,c++]
-----
-....
-try_handle_some(
-  []
-  {
-    return f(); // throws
-  },
-
-  []( leaf::e_file_name const * fn ) -> leaf::result<void> <1>
-  {
-    if( fn ) <2>
-      std::cerr << "File Name: \"" << fn->value << '"' << std::endl;
-  } );
-}
-----
-+
-[.text-right]
-<<result>> | <<e_file_name>>
-+
-<1> This handler matches any error, because it takes `e_file_name` as a `const *` (and nothing by `const &`).
-<2> If an `e_file_name` is available with the current error, print it.
+TIP: If you want to pass:["]`catch_`pass:["] a single exception type `Ex` that derives from `std::exception`, using `catch_` is not required -- simply take an argument of type `Ex const &` or `Ex &`. The use of `catch_` is required only if you want to match any one of a list of exception types, or if `Ex` does not derive from `std::exception`.
 +
 * If `a~i~` is of type `error_info const &`,  `try_handle_some` is always able to produce it.
 +
@@ -2885,7 +2894,14 @@ try_handle_some(
 <1> This handler matches any error.
 <2> Print verbose diagnostic information, including values of dropped error objects.
 <3> Return the original error, which will be returned out of `try_handle_some`.
++
 --
+* If `a~i~` is of type `std::error_code` or `std::error_code const &`, `try_handle_some` is always able to produce it:
+** If an object of type `std::error_code` is currently stored in `ctx`, `a~i~` is initialized with a reference to that object;
+** Otherwise, it is initialized with the current `error_id` value converted to `std::error_code` by <<error_id::to_error_code>>.
+--
++
+NOTE: It is invalid for a handler to take a `std::error_code &` argument.
 
 [[types]]
 
