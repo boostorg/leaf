@@ -86,20 +86,6 @@ namespace boost { namespace leaf {
 
 namespace boost { namespace leaf {
 
-	namespace leaf_detail
-	{
-		template <class T> using has_value_impl = decltype( std::declval<T>().value );
-		template <class T> using has_value_fn_impl = decltype( std::declval<T>().value() );
-
-		template <class T>
-		struct has_value
-		{
-			enum { value = leaf_detail_mp11::mp_valid<has_value_impl, T>::value && !leaf_detail_mp11::mp_valid<has_value_fn_impl, T>::value };
-		};
-	}
-
-	////////////////////////////////////////
-
 	struct e_source_location
 	{
 		char const * const file;

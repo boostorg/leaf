@@ -48,6 +48,22 @@ void test()
 			{
 				return make_error_code(errc_a::a0);
 			},
+			[]( leaf::match<std::error_code, int(errc_a::a0)> )
+			{
+				return 42;
+			},
+			[]
+			{
+				return -42;
+			} );
+		BOOST_TEST_EQ(r, 42);
+	}
+	{
+		int r = leaf::try_handle_all(
+			[]() -> R
+			{
+				return make_error_code(errc_a::a0);
+			},
 			[]( leaf::match<leaf::condition<cond_x>, cond_x::x00> )
 			{
 				return 42;

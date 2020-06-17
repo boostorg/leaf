@@ -28,26 +28,26 @@ struct error2: std::exception { };
 struct error3: std::exception { };
 
 template <class R,class Ex>
-R f( Ex && ex )
+R failing( Ex && ex )
 {
-	throw leaf::exception(std::move(ex),info<1>{1},info<2>{2},info<3>{3});
+	throw leaf::exception(std::move(ex), info<1>{1}, info<2>{2}, info<3>{3});
 }
 
 template <class R>
-R f()
+R succeeding()
 {
 	return R(42);
 }
 
 int main()
 {
-	// void, handle_all (success)
+	// void, try_catch (success)
 	{
 		int c=0;
 		leaf::try_catch(
 			[&c]
 			{
-				c = f<int>();
+				c = succeeding<int>();
 			},
 			[&c]
 			{
@@ -57,13 +57,13 @@ int main()
 		BOOST_TEST_EQ(c, 42);
 	}
 
-	// void, handle_all (failure), match_enum (single enum value)
+	// void, try_catch (failure), match_enum (single enum value)
 	{
 		int c=0;
 		leaf::try_catch(
 			[&c]
 			{
-				c = f<int>(error1());
+				c = failing<int>(error1());
 			},
 			[&c]( error2 const & )
 			{
@@ -85,13 +85,13 @@ int main()
 		BOOST_TEST_EQ(c, 2);
 	}
 
-	// void, handle_all (failure), match_enum (multiple enum values)
+	// void, try_catch (failure), match_enum (multiple enum values)
 	{
 		int c=0;
 		leaf::try_catch(
 			[&c]
 			{
-				c = f<int>(error1());
+				c = failing<int>(error1());
 			},
 			[&c]( error2 const & )
 			{
@@ -113,13 +113,13 @@ int main()
 		BOOST_TEST_EQ(c, 2);
 	}
 
-	// void, handle_all (failure), match_value (single value)
+	// void, try_catch (failure), match_value (single value)
 	{
 		int c=0;
 		leaf::try_catch(
 			[&c]
 			{
-				c = f<int>(error1());
+				c = failing<int>(error1());
 			},
 			[&c]( error2 const & )
 			{
@@ -141,13 +141,13 @@ int main()
 		BOOST_TEST_EQ(c, 2);
 	}
 
-	// void, handle_all (failure), match_value (multiple values)
+	// void, try_catch (failure), match_value (multiple values)
 	{
 		int c=0;
 		leaf::try_catch(
 			[&c]
 			{
-				c = f<int>(error1());
+				c = failing<int>(error1());
 			},
 			[&c]( error2 const & )
 			{
@@ -180,7 +180,7 @@ int main()
 				leaf::try_catch(
 					[&c]
 					{
-						c = f<int>(error1());
+						c = failing<int>(error1());
 					},
 					[&c]( error2 const & )
 					{
@@ -213,7 +213,7 @@ int main()
 				leaf::try_catch(
 					[&c]
 					{
-						c = f<int>(error1());
+						c = failing<int>(error1());
 					},
 					[&c]( error2 const & )
 					{
@@ -246,7 +246,7 @@ int main()
 				leaf::try_catch(
 					[&c]
 					{
-						c = f<int>(error1());
+						c = failing<int>(error1());
 					},
 					[&c]( error1 const &, info<1> const & x, info<2> y )
 					{
@@ -278,7 +278,7 @@ int main()
 				leaf::try_catch(
 					[&c]
 					{
-						c = f<int>(error1());
+						c = failing<int>(error1());
 					},
 					[&c]( leaf::catch_<error2,error1>, info<1> const & x, info<2> y )
 					{
@@ -303,12 +303,12 @@ int main()
 
 	//////////////////////////////////////
 
-	// int, handle_all (success)
+	// int, try_catch (success)
 	{
 		int r = leaf::try_catch(
 			[]
 			{
-				return f<int>();
+				return succeeding<int>();
 			},
 			[]
 			{
@@ -317,12 +317,12 @@ int main()
 		BOOST_TEST_EQ(r, 42);
 	}
 
-	// int, handle_all (failure), match_enum (single enum value)
+	// int, try_catch (failure), match_enum (single enum value)
 	{
 		int r = leaf::try_catch(
 			[]
 			{
-				return f<int>(error1());
+				return failing<int>(error1());
 			},
 			[]( error2 const & )
 			{
@@ -341,12 +341,12 @@ int main()
 		BOOST_TEST_EQ(r, 2);
 	}
 
-	// int, handle_all (failure), match_enum (multiple enum values)
+	// int, try_catch (failure), match_enum (multiple enum values)
 	{
 		int r = leaf::try_catch(
 			[]
 			{
-				return f<int>(error1());
+				return failing<int>(error1());
 			},
 			[]( error2 const & )
 			{
@@ -372,7 +372,7 @@ int main()
 		int r = leaf::try_catch(
 			[]
 			{
-				return f<int>(error1());
+				return failing<int>(error1());
 			},
 			[]( error2 const & )
 			{
@@ -392,7 +392,7 @@ int main()
 		int r = leaf::try_catch(
 			[]
 			{
-				return f<int>(error1());
+				return failing<int>(error1());
 			},
 			[]( error2 const & )
 			{
@@ -415,7 +415,7 @@ int main()
 				int r = leaf::try_catch(
 					[]
 					{
-						return f<int>(error1());
+						return failing<int>(error1());
 					},
 					[]( error2 const & )
 					{
@@ -445,7 +445,7 @@ int main()
 				int r = leaf::try_catch(
 					[]
 					{
-						return f<int>(error1());
+						return failing<int>(error1());
 					},
 					[]( error2 const & )
 					{
@@ -475,7 +475,7 @@ int main()
 				int r = leaf::try_catch(
 					[]
 					{
-						return f<int>(error1());
+						return failing<int>(error1());
 					},
 					[]( error1 const &, info<1> const & x, info<2> y )
 					{
@@ -505,7 +505,7 @@ int main()
 				int r = leaf::try_catch(
 					[]
 					{
-						return f<int>(error1());
+						return failing<int>(error1());
 					},
 					[]( leaf::catch_<error2,error1>, info<1> const & x, info<2> y )
 					{
