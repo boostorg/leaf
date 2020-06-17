@@ -93,7 +93,7 @@ int main()
 				{
 					auto load = leaf::on_error( info<4>{} );
 
-					// Calling future_get is required in order to make the preload (above) work.
+					// Calling future_get is required in order to make the on_error (above) work.
 					return leaf::future_get(f.fut);
 				},
 				error_handlers );
@@ -131,8 +131,8 @@ int main()
 					return leaf::try_catch(
 						[&]
 						{
-							// Not calling future_get, a preload in this scope won't work correctly.
-							// This is to verify that the preload in the outer scope (above) works.
+							// Not calling future_get, a on_error in this scope won't work correctly.
+							// This is to verify that the on_error in the outer scope (above) works.
 							return f.fut.get();
 						},
 						[]() -> int
