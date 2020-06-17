@@ -3,7 +3,7 @@
 :prewrap!:
 :docinfo: shared
 :stylesheet: zajo-dark.css
-// :source-highlighter: rouge
+:source-highlighter: rouge
 
 = LEAF
 Lightweight Error Augmentation Framework
