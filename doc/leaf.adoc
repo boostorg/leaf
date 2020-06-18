@@ -1048,7 +1048,7 @@ The disadvantage of such flat enums is that they do not support handling a whole
 
 It will get called if the value of the `error_code` enum communicated with the failure is one of `size_error`, `read_error` or `eof_error`. In short, the idea is to handle any input error.
 
-But what if later we add support for detecting and reporting a new type of input error, e.g. `input_permissions_error`? It is easy to add that to the `error_code` enum; but now our input error handler won't recognize this new input error -- and we have a bug.
+But what if later we add support for detecting and reporting a new type of input error, e.g. `permissions_error`? It is easy to add that to our `error_code` enum; but now our input error handler won't recognize this new input error -- and we have a bug.
 
 If we can use exceptions, the situation is better because exception types can be organized in a hierarchy in order to classify failures:
 
