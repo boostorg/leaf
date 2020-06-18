@@ -40,7 +40,7 @@ ifndef::backend-pdf[]
 |====
 endif::[]
 
-LEAF is designed with a strong bias towards the common use case where callers of functions which may fail check for success and forward errors up the call chain but do not handle them. In this case, only a simple success-or-failure discriminant is communicated. Actual error objects are delivered directly to the error-handling scope, skipping the intermediate check-only frames altogether.
+LEAF is designed with a strong bias towards the common use case where callers of functions which may fail check for success and forward errors up the call chain but do not handle them. In this case, only a simple success-or-failure discriminant is transported. Actual error objects are delivered directly to the error-handling scope, skipping the intermediate check-only frames altogether.
 
 [[introduction]]
 == Five Minute Introduction
@@ -64,9 +64,9 @@ template <class TryBlock, class... Handler>
 
 `TryBlock` is a function, almost always a lambda. It is required to return a `result<T>` type -- for example, `leaf::result<T>` -- that holds a value of type `T` or else it indicates a failure.
 
-The first thing `try_handle_all` does is invoke the `try_block` function. If the returned object `r` indicates success, `try_handle_all` unwraps it, returning the contained `r.value()`; otherwise it calls the [underline]#first# suitable error handling function from the `handler...` list.
+The first thing `try_handle_all` does is invoke the `try_block` function. If the returned object `r` indicates success, `try_handle_all` unwraps it, returning the contained `r.value()`; otherwise it calls the [underline]#first suitable# error handling function from the `handler...` list.
 
-We'll see later just what kind of a `TryBlock` will our `main` function pass to `try_handle_all`, but first, let's look at the juicy error-handling part. LEAF will consider each of the `handler...` lambdas, [underline]#in order#, and call the first suitable match:
+We'll see later just what kind of a `TryBlock` will our `main` function pass to `try_handle_all`, but first, let's look at the juicy error-handling part. In case of an error, LEAF will consider each of the `handler...` lambdas, [underline]#in order#, and call the first suitable match:
 
 [source,c++]
 ----
@@ -81,26 +81,20 @@ int main( int argc, char const * argv[] )
 
     // Error handlers below:
 
-    [](leaf::match<error_code, open_error>, <1>
-        leaf::match<leaf::e_errno, ENOENT>,
-        leaf::e_file_name const & fn)
-    {
+    [](leaf::match<error_code, open_error>, leaf::match<leaf::e_errno, ENOENT>, leaf::e_file_name const & fn)
+    { <1>
       std::cerr << "File not found: " << fn.value << std::endl;
       return 1;
     },
 
-    [](leaf::match<error_code, open_error>, <2>
-        leaf::e_errno const & errn,
-        leaf::e_file_name const & fn)
-    {
+    [](leaf::match<error_code, open_error>, leaf::e_errno const & errn, leaf::e_file_name const & fn)
+    { <2>
       std::cerr << "Failed to open " << fn.value << ", errno=" << errn << std::endl;
       return 2;
     },
 
-    [](leaf::match<error_code, size_error, read_error, eof_error>, <3>
-        leaf::e_errno const * errn,
-        leaf::e_file_name const & fn)
-    {
+    [](leaf::match<error_code, size_error, read_error, eof_error>, leaf::e_errno const * errn, leaf::e_file_name const & fn)
+    { <3>
       std::cerr << "Failed to access " << fn.value;
       if( errn )
         std::cerr << ", errno=" << *errn;
@@ -108,21 +102,20 @@ int main( int argc, char const * argv[] )
       return 3;
     },
 
-    [](leaf::match<error_code, output_error>, <4>
-        leaf::e_errno const & errn)
-    {
+    [](leaf::match<error_code, output_error>, leaf::e_errno const & errn)
+    { <4>
       std::cerr << "Output error, errno=" << errn << std::endl;
       return 4;
     },
 
-    [](leaf::match<error_code, bad_command_line>) <5>
-    {
+    [](leaf::match<error_code, bad_command_line>)
+    { <5>
       std::cout << "Bad command line argument" << std::endl;
       return 5;
     },
 
-    [](leaf::error_info const & unmatched) <6>
-    {
+    [](leaf::error_info const & unmatched)
+    { <6>
       std::cerr <<
         "Unknown failure detected" << std::endl <<
         "Cryptic diagnostic information follows" << std::endl <<
@@ -365,29 +358,25 @@ int main( int argc, char const * argv[] )
   return leaf::try_catch(
     [&]
     {
-      .... <1>
+      // The TryBlock code goes here (previous listing)
     },
 
-    [](leaf::catch_<open_error>, <2>
-        leaf::match<leaf::e_errno,ENOENT>,
-        leaf::e_file_name const & fn)
-    {
+    // Error handlers below:
+
+    [](open_error &, leaf::match<leaf::e_errno,ENOENT>, leaf::e_file_name const & fn)
+    { <1>
       std::cerr << "File not found: " << fn.value << std::endl;
       return 1;
     },
 
-    [](leaf::catch_<open_error>, <3>
-        leaf::e_errno const & errn,
-        leaf::e_file_name const & fn )
-    {
+    [](open_error &, leaf::e_file_name const & fn, leaf::e_errno const & errn)
+    { <2>
       std::cerr << "Failed to open " << fn.value << ", errno=" << errn << std::endl;
       return 2;
     },
 
-    [](leaf::catch_<input_error>, <4>
-        leaf::e_errno const * errn,
-        leaf::e_file_name const & fn)
-    {
+    [](input_error &, leaf::e_errno const * errn, leaf::e_file_name const & fn)
+    { <3>
       std::cerr << "Failed to access " << fn.value;
       if( errn )
         std::cerr << ", errno=" << *errn;
@@ -395,21 +384,20 @@ int main( int argc, char const * argv[] )
       return 3;
     },
 
-    [](leaf::catch_<std::ostream::failure>, <5>
-        leaf::e_errno const & errn )
-    {
+    [](output_error &, leaf::e_errno const & errn)
+    { <4>
       std::cerr << "Output error, errno=" << errn << std::endl;
       return 4;
     },
 
-    [](leaf::catch_<bad_command_line>) <6>
-    {
+    [](bad_command_line &)
+    { <5>
       std::cout << "Bad command line argument" << std::endl;
       return 5;
     },
 
-    [](leaf::error_info const & unmatched) <7>
-    {
+    [](leaf::error_info const & unmatched)
+    { <6>
       std::cerr <<
         "Unknown failure detected" << std::endl <<
         "Cryptic diagnostic information follows" << std::endl <<
@@ -419,30 +407,28 @@ int main( int argc, char const * argv[] )
 }
 ----
 
-<1> This is the `TryBlock` from the previous listing; if it throws, `try_catch` will catch the exception, then consider the error handlers that follow, in order, and it will call the first one that can deal with the error:
-
-<2> This handler will be called if: +
+<1> This handler will be called if: +
 pass:[•] an `open_error` exception was caught, with +
 pass:[•] an object of type `leaf::e_errno` that has `.value` equal to `ENOENT`, and +
 pass:[•] an object of type `leaf::e_file_name`.
 
-<3> This handler will be called if: +
+<2> This handler will be called if: +
 pass:[•] an `open_error` exception was caught, with +
 pass:[•] an object of type `leaf::e_errno` (regardless of its `.value`), and +
 pass:[•] an object of type `leaf::e_file_name`.
 
-<4> This handler will be called if: +
+<3> This handler will be called if: +
 pass:[•] an `input_error` exception was caught (which is a base type), with +
 pass:[•] an optional object of type `leaf::e_errno` (regardless of its `.value`), and +
 pass:[•] an object of type `leaf::e_file_name`.
 
-<5> This handler will be called if: +
-pass:[•] an `std::ostream::failure` exception was caught, with +
+<4> This handler will be called if: +
+pass:[•] an `output_error` exception was caught, with +
 pass:[•] an object of type `leaf::e_errno` (regardless of its `.value`),
 
-<6> This handler will be called if a `bad_command_line` exception was caught.
+<5> This handler will be called if a `bad_command_line` exception was caught.
 
-<7> If `try_catch` fails to find an appropriate handler, it will re-throw the exception. But this is the `main` function which should handle all exceptions, so this last handler matches any error and prints diagnostic information, to help debug logic errors.
+<6> If `try_catch` fails to find an appropriate handler, it will re-throw the exception. But this is the `main` function which should handle all exceptions, so this last handler matches any error and prints diagnostic information, to help debug logic errors.
 
 WARNING: It is critical to understand that the error handlers are considered in order, rather than by finding a "best match". No error handler is "better" than the others: LEAF will call the first one for which all of the arguments can be supplied using the available error objects. See <<handler_matching_procedure,handler matching procedure>> for details.
 
@@ -558,7 +544,7 @@ leaf::result<void> g() noexcept
     {
       BOOST_LEAF_CHECK(f());
     },
-    []( my_error_code ec ) <1>
+    [](my_error_code ec) <1>
     {
       ....
     } );
@@ -587,7 +573,7 @@ void g()
     {
       f();
     },
-    []( my_error_code ec ) <1>
+    [](my_error_code ec) <1>
     {
       ....
     } );
@@ -675,7 +661,7 @@ leaf::result<void> operation( char const * file_name ) noexcept
   else
   {
     return r.load( <2>
-      [&]( e_relevant_file_names & e )
+      [&](e_relevant_file_names & e)
       {
         e.value.push_back(file_name);
       } );
@@ -774,12 +760,12 @@ leaf::try_handle_all(
     // Operations which may fail
   },
 
-  []( my_error_enum x )
+  [](my_error_enum x)
   {
     ...
   },
 
-  []( read_file_error_enum y, e_file_name const & fn )
+  [](read_file_error_enum y, e_file_name const & fn)
   {
     ...
   },
@@ -804,12 +790,12 @@ leaf::try_handle_all(
     // Different operations which may fail
   },
 
-  []( my_error_enum x )
+  [](my_error_enum x)
   {
     ...
   },
 
-  []( read_file_error_enum y, e_file_name const & fn )
+  [](read_file_error_enum y, e_file_name const & fn)
   {
     ...
   },
@@ -825,12 +811,12 @@ That works, but it is better to bind our error handlers in a `std::tuple`:
 [source,c++]
 ----
 auto error_handlers = std::make_tuple(
-  []( my_error_enum x )
+  [](my_error_enum x)
   {
     ...
   },
 
-  []( read_file_error_enum y, e_file_name const & fn )
+  [](read_file_error_enum y, e_file_name const & fn)
   {
     ...
   },
@@ -894,14 +880,14 @@ Because the task will run asynchronously, in case of a failure we need it to cap
 [source,c++]
 ----
 auto error_handlers = std::make_tuple(
-  []( E1 e1, E2 e2 )
+  [](E1 e1, E2 e2)
   {
     //Deal with E1, E2
     ....
     return { };
   },
 
-  []( E3 e3 )
+  [](E3 e3)
   {
     //Deal with E3
     ....
@@ -981,14 +967,14 @@ Just like we saw in <<tutorial-async_result>>, first we will bind our error hond
 ----
 auto handle_errors = std::make_tuple(
 {
-  []( E1 e1, E2 e2 )
+  [](E1 e1, E2 e2)
   {
     //Deal with E1, E2
     ....
     return { };
   },
 
-  []( E3 e3 )
+  [](E3 e3)
   {
     //Deal with E3
     ....
@@ -1051,9 +1037,7 @@ The disadvantage of such flat enums is that they do not support handling a whole
 [source,c++]
 ----
 ....
-[](leaf::match<error_code, size_error, read_error, eof_error>,
-    leaf::e_errno const * errn,
-    leaf::e_file_name const & fn)
+[](leaf::match<error_code, size_error, read_error, eof_error>, leaf::e_errno const * errn, leaf::e_file_name const & fn)
 {
   std::cerr << "Failed to access " << fn.value;
   if( errn )
@@ -1256,12 +1240,12 @@ return try_handle_some(
     BOOST_LEAF_CHECK(g()); <2>
   },
 
-  []( std::error_code const & e )
+  [](std::error_code const & e)
   {
     ....; <3>
   },
 
-  []( boost::system::error_code const & e )
+  [](boost::system::error_code const & e)
   {
     ....; <4>
   } );
@@ -1349,12 +1333,12 @@ leaf::try_handle_all(
     return { };
   },
 
-  []( error_a const & e )
+  [](error_a const & e)
   {
     std::cerr << "Error A!" << std::endl;
   },
 
-  []( error_b const & e )
+  [](error_b const & e)
   {
     std::cerr << "Error B!" << std::endl;
   },
@@ -1497,17 +1481,17 @@ int main() noexcept
         return { };
       },
 
-      []( do_work_error_code e ) <2>
+      [](do_work_error_code e) <2>
       {
         std::cout << "Got do_work_error_code = " << e <<  "!\n";
       },
 
-      []( e_lua_pcall_error const & err, e_lua_error_message const & msg ) <3>
+      [](e_lua_pcall_error const & err, e_lua_error_message const & msg) <3>
       {
         std::cout << "Got e_lua_pcall_error, Lua error code = " << err.value << ", " << msg.value << "\n";
       },
 
-      []( leaf::error_info const & unmatched )
+      [](leaf::error_info const & unmatched)
       {
         std::cerr <<
           "Unknown failure detected" << std::endl <<
@@ -2161,11 +2145,11 @@ Example Usage: ::
 [source,c++]
 ----
 auto error_handlers = std::make_tuple(
-  []( e_this const & a, e_that const & b )
+  [](e_this const & a, e_that const & b)
   {
     ....
   },
-  []( leaf::diagnostic_info const & info )
+  [](leaf::diagnostic_info const & info)
   {
     ....
   },
@@ -2256,7 +2240,7 @@ Effects: ::
 . Catches all exceptions, then captures `std::current_exception` in a `std::exception_ptr` object, which is <<tutorial-loading,loaded>> with the returned `result<T>`.
 . Attempts to convert the caught exception, using `dynamic_cast`, to each type `Ex~i~` in `Ex...`. If the cast to `Ex~i~` succeeds, the `Ex~i~` slice of the caught exception is loaded with the returned `result<T>`.
 
-WARNING: Handlers passed to <<try_handle_some>> / <<try_handle_all>> should take the converted-to-result exception objects by `const &` (whereas, in case exceptions are handled directly, <<catch_>> should be used instead).
+TIP: An error handler that takes an argument of an exception type (that is, of a type that derives from `std::exception`) will work correctly whether the object is thrown as an exception or communicated via <<new_error>> (or converted using `exception_to_result`).
 
 Example:
 
@@ -2271,7 +2255,7 @@ leaf::result<int> compute_answer()
 }
 ----
 
-Later, what used to be the exception types `ex_type1` and `ex_type2` can be handled by <<try_handle_some>> / <<try_handle_all>>:
+At a later time we can invoke <<try_handle_some>> / <<try_handle_all>> as usual, passing handlers that take `ex_type1` or `ex_type2`, for example by reference:
 
 [source,c++]
 ----
@@ -2285,21 +2269,21 @@ return leaf::try_handle_some(
     return { };
   },
 
-  []( ex_type1 const & ex1 )
+  [](ex_type1 & ex1)
   {
     //Handle ex_type1
     ....
     return { };
   },
 
-  []( ex_type2 const & ex2 )
+  [](ex_type2 & ex2)
   {
     //Handle ex_type2
     ....
     return { };
   },
 
-  []( std::exception_ptr const & p )
+  [](std::exception_ptr const & p)
   {
     //Handle any other exception from compute_answer.
     ....
@@ -2309,6 +2293,8 @@ return leaf::try_handle_some(
 
 [.text-right]
 <<try_handle_some>> | <<result>> | <<BOOST_LEAF_AUTO>>
+
+WARNING: When a handler takes an argument of an exception type (that is, a type that derives from `std::exception`), if the object is thrown, the argument will be matched dynamically (using `dynamic_cast`); otherwise (e.g. after being converted by `exception_to_result`) it will be matched based on its static type only (the same as types that do not derive from `std::exception`).
 
 TIP: See also <<tutorial-exception_to_result>> from the tutorial.
 
@@ -2565,7 +2551,7 @@ auto r = leaf::try_handle_some(
     return f(); // returns leaf::result<int>
   },
 
-  []( leaf::e_file_name const & fn ) <1>
+  [](leaf::e_file_name const & fn) <1>
   {
     std::cerr << "File Name: \"" << fn.value << '"' << std::endl; <2>
     return 1;
@@ -2590,7 +2576,7 @@ try_handle_some(
     return f(); // throws
   },
 
-  []( leaf::e_file_name const * fn ) -> leaf::result<void> <1>
+  [](leaf::e_file_name const * fn) -> leaf::result<void> <1>
   {
     if( fn ) <2>
       std::cerr << "File Name: \"" << fn->value << '"' << std::endl;
@@ -2624,12 +2610,12 @@ try_handle_some(
     return f();
   },
 
-  []( leaf::match<errors, errors::ec1> ) <1>
+  [](leaf::match<errors, errors::ec1>) <1>
   {
     ....
   },
 
-  []( errors ec ) <2>
+  [](errors ec) <2>
   {
     ....
   } );
@@ -2662,12 +2648,12 @@ try_handle_some(
     return f();
   },
 
-  [&c]( leaf::match<leaf::condition<cond_x>, cond_x::x11> ) <1>
+  [&c](leaf::match<leaf::condition<cond_x>, cond_x::x11>) <1>
   {
     ....
   },
 
-  []( std::error_code const & ec ) <2>
+  [](std::error_code const & ec) <2>
   {
     ....
   } );
@@ -2697,12 +2683,12 @@ try_handle_some(
     return f(); // throws
   },
 
-  []( leaf::catch_<exception1, exception2> ) <1>
+  [](leaf::catch_<exception1, exception2>) <1>
   {
     ....
   },
 
-  []( leaf::error_info const & info ) <2>
+  [](leaf::error_info const & info) <2>
   {
     ....
   } );
@@ -2730,7 +2716,7 @@ try_handle_some(
     return f(); // returns leaf::result<T>
   },
 
-  []( leaf::error_info const & info ) <1>
+  [](leaf::error_info const & info) <1>
   {
     std::cerr << "leaf::error_info:" << std::endl << info; <2>
     return info.error(); <3>
@@ -2756,7 +2742,7 @@ try_handle_some(
     return f(); // throws
   },
 
-  []( leaf::diagnostic_info const & info ) <1>
+  [](leaf::diagnostic_info const & info) <1>
   {
     std::cerr << "leaf::diagnostic_information:" << std::endl << info; <2>
     return info.error(); <3>
@@ -2782,7 +2768,7 @@ try_handle_some(
     return f(); // throws
   },
 
-  []( leaf::verbose_diagnostic_info const & info ) <1>
+  [](leaf::verbose_diagnostic_info const & info) <1>
   {
     std::cerr << "leaf::verbose_diagnostic_information:" << std::endl << info; <2>
     return info.error(); <3>
@@ -4229,19 +4215,19 @@ try
   ....
 }
 
-catch( file_read_error const &, e_file_name const & fn, e_errno const & err )
+catch(file_read_error &, e_file_name const & fn, e_errno const & err)
 {
   std::cerr <<
     "Could not read " << fn << ", errno=" << err << std::endl;
 }
 
-catch( file_read_error const &, e_errno const & err )
+catch(file_read_error &, e_errno const & err)
 {
   std::cerr <<
     "File read error, errno=" << err << std::endl;
 }
 
-catch( file_read_error const & )
+catch(file_read_error &)
 {
   std::cerr << "File read error!" << std::endl;
 }
@@ -4261,26 +4247,26 @@ leaf::try_catch(
     ....
   }
 
-  []( leaf::catch_<file_read_error>, e_file_name const & fn, e_errno const & err )
+  [](file_read_error &, e_file_name const & fn, e_errno const & err)
   {
     std::cerr <<
       "Could not read " << fn << ", errno=" << err << std::endl;
   },
 
-  []( leaf::catch_<file_read_error>, e_errno const & err )
+  [](file_read_error &, e_errno const & err)
   {
     std::cerr <<
       "File read error, errno=" << err << std::endl;
   },
 
-  []( leaf::catch_<file_read_error> )
+  [](file_read_error &)
   {
     std::cerr << "File read error!" << std::endl;
   } );
 ----
 
 [.text-right]
-<<try_catch>> | <<catch_>> | <<e_file_name>> | <<e_errno>>
+<<try_catch>> | <<e_file_name>> | <<e_errno>>
 
 Similar syntax works without exception handling as well. Below is the same snippet, written using `<<result,result>><T>`:
 
@@ -4298,19 +4284,19 @@ return leaf::try_handle_some(
     return { };
   }
 
-  []( leaf::match<error_enum, file_read_error>, e_file_name const & fn, e_errno const & err )
+  [](leaf::match<error_enum, file_read_error>, e_file_name const & fn, e_errno const & err)
   {
     std::cerr <<
       "Could not read " << fn << ", errno=" << err << std::endl;
   },
 
-  []( leaf::match<error_enum, file_read_error>, e_errno const & err )
+  [](leaf::match<error_enum, file_read_error>, e_errno const & err)
   {
     std::cerr <<
       "File read error, errno=" << err << std::endl;
   },
 
-  []( leaf::match<error_enum, file_read_error> )
+  [](leaf::match<error_enum, file_read_error>)
   {
     std::cerr << "File read error!" << std::endl;
   } );
@@ -4385,7 +4371,10 @@ namespace lib_a
     ....
   };
 }
+----
 
+[source,c++,options="nowrap"]
+----
 namespace lib_b
 {
   enum error
@@ -4616,14 +4605,14 @@ leaf::try_catch(
   {
     f();
   }
-  []( leaf::catch_<my_exception>, my_info const & x )
+  [](my_exception &, my_info const & x)
   {
     //my_info is available with
     //the caught exception.
   } );
 ----
 [.text-right]
-<<try_catch>> | <<catch_>>
+<<try_catch>>
 |====
 
 .Transporting of error objects
