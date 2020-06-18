@@ -3293,9 +3293,8 @@ namespace boost { namespace leaf {
 
 	public:
 
-		template <class SlotsTuple>
-		BOOST_LEAF_CONSTEXPR match( SlotsTuple const & tup, error_info const & ei ) noexcept:
-			err_(leaf_detail::peek<error_type>(tup, ei))
+		BOOST_LEAF_CONSTEXPR explicit match( error_type const * err ) noexcept:
+			err_(err)
 		{
 		}
 
@@ -3353,15 +3352,13 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple>
 		struct check_one_argument<SlotsTuple,verbose_diagnostic_info>: always_available<SlotsTuple> { };
 
-		template <class SlotsTuple>
-		struct check_one_argument<SlotsTuple,std::error_code>: always_available<SlotsTuple> { };
-
 		template <class SlotsTuple, class T, typename match_traits<T>::enum_type... V>
-		struct check_one_argument<SlotsTuple, match<T,V...>>
+		struct check_one_argument<SlotsTuple, match<T, V...>>
 		{
 			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				return match<T,V...>(tup, ei)();
+				using error_type = typename match<T, V...>::error_type;
+				return match<T, V...>(peek<error_type>(tup, ei))();
 			}
 		};
 
@@ -3432,19 +3429,6 @@ namespace boost { namespace leaf {
 		};
 
 		template <>
-		struct get_one_argument<std::error_code>
-		{
-			template <class SlotsTuple>
-			static std::error_code get( SlotsTuple const & tup, error_info const & ei ) noexcept
-			{
-				if( std::error_code const * ec = peek<std::error_code>(tup, ei) )
-					return *ec;
-				else
-					return ei.error().to_error_code();
-			}
-		};
-
-		template <>
 		struct get_one_argument<error_info>
 		{
 			template <class SlotsTuple>
@@ -3501,12 +3485,13 @@ namespace boost { namespace leaf {
 #endif
 
 		template <class T, typename match_traits<T>::enum_type... V>
-		struct get_one_argument<match<T,V...>>
+		struct get_one_argument<match<T, V...>>
 		{
 			template <class SlotsTuple>
-			BOOST_LEAF_CONSTEXPR static match<T,V...> get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			BOOST_LEAF_CONSTEXPR static match<T, V...> get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				return match<T,V...>(tup, ei);
+				using error_type = typename match<T, V...>::error_type;
+				return match<T, V...>(peek<error_type>(tup, ei));
 			}
 		};
 	}
@@ -3520,7 +3505,6 @@ namespace boost { namespace leaf {
 		template <> struct argument_matches_any_error<error_info const &>: std::true_type { };
 		template <> struct argument_matches_any_error<diagnostic_info const &>: std::true_type { };
 		template <> struct argument_matches_any_error<verbose_diagnostic_info const &>: std::true_type { };
-		template <> struct argument_matches_any_error<std::error_code const &>: std::true_type { };
 
 		template <class>
 		struct handler_matches_any_error: std::false_type

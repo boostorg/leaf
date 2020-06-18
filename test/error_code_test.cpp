@@ -19,19 +19,6 @@ void test()
 		int r = leaf::try_handle_all(
 			[]() -> R
 			{
-				return leaf::new_error().to_error_code();
-			},
-			[]( std::error_code const & ec )
-			{
-				BOOST_TEST(leaf::is_error_id(ec));
-				return 42;
-			} );
-		BOOST_TEST_EQ(r, 42);
-	}
-	{
-		int r = leaf::try_handle_all(
-			[]() -> R
-			{
 				return make_error_code(errc_a::a0);
 			},
 			[]( std::error_code const & ec )
@@ -39,6 +26,10 @@ void test()
 				BOOST_TEST(!leaf::is_error_id(ec));
 				BOOST_TEST_EQ(ec, make_error_code(errc_a::a0));
 				return 42;
+			},
+			[]
+			{
+				return -42;
 			} );
 		BOOST_TEST_EQ(r, 42);
 	}
