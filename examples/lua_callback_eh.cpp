@@ -80,12 +80,13 @@ int call_lua( lua_State * L )
 	lua_getfield( L, LUA_GLOBALSINDEX, "call_do_work" );
 	if( int err = lua_pcall(L, 0, 1, 0) ) // Ask Lua to call the global function call_do_work.
 	{
-		lua_pop(L,1);
+	    auto load = leaf::on_error(e_lua_error_message{lua_tostring(L, 1)});
+	    lua_pop(L,1);
 
 		// We got a Lua error that is definitely not the error we're throwing in do_work.
 		// (if it did throw an exception, we won't be here).
 		// Throw a new exception to indicate that lua_pcall returned an error.
-		throw leaf::exception( e_lua_pcall_error{err}, e_lua_error_message{lua_tostring(L, 1)} );
+		throw leaf::exception(e_lua_pcall_error{err});
 	}
 	else
 	{

@@ -82,12 +82,13 @@ leaf::result<int> call_lua( lua_State * L )
 	lua_getfield( L, LUA_GLOBALSINDEX, "call_do_work" );
 	if( int err = lua_pcall(L, 0, 1, 0) ) // Ask Lua to call the global function call_do_work.
 	{
-		lua_pop(L,1);
+	    auto load = leaf::on_error(e_lua_error_message{lua_tostring(L, 1)});
+	    lua_pop(L,1);
 
 		// We got a Lua error which may be the error we're reporting from do_work, or some other error.
 		// If it is another error, augment.get_error() will return a new leaf::error_id, otherwise
 		// we'll be working with the original value returned by leaf::new_error in do_work.
-		return augment.get_error( e_lua_pcall_error{err}, e_lua_error_message{lua_tostring(L, 1)} );
+		return augment.get_error(e_lua_pcall_error{err});
 	}
 	else
 	{
