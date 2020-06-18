@@ -5,7 +5,12 @@
 :stylesheet: zajo-dark.css
 :source-highlighter: rouge
 
+ifdef::backend-pdf[]
 = LEAF
+endif::[]
+ifndef::backend-pdf[]
+= LEAFpass:[<a href="https://ci.appveyor.com/project/zajo/leaf/branch/master"><img style="padding-left:8px; padding-top:21px; float:right; vertical-align: top" src="https://ci.appveyor.com/api/projects/status/u7mq10n8y5ewpre3/branch/master?svg=true"></a> <a href="https://travis-ci.org/zajo/leaf"><img style="padding-top:21px; float:right; vertical-align: top" src="https://travis-ci.org/zajo/leaf.svg?branch=master"></a>]
+endif::[]
 Lightweight Error Augmentation Framework
 ifndef::backend-pdf[]
 :toc: left
@@ -13,7 +18,7 @@ ifndef::backend-pdf[]
 :toc-title: pass:[<div style="float:right"><input width="32" height="32" type="image" alt="Skin" src="./skin.png" onclick="this.blur();switch_style();return false;"/></div>]
 
 [.text-right]
-https://github.com/zajo/leaf[GitHub] | https://travis-ci.org/zajo/leaf[Travis] | https://ci.appveyor.com/project/zajo/leaf[AppVeyor] | link:./leaf.pdf[PDF]
+https://github.com/zajo/leaf[GitHub] | link:./leaf.pdf[PDF]
 endif::[]
 
 [abstract]
