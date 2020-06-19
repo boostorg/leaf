@@ -1869,11 +1869,17 @@ namespace boost { namespace leaf {
 
 	class augment_id
 	{
+#if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
+		int const uncaught_exceptions_;
+#endif
 		int const err_id_;
 
 	public:
 
 		augment_id() noexcept:
+#if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
+			uncaught_exceptions_(std::uncaught_exceptions()),
+#endif
 			err_id_(leaf_detail::current_id())
 		{
 		}
@@ -1887,7 +1893,7 @@ namespace boost { namespace leaf {
 			{
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 #	if BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
-				if( std::uncaught_exceptions() )
+				if( std::uncaught_exceptions() > uncaught_exceptions_ )
 #	else
 				if( std::uncaught_exception() )
 #	endif
