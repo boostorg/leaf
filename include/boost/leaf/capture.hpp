@@ -99,7 +99,7 @@ namespace boost { namespace leaf {
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, false>, context_ptr && ctx, F && f, A... a)
 		{
 			auto active_context = activate_context(*ctx);
-			augment_id aug;
+			error_monitor cur_err;
 			try
 			{
 				return std::forward<F>(f)(std::forward<A>(a)...);
@@ -115,7 +115,7 @@ namespace boost { namespace leaf {
 			}
 			catch(...)
 			{
-				ctx->captured_id_ = aug.get_error();
+				ctx->captured_id_ = cur_err.assigned_error_id();
 				throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
 			}
 		}
@@ -124,7 +124,7 @@ namespace boost { namespace leaf {
 		inline decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...)) capture_impl(is_result_tag<R, true>, context_ptr && ctx, F && f, A... a)
 		{
 			auto active_context = activate_context(*ctx);
-			augment_id aug;
+			error_monitor cur_err;
 			try
 			{
 				if( auto && r = std::forward<F>(f)(std::forward<A>(a)...) )
@@ -146,7 +146,7 @@ namespace boost { namespace leaf {
 			}
 			catch(...)
 			{
-				ctx->captured_id_ = aug.get_error();
+				ctx->captured_id_ = cur_err.assigned_error_id();
 				throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
 			}
 		}

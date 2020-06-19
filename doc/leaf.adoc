@@ -501,7 +501,7 @@ For example, the error may need to be communicated through uncooperative 3rd-par
 
 Further, it is sometimes necessary to communicate errors through an interface that does not even use `std::error_code`. An example of this is when an external lower-level library throws an exception, which is unlikely to be able to carry an `error_id`.
 
-To support this tricky use case, LEAF provides the function <<current_error>>, which returns the error ID returned by the most recent call (from this thread) to <<new_error>>. One possible approach to solving the problem is to use the following logic (implemented by the <<augment_id>> type):
+To support this tricky use case, LEAF provides the function <<current_error>>, which returns the error ID returned by the most recent call (from this thread) to <<new_error>>. One possible approach to solving the problem is to use the following logic (implemented by the <<error_monitor>> type):
 
 . Before calling the uncooperative API, call <<current_error>> and cache the returned value.
 . Call the API, then call `current_error` again:
@@ -1360,7 +1360,7 @@ NOTE: The complete program illustrating this technique is available https://gith
 '''
 
 [[tutorial-on_error_in_c_callbacks]]
-=== Using `augment_id` to Report Arbitrary Errors from C-callbacks
+=== Using `error_monitor` to Report Arbitrary Errors from C-callbacks
 
 Communicating information pertaining to a failure detected in a C callback is tricky, because C callbacks are limited to a specific static signature, which may not use {CPP} types.
 
@@ -1443,13 +1443,13 @@ leaf::result<int> call_lua( lua_State * L )
 {
   lua_getfield(L, LUA_GLOBALSINDEX, "call_do_work");
 
-  augment_id augment;
+  error_monitor cur_err;
   if( int err=lua_pcall(L, 0, 1, 0) ) <1>
   {
     auto load = leaf::on_error(e_lua_error_message{lua_tostring(L,1)}); <2>
     lua_pop(L,1);
 
-    return augment.get_error(e_lua_pcall_error{err}); <3>
+    return cur_err.assigned_error_id().load(e_lua_pcall_error{err}); <3>
   }
   else
   {
@@ -1460,11 +1460,11 @@ leaf::result<int> call_lua( lua_State * L )
 }
 ----
 [.text-right]
-<<result>> | <<on_error>> | <<augment_id>>
+<<result>> | <<on_error>> | <<error_monitor>>
 
 <1> Ask the Lua interpreter to call the global Lua function `call_do_work`.
 <2> `on_error` works as usual.
-<3> `get_error` will return the `error_id` generated in our Lua callback. This is the same `error_id` the `on_error` uses as well.
+<3> `load` will return the `error_id` generated in our Lua callback. This is the same `error_id` the `on_error` uses as well.
 <4> Success! Just return the `int` answer.
 
 Finally, here is the `main` function which exercises `call_lua`, each time handling any failure:
@@ -1769,7 +1769,7 @@ namespace boost { namespace leaf {
 
 This header defines the `on_error` function, which is used for automatic inclusion of error objects with any error exiting the scope in which it is invoked. See <<tutorial-on_error>> and <<tutorial-classification>>.
 
-The `augment_id` type is used internally by `on_error` to determine the correct <<error_id>> to associate error objects with.
+The `error_monitor` type is used internally by `on_error` to determine the correct <<error_id>> to associate error objects with.
 
 ====
 [source,c++]
@@ -1780,23 +1780,22 @@ namespace boost { namespace leaf {
   template <class... Item>
   <<unspecified-type>> on_error( Item && ... e ) noexcept;
 
-  class augment_id
+  class error_monitor
   {
   public:
 
-    augment_id() noexcept;
+    error_monitor() noexcept;
 
-    error_id check_error() const noexcept;
+    error_id check() const noexcept;
 
-    template <class... E>
-    error_id get_error( E && ... e ) const noexcept;
+    error_id assigned_error_id() const noexcept;
   };
 
 } }
 ----
 
 [.text-right]
-<<on_error>> | <<augment_id>>
+<<on_error>> | <<error_monitor>>
 ====
 
 [[exception.hpp]]
@@ -2799,62 +2798,6 @@ TIP: The contents of each Reference section are organized alphabetically.
 
 '''
 
-[[augment_id]]
-=== `augment_id`
-
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  class augment_id
-  {
-  public:
-
-    augment_id() noexcept;
-
-    error_id check_error() const noexcept;
-
-    template <class... E>
-    error_id get_error( E && ... e ) const noexcept;
-  };
-
-} }
-----
-
-This class helps obtain an <<error_id>> to associate error objects with, when augmenting failures communicated using LEAF through uncooperative APIs that do not use LEAF to report errors (and therefore do not return an `error_id` on error).
-
-The common usage of this class is as follows:
-
-[source,c++]
-----
-error_code compute_value( int * out_value ) noexcept; <1>
-
-leaf::error<int> augmenter() noexcept
-{
-  leaf::augment_id augment; <2>
-
-  int val;
-  auto ec = compute_value(&val);
-
-  if( failure(ec) )
-    return augment.get_error(e1, e2, ...); <3>
-  else
-    return val; <4>
-}
-----
-<1> Uncooperative third-party API that does not use LEAF, but results in calling a user callback that does use LEAF. In case our callback reports a failure, we'll augment it with error objects available in the calling scope, even though `compute_value` can not communicate an <<error_id>>.
-<2> Initialize an `augment_id` object.
-<3> The call to `compute_value` has failed:
-- If <<new_error>> was invoked (by the calling thread) after the `augment` object was initialized, `get_error` returns the last `error_id` returned by `new_error`. This would be the case if the failure originates in our callback (invoked internally by `compute_value`).
-- Else, `get_error` invokes `new_error` and returns that `error_id`.
-<4> The call was successful, return the computed value.
-
-The `check_error` function works similarly, but instead of invoking `new_error` it returns a defaul-initialized `error_id`.
-
-TIP: See <<tutorial-on_error_in_c_callbacks>>.
-
-'''
-
 [[catch_]]
 === `catch_`
 
@@ -3425,6 +3368,61 @@ namespace boost { namespace leaf {
 Effects: ::
 * If `*this` was initialized using the default constructor, returns 0.
 * Otherwise returns an `int` that is guaranteed to not be 0: a program-wide unique identifier of the failure.
+
+'''
+
+[[error_monitor]]
+=== `error_monitor`
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  class error_monitor
+  {
+  public:
+
+    error_monitor() noexcept;
+
+    error_id check() const noexcept;
+
+    error_id assigned_error_id( E && ... e ) const noexcept;
+  };
+
+} }
+----
+
+This class helps obtain an <<error_id>> to associate error objects with, when augmenting failures communicated using LEAF through uncooperative APIs that do not use LEAF to report errors (and therefore do not return an `error_id` on error).
+
+The common usage of this class is as follows:
+
+[source,c++]
+----
+error_code compute_value( int * out_value ) noexcept; <1>
+
+leaf::error<int> augmenter() noexcept
+{
+  leaf::error_monitor cur_err; <2>
+
+  int val;
+  auto ec = compute_value(&val);
+
+  if( failure(ec) )
+    return cur_err.assigned_error_id().load(e1, e2, ...); <3>
+  else
+    return val; <4>
+}
+----
+<1> Uncooperative third-party API that does not use LEAF, but results in calling a user callback that does use LEAF. In case our callback reports a failure, we'll augment it with error objects available in the calling scope, even though `compute_value` can not communicate an <<error_id>>.
+<2> Initialize an `error_monitor` object.
+<3> The call to `compute_value` has failed:
+- If <<new_error>> was invoked (by the calling thread) after the `augment` object was initialized, `assigned_error_id` returns the last `error_id` returned by `new_error`. This would be the case if the failure originates in our callback (invoked internally by `compute_value`).
+- Else, `assigned_error_id` invokes `new_error` and returns that `error_id`.
+<4> The call was successful, return the computed value.
+
+The `check` function works similarly, but instead of invoking `new_error` it returns a defaul-initialized `error_id`.
+
+TIP: See <<tutorial-on_error_in_c_callbacks>>.
 
 '''
 

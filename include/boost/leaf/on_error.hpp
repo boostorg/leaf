@@ -18,7 +18,7 @@
 
 namespace boost { namespace leaf {
 
-	class augment_id
+	class error_monitor
 	{
 #if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
 		int const uncaught_exceptions_;
@@ -27,7 +27,7 @@ namespace boost { namespace leaf {
 
 	public:
 
-		augment_id() noexcept:
+		error_monitor() noexcept:
 #if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
 			uncaught_exceptions_(std::uncaught_exceptions()),
 #endif
@@ -63,15 +63,14 @@ namespace boost { namespace leaf {
 				return leaf_detail::new_id();
 		}
 
-		error_id check_error() const noexcept
+		error_id check() const noexcept
 		{
 			return leaf_detail::make_error_id(check_id());
 		}
 
-		template <class... E>
-		error_id get_error( E && ... e ) const noexcept
+		error_id assigned_error_id() const noexcept
 		{
-			return leaf_detail::make_error_id(get_id()).load(std::forward<E>(e)...);
+			return leaf_detail::make_error_id(get_id());
 		}
 	};
 
@@ -202,7 +201,7 @@ namespace boost { namespace leaf {
 
 			std::tuple<Item...> p_;
 			bool moved_;
-			augment_id id_;
+			error_monitor id_;
 
 		public:
 

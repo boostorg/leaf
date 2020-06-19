@@ -76,7 +76,7 @@ std::shared_ptr<lua_State> init_lua_state()
 // If it fails, we'll communicate that failure to our caller.
 leaf::result<int> call_lua( lua_State * L )
 {
-	leaf::augment_id augment;
+	leaf::error_monitor cur_err;
 
 	// Ask the Lua interpreter to call the global Lua function call_do_work.
 	lua_getfield( L, LUA_GLOBALSINDEX, "call_do_work" );
@@ -86,9 +86,9 @@ leaf::result<int> call_lua( lua_State * L )
 	    lua_pop(L,1);
 
 		// We got a Lua error which may be the error we're reporting from do_work, or some other error.
-		// If it is another error, augment.get_error() will return a new leaf::error_id, otherwise
-		// we'll be working with the original value returned by leaf::new_error in do_work.
-		return augment.get_error(e_lua_pcall_error{err});
+		// If it is another error, cur_err.assigned_error_id() will return a new leaf::error_id,
+		// otherwise we'll be working with the original value returned by leaf::new_error in do_work.
+		return cur_err.assigned_error_id().load(e_lua_pcall_error{err});
 	}
 	else
 	{
