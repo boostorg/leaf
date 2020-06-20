@@ -3228,7 +3228,7 @@ namespace boost { namespace leaf {
 		template <class E>
 		struct match_traits_value<E, true>
 		{
-			using enum_type = decltype(std::declval<E>().value());
+			using enum_type = typename std::remove_reference<decltype(std::declval<E>().value())>::type;
 			using error_type = E;
 			using value_type = enum_type;
 
@@ -3339,9 +3339,9 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple, class T>
 		struct check_one_argument
 		{
-			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
+			BOOST_LEAF_CONSTEXPR static T * check( SlotsTuple & tup, error_info const & ei ) noexcept
 			{
-				return peek<T>(tup, ei)!=0;
+				return peek<T>(tup, ei);
 			}
 		};
 
@@ -3360,10 +3360,10 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple, class T, typename match_traits<T>::enum_type... V>
 		struct check_one_argument<SlotsTuple, match<T, V...>>
 		{
-			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
+			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple & tup, error_info const & ei ) noexcept
 			{
 				using error_type = typename match<T, V...>::error_type;
-				return match<T, V...>(peek<error_type>(tup, ei))();
+				return match<T, V...>(check_one_argument<SlotsTuple, error_type>::check(tup, ei))();
 			}
 		};
 
@@ -3373,7 +3373,7 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple, class Car, class... Cdr>
 		struct check_arguments<SlotsTuple, Car, Cdr...>
 		{
-			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
+			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple & tup, error_info const & ei ) noexcept
 			{
 				return check_one_argument<SlotsTuple,Car>::check(tup,ei) && check_arguments<SlotsTuple,Cdr...>::check(tup,ei);
 			}
