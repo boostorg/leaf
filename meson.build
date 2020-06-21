@@ -140,6 +140,9 @@ tests = [
 	'_hpp_result_test',
 	'_hpp_all_test',
 ]
+if get_option('leaf_boost')
+	tests += 'boost_exception_test'
+endif
 foreach t : tests
 	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf,thread_dep]+mp11) )
 endforeach
@@ -167,12 +170,12 @@ if exceptions
 		executable(e, 'examples/'+e+'.cpp', dependencies: [leaf,thread_dep]+mp11 )
 	endforeach
 
-	if get_option('leaf_boost_examples')
+	if get_option('leaf_boost')
 		executable('asio_beast_leaf_rpc', 'examples/asio_beast_leaf_rpc.cpp', dependencies: [leaf,thread_dep,boost_headers], override_options: ['cpp_std=c++17'] )
 		executable('print_file_outcome_result', 'examples/print_file/print_file_outcome_result.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
 	endif
 
-	if get_option('leaf_lua_examples')
+	if get_option('leaf_lua')
 		lua=subproject('lua').get_variable('all')
 		executable('lua_callback_result', 'examples/lua_callback_result.cpp', dependencies: [leaf,lua]+mp11 )
 		executable('lua_callback_eh', 'examples/lua_callback_eh.cpp', dependencies: [leaf,lua]+mp11 )
@@ -183,7 +186,7 @@ if not exceptions
 	if diagnostics == 0
 		executable('deep_stack_leaf', 'benchmark/deep_stack_leaf.cpp', dependencies: [leaf], override_options: ['cpp_std=c++17'])
 	endif
-	if get_option('leaf_boost_examples')
+	if get_option('leaf_boost')
 		executable('deep_stack_tl', 'benchmark/deep_stack_other.cpp', override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=0' )
 		executable('deep_stack_result', 'benchmark/deep_stack_other.cpp', dependencies: [boost_headers], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=1' )
 		executable('deep_stack_outcome', 'benchmark/deep_stack_other.cpp', dependencies: [boost_headers], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=2' )

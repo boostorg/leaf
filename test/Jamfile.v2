@@ -37,6 +37,7 @@ run accumulate_nested_new_error_exception_test.cpp ;
 run accumulate_nested_new_error_result_test.cpp ;
 run accumulate_nested_success_exception_test.cpp ;
 run accumulate_nested_success_result_test.cpp ;
+run boost_exception_test.cpp ;
 run capture_exception_async_test.cpp ;
 run capture_exception_result_async_test.cpp ;
 run capture_exception_state_test.cpp ;
