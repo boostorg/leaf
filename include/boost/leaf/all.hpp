@@ -4209,6 +4209,44 @@ namespace boost { namespace leaf {
 
 } }
 
+// Boost Exception Integration below
+
+namespace boost { template <class Tag,class T> class error_info; }
+namespace boost { class exception; }
+namespace boost { namespace exception_detail { template <class ErrorInfo> struct get_info; } }
+
+namespace boost { namespace leaf {
+
+	namespace leaf_detail
+	{
+		template <class Tag, class T> struct requires_catch<boost::error_info<Tag, T>>: std::true_type { };
+		template <class Tag, class T> struct requires_catch<boost::error_info<Tag, T> const &>: std::true_type { };
+		template <class Tag, class T> struct requires_catch<boost::error_info<Tag, T> const *>: std::true_type { };
+		template <class Tag, class T> struct requires_catch<boost::error_info<Tag, T> &> { static_assert(sizeof(boost::error_info<Tag, T>)==0, "mutable boost::error_info reference arguments are not supported"); };
+		template <class Tag, class T> struct requires_catch<boost::error_info<Tag, T> *> { static_assert(sizeof(boost::error_info<Tag, T>)==0, "mutable boost::error_info pointer arguments are not supported"); };
+
+		template <class> struct dependent_type_boost_exception { using type = boost::exception; };
+
+		template <class SlotsTuple, class Tag, class T>
+		struct check_one_argument<SlotsTuple, boost::error_info<Tag, T>>
+		{
+			static boost::error_info<Tag, T> * check( SlotsTuple & tup, error_info const & ei ) noexcept
+			{
+				using boost_exception = typename dependent_type_boost_exception<Tag>::type;
+				if( ei.exception_caught() )
+					if( boost_exception const * be = dynamic_cast<boost_exception const *>(ei.exception()) )
+						if( auto * x = exception_detail::get_info<boost::error_info<Tag, T>>::get(*be) )
+						{
+							auto & sl = std::get<tuple_type_index<slot<boost::error_info<Tag, T>>,SlotsTuple>::value>(tup);
+							return &sl.put(ei.error().value(), boost::error_info<Tag, T>(*x));
+						}
+				return 0;
+			}
+		};
+	}
+
+} }
+
 #endif
 // <<< #	include <boost/leaf/handle_exception.hpp>
 #line 18 "../../include/boost/leaf/detail/all.hpp"

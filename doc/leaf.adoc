@@ -1550,9 +1550,7 @@ TIP: The automatically-generated diagnostic messages are developer-friendly, but
 [[tutorial-boost_exception_integration]]
 === Boost Exception Integration
 
-Instead of the https://www.boost.org/doc/libs/release/libs/exception/doc/get_error_info.html[`boost::get_error_info`] API defined by Boost Exception, it is possible to use LEAF error handlers directly (this requires that the LEAF header `boost_exception_support.hpp` is included).
-
-Consider the following use of `boost::get_error_info`:
+Instead of the https://www.boost.org/doc/libs/release/libs/exception/doc/get_error_info.html[`boost::get_error_info`] API defined by Boost Exception, it is possible to use LEAF error handlers directly. Consider the following use of `boost::get_error_info`:
 
 [source,c++]
 ----
@@ -1578,7 +1576,7 @@ We can rewrite `g` to access `my_info` using LEAF:
 
 [source,c++]
 ----
-#include <boost/leaf/boost_exception_support.hpp>
+#include <boost/leaf/handle_exception.hpp>
 
 void g()
 {
@@ -1602,7 +1600,7 @@ The use of <<match>> is also supported:
 
 [source,c++]
 ----
-#include <boost/leaf/boost_exception_support.hpp>
+#include <boost/leaf/handle_exception.hpp>
 
 void g()
 {
@@ -2109,11 +2107,6 @@ namespace boost { namespace leaf {
 [.text-right]
 <<handle_error.hpp>> | <<try_catch>> | <<catch_>>
 ====
-
-[[boost_exception_support.hpp]]
-==== `boost_exception_support.hpp`
-
-Including this header enables LEAF error handlers to access Boost Exception error information. See <<tutorial-boost_exception_integration>>.
 
 [[traits]]
 == Reference: Traits
