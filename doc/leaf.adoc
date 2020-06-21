@@ -4019,7 +4019,7 @@ Returns: :: If `*this` is in <<result,value state>>, returns `true`, otherwise r
 '''
 
 [[result::value]]
-==== `value` / `operator*` / `operatorpass:[->]`
+==== `value`, `operator*`, `pass:[->]`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
