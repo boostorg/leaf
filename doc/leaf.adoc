@@ -4586,7 +4586,9 @@ While LEAF can be used without exception handling, in the use case when errors a
 * LEAF does not waste system resources communicating error objects not used by specific error handling functions;
 * LEAF does not store the error objects in the exception object, and therefore it is able to augment exceptions thrown by external libraries (Boost Exception can only augment exceptions of types that derive from `boost::exception`).
 
-The following tables outline the differences between the two libraries which should be considered when code that uses Boost Exception is refactored to use LEAF instead:
+The following tables outline the differences between the two libraries which should be considered when code that uses Boost Exception is refactored to use LEAF instead.
+
+NOTE: It is possible to access Boost Exception error information using the LEAF error handling interface. See <<tutorial-boost_exception_integration>>.
 
 .Defining a custom type for transporting values of type T
 [cols="1a,1a",options="header",stripes=none]
