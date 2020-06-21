@@ -3228,7 +3228,7 @@ namespace boost { namespace leaf {
 		template <class E>
 		struct match_traits_value<E, true>
 		{
-			using enum_type = decltype(std::declval<E>().value());
+			using enum_type = typename std::remove_reference<decltype(std::declval<E>().value())>::type;
 			using error_type = E;
 			using value_type = enum_type;
 
@@ -3339,9 +3339,9 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple, class T>
 		struct check_one_argument
 		{
-			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
+			BOOST_LEAF_CONSTEXPR static T * check( SlotsTuple & tup, error_info const & ei ) noexcept
 			{
-				return peek<T>(tup, ei)!=0;
+				return peek<T>(tup, ei);
 			}
 		};
 
@@ -3360,10 +3360,10 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple, class T, typename match_traits<T>::enum_type... V>
 		struct check_one_argument<SlotsTuple, match<T, V...>>
 		{
-			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
+			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple & tup, error_info const & ei ) noexcept
 			{
 				using error_type = typename match<T, V...>::error_type;
-				return match<T, V...>(peek<error_type>(tup, ei))();
+				return match<T, V...>(check_one_argument<SlotsTuple, error_type>::check(tup, ei))();
 			}
 		};
 
@@ -3373,7 +3373,7 @@ namespace boost { namespace leaf {
 		template <class SlotsTuple, class Car, class... Cdr>
 		struct check_arguments<SlotsTuple, Car, Cdr...>
 		{
-			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple const & tup, error_info const & ei ) noexcept
+			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple & tup, error_info const & ei ) noexcept
 			{
 				return check_one_argument<SlotsTuple,Car>::check(tup,ei) && check_arguments<SlotsTuple,Cdr...>::check(tup,ei);
 			}
@@ -4205,6 +4205,44 @@ namespace boost { namespace leaf {
 				return std::forward<TryBlock>(try_block)();
 			},
 			std::forward<H>(h)...);
+	}
+
+} }
+
+// Boost Exception Integration below
+
+namespace boost { template <class Tag,class T> class error_info; }
+namespace boost { class exception; }
+namespace boost { namespace exception_detail { template <class ErrorInfo> struct get_info; } }
+
+namespace boost { namespace leaf {
+
+	namespace leaf_detail
+	{
+		template <class Tag, class T> struct requires_catch<boost::error_info<Tag, T>>: std::true_type { };
+		template <class Tag, class T> struct requires_catch<boost::error_info<Tag, T> const &>: std::true_type { };
+		template <class Tag, class T> struct requires_catch<boost::error_info<Tag, T> const *>: std::true_type { };
+		template <class Tag, class T> struct requires_catch<boost::error_info<Tag, T> &> { static_assert(sizeof(boost::error_info<Tag, T>)==0, "mutable boost::error_info reference arguments are not supported"); };
+		template <class Tag, class T> struct requires_catch<boost::error_info<Tag, T> *> { static_assert(sizeof(boost::error_info<Tag, T>)==0, "mutable boost::error_info pointer arguments are not supported"); };
+
+		template <class> struct dependent_type_boost_exception { using type = boost::exception; };
+
+		template <class SlotsTuple, class Tag, class T>
+		struct check_one_argument<SlotsTuple, boost::error_info<Tag, T>>
+		{
+			static boost::error_info<Tag, T> * check( SlotsTuple & tup, error_info const & ei ) noexcept
+			{
+				using boost_exception = typename dependent_type_boost_exception<Tag>::type;
+				if( ei.exception_caught() )
+					if( boost_exception const * be = dynamic_cast<boost_exception const *>(ei.exception()) )
+						if( auto * x = exception_detail::get_info<boost::error_info<Tag, T>>::get(*be) )
+						{
+							auto & sl = std::get<tuple_type_index<slot<boost::error_info<Tag, T>>,SlotsTuple>::value>(tup);
+							return &sl.put(ei.error().value(), boost::error_info<Tag, T>(*x));
+						}
+				return 0;
+			}
+		};
 	}
 
 } }

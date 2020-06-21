@@ -1547,6 +1547,77 @@ The `e_errno` type above is designed to hold `errno` values. The defined `operat
 
 TIP: The automatically-generated diagnostic messages are developer-friendly, but not user-friendly. Therefore, `operator<<` overloads for error types should only print technical information in English, and should not attempt to localize strings or to format a user-friendly message; this should be done in error-handling functions specifically designed for that purpose.
 
+[[tutorial-boost_exception_integration]]
+=== Boost Exception Integration
+
+Instead of the https://www.boost.org/doc/libs/release/libs/exception/doc/get_error_info.html[`boost::get_error_info`] API defined by Boost Exception, it is possible to use LEAF error handlers directly. Consider the following use of `boost::get_error_info`:
+
+[source,c++]
+----
+typedef boost::error_info<struct my_info_, int> my_info;
+
+void f(); // Throws using boost::throw_exception
+
+void g()
+{
+  try
+  {
+    f();
+  },
+  catch( boost::exception & e )
+  {
+    if( int const * x = boost::get_error_info<my_info>(e) )
+      std::cerr << "Got my_info with value = " << *x;
+  } );
+}
+----
+
+We can rewrite `g` to access `my_info` using LEAF:
+
+[source,c++]
+----
+#include <boost/leaf/handle_exception.hpp>
+
+void g()
+{
+  leaf::try_catch(
+    []
+    {
+      f();
+    },
+    []( my_info const & x )
+    {
+      std::cerr << "Got my_info with value = " << x.value();
+    } );
+}
+----
+[.text-right]
+<<try_catch>>
+
+Taking `my_info const &` means that the handler will only be selected if the caught exception object carries `my_info` (which LEAF accesses via `boost::get_error_info`). Alternatively, we can take `my_info const *`, in which case we'll get a `my_info` if it is available, or `0` if it is not.
+
+The use of <<match>> is also supported:
+
+[source,c++]
+----
+#include <boost/leaf/handle_exception.hpp>
+
+void g()
+{
+  leaf::try_catch(
+    []
+    {
+      f();
+    },
+    []( leaf::match<my_info, 42> )
+    {
+      std::cerr << "Got my_info with value = 42";
+    } );
+}
+----
+
+Above, the handler will be selected if the caught exception object carries `my_info` with `.value()` equal to 42.
+
 [[examples]]
 == Examples
 
@@ -3948,7 +4019,7 @@ Returns: :: If `*this` is in <<result,value state>>, returns `true`, otherwise r
 '''
 
 [[result::value]]
-==== `value` / `operator*` / `operatorpass:[->]`
+==== `value`, `operator*`, `pass:[->]`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
@@ -4508,7 +4579,9 @@ While LEAF can be used without exception handling, in the use case when errors a
 * LEAF does not waste system resources communicating error objects not used by specific error handling functions;
 * LEAF does not store the error objects in the exception object, and therefore it is able to augment exceptions thrown by external libraries (Boost Exception can only augment exceptions of types that derive from `boost::exception`).
 
-The following tables outline the differences between the two libraries which should be considered when code that uses Boost Exception is refactored to use LEAF instead:
+The following tables outline the differences between the two libraries which should be considered when code that uses Boost Exception is refactored to use LEAF instead.
+
+NOTE: It is possible to access Boost Exception error information using the LEAF error handling interface. See <<tutorial-boost_exception_integration>>.
 
 .Defining a custom type for transporting values of type T
 [cols="1a,1a",options="header",stripes=none]
