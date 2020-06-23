@@ -1547,6 +1547,224 @@ The `e_errno` type above is designed to hold `errno` values. The defined `operat
 
 TIP: The automatically-generated diagnostic messages are developer-friendly, but not user-friendly. Therefore, `operator<<` overloads for error types should only print technical information in English, and should not attempt to localize strings or to format a user-friendly message; this should be done in error-handling functions specifically designed for that purpose.
 
+'''
+
+[[tutorial-working_with_std_error_code]]
+=== Working with `std::error_code` / `std::error_condition`
+
+The relationship between `std::error_code` and `std::error_condition` is not easily understood from reading the standard specifications. This section explains how they're supposed to be used, and how LEAF interacts with them.
+
+The idea behind `std::error_code` is to encode both an integer value representing an error code, as well as the domain of that value. The domain is represented by a [underline]#reference#, `cat`, to a static object of type `std::error_category`. Conceptually, a `std::error_code` is like `pair<cat, int>`.
+
+The point of wrapping an error code enum in a `std::error_code` is to erase its type, so it can travel freely across API boundaries. Let's say we have this `enum`:
+
+[source,c++]
+----
+enum class libfoo_error
+{
+  e1 = 1,
+  e2,
+  e3
+};
+----
+
+We need some boilerplate to define our `std::error_category`:
+
+[source,c++]
+----
+namespace std
+{
+  template <> <1>
+  struct is_error_code_enum<libfoo_error>: std::true_type
+  {
+  };
+}
+
+std::error_category const & libfoo_error_category() <2>
+{
+  struct cat: std::error_category
+  {
+    char const * name() const noexcept override
+    {
+      return "libfoo";
+    }
+
+    std::string message(int code) const override
+    {
+      switch( libfoo_error(code) )
+      {
+        case libfoo_error::e1: return "e1";
+        case libfoo_error::e2: return "e2";
+        case libfoo_error::e3: return "e3";
+        default: return "error";
+      }
+    }
+  };
+
+  static cat c;
+  return c;
+}
+
+std::error_code make_error_code(libfoo_error e) <3>
+{
+  return std::error_code(int(e), libfoo_error_category());
+}
+----
+
+<1> Tell the standard library that `libfoo_error` is a designed to be used with `std::error_code`.
+<2> Helper function to obtain a reference to the static `std::error_category` instance that describes `libfoo` errors.
+<3> A factory function that converts a `libfoo_error` enum to a `std::error_code` object.
+
+With this in place, if we receive a `std::error_code`, we can easily check if it represents some of the `libfoo_error` values we're interested in:
+
+[source,c++]
+----
+std::error_code f();
+
+....
+auto ec = f();
+if( ec == libfoo_error::e1 || ec == libfoo_error::e2 )
+{
+  // We got either a libfoo_error::e1 or a libfoo_error::e2
+}
+----
+
+In terms of LEAF, we can write an error handler that matches `libfoo_error::e1` or `libfoo_error::e2` like this:
+
+[source,c++]
+----
+[]( leaf::match<leaf::code<libfoo_error>, libfoo_error::e1, libfoo_error::e2> )
+{
+  // We got either a libfoo_error::e1 or a libfoo_error::e2
+}
+----
+
+When we pass an instance of `leaf::code` as the first argument of the `leaf::match` template, it understands that the error object we want matched is not of type `libfoo_error`, but of type `std::error_code`. To check if the error handler is suitable to handle the received `std::error_code` object `ec`, LEAF checks if either of `ec == libfoo_error::e1` or `ec == libfoo_error::e2` is `true`.
+
+So far so good, but remember, the standard library defines another type also, `std::error_condition`. The first confusing thing is that in terms of its physical representation, `std::error_condition` is identical to `std::error_code`; that is, it is also like a pair of `std::error_category` and an `int`!
+
+So why do we need two different types which use identical physical representation?
+
+The key to answering this question is to understand that `std::error_code` objects are designed to be returned from functions to indicate failures. In contrast, `std::error_condition` objects are [underline]#never# supposed to be communicated; their purpose is to provide an interpretation for the `std::error_code` values being communicated. The idea is that in a given program there may be multiple different "physical" (maybe platform-specific) `std::error_code` values which all indicate the same "logical" `std::error_condition`.
+
+This leads us to the second confusing thing about `std::error_condition`: it uses the same `std::error_category` type, this time to specify what `std::error_code` values are equivalent to what `std::error_condition` values.
+
+Let's say that our program uses two libraries, `libfoo` and `libbar`, each communicated in terms of `std::error_code` with different error categories. Let's say `libbar_error` looks like this:
+
+[source,c++]
+----
+enum class libbar_error
+{
+  e1 = 1,
+  e2,
+  e3,
+  e4
+};
+
+// Boilerplate omitted:
+// - specialization of std::is_error_code_enum
+// - libbar_error_category()
+// - make_error_code overload for libbar_error.
+----
+
+We can now use `std::error_condition` to define the _logical_ error conditions represented by the `std::error_code` values communicated by `libfoo` and `libbar`:
+
+[source,c++]
+----
+enum class my_error_condition <1>
+{
+  c1 = 1,
+  c2
+};
+
+namespace std
+{
+  template <> <2>
+  class is_error_condition_enum<my_error_condition>: std::true_type
+  {
+  };
+}
+
+std::error_category const & libfoo_error_category() <3>
+{
+  struct cat: std::error_category
+  {
+    char const * name() const noexcept override
+    {
+      return "my_error_condition";
+    }
+
+    std::string message(int cond) const override
+    {
+      switch( my_error_condition(code) )
+      {
+        case my_error_condition::c1: return "c1";
+        case my_error_condition::c2: return "c2";
+        default: return "error";
+      }
+    }
+
+    bool equivalent(std::error_code const & code, int cond) const noexcept
+    {
+      switch( my_error_condition(cond) )
+      {
+        case my_error_condition::c1: <4>
+          return
+            code == libfoo_error::e1 ||
+            code == libbar_error::e3 ||
+            code == libbar_error::e4;
+        case my_error_condition::c2: <5>
+          return
+            code == libfoo_error::e2 ||
+            code == libbar_error::e1 ||
+            code == libbar_error::e2;
+        default:
+          return false;
+      }
+    }
+  };
+
+  static cat c;
+  return c;
+}
+
+std::error_condition make_error_condition(my_error_condition e) <3>
+{
+  return std::error_condition(int(e), my_error_condition_error_category());
+}
+----
+<1> Enumeration of the two logical error conditions, `c1` and `c2`.
+<2> This specialization tells the standard library that the `my_error_condition` enum is designed to be used with `std::error_condition`.
+<3> Define the `std::error_category` for `my_error_condition` `std::error_condition` objects.
+<4> Here we specify that any of `libfoo:error::e1`, `libbar_error::e3` and `libbar_error::e4` are logically equivalent to `my_error_condition::c1`...
+<5> ...and that any of `libfoo:error::e2`, `libbar_error::e1` and `libbar_error::e2` are logically equivalent to `my_error_condition::c2`.
+
+Phew!
+
+Now, if we have a `std::error_code` object `ec`, we can check if it represents `my_error_condition::c1` like so:
+
+[source,c++]
+----
+if( ec == my_error_condition::c1 )
+{
+  // We have a c1 in our hands
+}
+----
+
+Finally, the equivalent LEAF error handler would look like this:
+
+[source,c++]
+----
+[]( leaf::match<condition<my_error_condition>, my_error_condition::c1> )
+{
+  // We have a c1 in our hands
+}
+----
+
+When we pass an instance of `leaf::condition` as the first argument of the `leaf::match` template, it understands that the error object we want matched is not of type `my_error_condition`, but of type `std::error_code`. To check if the error handler is suitable to handle the received `std::error_code` object `ec`, LEAF checks if `ec == my_error_condition::c1` is `true`.
+
+'''
+
 [[tutorial-boost_exception_integration]]
 === Boost Exception Integration
 
@@ -2035,11 +2253,32 @@ namespace boost { namespace leaf {
 
   //////////////////////////////////////////
 
-  template <class Enum>
-  class match;
+  template <class E, typename deduced-type<E>::type... V>
+  class match
+  {
+  public:
 
-  template <class Enum, class ErrorConditionEnum = Enum>
-  struct condition;
+    using enum_type = <<deduced>>;
+    using matched_type = <<deduced>>;
+
+    explicit match( matched_type const * m ) noexcept;
+
+    explicit bool operator()() const noexcept;
+
+    matched_type const & matched() const noexcept;
+  };
+
+  template <class Enum, class EnumType = Enum>
+  struct condition
+  {
+    using enum_type = EnumType;
+  };
+
+  template <class Enum, class EnumType = Enum>
+  struct code
+  {
+    using enum_type = EnumType;
+  };
 
   //////////////////////////////////////////
 
@@ -2075,7 +2314,7 @@ namespace boost { namespace leaf {
 ----
 
 [.text-right]
-<<context.hpp>> | <<try_handle_all>> | <<try_handle_some>> | <<match>> | <<condition>> | <<error_info>> | <<diagnostic_info>> | <<verbose_diagnostic_info>>
+<<context.hpp>> | <<try_handle_all>> | <<try_handle_some>> | <<match>> | <<condition>> | <<code>> | <<error_info>> | <<diagnostic_info>> | <<verbose_diagnostic_info>>
 ====
 
 [[handle_exception.hpp]]
@@ -2707,7 +2946,7 @@ try_handle_some(
 <1> This handler is selected if the error includes an object of type `errors` with value `ec1`.
 <2> This handler is selected if the error includes an object of type `errors` regardless of its value.
 +
-In particular, the `E` type used to instantiate the `match` template may be an instance of the <<condition>> class template, which is used to match a `std::error_condition` enumerated value:
+In particular, the `E` type used to instantiate the `match` template may be an instance of the <<condition>> class template, which is used to match enumerated values of some type `En` for which `std::is_error_condition_enum<En>::value` is true:
 +
 .Example:
 [source,c++]
@@ -2742,7 +2981,45 @@ try_handle_some(
 [.text-right]
 <<result>> | <<match>> | <<condition>>
 +
-<1> This handler is selected if the error includes an object of type `std::error_code` equivalent to the error condition `cond_x::x11`.
+<1> This handler is selected if the error includes an object of type `std::error_code` that compares equal to `make_error_condition(condx::x11)`.
+<2> This handler is selected if the error includes any object of type `std::error_code`.
++
+In particular, the `E` type used to instantiate the `match` template may be an instance of the <<code>> class template, which is used to match enumerated values of some type `En` for which `std::is_error_code_enum<En>::value` is true:
++
+.Example:
+[source,c++]
+----
+enum class my_error_code { e1=1, e2, e3 };
+
+namespace std
+{
+  template <> struct is_error_code_enum<my_error_code>: true_type { };
+};
+
+....
+
+try_handle_some(
+  []
+  {
+    return f();
+  },
+
+  [&c](leaf::match<leaf::code<my_error_code>, my_error_code::e2>) <1>
+  {
+    ....
+  },
+
+  [](std::error_code const & ec) <2>
+  {
+    ....
+  } );
+}
+----
++
+[.text-right]
+<<result>> | <<match>> | <<code>>
++
+<1> This handler is selected if the error includes an object of type `std::error_code` that compares equal to `make_error_code(my_error_code::e2)`.
 <2> This handler is selected if the error includes any object of type `std::error_code`.
 +
 * If `A~i~` is of the predicate type `<<catch_,catch_>><Ex...>`, and the `try_block` throws, `a~i~` is initialized with the current `std::exception`. The handler is dropped if the expression `a~i~()` evaluates to `false` (see `<<catch_,catch_>><Ex...>`).
@@ -2921,6 +3198,58 @@ assert(!c4());
 
 '''
 
+[[code]]
+=== `code`
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class Enum, class EnumType = Enum>
+  struct code
+  {
+    using enum_type = EnumType;
+
+    static_assert(std::is_error_code_Enum<enum_type>::value);
+  };
+
+} }
+----
+
+NOTE: The `code` template is useful only as argument to the <<match>> template, to match a received `std::error_code` to a list of values of an error code enum.
+
+.Example:
+[source,c++]
+----
+enum class my_error_code_enum { e1=1, e2, e3 };
+
+namespace std
+{
+  template <> struct is_error_code_enum<my_error_code_enum>: true_type { };
+};
+
+std::error_code ec;
+match<code<my_error_code_enum>, my_error_code_enum::e1> m(&ec);
+
+// m() evaluates to true iff ec == make_error_code(my_error_code_enum::e1).
+----
+
+.Alternatively:
+[source,c++]
+----
+struct e_wrapped_error_code { std::error_code value; };
+
+e_wrapped_error_code ec;
+match<code<e_wrapped_error_code, my_error_code_enum>, my_error_code_enum::e1> m(&ec);
+
+// m() evaluates to true iff ec.value == make_error_code(my_error_code_enum::e1).
+----
+
+NOTE: See also <<match>>.
+
+
+'''
+
 [[condition]]
 === `condition`
 
@@ -2928,13 +3257,18 @@ assert(!c4());
 ----
 namespace boost { namespace leaf {
 
-  template <class Enum, class ErrorConditionEnum = Enum>
-  struct condition;
+  template <class Enum, class EnumType = Enum>
+  struct condition
+  {
+    using enum_type = EnumType;
+
+    static_assert(std::is_error_condition_Enum<enum_type>::value);
+  };
 
 } }
 ----
 
-NOTE: The `condition` template is useful only as argument to the <<match>> template, to match a specific `std::error_condition`.
+NOTE: The `condition` template is useful only as argument to the <<match>> template, to match a received `std::error_code` to a list of values of an error condition enum.
 
 .Example:
 [source,c++]
@@ -2947,10 +3281,22 @@ namespace std
 };
 
 std::error_code ec;
-match<condition<cond_x, cond_x::x11>> m(ec);
+match<condition<cond_x>, cond_x::x11> m(&ec);
 
-// m() evaluates to true if ec is equivalent to the error condition cond_x::x11.
+// m() evaluates to true iff ec == make_error_condition(cond_x::x11).
 ----
+
+.Alternatively:
+[source,c++]
+----
+struct e_wrapped_error_code { std::error_code value; };
+
+e_wrapped_error_code ec;
+match<condition<e_wrapped_error_code, cond_x>, cond_x::x11> m(&ec);
+
+// m() evaluates to true iff ec.value == make_error_condition(cond_x::x11).
+----
+
 
 NOTE: See also <<match>>.
 
@@ -3682,41 +4028,45 @@ namespace boost { namespace leaf {
   {
   public:
 
-    using error_type = <<deduced>>;
-    using value_type = <<deduced>>;
+    using enum_type = <<deduced>>;
+    using matched_type = <<deduced>>;
 
-    explicit match( error_type const * value ) noexcept;
+    explicit match( matched_type const * m ) noexcept;
 
     explicit bool operator()() const noexcept;
 
-    value_type value() const noexcept;
+    matched_type const & matched() const noexcept;
   };
 
 } }
 ----
 
-Effects: ::
+This class template is used only as an argument to an error handler. The <<handler_selection_procedure,handler selection procedure>> uses the boolean conversion operator to determine if the error object under consideration matches one of the specified `V...` values.
+
+The type of the `V...` parameter pack is the same as the deduced member `enum_type`. The type deductions and the behavior of the boolean conversion operator follow these rules:
 
 * If `E` is an instance of the <<condition>> template:
-** `match<E>::error_type` is deduced as `std::error_code`;
-** `match<E>::value_type` is deduced as the type of the error condition enum used with `condition`;
-** The type of the parameter pack `V...` is deduced as `value_type`;
-** The boolean conversion operator evaluates to `true` iff the `std::error_code` pointer passed to the constructor is not `0` and the object it points is equivalent to one of the error condition enum values used with `condition`.
+** `match<E>::enum_type` is deduced as `typename E::enum_type`;
+** `match<E>::matched_type` is deduced as `std::error_code`;
+** The boolean conversion operator evaluates to `true` iff the `std::error_code` pointer `m` passed to the constructor is not `0` and the object it points compares equal to at least one of `make_error_condition(V)...`.
+* Otherwise, if `E` is an instance of the <<code>> template:
+** `match<E>::enum_type` is deduced as `typename E::enum_type`;
+** `match<E>::matched_type` is deduced as `std::error_code`;
+** The boolean conversion operator evaluates to `true` iff the `std::error_code` pointer `m` passed to the constructor is not `0` and the object it points compares equal to at least one of `make_error_code(V)...`.
 * Otherwise, if `E` defines an accessible data member `value`:
-** `match<E>::error_type` is deduced as `E`;
-** `match<E>::value_type` is deduced as `decltype(std::declval<E>().value)`;
-** The type of the parameter pack `V...` is deduced as `value_type`;
-** The boolean conversion operator evaluates to `true` iff the `value` pointer passed to the constructor is not `0` and `*value` is equal to one of `V...`.
+** `match<E>::enum_type` is deduced as `decltype(E::value)`;
+** `match<E>::matched_type` is deduced as `E`;
+** The boolean conversion operator evaluates to `true` iff the `E` pointer `m` passed to the constructor is not `0` and `mpass:[->]value` is equal to one of `V...`.
 * Otherwise, if `E` defines an accessible member function `value()`:
-** `match<E>::error_type` is deduced as `E`;
-** `match<E>::value_type` is deduced as `decltype(std::declval<E>().value())`;
-** The type of the parameter pack `V...` is deduced as `value_type`;
-** The boolean conversion operator evaluates to `true` iff the `value` pointer passed to the constructor is not `0` and `*value` is equal to one of `V...`.
+** `match<E>::enum_type` is deduced as `typename std::remove_reference<decltype(std::declval<E>().value()))>::type`;
+** `match<E>::matched_type` is deduced as `E`;
+** The boolean conversion operator evaluates to `true` iff the `E` pointer `m` passed to the constructor is not `0` and `mpass:[->]value()` is equal to one of `V...`.
 * Otherwise:
-** `match<E>::error_type` is deduced as `E`;
-** `match<E>::value_type` is deduced as `E`;
-** The type of the parameter pack `V...` is deduced as `value_type`;
-** The boolean conversion operator evaluates to `true` iff the `value` pointer passed to the constructor is not `0` and `*value` is equal to one of `V...`.
+** `match<E>::enum_type` is deduced as `E`;
+** `match<E>::matched_type` is deduced as `E`;
+** The boolean conversion operator evaluates to `true` iff the `E` pointer `m` passed to the constructor is not `0` and `*m` is equal to one of `V...`.
+
+In all cases, if the boolean conversion operator evaluates to `true`, it is valid to call `matched` to obtain a reference to the matched object.
 
 NOTE: The examples below demonstrate how `match` works in isolation, but it is designed to be used as argument to a handler function passed to an error-handling function such as <<try_handle_some>>, <<try_handle_all>>, <<try_catch>>. See Five Minute Introduction <<introduction-result>> for a more practical example.
 
@@ -3728,19 +4078,21 @@ struct my_error_code { int value; };
 my_error_code ec = {42};
 
 match<my_error_code, 1> m1(&ec);
-assert(!m1());
+assert(!m1()); // !(42==1)
 
 match<my_error_code, 42> m2(0);
-assert(!m2());
+assert(!m2()); // 0 passed to the constructor
 
-match<my_error_code, 42> m2(&ec);
-assert(m2());
+match<my_error_code, 42> m3(&ec);
+assert(m3()); // 42==42
+assert(&m3.matched() == &ec);
 
-match<my_error_code, 1, 5, 42, 7> m3(&ec);
-assert(m3());
+match<my_error_code, 1, 5, 42, 7> m4(&ec);
+assert(m4()); // 42==1 || 42==5 || 42==42 || 42==7
+assert(&m4.matched() == &ec);
 
-match<my_error_code, 1, 3, -42> m4(&ec);
-assert(!m4());
+match<my_error_code, 1, 3, -42> m5(&ec);
+assert(!m5()); // !(42==1 || 42==3 || 42==-42 || 42==7)
 ----
 
 .Example 2:
@@ -3751,19 +4103,21 @@ enum my_error_code { e1=1, e2, e3 };
 my_error_code ec = e2;
 
 match<my_error_code, e1> m1(&ec);
-assert(!m1());
+assert(!m1()); // !(e2==e1)
 
 match<my_error_code, e2> m2(0);
-assert(m2());
+assert(!m2()); // 0 passed to the constructor
 
-match<my_error_code, e2> m2(&ec);
-assert(m2());
+match<my_error_code, e2> m3(&ec);
+assert(m3()); // e2==e2
+assert(&m3.matched() == &ec);
 
-match<my_error_code, e1, e2> m3(&ec);
-assert(m3());
+match<my_error_code, e1, e2> m4(&ec);
+assert(m4()); // e2==e1 || e2==e2
+assert(&m4.matched() == &ec);
 
 match<my_error_code, e1, e3> m4(&ec);
-assert(!m4());
+assert(!m4()); // !(e2==e1 || e2==e3)
 ----
 
 '''
