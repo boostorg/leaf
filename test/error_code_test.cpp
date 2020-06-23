@@ -167,6 +167,27 @@ void test()
 			} );
 		BOOST_TEST_EQ(r, 42);
 	}
+#if __cplusplus >= 201703L
+	{
+		int r = leaf::try_handle_all(
+			[]() -> R
+			{
+				return leaf::new_error( e_wrapped_error_code { make_error_code(errc_a::a0) } ).to_error_code();
+			},
+			[]( leaf::match<e_wrapped_error_code, errc_a::a0> code )
+			{
+				e_wrapped_error_code const & wec = code.matched();
+				std::error_code const & ec = wec.value;
+				BOOST_TEST_EQ(ec, make_error_code(errc_a::a0));
+				return 42;
+			},
+			[]
+			{
+				return -42;
+			} );
+		BOOST_TEST_EQ(r, 42);
+	}
+#endif
 	{
 		int r = leaf::try_handle_all(
 			[]() -> R
@@ -187,6 +208,28 @@ void test()
 			} );
 		BOOST_TEST_EQ(r, 42);
 	}
+#if __cplusplus >= 201703L
+	{
+		int r = leaf::try_handle_all(
+			[]() -> R
+			{
+				return leaf::new_error( e_wrapped_error_code { make_error_code(errc_a::a0) } ).to_error_code();
+			},
+			[]( leaf::match<e_wrapped_error_code, cond_x::x00> cond )
+			{
+				e_wrapped_error_code const & wec = cond.matched();
+				std::error_code const & ec = wec.value;
+				BOOST_TEST_EQ(ec, make_error_code(errc_a::a0));
+				BOOST_TEST(ec==make_error_condition(cond_x::x00));
+				return 42;
+			},
+			[]
+			{
+				return -42;
+			} );
+		BOOST_TEST_EQ(r, 42);
+	}
+#endif
 }
 
 int main()

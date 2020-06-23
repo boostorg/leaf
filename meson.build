@@ -112,6 +112,7 @@ tests = [
 	'handle_basic_test',
 	'handle_some_other_result_test',
 	'handle_some_test',
+	'match_test',
 	'multiple_errors_test',
 	'optional_test',
 	'preload_basic_test',

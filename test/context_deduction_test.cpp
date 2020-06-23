@@ -44,6 +44,22 @@ enum class my_error_code
 	error3
 };
 
+namespace std
+{
+	template <> struct is_error_code_enum<my_error_code>: std::true_type { };
+}
+
+enum class my_error_condition
+{
+	ok,
+	cond1
+};
+
+namespace std
+{
+	template <> struct is_error_condition_enum<my_error_condition>: std::true_type { };
+}
+
 void not_called_on_purpose()
 {
 	test< std::tuple<info<1>> >( expd([]( info<1> ){ }) );
@@ -93,6 +109,13 @@ void not_called_on_purpose()
 
 	test< std::tuple<info<1>> >( expd([]( leaf::match<info<1>,42> ){ }) );
 	test< std::tuple<info_f<1>> >( expd([]( leaf::match<info_f<1>,42> ){ }) );
+
+	test< std::tuple<std::error_code> >( expd([]( leaf::match<leaf::code<my_error_code>, my_error_code::error1> ){ }) );
+	test< std::tuple<std::error_code> >( expd([]( leaf::match<leaf::condition<my_error_condition>, my_error_condition::cond1> ){ }) );
+#if __cplusplus >= 201703L
+	test< std::tuple<std::error_code> >( expd([]( leaf::match<std::error_code, my_error_code::error1> ){ }) );
+	test< std::tuple<std::error_code> >( expd([]( leaf::match<std::error_code, my_error_condition::cond1> ){ }) );
+#endif
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 	test< std::tuple<info<1>> >( expd([]( leaf::catch_<std::exception>, info<1> ){ }) );

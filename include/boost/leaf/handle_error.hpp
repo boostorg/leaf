@@ -313,9 +313,9 @@ namespace boost { namespace leaf {
 			using enum_type = Enum;
 			using matched_type = Enum;
 
-			BOOST_LEAF_CONSTEXPR static bool cmp_value( matched_type const & x, enum_type v ) noexcept
+			BOOST_LEAF_CONSTEXPR static enum_type get_value( matched_type x ) noexcept
 			{
-				return x == v;
+				return x;
 			}
 		};
 
@@ -328,9 +328,9 @@ namespace boost { namespace leaf {
 			using enum_type = decltype(std::declval<E>().value);
 			using matched_type = E;
 
-			BOOST_LEAF_CONSTEXPR static bool cmp_value( matched_type const & x, enum_type v ) noexcept
+			BOOST_LEAF_CONSTEXPR static enum_type const & get_value( matched_type const & x ) noexcept
 			{
-				return x.value == v;
+				return x.value;
 			}
 		};
 
@@ -340,9 +340,9 @@ namespace boost { namespace leaf {
 			using enum_type = typename std::remove_reference<decltype(std::declval<E>().value())>::type;
 			using matched_type = E;
 
-			BOOST_LEAF_CONSTEXPR static bool cmp_value( matched_type const & x, enum_type v ) noexcept
+			BOOST_LEAF_CONSTEXPR static decltype(std::declval<E>().value()) get_value( matched_type const & x ) noexcept
 			{
-				return x.value() == v;
+				return x.value();
 			}
 		};
 
@@ -357,10 +357,9 @@ namespace boost { namespace leaf {
 			using enum_type = EnumType;
 			using matched_type = std::error_code;
 
-			BOOST_LEAF_CONSTEXPR static bool cmp_value( std::error_code const & x, enum_type v ) noexcept
+			BOOST_LEAF_CONSTEXPR static std::error_code const & get_value( std::error_code const & x ) noexcept
 			{
-				using namespace std;
-				return x == v;
+				return x;
 			}
 		};
 
@@ -370,10 +369,9 @@ namespace boost { namespace leaf {
 			using enum_type = EnumType;
 			using matched_type = E;
 
-			BOOST_LEAF_CONSTEXPR static bool cmp_value( matched_type const & x, enum_type v ) noexcept
+			BOOST_LEAF_CONSTEXPR static std::error_code const & get_value( matched_type const & x ) noexcept
 			{
-				using namespace std;
-				return x.value == v;
+				return x.value;
 			}
 		};
 
@@ -383,10 +381,9 @@ namespace boost { namespace leaf {
 			using enum_type = EnumType;
 			using matched_type = std::error_code;
 
-			BOOST_LEAF_CONSTEXPR static bool cmp_value( std::error_code const & x, enum_type v ) noexcept
+			BOOST_LEAF_CONSTEXPR static std::error_code const & get_value( std::error_code const & x ) noexcept
 			{
-				using namespace std;
-				return x == v;
+				return x;
 			}
 		};
 
@@ -396,10 +393,9 @@ namespace boost { namespace leaf {
 			using enum_type = EnumType;
 			using matched_type = E;
 
-			BOOST_LEAF_CONSTEXPR static bool cmp_value( matched_type const & x, enum_type v ) noexcept
+			BOOST_LEAF_CONSTEXPR static std::error_code const & get_value( matched_type const & x ) noexcept
 			{
-				using namespace std;
-				return x.value == v;
+				return x.value;
 			}
 		};
 
@@ -409,25 +405,16 @@ namespace boost { namespace leaf {
 			using enum_type = void;
 			using matched_type = std::error_code;
 
-			template <class EnumType>
-			static bool cmp_value( matched_type const & x, EnumType v ) noexcept
+			static std::error_code const & get_value( std::error_code const & x ) noexcept
 			{
-				return x == v;
+				return x;
 			}
 		};
 
+		// Use match<std::error_code, ...> with an error condition enum to match a specific error condition.
+		// This type intentionally left undefined to detect such bugs.
 		template <>
-		struct match_traits<std::error_condition, true>
-		{
-			using enum_type = void;
-			using matched_type = std::error_condition;
-
-			template <class EnumType>
-			static bool cmp_value( matched_type x, EnumType v ) noexcept
-			{
-				return x == v;
-			}
-		};
+		struct match_traits<std::error_condition, true>;
 
 		template <class MatchTraits>
 		struct check_value_pack
@@ -435,13 +422,13 @@ namespace boost { namespace leaf {
 			template <class V>
 			BOOST_LEAF_CONSTEXPR static bool check( typename MatchTraits::matched_type const & x, V v ) noexcept
 			{
-				return MatchTraits::cmp_value(x, v);
+				return MatchTraits::get_value(x) == v;
 			}
 
 			template <class VCar, class... VCdr>
 			BOOST_LEAF_CONSTEXPR static bool check( typename MatchTraits::matched_type const & x, VCar car, VCdr ... cdr ) noexcept
 			{
-				return MatchTraits::cmp_value(x, car) || check_value_pack<MatchTraits>::check(x, cdr...);
+				return MatchTraits::get_value(x) == car || check_value_pack<MatchTraits>::check(x, cdr...);
 			}
 		};
 	}
@@ -523,8 +510,12 @@ namespace boost { namespace leaf {
 			}
 		};
 
+
+		template <class SlotsTuple, class T, bool = std::is_base_of<match_base, T>::value>
+		struct check_one_argument;
+
 		template <class SlotsTuple, class T>
-		struct check_one_argument
+		struct check_one_argument<SlotsTuple, T, false>
 		{
 			BOOST_LEAF_CONSTEXPR static T * check( SlotsTuple & tup, error_info const & ei ) noexcept
 			{
@@ -533,24 +524,24 @@ namespace boost { namespace leaf {
 		};
 
 		template <class SlotsTuple, class T>
-		struct check_one_argument<SlotsTuple, T *>: always_available<SlotsTuple> { };
+		struct check_one_argument<SlotsTuple, T *, false>: always_available<SlotsTuple> { };
 
 		template <class SlotsTuple>
-		struct check_one_argument<SlotsTuple,error_info>: always_available<SlotsTuple> { };
+		struct check_one_argument<SlotsTuple, error_info, false>: always_available<SlotsTuple> { };
 
 		template <class SlotsTuple>
-		struct check_one_argument<SlotsTuple,diagnostic_info>: always_available<SlotsTuple> { };
+		struct check_one_argument<SlotsTuple, diagnostic_info, false>: always_available<SlotsTuple> { };
 
 		template <class SlotsTuple>
-		struct check_one_argument<SlotsTuple,verbose_diagnostic_info>: always_available<SlotsTuple> { };
+		struct check_one_argument<SlotsTuple, verbose_diagnostic_info, false>: always_available<SlotsTuple> { };
 
-		template <class SlotsTuple, class T, typename match_traits<T>::enum_type... V>
-		struct check_one_argument<SlotsTuple, match<T, V...>>
+		template <class SlotsTuple, class Match>
+		struct check_one_argument<SlotsTuple, Match, true>
 		{
 			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple & tup, error_info const & ei ) noexcept
 			{
-				using matched_type = typename match<T, V...>::matched_type;
-				return match<T, V...>(check_one_argument<SlotsTuple, matched_type>::check(tup, ei))();
+				using matched_type = typename Match::matched_type;
+				return Match(check_one_argument<SlotsTuple, matched_type>::check(tup, ei))();
 			}
 		};
 
@@ -580,8 +571,11 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
+		template <class T, bool = std::is_base_of<match_base, T>::value>
+		struct get_one_argument;
+
 		template <class T>
-		struct get_one_argument
+		struct get_one_argument<T, false>
 		{
 			template <class SlotsTuple>
 			BOOST_LEAF_CONSTEXPR static T const & get( SlotsTuple const & tup, error_info const & ei ) noexcept
@@ -601,7 +595,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class T>
-		struct get_one_argument<T *>
+		struct get_one_argument<T *, false>
 		{
 			template <class SlotsTuple>
 			BOOST_LEAF_CONSTEXPR static T * get( SlotsTuple & tup, error_info const & ei ) noexcept
@@ -611,7 +605,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class T>
-		struct get_one_argument<T const *>
+		struct get_one_argument<T const *, false>
 		{
 			template <class SlotsTuple>
 			BOOST_LEAF_CONSTEXPR static T const * get( SlotsTuple const & tup, error_info const & ei ) noexcept
@@ -621,7 +615,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <>
-		struct get_one_argument<error_info>
+		struct get_one_argument<error_info, false>
 		{
 			template <class SlotsTuple>
 			BOOST_LEAF_CONSTEXPR static error_info const & get( SlotsTuple const &, error_info const & ei ) noexcept
@@ -633,7 +627,7 @@ namespace boost { namespace leaf {
 #if BOOST_LEAF_DIAGNOSTICS
 
 		template <>
-		struct get_one_argument<diagnostic_info>
+		struct get_one_argument<diagnostic_info, false>
 		{
 			template <class SlotsTuple>
 			BOOST_LEAF_CONSTEXPR static diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
@@ -643,7 +637,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <>
-		struct get_one_argument<verbose_diagnostic_info>
+		struct get_one_argument<verbose_diagnostic_info, false>
 		{
 			template <class SlotsTuple>
 			BOOST_LEAF_CONSTEXPR static verbose_diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
@@ -655,7 +649,7 @@ namespace boost { namespace leaf {
 #else
 
 		template <>
-		struct get_one_argument<diagnostic_info>
+		struct get_one_argument<diagnostic_info, false>
 		{
 			template <class SlotsTuple>
 			BOOST_LEAF_CONSTEXPR static diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
@@ -665,7 +659,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <>
-		struct get_one_argument<verbose_diagnostic_info>
+		struct get_one_argument<verbose_diagnostic_info, false>
 		{
 			template <class SlotsTuple>
 			BOOST_LEAF_CONSTEXPR static verbose_diagnostic_info get( SlotsTuple const & tup, error_info const & ei ) noexcept
@@ -676,14 +670,14 @@ namespace boost { namespace leaf {
 
 #endif
 
-		template <class T, typename match_traits<T>::enum_type... V>
-		struct get_one_argument<match<T, V...>>
+		template <class Match>
+		struct get_one_argument<Match, true>
 		{
 			template <class SlotsTuple>
-			BOOST_LEAF_CONSTEXPR static match<T, V...> get( SlotsTuple const & tup, error_info const & ei ) noexcept
+			BOOST_LEAF_CONSTEXPR static Match get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
-				using matched_type = typename match<T, V...>::matched_type;
-				return match<T, V...>(peek<matched_type>(tup, ei));
+				using matched_type = typename Match::matched_type;
+				return Match(peek<matched_type>(tup, ei));
 			}
 		};
 	}
