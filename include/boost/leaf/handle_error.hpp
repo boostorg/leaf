@@ -340,7 +340,7 @@ namespace boost { namespace leaf {
 			using enum_type = typename std::remove_reference<decltype(std::declval<E>().value())>::type;
 			using matched_type = E;
 
-			BOOST_LEAF_CONSTEXPR static decltype(std::declval<E>().value()) get_value( matched_type const & x ) noexcept
+			BOOST_LEAF_CONSTEXPR static decltype(std::declval<matched_type const &>().value()) get_value( matched_type const & x ) noexcept
 			{
 				return x.value();
 			}
@@ -416,21 +416,17 @@ namespace boost { namespace leaf {
 		template <>
 		struct match_traits<std::error_condition, true>;
 
-		template <class MatchTraits>
-		struct check_value_pack
+		template <class MatchedType, class V>
+		BOOST_LEAF_CONSTEXPR inline bool check_value_pack( MatchedType const & x, V v ) noexcept
 		{
-			template <class V>
-			BOOST_LEAF_CONSTEXPR static bool check( typename MatchTraits::matched_type const & x, V v ) noexcept
-			{
-				return MatchTraits::get_value(x) == v;
-			}
+			return x == v;
+		}
 
-			template <class VCar, class... VCdr>
-			BOOST_LEAF_CONSTEXPR static bool check( typename MatchTraits::matched_type const & x, VCar car, VCdr ... cdr ) noexcept
-			{
-				return MatchTraits::get_value(x) == car || check_value_pack<MatchTraits>::check(x, cdr...);
-			}
-		};
+		template <class MatchedType, class VCar, class... VCdr>
+		BOOST_LEAF_CONSTEXPR inline bool check_value_pack( MatchedType const & x, VCar car, VCdr ... cdr ) noexcept
+		{
+			return x == car || check_value_pack(x, cdr...);
+		}
 	}
 
 #if __cplusplus >= 201703L
@@ -454,7 +450,7 @@ namespace boost { namespace leaf {
 
 		BOOST_LEAF_CONSTEXPR bool operator()() const noexcept
 		{
-			return matched_ && leaf_detail::check_value_pack<leaf_detail::match_traits<E>>::check(*matched_, V1, V...);
+			return matched_ && leaf_detail::check_value_pack(leaf_detail::match_traits<E>::get_value(*matched_), V1, V...);
 		}
 
 		BOOST_LEAF_CONSTEXPR matched_type const & matched() const noexcept
@@ -485,7 +481,7 @@ namespace boost { namespace leaf {
 
 		BOOST_LEAF_CONSTEXPR bool operator()() const noexcept
 		{
-			return matched_ && leaf_detail::check_value_pack<leaf_detail::match_traits<E>>::check(*matched_, V1, V...);
+			return matched_ && leaf_detail::check_value_pack(leaf_detail::match_traits<E>::get_value(*matched_), V1, V...);
 		}
 
 		BOOST_LEAF_CONSTEXPR matched_type const & matched() const noexcept

@@ -10,6 +10,7 @@ variant release-diagnostics0 : release : <define>BOOST_LEAF_DIAGNOSTICS=0 ;
 
 project
     : requirements
+        <cxxstd>11
         <threading>single:<define>BOOST_LEAF_NO_THREADS
         <toolset>gcc:<cxxflags>"-Wno-delete-non-virtual-dtor -Wno-parentheses"
         <toolset>clang:<cxxflags>"-Wno-dangling-else"
