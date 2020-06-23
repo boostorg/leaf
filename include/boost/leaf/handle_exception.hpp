@@ -148,13 +148,13 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...>> { using type = void; };
-		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const>;
-		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const *> { static_assert(sizeof(catch_<Exceptions...>)==0, "Handlers should take catch_<> by value, not as catch_<> const *"); };
-		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const &> { static_assert(sizeof(catch_<Exceptions...>)==0, "Handlers should take catch_<> by value, not as catch_<> const &"); };
+		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...>, false> { using type = void; };
+		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const, false>;
+		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const *, false> { static_assert(sizeof(catch_<Exceptions...>)==0, "Handlers should take catch_<> by value, not as catch_<> const *"); };
+		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const &, false> { static_assert(sizeof(catch_<Exceptions...>)==0, "Handlers should take catch_<> by value, not as catch_<> const &"); };
 
 		template <class SlotsTuple, class... Ex>
-		struct check_one_argument<SlotsTuple,catch_<Ex...>>
+		struct check_one_argument<SlotsTuple,catch_<Ex...>, false>
 		{
 			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple const &, error_info const & ei ) noexcept
 			{
@@ -166,7 +166,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class... Ex>
-		struct get_one_argument<catch_<Ex...>>
+		struct get_one_argument<catch_<Ex...>, false>
 		{
 			template <class SlotsTuple>
 			BOOST_LEAF_CONSTEXPR static catch_<Ex...> get( SlotsTuple const &, error_info const & ei ) noexcept
@@ -314,7 +314,7 @@ namespace boost { namespace leaf {
 		template <class> struct dependent_type_boost_exception { using type = boost::exception; };
 
 		template <class SlotsTuple, class Tag, class T>
-		struct check_one_argument<SlotsTuple, boost::error_info<Tag, T>>
+		struct check_one_argument<SlotsTuple, boost::error_info<Tag, T>, false>
 		{
 			static boost::error_info<Tag, T> * check( SlotsTuple & tup, error_info const & ei ) noexcept
 			{

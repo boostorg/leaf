@@ -67,6 +67,7 @@ run handle_all_test.cpp ;
 run handle_basic_test.cpp ;
 run handle_some_other_result_test.cpp ;
 run handle_some_test.cpp ;
+run match_test.cpp ;
 run multiple_errors_test.cpp ;
 run optional_test.cpp ;
 run preload_basic_test.cpp ;

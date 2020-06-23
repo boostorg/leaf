@@ -112,6 +112,7 @@ tests = [
 	'handle_basic_test',
 	'handle_some_other_result_test',
 	'handle_some_test',
+	'match_test',
 	'multiple_errors_test',
 	'optional_test',
 	'preload_basic_test',
@@ -144,7 +145,7 @@ if get_option('leaf_boost')
 	tests += 'boost_exception_test'
 endif
 foreach t : tests
-	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf,thread_dep]+mp11) )
+	test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf,thread_dep,boost_headers]+mp11) )
 endforeach
 
 if exceptions

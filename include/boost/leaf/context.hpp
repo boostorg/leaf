@@ -107,22 +107,30 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class T> struct translate_type_impl { using type = T; };
-		template <class T> struct translate_type_impl<T const> { using type = T; };
-		template <class T> struct translate_type_impl<T const *> { using type = T; };
-		template <class T> struct translate_type_impl<T const &> { using type = T; };
-		template <class T> struct translate_type_impl<T *> { using type = T; };
-		template <class T> struct translate_type_impl<T &> { using type = T; };
+		struct match_base { };
 
-		template <> struct translate_type_impl<diagnostic_info>; // Only take leaf::diagnostic_info by const &
-		template <> struct translate_type_impl<diagnostic_info const>; // Only take leaf::diagnostic_info by const &
-		template <> struct translate_type_impl<diagnostic_info const *>; // Only take leaf::diagnostic_info by const &
-		template <> struct translate_type_impl<diagnostic_info const &> { using type = e_unexpected_count; };
+		template <class T, bool = std::is_base_of<match_base, T>::value> struct translate_type_impl;
+		template <class Match> struct translate_type_impl<Match, true> { using type = typename Match::matched_type; };
+		template <class Match> struct translate_type_impl<Match const, true>; // Only take leaf::match<> by value
+		template <class Match> struct translate_type_impl<Match *, true>; // Only take leaf::match<> by value
+		template <class Match> struct translate_type_impl<Match &, true>; // Only take leaf::match<> by value
 
-		template <> struct translate_type_impl<verbose_diagnostic_info>; // Only take leaf::verbose_diagnostic_info by const &
-		template <> struct translate_type_impl<verbose_diagnostic_info const>; // Only take leaf::verbose_diagnostic_info by const &
-		template <> struct translate_type_impl<verbose_diagnostic_info const *>; // Only take leaf::verbose_diagnostic_info by const &
-		template <> struct translate_type_impl<verbose_diagnostic_info const &> { using type = e_unexpected_info; };
+		template <class T> struct translate_type_impl<T, false> { using type = T; };
+		template <class T> struct translate_type_impl<T const, false> { using type = T; };
+		template <class T> struct translate_type_impl<T const *, false> { using type = T; };
+		template <class T> struct translate_type_impl<T const &, false> { using type = T; };
+		template <class T> struct translate_type_impl<T *, false> { using type = T; };
+		template <class T> struct translate_type_impl<T &, false> { using type = T; };
+
+		template <> struct translate_type_impl<diagnostic_info, false>; // Only take leaf::diagnostic_info by const &
+		template <> struct translate_type_impl<diagnostic_info const, false>; // Only take leaf::diagnostic_info by const &
+		template <> struct translate_type_impl<diagnostic_info const *, false>; // Only take leaf::diagnostic_info by const &
+		template <> struct translate_type_impl<diagnostic_info const &, false> { using type = e_unexpected_count; };
+
+		template <> struct translate_type_impl<verbose_diagnostic_info, false>; // Only take leaf::verbose_diagnostic_info by const &
+		template <> struct translate_type_impl<verbose_diagnostic_info const, false>; // Only take leaf::verbose_diagnostic_info by const &
+		template <> struct translate_type_impl<verbose_diagnostic_info const *, false>; // Only take leaf::verbose_diagnostic_info by const &
+		template <> struct translate_type_impl<verbose_diagnostic_info const &, false> { using type = e_unexpected_info; };
 
 		template <> struct translate_type_impl<std::error_code &>;
 
