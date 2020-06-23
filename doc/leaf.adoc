@@ -81,7 +81,7 @@ int main( int argc, char const * argv[] )
 
     [&]() -> leaf::result<int>
     {
-      // The TryBlock code goes here, we'll see it later
+      // The TryBlock goes here, we'll see it later
     },
 
     // Error handlers below:
@@ -363,7 +363,7 @@ int main( int argc, char const * argv[] )
   return leaf::try_catch(
     [&]
     {
-      // The TryBlock code goes here (previous listing)
+      // The TryBlock goes here (previous listing)
     },
 
     // Error handlers below:
@@ -2270,12 +2270,6 @@ namespace boost { namespace leaf {
     using enum_type = EnumType;
   };
 
-  template <class Enum, class EnumType = Enum>
-  struct code
-  {
-    using enum_type = EnumType;
-  };
-
   //////////////////////////////////////////
 
   class error_info
@@ -2310,7 +2304,7 @@ namespace boost { namespace leaf {
 ----
 
 [.text-right]
-<<context.hpp>> | <<try_handle_all>> | <<try_handle_some>> | <<match>> | <<condition>> | <<code>> | <<error_info>> | <<diagnostic_info>> | <<verbose_diagnostic_info>>
+<<context.hpp>> | <<try_handle_all>> | <<try_handle_some>> | <<match>> | <<condition>> | <<error_info>> | <<diagnostic_info>> | <<verbose_diagnostic_info>>
 ====
 
 [[handle_exception.hpp]]
@@ -2942,7 +2936,7 @@ try_handle_some(
 <1> This handler is selected if the error includes an object of type `errors` with value `ec1`.
 <2> This handler is selected if the error includes an object of type `errors` regardless of its value.
 +
-In particular, the `E` type used to instantiate the `match` template may be an instance of the <<condition>> class template, which is used to match enumerated values of some type `En` for which `std::is_error_condition_enum<En>::value` is true:
+In particular, the `E` type used to instantiate the `match` template may be an instance of the <<condition>> class template, which is used to match enumerated values of some type `En` for which either of  `std::is_error_condition_enum<En>::value` or `std::is_error_code_enum<En>::value` is true:
 +
 .Example:
 [source,c++]
@@ -2977,45 +2971,7 @@ try_handle_some(
 [.text-right]
 <<result>> | <<match>> | <<condition>>
 +
-<1> This handler is selected if the error includes an object of type `std::error_code` that compares equal to `make_error_condition(condx::x11)`.
-<2> This handler is selected if the error includes any object of type `std::error_code`.
-+
-In particular, the `E` type used to instantiate the `match` template may be an instance of the <<code>> class template, which is used to match enumerated values of some type `En` for which `std::is_error_code_enum<En>::value` is true:
-+
-.Example:
-[source,c++]
-----
-enum class my_error_code { e1=1, e2, e3 };
-
-namespace std
-{
-  template <> struct is_error_code_enum<my_error_code>: true_type { };
-};
-
-....
-
-try_handle_some(
-  []
-  {
-    return f();
-  },
-
-  [&c](leaf::match<leaf::code<my_error_code>, my_error_code::e2>) <1>
-  {
-    ....
-  },
-
-  [](std::error_code const & ec) <2>
-  {
-    ....
-  } );
-}
-----
-+
-[.text-right]
-<<result>> | <<match>> | <<code>>
-+
-<1> This handler is selected if the error includes an object of type `std::error_code` that compares equal to `make_error_code(my_error_code::e2)`.
+<1> This handler is selected if the error includes an object of type `std::error_code` that compares equal to `condx::x11`.
 <2> This handler is selected if the error includes any object of type `std::error_code`.
 +
 * If `A~i~` is of the predicate type `<<catch_,catch_>><Ex...>`, and the `try_block` throws, `a~i~` is initialized with the current `std::exception`. The handler is dropped if the expression `a~i~()` evaluates to `false` (see `<<catch_,catch_>><Ex...>`).
@@ -3194,58 +3150,6 @@ assert(!c4());
 
 '''
 
-[[code]]
-=== `code`
-
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class Enum, class EnumType = Enum>
-  struct code
-  {
-    using enum_type = EnumType;
-
-    static_assert(std::is_error_code_Enum<enum_type>::value);
-  };
-
-} }
-----
-
-NOTE: The `code` template is useful only as argument to the <<match>> template, to match a received `std::error_code` to a list of values of an error code enum.
-
-.Example:
-[source,c++]
-----
-enum class my_error_code_enum { e1=1, e2, e3 };
-
-namespace std
-{
-  template <> struct is_error_code_enum<my_error_code_enum>: true_type { };
-};
-
-std::error_code ec;
-match<code<my_error_code_enum>, my_error_code_enum::e1> m(&ec);
-
-// m() evaluates to true iff ec == make_error_code(my_error_code_enum::e1).
-----
-
-.Alternatively:
-[source,c++]
-----
-struct e_wrapped_error_code { std::error_code value; };
-
-e_wrapped_error_code ec;
-match<code<e_wrapped_error_code, my_error_code_enum>, my_error_code_enum::e1> m(&ec);
-
-// m() evaluates to true iff ec.value == make_error_code(my_error_code_enum::e1).
-----
-
-NOTE: See also <<match>>.
-
-
-'''
-
 [[condition]]
 === `condition`
 
@@ -3258,13 +3162,34 @@ namespace boost { namespace leaf {
   {
     using enum_type = EnumType;
 
-    static_assert(std::is_error_condition_Enum<enum_type>::value);
+    static_assert(std::is_error_condition_enum<enum_type>::value || std::is_error_code_enum<enum_type>::value);
   };
 
 } }
 ----
 
-NOTE: The `condition` template is useful only as argument to the <<match>> template, to match a received `std::error_code` to a list of values of an error condition enum.
+[NOTE]
+--
+The `condition` class template is a workaround for {CPP}11 (compatible with newer {CPP} versions). If you can use {CPP}17 and newer, instead of:
+
+[source,c++]
+----
+[]( leaf::match<leaf::condition<my_enum>, my_enum::v1, my_enum::v2, ...> )
+{
+}
+----
+
+you can use this instead:
+
+[source,c++]
+----
+[]( leaf::match<std::error_code, my_enum::v1, my_enum::v2, ...> )
+{
+}
+----
+--
+
+The `condition` template is useful only as argument to the <<match>> template, to match a received `std::error_code` to a list of values of an error condition enum.
 
 .Example:
 [source,c++]
@@ -3292,9 +3217,6 @@ match<condition<e_wrapped_error_code, cond_x>, cond_x::x11> m(&ec);
 
 // m() evaluates to true iff ec.value == make_error_condition(cond_x::x11).
 ----
-
-
-NOTE: See also <<match>>.
 
 '''
 
@@ -4045,10 +3967,6 @@ The type of the `V...` parameter pack is the same as the deduced member `enum_ty
 ** `match<E>::enum_type` is deduced as `typename E::enum_type`;
 ** `match<E>::matched_type` is deduced as `std::error_code`;
 ** The boolean conversion operator evaluates to `true` iff the `std::error_code` pointer `m` passed to the constructor is not `0` and the object it points compares equal to at least one of `make_error_condition(V)...`.
-* Otherwise, if `E` is an instance of the <<code>> template:
-** `match<E>::enum_type` is deduced as `typename E::enum_type`;
-** `match<E>::matched_type` is deduced as `std::error_code`;
-** The boolean conversion operator evaluates to `true` iff the `std::error_code` pointer `m` passed to the constructor is not `0` and the object it points compares equal to at least one of `make_error_code(V)...`.
 * Otherwise, if `E` defines an accessible data member `value`:
 ** `match<E>::enum_type` is deduced as `decltype(E::value)`;
 ** `match<E>::matched_type` is deduced as `E`;

@@ -3189,14 +3189,7 @@ namespace boost { namespace leaf {
 	struct condition
 	{
 		using enum_type = EnumType;
-		static_assert(std::is_error_condition_enum<enum_type>::value, "leaf::condition requires a std::error_condition_enum");
-	};
-
-	template <class E, class EnumType = E>
-	struct code
-	{
-		using enum_type = EnumType;
-		static_assert(std::is_error_code_enum<enum_type>::value, "leaf::condition requires a std::error_code_enum");
+		static_assert(std::is_error_condition_enum<enum_type>::value || std::is_error_code_enum<enum_type>::value, "leaf::condition requires the enum to be registered either with std::is_error_condition or std::is_error_code.");
 	};
 
 	namespace leaf_detail
@@ -3271,30 +3264,6 @@ namespace boost { namespace leaf {
 
 		template <class E, class EnumType>
 		struct match_traits<condition<E, EnumType>, false>
-		{
-			using enum_type = EnumType;
-			using matched_type = E;
-
-			BOOST_LEAF_CONSTEXPR static std::error_code const & get_value( matched_type const & x ) noexcept
-			{
-				return x.value;
-			}
-		};
-
-		template <class EnumType>
-		struct match_traits<code<EnumType, EnumType>, false>
-		{
-			using enum_type = EnumType;
-			using matched_type = std::error_code;
-
-			BOOST_LEAF_CONSTEXPR static std::error_code const & get_value( std::error_code const & x ) noexcept
-			{
-				return x;
-			}
-		};
-
-		template <class E, class EnumType>
-		struct match_traits<code<E, EnumType>, false>
 		{
 			using enum_type = EnumType;
 			using matched_type = E;

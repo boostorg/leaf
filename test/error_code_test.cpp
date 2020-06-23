@@ -39,7 +39,7 @@ void test()
 			{
 				return make_error_code(errc_a::a0);
 			},
-			[]( leaf::match<leaf::code<errc_a>, errc_a::a0> code )
+			[]( leaf::match<leaf::condition<errc_a>, errc_a::a0> code )
 			{
 				std::error_code const & ec = code.matched();
 				BOOST_TEST_EQ(ec, make_error_code(errc_a::a0));
@@ -77,7 +77,7 @@ void test()
 			{
 				return make_error_code(errc_a::a0);
 			},
-			[]( leaf::match<leaf::code<errc_a>, errc_a::a0> code )
+			[]( leaf::match<leaf::condition<errc_a>, errc_a::a0> code )
 			{
 				std::error_code const & ec = code.matched();
 				BOOST_TEST_EQ(ec, make_error_code(errc_a::a0));
@@ -154,7 +154,7 @@ void test()
 			{
 				return leaf::new_error( e_wrapped_error_code { make_error_code(errc_a::a0) } ).to_error_code();
 			},
-			[]( leaf::match<leaf::code<e_wrapped_error_code, errc_a>, errc_a::a0> code )
+			[]( leaf::match<leaf::condition<e_wrapped_error_code, errc_a>, errc_a::a0> code )
 			{
 				e_wrapped_error_code const & wec = code.matched();
 				std::error_code const & ec = wec.value;

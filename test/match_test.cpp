@@ -49,13 +49,6 @@ int main()
 	{
 		std::error_code ec = errc_a::a0;
 
-		static_assert(std::is_same<std::error_code, leaf::match<leaf::code<errc_a>, errc_a::a0>::matched_type>::value, "match type deduction error");
-		static_assert(std::is_same<errc_a, leaf::match<leaf::code<errc_a>, errc_a::a0>::enum_type>::value, "match type deduction error");
-		BOOST_TEST(( !leaf::match<leaf::code<errc_a>, errc_a::a0>(0)() ));
-		BOOST_TEST(( leaf::match<leaf::code<errc_a>, errc_a::a0>(&ec)() ));
-		BOOST_TEST(( !leaf::match<leaf::code<errc_a>, errc_a::a2>(&ec)() ));
-		BOOST_TEST(( leaf::match<leaf::code<errc_a>, errc_a::a2, errc_a::a0>(&ec)() ));
-
 		static_assert(std::is_same<std::error_code, leaf::match<leaf::condition<cond_x>, cond_x::x00>::matched_type>::value, "match type deduction error");
 		static_assert(std::is_same<cond_x, leaf::match<leaf::condition<cond_x>, cond_x::x00>::enum_type>::value, "match type deduction error");
 		BOOST_TEST(( !leaf::match<leaf::condition<cond_x>, cond_x::x00>(0)() ));

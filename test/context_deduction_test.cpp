@@ -110,7 +110,6 @@ void not_called_on_purpose()
 	test< std::tuple<info<1>> >( expd([]( leaf::match<info<1>,42> ){ }) );
 	test< std::tuple<info_f<1>> >( expd([]( leaf::match<info_f<1>,42> ){ }) );
 
-	test< std::tuple<std::error_code> >( expd([]( leaf::match<leaf::code<my_error_code>, my_error_code::error1> ){ }) );
 	test< std::tuple<std::error_code> >( expd([]( leaf::match<leaf::condition<my_error_condition>, my_error_condition::cond1> ){ }) );
 #if __cplusplus >= 201703L
 	test< std::tuple<std::error_code> >( expd([]( leaf::match<std::error_code, my_error_code::error1> ){ }) );
