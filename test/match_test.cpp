@@ -20,30 +20,27 @@ int main()
 		my_error ec = my_error::e1;
 		static_assert(std::is_same<my_error, leaf::match<my_error, my_error::e1>::matched_type>::value, "match type deduction error");
 		static_assert(std::is_same<my_error, leaf::match<my_error, my_error::e1>::enum_type>::value, "match type deduction error");
-		BOOST_TEST(( !leaf::match<my_error, my_error::e1>(0)() ));
-		BOOST_TEST(( leaf::match<my_error, my_error::e1>(&ec)() ));
-		BOOST_TEST(( !leaf::match<my_error, my_error::e2>(&ec)() ));
-		BOOST_TEST(( leaf::match<my_error, my_error::e2, my_error::e1>(&ec)() ));
+		BOOST_TEST(( leaf::match<my_error, my_error::e1>(ec)() ));
+		BOOST_TEST(( !leaf::match<my_error, my_error::e2>(ec)() ));
+		BOOST_TEST(( leaf::match<my_error, my_error::e2, my_error::e1>(ec)() ));
 	}
 
 	{
 		e_my_error ec = { my_error::e1 };
 		static_assert(std::is_same<e_my_error, leaf::match<e_my_error, my_error::e1>::matched_type>::value, "match type deduction error");
 		static_assert(std::is_same<my_error, leaf::match<e_my_error, my_error::e1>::enum_type>::value, "match type deduction error");
-		BOOST_TEST(( !leaf::match<e_my_error, my_error::e1>(0)() ));
-		BOOST_TEST(( leaf::match<e_my_error, my_error::e1>(&ec)() ));
-		BOOST_TEST(( !leaf::match<e_my_error, my_error::e2>(&ec)() ));
-		BOOST_TEST(( leaf::match<e_my_error, my_error::e2, my_error::e1>(&ec)() ));
+		BOOST_TEST(( leaf::match<e_my_error, my_error::e1>(ec)() ));
+		BOOST_TEST(( !leaf::match<e_my_error, my_error::e2>(ec)() ));
+		BOOST_TEST(( leaf::match<e_my_error, my_error::e2, my_error::e1>(ec)() ));
 	}
 
 	{
 		e_my_error_f ec = { my_error::e1 };
 		static_assert(std::is_same<e_my_error_f, leaf::match<e_my_error_f, my_error::e1>::matched_type>::value, "match type deduction error");
 		static_assert(std::is_same<my_error, leaf::match<e_my_error_f, my_error::e1>::enum_type>::value, "match type deduction error");
-		BOOST_TEST(( !leaf::match<e_my_error_f, my_error::e1>(0)() ));
-		BOOST_TEST(( leaf::match<e_my_error_f, my_error::e1>(&ec)() ));
-		BOOST_TEST(( !leaf::match<e_my_error_f, my_error::e2>(&ec)() ));
-		BOOST_TEST(( leaf::match<e_my_error_f, my_error::e2, my_error::e1>(&ec)() ));
+		BOOST_TEST(( leaf::match<e_my_error_f, my_error::e1>(ec)() ));
+		BOOST_TEST(( !leaf::match<e_my_error_f, my_error::e2>(ec)() ));
+		BOOST_TEST(( leaf::match<e_my_error_f, my_error::e2, my_error::e1>(ec)() ));
 	}
 
 	{
@@ -51,18 +48,16 @@ int main()
 
 		static_assert(std::is_same<std::error_code, leaf::match<leaf::condition<cond_x>, cond_x::x00>::matched_type>::value, "match type deduction error");
 		static_assert(std::is_same<cond_x, leaf::match<leaf::condition<cond_x>, cond_x::x00>::enum_type>::value, "match type deduction error");
-		BOOST_TEST(( !leaf::match<leaf::condition<cond_x>, cond_x::x00>(0)() ));
-		BOOST_TEST(( leaf::match<leaf::condition<cond_x>, cond_x::x00>(&ec)() ));
-		BOOST_TEST(( !leaf::match<leaf::condition<cond_x>, cond_x::x11>(&ec)() ));
-		BOOST_TEST(( leaf::match<leaf::condition<cond_x>, cond_x::x11, cond_x::x00>(&ec)() ));
+		BOOST_TEST(( leaf::match<leaf::condition<cond_x>, cond_x::x00>(ec)() ));
+		BOOST_TEST(( !leaf::match<leaf::condition<cond_x>, cond_x::x11>(ec)() ));
+		BOOST_TEST(( leaf::match<leaf::condition<cond_x>, cond_x::x11, cond_x::x00>(ec)() ));
 
 #if __cplusplus >= 201703L
 		static_assert(std::is_same<std::error_code, leaf::match<std::error_code, errc_a::a0>::matched_type>::value, "match type deduction error");
 		static_assert(std::is_same<errc_a, leaf::match<std::error_code, errc_a::a0>::enum_type>::value, "match type deduction error");
-		BOOST_TEST(( !leaf::match<std::error_code, errc_a::a0>(0)() ));
-		BOOST_TEST(( leaf::match<std::error_code, errc_a::a0>(&ec)() ));
-		BOOST_TEST(( !leaf::match<std::error_code, errc_a::a2>(&ec)() ));
-		BOOST_TEST(( leaf::match<std::error_code, errc_a::a2, errc_a::a0>(&ec)() ));
+		BOOST_TEST(( leaf::match<std::error_code, errc_a::a0>(ec)() ));
+		BOOST_TEST(( !leaf::match<std::error_code, errc_a::a2>(ec)() ));
+		BOOST_TEST(( leaf::match<std::error_code, errc_a::a2, errc_a::a0>(ec)() ));
 #endif
 	}
 

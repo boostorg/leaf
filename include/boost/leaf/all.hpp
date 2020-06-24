@@ -3327,24 +3327,23 @@ namespace boost { namespace leaf {
 		using matched_type = typename leaf_detail::match_traits<E>::matched_type;
 
 	private:
-		matched_type const * const matched_;
+		matched_type const & matched_;
 
 	public:
 
-		BOOST_LEAF_CONSTEXPR explicit match( matched_type const * matched ) noexcept:
+		BOOST_LEAF_CONSTEXPR explicit match( matched_type const & matched ) noexcept:
 			matched_(matched)
 		{
 		}
 
 		BOOST_LEAF_CONSTEXPR bool operator()() const noexcept
 		{
-			return matched_ && leaf_detail::check_value_pack(leaf_detail::match_traits<E>::get_value(*matched_), V1, V...);
+			return leaf_detail::check_value_pack(leaf_detail::match_traits<E>::get_value(matched_), V1, V...);
 		}
 
 		BOOST_LEAF_CONSTEXPR matched_type const & matched() const noexcept
 		{
-			BOOST_LEAF_ASSERT(matched_!=0);
-			return *matched_;
+			return matched_;
 		}
 	};
 
@@ -3358,24 +3357,23 @@ namespace boost { namespace leaf {
 		using matched_type = typename leaf_detail::match_traits<E>::matched_type;
 
 	private:
-		matched_type const * const matched_;
+		matched_type const & matched_;
 
 	public:
 
-		BOOST_LEAF_CONSTEXPR explicit match( matched_type const * matched ) noexcept:
+		BOOST_LEAF_CONSTEXPR explicit match( matched_type const & matched ) noexcept:
 			matched_(matched)
 		{
 		}
 
 		BOOST_LEAF_CONSTEXPR bool operator()() const noexcept
 		{
-			return matched_ && leaf_detail::check_value_pack(leaf_detail::match_traits<E>::get_value(*matched_), V1, V...);
+			return leaf_detail::check_value_pack(leaf_detail::match_traits<E>::get_value(matched_), V1, V...);
 		}
 
 		BOOST_LEAF_CONSTEXPR matched_type const & matched() const noexcept
 		{
-			BOOST_LEAF_ASSERT(matched_!=0);
-			return *matched_;
+			return matched_;
 		}
 	};
 
@@ -3425,7 +3423,8 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple & tup, error_info const & ei ) noexcept
 			{
 				using matched_type = typename Match::matched_type;
-				return Match(check_one_argument<SlotsTuple, matched_type>::check(tup, ei))();
+				matched_type const * e = check_one_argument<SlotsTuple, matched_type>::check(tup, ei);
+				return e && Match(*e)();
 			}
 		};
 
@@ -3561,7 +3560,7 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_CONSTEXPR static Match get( SlotsTuple const & tup, error_info const & ei ) noexcept
 			{
 				using matched_type = typename Match::matched_type;
-				return Match(peek<matched_type>(tup, ei));
+				return Match(*peek<matched_type>(tup, ei));
 			}
 		};
 	}
