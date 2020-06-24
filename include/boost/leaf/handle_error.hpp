@@ -279,6 +279,13 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
+	template <class ErrorCodeEnum>
+	BOOST_LEAF_CONSTEXPR inline std::error_category const & cat() noexcept
+	{
+		static_assert(std::is_error_code_enum<ErrorCodeEnum>::value, "leaf::cat requires an error code enum");
+		return std::error_code(ErrorCodeEnum{}).category();
+	}
+
 	template <class E, class EnumType = E>
 	struct condition
 	{
@@ -395,6 +402,19 @@ namespace boost { namespace leaf {
 		BOOST_LEAF_CONSTEXPR inline bool check_value_pack( MatchedType const & x, VCar car, VCdr ... cdr ) noexcept
 		{
 			return x == car || check_value_pack(x, cdr...);
+		}
+
+		BOOST_LEAF_CONSTEXPR inline bool check_value_pack( std::error_code const & x, std::error_category const & (*car)() noexcept ) noexcept
+		{
+			BOOST_LEAF_ASSERT(car!=0);
+			return &x.category() == &car();
+		}
+
+		template <class... VCdr>
+		BOOST_LEAF_CONSTEXPR inline bool check_value_pack( std::error_code const & x, std::error_category const & (*car)() noexcept, VCdr ... cdr ) noexcept
+		{
+			BOOST_LEAF_ASSERT(car!=0);
+			return &x.category() == &car() || check_value_pack(x, cdr...);
 		}
 	}
 
