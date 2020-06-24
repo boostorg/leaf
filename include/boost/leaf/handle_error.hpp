@@ -392,29 +392,22 @@ namespace boost { namespace leaf {
 		template <>
 		struct match_traits<std::error_condition, true>;
 
-		template <class MatchedType, class V>
-		BOOST_LEAF_CONSTEXPR inline bool check_value_pack( MatchedType const & x, V v ) noexcept
-		{
-			return x == v;
-		}
-
-		template <class MatchedType, class VCar, class... VCdr>
-		BOOST_LEAF_CONSTEXPR inline bool check_value_pack( MatchedType const & x, VCar car, VCdr ... cdr ) noexcept
-		{
-			return x == car || check_value_pack(x, cdr...);
-		}
-
 		inline bool check_value_pack( std::error_code const & x, std::error_category const & (*car)() noexcept ) noexcept
 		{
 			BOOST_LEAF_ASSERT(car!=0);
 			return &x.category() == &car();
 		}
 
-		template <class... VCdr>
-		inline bool check_value_pack( std::error_code const & x, std::error_category const & (*car)() noexcept, VCdr ... cdr ) noexcept
+		template <class MatchedType, class V>
+		inline bool check_value_pack( MatchedType const & x, V v ) noexcept
 		{
-			BOOST_LEAF_ASSERT(car!=0);
-			return &x.category() == &car() || check_value_pack(x, cdr...);
+			return x == v;
+		}
+
+		template <class MatchedType, class VCar, class... VCdr>
+		inline bool check_value_pack( MatchedType const & x, VCar car, VCdr ... cdr ) noexcept
+		{
+			return check_value_pack(x, car) || check_value_pack(x, cdr...);
 		}
 	}
 
