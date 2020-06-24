@@ -404,14 +404,14 @@ namespace boost { namespace leaf {
 			return x == car || check_value_pack(x, cdr...);
 		}
 
-		BOOST_LEAF_CONSTEXPR inline bool check_value_pack( std::error_code const & x, std::error_category const & (*car)() noexcept ) noexcept
+		inline bool check_value_pack( std::error_code const & x, std::error_category const & (*car)() noexcept ) noexcept
 		{
 			BOOST_LEAF_ASSERT(car!=0);
 			return &x.category() == &car();
 		}
 
 		template <class... VCdr>
-		BOOST_LEAF_CONSTEXPR inline bool check_value_pack( std::error_code const & x, std::error_category const & (*car)() noexcept, VCdr ... cdr ) noexcept
+		inline bool check_value_pack( std::error_code const & x, std::error_category const & (*car)() noexcept, VCdr ... cdr ) noexcept
 		{
 			BOOST_LEAF_ASSERT(car!=0);
 			return &x.category() == &car() || check_value_pack(x, cdr...);
