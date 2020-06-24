@@ -81,18 +81,18 @@ namespace boost { namespace leaf {
 		};
 
 		template <class Ex>
-		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * ex, Ex const * ) noexcept
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const * ) noexcept
 		{
-			return dynamic_cast<Ex const *>(ex)!=0;
+			return dynamic_cast<Ex const *>(&ex)!=0;
 		}
 
 		template <class Ex, class... ExRest>
-		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * ex, Ex const *, ExRest const * ... ex_rest ) noexcept
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const *, ExRest const * ... ex_rest ) noexcept
 		{
-			return dynamic_cast<Ex const *>(ex)!=0 || check_exception_pack(ex, ex_rest...);
+			return dynamic_cast<Ex const *>(&ex)!=0 || check_exception_pack(ex, ex_rest...);
 		}
 
-		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * )
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & )
 		{
 			return true;
 		}
@@ -101,48 +101,48 @@ namespace boost { namespace leaf {
 	template <class... Ex>
 	class catch_
 	{
-		std::exception const * const value_;
+		std::exception const & ex_;
 
 	public:
 
-		BOOST_LEAF_CONSTEXPR explicit catch_( std::exception const * value ) noexcept:
-			value_(value)
+		BOOST_LEAF_CONSTEXPR explicit catch_( std::exception const & ex ) noexcept:
+			ex_(ex)
 		{
 		}
 
 		BOOST_LEAF_CONSTEXPR bool operator()() const noexcept
 		{
-			return value_ && leaf_detail::check_exception_pack(value_,static_cast<Ex const *>(0)...);
+			return leaf_detail::check_exception_pack(ex_, static_cast<Ex const *>(0)...);
 		}
 
-		BOOST_LEAF_CONSTEXPR std::exception const & value() const noexcept
+		BOOST_LEAF_CONSTEXPR std::exception const & caught() const noexcept
 		{
-			BOOST_LEAF_ASSERT(value_!=0);
-			return *value_;
+			return ex_;
 		}
 	};
 
 	template <class Ex>
 	class catch_<Ex>
 	{
-		Ex const * const value_;
+		std::exception const & ex_;
 
 	public:
 
-		BOOST_LEAF_CONSTEXPR explicit catch_( std::exception const * value ) noexcept:
-			value_(dynamic_cast<Ex const *>(value))
+		BOOST_LEAF_CONSTEXPR explicit catch_( std::exception const & ex ) noexcept:
+			ex_(ex)
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR bool operator()() const noexcept
+		BOOST_LEAF_CONSTEXPR Ex const * operator()() const noexcept
 		{
-			return this->value_!=0;
+			return dynamic_cast<Ex const *>(&ex_);
 		}
 
-		BOOST_LEAF_CONSTEXPR Ex const & value() const noexcept
+		BOOST_LEAF_CONSTEXPR Ex const & caught() const noexcept
 		{
-			BOOST_LEAF_ASSERT(this->value_!=0);
-			return *this->value_;
+			Ex const * ex = dynamic_cast<Ex const *>(&ex_);
+			BOOST_LEAF_ASSERT(ex!=0);
+			return *ex;
 		}
 	};
 
@@ -159,9 +159,9 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple const &, error_info const & ei ) noexcept
 			{
 				if( ei.exception_caught() )
-					return catch_<Ex...>(ei.exception())();
-				else
-					return false;
+					if( std::exception const * ex = ei.exception() )
+						return catch_<Ex...>(*ex)();
+				return false;
 			}
 		};
 
@@ -173,7 +173,7 @@ namespace boost { namespace leaf {
 			{
 				std::exception const * ex = ei.exception();
 				BOOST_LEAF_ASSERT(ex!=0);
-				return catch_<Ex...>(ex);
+				return catch_<Ex...>(*ex);
 			}
 		};
 	}

@@ -22,7 +22,7 @@ void test()
 			{
 				return make_error_code(errc_a::a0);
 			},
-			[]( leaf::match<std::error_code, leaf::cat<errc_a>, leaf::cat<errc_b>> code )
+			[]( leaf::match<std::error_code, leaf::category<errc_a>, leaf::category<errc_b>> code )
 			{
 				std::error_code const & ec = code.matched();
 				BOOST_TEST_EQ(&ec.category(), &cat_errc_a());
@@ -41,7 +41,26 @@ void test()
 			{
 				return make_error_code(errc_b::b0);
 			},
-			[]( leaf::match<std::error_code, leaf::cat<errc_a>, leaf::cat<errc_b>> code )
+			[]( leaf::match<std::error_code, leaf::category<errc_a>, leaf::category<errc_b>> code )
+			{
+				std::error_code const & ec = code.matched();
+				BOOST_TEST_EQ(&ec.category(), &cat_errc_b());
+				BOOST_TEST_EQ(ec, errc_b::b0);
+				return 42;
+			},
+			[]
+			{
+				return -42;
+			} );
+		BOOST_TEST_EQ(r, 42);
+	}
+	{
+		int r = leaf::try_handle_all(
+			[]() -> R
+			{
+				return make_error_code(errc_b::b0);
+			},
+			[]( leaf::match<std::error_code, leaf::category<errc_a>, errc_b::b0> code )
 			{
 				std::error_code const & ec = code.matched();
 				BOOST_TEST_EQ(&ec.category(), &cat_errc_b());

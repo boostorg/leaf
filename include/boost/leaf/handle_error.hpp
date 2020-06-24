@@ -280,9 +280,9 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////
 
 	template <class ErrorCodeEnum>
-	BOOST_LEAF_CONSTEXPR inline bool cat( std::error_code const & ec ) noexcept
+	BOOST_LEAF_CONSTEXPR inline bool category( std::error_code const & ec ) noexcept
 	{
-		static_assert(std::is_error_code_enum<ErrorCodeEnum>::value, "leaf::cat requires an error code enum");
+		static_assert(std::is_error_code_enum<ErrorCodeEnum>::value, "leaf::category requires an error code enum");
 		return &ec.category() == &std::error_code(ErrorCodeEnum{}).category();
 	}
 
