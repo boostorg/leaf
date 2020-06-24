@@ -169,7 +169,7 @@ struct benchmark
 
 	NOINLINE static select_result_t<N, E> f( int failure_rate ) noexcept
 	{
-		BOOST_LEAF_AUTO(x, (benchmark<N-1, E>::f(failure_rate)));
+		BOOST_LEAF_VAR(auto x, (benchmark<N-1, E>::f(failure_rate)));
 		return x+1;
 	}
 };

@@ -42,14 +42,15 @@
 	} }
 #endif
 
-#define BOOST_LEAF_NEW_ERROR ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
+#define BOOST_LEAF_TOKEN_PASTE(x, y) x ## y
+#define BOOST_LEAF_TOKEN_PASTE2(x, y) BOOST_LEAF_TOKEN_PASTE(x, y)
 
-#define BOOST_LEAF_AUTO(v,r)\
-	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "BOOST_LEAF_AUTO requires a result type");\
-	auto && _r_##v = r;\
-	if( !_r_##v )\
-		return _r_##v.error();\
-	auto && v = _r_##v.value()
+#define BOOST_LEAF_VAR(v,r)\
+	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "The BOOST_LEAF_VAR macro requires a result type as the second argument");\
+	auto && BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__) = r;\
+	if( !BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__) )\
+		return BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).error();\
+	v = BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).value()
 
 #define BOOST_LEAF_CHECK(r)\
 	{\
@@ -58,6 +59,8 @@
 		if( !_r )\
 			return _r.error();\
 	}
+
+#define BOOST_LEAF_NEW_ERROR ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
 
 ////////////////////////////////////////
 

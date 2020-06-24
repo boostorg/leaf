@@ -37,7 +37,7 @@ The most common check-only use case looks almost identically in LEAF and in Boos
 ```c++
 // LEAF
 {
-  BOOST_LEAF_AUTO(v, f()); // Check for errors, forward failures to the caller
+  BOOST_LEAF_VAR(auto v, f()); // Check for errors, forward failures to the caller
   // If control reaches here, v is the successful result (the call succeeded).
 }
 ```
@@ -74,7 +74,7 @@ leaf::try_handle_all
 
   []() -> leaf::result<T>
   {
-    BOOST_LEAF_AUTO(v, f());
+    BOOST_LEAF_VAR(auto v, f());
     // No error, use v
   },
 
@@ -142,7 +142,7 @@ leaf::result<int> f();
 
 leaf::result<int> g()
 {
-  BOOST_LEAF_AUTO(x, f());
+  BOOST_LEAF_VAR(auto x, f());
   return x+1;
 }
 ```
@@ -207,7 +207,7 @@ leaf::result<int> f()
 
 leaf::result<int> g()
 {
-  BOOST_LEAF_AUTO(x, f());
+  BOOST_LEAF_VAR(auto x, f());
   return x+1;
 }
 ```
@@ -235,7 +235,7 @@ leaf::result<int> f()
 
 leaf::result<int> g()
 {
-  BOOST_LEAF_AUTO(x, f());
+  BOOST_LEAF_VAR(auto x, f());
   return x+1;
 }
 ```

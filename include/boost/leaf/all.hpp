@@ -1009,14 +1009,15 @@ namespace boost { namespace leaf {
 	} }
 #endif
 
-#define BOOST_LEAF_NEW_ERROR ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
+#define BOOST_LEAF_TOKEN_PASTE(x, y) x ## y
+#define BOOST_LEAF_TOKEN_PASTE2(x, y) BOOST_LEAF_TOKEN_PASTE(x, y)
 
-#define BOOST_LEAF_AUTO(v,r)\
-	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "BOOST_LEAF_AUTO requires a result type");\
-	auto && _r_##v = r;\
-	if( !_r_##v )\
-		return _r_##v.error();\
-	auto && v = _r_##v.value()
+#define BOOST_LEAF_VAR(v,r)\
+	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "The BOOST_LEAF_VAR macro requires a result type as the second argument");\
+	auto && BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__) = r;\
+	if( !BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__) )\
+		return BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).error();\
+	v = BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).value()
 
 #define BOOST_LEAF_CHECK(r)\
 	{\
@@ -1025,6 +1026,8 @@ namespace boost { namespace leaf {
 		if( !_r )\
 			return _r.error();\
 	}
+
+#define BOOST_LEAF_NEW_ERROR ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
 
 ////////////////////////////////////////
 
@@ -3186,10 +3189,10 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////
 
 	template <class ErrorCodeEnum>
-	BOOST_LEAF_CONSTEXPR inline std::error_category const & cat() noexcept
+	BOOST_LEAF_CONSTEXPR inline bool cat( std::error_code const & ec ) noexcept
 	{
 		static_assert(std::is_error_code_enum<ErrorCodeEnum>::value, "leaf::cat requires an error code enum");
-		return std::error_code(ErrorCodeEnum{}).category();
+		return &ec.category() == &std::error_code(ErrorCodeEnum{}).category();
 	}
 
 	template <class E, class EnumType = E>
@@ -3298,10 +3301,11 @@ namespace boost { namespace leaf {
 		template <>
 		struct match_traits<std::error_condition, true>;
 
-		inline bool check_value_pack( std::error_code const & x, std::error_category const & (*car)() noexcept ) noexcept
+		template <class MatchedType>
+		inline bool check_value_pack( MatchedType const & x, bool (*pred)(MatchedType const &) noexcept ) noexcept
 		{
-			BOOST_LEAF_ASSERT(car!=0);
-			return &x.category() == &car();
+			BOOST_LEAF_ASSERT(pred!=0);
+			return pred(x);
 		}
 
 		template <class MatchedType, class V>

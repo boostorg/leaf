@@ -57,13 +57,13 @@ int main( int argc, char const * argv[] )
 
 		[&]() -> result<int>
 		{
-			BOOST_LEAF_AUTO(file_name, parse_command_line(argc,argv));
+			BOOST_LEAF_VAR(auto file_name, parse_command_line(argc,argv));
 
 			auto load = leaf::on_error( leaf::e_file_name{file_name} );
 
-			BOOST_LEAF_AUTO(f, file_open(file_name));
+			BOOST_LEAF_VAR(auto f, file_open(file_name));
 
-			BOOST_LEAF_AUTO(s, file_size(*f));
+			BOOST_LEAF_VAR(auto s, file_size(*f));
 
 			std::string buffer(1 + s, '\0');
 			BOOST_LEAF_CHECK(file_read(*f, &buffer[0], buffer.size()-1));
