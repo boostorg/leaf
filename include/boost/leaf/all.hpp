@@ -4562,13 +4562,13 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR result( stored_type && v ) noexcept:
+		BOOST_LEAF_CONSTEXPR result( value_type && v ) noexcept:
 			stored_(std::move(v)),
 			what_(result_discriminant::kind_val{})
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR result( stored_type const & v ):
+		BOOST_LEAF_CONSTEXPR result( value_type_const & v ):
 			stored_(v),
 			what_(result_discriminant::kind_val{})
 		{

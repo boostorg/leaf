@@ -501,6 +501,15 @@
 			}
 		},
 		{
+			"label": "result_ref_test",
+			"type": "shell",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test result_ref_test",
+			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test result_ref_test"
+			}
+		},
+		{
 			"label": "result_state_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test result_state_test",
