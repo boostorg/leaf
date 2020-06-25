@@ -50,10 +50,10 @@ LEAF is designed with a strong bias towards the common use case where callers of
 [[introduction]]
 == Five Minute Introduction
 
-We'll implement two versions of the same simple program: one using `result<T>` to handle errors, and one using exception handling.
+We'll implement two versions of the same simple program: one using the LEAF `noexcept` API to handle errors, and another using the exception-handling API.
 
 [[introduction-result]]
-=== Using `result<T>`
+=== `noexcept` API
 
 We'll write a short but complete program that reads a text file in a buffer and prints it to `std::cout`, using LEAF to handle errors without exception handling.
 
@@ -270,7 +270,7 @@ TIP: The complete program from this tutorial is available https://github.com/zaj
 '''
 
 [[introduction-eh]]
-=== Using Exception Handling
+=== Exception-Handling API
 
 And now, we'll write the same program that reads a text file in a buffer and prints it to `std::cout`, this time using exceptions to report errors. First, we need to define our exception class hierarchy:
 
@@ -459,10 +459,12 @@ TIP: The complete program from this tutorial is available https://github.com/zaj
 [[tutorial]]
 == Tutorial
 
+This section assumes at least a basic understanding of using LEAF to handle errors. See <<introduction>>.
+
 [[tutorial-model]]
 === Error Communication Model
 
-==== Using `noexcept` Functionality
+==== `noexcept` API
 
 The following figure illustrates how error objects are transported when using LEAF without exception handling:
 
@@ -481,7 +483,7 @@ When the destructor of the `load` object in `f3` executes, it detects that `new_
 
 When the error-handling scope `f1` is reached, it probes `ctx` for any error objects associated with the `error_id` it received from `f2`, and processes a list of user-provided error handlers, in order, until it finds a handler with arguments that can be supplied using the available (in `ctx`) error objects. That handler is called to deal with the failure.
 
-==== Using Exception Handling
+==== Exception-Handling API
 
 The following figure illustrates the slightly different error communication model used when errors are reported by throwing exceptions:
 
@@ -511,96 +513,6 @@ To support this tricky use case, LEAF provides the function <<current_error>>, w
 Note that if the above logic is nested (e.g. one function calling another), `new_error` will be called only by the inner-most function, because that call guarantees that all calling functions will hit the `else` branch.
 
 TIP: To avoid ambiguities, whenever possible, use the <<exception>> function template when throwing exceptions to ensure that the exception object transports a unique `error_id`; better yet, use the <<BOOST_LEAF_THROW_EXCEPTION>> macro, which in addition will capture `pass:[__FILE__]` and `pass:[__LINE__]`.
-
-'''
-
-=== Error Object Types
-
-LEAF allows users to efficiently associate with a failure any number of relevant error values. These values may be of any no-throw movable type. This of course includes simple enums:
-
-[source,c++]
-----
-enum class my_error_code
-{
-  ok,
-  failure_a,
-  failure_b,
-  failure_c
-};
-----
-
-Error handlers recognize error objects associated with a failure by their static type:
-
-.Example 1:
-[source,c++]
-----
-leaf::result<void> f() noexcept
-{
-  ....
-  if( err )
-    return leaf::new_error(my_error_code::failure_a);
-}
-
-leaf::result<void> g() noexcept
-{
-  return leaf::try_handle_some(
-    []() -> leaf::result<void>
-    {
-      BOOST_LEAF_CHECK(f());
-    },
-    [](my_error_code ec) <1>
-    {
-      ....
-    } );
-}
-----
-[.text-right]
-<<result>> | <<new_error>> | <<try_handle_all>> | <<BOOST_LEAF_CHECK>>
-
-<1> This handler is selected based on the static type of `ec`. If an error is reported that does not have a `my_error_code` associated with it, it will be returned to the caller (because this is the only provided error handler).
-
-If `f` communicates failures by throwing, the above becomes:
-
-[source,c++]
-----
-void f()
-{
-  ....
-  if( err )
-    throw leaf::exception(my_error_code::failure_a);
-}
-
-void g()
-{
-  leaf::try_catch(
-    [
-    {
-      f();
-    },
-    [](my_error_code ec) <1>
-    {
-      ....
-    } );
-}
-----
-[.text-right]
-<<result>> | <<exception>> | <<try_catch>> | <<BOOST_LEAF_CHECK>>
-
-<1> This handler is selected based on the static type of `ec`, after catching `std::exception` (which <<try_catch>> always does).
-
-Because error handlers are selected based on the static type of their arguments, when we need to communicate objects of generic types (e.g. `int` or `std::string`), they should be enclosed in a C-`struct` that acts as their compile-time identifier and gives them semantic meaning:
-
-.Example 2:
-[source,c++]
-----
-struct e_input_name  { std::string value; };
-struct e_output_name { std::string value; };
-
-struct e_minimum_temperature { float value; };
-struct e_maximum_temperature { float value; };
-----
-
-By convention, the enclosing C-`struct` names use the `e_` prefix, and define a data member called `value`.
 
 '''
 
@@ -641,9 +553,9 @@ leaf::result<void> g( char const * fn ) noexcept
 <1> Success! Use `*r`.
 <2> `f()` has failed; here we associate an additional `e_file_name` with the error. However, this association occurs iff in the call stack leading to `g` there are error handlers that take an `e_file_name` argument. Otherwise, the object passed to `load` is discarded. In other words, the passed objects are loaded iff the program actually uses them to handle errors.
 
-Besides error objects, `load` can be passed functions:
+Besides error objects, `load` can take function arguments:
 
-* If we pass a function that takes no arguments, it is called, and the returned error object is loaded.
+* If we pass a function that takes no arguments, it is invoked, and the returned error object is loaded.
 * If we pass a function that takes a single argument of type `E &`, LEAF calls the function with the object of type `E` currently loaded in an active `context`, associated with the error. If no such object is available, a new one is default-initialized and then passed to the function.
 
 If an operation that involves many different files fails, a program may provide for collecting all relevant file names in a `e_relevant_file_names` object:
@@ -2704,7 +2616,7 @@ Effects: :: How each `item` is handled depends on its type:
 +
 --
 * If it is a function that takes no arguments, the function is invoked, and the returned object is <<tutorial-loading,loaded>> into an active <<context>>.
-* If it is a function that takes a single argument of some type `E &`, LEAF calls the function with the object of type `E` currently loaded in an active `context`, associated with the error. If no such object is available, a new one is default-initialized and then passed to the function.
+* If it is a function that takes a single argument of some type `E &`, an object of type `E` is default-initialized, loaded into an active `context`, then passed to the function.
 * Otherwise, the `item` itself is loaded into an active `context`.
 --
 +
