@@ -575,5 +575,141 @@ int main()
 		BOOST_TEST(r);
 	}
 
+	// Mutable:
+
+	static_assert(std::is_same<decltype(std::declval<leaf::result<int const>>().value()), int const &>::value, "result type deduction bug");
+	static_assert(std::is_same<decltype(std::declval<leaf::result<int>>().value()), int &>::value, "result type deduction bug");
+	static_assert(std::is_same<decltype(std::declval<leaf::result<int const &>>().value()), int const &>::value, "result type deduction bug");
+	static_assert(std::is_same<decltype(std::declval<leaf::result<int &>>().value()), int &>::value, "result type deduction bug");
+
+	static_assert(std::is_same<decltype(*std::declval<leaf::result<int const>>()), int const &>::value, "result type deduction bug");
+	static_assert(std::is_same<decltype(*std::declval<leaf::result<int>>()), int &>::value, "result type deduction bug");
+	static_assert(std::is_same<decltype(*std::declval<leaf::result<int const &>>()), int const &>::value, "result type deduction bug");
+	static_assert(std::is_same<decltype(*std::declval<leaf::result<int &>>()), int &>::value, "result type deduction bug");
+
+	{
+		int x = 42;
+		leaf::result<int const &> r(x);
+		BOOST_TEST(r);
+		int a = r.value();
+		BOOST_TEST_EQ(a, x);
+		int b = *r;
+		BOOST_TEST_EQ(b, x);
+	}
+	{
+		int x = 42;
+		leaf::result<int const &> r(x);
+		BOOST_TEST(r);
+		int const & a = r.value();
+		BOOST_TEST_EQ(&a, &x);
+		int const & b = *r;
+		BOOST_TEST_EQ(&b, &x);
+	}
+	{
+		int x = 42;
+		leaf::result<int const &> r(x);
+		BOOST_TEST(r);
+		auto & a = r.value();
+		BOOST_TEST_EQ(&a, &x);
+		auto & b = *r;
+		BOOST_TEST_EQ(&b, &x);
+	}
+
+	{
+		int x = 42;
+		leaf::result<int &> r(x);
+		BOOST_TEST(r);
+		int a = r.value();
+		BOOST_TEST_EQ(a, x);
+		int b = *r;
+		BOOST_TEST_EQ(b, x);
+	}
+	{
+		int x = 42;
+		leaf::result<int &> r(x);
+		BOOST_TEST(r);
+		int & a = r.value();
+		BOOST_TEST_EQ(&a, &x);
+		int & b = *r;
+		BOOST_TEST_EQ(&b, &x);
+	}
+	{
+		int x = 42;
+		leaf::result<int &> r(x);
+		BOOST_TEST(r);
+		auto & a = r.value();
+		BOOST_TEST_EQ(&a, &x);
+		auto & b = *r;
+		BOOST_TEST_EQ(&b, &x);
+	}
+
+	// Const:
+
+	static_assert(std::is_same<decltype(std::declval<leaf::result<int const> const>().value()), int const &>::value, "result type deduction bug");
+	static_assert(std::is_same<decltype(std::declval<leaf::result<int> const>().value()), int const &>::value, "result type deduction bug");
+	static_assert(std::is_same<decltype(std::declval<leaf::result<int const &> const>().value()), int const &>::value, "result type deduction bug");
+	static_assert(std::is_same<decltype(std::declval<leaf::result<int &> const>().value()), int &>::value, "result type deduction bug");
+
+	static_assert(std::is_same<decltype(*std::declval<leaf::result<int const> const>()), int const &>::value, "result type deduction bug");
+	static_assert(std::is_same<decltype(*std::declval<leaf::result<int> const>()), int const &>::value, "result type deduction bug");
+	static_assert(std::is_same<decltype(*std::declval<leaf::result<int const &> const>()), int const &>::value, "result type deduction bug");
+	static_assert(std::is_same<decltype(*std::declval<leaf::result<int &> const>()), int &>::value, "result type deduction bug");
+
+	{
+		int x = 42;
+		leaf::result<int const &> const r(x);
+		BOOST_TEST(r);
+		int a = r.value();
+		BOOST_TEST_EQ(a, x);
+		int b = *r;
+		BOOST_TEST_EQ(b, x);
+	}
+	{
+		int x = 42;
+		leaf::result<int const &> const r(x);
+		BOOST_TEST(r);
+		int const & a = r.value();
+		BOOST_TEST_EQ(&a, &x);
+		int const & b = *r;
+		BOOST_TEST_EQ(&b, &x);
+	}
+	{
+		int x = 42;
+		leaf::result<int const &> const r(x);
+		BOOST_TEST(r);
+		auto & a = r.value();
+		BOOST_TEST_EQ(&a, &x);
+		auto & b = *r;
+		BOOST_TEST_EQ(&b, &x);
+	}
+
+	{
+		int x = 42;
+		leaf::result<int &> const r(x);
+		BOOST_TEST(r);
+		int a = r.value();
+		BOOST_TEST_EQ(a, x);
+		int b = *r;
+		BOOST_TEST_EQ(b, x);
+	}
+	{
+		int x = 42;
+		leaf::result<int &> const r(x);
+		BOOST_TEST(r);
+		int & a = r.value();
+		BOOST_TEST_EQ(&a, &x);
+		int & b = *r;
+		BOOST_TEST_EQ(&b, &x);
+	}
+	{
+		int x = 42;
+		leaf::result<int &> const r(x);
+		BOOST_TEST(r);
+		auto & a = r.value();
+		BOOST_TEST_EQ(&a, &x);
+		auto & b = *r;
+		BOOST_TEST_EQ(&b, &x);
+	}
+
 	return boost::report_errors();
 }
