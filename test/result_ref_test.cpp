@@ -197,12 +197,16 @@ int main()
 		derived d;
 		leaf::result<base &> r = d;
 		BOOST_TEST_EQ(&r.value(), &d);
+		BOOST_TEST_EQ(&*r, &d);
+		BOOST_TEST_EQ(r.operator->(), &d);
 	}
 
 	{
 		derived d;
 		leaf::result<base *> r = &d;
 		BOOST_TEST_EQ(r.value(), &d);
+		BOOST_TEST_EQ(*r, &d);
+		BOOST_TEST_EQ(*r.operator->(), &d);
 	}
 
 	return boost::report_errors();

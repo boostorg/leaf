@@ -46,7 +46,6 @@ namespace boost { namespace leaf {
 		struct stored
 		{
 			using type = T;
-			using original_type = T;
 			using value_type_const = T const;
 			using value_type = T;
 		};
@@ -55,7 +54,6 @@ namespace boost { namespace leaf {
 		struct stored<T &>
 		{
 			using type = std::reference_wrapper<T>;
-			using original_type = T &;
 			using value_type_const = T;
 			using value_type = T;
 		};
@@ -161,7 +159,6 @@ namespace boost { namespace leaf {
 		};
 
 		using stored_type = typename leaf_detail::stored<T>::type;
-		using original_type = typename leaf_detail::stored<T>::original_type;
 		using value_type_const = typename leaf_detail::stored<T>::value_type_const;
 	public:
 		using value_type = typename leaf_detail::stored<T>::value_type;
