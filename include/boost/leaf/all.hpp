@@ -2544,11 +2544,9 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////////
 
+#if BOOST_LEAF_DIAGNOSTICS
 	namespace leaf_detail
 	{
-		class e_unexpected_count;
-		class e_unexpected_info;
-
 		template <class T> struct requires_unexpected { constexpr static bool value = false; };
 		template <class T> struct requires_unexpected<T const> { constexpr static bool value = requires_unexpected<T>::value; };
 		template <class T> struct requires_unexpected<T const &> { constexpr static bool value = requires_unexpected<T>::value; };
@@ -2571,6 +2569,7 @@ namespace boost { namespace leaf {
 			constexpr static bool value = requires_unexpected<Car>::value || unexpected_requested<L<S<Cdr>...>>::value;
 		};
 	}
+#endif
 
 	////////////////////////////////////////////
 
