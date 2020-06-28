@@ -11,6 +11,7 @@
 
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/pred.hpp>
 #include <boost/leaf/on_error.hpp>
 #include <boost/leaf/common.hpp>
 #include <iostream>

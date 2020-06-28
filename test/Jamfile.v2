@@ -28,6 +28,7 @@ compile _hpp_exception_test.cpp ;
 compile _hpp_handle_error_test.cpp ;
 compile _hpp_handle_exception_test.cpp ;
 compile _hpp_on_error_test.cpp ;
+compile _hpp_pred_test.cpp ;
 compile _hpp_result_test.cpp ;
 
 run accumulate_basic_test.cpp ;

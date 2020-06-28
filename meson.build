@@ -139,6 +139,7 @@ tests = [
 	'_hpp_handle_error_test',
 	'_hpp_handle_exception_test',
 	'_hpp_on_error_test',
+	'_hpp_pred_test',
 	'_hpp_result_test',
 	'_hpp_all_test',
 ]

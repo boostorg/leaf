@@ -17,6 +17,7 @@ int main()
 #else
 
 #include <boost/leaf/handle_exception.hpp>
+#include <boost/leaf/pred.hpp>
 #include <boost/leaf/result.hpp>
 #include "lightweight_test.hpp"
 

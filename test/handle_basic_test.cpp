@@ -8,6 +8,7 @@
 #	include <boost/leaf/handle_exception.hpp>
 #endif
 #include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/pred.hpp>
 #include <boost/leaf/result.hpp>
 #include "lightweight_test.hpp"
 

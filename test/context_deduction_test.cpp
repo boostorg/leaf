@@ -7,7 +7,7 @@
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 #	include <boost/leaf/handle_exception.hpp>
 #endif
-#include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/pred.hpp>
 #include "_test_ec.hpp"
 
 namespace leaf = boost::leaf;

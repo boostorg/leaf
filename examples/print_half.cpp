@@ -7,6 +7,7 @@
 // https://github.com/ned14/outcome/blob/master/doc/src/snippets/using_result.cpp
 
 #include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/pred.hpp>
 #include <boost/leaf/result.hpp>
 #include <algorithm>
 #include <ctype.h>

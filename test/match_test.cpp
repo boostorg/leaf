@@ -4,6 +4,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/pred.hpp>
 #include "_test_ec.hpp"
 #include "lightweight_test.hpp"
 
