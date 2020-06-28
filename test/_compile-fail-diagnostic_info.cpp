@@ -4,24 +4,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/handle_error.hpp>
-#include <boost/leaf/result.hpp>
 
 namespace leaf = boost::leaf;
 
-int main()
-{
-	return leaf::try_handle_all(
-		[]() -> leaf::result<int>
-		{
-			return 0;
-		},
-		[]( leaf::match<int,4> & )
-		{
-			return 1;
-		},
-		[]
-		{
-			return 2;
-		});
-	return 0;
-}
+leaf::diagnostic_info f();
+
+leaf::diagnostic_info x = f();

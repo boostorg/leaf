@@ -24,6 +24,9 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
+		struct diagnostic_info_;
+		struct verbose_diagnostic_info_;
+
 		template <int I, class Tuple>
 		struct tuple_for_each
 		{
@@ -161,6 +164,12 @@ namespace boost { namespace leaf {
 		};
 
 		template <class A>
+		struct handler_argument_traits<A &&>
+		{
+			static_assert(sizeof(A) == 0, "Error handlers may not take rvalue ref arguments");
+		};
+
+		template <class A>
 		struct handler_argument_traits<A *>: handler_argument_always_available<typename std::remove_const<A>::type>
 		{
 			template <class Tup>
@@ -181,27 +190,17 @@ namespace boost { namespace leaf {
 		};
 
 		template <>
-		struct handler_argument_traits<diagnostic_info>: handler_argument_always_available<e_unexpected_count>
+		struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<e_unexpected_count>
 		{
 			template <class Tup>
-			BOOST_LEAF_CONSTEXPR static diagnostic_info get( Tup const & tup, error_info const & ei ) noexcept;
+			BOOST_LEAF_CONSTEXPR static diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept;
 		};
 
 		template <>
-		struct handler_argument_traits<diagnostic_info const &>: handler_argument_traits<diagnostic_info>
-		{
-		};
-
-		template <>
-		struct handler_argument_traits<verbose_diagnostic_info>: handler_argument_always_available<e_unexpected_info>
+		struct handler_argument_traits<verbose_diagnostic_info const &>: handler_argument_always_available<e_unexpected_info>
 		{
 			template <class Tup>
-			BOOST_LEAF_CONSTEXPR static verbose_diagnostic_info get( Tup const & tup, error_info const & ei ) noexcept;
-		};
-
-		template <>
-		struct handler_argument_traits<verbose_diagnostic_info const &>: handler_argument_traits<verbose_diagnostic_info>
-		{
+			BOOST_LEAF_CONSTEXPR static verbose_diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept;
 		};
 
 		template <class P, class A, bool RequiresCatch = false>

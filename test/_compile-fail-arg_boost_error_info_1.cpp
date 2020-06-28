@@ -28,11 +28,9 @@ int main()
 				throw;
 			}
 		},
-		[]( test_info const & x )
+		[]( test_info const & x ) // boost::error_info must be taken by value
 		{
 		} );
 
 	return 0;
 }
-
-#endif

@@ -53,14 +53,14 @@ namespace boost { namespace leaf {
 
 	protected:
 
+		error_info( error_info const & ) noexcept = default;
+
 		void print( std::ostream & os ) const
 		{
 			os << "Error ID = " << err_id_.value();
 			if( xi_ )
 				xi_->print(os);
 		}
-
-		BOOST_LEAF_CONSTEXPR error_info( error_info  const & ) noexcept = default;
 
 	public:
 
@@ -109,6 +109,10 @@ namespace boost { namespace leaf {
 		void const * tup_;
 		void (*print_)( std::ostream &, void const * tup, int key_to_print );
 
+	protected:
+
+		diagnostic_info( diagnostic_info const & ) noexcept = default;
+
 	public:
 
 		template <class Tup>
@@ -132,11 +136,27 @@ namespace boost { namespace leaf {
 		}
 	};
 
+	namespace leaf_detail
+	{
+		struct diagnostic_info_: diagnostic_info
+		{
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR diagnostic_info_( error_info const & ei, leaf_detail::e_unexpected_count const * e_uc, Tup const & tup ) noexcept:
+				diagnostic_info(ei, e_uc, tup)
+			{
+			}
+		};
+	}
+
 	class verbose_diagnostic_info: public error_info
 	{
 		leaf_detail::e_unexpected_info const * e_ui_;
 		void const * tup_;
 		void (*print_)( std::ostream &, void const * tup, int key_to_print );
+
+	protected:
+
+		verbose_diagnostic_info( verbose_diagnostic_info const & ) noexcept = default;
 
 	public:
 
@@ -161,10 +181,26 @@ namespace boost { namespace leaf {
 		}
 	};
 
+	namespace leaf_detail
+	{
+		struct verbose_diagnostic_info_: verbose_diagnostic_info
+		{
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR verbose_diagnostic_info_( error_info const & ei, leaf_detail::e_unexpected_info const * e_ui, Tup const & tup ) noexcept:
+				verbose_diagnostic_info(ei, e_ui, tup)
+			{
+			}
+		};
+	}
+
 #else
 
 	class diagnostic_info: public error_info
 	{
+	protected:
+
+		diagnostic_info( diagnostic_info const & ) noexcept = default;
+
 	public:
 
 		BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei ) noexcept:
@@ -182,8 +218,24 @@ namespace boost { namespace leaf {
 		}
 	};
 
+	namespace leaf_detail
+	{
+		struct diagnostic_info_: diagnostic_info
+		{
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR diagnostic_info_( error_info const & ei ) noexcept:
+				diagnostic_info(ei)
+			{
+			}
+		};
+	}
+
 	class verbose_diagnostic_info: public error_info
 	{
+	protected:
+
+		verbose_diagnostic_info( verbose_diagnostic_info const & ) noexcept = default;
+
 	public:
 
 		BOOST_LEAF_CONSTEXPR verbose_diagnostic_info( error_info const & ei ) noexcept:
@@ -200,6 +252,18 @@ namespace boost { namespace leaf {
 			return os << '\n';
 		}
 	};
+
+	namespace leaf_detail
+	{
+		struct verbose_diagnostic_info_: verbose_diagnostic_info
+		{
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR verbose_diagnostic_info_( error_info const & ei ) noexcept:
+				verbose_diagnostic_info(ei)
+			{
+			}
+		};
+	}
 
 #endif
 
@@ -462,22 +526,22 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class Tup>
-		BOOST_LEAF_CONSTEXPR diagnostic_info handler_argument_traits<diagnostic_info>::get( Tup const & tup, error_info const & ei ) noexcept
+		BOOST_LEAF_CONSTEXPR diagnostic_info_ handler_argument_traits<diagnostic_info const &>::get( Tup const & tup, error_info const & ei ) noexcept
 		{
 #if BOOST_LEAF_DIAGNOSTICS
-			return diagnostic_info(ei, handler_argument_traits_defaults<e_unexpected_count>::check(tup, ei), tup);
+			return diagnostic_info_(ei, handler_argument_traits_defaults<e_unexpected_count>::check(tup, ei), tup);
 #else
-			return diagnostic_info(ei);
+			return diagnostic_info_(ei);
 #endif
 		}
 
 		template <class Tup>
-		BOOST_LEAF_CONSTEXPR verbose_diagnostic_info handler_argument_traits<verbose_diagnostic_info>::get( Tup const & tup, error_info const & ei ) noexcept
+		BOOST_LEAF_CONSTEXPR verbose_diagnostic_info_ handler_argument_traits<verbose_diagnostic_info const &>::get( Tup const & tup, error_info const & ei ) noexcept
 		{
 #if BOOST_LEAF_DIAGNOSTICS
-			return verbose_diagnostic_info(ei, handler_argument_traits_defaults<e_unexpected_info>::check(tup, ei), tup);
+			return verbose_diagnostic_info_(ei, handler_argument_traits_defaults<e_unexpected_info>::check(tup, ei), tup);
 #else
-			return verbose_diagnostic_info(ei);
+			return verbose_diagnostic_info_(ei);
 #endif
 		}
 

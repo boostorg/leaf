@@ -6,4 +6,4 @@
 #include <boost/leaf/error.hpp>
 
 int a;
-auto x = boost::leaf::new_error(&a);
+auto x = boost::leaf::new_error(&a); // Pointer error objects not allowed
