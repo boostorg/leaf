@@ -113,8 +113,6 @@ namespace boost { namespace leaf {
 
 		diagnostic_info( diagnostic_info const & ) noexcept = default;
 
-	public:
-
 		template <class Tup>
 		BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei, leaf_detail::e_unexpected_count const * e_uc, Tup const & tup ) noexcept:
 			error_info(ei),
@@ -123,6 +121,8 @@ namespace boost { namespace leaf {
 			print_(&leaf_detail::tuple_for_each<std::tuple_size<Tup>::value, Tup>::print)
 		{
 		}
+
+	public:
 
 		friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
 		{
@@ -158,8 +158,6 @@ namespace boost { namespace leaf {
 
 		verbose_diagnostic_info( verbose_diagnostic_info const & ) noexcept = default;
 
-	public:
-
 		template <class Tup>
 		BOOST_LEAF_CONSTEXPR verbose_diagnostic_info( error_info const & ei, leaf_detail::e_unexpected_info const * e_ui, Tup const & tup ) noexcept:
 			error_info(ei),
@@ -168,6 +166,8 @@ namespace boost { namespace leaf {
 			print_(&leaf_detail::tuple_for_each<std::tuple_size<Tup>::value, Tup>::print)
 		{
 		}
+
+	public:
 
 		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
 		{
@@ -201,12 +201,12 @@ namespace boost { namespace leaf {
 
 		diagnostic_info( diagnostic_info const & ) noexcept = default;
 
-	public:
-
 		BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei ) noexcept:
 			error_info(ei)
 		{
 		}
+
+	public:
 
 		friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
 		{
@@ -222,7 +222,6 @@ namespace boost { namespace leaf {
 	{
 		struct diagnostic_info_: diagnostic_info
 		{
-			template <class Tup>
 			BOOST_LEAF_CONSTEXPR diagnostic_info_( error_info const & ei ) noexcept:
 				diagnostic_info(ei)
 			{
@@ -236,12 +235,12 @@ namespace boost { namespace leaf {
 
 		verbose_diagnostic_info( verbose_diagnostic_info const & ) noexcept = default;
 
-	public:
-
 		BOOST_LEAF_CONSTEXPR verbose_diagnostic_info( error_info const & ei ) noexcept:
 			error_info(ei)
 		{
 		}
+
+	public:
 
 		friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
 		{
@@ -257,7 +256,6 @@ namespace boost { namespace leaf {
 	{
 		struct verbose_diagnostic_info_: verbose_diagnostic_info
 		{
-			template <class Tup>
 			BOOST_LEAF_CONSTEXPR verbose_diagnostic_info_( error_info const & ei ) noexcept:
 				verbose_diagnostic_info(ei)
 			{
