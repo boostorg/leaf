@@ -3131,6 +3131,9 @@ namespace boost { namespace leaf {
 	{
 		error_info & operator=( error_info const & ) = delete;
 
+		leaf_detail::exception_info_base const * const xi_;
+		error_id const err_id_;
+
 	protected:
 
 		error_info( error_info const & ) noexcept = default;
@@ -3143,9 +3146,6 @@ namespace boost { namespace leaf {
 		}
 
 	public:
-
-		leaf_detail::exception_info_base const * const xi_;
-		error_id const err_id_;
 
 		BOOST_LEAF_CONSTEXPR explicit error_info( error_id id ) noexcept:
 			xi_(0),
@@ -3209,7 +3209,7 @@ namespace boost { namespace leaf {
 			os << "leaf::diagnostic_info for ";
 			x.print(os);
 			os << ":\n";
-			x.print_(os, x.tup_, x.err_id_.value());
+			x.print_(os, x.tup_, x.error().value());
 			if( x.e_uc_  )
 				x.e_uc_->print(os);
 			return os;
@@ -3254,7 +3254,7 @@ namespace boost { namespace leaf {
 			os << "leaf::verbose_diagnostic_info for ";
 			x.print(os);
 			os << ":\n";
-			x.print_(os, x.tup_, x.err_id_.value());
+			x.print_(os, x.tup_, x.error().value());
 			if( x.e_ui_ )
 				x.e_ui_->print(os);
 			return os;
