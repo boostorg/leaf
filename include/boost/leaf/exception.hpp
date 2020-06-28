@@ -119,13 +119,13 @@ namespace boost { namespace leaf {
 				Ex(std::move(ex)),
 				error_id(id)
 			{
-				leaf_detail::enforce_std_exception(*this);
+				enforce_std_exception(*this);
 			}
 
 			explicit BOOST_LEAF_CONSTEXPR exception( error_id id ) noexcept:
 				error_id(id)
 			{
-				leaf_detail::enforce_std_exception(*this);
+				enforce_std_exception(*this);
 			}
 		};
 

@@ -153,25 +153,25 @@ namespace boost { namespace leaf {
 
 			BOOST_LEAF_CONSTEXPR T const & value(int key) const & noexcept
 			{
-				BOOST_LEAF_ASSERT(has_value(key)!=0);
+				BOOST_LEAF_ASSERT(has_value(key) != 0);
 				return value_;
 			}
 
 			BOOST_LEAF_CONSTEXPR T & value(int key) & noexcept
 			{
-				BOOST_LEAF_ASSERT(has_value(key)!=0);
+				BOOST_LEAF_ASSERT(has_value(key) != 0);
 				return value_;
 			}
 
 			BOOST_LEAF_CONSTEXPR T const && value(int key) const && noexcept
 			{
-				BOOST_LEAF_ASSERT(has_value(key)!=0);
+				BOOST_LEAF_ASSERT(has_value(key) != 0);
 				return value_;
 			}
 
 			BOOST_LEAF_CONSTEXPR T value(int key) && noexcept
 			{
-				BOOST_LEAF_ASSERT(has_value(key)!=0);
+				BOOST_LEAF_ASSERT(has_value(key) != 0);
 				T tmp(std::move(value_));
 				reset();
 				return tmp;

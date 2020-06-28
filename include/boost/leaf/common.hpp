@@ -73,7 +73,7 @@ namespace boost { namespace leaf {
 					0,
 					0) )
 				{
-					BOOST_LEAF_ASSERT(mb.p!=0);
+					BOOST_LEAF_ASSERT(mb.p != 0);
 					char * z = std::strchr((LPSTR)mb.p,0);
 					if( z[-1] == '\n' )
 						*--z = 0;

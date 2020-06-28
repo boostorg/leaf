@@ -158,7 +158,7 @@ namespace boost { namespace leaf {
 			{
 				return fut.get();
 			}
-			catch( leaf_detail::capturing_exception const & cap )
+			catch( capturing_exception const & cap )
 			{
 				cap.unload_and_rethrow_original_exception();
 			}
@@ -174,7 +174,7 @@ namespace boost { namespace leaf {
 				else
 					return error_id(r.error()); // unloads
 			}
-			catch( leaf_detail::capturing_exception const & cap )
+			catch( capturing_exception const & cap )
 			{
 				cap.unload_and_rethrow_original_exception();
 			}

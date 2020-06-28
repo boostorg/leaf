@@ -122,7 +122,7 @@ namespace boost { namespace leaf {
 
 			void print( std::ostream & os ) const
 			{
-				BOOST_LEAF_ASSERT(first_type!=0);
+				BOOST_LEAF_ASSERT(first_type != 0);
 				BOOST_LEAF_ASSERT(count>0);
 				os << "Detected ";
 				if( count==1 )
@@ -163,9 +163,9 @@ namespace boost { namespace leaf {
 			void add( E const & e )
 			{
 				std::stringstream s;
-				if( !leaf_detail::diagnostic<E>::is_invisible )
+				if( !diagnostic<E>::is_invisible )
 				{
-					leaf_detail::diagnostic<E>::print(s,e);
+					diagnostic<E>::print(s,e);
 					if( already_.insert(&type<E>).second  )
 					{
 						s << std::endl;
@@ -194,6 +194,14 @@ namespace boost { namespace leaf {
 			static BOOST_LEAF_THREAD_LOCAL int c;
 			return c;
 		}
+	}
+
+#else
+
+	namespace leaf_detail
+	{
+		using e_unexpected_count = void;
+		using e_unexpected_info = void;
 	}
 
 #endif

@@ -27,7 +27,7 @@ compile _hpp_error_test.cpp ;
 compile _hpp_exception_test.cpp ;
 compile _hpp_handle_error_test.cpp ;
 compile _hpp_handle_exception_test.cpp ;
-compile _hpp_preload_test.cpp ;
+compile _hpp_on_error_test.cpp ;
 compile _hpp_result_test.cpp ;
 
 run accumulate_basic_test.cpp ;
@@ -88,6 +88,12 @@ run try_catch_error_id_test.cpp ;
 run try_catch_test.cpp ;
 run try_exception_and_result_test.cpp ;
 
+compile-fail boost_exception_fail_1_test.cpp ;
+compile-fail boost_exception_fail_2_test.cpp ;
+compile-fail catch_fail_1_test.cpp ;
+compile-fail catch_fail_2_test.cpp ;
+compile-fail match_fail_1_test.cpp ;
+compile-fail match_fail_2_test.cpp ;
 compile-fail new_error_fail_test.cpp ;
 compile-fail result_fail_1_test.cpp ;
 compile-fail result_fail_2_test.cpp ;

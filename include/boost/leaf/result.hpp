@@ -98,7 +98,7 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_CONSTEXPR error_id get_error_id() const noexcept
 			{
 				BOOST_LEAF_ASSERT(kind()==no_error || kind()==err_id);
-				return leaf_detail::make_error_id(state_);
+				return make_error_id(state_);
 			}
 		};
 	}

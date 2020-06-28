@@ -15,6 +15,12 @@ namespace leaf = boost::leaf;
 template <class... T>
 struct unwrap_tuple;
 
+template <>
+struct unwrap_tuple<std::tuple<>>
+{
+	using type = std::tuple<>;
+};
+
 template <template <class> class S, class... E>
 struct unwrap_tuple<std::tuple<S<E>...>>
 {
@@ -62,6 +68,8 @@ namespace std
 
 void not_called_on_purpose()
 {
+	test< std::tuple<> >( expd([]( leaf::error_info const & ){ }) );
+
 	test< std::tuple<info<1>> >( expd([]( info<1> ){ }) );
 	test< std::tuple<info<1>> >( expd([]( info<1> const ){ }) );
 	test< std::tuple<info<1>> >( expd([]( info<1> const & ){ }) );
@@ -117,7 +125,7 @@ void not_called_on_purpose()
 #endif
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
-	test< std::tuple<info<1>> >( expd([]( leaf::catch_<std::exception>, info<1> ){ }) );
+	test< std::tuple<std::exception, info<1>> >( expd([]( leaf::catch_<std::exception>, info<1> ){ }) );
 #endif
 
 	test< std::tuple<info<1>,info<2>,info<3>> >( expd([]( info<1> const *, info<2> ){ }, []( info<1>, info<3> const * ){ }) );

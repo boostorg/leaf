@@ -224,7 +224,7 @@ namespace boost { namespace leaf {
 				if( moved_ )
 					return;
 				if( auto id = id_.check_id() )
-					leaf_detail::tuple_for_each_preload<sizeof...(Item),decltype(p_)>::trigger(p_,id);
+					tuple_for_each_preload<sizeof...(Item),decltype(p_)>::trigger(p_,id);
 			}
 		};
 

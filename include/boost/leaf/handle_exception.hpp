@@ -110,7 +110,7 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR bool operator()() const noexcept
+		BOOST_LEAF_CONSTEXPR explicit operator bool() const noexcept
 		{
 			return leaf_detail::check_exception_pack(ex_, static_cast<Ex const *>(0)...);
 		}
@@ -133,50 +133,18 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR Ex const * operator()() const noexcept
+		BOOST_LEAF_CONSTEXPR explicit operator bool() const noexcept
 		{
-			return dynamic_cast<Ex const *>(&ex_);
+			return dynamic_cast<Ex const *>(&ex_) != 0;
 		}
 
 		BOOST_LEAF_CONSTEXPR Ex const & caught() const noexcept
 		{
 			Ex const * ex = dynamic_cast<Ex const *>(&ex_);
-			BOOST_LEAF_ASSERT(ex!=0);
+			BOOST_LEAF_ASSERT(ex != 0);
 			return *ex;
 		}
 	};
-
-	namespace leaf_detail
-	{
-		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...>, false> { using type = void; };
-		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const, false>;
-		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const *, false> { static_assert(sizeof(catch_<Exceptions...>)==0, "Handlers should take catch_<> by value, not as catch_<> const *"); };
-		template <class... Exceptions> struct translate_type_impl<catch_<Exceptions...> const &, false> { static_assert(sizeof(catch_<Exceptions...>)==0, "Handlers should take catch_<> by value, not as catch_<> const &"); };
-
-		template <class SlotsTuple, class... Ex>
-		struct check_one_argument<SlotsTuple,catch_<Ex...>, false>
-		{
-			BOOST_LEAF_CONSTEXPR static bool check( SlotsTuple const &, error_info const & ei ) noexcept
-			{
-				if( ei.exception_caught() )
-					if( std::exception const * ex = ei.exception() )
-						return catch_<Ex...>(*ex)();
-				return false;
-			}
-		};
-
-		template <class... Ex>
-		struct get_one_argument<catch_<Ex...>, false>
-		{
-			template <class SlotsTuple>
-			BOOST_LEAF_CONSTEXPR static catch_<Ex...> get( SlotsTuple const &, error_info const & ei ) noexcept
-			{
-				std::exception const * ex = ei.exception();
-				BOOST_LEAF_ASSERT(ex!=0);
-				return catch_<Ex...>(*ex);
-			}
-		};
-	}
 
 	////////////////////////////////////////
 
@@ -187,7 +155,7 @@ namespace boost { namespace leaf {
 			if( ex_ )
 			{
 				os <<
-					"\nException dynamic type: " << leaf_detail::demangle(typeid(*ex_).name()) <<
+					"\nException dynamic type: " << demangle(typeid(*ex_).name()) <<
 					"\nstd::exception::what(): " << ex_->what();
 			}
 			else
@@ -219,26 +187,26 @@ namespace boost { namespace leaf {
 				catch( std::exception & ex )
 				{
 					deactivate();
-					return leaf_detail::handle_error_<R>(this->tup(), error_info(exception_info_(&ex)), std::forward<H>(h)...,
+					return handle_error_<R>(this->tup(), error_info(exception_info_(&ex)), std::forward<H>(h)...,
 						[]() -> R { throw; } );
 				}
 				catch(...)
 				{
 					deactivate();
-					return leaf_detail::handle_error_<R>(this->tup(), error_info(exception_info_(0)), std::forward<H>(h)...,
+					return handle_error_<R>(this->tup(), error_info(exception_info_(0)), std::forward<H>(h)...,
 						[]() -> R { throw; } );
 				}
 			}
 			catch( std::exception & ex )
 			{
 				deactivate();
-				return leaf_detail::handle_error_<R>(this->tup(), error_info(exception_info_(&ex)), std::forward<H>(h)...,
+				return handle_error_<R>(this->tup(), error_info(exception_info_(&ex)), std::forward<H>(h)...,
 					[]() -> R { throw; } );
 			}
 			catch(...)
 			{
 				deactivate();
-				return leaf_detail::handle_error_<R>(this->tup(), error_info(exception_info_(0)), std::forward<H>(h)...,
+				return handle_error_<R>(this->tup(), error_info(exception_info_(0)), std::forward<H>(h)...,
 					[]() -> R { throw; } );
 			}
 		}
@@ -305,29 +273,62 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class Tag, class T> struct requires_catch<boost::error_info<Tag, T>>: std::true_type { };
-		template <class Tag, class T> struct requires_catch<boost::error_info<Tag, T> const &>: std::true_type { };
-		template <class Tag, class T> struct requires_catch<boost::error_info<Tag, T> const *>: std::true_type { };
-		template <class Tag, class T> struct requires_catch<boost::error_info<Tag, T> &> { static_assert(sizeof(boost::error_info<Tag, T>)==0, "mutable boost::error_info reference arguments are not supported"); };
-		template <class Tag, class T> struct requires_catch<boost::error_info<Tag, T> *> { static_assert(sizeof(boost::error_info<Tag, T>)==0, "mutable boost::error_info pointer arguments are not supported"); };
+		template <class Tag, class T>
+		struct match_traits_value<boost::error_info<Tag, T>, true>
+		{
+			using error_type = boost::error_info<Tag, T>;
+			using enum_type = T;
+			using match_type = T;
+
+			BOOST_LEAF_CONSTEXPR static T get_value( match_type x ) noexcept
+			{
+				return x;
+			}
+		};
 
 		template <class> struct dependent_type_boost_exception { using type = boost::exception; };
 
-		template <class SlotsTuple, class Tag, class T>
-		struct check_one_argument<SlotsTuple, boost::error_info<Tag, T>, false>
+		template <class Tag, class T>
+		struct handler_argument_traits<boost::error_info<Tag, T>>
 		{
-			static boost::error_info<Tag, T> * check( SlotsTuple & tup, error_info const & ei ) noexcept
+		private:
+
+			using boost_exception = typename dependent_type_boost_exception<Tag>::type;
+
+		public:
+
+			using error_type = void;
+			constexpr static bool requires_catch = true;
+			constexpr static bool always_available = false;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static T * check( Tup &, error_info const & ei ) noexcept
 			{
-				using boost_exception = typename dependent_type_boost_exception<Tag>::type;
 				if( ei.exception_caught() )
-					if( boost_exception const * be = dynamic_cast<boost_exception const *>(ei.exception()) )
-						if( auto * x = exception_detail::get_info<boost::error_info<Tag, T>>::get(*be) )
-						{
-							auto & sl = std::get<tuple_type_index<slot<boost::error_info<Tag, T>>,SlotsTuple>::value>(tup);
-							return &sl.put(ei.error().value(), boost::error_info<Tag, T>(*x));
-						}
+					if( boost_exception * be = dynamic_cast<boost_exception *>(ei.exception()) )
+						return exception_detail::get_info<boost::error_info<Tag, T>>::get(*be);
 				return 0;
 			}
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static boost::error_info<Tag, T> get( Tup const & tup, error_info const & ei ) noexcept
+			{
+				T * x = check(tup, ei);
+				BOOST_LEAF_ASSERT(x != 0);
+				return boost::error_info<Tag, T>(*x);
+			}
+		};
+
+		template <class Tag, class T>
+		struct handler_argument_traits<boost::error_info<Tag, T> const &>
+		{
+			static_assert(sizeof(T) == 0, "Error handlers must take boost::error_info<> by value");
+		};
+
+		template <class Tag, class T>
+		struct handler_argument_traits<boost::error_info<Tag, T> &>
+		{
+			static_assert(sizeof(T) == 0, "Error handlers must take boost::error_info<> by value");
 		};
 	}
 
