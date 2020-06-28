@@ -51,13 +51,13 @@ leaf::result<void> print_half(const std::string& text)
 	return leaf::try_handle_some(
 		[&]() -> leaf::result<void>
 		{
-			BOOST_LEAF_VAR(auto r,convert(text));
+			BOOST_LEAF_AUTO(r,convert(text));
 			std::cout << r / 2 << std::endl;
 			return { };
 		},
 		[&]( leaf::match<ConversionErrc,ConversionErrc::TooLong> ) -> leaf::result<void>
 		{
-			BOOST_LEAF_VAR(auto i, BigInt::fromString(text));
+			BOOST_LEAF_AUTO(i, BigInt::fromString(text));
 			std::cout << i.half() << std::endl;
 			return { };
 		} );

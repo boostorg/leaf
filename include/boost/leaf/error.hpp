@@ -52,6 +52,8 @@
 		return BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).error();\
 	v = BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).value()
 
+#define BOOST_LEAF_AUTO(v, r) BOOST_LEAF_VAR(auto && v, r)
+
 #define BOOST_LEAF_CHECK(r)\
 	{\
 		static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "BOOST_LEAF_CHECK requires a result type");\

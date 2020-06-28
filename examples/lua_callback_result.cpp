@@ -109,7 +109,7 @@ int main()
 
 			[&]() -> leaf::result<void>
 			{
-				BOOST_LEAF_VAR(auto answer, call_lua(&*L));
+				BOOST_LEAF_AUTO(answer, call_lua(&*L));
 				std::cout << "do_work succeeded, answer=" << answer << '\n';
 				return { };
 			},

@@ -87,7 +87,7 @@ leaf::result<void> handle_some_errors_void( int what_to_do )
 	return leaf::try_handle_some(
 		[=]() -> leaf::result<void>
 		{
-			BOOST_LEAF_VAR(auto answer, compute_answer(what_to_do));
+			BOOST_LEAF_AUTO(answer, compute_answer(what_to_do));
 			(void) answer;
 			return { };
 		},
@@ -178,7 +178,7 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				BOOST_LEAF_VAR(auto answer,handle_some_errors(3));
+				BOOST_LEAF_AUTO(answer,handle_some_errors(3));
 				(void) answer;
 				return 0;
 			},
@@ -202,7 +202,7 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				BOOST_LEAF_VAR(auto answer,handle_some_errors_float(1));
+				BOOST_LEAF_AUTO(answer,handle_some_errors_float(1));
 				(void) answer;
 				return 0;
 			},

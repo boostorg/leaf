@@ -231,13 +231,13 @@ int main( int argc, char const * argv[] )
 
     [&]() -> leaf::result<int> <1>
     {
-      BOOST_LEAF_VAR(auto file_name, parse_command_line(argc,argv)); <2>
+      BOOST_LEAF_AUTO(file_name, parse_command_line(argc,argv)); <2>
 
       auto load = leaf::on_error( leaf::e_file_name{file_name} ); <3>
 
-      BOOST_LEAF_VAR(auto f, file_open(file_name)); <4>
+      BOOST_LEAF_AUTO(f, file_open(file_name)); <4>
 
-      BOOST_LEAF_VAR(auto s, file_size(*f)); <4>
+      BOOST_LEAF_AUTO(s, file_size(*f)); <4>
 
       std::string buffer( 1 + s, '\0' );
       BOOST_LEAF_CHECK(file_read(*f, &buffer[0], buffer.size()-1)); <4>
@@ -849,7 +849,7 @@ return leaf::try_handle_some(
 
   [&]() -> leaf::result<void>
   {
-    BOOST_LEAF_VAR(auto r, fut.get());
+    BOOST_LEAF_AUTO(r, fut.get());
     //Success!
     return { }
   },
@@ -1228,7 +1228,7 @@ Here is a simple function which prints successfully computed answers, forwarding
 ----
 leaf::result<void> print_answer() noexcept
 {
-  BOOST_LEAF_VAR(auto answer, compute_answer());
+  BOOST_LEAF_AUTO(answer, compute_answer());
   std::cout << "Answer: " << answer << std::endl;
   return { };
 }
@@ -1394,7 +1394,7 @@ int main() noexcept
 
       [&]() -> leaf::result<void>
       {
-        BOOST_LEAF_VAR(auto answer, call_lua(&*L));
+        BOOST_LEAF_AUTO(answer, call_lua(&*L));
         std::cout << "do_work succeeded, answer=" << answer << '\n'; <1>
         return { };
       },
@@ -2525,7 +2525,7 @@ return leaf::try_handle_some(
 
   [] -> leaf::result<void>
   {
-    BOOST_LEAF_VAR(auto answer, compute_answer());
+    BOOST_LEAF_AUTO(answer, compute_answer());
     //Use answer
     ....
     return { };
@@ -4298,8 +4298,8 @@ leaf::result<int> compute_value();
 
 leaf::result<float> add_values()
 {
-  BOOST_LEAF_VAR(auto v1, compute_value()); <1>
-  BOOST_LEAF_VAR(auto v2, compute_value()); <2>
+  BOOST_LEAF_AUTO(v1, compute_value()); <1>
+  BOOST_LEAF_AUTO(v2, compute_value()); <2>
   return v1 + v2;
 }
 ----
@@ -4527,7 +4527,7 @@ return leaf::try_handle_some(
 
   []() -> leaf::result<void>
   {
-    BOOST_LEAF_VAR(auto r, process_file()); //In case of errors, error objects are stored inside the try_handle_some scope
+    BOOST_LEAF_AUTO(r, process_file()); //In case of errors, error objects are stored inside the try_handle_some scope
 
     //Success, use r:
     ....
@@ -4704,8 +4704,8 @@ leaf::result<parsed_line> parse_line( std::string const & line );
 
 leaf::result<parsed_line> read_and_parse_line( reader & r )
 {
-  BOOST_LEAF_VAR(auto line, read_line(r)); <1>
-  BOOST_LEAF_VAR(auto parsed, parse_line(line)); <2>
+  BOOST_LEAF_AUTO(line, read_line(r)); <1>
+  BOOST_LEAF_AUTO(parsed, parse_line(line)); <2>
   return parsed;
 }
 ----

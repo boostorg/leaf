@@ -318,7 +318,7 @@ leaf::result<std::string> execute_command(std::string_view line) {
     } else if (command == "sum") {
         std::int64_t sum = 0;
         for (auto const &w : words) {
-            BOOST_LEAF_VAR(auto i, parse_int64(w));
+            BOOST_LEAF_AUTO(i, parse_int64(w));
             sum += i;
         }
         response = std::to_string(sum);
@@ -326,17 +326,17 @@ leaf::result<std::string> execute_command(std::string_view line) {
         if (words.size() < 2) {
             return leaf::new_error(e_unexpected_arg_count{words.size(), 2, SIZE_MAX});
         }
-        BOOST_LEAF_VAR(auto sub, parse_int64(words.front()));
+        BOOST_LEAF_AUTO(sub, parse_int64(words.front()));
         words.pop_front();
         for (auto const &w : words) {
-            BOOST_LEAF_VAR(auto i, parse_int64(w));
+            BOOST_LEAF_AUTO(i, parse_int64(w));
             sub -= i;
         }
         response = std::to_string(sub);
     } else if (command == "mul") {
         std::int64_t mul = 1;
         for (auto const &w : words) {
-            BOOST_LEAF_VAR(auto i, parse_int64(w));
+            BOOST_LEAF_AUTO(i, parse_int64(w));
             mul *= i;
         }
         response = std::to_string(mul);
@@ -344,10 +344,10 @@ leaf::result<std::string> execute_command(std::string_view line) {
         if (words.size() < 2) {
             return leaf::new_error(e_unexpected_arg_count{words.size(), 2, SIZE_MAX});
         }
-        BOOST_LEAF_VAR(auto div, parse_int64(words.front()));
+        BOOST_LEAF_AUTO(div, parse_int64(words.front()));
         words.pop_front();
         for (auto const &w : words) {
-            BOOST_LEAF_VAR(auto i, parse_int64(w));
+            BOOST_LEAF_AUTO(i, parse_int64(w));
             if (i == 0) {
                 // In some cases this command execution function might throw, not just return an error.
                 throw std::runtime_error{"division by zero"};
@@ -359,9 +359,9 @@ leaf::result<std::string> execute_command(std::string_view line) {
         if (words.size() != 2) {
             return leaf::new_error(e_unexpected_arg_count{words.size(), 2, 2});
         }
-        BOOST_LEAF_VAR(auto i1, parse_int64(words.front()));
+        BOOST_LEAF_AUTO(i1, parse_int64(words.front()));
         words.pop_front();
-        BOOST_LEAF_VAR(auto i2, parse_int64(words.front()));
+        BOOST_LEAF_AUTO(i2, parse_int64(words.front()));
         words.pop_front();
         if (i2 == 0) {
             // In some cases this command execution function might throw, not just return an error.
@@ -404,7 +404,7 @@ response_t handle_request(request_t &&request) {
                 return leaf::new_error(e_unexpected_http_method{http::verb::post},
                                        e_http_status{http::status::bad_request});
             }
-            BOOST_LEAF_VAR(auto response, execute_command(request.body()));
+            BOOST_LEAF_AUTO(response, execute_command(request.body()));
             return std::make_pair(http::status::ok, std::move(response));
         },
         // For the `error_quit` command and associated error condition we have the error handler itself fail
