@@ -101,6 +101,18 @@ namespace boost { namespace leaf {
 		}
 	};
 
+	namespace leaf_detail
+	{
+		template <class Ex>
+		BOOST_LEAF_CONSTEXPR inline Ex * get_exception( error_info const & ei )
+		{
+			if( ei.exception_caught() )
+				if( Ex * ex = dynamic_cast<Ex *>(ei.exception()) )
+					return ex;
+			return 0;
+		}
+	}
+
 	////////////////////////////////////////
 
 #if BOOST_LEAF_DIAGNOSTICS

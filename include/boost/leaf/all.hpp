@@ -642,6 +642,24 @@ namespace boost { namespace leaf {
 #endif
 // <<< #include <boost/leaf/detail/function_traits.hpp>
 #line 18 "boost/leaf/error.hpp"
+// >>> #include <boost/leaf/detail/unexpected.hpp>
+#line 1 "boost/leaf/detail/unexpected.hpp"
+#ifndef BOOST_LEAF_DETAIL_UNEXPECTED_HPP_INCLUDED
+#define BOOST_LEAF_DETAIL_UNEXPECTED_HPP_INCLUDED
+
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#if defined(__clang__)
+#	pragma clang system_header
+#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
+#	pragma GCC system_header
+#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
+#	pragma warning(push,1)
+#endif
+
 // >>> #include <boost/leaf/detail/print.hpp>
 #line 1 "boost/leaf/detail/print.hpp"
 #ifndef BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
@@ -983,11 +1001,8 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/detail/print.hpp>
-#line 19 "boost/leaf/error.hpp"
-#include <system_error>
-#include <type_traits>
+#line 19 "boost/leaf/detail/unexpected.hpp"
 #include <sstream>
-#include <memory>
 #include <set>
 
 #ifdef BOOST_LEAF_NO_THREADS
@@ -1010,69 +1025,7 @@ namespace boost { namespace leaf {
 	} }
 #endif
 
-#define BOOST_LEAF_TOKEN_PASTE(x, y) x ## y
-#define BOOST_LEAF_TOKEN_PASTE2(x, y) BOOST_LEAF_TOKEN_PASTE(x, y)
-
-#define BOOST_LEAF_VAR(v,r)\
-	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "The BOOST_LEAF_VAR macro requires a result type as the second argument");\
-	auto && BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__) = r;\
-	if( !BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__) )\
-		return BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).error();\
-	v = BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).value()
-
-#define BOOST_LEAF_AUTO(v, r)\
-	BOOST_LEAF_VAR(auto && v, r)
-
-#define BOOST_LEAF_CHECK(r)\
-	{\
-		static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "BOOST_LEAF_CHECK requires a result type");\
-		auto && _r = r;\
-		if( !_r )\
-			return _r.error();\
-	}
-
-#define BOOST_LEAF_NEW_ERROR ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
-
-////////////////////////////////////////
-
 namespace boost { namespace leaf {
-
-	namespace leaf_detail
-	{
-		struct inject_loc
-		{
-			char const * const file;
-			int const line;
-			char const * const fn;
-
-			template <class T>
-			friend T operator+( inject_loc loc, T && x ) noexcept
-			{
-				x.load_source_location_(loc.file, loc.line, loc.fn);
-				return x;
-			}
-		};
-	}
-
-} }
-
-////////////////////////////////////////
-
-namespace boost { namespace leaf {
-
-	struct e_source_location
-	{
-		char const * const file;
-		int const line;
-		char const * const function;
-
-		friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
-		{
-			return os << leaf::type<e_source_location>() << ": " << x.file << '(' << x.line << ") in function " << x.function;
-		}
-	};
-
-	////////////////////////////////////////
 
 #if BOOST_LEAF_DIAGNOSTICS
 
@@ -1176,6 +1129,77 @@ namespace boost { namespace leaf {
 	}
 
 #endif
+
+} }
+
+#endif
+// <<< #include <boost/leaf/detail/unexpected.hpp>
+#line 19 "boost/leaf/error.hpp"
+#include <system_error>
+#include <type_traits>
+#include <memory>
+
+#define BOOST_LEAF_TOKEN_PASTE(x, y) x ## y
+#define BOOST_LEAF_TOKEN_PASTE2(x, y) BOOST_LEAF_TOKEN_PASTE(x, y)
+
+#define BOOST_LEAF_VAR(v,r)\
+	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "The BOOST_LEAF_VAR macro requires a result type as the second argument");\
+	auto && BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__) = r;\
+	if( !BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__) )\
+		return BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).error();\
+	v = BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).value()
+
+#define BOOST_LEAF_AUTO(v, r)\
+	BOOST_LEAF_VAR(auto && v, r)
+
+#define BOOST_LEAF_CHECK(r)\
+	{\
+		static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "BOOST_LEAF_CHECK requires a result type");\
+		auto && _r = r;\
+		if( !_r )\
+			return _r.error();\
+	}
+
+#define BOOST_LEAF_NEW_ERROR ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
+
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
+
+	namespace leaf_detail
+	{
+		struct inject_loc
+		{
+			char const * const file;
+			int const line;
+			char const * const fn;
+
+			template <class T>
+			friend T operator+( inject_loc loc, T && x ) noexcept
+			{
+				x.load_source_location_(loc.file, loc.line, loc.fn);
+				return x;
+			}
+		};
+	}
+
+} }
+
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
+
+	struct e_source_location
+	{
+		char const * const file;
+		int const line;
+		char const * const function;
+
+		friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
+		{
+			return os << leaf::type<e_source_location>() << ": " << x.file << '(' << x.line << ") in function " << x.function;
+		}
+	};
 
 	////////////////////////////////////////
 
@@ -2531,6 +2555,8 @@ namespace boost { namespace leaf {
 #	pragma warning(push,1)
 #endif
 
+#include <utility>
+#include <exception>
 
 namespace boost { namespace leaf {
 
@@ -3311,6 +3337,18 @@ namespace boost { namespace leaf {
 			return os << '\n';
 		}
 	};
+
+	namespace leaf_detail
+	{
+		template <class Ex>
+		BOOST_LEAF_CONSTEXPR inline Ex * get_exception( error_info const & ei )
+		{
+			if( ei.exception_caught() )
+				if( Ex * ex = dynamic_cast<Ex *>(ei.exception()) )
+					return ex;
+			return 0;
+		}
+	}
 
 	////////////////////////////////////////
 
@@ -4566,6 +4604,9 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
+		template <class Ex>
+		BOOST_LEAF_CONSTEXPR Ex * get_exception( error_info const & );
+
 		template <class Tag, class T>
 		struct match_traits<boost::error_info<Tag, T>>
 		{
@@ -4588,10 +4629,10 @@ namespace boost { namespace leaf {
 		check( Tup &, error_info const & ei ) noexcept
 		{
 			using boost_exception = dependent_type_t<T, boost::exception>;
-			if( ei.exception_caught() )
-				if( boost_exception * be = dynamic_cast<boost_exception *>(ei.exception()) )
-					return exception_detail::get_info<boost::error_info<Tag, T>>::get(*be);
-			return 0;
+			if( auto * be = get_exception<boost_exception>(ei) )
+				return exception_detail::get_info<boost::error_info<Tag, T>>::get(*be);
+			else
+				return 0;
 		}
 
 		template <class Tag, class T>

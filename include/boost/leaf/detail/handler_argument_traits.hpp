@@ -14,7 +14,9 @@
 #	pragma warning(push,1)
 #endif
 
-#include <boost/leaf/error.hpp>
+#include <boost/leaf/detail/unexpected.hpp>
+#include <utility>
+#include <exception>
 
 namespace boost { namespace leaf {
 

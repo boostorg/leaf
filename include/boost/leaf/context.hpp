@@ -15,6 +15,7 @@
 #endif
 
 #include <boost/leaf/detail/handler_argument_traits.hpp>
+#include <boost/leaf/error.hpp>
 
 namespace boost { namespace leaf {
 

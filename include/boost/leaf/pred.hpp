@@ -14,7 +14,7 @@
 #	pragma warning(push,1)
 #endif
 
-#include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/detail/handler_argument_traits.hpp>
 
 namespace boost { namespace leaf {
 
@@ -209,6 +209,9 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
+		template <class Ex>
+		BOOST_LEAF_CONSTEXPR Ex * get_exception( error_info const & );
+
 		template <class Tag, class T>
 		struct match_traits<boost::error_info<Tag, T>>
 		{
@@ -231,10 +234,10 @@ namespace boost { namespace leaf {
 		check( Tup &, error_info const & ei ) noexcept
 		{
 			using boost_exception = dependent_type_t<T, boost::exception>;
-			if( ei.exception_caught() )
-				if( boost_exception * be = dynamic_cast<boost_exception *>(ei.exception()) )
-					return exception_detail::get_info<boost::error_info<Tag, T>>::get(*be);
-			return 0;
+			if( auto * be = get_exception<boost_exception>(ei) )
+				return exception_detail::get_info<boost::error_info<Tag, T>>::get(*be);
+			else
+				return 0;
 		}
 
 		template <class Tag, class T>
