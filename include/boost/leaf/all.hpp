@@ -2169,15 +2169,15 @@ namespace boost { namespace leaf {
 		template <class R, class Future>
 		inline
 		decltype(std::declval<Future>().get())
-		future_get_impl(is_result_tag<R, false>, Future & fut ) noexcept
+		future_get_impl(is_result_tag<R, false>, Future & fut) noexcept
 		{
 			return fut.get();
 		}
 
 		template <class R, class Future>
 		inline
-		decltype(std::declval<Future>().get()
-		future_get_impl(is_result_tag<R, true>, Future & fut ) noexcept
+		decltype(std::declval<Future>().get())
+		future_get_impl(is_result_tag<R, true>, Future & fut) noexcept
 		{
 			if( auto r = fut.get() )
 				return r;
