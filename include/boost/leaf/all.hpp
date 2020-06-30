@@ -4561,19 +4561,16 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	template <class T, class U = T>
-	struct condition;
+	template <class E, class Enum = E>
+	struct condition
+	{
+		static_assert(std::is_error_condition_enum<Enum>::value || std::is_error_code_enum<Enum>::value, "leaf::condition<E, Enum> requires Enum to be registered either with std::is_error_condition_enum or std::is_error_code_enum.");
+	};
 
 	template <class Enum>
 	struct condition<Enum, Enum>
 	{
 		static_assert(std::is_error_condition_enum<Enum>::value || std::is_error_code_enum<Enum>::value, "leaf::condition<Enum> requires Enum to be registered either with std::is_error_condition_enum or std::is_error_code_enum.");
-	};
-
-	template <class E, class Enum>
-	struct condition
-	{
-		static_assert(std::is_error_condition_enum<Enum>::value || std::is_error_code_enum<Enum>::value, "leaf::condition<E, Enum> requires Enum to be registered either with std::is_error_condition_enum or std::is_error_code_enum.");
 	};
 
 	namespace leaf_detail
