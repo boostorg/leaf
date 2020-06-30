@@ -35,7 +35,7 @@ int main()
 		},
 		[]( my_error const & x, leaf::catch_<leaf::error_id> id )
 		{
-			BOOST_TEST(dynamic_cast<leaf::error_id const *>(&id.caught())!=0 && dynamic_cast<leaf::error_id const *>(&id.caught())->value()==1);
+			BOOST_TEST(dynamic_cast<leaf::error_id const *>(&id.matched())!=0 && dynamic_cast<leaf::error_id const *>(&id.matched())->value()==1);
 			return 1;
 		},
 		[]

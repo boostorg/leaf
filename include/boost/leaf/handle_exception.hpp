@@ -119,7 +119,7 @@ namespace boost { namespace leaf {
 			return leaf_detail::check_exception_pack(ex_, static_cast<Ex const *>(0)...);
 		}
 
-		BOOST_LEAF_CONSTEXPR std::exception const & caught() const noexcept
+		BOOST_LEAF_CONSTEXPR std::exception const & matched() const noexcept
 		{
 			return ex_;
 		}
@@ -142,7 +142,7 @@ namespace boost { namespace leaf {
 			return dynamic_cast<Ex const *>(&ex_) != 0;
 		}
 
-		BOOST_LEAF_CONSTEXPR Ex const & caught() const noexcept
+		BOOST_LEAF_CONSTEXPR Ex const & matched() const noexcept
 		{
 			Ex const * ex = dynamic_cast<Ex const *>(&ex_);
 			BOOST_LEAF_ASSERT(ex != 0);

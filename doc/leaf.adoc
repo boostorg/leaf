@@ -2255,7 +2255,7 @@ namespace boost { namespace leaf {
 
     bool operator()() const noexcept;
 
-    std::exception const & caught() const noexcept;
+    std::exception const & matched() const noexcept;
   };
 
 } }
@@ -3030,7 +3030,7 @@ namespace boost { namespace leaf {
 
     bool operator()() const noexcept;
 
-    std::exception const & caught() const noexcept;
+    std::exception const & matched() const noexcept;
   };
 
 } }
@@ -3041,7 +3041,7 @@ The `catch_` template is a function predicate type: `operator()` returns `true` 
 [.text-center]
 `dynamic_cast<Ex~i~ const *>(&ex) != 0`
 
-is `true`. In this case it is valid to call the member function `caught()`, which returns the same reference that was passed to the constructor.
+is `true`. In this case it is valid to call the member function `matched()`, which returns the same reference that was passed to the constructor.
 
 NOTE: The `catch_` template is useful only as an argument to a handler function passed to a LEAF error-handling function, such as <<try_handle_all>>, <<try_handle_some>> or <<try_catch>>.
 
