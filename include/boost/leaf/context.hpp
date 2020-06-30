@@ -270,6 +270,38 @@ namespace boost { namespace leaf {
 		};
 
 		template <class... E>
+		class nocatch_context: public context_base<E...>
+		{
+		public:
+
+			template <class TryBlock, class... H>
+			BOOST_LEAF_CONSTEXPR
+			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+			try_handle_all( TryBlock &&, H && ... h );
+
+			template <class TryBlock, class... H>
+			BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type
+			try_handle_some( TryBlock &&, H && ... );
+		};
+
+		template <class... E>
+		class catch_context: public context_base<E...>
+		{
+		public:
+
+			template <class TryBlock, class... H>
+			BOOST_LEAF_CONSTEXPR
+			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+			try_handle_all( TryBlock &&, H && ... );
+
+			template <class TryBlock, class... H>
+			BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type
+			try_handle_some( TryBlock &&, H && ... );
+		};
+
+		template <class... E>
 		struct catch_requested;
 
 		template <>
@@ -287,17 +319,12 @@ namespace boost { namespace leaf {
 		template <bool CatchRequested, class... E>
 		struct select_context_base_impl;
 
-		template <class...>
-		class nocatch_context;
-
 		template <class... E>
 		struct select_context_base_impl<false, E...>
 		{
 			using type = nocatch_context<E...>;
 		};
 
-		template <class...>
-		class catch_context;
 
 		template <class... E>
 		struct select_context_base_impl<true, E...>

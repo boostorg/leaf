@@ -28,61 +28,59 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class... E>
-		class catch_context: public context_base<E...>
+		template <class TryBlock, class... H>
+		BOOST_LEAF_CONSTEXPR inline
+		typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+		catch_context<E...>::
+		try_handle_all( TryBlock && try_block, H && ... h )
 		{
-		public:
-
-			template <class TryBlock, class... H>
-			BOOST_LEAF_CONSTEXPR inline
-			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-			try_handle_all( TryBlock && try_block, H && ... h )
+			using namespace leaf_detail;
+			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
+			auto active_context = activate_context(*this);
+			if(	auto r = this->try_catch_(
+					[&]
+					{
+						return std::forward<TryBlock>(try_block)();
+					},
+					std::forward<H>(h)...) )
+				return r.value();
+			else
 			{
-				using namespace leaf_detail;
-				static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
-				auto active_context = activate_context(*this);
-				if(	auto r = this->try_catch_(
-						[&]
-						{
-							return std::forward<TryBlock>(try_block)();
-						},
-						std::forward<H>(h)...) )
-					return r.value();
-				else
-				{
-					error_id id = r.error();
-					this->deactivate();
-					using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
-					return this->template handle_error<R>(std::move(id), std::forward<H>(h)...);
-				}
+				error_id id = r.error();
+				this->deactivate();
+				using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
+				return this->template handle_error<R>(std::move(id), std::forward<H>(h)...);
 			}
+		}
 
-			template <class TryBlock, class... H>
-			BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR inline
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type
-			try_handle_some( TryBlock && try_block, H && ... h )
+		template <class... E>
+		template <class TryBlock, class... H>
+		BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR inline
+		typename std::decay<decltype(std::declval<TryBlock>()())>::type
+		catch_context<E...>::
+		try_handle_some( TryBlock && try_block, H && ... h )
+		{
+			using namespace leaf_detail;
+			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
+			auto active_context = activate_context(*this);
+			if(	auto r = this->try_catch_(
+					[&]
+					{
+						return std::forward<TryBlock>(try_block)();
+					},
+					std::forward<H>(h)...) )
+				return r;
+			else
 			{
-				using namespace leaf_detail;
-				static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
-				auto active_context = activate_context(*this);
-				if(	auto r = this->try_catch_(
-						[&]
-						{
-							return std::forward<TryBlock>(try_block)();
-						},
-						std::forward<H>(h)...) )
-					return r;
-				else
-				{
-					error_id id = r.error();
-					this->deactivate();
-					using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
-					auto rr = this->template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
-					if( !rr )
-						this->propagate();
-					return rr;
-				}
+				error_id id = r.error();
+				this->deactivate();
+				using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
+				auto rr = this->template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
+				if( !rr )
+					this->propagate();
+				return rr;
 			}
-		};
+		}
 
 		template <class Ex>
 		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const * ) noexcept
@@ -101,6 +99,8 @@ namespace boost { namespace leaf {
 			return true;
 		}
 	}
+
+	////////////////////////////////////////
 
 	template <class... Ex>
 	class catch_

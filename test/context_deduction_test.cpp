@@ -7,6 +7,7 @@
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 #	include <boost/leaf/handle_exception.hpp>
 #endif
+#include <boost/leaf/context.hpp>
 #include <boost/leaf/pred.hpp>
 #include "_test_ec.hpp"
 
