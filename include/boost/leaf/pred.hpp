@@ -77,11 +77,7 @@ namespace boost { namespace leaf {
 		};
 	}
 
-#if __cplusplus >= 201703L
-	template <class E, auto V1, auto... V>
-#else
-	template <class E, typename leaf_detail::match_traits<E>::enum_type V1, typename leaf_detail::match_traits<E>::enum_type... V>
-#endif
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_traits)>
 	struct match: leaf_detail::pred<typename leaf_detail::match_traits<E>::match_type>
 	{
 		using base = leaf_detail::pred<typename leaf_detail::match_traits<E>::match_type>;
@@ -110,11 +106,7 @@ namespace boost { namespace leaf {
 		};
 	}
 
-#if __cplusplus >= 201703L
-	template <class E, auto V1, auto... V>
-#else
-	template <class E, typename leaf_detail::match_value_traits<E>::enum_type V1, typename leaf_detail::match_value_traits<E>::enum_type... V>
-#endif
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits)>
 	struct match_value: leaf_detail::pred<typename leaf_detail::match_value_traits<E>::match_type>
 	{
 		using base = leaf_detail::pred<typename leaf_detail::match_value_traits<E>::match_type>;
@@ -133,6 +125,7 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////
 
 #if __cplusplus >= 201703L
+
 	template <class T, class E, T E::* P, auto V1, auto... V>
 	struct match_member<P, V1, V...>: leaf_detail::pred<E const &>
 	{
@@ -148,6 +141,7 @@ namespace boost { namespace leaf {
 			return leaf_detail::cmp_value_pack(this->m_.*P, V1, V...);
 		}
 	};
+
 #endif
 
 	////////////////////////////////////////

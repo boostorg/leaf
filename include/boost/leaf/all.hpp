@@ -2648,63 +2648,40 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
+#if __cplusplus >= 201703L
+#	define BOOST_LEAF_MATCH_ARGS(t) auto V1, auto... V
+#else
+#	define BOOST_LEAF_MATCH_ARGS(t) typename leaf_detail::t<E>::enum_type V1, typename leaf_detail::t<E>::enum_type... V
+#	endif
+
 	namespace leaf_detail
 	{
 		template <class E>
 		struct match_traits;
 	}
 
-#if __cplusplus >= 201703L
-
-	template <class E, auto V1, auto... V>
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_traits)>
 	struct match;
 
 	namespace leaf_detail
 	{
-		template <class E, auto V1, auto... V>
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits)>
 		struct handler_argument_traits<match<E, V1, V...>>: handler_argument_pred<match<E, V1, V...>, typename match_traits<E>::error_type, handler_argument_traits<E>::requires_catch>
 		{
 		};
 
-		template <class E, auto V1, auto... V>
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits)>
 		struct handler_argument_traits<match<E, V1, V...> const &>
 		{
 			static_assert(sizeof(E) == 0, "Error handlers must take leaf::match<> by value");
 		};
 
-		template <class E, auto V1, auto... V>
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits)>
 		struct handler_argument_traits<match<E, V1, V...> &>
 		{
 			static_assert(sizeof(E) == 0, "Error handlers must take leaf::match<> by value");
 		};
 	}
-
-#else
-
-	template <class E, typename leaf_detail::match_traits<E>::enum_type V1, typename leaf_detail::match_traits<E>::enum_type... V>
-	struct match;
-
-	namespace leaf_detail
-	{
-		template <class E, typename match_traits<E>::enum_type V1, typename match_traits<E>::enum_type... V>
-		struct handler_argument_traits<match<E, V1, V...>>: handler_argument_pred<match<E, V1, V...>, typename match_traits<E>::error_type, handler_argument_traits<E>::requires_catch>
-		{
-		};
-
-		template <class E, typename match_traits<E>::enum_type V1, typename match_traits<E>::enum_type... V>
-		struct handler_argument_traits<match<E, V1, V...> const &>
-		{
-			static_assert(sizeof(E) == 0, "Error handlers must take leaf::match<> by value");
-		};
-
-		template <class E, typename match_traits<E>::enum_type V1, typename match_traits<E>::enum_type... V>
-		struct handler_argument_traits<match<E, V1, V...> &>
-		{
-			static_assert(sizeof(E) == 0, "Error handlers must take leaf::match<> by value");
-		};
-	}
-
-#endif
 
 	////////////////////////////////////////
 
@@ -2714,57 +2691,28 @@ namespace boost { namespace leaf {
 		struct match_value_traits;
 	}
 
-#if __cplusplus >= 201703L
-
-	template <class E, auto V1, auto... V>
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits)>
 	struct match_value;
 
 	namespace leaf_detail
 	{
-		template <class E, auto V1, auto... V>
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits)>
 		struct handler_argument_traits<match_value<E, V1, V...>>: handler_argument_pred<match_value<E, V1, V...>, typename match_value_traits<E>::error_type, handler_argument_traits<E>::requires_catch>
 		{
 		};
 
-		template <class E, auto V1, auto... V>
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits)>
 		struct handler_argument_traits<match_value<E, V1, V...> const &>
 		{
 			static_assert(sizeof(E) == 0, "Error handlers must take leaf::match_value<> by value");
 		};
 
-		template <class E, auto V1, auto... V>
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits)>
 		struct handler_argument_traits<match_value<E, V1, V...> &>
 		{
 			static_assert(sizeof(E) == 0, "Error handlers must take leaf::match_value<> by value");
 		};
 	}
-
-#else
-
-	template <class E, typename leaf_detail::match_value_traits<E>::enum_type V1, typename leaf_detail::match_value_traits<E>::enum_type... V>
-	struct match_value;
-
-	namespace leaf_detail
-	{
-		template <class E, typename match_value_traits<E>::enum_type V1, typename match_value_traits<E>::enum_type... V>
-		struct handler_argument_traits<match_value<E, V1, V...>>: handler_argument_pred<match_value<E, V1, V...>, typename match_value_traits<E>::error_type, handler_argument_traits<E>::requires_catch>
-		{
-		};
-
-		template <class E, typename match_value_traits<E>::enum_type V1, typename match_value_traits<E>::enum_type... V>
-		struct handler_argument_traits<match_value<E, V1, V...> const &>
-		{
-			static_assert(sizeof(E) == 0, "Error handlers must take leaf::match_value<> by value");
-		};
-
-		template <class E, typename match_value_traits<E>::enum_type V1, typename match_value_traits<E>::enum_type... V>
-		struct handler_argument_traits<match_value<E, V1, V...> &>
-		{
-			static_assert(sizeof(E) == 0, "Error handlers must take leaf::match_value<> by value");
-		};
-	}
-
-#endif
 
 	////////////////////////////////////////
 
@@ -4486,11 +4434,7 @@ namespace boost { namespace leaf {
 		};
 	}
 
-#if __cplusplus >= 201703L
-	template <class E, auto V1, auto... V>
-#else
-	template <class E, typename leaf_detail::match_traits<E>::enum_type V1, typename leaf_detail::match_traits<E>::enum_type... V>
-#endif
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_traits)>
 	struct match: leaf_detail::pred<typename leaf_detail::match_traits<E>::match_type>
 	{
 		using base = leaf_detail::pred<typename leaf_detail::match_traits<E>::match_type>;
@@ -4519,11 +4463,7 @@ namespace boost { namespace leaf {
 		};
 	}
 
-#if __cplusplus >= 201703L
-	template <class E, auto V1, auto... V>
-#else
-	template <class E, typename leaf_detail::match_value_traits<E>::enum_type V1, typename leaf_detail::match_value_traits<E>::enum_type... V>
-#endif
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits)>
 	struct match_value: leaf_detail::pred<typename leaf_detail::match_value_traits<E>::match_type>
 	{
 		using base = leaf_detail::pred<typename leaf_detail::match_value_traits<E>::match_type>;
