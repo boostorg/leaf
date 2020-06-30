@@ -142,7 +142,7 @@ namespace boost { namespace leaf {
 					os << std::endl;
 				}
 		}
-	} // leaf_detail
+	}
 
 } }
 

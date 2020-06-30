@@ -33,7 +33,9 @@ namespace boost { namespace leaf {
 		public:
 
 			template <class TryBlock, class... H>
-			BOOST_LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()().value())>::type try_handle_all( TryBlock && try_block, H && ... h )
+			BOOST_LEAF_CONSTEXPR inline
+			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+			try_handle_all( TryBlock && try_block, H && ... h )
 			{
 				using namespace leaf_detail;
 				static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
@@ -55,7 +57,9 @@ namespace boost { namespace leaf {
 			}
 
 			template <class TryBlock, class... H>
-			BOOST_LEAF_CONSTEXPR inline typename std::decay<decltype(std::declval<TryBlock>()())>::type try_handle_some( TryBlock && try_block, H && ... h )
+			BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR inline
+			typename std::decay<decltype(std::declval<TryBlock>()())>::type
+			try_handle_some( TryBlock && try_block, H && ... h )
 			{
 				using namespace leaf_detail;
 				static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
@@ -169,7 +173,10 @@ namespace boost { namespace leaf {
 
 		template <class... E>
 		template <class TryBlock, class... H>
-		inline decltype(std::declval<TryBlock>()()) context_base<E...>::try_catch_( TryBlock && try_block, H && ... h )
+		inline
+		decltype(std::declval<TryBlock>()())
+		context_base<E...>::
+		try_catch_( TryBlock && try_block, H && ... h )
 		{
 			using namespace leaf_detail;
 			BOOST_LEAF_ASSERT(is_active());
@@ -248,7 +255,9 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////
 
 	template <class TryBlock, class... H>
-	BOOST_LEAF_CONSTEXPR inline decltype(std::declval<TryBlock>()()) try_catch( TryBlock && try_block, H && ... h )
+	BOOST_LEAF_CONSTEXPR inline
+	decltype(std::declval<TryBlock>()())
+	try_catch( TryBlock && try_block, H && ... h )
 	{
 		using namespace leaf_detail;
 		context_type_from_handlers<H...> ctx;

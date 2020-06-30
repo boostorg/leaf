@@ -90,7 +90,8 @@ namespace boost { namespace leaf {
 
 		template <class F>
 		using fn_mp_args = typename function_traits<F>::mp_args;
-	} // namespace leaf_detail
+
+	}
 
 } }
 

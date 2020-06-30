@@ -248,10 +248,12 @@ namespace boost { namespace leaf {
 		{
 			using type = accumulating_item<F>;
 		};
-	} // leaf_detail
+	}
 
 	template <class... Item>
-	BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR inline leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...> on_error( Item && ... i )
+	BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR inline
+	leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...>
+	on_error( Item && ... i )
 	{
 		return leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...>(std::forward<Item>(i)...);
 	}

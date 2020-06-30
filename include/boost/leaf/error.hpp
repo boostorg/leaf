@@ -52,7 +52,8 @@
 		return BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).error();\
 	v = BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).value()
 
-#define BOOST_LEAF_AUTO(v, r) BOOST_LEAF_VAR(auto && v, r)
+#define BOOST_LEAF_AUTO(v, r)\
+	BOOST_LEAF_VAR(auto && v, r)
 
 #define BOOST_LEAF_CHECK(r)\
 	{\
@@ -633,9 +634,12 @@ namespace boost { namespace leaf {
 	class polymorphic_context
 	{
 	protected:
+
 		polymorphic_context() noexcept = default;
 		~polymorphic_context() noexcept = default;
+
 	public:
+
 		virtual error_id propagate_captured_errors() noexcept = 0;
 		virtual void activate() noexcept = 0;
 		virtual void deactivate() noexcept = 0;

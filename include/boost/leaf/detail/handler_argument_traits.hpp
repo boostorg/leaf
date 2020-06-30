@@ -64,11 +64,6 @@ namespace boost { namespace leaf {
 		template <class A>
 		struct handler_argument_traits: handler_argument_traits_defaults<A>
 		{
-			template <class Tup>
-			BOOST_LEAF_CONSTEXPR static A get( Tup & tup, error_info const & ei ) noexcept
-			{
-				return *handler_argument_traits_defaults<A>::check(tup, ei);
-			}
 		};
 
 		template <class A>
@@ -311,6 +306,7 @@ namespace boost { namespace leaf {
 			static_assert(sizeof(catch_<Ex...>) == 0, "Error handlers must take leaf::catch_<> by value");
 		};
 	}
+
 } }
 
 // Boost Exception Integration below

@@ -414,6 +414,7 @@ namespace boost { namespace leaf {
 	struct is_result_type<result<T>>: std::true_type
 	{
 	};
+
 } }
 
 #endif

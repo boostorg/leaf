@@ -143,7 +143,9 @@ namespace boost { namespace leaf {
 	}
 
 	template <class Ex, class... E>
-	inline typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type exception( Ex && ex, E && ... e ) noexcept
+	inline
+	typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type
+	exception( Ex && ex, E && ... e ) noexcept
 	{
 		static_assert(!leaf_detail::at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
 		auto id = leaf::new_error(std::forward<E>(e)...);
@@ -151,7 +153,9 @@ namespace boost { namespace leaf {
 	}
 
 	template <class E1, class... E>
-	inline typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type exception( E1 && car, E && ... cdr ) noexcept
+	inline
+	typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type
+	exception( E1 && car, E && ... cdr ) noexcept
 	{
 		static_assert(!leaf_detail::at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
 		auto id = leaf::new_error(std::forward<E1>(car), std::forward<E>(cdr)...);

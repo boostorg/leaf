@@ -234,7 +234,10 @@ namespace boost { namespace leaf {
 
 		template <class Tag, class T>
 		template <class Tup>
-		BOOST_LEAF_CONSTEXPR inline T * handler_argument_traits<boost::error_info<Tag, T>>::check( Tup &, error_info const & ei ) noexcept
+		BOOST_LEAF_CONSTEXPR inline
+		T *
+		handler_argument_traits<boost::error_info<Tag, T>>::
+		check( Tup &, error_info const & ei ) noexcept
 		{
 			using boost_exception = dependent_type_t<T, boost::exception>;
 			if( ei.exception_caught() )
@@ -245,7 +248,10 @@ namespace boost { namespace leaf {
 
 		template <class Tag, class T>
 		template <class Tup>
-		BOOST_LEAF_CONSTEXPR inline boost::error_info<Tag, T> handler_argument_traits<boost::error_info<Tag, T>>::get( Tup const & tup, error_info const & ei ) noexcept
+		BOOST_LEAF_CONSTEXPR inline
+		boost::error_info<Tag, T>
+		handler_argument_traits<boost::error_info<Tag, T>>::
+		get( Tup const & tup, error_info const & ei ) noexcept
 		{
 			return boost::error_info<Tag, T>(*check(tup, ei));
 		}
