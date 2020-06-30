@@ -31,7 +31,7 @@ int main()
 			{
 				return test<int>();
 			},
-			[]( leaf::match<info<42>, 42>, leaf::match<info<1>, 1>, leaf::match<info<2>, 2>, leaf::match<info<3>, 3> )
+			[]( leaf::match_value<info<42>, 42>, leaf::match_value<info<1>, 1>, leaf::match_value<info<2>, 2>, leaf::match_value<info<3>, 3> )
 			{
 				return 1;
 			},
@@ -48,7 +48,7 @@ int main()
 				BOOST_LEAF_CHECK(test<void>());
 				return 0;
 			},
-			[]( leaf::match<info<42>, 42>, leaf::match<info<1>, 1>, leaf::match<info<2>, 2>, leaf::match<info<3>, 3> )
+			[]( leaf::match_value<info<42>, 42>, leaf::match_value<info<1>, 1>, leaf::match_value<info<2>, 2>, leaf::match_value<info<3>, 3> )
 			{
 				return 1;
 			},

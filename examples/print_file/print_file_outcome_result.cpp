@@ -92,7 +92,7 @@ int main( int argc, char const * argv[] )
 		// - an object of type error_code equal to open_error, and
 		// - an object of type leaf::e_errno that has .value equal to ENOENT, and
 		// - an object of type leaf::e_file_name.
-		[]( leaf::match<error_code, open_error>, leaf::match<leaf::e_errno, ENOENT>, leaf::e_file_name const & fn )
+		[]( leaf::match<error_code, open_error>, leaf::match_value<leaf::e_errno, ENOENT>, leaf::e_file_name const & fn )
 		{
 			std::cerr << "File not found: " << fn.value << std::endl;
 			return 1;

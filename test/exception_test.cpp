@@ -52,12 +52,12 @@ int test( F && f )
 			return 0;
 		},
 
-		[]( Ex ex, leaf::match<info,42>, leaf::e_source_location )
+		[]( Ex ex, leaf::match_value<info,42>, leaf::e_source_location )
 		{
 			BOOST_TEST_EQ(get_val(ex), 42);
 			return 20;
 		},
-		[]( Ex ex, leaf::match<info,42>, info x )
+		[]( Ex ex, leaf::match_value<info,42>, info x )
 		{
 			BOOST_TEST_EQ(get_val(ex), 42);
 			return 21;
@@ -72,11 +72,11 @@ int test( F && f )
 			BOOST_TEST_EQ(get_val(ex), 42);
 			return 23;
 		},
-		[]( leaf::match<info,42>, leaf::e_source_location )
+		[]( leaf::match_value<info,42>, leaf::e_source_location )
 		{
 			return 40;
 		},
-		[]( leaf::match<info,42>, info x )
+		[]( leaf::match_value<info,42>, info x )
 		{
 			return 41;
 		},

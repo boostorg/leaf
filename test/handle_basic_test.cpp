@@ -56,11 +56,11 @@ leaf::result<int> handle_some_errors( int what_to_do )
 		{
 			return compute_answer(what_to_do);
 		},
-		[]( error1_tag, leaf::match<error_code,error_code::error1> )
+		[]( error1_tag, leaf::match<error_code, error_code::error1> )
 		{
 			return -1;
 		},
-		[]( leaf::match<error_code,error_code::error1> )
+		[]( leaf::match<error_code, error_code::error1> )
 		{
 			return -2;
 		} );
@@ -73,11 +73,11 @@ leaf::result<float> handle_some_errors_float( int what_to_do )
 		{
 			return compute_answer(what_to_do);
 		},
-		[]( error2_tag, leaf::match<error_code,error_code::error2> )
+		[]( error2_tag, leaf::match<error_code, error_code::error2> )
 		{
 			return -1.0f;
 		},
-		[]( leaf::match<error_code,error_code::error2> )
+		[]( leaf::match<error_code, error_code::error2> )
 		{
 			return -2.0f;
 		} );
@@ -92,7 +92,7 @@ leaf::result<void> handle_some_errors_void( int what_to_do )
 			(void) answer;
 			return { };
 		},
-		[]( leaf::match<error_code,error_code::error3>  )
+		[]( leaf::match<error_code, error_code::error3>  )
 		{
 		} );
 }
@@ -179,11 +179,11 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				BOOST_LEAF_AUTO(answer,handle_some_errors(3));
+				BOOST_LEAF_AUTO(answer, handle_some_errors(3));
 				(void) answer;
 				return 0;
 			},
-			[]( leaf::match<error_code,error_code::error3> )
+			[]( leaf::match<error_code, error_code::error3> )
 			{
 				return 1;
 			},
@@ -203,11 +203,11 @@ int main()
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
 			{
-				BOOST_LEAF_AUTO(answer,handle_some_errors_float(1));
+				BOOST_LEAF_AUTO(answer, handle_some_errors_float(1));
 				(void) answer;
 				return 0;
 			},
-			[]( leaf::match<error_code,error_code::error1> )
+			[]( leaf::match<error_code, error_code::error1> )
 			{
 				return 1;
 			},
@@ -229,7 +229,7 @@ int main()
 				BOOST_LEAF_CHECK(handle_some_errors_void(2));
 				return 0;
 			},
-			[]( leaf::match<error_code,error_code::error2> )
+			[]( leaf::match<error_code, error_code::error2> )
 			{
 				return 1;
 			},

@@ -215,7 +215,7 @@ void test()
 			{
 				return leaf::new_error( e_wrapped_error_code { make_error_code(errc_a::a0) } ).to_error_code();
 			},
-			[]( leaf::match<leaf::condition<e_wrapped_error_code, errc_a>, errc_a::a0> code )
+			[]( leaf::match_value<leaf::condition<e_wrapped_error_code, errc_a>, errc_a::a0> code )
 			{
 				e_wrapped_error_code const & wec = code.matched();
 				std::error_code const & ec = wec.value;
@@ -235,7 +235,7 @@ void test()
 			{
 				return leaf::new_error( e_wrapped_error_code { make_error_code(errc_a::a0) } ).to_error_code();
 			},
-			[]( leaf::match<e_wrapped_error_code, errc_a::a0> code )
+			[]( leaf::match_value<e_wrapped_error_code, errc_a::a0> code )
 			{
 				e_wrapped_error_code const & wec = code.matched();
 				std::error_code const & ec = wec.value;
@@ -255,7 +255,7 @@ void test()
 			{
 				return leaf::new_error( e_wrapped_error_code { make_error_code(errc_a::a0) } ).to_error_code();
 			},
-			[]( leaf::match<leaf::condition<e_wrapped_error_code, cond_x>, cond_x::x00> cond )
+			[]( leaf::match_value<leaf::condition<e_wrapped_error_code, cond_x>, cond_x::x00> cond )
 			{
 				e_wrapped_error_code const & wec = cond.matched();
 				std::error_code const & ec = wec.value;
@@ -276,7 +276,7 @@ void test()
 			{
 				return leaf::new_error( e_wrapped_error_code { make_error_code(errc_a::a0) } ).to_error_code();
 			},
-			[]( leaf::match<e_wrapped_error_code, cond_x::x00> cond )
+			[]( leaf::match_value<e_wrapped_error_code, cond_x::x00> cond )
 			{
 				e_wrapped_error_code const & wec = cond.matched();
 				std::error_code const & ec = wec.value;
