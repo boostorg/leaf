@@ -2566,6 +2566,30 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
+		template <class MatchType>
+		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & x, bool (*pred)(MatchType const &) noexcept ) noexcept
+		{
+			BOOST_LEAF_ASSERT(pred != 0);
+			return pred(x);
+		}
+
+		template <class MatchType, class V>
+		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & x, V v ) noexcept
+		{
+			return x == v;
+		}
+
+		template <class MatchType, class VCar, class... VCdr>
+		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & x, VCar car, VCdr ... cdr ) noexcept
+		{
+			return cmp_value_pack(x, car) || cmp_value_pack(x, cdr...);
+		}
+	}
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
 		struct diagnostic_info_;
 		struct verbose_diagnostic_info_;
 
@@ -2694,6 +2718,7 @@ namespace boost { namespace leaf {
 		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)>
 		struct handler_argument_traits<match<E, V1, V...>>: handler_argument_pred<match<E, V1, V...>, typename match_traits<E>::error_type, handler_argument_traits<E>::requires_catch>
 		{
+			using require_E_and_V_are_comparable = decltype(cmp_value_pack(std::declval<typename match_traits<E>::error_type>(), V1));
 		};
 
 		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)>
@@ -2725,6 +2750,7 @@ namespace boost { namespace leaf {
 		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)>
 		struct handler_argument_traits<match_value<E, V1, V...>>: handler_argument_pred<match_value<E, V1, V...>, typename match_value_traits<E>::error_type, handler_argument_traits<E>::requires_catch>
 		{
+			using require_E_dot_value_and_V_are_comparable = decltype(cmp_value_pack(std::declval<typename match_value_traits<E>::error_type>().value, V1));
 		};
 
 		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)>
@@ -2755,6 +2781,7 @@ namespace boost { namespace leaf {
 		template <class T, class E, T E::* P, auto V1, auto... V>
 		struct handler_argument_traits<match_member<P, V1, V...>>: handler_argument_pred<match_member<P, V1, V...>, E const &, handler_argument_traits<E>::requires_catch>
 		{
+			using require_E_member_and_V_are_comparable = decltype(cmp_value_pack(std::declval<E>().*P, V1));
 		};
 
 		template <class T, class E, T E::* P, auto V1, auto... V>
@@ -4183,7 +4210,8 @@ namespace boost { namespace leaf {
 			else
 			{
 				error_id id = r.error();
-				this->deactivate();
+				if( this->is_active() )
+					this->deactivate();
 				using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
 				return this->template handle_error<R>(std::move(id), std::forward<H>(h)...);
 			}
@@ -4209,7 +4237,8 @@ namespace boost { namespace leaf {
 			else
 			{
 				error_id id = r.error();
-				this->deactivate();
+				if( this->is_active() )
+					this->deactivate();
 				using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
 				auto rr = this->template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
 				if( !rr )
@@ -4435,25 +4464,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class MatchType>
-		inline bool cmp_value_pack( MatchType const & x, bool (*pred)(MatchType const &) noexcept ) noexcept
-		{
-			BOOST_LEAF_ASSERT(pred != 0);
-			return pred(x);
-		}
-
-		template <class MatchType, class V>
-		inline bool cmp_value_pack( MatchType const & x, V v ) noexcept
-		{
-			return x == v;
-		}
-
-		template <class MatchType, class VCar, class... VCdr>
-		inline bool cmp_value_pack( MatchType const & x, VCar car, VCdr ... cdr ) noexcept
-		{
-			return cmp_value_pack(x, car) || cmp_value_pack(x, cdr...);
-		}
-
 		template <class MatchType>
 		struct pred
 		{

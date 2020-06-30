@@ -47,7 +47,8 @@ namespace boost { namespace leaf {
 			else
 			{
 				error_id id = r.error();
-				this->deactivate();
+				if( this->is_active() )
+					this->deactivate();
 				using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
 				return this->template handle_error<R>(std::move(id), std::forward<H>(h)...);
 			}
@@ -73,7 +74,8 @@ namespace boost { namespace leaf {
 			else
 			{
 				error_id id = r.error();
-				this->deactivate();
+				if( this->is_active() )
+					this->deactivate();
 				using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
 				auto rr = this->template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
 				if( !rr )

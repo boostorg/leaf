@@ -17,6 +17,7 @@ int main()
 #else
 
 #include <boost/leaf/handle_exception.hpp>
+#include <boost/leaf/pred.hpp>
 #include <boost/leaf/result.hpp>
 #include "lightweight_test.hpp"
 
@@ -24,7 +25,20 @@ namespace leaf = boost::leaf;
 
 template <int> struct info { int value; };
 
-struct my_exception: std::exception { };
+struct my_exception: std::exception
+{
+	int value;
+
+	my_exception():
+		value(0)
+	{
+	}
+
+	my_exception(int v):
+		value(v)
+	{
+	}
+};
 
 int main()
 {
@@ -336,6 +350,134 @@ int main()
 			} );
 
 		BOOST_TEST_EQ(r, 3);
+	}
+
+	//////////////////////////////////////
+
+	// match<> with exceptions, try_handle_some
+	{
+		leaf::result<int> r = leaf::try_handle_some(
+			[]() -> leaf::result<int>
+			{
+				throw leaf::exception( my_exception(42) );
+			},
+			[]( leaf::match_value<my_exception, 42> m )
+			{
+				return m.matched().value;
+			} );
+		BOOST_TEST(r);
+		BOOST_TEST_EQ(r.value(), 42);
+	}
+	{
+		leaf::result<int> r = leaf::try_handle_some(
+			[]() -> leaf::result<int>
+			{
+				throw my_exception(42);
+			},
+			[]( leaf::match_value<my_exception, 42> m )
+			{
+				return m.matched().value;
+			} );
+		BOOST_TEST(r);
+		BOOST_TEST_EQ(r.value(), 42);
+	}
+	{
+		leaf::result<int> r = leaf::try_handle_some(
+			[]() -> leaf::result<int>
+			{
+				throw leaf::exception( my_exception(42) );
+			},
+			[]( leaf::match_value<my_exception, 41> m )
+			{
+				return m.matched().value;
+			},
+			[]( leaf::error_info const & unmatched )
+			{
+				return unmatched.error();
+			} );
+		BOOST_TEST(!r);
+	}
+	{
+		leaf::result<int> r = leaf::try_handle_some(
+			[]() -> leaf::result<int>
+			{
+				throw my_exception(42);
+			},
+			[]( leaf::match_value<my_exception, 41> m )
+			{
+				return m.matched().value;
+			},
+			[]( leaf::error_info const & unmatched )
+			{
+				return unmatched.error();
+			} );
+		BOOST_TEST(!r);
+	}
+
+	// match<> with exceptions, try_handle_all
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				throw leaf::exception( my_exception(42) );
+			},
+			[]( leaf::match_value<my_exception, 42> m )
+			{
+				return m.matched().value;
+			},
+			[]
+			{
+				return -1;
+			} );
+		BOOST_TEST_EQ(r, 42);
+	}
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				throw my_exception(42);
+			},
+			[]( leaf::match_value<my_exception, 42> m )
+			{
+				return m.matched().value;
+			},
+			[]
+			{
+				return -1;
+			} );
+		BOOST_TEST_EQ(r, 42);
+	}
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				throw leaf::exception( my_exception(42) );
+			},
+			[]( leaf::match_value<my_exception, 41> m )
+			{
+				return m.matched().value;
+			},
+			[]
+			{
+				return -1;
+			} );
+		BOOST_TEST_EQ(r, -1);
+	}
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				throw my_exception(42);
+			},
+			[]( leaf::match_value<my_exception, 41> m )
+			{
+				return m.matched().value;
+			},
+			[]
+			{
+				return -1;
+			} );
+		BOOST_TEST_EQ(r, -1);
 	}
 
 	return boost::report_errors();

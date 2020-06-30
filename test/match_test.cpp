@@ -5,6 +5,7 @@
 
 #include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/pred.hpp>
+#include <exception>
 #include "_test_ec.hpp"
 #include "lightweight_test.hpp"
 
@@ -15,6 +16,29 @@ enum class my_error { e1=1, e2, e3 };
 struct e_my_error { my_error value; };
 
 struct e_error_code { std::error_code value; };
+
+
+struct my_exception: std::exception
+{
+	int value;
+
+	my_exception():
+		value(0)
+	{
+	}
+
+	my_exception(int v):
+		value(v)
+	{
+	}
+};
+
+static_assert(leaf::leaf_detail::handler_argument_traits<leaf::match_value<my_exception, 42>>::requires_catch, "requires_catch deduction error");
+static_assert(!leaf::leaf_detail::handler_argument_traits<leaf::match<my_error, my_error::e1>>::requires_catch, "requires_catch deduction error");
+
+#if __cplusplus >= 201703L
+static_assert(leaf::leaf_detail::handler_argument_traits<leaf::match_member<&my_exception::value, 42>>::requires_catch, "requires_catch deduction error");
+#endif
 
 int main()
 {

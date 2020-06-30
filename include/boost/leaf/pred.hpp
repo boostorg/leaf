@@ -21,25 +21,6 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class MatchType>
-		inline bool cmp_value_pack( MatchType const & x, bool (*pred)(MatchType const &) noexcept ) noexcept
-		{
-			BOOST_LEAF_ASSERT(pred != 0);
-			return pred(x);
-		}
-
-		template <class MatchType, class V>
-		inline bool cmp_value_pack( MatchType const & x, V v ) noexcept
-		{
-			return x == v;
-		}
-
-		template <class MatchType, class VCar, class... VCdr>
-		inline bool cmp_value_pack( MatchType const & x, VCar car, VCdr ... cdr ) noexcept
-		{
-			return cmp_value_pack(x, car) || cmp_value_pack(x, cdr...);
-		}
-
-		template <class MatchType>
 		struct pred
 		{
 		public:
