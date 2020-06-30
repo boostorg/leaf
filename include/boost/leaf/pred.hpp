@@ -77,7 +77,7 @@ namespace boost { namespace leaf {
 		};
 	}
 
-	template <class E, BOOST_LEAF_MATCH_ARGS(match_traits)>
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)>
 	struct match: leaf_detail::pred<typename leaf_detail::match_traits<E>::match_type>
 	{
 		using base = leaf_detail::pred<typename leaf_detail::match_traits<E>::match_type>;
@@ -106,7 +106,7 @@ namespace boost { namespace leaf {
 		};
 	}
 
-	template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits)>
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)>
 	struct match_value: leaf_detail::pred<typename leaf_detail::match_value_traits<E>::match_type>
 	{
 		using base = leaf_detail::pred<typename leaf_detail::match_value_traits<E>::match_type>;
