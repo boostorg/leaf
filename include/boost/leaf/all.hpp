@@ -4561,7 +4561,7 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	template <class T, class = T>
+	template <class T, class U = T>
 	struct condition;
 
 	template <class Enum>
