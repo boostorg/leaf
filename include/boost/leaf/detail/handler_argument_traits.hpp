@@ -71,6 +71,10 @@ namespace boost { namespace leaf {
 			{
 				return *check(tup, ei);
 			}
+
+			static_assert(!std::is_same<A, error_info>::value, "Handlers must take leaf::error_info arguments by const &");
+			static_assert(!std::is_same<A, diagnostic_info>::value, "Handlers must take leaf::diagnostic_info arguments by const &");
+			static_assert(!std::is_same<A, verbose_diagnostic_info>::value, "Handlers must take leaf::verbose_diagnostic_info arguments by const &");
 		};
 
 		template <class A>
@@ -154,6 +158,12 @@ namespace boost { namespace leaf {
 				return P(*handler_argument_traits<A>::check(tup, ei));
 			}
 		};
+
+		template <class T>
+		struct bad_predicate
+		{
+			static_assert(sizeof(T) == 0, "Error handlers must take predicates by value");
+		};
 	}
 
 	////////////////////////////////////////
@@ -162,7 +172,7 @@ namespace boost { namespace leaf {
 #	define BOOST_LEAF_MATCH_ARGS(t,v1,v) auto v1, auto... v
 #else
 #	define BOOST_LEAF_MATCH_ARGS(t,v1,v) typename leaf_detail::t<E>::enum_type v1, typename leaf_detail::t<E>::enum_type... v
-#	endif
+#endif
 
 	namespace leaf_detail
 	{
@@ -178,20 +188,14 @@ namespace boost { namespace leaf {
 		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)>
 		struct handler_argument_traits<match<E, V1, V...>>: handler_argument_pred<match<E, V1, V...>, typename match_traits<E>::error_type, handler_argument_traits<E>::requires_catch>
 		{
-			using require_E_and_V_are_comparable = decltype(cmp_value_pack(std::declval<typename match_traits<E>::error_type>(), V1));
+			static_assert(std::is_same<bool, decltype(cmp_value_pack(std::declval<typename match_traits<E>::error_type>(), V1))>::value,
+				"The predicate match<E, V...> requires that objects of type E can be compared to the values V...");
 		};
 
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)>
-		struct handler_argument_traits<match<E, V1, V...> const &>
-		{
-			static_assert(sizeof(E) == 0, "Error handlers must take leaf::match<> by value");
-		};
-
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)>
-		struct handler_argument_traits<match<E, V1, V...> &>
-		{
-			static_assert(sizeof(E) == 0, "Error handlers must take leaf::match<> by value");
-		};
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)> struct handler_argument_traits<match<E, V1, V...> const &>: bad_predicate<match<E, V1, V...>> { };
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)> struct handler_argument_traits<match<E, V1, V...> const *>: bad_predicate<match<E, V1, V...>> { };
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)> struct handler_argument_traits<match<E, V1, V...> &>: bad_predicate<match<E, V1, V...>> { };
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)> struct handler_argument_traits<match<E, V1, V...> *>: bad_predicate<match<E, V1, V...>> { };
 	}
 
 	////////////////////////////////////////
@@ -210,20 +214,14 @@ namespace boost { namespace leaf {
 		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)>
 		struct handler_argument_traits<match_value<E, V1, V...>>: handler_argument_pred<match_value<E, V1, V...>, typename match_value_traits<E>::error_type, handler_argument_traits<E>::requires_catch>
 		{
-			using require_E_dot_value_and_V_are_comparable = decltype(cmp_value_pack(std::declval<typename match_value_traits<E>::error_type>().value, V1));
+			static_assert(std::is_same<bool, decltype(cmp_value_pack(std::declval<typename match_value_traits<E>::error_type>().value, V1))>::value,
+				"The predicate match_value<E, V...> requires that objects of type E have a data member .value that can be compared to the values V...");
 		};
 
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)>
-		struct handler_argument_traits<match_value<E, V1, V...> const &>
-		{
-			static_assert(sizeof(E) == 0, "Error handlers must take leaf::match_value<> by value");
-		};
-
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)>
-		struct handler_argument_traits<match_value<E, V1, V...> &>
-		{
-			static_assert(sizeof(E) == 0, "Error handlers must take leaf::match_value<> by value");
-		};
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)> struct handler_argument_traits<match_value<E, V1, V...> const &>: bad_predicate<match_value<E, V1, V...>> { };
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)> struct handler_argument_traits<match_value<E, V1, V...> const *>: bad_predicate<match_value<E, V1, V...>> { };
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)> struct handler_argument_traits<match_value<E, V1, V...> &>: bad_predicate<match_value<E, V1, V...>> { };
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)> struct handler_argument_traits<match_value<E, V1, V...> *>: bad_predicate<match_value<E, V1, V...>> { };
 	}
 
 	////////////////////////////////////////
@@ -241,20 +239,14 @@ namespace boost { namespace leaf {
 		template <class T, class E, T E::* P, auto V1, auto... V>
 		struct handler_argument_traits<match_member<P, V1, V...>>: handler_argument_pred<match_member<P, V1, V...>, E const &, handler_argument_traits<E>::requires_catch>
 		{
-			using require_E_member_and_V_are_comparable = decltype(cmp_value_pack(std::declval<E>().*P, V1));
+			static_assert(std::is_same<bool, decltype(cmp_value_pack(std::declval<E>().*P, V1))>::value,
+				"The predicate match_member<&E::m, V...> requires that objects of type E have a data member m that can be compared to the values V...");
 		};
 
-		template <class T, class E, T E::* P, auto V1, auto... V>
-		struct handler_argument_traits<match_member<P, V1, V...> const &>
-		{
-			static_assert(sizeof(E) == 0, "Error handlers must take leaf::match_member<> by value");
-		};
-
-		template <class T, class E, T E::* P, auto V1, auto... V>
-		struct handler_argument_traits<match_member<P, V1, V...> &>
-		{
-			static_assert(sizeof(E) == 0, "Error handlers must take leaf::match_member<> by value");
-		};
+		template <class T, class E, T E::* P, auto V1, auto... V> struct handler_argument_traits<match_member<P, V1, V...> const &>: bad_predicate<match_member<P, V1, V...>> { };
+		template <class T, class E, T E::* P, auto V1, auto... V> struct handler_argument_traits<match_member<P, V1, V...> const *>: bad_predicate<match_member<P, V1, V...>> { };
+		template <class T, class E, T E::* P, auto V1, auto... V> struct handler_argument_traits<match_member<P, V1, V...> &>: bad_predicate<match_member<P, V1, V...>> { };
+		template <class T, class E, T E::* P, auto V1, auto... V> struct handler_argument_traits<match_member<P, V1, V...> *>: bad_predicate<match_member<P, V1, V...>> { };
 	}
 
 #endif
@@ -271,17 +263,10 @@ namespace boost { namespace leaf {
 		{
 		};
 
-		template <class... Ex>
-		struct handler_argument_traits<catch_<Ex...> const &>
-		{
-			static_assert(sizeof(catch_<Ex...>) == 0, "Error handlers must take leaf::catch_<> by value");
-		};
-
-		template <class... Ex>
-		struct handler_argument_traits<catch_<Ex...> &>
-		{
-			static_assert(sizeof(catch_<Ex...>) == 0, "Error handlers must take leaf::catch_<> by value");
-		};
+		template <class... Ex> struct handler_argument_traits<catch_<Ex...> const &>: bad_predicate<catch_<Ex...>> { };
+		template <class... Ex> struct handler_argument_traits<catch_<Ex...> const *>: bad_predicate<catch_<Ex...>> { };
+		template <class... Ex> struct handler_argument_traits<catch_<Ex...> &>: bad_predicate<catch_<Ex...>> { };
+		template <class... Ex> struct handler_argument_traits<catch_<Ex...> *>: bad_predicate<catch_<Ex...>> { };
 	}
 
 } }
@@ -308,17 +293,16 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_CONSTEXPR static boost::error_info<Tag, T> get( Tup const &, error_info const & ) noexcept;
 		};
 
-		template <class Tag, class T>
-		struct handler_argument_traits<boost::error_info<Tag, T> const &>
+		template <class T>
+		struct bad_boost_error_info
 		{
 			static_assert(sizeof(T) == 0, "Error handlers must take boost::error_info<> by value");
 		};
 
-		template <class Tag, class T>
-		struct handler_argument_traits<boost::error_info<Tag, T> &>
-		{
-			static_assert(sizeof(T) == 0, "Error handlers must take boost::error_info<> by value");
-		};
+		template <class Tag, class T> struct handler_argument_traits<boost::error_info<Tag, T> const &>: bad_boost_error_info<boost::error_info<Tag, T>> { };
+		template <class Tag, class T> struct handler_argument_traits<boost::error_info<Tag, T> const *>: bad_boost_error_info<boost::error_info<Tag, T>> { };
+		template <class Tag, class T> struct handler_argument_traits<boost::error_info<Tag, T> &>: bad_boost_error_info<boost::error_info<Tag, T>> { };
+		template <class Tag, class T> struct handler_argument_traits<boost::error_info<Tag, T> *>: bad_boost_error_info<boost::error_info<Tag, T>> { };
 	}
 
 } }

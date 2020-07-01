@@ -354,7 +354,7 @@ int main()
 
 	//////////////////////////////////////
 
-	// match<> with exceptions, try_handle_some
+	// match_value<> with exceptions, try_handle_some
 	{
 		leaf::result<int> r = leaf::try_handle_some(
 			[]() -> leaf::result<int>
@@ -414,7 +414,7 @@ int main()
 		BOOST_TEST(!r);
 	}
 
-	// match<> with exceptions, try_handle_all
+	// match_value<> with exceptions, try_handle_all
 	{
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
