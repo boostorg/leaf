@@ -137,10 +137,26 @@ namespace boost { namespace leaf {
 
 			BOOST_LEAF_CONSTEXPR void propagate() noexcept;
 
+			void print( std::ostream & os, int key_to_print ) const
+			{
+				if( !diagnostic<E>::is_invisible )
+					if( int k = this->key() )
+					{
+						if( key_to_print )
+						{
+							if( key_to_print!=k )
+								return;
+						}
+						else
+							os << '[' << k << ']';
+						diagnostic<E>::print(os, value(k));
+						os << std::endl;
+					}
+			}
+
 			using impl::put;
 			using impl::has_value;
 			using impl::value;
-			using impl::print;
 		};
 
 #if BOOST_LEAF_DIAGNOSTICS

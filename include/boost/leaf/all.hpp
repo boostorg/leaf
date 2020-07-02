@@ -698,7 +698,6 @@ namespace boost { namespace leaf {
 
 #include <utility>
 #include <new>
-#include <ostream>
 
 namespace boost { namespace leaf {
 
@@ -787,12 +786,6 @@ namespace boost { namespace leaf {
 				return key_;
 			}
 
-			BOOST_LEAF_CONSTEXPR void set_key( int key ) noexcept
-			{
-				BOOST_LEAF_ASSERT(!empty());
-				key_ = key;
-			}
-
 			BOOST_LEAF_CONSTEXPR void reset() noexcept
 			{
 				if( key_ )
@@ -857,8 +850,6 @@ namespace boost { namespace leaf {
 				reset();
 				return tmp;
 			}
-
-			void print( std::ostream &, int key_to_print ) const;
 		};
 
 	}
@@ -977,24 +968,6 @@ namespace boost { namespace leaf {
 			{
 			}
 		};
-
-		template <class T>
-		void optional<T>::print( std::ostream & os, int key_to_print ) const
-		{
-			if( !diagnostic<T>::is_invisible )
-				if( int k = key() )
-				{
-					if( key_to_print )
-					{
-						if( key_to_print!=k )
-							return;
-					}
-					else
-						os << '[' << k << ']';
-					diagnostic<T>::print(os, value_);
-					os << std::endl;
-				}
-		}
 	}
 
 } }
@@ -1246,10 +1219,26 @@ namespace boost { namespace leaf {
 
 			BOOST_LEAF_CONSTEXPR void propagate() noexcept;
 
+			void print( std::ostream & os, int key_to_print ) const
+			{
+				if( !diagnostic<E>::is_invisible )
+					if( int k = this->key() )
+					{
+						if( key_to_print )
+						{
+							if( key_to_print!=k )
+								return;
+						}
+						else
+							os << '[' << k << ']';
+						diagnostic<E>::print(os, value(k));
+						os << std::endl;
+					}
+			}
+
 			using impl::put;
 			using impl::has_value;
 			using impl::value;
-			using impl::print;
 		};
 
 #if BOOST_LEAF_DIAGNOSTICS

@@ -124,24 +124,6 @@ namespace boost { namespace leaf {
 			{
 			}
 		};
-
-		template <class T>
-		void optional<T>::print( std::ostream & os, int key_to_print ) const
-		{
-			if( !diagnostic<T>::is_invisible )
-				if( int k = key() )
-				{
-					if( key_to_print )
-					{
-						if( key_to_print!=k )
-							return;
-					}
-					else
-						os << '[' << k << ']';
-					diagnostic<T>::print(os, value_);
-					os << std::endl;
-				}
-		}
 	}
 
 } }
