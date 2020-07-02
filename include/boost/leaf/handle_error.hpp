@@ -101,6 +101,10 @@ namespace boost { namespace leaf {
 		}
 	};
 
+	////////////////////////////////////////
+
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
 	namespace leaf_detail
 	{
 		template <class Ex>
@@ -112,6 +116,8 @@ namespace boost { namespace leaf {
 			return 0;
 		}
 	}
+
+#endif
 
 	////////////////////////////////////////
 
@@ -315,6 +321,8 @@ namespace boost { namespace leaf {
 			constexpr static int value = type_index<T,TupleTypes...>::value;
 		};
 
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
 		template <class E, bool = handler_argument_traits<E>::requires_catch>
 		struct peek_exception;
 
@@ -345,6 +353,8 @@ namespace boost { namespace leaf {
 			}
 		};
 
+#endif
+
 		template <class E, class SlotsTuple>
 		BOOST_LEAF_CONSTEXPR inline
 		E const *
@@ -353,10 +363,11 @@ namespace boost { namespace leaf {
 			if( error_id err = ei.error() )
 				if( E const * e = std::get<tuple_type_index<slot<E>,SlotsTuple>::value>(tup).has_value(err.value()) )
 					return e;
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 				else
 					return peek_exception<E const>::peek(ei);
-			else
-				return 0;
+#endif
+			return 0;
 		}
 
 		template <class E, class SlotsTuple>
@@ -367,10 +378,11 @@ namespace boost { namespace leaf {
 			if( error_id err = ei.error() )
 				if( E * e = std::get<tuple_type_index<slot<E>,SlotsTuple>::value>(tup).has_value(err.value()) )
 					return e;
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 				else
 					return peek_exception<E>::peek(ei);
-			else
-				return 0;
+#endif
+			return 0;
 		}
 	}
 

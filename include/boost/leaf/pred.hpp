@@ -200,6 +200,8 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
 	namespace leaf_detail
 	{
 		template <class Ex>
@@ -252,6 +254,8 @@ namespace boost { namespace leaf {
 		}
 	};
 
+#endif
+
 	////////////////////////////////////////
 
 	template <class E, bool(*F)(E const &)>
@@ -271,6 +275,8 @@ namespace boost { namespace leaf {
 	};
 
 } }
+
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 
 // Boost Exception Integration
 
@@ -343,5 +349,7 @@ namespace boost { namespace leaf {
 	}
 
 } }
+
+#endif
 
 #endif

@@ -2564,28 +2564,6 @@ namespace boost { namespace leaf {
 	class diagnostic_info;
 	class verbose_diagnostic_info;
 
-	namespace leaf_detail
-	{
-		template <class MatchType>
-		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & x, bool (*pred)(MatchType const &) noexcept ) noexcept
-		{
-			BOOST_LEAF_ASSERT(pred != 0);
-			return pred(x);
-		}
-
-		template <class MatchType, class V>
-		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & x, V v ) noexcept
-		{
-			return x == v;
-		}
-
-		template <class MatchType, class VCar, class... VCdr>
-		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & x, VCar car, VCdr ... cdr ) noexcept
-		{
-			return cmp_value_pack(x, car) || cmp_value_pack(x, cdr...);
-		}
-	}
-
 	////////////////////////////////////////
 
 	namespace leaf_detail
@@ -2706,6 +2684,30 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
+	namespace leaf_detail
+	{
+		template <class MatchType>
+		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & x, bool (*pred)(MatchType const &) noexcept ) noexcept
+		{
+			BOOST_LEAF_ASSERT(pred != 0);
+			return pred(x);
+		}
+
+		template <class MatchType, class V>
+		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & x, V v ) noexcept
+		{
+			return x == v;
+		}
+
+		template <class MatchType, class VCar, class... VCdr>
+		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & x, VCar car, VCdr ... cdr ) noexcept
+		{
+			return cmp_value_pack(x, car) || cmp_value_pack(x, cdr...);
+		}
+	}
+
+	////////////////////////////////////////
+
 #if __cplusplus >= 201703L
 #	define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
 #else
@@ -2788,11 +2790,7 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	namespace leaf_detail
-	{
-		template <class... Ex>
-		struct catch_traits;
-	}
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 
 	template <class... Ex>
 	class catch_;
@@ -2818,6 +2816,8 @@ namespace boost { namespace leaf {
 		template <class... Ex> struct handler_argument_traits<catch_<Ex...> &>: bad_predicate<catch_<Ex...>> { };
 		template <class... Ex> struct handler_argument_traits<catch_<Ex...> *>: bad_predicate<catch_<Ex...>> { };
 	}
+
+#endif
 
 	////////////////////////////////////////
 
@@ -3404,6 +3404,10 @@ namespace boost { namespace leaf {
 		}
 	};
 
+	////////////////////////////////////////
+
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
 	namespace leaf_detail
 	{
 		template <class Ex>
@@ -3415,6 +3419,8 @@ namespace boost { namespace leaf {
 			return 0;
 		}
 	}
+
+#endif
 
 	////////////////////////////////////////
 
@@ -3618,6 +3624,8 @@ namespace boost { namespace leaf {
 			constexpr static int value = type_index<T,TupleTypes...>::value;
 		};
 
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
 		template <class E, bool = handler_argument_traits<E>::requires_catch>
 		struct peek_exception;
 
@@ -3648,6 +3656,8 @@ namespace boost { namespace leaf {
 			}
 		};
 
+#endif
+
 		template <class E, class SlotsTuple>
 		BOOST_LEAF_CONSTEXPR inline
 		E const *
@@ -3656,10 +3666,11 @@ namespace boost { namespace leaf {
 			if( error_id err = ei.error() )
 				if( E const * e = std::get<tuple_type_index<slot<E>,SlotsTuple>::value>(tup).has_value(err.value()) )
 					return e;
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 				else
 					return peek_exception<E const>::peek(ei);
-			else
-				return 0;
+#endif
+			return 0;
 		}
 
 		template <class E, class SlotsTuple>
@@ -3670,10 +3681,11 @@ namespace boost { namespace leaf {
 			if( error_id err = ei.error() )
 				if( E * e = std::get<tuple_type_index<slot<E>,SlotsTuple>::value>(tup).has_value(err.value()) )
 					return e;
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 				else
 					return peek_exception<E>::peek(ei);
-			else
-				return 0;
+#endif
+			return 0;
 		}
 	}
 
@@ -4614,6 +4626,8 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
 	namespace leaf_detail
 	{
 		template <class Ex>
@@ -4666,6 +4680,8 @@ namespace boost { namespace leaf {
 		}
 	};
 
+#endif
+
 	////////////////////////////////////////
 
 	template <class E, bool(*F)(E const &)>
@@ -4685,6 +4701,8 @@ namespace boost { namespace leaf {
 	};
 
 } }
+
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 
 // Boost Exception Integration
 
@@ -4757,6 +4775,8 @@ namespace boost { namespace leaf {
 	}
 
 } }
+
+#endif
 
 #endif
 // <<< #include <boost/leaf/pred.hpp>
