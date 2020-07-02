@@ -14,7 +14,7 @@
 #	pragma warning(push,1)
 #endif
 
-#include <boost/leaf/detail/unexpected.hpp>
+#include <boost/leaf/config.hpp>
 #include <utility>
 #include <exception>
 
@@ -30,6 +30,11 @@ namespace boost { namespace leaf {
 	{
 		struct diagnostic_info_;
 		struct verbose_diagnostic_info_;
+
+#if BOOST_LEAF_DIAGNOSTICS
+		struct e_unexpected_count;
+		struct e_unexpected_info;
+#endif
 
 		template <class A, bool RequiresCatch = std::is_base_of<std::exception, typename std::decay<A>::type>::value>
 		struct handler_argument_traits_defaults
@@ -101,14 +106,22 @@ namespace boost { namespace leaf {
 		};
 
 		template <>
+#if BOOST_LEAF_DIAGNOSTICS
 		struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<e_unexpected_count>
+#else
+		struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<void>
+#endif
 		{
 			template <class Tup>
 			BOOST_LEAF_CONSTEXPR static diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept;
 		};
 
 		template <>
+#if BOOST_LEAF_DIAGNOSTICS
 		struct handler_argument_traits<verbose_diagnostic_info const &>: handler_argument_always_available<e_unexpected_info>
+#else
+		struct handler_argument_traits<verbose_diagnostic_info const &>: handler_argument_always_available<void>
+#endif
 		{
 			template <class Tup>
 			BOOST_LEAF_CONSTEXPR static verbose_diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept;
