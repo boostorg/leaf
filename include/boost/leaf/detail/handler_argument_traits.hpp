@@ -279,6 +279,24 @@ namespace boost { namespace leaf {
 		template <class... Ex> struct handler_argument_traits<catch_<Ex...> *>: bad_predicate<catch_<Ex...>> { };
 	}
 
+	////////////////////////////////////////
+
+	template <class E, bool (*F)(E const &)>
+	struct match_if;
+
+	namespace leaf_detail
+	{
+		template <class E, bool (*F)(E const &)>
+		struct handler_argument_traits<match_if<E, F>>: handler_argument_pred<match_if<E, F>>
+		{
+		};
+
+		template <class E, bool (*F)(E const &)> struct handler_argument_traits<match_if<E, F> const &>: bad_predicate<match_if<E, F>> { };
+		template <class E, bool (*F)(E const &)> struct handler_argument_traits<match_if<E, F> const *>: bad_predicate<match_if<E, F>> { };
+		template <class E, bool (*F)(E const &)> struct handler_argument_traits<match_if<E, F> &>: bad_predicate<match_if<E, F>> { };
+		template <class E, bool (*F)(E const &)> struct handler_argument_traits<match_if<E, F> *>: bad_predicate<match_if<E, F>> { };
+	}
+
 } }
 
 // Boost Exception Integration below

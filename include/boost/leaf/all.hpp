@@ -2819,6 +2819,24 @@ namespace boost { namespace leaf {
 		template <class... Ex> struct handler_argument_traits<catch_<Ex...> *>: bad_predicate<catch_<Ex...>> { };
 	}
 
+	////////////////////////////////////////
+
+	template <class E, bool (*F)(E const &)>
+	struct match_if;
+
+	namespace leaf_detail
+	{
+		template <class E, bool (*F)(E const &)>
+		struct handler_argument_traits<match_if<E, F>>: handler_argument_pred<match_if<E, F>>
+		{
+		};
+
+		template <class E, bool (*F)(E const &)> struct handler_argument_traits<match_if<E, F> const &>: bad_predicate<match_if<E, F>> { };
+		template <class E, bool (*F)(E const &)> struct handler_argument_traits<match_if<E, F> const *>: bad_predicate<match_if<E, F>> { };
+		template <class E, bool (*F)(E const &)> struct handler_argument_traits<match_if<E, F> &>: bad_predicate<match_if<E, F>> { };
+		template <class E, bool (*F)(E const &)> struct handler_argument_traits<match_if<E, F> *>: bad_predicate<match_if<E, F>> { };
+	}
+
 } }
 
 // Boost Exception Integration below
@@ -4420,22 +4438,18 @@ namespace boost { namespace leaf {
 		template <class MatchType>
 		class pred
 		{
-		public:
-
-			using match_type = MatchType;
-
 		protected:
 
-			match_type m_;
+			MatchType m_;
 
-			BOOST_LEAF_CONSTEXPR explicit pred( match_type m ) noexcept:
+			BOOST_LEAF_CONSTEXPR explicit pred( MatchType m ) noexcept:
 				m_(m)
 			{
 			}
 
 		public:
 
-			BOOST_LEAF_CONSTEXPR match_type matched() const noexcept
+			BOOST_LEAF_CONSTEXPR MatchType matched() const noexcept
 			{
 				return m_;
 			}
@@ -4651,6 +4665,25 @@ namespace boost { namespace leaf {
 			return dynamic_cast<Ex const *>(ex) != 0;
 		}
 	};
+
+	////////////////////////////////////////
+
+	template <class E, bool(*F)(E const &)>
+	struct match_if: leaf_detail::pred<E const &>
+	{
+		using error_type = E;
+
+		BOOST_LEAF_CONSTEXPR explicit match_if(E const * e) noexcept:
+			leaf_detail::pred<E const &>(*e)
+		{
+		}
+
+		BOOST_LEAF_CONSTEXPR static bool evaluate(E const * e)
+		{
+			return e && F(*e);
+		}
+	};
+
 } }
 
 // Boost Exception Integration
