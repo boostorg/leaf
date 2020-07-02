@@ -4581,7 +4581,6 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////
 
 #if __cplusplus >= 201703L
-
 	template <class T, class E, T E::* P, auto V1, auto... V>
 	struct match_member<P, V1, V...>: leaf_detail::pred<E const &>
 	{
@@ -4597,7 +4596,6 @@ namespace boost { namespace leaf {
 			return e && leaf_detail::cmp_value_pack(e->*P, V1, V...);
 		}
 	};
-
 #endif
 
 	////////////////////////////////////////
@@ -4662,7 +4660,17 @@ namespace boost { namespace exception_detail { template <class ErrorInfo> struct
 
 namespace boost { namespace leaf {
 
-	template <class Tag, class T, T V1, T... V>
+	namespace leaf_detail
+	{
+		template <class Tag, class T>
+		struct match_enum_type<boost::error_info<Tag, T>>
+		{
+			using type = T;
+		};
+	}
+
+#define BOOST_LEAF_ESC(...) __VA_ARGS__
+	template <class Tag, class T, BOOST_LEAF_MATCH_ARGS(BOOST_LEAF_ESC(match_enum_type<boost::error_info<Tag, T>>), V1, V)>
 	struct match<boost::error_info<Tag, T>, V1, V...>: leaf_detail::pred<T>
 	{
 		using error_type = boost::error_info<Tag, T>;
@@ -4677,6 +4685,7 @@ namespace boost { namespace leaf {
 			return x && leaf_detail::cmp_value_pack(*x, V1, V...);
 		}
 	};
+#undef BOOST_LEAF_ESC
 
 	namespace leaf_detail
 	{
