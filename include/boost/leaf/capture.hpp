@@ -20,6 +20,22 @@
 
 namespace boost { namespace leaf {
 
+	namespace leaf_detail
+	{
+		template <class R, bool IsResult = is_result_type<R>::value>
+		struct is_result_tag;
+
+		template <class R>
+		struct is_result_tag<R, false>
+		{
+		};
+
+		template <class R>
+		struct is_result_tag<R, true>
+		{
+		};
+	}
+
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
 
 	namespace leaf_detail
@@ -80,7 +96,7 @@ namespace boost { namespace leaf {
 
 		public:
 
-			capturing_exception(std::exception_ptr && ex, context_ptr && ctx) noexcept:
+			BOOST_LEAF_CONSTEXPR capturing_exception(std::exception_ptr && ex, context_ptr && ctx) noexcept:
 				ex_(std::move(ex)),
 				ctx_(std::move(ctx))
 			{

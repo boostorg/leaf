@@ -203,11 +203,13 @@ namespace boost { namespace leaf {
 		class slot;
 
 		template <class E>
-		inline slot<E> * & tl_slot_ptr() noexcept
+		struct tl_slot_ptr
 		{
-			static BOOST_LEAF_THREAD_LOCAL slot<E> * s;
-			return s;
-		}
+			static BOOST_LEAF_THREAD_LOCAL slot<E> * p;
+		};
+
+		template <class E>
+		BOOST_LEAF_THREAD_LOCAL slot<E> * tl_slot_ptr<E>::p;
 
 		template <class E>
 		class slot:
@@ -237,7 +239,7 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_CONSTEXPR void activate() noexcept
 			{
 				BOOST_LEAF_ASSERT(top_==0 || *top_!=this);
-				top_ = &tl_slot_ptr<E>();
+				top_ = &tl_slot_ptr<E>::p;
 				prev_ = *top_;
 				*top_ = this;
 			}
@@ -277,7 +279,7 @@ namespace boost { namespace leaf {
 		template <class E>
 		BOOST_LEAF_CONSTEXPR inline void load_unexpected_count( int err_id ) noexcept
 		{
-			if( slot<e_unexpected_count> * sl = tl_slot_ptr<e_unexpected_count>() )
+			if( slot<e_unexpected_count> * sl = tl_slot_ptr<e_unexpected_count>::p )
 				if( e_unexpected_count * unx = sl->has_value(err_id) )
 					++unx->count;
 				else
@@ -287,7 +289,7 @@ namespace boost { namespace leaf {
 		template <class E>
 		BOOST_LEAF_CONSTEXPR inline void load_unexpected_info( int err_id, E && e ) noexcept
 		{
-			if( slot<e_unexpected_info> * sl = tl_slot_ptr<e_unexpected_info>() )
+			if( slot<e_unexpected_info> * sl = tl_slot_ptr<e_unexpected_info>::p )
 				if( e_unexpected_info * unx = sl->has_value(err_id) )
 					unx->add(e);
 				else
@@ -334,7 +336,7 @@ namespace boost { namespace leaf {
 			static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
 			using T = typename std::decay<E>::type;
 			BOOST_LEAF_ASSERT((err_id&3)==1);
-			if( slot<T> * p = tl_slot_ptr<T>() )
+			if( slot<T> * p = tl_slot_ptr<T>::p )
 				(void) p->put(err_id, std::forward<E>(e));
 #if BOOST_LEAF_DIAGNOSTICS
 			else
@@ -355,7 +357,7 @@ namespace boost { namespace leaf {
 			using E = typename std::decay<fn_arg_type<F,0>>::type;
 			static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
 			BOOST_LEAF_ASSERT((err_id&3)==1);
-			if( auto sl = tl_slot_ptr<E>() )
+			if( auto sl = tl_slot_ptr<E>::p )
 				if( auto v = sl->has_value(err_id) )
 					(void) std::forward<F>(f)(*v);
 				else
@@ -708,22 +710,6 @@ namespace boost { namespace leaf {
 	struct is_result_type<R const>: is_result_type<R>
 	{
 	};
-
-	namespace leaf_detail
-	{
-		template <class R, bool IsResult = is_result_type<R>::value>
-		struct is_result_tag;
-
-		template <class R>
-		struct is_result_tag<R, false>
-		{
-		};
-
-		template <class R>
-		struct is_result_tag<R, true>
-		{
-		};
-	}
 
 } }
 

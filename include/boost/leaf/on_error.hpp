@@ -105,7 +105,7 @@ namespace boost { namespace leaf {
 		public:
 
 			BOOST_LEAF_CONSTEXPR preloaded_item( E && e ):
-				s_(tl_slot_ptr<decay_E>()),
+				s_(tl_slot_ptr<decay_E>::p),
 				e_(std::forward<E>(e))
 			{
 			}
@@ -140,7 +140,7 @@ namespace boost { namespace leaf {
 		public:
 
 			BOOST_LEAF_CONSTEXPR deferred_item( F && f ) noexcept:
-				s_(tl_slot_ptr<E>()),
+				s_(tl_slot_ptr<E>::p),
 				f_(std::forward<F>(f))
 			{
 			}
@@ -178,7 +178,7 @@ namespace boost { namespace leaf {
 		public:
 
 			BOOST_LEAF_CONSTEXPR accumulating_item( F && f ) noexcept:
-				s_(tl_slot_ptr<E>()),
+				s_(tl_slot_ptr<E>::p),
 				f_(std::forward<F>(f))
 			{
 			}

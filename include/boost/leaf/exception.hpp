@@ -15,41 +15,11 @@
 #endif
 
 #include <boost/leaf/error.hpp>
+#include <boost/leaf/detail/throw_exception.hpp>
 #include <exception>
 
 #define BOOST_LEAF_EXCEPTION ::boost::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
 #define BOOST_LEAF_THROW_EXCEPTION ::boost::leaf::leaf_detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
-
-#ifdef BOOST_LEAF_NO_EXCEPTIONS
-
-namespace boost
-{
-	[[noreturn]] void throw_exception( std::exception const & ); // user defined
-}
-
-namespace boost { namespace leaf {
-
-	template <class T>
-	[[noreturn]] void throw_exception( T const & e )
-	{
-		::boost::throw_exception(e);
-	}
-
-} }
-
-#else
-
-namespace boost { namespace leaf {
-
-	template <class T>
-	[[noreturn]] void throw_exception( T const & e )
-	{
-		throw e;
-	}
-
-} }
-
-#endif
 
 ////////////////////////////////////////
 

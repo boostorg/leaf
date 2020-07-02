@@ -89,7 +89,7 @@ namespace boost { namespace leaf {
 		struct handler_argument_traits<A *>: handler_argument_always_available<typename std::remove_const<A>::type>
 		{
 			template <class Tup>
-			static A * get( Tup & tup, error_info const & ei) noexcept
+			BOOST_LEAF_CONSTEXPR static A * get( Tup & tup, error_info const & ei) noexcept
 			{
 				return handler_argument_traits_defaults<A>::check(tup, ei);
 			}
@@ -99,7 +99,7 @@ namespace boost { namespace leaf {
 		struct handler_argument_traits<error_info const &>: handler_argument_always_available<void>
 		{
 			template <class Tup>
-			static error_info const & get( Tup const &, error_info const & ei ) noexcept
+			BOOST_LEAF_CONSTEXPR static error_info const & get( Tup const &, error_info const & ei ) noexcept
 			{
 				return ei;
 			}
