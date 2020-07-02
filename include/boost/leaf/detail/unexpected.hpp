@@ -52,13 +52,13 @@ namespace boost { namespace leaf {
 			char const * (*first_type)();
 			int count;
 
-			BOOST_LEAF_CONSTEXPR explicit e_unexpected_count( char const * (*first_type)() ) noexcept:
+			BOOST_LEAF_CONSTEXPR explicit e_unexpected_count(char const * (*first_type)()) noexcept:
 				first_type(first_type),
 				count(1)
 			{
 			}
 
-			void print( std::ostream & os ) const
+			void print(std::ostream & os) const
 			{
 				BOOST_LEAF_ASSERT(first_type != 0);
 				BOOST_LEAF_ASSERT(count>0);
@@ -75,9 +75,7 @@ namespace boost { namespace leaf {
 		struct diagnostic<e_unexpected_count, false, false>
 		{
 			static constexpr bool is_invisible = true;
-			BOOST_LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_count const & ) noexcept
-			{
-			}
+			BOOST_LEAF_CONSTEXPR static void print(std::ostream &, e_unexpected_count const &) noexcept { }
 		};
 
 		class e_unexpected_info
@@ -91,28 +89,19 @@ namespace boost { namespace leaf {
 			{
 			}
 
-			void reset() noexcept
-			{
-				s_.clear();
-				already_.clear();
-			}
-
 			template <class E>
-			void add( E const & e )
+			void add(E const & e)
 			{
-				std::stringstream s;
-				if( !diagnostic<E>::is_invisible )
+				if( !diagnostic<E>::is_invisible && already_.insert(&type<E>).second  )
 				{
+					std::stringstream s;
 					diagnostic<E>::print(s,e);
-					if( already_.insert(&type<E>).second  )
-					{
-						s << std::endl;
-						s_ += s.str();
-					}
+					s << std::endl;
+					s_ += s.str();
 				}
 			}
 
-			void print( std::ostream & os ) const
+			void print(std::ostream & os) const
 			{
 				os << "Unexpected error objects:\n" << s_;
 			}
@@ -122,9 +111,7 @@ namespace boost { namespace leaf {
 		struct diagnostic<e_unexpected_info, false, false>
 		{
 			static constexpr bool is_invisible = true;
-			BOOST_LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_info const & ) noexcept
-			{
-			}
+			BOOST_LEAF_CONSTEXPR static void print(std::ostream &, e_unexpected_info const &) noexcept { }
 		};
 
 		template <class=void>
