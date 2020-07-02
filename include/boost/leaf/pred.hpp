@@ -87,18 +87,18 @@ namespace boost { namespace leaf {
 	}
 
 	template <class E, BOOST_LEAF_MATCH_ARGS(match_enum_type<E>, V1, V)>
-	struct match: leaf_detail::pred<E const &>
+	struct match: leaf_detail::pred<E>
 	{
 		using error_type = E;
 
-		BOOST_LEAF_CONSTEXPR explicit match(E const * e) noexcept:
-			leaf_detail::pred<E const &>(*e)
+		BOOST_LEAF_CONSTEXPR explicit match(E e) noexcept:
+			leaf_detail::pred<E>(e)
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR static bool evaluate(E const * e)
+		BOOST_LEAF_CONSTEXPR static bool evaluate(E e)
 		{
-			return e && leaf_detail::cmp_value_pack(*e, V1, V...);
+			return leaf_detail::cmp_value_pack(e, V1, V...);
 		}
 	};
 
@@ -108,14 +108,14 @@ namespace boost { namespace leaf {
 	{
 		using error_type = std::error_code;
 
-		BOOST_LEAF_CONSTEXPR explicit match(std::error_code const * e) noexcept:
-			leaf_detail::pred<std::error_code const &>(*e)
+		BOOST_LEAF_CONSTEXPR explicit match(std::error_code const & e) noexcept:
+			leaf_detail::pred<std::error_code const &>(e)
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR static bool evaluate(std::error_code const * e) noexcept
+		BOOST_LEAF_CONSTEXPR static bool evaluate(std::error_code const & e) noexcept
 		{
-			return e && leaf_detail::cmp_value_pack(*e, V1, V...);
+			return leaf_detail::cmp_value_pack(e, V1, V...);
 		}
 	};
 #undef BOOST_LEAF_ESC
@@ -148,14 +148,14 @@ namespace boost { namespace leaf {
 	{
 		using error_type = E;
 
-		BOOST_LEAF_CONSTEXPR explicit match_value(E const * e) noexcept:
-			leaf_detail::pred<E const &>(*e)
+		BOOST_LEAF_CONSTEXPR explicit match_value(E const & e) noexcept:
+			leaf_detail::pred<E const &>(e)
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR static bool evaluate(E const * e) noexcept
+		BOOST_LEAF_CONSTEXPR static bool evaluate(E const & e) noexcept
 		{
-			return e && leaf_detail::cmp_value_pack(e->value, V1, V...);
+			return leaf_detail::cmp_value_pack(e.value, V1, V...);
 		}
 	};
 
@@ -166,14 +166,14 @@ namespace boost { namespace leaf {
 	{
 		using error_type = E;
 
-		BOOST_LEAF_CONSTEXPR explicit match_value(E const * e) noexcept:
-			leaf_detail::pred<E const &>(*e)
+		BOOST_LEAF_CONSTEXPR explicit match_value(E const & e) noexcept:
+			leaf_detail::pred<E const &>(e)
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR static bool evaluate(E const * e)
+		BOOST_LEAF_CONSTEXPR static bool evaluate(E const & e)
 		{
-			return e && leaf_detail::cmp_value_pack(e->value, V1, V...);
+			return leaf_detail::cmp_value_pack(e.value, V1, V...);
 		}
 	};
 #undef BOOST_LEAF_ESC
@@ -186,14 +186,14 @@ namespace boost { namespace leaf {
 	{
 		using error_type = E;
 
-		BOOST_LEAF_CONSTEXPR explicit match_member(E const * e) noexcept:
-			leaf_detail::pred<E const &>(*e)
+		BOOST_LEAF_CONSTEXPR explicit match_member(E const & e) noexcept:
+			leaf_detail::pred<E const &>(e)
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR static bool evaluate(E const * e) noexcept
+		BOOST_LEAF_CONSTEXPR static bool evaluate(E const & e) noexcept
 		{
-			return e && leaf_detail::cmp_value_pack(e->*P, V1, V...);
+			return leaf_detail::cmp_value_pack(e.*P, V1, V...);
 		}
 	};
 #endif
@@ -205,18 +205,18 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class Ex>
-		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * ex, Ex const * ) noexcept
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const * ) noexcept
 		{
-			return dynamic_cast<Ex const *>(ex)!=0;
+			return dynamic_cast<Ex const *>(&ex)!=0;
 		}
 
 		template <class Ex, class... ExRest>
-		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * ex, Ex const *, ExRest const * ... ex_rest ) noexcept
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const *, ExRest const * ... ex_rest ) noexcept
 		{
-			return dynamic_cast<Ex const *>(ex)!=0 || check_exception_pack(ex, ex_rest...);
+			return dynamic_cast<Ex const *>(&ex)!=0 || check_exception_pack(ex, ex_rest...);
 		}
 
-		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * ) noexcept
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ) noexcept
 		{
 			return true;
 		}
@@ -227,14 +227,14 @@ namespace boost { namespace leaf {
 	{
 		using error_type = void;
 
-		BOOST_LEAF_CONSTEXPR explicit catch_(std::exception const * ex) noexcept:
-			leaf_detail::pred<std::exception const &>(*ex)
+		BOOST_LEAF_CONSTEXPR explicit catch_(std::exception const & ex) noexcept:
+			leaf_detail::pred<std::exception const &>(ex)
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR static bool evaluate(std::exception const * ex) noexcept
+		BOOST_LEAF_CONSTEXPR static bool evaluate(std::exception const & ex) noexcept
 		{
-			return ex && leaf_detail::check_exception_pack(ex, static_cast<Ex const *>(0)...);
+			return leaf_detail::check_exception_pack(ex, static_cast<Ex const *>(0)...);
 		}
 	};
 
@@ -243,14 +243,14 @@ namespace boost { namespace leaf {
 	{
 		using error_type = void;
 
-		BOOST_LEAF_CONSTEXPR explicit catch_(std::exception const * ex) noexcept:
-			leaf_detail::pred<Ex const &>(*dynamic_cast<Ex const *>(ex))
+		BOOST_LEAF_CONSTEXPR explicit catch_(std::exception const & ex) noexcept:
+			leaf_detail::pred<Ex const &>(*dynamic_cast<Ex const *>(&ex))
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR static bool evaluate(std::exception const * ex) noexcept
+		BOOST_LEAF_CONSTEXPR static bool evaluate(std::exception const & ex) noexcept
 		{
-			return dynamic_cast<Ex const *>(ex) != 0;
+			return dynamic_cast<Ex const *>(&ex) != 0;
 		}
 	};
 
@@ -263,14 +263,32 @@ namespace boost { namespace leaf {
 	{
 		using error_type = E;
 
-		BOOST_LEAF_CONSTEXPR explicit match_if(E const * e) noexcept:
-			leaf_detail::pred<E const &>(*e)
+		BOOST_LEAF_CONSTEXPR explicit match_if(E const & e) noexcept:
+			leaf_detail::pred<E const &>(e)
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR static bool evaluate(E const * e) noexcept
+		BOOST_LEAF_CONSTEXPR static bool evaluate(E const & e) noexcept
 		{
-			return e && F(*e);
+			return F(e);
+		}
+	};
+
+	////////////////////////////////////////
+
+	template <class P>
+	struct if_not: leaf_detail::pred<typename P::error_type const &>
+	{
+		using error_type = typename P::error_type;
+
+		BOOST_LEAF_CONSTEXPR explicit if_not(error_type const & e) noexcept:
+			leaf_detail::pred<error_type const &>(e)
+		{
+		}
+
+		BOOST_LEAF_CONSTEXPR static bool evaluate(error_type const & e) noexcept
+		{
+			return !P::evaluate(e);
 		}
 	};
 
@@ -300,14 +318,14 @@ namespace boost { namespace leaf {
 	{
 		using error_type = boost::error_info<Tag, T>;
 
-		BOOST_LEAF_CONSTEXPR explicit match(T const * x) noexcept:
-			leaf_detail::pred<T>(*x)
+		BOOST_LEAF_CONSTEXPR explicit match(T x) noexcept:
+			leaf_detail::pred<T>(x)
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR static bool evaluate(T const * x) noexcept
+		BOOST_LEAF_CONSTEXPR static bool evaluate(T x) noexcept
 		{
-			return x && leaf_detail::cmp_value_pack(*x, V1, V...);
+			return leaf_detail::cmp_value_pack(x, V1, V...);
 		}
 	};
 #undef BOOST_LEAF_ESC

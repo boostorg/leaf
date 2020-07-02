@@ -34,12 +34,12 @@ static_assert(leaf::leaf_detail::handler_argument_traits<leaf::match_if<my_excep
 #endif
 
 template <class M, class E>
-bool test(E const * e )
+bool test(E const & e )
 {
 	if( M::evaluate(e) )
 	{
 		M m(e);
-		BOOST_TEST_EQ(e, &m.matched());
+		BOOST_TEST_EQ(&e, &m.matched());
 		return true;
 	}
 	else
@@ -51,8 +51,8 @@ int main()
 	{
 		my_error e = my_error::e1;
 
-		BOOST_TEST(( test<leaf::match_if<my_error, cmp_my_error<my_error::e1>>>(&e) ));
-		BOOST_TEST(( !test<leaf::match_if<my_error, cmp_my_error<my_error::e2>>>(&e) ));
+		BOOST_TEST(( test<leaf::match_if<my_error, cmp_my_error<my_error::e1>>>(e) ));
+		BOOST_TEST(( !test<leaf::match_if<my_error, cmp_my_error<my_error::e2>>>(e) ));
 	}
 
 	{

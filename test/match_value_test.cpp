@@ -27,12 +27,12 @@ static_assert(!leaf::leaf_detail::handler_argument_traits<leaf::match_value<e_my
 static_assert(leaf::leaf_detail::handler_argument_traits<leaf::match_value<my_exception, 42>>::requires_catch, "requires_catch deduction error");
 
 template <class M, class E>
-bool test(E const * e )
+bool test(E const & e )
 {
 	if( M::evaluate(e) )
 	{
 		M m(e);
-		BOOST_TEST_EQ(e, &m.matched());
+		BOOST_TEST_EQ(&e, &m.matched());
 		return true;
 	}
 	else
@@ -44,22 +44,22 @@ int main()
 	{
 		e_my_error e = { my_error::e1 };
 
-		BOOST_TEST(( test<leaf::match_value<e_my_error, my_error::e1>>(&e) ));
-		BOOST_TEST(( !test<leaf::match_value<e_my_error, my_error::e2>>(&e) ));
-		BOOST_TEST(( test<leaf::match_value<e_my_error, my_error::e2, my_error::e1>>(&e) ));
+		BOOST_TEST(( test<leaf::match_value<e_my_error, my_error::e1>>(e) ));
+		BOOST_TEST(( !test<leaf::match_value<e_my_error, my_error::e2>>(e) ));
+		BOOST_TEST(( test<leaf::match_value<e_my_error, my_error::e2, my_error::e1>>(e) ));
 	}
 
 	{
 		e_error_code e = { errc_a::a0 };
 
-		BOOST_TEST(( test<leaf::match_value<leaf::condition<e_error_code, cond_x>, cond_x::x00>>(&e) ));
-		BOOST_TEST(( !test<leaf::match_value<leaf::condition<e_error_code, cond_x>, cond_x::x11>>(&e) ));
-		BOOST_TEST(( test<leaf::match_value<leaf::condition<e_error_code, cond_x>, cond_x::x11, cond_x::x00>>(&e) ));
+		BOOST_TEST(( test<leaf::match_value<leaf::condition<e_error_code, cond_x>, cond_x::x00>>(e) ));
+		BOOST_TEST(( !test<leaf::match_value<leaf::condition<e_error_code, cond_x>, cond_x::x11>>(e) ));
+		BOOST_TEST(( test<leaf::match_value<leaf::condition<e_error_code, cond_x>, cond_x::x11, cond_x::x00>>(e) ));
 
 #if __cplusplus >= 201703L
-		BOOST_TEST(( test<leaf::match_value<e_error_code, errc_a::a0>>(&e) ));
-		BOOST_TEST(( !test<leaf::match_value<e_error_code, errc_a::a2>>(&e) ));
-		BOOST_TEST(( test<leaf::match_value<e_error_code, errc_a::a2, errc_a::a0>>(&e) ));
+		BOOST_TEST(( test<leaf::match_value<e_error_code, errc_a::a0>>(e) ));
+		BOOST_TEST(( !test<leaf::match_value<e_error_code, errc_a::a2>>(e) ));
+		BOOST_TEST(( test<leaf::match_value<e_error_code, errc_a::a2, errc_a::a0>>(e) ));
 #endif
 	}
 

@@ -26,12 +26,12 @@ static_assert(leaf::leaf_detail::handler_argument_traits<leaf::match<my_exceptio
 #endif
 
 template <class M, class E>
-bool test(E const * e )
+bool test(E const & e )
 {
 	if( M::evaluate(e) )
 	{
 		M m(e);
-		BOOST_TEST_EQ(e, &m.matched());
+		BOOST_TEST(e == m.matched());
 		return true;
 	}
 	else
@@ -43,30 +43,47 @@ int main()
 	{
 		int e = 42;
 
-		BOOST_TEST(( test<leaf::match<int, 42>>(&e) ));
-		BOOST_TEST(( !test<leaf::match<int, 41>>(&e) ));
-		BOOST_TEST(( test<leaf::match<int, 42, 41>>(&e) ));
+		BOOST_TEST(( test<leaf::match<int, 42>>(e) ));
+		BOOST_TEST(( !test<leaf::match<int, 41>>(e) ));
+		BOOST_TEST(( test<leaf::match<int, 42, 41>>(e) ));
+
+		BOOST_TEST(( !test<leaf::if_not<leaf::match<int, 42>>>(e) ));
+		BOOST_TEST(( test<leaf::if_not<leaf::match<int, 41>>>(e) ));
+		BOOST_TEST(( !test<leaf::if_not<leaf::match<int, 42, 41>>>(e) ));
 	}
 
 	{
 		my_error e = my_error::e1;
 
-		BOOST_TEST(( test<leaf::match<my_error, my_error::e1>>(&e) ));
-		BOOST_TEST(( !test<leaf::match<my_error, my_error::e2>>(&e) ));
-		BOOST_TEST(( test<leaf::match<my_error, my_error::e2, my_error::e1>>(&e) ));
+		BOOST_TEST(( test<leaf::match<my_error, my_error::e1>>(e) ));
+		BOOST_TEST(( !test<leaf::match<my_error, my_error::e2>>(e) ));
+		BOOST_TEST(( test<leaf::match<my_error, my_error::e2, my_error::e1>>(e) ));
+
+		BOOST_TEST(( !test<leaf::if_not<leaf::match<my_error, my_error::e1>>>(e) ));
+		BOOST_TEST(( test<leaf::if_not<leaf::match<my_error, my_error::e2>>>(e) ));
+		BOOST_TEST(( !test<leaf::if_not<leaf::match<my_error, my_error::e2, my_error::e1>>>(e) ));
 	}
 
 	{
 		std::error_code e = errc_a::a0;
 
-		BOOST_TEST(( test<leaf::match<leaf::condition<cond_x>, cond_x::x00>>(&e) ));
-		BOOST_TEST(( !test<leaf::match<leaf::condition<cond_x>, cond_x::x11>>(&e) ));
-		BOOST_TEST(( test<leaf::match<leaf::condition<cond_x>, cond_x::x11, cond_x::x00>>(&e) ));
+		BOOST_TEST(( test<leaf::match<leaf::condition<cond_x>, cond_x::x00>>(e) ));
+		BOOST_TEST(( !test<leaf::match<leaf::condition<cond_x>, cond_x::x11>>(e) ));
+		BOOST_TEST(( test<leaf::match<leaf::condition<cond_x>, cond_x::x11, cond_x::x00>>(e) ));
+
+
+		BOOST_TEST(( !test<leaf::if_not<leaf::match<leaf::condition<cond_x>, cond_x::x00>>>(e) ));
+		BOOST_TEST(( test<leaf::if_not<leaf::match<leaf::condition<cond_x>, cond_x::x11>>>(e) ));
+		BOOST_TEST(( !test<leaf::if_not<leaf::match<leaf::condition<cond_x>, cond_x::x11, cond_x::x00>>>(e) ));
 
 #if __cplusplus >= 201703L
-		BOOST_TEST(( test<leaf::match<std::error_code, errc_a::a0>>(&e) ));
-		BOOST_TEST(( !test<leaf::match<std::error_code, errc_a::a2>>(&e) ));
-		BOOST_TEST(( test<leaf::match<std::error_code, errc_a::a2, errc_a::a0>>(&e) ));
+		BOOST_TEST(( test<leaf::match<std::error_code, errc_a::a0>>(e) ));
+		BOOST_TEST(( !test<leaf::match<std::error_code, errc_a::a2>>(e) ));
+		BOOST_TEST(( test<leaf::match<std::error_code, errc_a::a2, errc_a::a0>>(e) ));
+
+		BOOST_TEST(( !test<leaf::if_not<leaf::match<std::error_code, errc_a::a0>>>(e) ));
+		BOOST_TEST(( test<leaf::if_not<leaf::match<std::error_code, errc_a::a2>>>(e) ));
+		BOOST_TEST(( !test<leaf::if_not<leaf::match<std::error_code, errc_a::a2, errc_a::a0>>>(e) ));
 #endif
 	}
 
@@ -106,6 +123,54 @@ int main()
 				return 2;
 			} );
 		BOOST_TEST_EQ(r, 2);
+	}
+
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				return leaf::new_error(my_error::e1);
+			},
+
+			[]( leaf::if_not<leaf::match<my_error, my_error::e1>> )
+			{
+				return 1;
+			},
+
+			[]( my_error e )
+			{
+				return 2;
+			},
+
+			[]
+			{
+				return 3;
+			} );
+		BOOST_TEST_EQ(r, 2);
+	}
+
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				return leaf::new_error();
+			},
+
+			[]( leaf::if_not<leaf::match<my_error, my_error::e1>> )
+			{
+				return 1;
+			},
+
+			[]( my_error e )
+			{
+				return 2;
+			},
+
+			[]
+			{
+				return 3;
+			} );
+		BOOST_TEST_EQ(r, 3);
 	}
 
 	return boost::report_errors();

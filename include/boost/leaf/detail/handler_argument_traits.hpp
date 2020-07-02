@@ -138,13 +138,14 @@ namespace boost { namespace leaf {
 			template <class Tup>
 			BOOST_LEAF_CONSTEXPR static bool check( Tup & tup, error_info const & ei ) noexcept
 			{
-				return Pred::evaluate(argument_traits::check(tup, ei));
+				auto e = argument_traits::check(tup, ei);
+				return e && Pred::evaluate(*e);
 			};
 
 			template <class Tup>
 			BOOST_LEAF_CONSTEXPR static Pred get( Tup const & tup, error_info const & ei ) noexcept
 			{
-				return Pred(argument_traits::check(tup, ei));
+				return Pred(*argument_traits::check(tup, ei));
 			}
 		};
 
@@ -309,6 +310,25 @@ namespace boost { namespace leaf {
 		template <class E, bool (*F)(E const &)> struct handler_argument_traits<match_if<E, F> &>: bad_predicate<match_if<E, F>> { };
 		template <class E, bool (*F)(E const &)> struct handler_argument_traits<match_if<E, F> *>: bad_predicate<match_if<E, F>> { };
 	}
+
+	////////////////////////////////////////
+
+	template <class P>
+	struct if_not;
+
+	namespace leaf_detail
+	{
+		template <class P>
+		struct handler_argument_traits<if_not<P>>: handler_argument_pred<if_not<P>>
+		{
+		};
+
+		template <class P> struct handler_argument_traits<if_not<P> const &>: bad_predicate<if_not<P>> { };
+		template <class P> struct handler_argument_traits<if_not<P> const *>: bad_predicate<if_not<P>> { };
+		template <class P> struct handler_argument_traits<if_not<P> &>: bad_predicate<if_not<P>> { };
+		template <class P> struct handler_argument_traits<if_not<P> *>: bad_predicate<if_not<P>> { };
+	}
+
 
 } }
 

@@ -216,7 +216,10 @@ namespace boost { namespace leaf {
 		handler_argument_traits<catch_<Ex...>>::
 		check( Tup &, error_info const & ei ) noexcept
 		{
-			return ei.exception_caught() && catch_<Ex...>::evaluate(ei.exception());
+			if( ei.exception_caught() )
+				if( std::exception const * ex = ei.exception() )
+					return catch_<Ex...>::evaluate(*ex);
+			return false;
 		};
 
 		template <class... Ex>
@@ -226,7 +229,7 @@ namespace boost { namespace leaf {
 		handler_argument_traits<catch_<Ex...>>::
 		get( Tup const &, error_info const & ei ) noexcept
 		{
-			return catch_<Ex...>(ei.exception());
+			return catch_<Ex...>(*ei.exception());
 		}
 	}
 
