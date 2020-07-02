@@ -299,6 +299,8 @@ namespace boost { namespace leaf {
 
 } }
 
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
 // Boost Exception Integration below
 
 namespace boost { template <class Tag,class T> class error_info; }
@@ -334,5 +336,7 @@ namespace boost { namespace leaf {
 	}
 
 } }
+
+#endif
 
 #endif

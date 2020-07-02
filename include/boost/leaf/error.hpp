@@ -103,7 +103,7 @@ namespace boost { namespace leaf {
 			slot( slot const & ) = delete;
 			slot & operator=( slot const & ) = delete;
 
-			typedef optional<E> impl;
+			using impl = optional<E>;
 			slot<E> * * top_;
 			slot<E> * prev_;
 
@@ -190,7 +190,7 @@ namespace boost { namespace leaf {
 #if BOOST_LEAF_DIAGNOSTICS
 			else
 			{
-				int c = tl_unexpected_enabled_counter();
+				int c = tl_unexpected_enabled<>::counter;
 				BOOST_LEAF_ASSERT(c>=0);
 				if( c )
 					if( int err_id = impl::key() )
@@ -210,7 +210,7 @@ namespace boost { namespace leaf {
 #if BOOST_LEAF_DIAGNOSTICS
 			else
 			{
-				int c = tl_unexpected_enabled_counter();
+				int c = tl_unexpected_enabled<>::counter;
 				BOOST_LEAF_ASSERT(c>=0);
 				if( c )
 					load_unexpected(err_id, std::forward<E>(e));
@@ -233,7 +233,7 @@ namespace boost { namespace leaf {
 					(void) std::forward<F>(f)(sl->put(err_id,E()));
 			return 0;
 		}
-	} // leaf_detail
+	}
 
 	////////////////////////////////////////
 
@@ -487,19 +487,6 @@ namespace boost { namespace leaf {
 	inline error_id current_error() noexcept
 	{
 		return leaf_detail::make_error_id(leaf_detail::current_id());
-	}
-
-	namespace leaf_detail
-	{
-		template <class... E>
-		inline error_id new_error_at( char const * file, int line, char const * function ) noexcept
-		{
-			BOOST_LEAF_ASSERT(file&&*file);
-			BOOST_LEAF_ASSERT(line>0);
-			BOOST_LEAF_ASSERT(function&&*function);
-			e_source_location sl { file, line, function }; // Temp object MSVC workaround
-			return new_error(std::move(sl));
-		}
 	}
 
 	////////////////////////////////////////////

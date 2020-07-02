@@ -177,7 +177,7 @@ if exceptions
 	endforeach
 
 	if get_option('leaf_boost')
-		executable('asio_beast_leaf_rpc', 'examples/asio_beast_leaf_rpc.cpp', dependencies: [leaf,thread_dep,boost_headers], override_options: ['cpp_std=c++17'] )
+#		executable('asio_beast_leaf_rpc', 'examples/asio_beast_leaf_rpc.cpp', dependencies: [leaf,thread_dep,boost_headers], override_options: ['cpp_std=c++17'] )
 		executable('print_file_outcome_result', 'examples/print_file/print_file_outcome_result.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
 	endif
 

@@ -257,7 +257,9 @@ namespace boost { namespace leaf {
 	}
 
 	template <class... Ex, class F>
-	inline leaf_detail::deduce_exception_to_result_return_type<leaf_detail::fn_return_type<F>> exception_to_result( F && f ) noexcept
+	inline
+	leaf_detail::deduce_exception_to_result_return_type<leaf_detail::fn_return_type<F>>
+	exception_to_result( F && f ) noexcept
 	{
 		try
 		{

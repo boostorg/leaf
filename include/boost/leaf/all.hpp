@@ -568,7 +568,7 @@ namespace boost { namespace leaf {
 		template<class...>
 		struct gcc49_workaround //Thanks Glen Fernandes
 		{
-			typedef void type;
+			using type = void;
 		};
 
 		template<class... T>
@@ -1058,7 +1058,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <>
-		struct diagnostic<e_unexpected_count,false,false>
+		struct diagnostic<e_unexpected_count, false, false>
 		{
 			static constexpr bool is_invisible = true;
 			BOOST_LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_count const & ) noexcept
@@ -1105,7 +1105,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <>
-		struct diagnostic<e_unexpected_info,false,false>
+		struct diagnostic<e_unexpected_info, false, false>
 		{
 			static constexpr bool is_invisible = true;
 			BOOST_LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_info const & ) noexcept
@@ -1113,11 +1113,14 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		inline int & tl_unexpected_enabled_counter() noexcept
+		template <class=void>
+		struct tl_unexpected_enabled
 		{
-			static BOOST_LEAF_THREAD_LOCAL int c;
-			return c;
-		}
+			static BOOST_LEAF_THREAD_LOCAL int counter;
+		};
+
+		template <class T>
+		BOOST_LEAF_THREAD_LOCAL int tl_unexpected_enabled<T>::counter;
 	}
 
 #else
@@ -1222,7 +1225,7 @@ namespace boost { namespace leaf {
 			slot( slot const & ) = delete;
 			slot & operator=( slot const & ) = delete;
 
-			typedef optional<E> impl;
+			using impl = optional<E>;
 			slot<E> * * top_;
 			slot<E> * prev_;
 
@@ -1309,7 +1312,7 @@ namespace boost { namespace leaf {
 #if BOOST_LEAF_DIAGNOSTICS
 			else
 			{
-				int c = tl_unexpected_enabled_counter();
+				int c = tl_unexpected_enabled<>::counter;
 				BOOST_LEAF_ASSERT(c>=0);
 				if( c )
 					if( int err_id = impl::key() )
@@ -1329,7 +1332,7 @@ namespace boost { namespace leaf {
 #if BOOST_LEAF_DIAGNOSTICS
 			else
 			{
-				int c = tl_unexpected_enabled_counter();
+				int c = tl_unexpected_enabled<>::counter;
 				BOOST_LEAF_ASSERT(c>=0);
 				if( c )
 					load_unexpected(err_id, std::forward<E>(e));
@@ -1352,7 +1355,7 @@ namespace boost { namespace leaf {
 					(void) std::forward<F>(f)(sl->put(err_id,E()));
 			return 0;
 		}
-	} // leaf_detail
+	}
 
 	////////////////////////////////////////
 
@@ -1606,19 +1609,6 @@ namespace boost { namespace leaf {
 	inline error_id current_error() noexcept
 	{
 		return leaf_detail::make_error_id(leaf_detail::current_id());
-	}
-
-	namespace leaf_detail
-	{
-		template <class... E>
-		inline error_id new_error_at( char const * file, int line, char const * function ) noexcept
-		{
-			BOOST_LEAF_ASSERT(file&&*file);
-			BOOST_LEAF_ASSERT(line>0);
-			BOOST_LEAF_ASSERT(function&&*function);
-			e_source_location sl { file, line, function }; // Temp object MSVC workaround
-			return new_error(std::move(sl));
-		}
 	}
 
 	////////////////////////////////////////////
@@ -2016,7 +2006,7 @@ namespace boost { namespace leaf {
 #if BOOST_LEAF_DIAGNOSTICS
 				else
 				{
-					int c = tl_unexpected_enabled_counter();
+					int c = tl_unexpected_enabled<>::counter;
 					BOOST_LEAF_ASSERT(c>=0);
 					if( c )
 						load_unexpected(err_id, std::move(e_));
@@ -2028,7 +2018,7 @@ namespace boost { namespace leaf {
 		template <class F>
 		class deferred_item
 		{
-			typedef decltype(std::declval<F>()()) E;
+			using E = decltype(std::declval<F>()());
 			slot<E> * s_;
 			F f_;
 
@@ -2051,7 +2041,7 @@ namespace boost { namespace leaf {
 #if BOOST_LEAF_DIAGNOSTICS
 				else
 				{
-					int c = tl_unexpected_enabled_counter();
+					int c = tl_unexpected_enabled<>::counter;
 					BOOST_LEAF_ASSERT(c>=0);
 					if( c )
 						load_unexpected(err_id, std::forward<E>(f_()));
@@ -2399,7 +2389,9 @@ namespace boost { namespace leaf {
 	}
 
 	template <class... Ex, class F>
-	inline leaf_detail::deduce_exception_to_result_return_type<leaf_detail::fn_return_type<F>> exception_to_result( F && f ) noexcept
+	inline
+	leaf_detail::deduce_exception_to_result_return_type<leaf_detail::fn_return_type<F>>
+	exception_to_result( F && f ) noexcept
 	{
 		try
 		{
@@ -2839,6 +2831,8 @@ namespace boost { namespace leaf {
 
 } }
 
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
 // Boost Exception Integration below
 
 namespace boost { template <class Tag,class T> class error_info; }
@@ -2874,6 +2868,8 @@ namespace boost { namespace leaf {
 	}
 
 } }
+
+#endif
 
 #endif
 // <<< #include <boost/leaf/detail/handler_argument_traits.hpp>
@@ -2939,6 +2935,7 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////////
 
 #if BOOST_LEAF_DIAGNOSTICS
+
 	namespace leaf_detail
 	{
 		template <class T> struct requires_unexpected { constexpr static bool value = false; };
@@ -2963,6 +2960,7 @@ namespace boost { namespace leaf {
 			constexpr static bool value = requires_unexpected<Car>::value || unexpected_requested<L<S<Cdr>...>>::value;
 		};
 	}
+
 #endif
 
 	////////////////////////////////////////////
@@ -3082,7 +3080,7 @@ namespace boost { namespace leaf {
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
 #if BOOST_LEAF_DIAGNOSTICS
 				if( unexpected_requested<Tup>::value )
-					++tl_unexpected_enabled_counter();
+					++tl_unexpected_enabled<>::counter;
 #endif
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
 				thread_id_ = std::this_thread::get_id();
@@ -3101,7 +3099,7 @@ namespace boost { namespace leaf {
 #endif
 #if BOOST_LEAF_DIAGNOSTICS
 				if( unexpected_requested<Tup>::value )
-					--tl_unexpected_enabled_counter();
+					--tl_unexpected_enabled<>::counter;
 #endif
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_);
 			}
@@ -3207,18 +3205,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class HandlerL>
-		struct handler_args_impl;
-
-		template <template <class...> class L, class... H>
-		struct handler_args_impl<L<H...>>
-		{
-			using type = leaf_detail_mp11::mp_append<fn_mp_args<H>...>;
-		};
-
-		template <class HandlerL>
-		using handler_args = typename handler_args_impl<HandlerL>::type;
-
 		template <class TypeList>
 		struct deduce_context_impl;
 
@@ -3891,74 +3877,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class T, template <class...> class R, class... E>
-		struct add_result
-		{
-			using type = R<T, E...>;
-		};
-
-		template <class T, template <class...> class R, class... E>
-		struct add_result<R<T, E...>, R, E...>
-		{
-			using type = R<T, E...>;
-		};
-
-		template <class... T>
-		struct handler_pack_return_impl;
-
-		template <class T>
-		struct handler_pack_return_impl<T>
-		{
-			using type = T;
-		};
-
-		template <class Car, class... Cdr>
-		struct handler_pack_return_impl<Car, Car, Cdr...>
-		{
-			using type = typename handler_pack_return_impl<Car, Cdr...>::type;
-		};
-
-		template <template <class...> class R, class... E, class Car, class... Cdr>
-		struct handler_pack_return_impl<R<Car,E...>, Car, Cdr...>
-		{
-			using type = typename handler_pack_return_impl<R<Car,E...>, typename add_result<Cdr,R,E...>::type...>::type;
-		};
-
-		template <template <class...> class R, class... E, class Car, class... Cdr>
-		struct handler_pack_return_impl<Car, R<Car,E...>, Cdr...>
-		{
-			using type = typename handler_pack_return_impl<R<Car,E...>, typename add_result<Cdr,R,E...>::type...>::type;
-		};
-
-		template <class... H>
-		using handler_pack_return = typename handler_pack_return_impl<typename std::decay<fn_return_type<H>>::type...>::type;
-
-		template <class... H>
-		struct handler_result
-		{
-			using R = handler_pack_return<H...>;
-
-			R r;
-
-			BOOST_LEAF_CONSTEXPR R get() noexcept
-			{
-				return std::move(r);
-			}
-		};
-
-		template <class... H>
-		struct handler_result_void
-		{
-			BOOST_LEAF_CONSTEXPR void get() noexcept
-			{
-			}
-		};
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
 		template <class... E>
 		template <class R, class... H>
 		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE
@@ -3974,7 +3892,8 @@ namespace boost { namespace leaf {
 		template <class R, class... H>
 		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE
 		R
-		context_base<E...>::handle_error( error_id id, H && ... h )
+		context_base<E...>::
+		handle_error( error_id id, H && ... h )
 		{
 			BOOST_LEAF_ASSERT(!is_active());
 			return handle_error_<R>(tup(), error_info(id), std::forward<H>(h)...);

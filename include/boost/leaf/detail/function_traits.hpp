@@ -24,7 +24,7 @@ namespace boost { namespace leaf {
 		template<class...>
 		struct gcc49_workaround //Thanks Glen Fernandes
 		{
-			typedef void type;
+			using type = void;
 		};
 
 		template<class... T>

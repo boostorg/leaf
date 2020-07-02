@@ -121,7 +121,7 @@ namespace boost { namespace leaf {
 #if BOOST_LEAF_DIAGNOSTICS
 				else
 				{
-					int c = tl_unexpected_enabled_counter();
+					int c = tl_unexpected_enabled<>::counter;
 					BOOST_LEAF_ASSERT(c>=0);
 					if( c )
 						load_unexpected(err_id, std::move(e_));
@@ -133,7 +133,7 @@ namespace boost { namespace leaf {
 		template <class F>
 		class deferred_item
 		{
-			typedef decltype(std::declval<F>()()) E;
+			using E = decltype(std::declval<F>()());
 			slot<E> * s_;
 			F f_;
 
@@ -156,7 +156,7 @@ namespace boost { namespace leaf {
 #if BOOST_LEAF_DIAGNOSTICS
 				else
 				{
-					int c = tl_unexpected_enabled_counter();
+					int c = tl_unexpected_enabled<>::counter;
 					BOOST_LEAF_ASSERT(c>=0);
 					if( c )
 						load_unexpected(err_id, std::forward<E>(f_()));

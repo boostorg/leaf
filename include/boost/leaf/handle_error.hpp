@@ -588,74 +588,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class T, template <class...> class R, class... E>
-		struct add_result
-		{
-			using type = R<T, E...>;
-		};
-
-		template <class T, template <class...> class R, class... E>
-		struct add_result<R<T, E...>, R, E...>
-		{
-			using type = R<T, E...>;
-		};
-
-		template <class... T>
-		struct handler_pack_return_impl;
-
-		template <class T>
-		struct handler_pack_return_impl<T>
-		{
-			using type = T;
-		};
-
-		template <class Car, class... Cdr>
-		struct handler_pack_return_impl<Car, Car, Cdr...>
-		{
-			using type = typename handler_pack_return_impl<Car, Cdr...>::type;
-		};
-
-		template <template <class...> class R, class... E, class Car, class... Cdr>
-		struct handler_pack_return_impl<R<Car,E...>, Car, Cdr...>
-		{
-			using type = typename handler_pack_return_impl<R<Car,E...>, typename add_result<Cdr,R,E...>::type...>::type;
-		};
-
-		template <template <class...> class R, class... E, class Car, class... Cdr>
-		struct handler_pack_return_impl<Car, R<Car,E...>, Cdr...>
-		{
-			using type = typename handler_pack_return_impl<R<Car,E...>, typename add_result<Cdr,R,E...>::type...>::type;
-		};
-
-		template <class... H>
-		using handler_pack_return = typename handler_pack_return_impl<typename std::decay<fn_return_type<H>>::type...>::type;
-
-		template <class... H>
-		struct handler_result
-		{
-			using R = handler_pack_return<H...>;
-
-			R r;
-
-			BOOST_LEAF_CONSTEXPR R get() noexcept
-			{
-				return std::move(r);
-			}
-		};
-
-		template <class... H>
-		struct handler_result_void
-		{
-			BOOST_LEAF_CONSTEXPR void get() noexcept
-			{
-			}
-		};
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
 		template <class... E>
 		template <class R, class... H>
 		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE
@@ -671,7 +603,8 @@ namespace boost { namespace leaf {
 		template <class R, class... H>
 		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE
 		R
-		context_base<E...>::handle_error( error_id id, H && ... h )
+		context_base<E...>::
+		handle_error( error_id id, H && ... h )
 		{
 			BOOST_LEAF_ASSERT(!is_active());
 			return handle_error_<R>(tup(), error_info(id), std::forward<H>(h)...);

@@ -77,6 +77,7 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////////
 
 #if BOOST_LEAF_DIAGNOSTICS
+
 	namespace leaf_detail
 	{
 		template <class T> struct requires_unexpected { constexpr static bool value = false; };
@@ -101,6 +102,7 @@ namespace boost { namespace leaf {
 			constexpr static bool value = requires_unexpected<Car>::value || unexpected_requested<L<S<Cdr>...>>::value;
 		};
 	}
+
 #endif
 
 	////////////////////////////////////////////
@@ -220,7 +222,7 @@ namespace boost { namespace leaf {
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
 #if BOOST_LEAF_DIAGNOSTICS
 				if( unexpected_requested<Tup>::value )
-					++tl_unexpected_enabled_counter();
+					++tl_unexpected_enabled<>::counter;
 #endif
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
 				thread_id_ = std::this_thread::get_id();
@@ -239,7 +241,7 @@ namespace boost { namespace leaf {
 #endif
 #if BOOST_LEAF_DIAGNOSTICS
 				if( unexpected_requested<Tup>::value )
-					--tl_unexpected_enabled_counter();
+					--tl_unexpected_enabled<>::counter;
 #endif
 				tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_);
 			}
@@ -345,18 +347,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class HandlerL>
-		struct handler_args_impl;
-
-		template <template <class...> class L, class... H>
-		struct handler_args_impl<L<H...>>
-		{
-			using type = leaf_detail_mp11::mp_append<fn_mp_args<H>...>;
-		};
-
-		template <class HandlerL>
-		using handler_args = typename handler_args_impl<HandlerL>::type;
-
 		template <class TypeList>
 		struct deduce_context_impl;
 

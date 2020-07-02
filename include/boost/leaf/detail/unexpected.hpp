@@ -72,7 +72,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <>
-		struct diagnostic<e_unexpected_count,false,false>
+		struct diagnostic<e_unexpected_count, false, false>
 		{
 			static constexpr bool is_invisible = true;
 			BOOST_LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_count const & ) noexcept
@@ -119,7 +119,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <>
-		struct diagnostic<e_unexpected_info,false,false>
+		struct diagnostic<e_unexpected_info, false, false>
 		{
 			static constexpr bool is_invisible = true;
 			BOOST_LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_info const & ) noexcept
@@ -127,11 +127,14 @@ namespace boost { namespace leaf {
 			}
 		};
 
-		inline int & tl_unexpected_enabled_counter() noexcept
+		template <class=void>
+		struct tl_unexpected_enabled
 		{
-			static BOOST_LEAF_THREAD_LOCAL int c;
-			return c;
-		}
+			static BOOST_LEAF_THREAD_LOCAL int counter;
+		};
+
+		template <class T>
+		BOOST_LEAF_THREAD_LOCAL int tl_unexpected_enabled<T>::counter;
 	}
 
 #else
