@@ -136,26 +136,24 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_CONSTEXPR static verbose_diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept;
 		};
 
-		template <class P, class A, bool RequiresCatch>
+		template <class Pred>
 		struct handler_argument_pred
 		{
-			using error_type = typename handler_argument_traits<A>::error_type;
-			constexpr static bool requires_catch = RequiresCatch;
+			using argument_traits = handler_argument_traits<typename Pred::error_type>;
+			using error_type = typename argument_traits::error_type;
+			constexpr static bool requires_catch = argument_traits::requires_catch;
 			constexpr static bool always_available = false;
 
 			template <class Tup>
 			BOOST_LEAF_CONSTEXPR static bool check( Tup & tup, error_info const & ei ) noexcept
 			{
-				if( auto * a = handler_argument_traits<A>::check(tup, ei) )
-					if( P(*a) )
-						return true;
-				return false;
+				return Pred::evaluate(argument_traits::check(tup, ei));
 			};
 
 			template <class Tup>
-			BOOST_LEAF_CONSTEXPR static P get( Tup const & tup, error_info const & ei ) noexcept
+			BOOST_LEAF_CONSTEXPR static Pred get( Tup const & tup, error_info const & ei ) noexcept
 			{
-				return P(*handler_argument_traits<A>::check(tup, ei));
+				return Pred(argument_traits::check(tup, ei));
 			}
 		};
 
@@ -169,33 +167,33 @@ namespace boost { namespace leaf {
 	////////////////////////////////////////
 
 #if __cplusplus >= 201703L
-#	define BOOST_LEAF_MATCH_ARGS(t,v1,v) auto v1, auto... v
+#	define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
 #else
-#	define BOOST_LEAF_MATCH_ARGS(t,v1,v) typename leaf_detail::t<E>::enum_type v1, typename leaf_detail::t<E>::enum_type... v
+#	define BOOST_LEAF_MATCH_ARGS(et,v1,v) typename leaf_detail::et::type v1, typename leaf_detail::et::type... v
 #endif
 
 	namespace leaf_detail
 	{
 		template <class E>
-		struct match_traits;
+		struct match_enum_type;
 	}
 
-	template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)>
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_enum_type<E>, V1, V)>
 	struct match;
 
 	namespace leaf_detail
 	{
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)>
-		struct handler_argument_traits<match<E, V1, V...>>: handler_argument_pred<match<E, V1, V...>, typename match_traits<E>::error_type, handler_argument_traits<E>::requires_catch>
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_enum_type<E>, V1, V)>
+		struct handler_argument_traits<match<E, V1, V...>>: handler_argument_pred<match<E, V1, V...>>
 		{
-			static_assert(std::is_same<bool, decltype(cmp_value_pack(std::declval<typename match_traits<E>::error_type>(), V1))>::value,
+			static_assert(std::is_same<bool, decltype(cmp_value_pack(std::declval<typename match<E, V1, V...>::error_type>(), V1))>::value,
 				"The predicate match<E, V...> requires that objects of type E can be compared to the values V...");
 		};
 
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)> struct handler_argument_traits<match<E, V1, V...> const &>: bad_predicate<match<E, V1, V...>> { };
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)> struct handler_argument_traits<match<E, V1, V...> const *>: bad_predicate<match<E, V1, V...>> { };
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)> struct handler_argument_traits<match<E, V1, V...> &>: bad_predicate<match<E, V1, V...>> { };
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)> struct handler_argument_traits<match<E, V1, V...> *>: bad_predicate<match<E, V1, V...>> { };
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_enum_type<E>, V1, V)> struct handler_argument_traits<match<E, V1, V...> const &>: bad_predicate<match<E, V1, V...>> { };
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_enum_type<E>, V1, V)> struct handler_argument_traits<match<E, V1, V...> const *>: bad_predicate<match<E, V1, V...>> { };
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_enum_type<E>, V1, V)> struct handler_argument_traits<match<E, V1, V...> &>: bad_predicate<match<E, V1, V...>> { };
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_enum_type<E>, V1, V)> struct handler_argument_traits<match<E, V1, V...> *>: bad_predicate<match<E, V1, V...>> { };
 	}
 
 	////////////////////////////////////////
@@ -203,25 +201,25 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class E>
-		struct match_value_traits;
+		struct match_value_enum_type;
 	}
 
-	template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)>
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_value_enum_type<E>, V1, V)>
 	struct match_value;
 
 	namespace leaf_detail
 	{
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)>
-		struct handler_argument_traits<match_value<E, V1, V...>>: handler_argument_pred<match_value<E, V1, V...>, typename match_value_traits<E>::error_type, handler_argument_traits<E>::requires_catch>
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_enum_type<E>, V1, V)>
+		struct handler_argument_traits<match_value<E, V1, V...>>: handler_argument_pred<match_value<E, V1, V...>>
 		{
-			static_assert(std::is_same<bool, decltype(cmp_value_pack(std::declval<typename match_value_traits<E>::error_type>().value, V1))>::value,
+			static_assert(std::is_same<bool, decltype(cmp_value_pack(std::declval<typename match_value<E, V1, V...>::error_type>().value, V1))>::value,
 				"The predicate match_value<E, V...> requires that objects of type E have a data member .value that can be compared to the values V...");
 		};
 
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)> struct handler_argument_traits<match_value<E, V1, V...> const &>: bad_predicate<match_value<E, V1, V...>> { };
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)> struct handler_argument_traits<match_value<E, V1, V...> const *>: bad_predicate<match_value<E, V1, V...>> { };
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)> struct handler_argument_traits<match_value<E, V1, V...> &>: bad_predicate<match_value<E, V1, V...>> { };
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)> struct handler_argument_traits<match_value<E, V1, V...> *>: bad_predicate<match_value<E, V1, V...>> { };
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_enum_type<E>, V1, V)> struct handler_argument_traits<match_value<E, V1, V...> const &>: bad_predicate<match_value<E, V1, V...>> { };
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_enum_type<E>, V1, V)> struct handler_argument_traits<match_value<E, V1, V...> const *>: bad_predicate<match_value<E, V1, V...>> { };
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_enum_type<E>, V1, V)> struct handler_argument_traits<match_value<E, V1, V...> &>: bad_predicate<match_value<E, V1, V...>> { };
+		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_enum_type<E>, V1, V)> struct handler_argument_traits<match_value<E, V1, V...> *>: bad_predicate<match_value<E, V1, V...>> { };
 	}
 
 	////////////////////////////////////////
@@ -231,13 +229,10 @@ namespace boost { namespace leaf {
 	template <auto, auto, auto...>
 	struct match_member;
 
-	template <class T, class E, T E::* P, auto V1, auto... V>
-	struct match_member<P, V1, V...>;
-
 	namespace leaf_detail
 	{
 		template <class T, class E, T E::* P, auto V1, auto... V>
-		struct handler_argument_traits<match_member<P, V1, V...>>: handler_argument_pred<match_member<P, V1, V...>, E const &, handler_argument_traits<E>::requires_catch>
+		struct handler_argument_traits<match_member<P, V1, V...>>: handler_argument_pred<match_member<P, V1, V...>>
 		{
 			static_assert(std::is_same<bool, decltype(cmp_value_pack(std::declval<E>().*P, V1))>::value,
 				"The predicate match_member<&E::m, V...> requires that objects of type E have a data member m that can be compared to the values V...");
@@ -253,14 +248,29 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
+	namespace leaf_detail
+	{
+		template <class... Ex>
+		struct catch_traits;
+	}
+
 	template <class... Ex>
 	class catch_;
 
 	namespace leaf_detail
 	{
 		template <class... Ex>
-		struct handler_argument_traits<catch_<Ex...>>: handler_argument_pred<catch_<Ex...>, std::exception, true>
+		struct handler_argument_traits<catch_<Ex...>>
 		{
+			using error_type = void;
+			constexpr static bool requires_catch = true;
+			constexpr static bool always_available = false;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static bool check( Tup & tup, error_info const & ei ) noexcept;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static catch_<Ex...> get( Tup const & tup, error_info const & ei ) noexcept;
 		};
 
 		template <class... Ex> struct handler_argument_traits<catch_<Ex...> const &>: bad_predicate<catch_<Ex...>> { };

@@ -18,6 +18,7 @@ int main()
 
 #include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
+#include <boost/leaf/pred.hpp>
 #include "lightweight_test.hpp"
 
 namespace leaf = boost::leaf;

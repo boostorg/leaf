@@ -83,74 +83,7 @@ namespace boost { namespace leaf {
 				return rr;
 			}
 		}
-
-		template <class Ex>
-		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const * ) noexcept
-		{
-			return dynamic_cast<Ex const *>(&ex)!=0;
-		}
-
-		template <class Ex, class... ExRest>
-		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const *, ExRest const * ... ex_rest ) noexcept
-		{
-			return dynamic_cast<Ex const *>(&ex)!=0 || check_exception_pack(ex, ex_rest...);
-		}
-
-		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & )
-		{
-			return true;
-		}
 	}
-
-	////////////////////////////////////////
-
-	template <class... Ex>
-	class catch_
-	{
-		std::exception const & ex_;
-
-	public:
-
-		BOOST_LEAF_CONSTEXPR explicit catch_( std::exception const & ex ) noexcept:
-			ex_(ex)
-		{
-		}
-
-		BOOST_LEAF_CONSTEXPR explicit operator bool() const noexcept
-		{
-			return leaf_detail::check_exception_pack(ex_, static_cast<Ex const *>(0)...);
-		}
-
-		BOOST_LEAF_CONSTEXPR std::exception const & matched() const noexcept
-		{
-			return ex_;
-		}
-	};
-
-	template <class Ex>
-	class catch_<Ex>
-	{
-		std::exception const & ex_;
-
-	public:
-
-		BOOST_LEAF_CONSTEXPR explicit catch_( std::exception const & ex ) noexcept:
-			ex_(ex)
-		{
-		}
-
-		BOOST_LEAF_CONSTEXPR explicit operator bool() const noexcept
-		{
-			return dynamic_cast<Ex const *>(&ex_) != 0;
-		}
-
-		BOOST_LEAF_CONSTEXPR Ex const & matched() const noexcept
-		{
-			Ex const * ex = dynamic_cast<Ex const *>(&ex_);
-			BOOST_LEAF_ASSERT(ex != 0);
-			return *ex;
-		}
-	};
 
 	////////////////////////////////////////
 
@@ -270,6 +203,31 @@ namespace boost { namespace leaf {
 				return std::forward<TryBlock>(try_block)();
 			},
 			std::forward<H>(h)...);
+	}
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		template <class... Ex>
+		template <class Tup>
+		BOOST_LEAF_CONSTEXPR inline
+		bool
+		handler_argument_traits<catch_<Ex...>>::
+		check( Tup &, error_info const & ei ) noexcept
+		{
+			return ei.exception_caught() && catch_<Ex...>::evaluate(ei.exception());
+		};
+
+		template <class... Ex>
+		template <class Tup>
+		BOOST_LEAF_CONSTEXPR inline
+		catch_<Ex...>
+		handler_argument_traits<catch_<Ex...>>::
+		get( Tup const &, error_info const & ei ) noexcept
+		{
+			return catch_<Ex...>(ei.exception());
+		}
 	}
 
 } }

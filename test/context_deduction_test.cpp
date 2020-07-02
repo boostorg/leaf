@@ -124,7 +124,7 @@ void not_called_on_purpose()
 #endif
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
-	test< std::tuple<std::exception, info<1>> >( expd([]( leaf::catch_<std::exception>, info<1> ){ }) );
+	test< std::tuple<info<1>> >( expd([]( leaf::catch_<std::exception>, info<1> ){ }) );
 #endif
 
 	test< std::tuple<info<1>,info<2>,info<3>> >( expd([]( info<1> const *, info<2> ){ }, []( info<1>, info<3> const * ){ }) );

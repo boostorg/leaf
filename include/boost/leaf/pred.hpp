@@ -22,7 +22,7 @@ namespace boost { namespace leaf {
 	namespace leaf_detail
 	{
 		template <class MatchType>
-		struct pred
+		class pred
 		{
 		public:
 
@@ -48,86 +48,6 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	namespace leaf_detail
-	{
-		template <class E>
-		struct match_traits
-		{
-			using enum_type = E;
-			using error_type = E;
-			using match_type = error_type const &;
-		};
-	}
-
-	template <class E, BOOST_LEAF_MATCH_ARGS(match_traits, V1, V)>
-	struct match: leaf_detail::pred<typename leaf_detail::match_traits<E>::match_type>
-	{
-		using base = leaf_detail::pred<typename leaf_detail::match_traits<E>::match_type>;
-
-		BOOST_LEAF_CONSTEXPR explicit match( typename base::match_type m ) noexcept:
-			base(m)
-		{
-		}
-
-		BOOST_LEAF_CONSTEXPR explicit operator bool() const noexcept
-		{
-			return leaf_detail::cmp_value_pack(this->m_, V1, V...);
-		}
-	};
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		template <class E>
-		struct match_value_traits
-		{
-			using enum_type = typename std::remove_reference<decltype(std::declval<E>().value)>::type;
-			using error_type = E;
-			using match_type = error_type const &;
-		};
-	}
-
-	template <class E, BOOST_LEAF_MATCH_ARGS(match_value_traits, V1, V)>
-	struct match_value: leaf_detail::pred<typename leaf_detail::match_value_traits<E>::match_type>
-	{
-		using base = leaf_detail::pred<typename leaf_detail::match_value_traits<E>::match_type>;
-
-		BOOST_LEAF_CONSTEXPR explicit match_value( typename base::match_type m ) noexcept:
-			base(m)
-		{
-		}
-
-		BOOST_LEAF_CONSTEXPR explicit operator bool() const noexcept
-		{
-			return leaf_detail::cmp_value_pack(this->m_.value, V1, V...);
-		}
-	};
-
-	////////////////////////////////////////
-
-#if __cplusplus >= 201703L
-
-	template <class T, class E, T E::* P, auto V1, auto... V>
-	struct match_member<P, V1, V...>: leaf_detail::pred<E const &>
-	{
-		using base = leaf_detail::pred<E const &>;
-
-		BOOST_LEAF_CONSTEXPR explicit match_member( typename base::match_type m ) noexcept:
-			base(m)
-		{
-		}
-
-		BOOST_LEAF_CONSTEXPR explicit operator bool() const noexcept
-		{
-			return leaf_detail::cmp_value_pack(this->m_.*P, V1, V...);
-		}
-	};
-
-#endif
-
-	////////////////////////////////////////
-
 	template <class E, class Enum = E>
 	struct condition
 	{
@@ -140,39 +60,6 @@ namespace boost { namespace leaf {
 		static_assert(std::is_error_condition_enum<Enum>::value || std::is_error_code_enum<Enum>::value, "leaf::condition<Enum> requires Enum to be registered either with std::is_error_condition_enum or std::is_error_code_enum.");
 	};
 
-	namespace leaf_detail
-	{
-		template <class Enum>
-		struct match_traits<condition<Enum, Enum>>
-		{
-			using enum_type = Enum;
-			using error_type = std::error_code;
-			using match_type = error_type const &;
-		};
-
-		template <class E, class Enum>
-		struct match_traits<condition<E, Enum>>
-		{
-			static_assert(sizeof(Enum)==0, "leaf::condition<E, Enum> should be used with leaf::match_value<>, not with leaf::match<>");
-		};
-
-		template <class E, class Enum>
-		struct match_value_traits<condition<E, Enum>>
-		{
-			using enum_type = Enum;
-			using error_type = E;
-			using match_type = error_type const &;
-		};
-
-		template <class Enum>
-		struct match_value_traits<condition<Enum, Enum>>
-		{
-			static_assert(sizeof(Enum)==0, "leaf::condition<Enum> should be used with leaf::match<>, not with leaf::match_value<>");
-		};
-	}
-
-	////////////////////////////////////////
-
 	template <class ErrorCodeEnum>
 	BOOST_LEAF_CONSTEXPR inline bool category( std::error_code const & ec ) noexcept
 	{
@@ -180,6 +67,196 @@ namespace boost { namespace leaf {
 		return &ec.category() == &std::error_code(ErrorCodeEnum{}).category();
 	}
 
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		template <class T>
+		struct match_enum_type
+		{
+			using type = T;
+		};
+
+		template <class Enum>
+		struct match_enum_type<condition<Enum, Enum>>
+		{
+			using type = Enum;
+		};
+
+		template <class E, class Enum>
+		struct match_enum_type<condition<E, Enum>>
+		{
+			static_assert(sizeof(Enum)==0, "leaf::condition<E, Enum> should be used with leaf::match_value<>, not with leaf::match<>");
+		};
+	}
+
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_enum_type<E>, V1, V)>
+	struct match: leaf_detail::pred<E const &>
+	{
+		using error_type = E;
+
+		BOOST_LEAF_CONSTEXPR explicit match(E const * e) noexcept:
+			leaf_detail::pred<E const &>(*e)
+		{
+		}
+
+		BOOST_LEAF_CONSTEXPR static bool evaluate(E const * e)
+		{
+			return e && leaf_detail::cmp_value_pack(*e, V1, V...);
+		}
+	};
+
+#define BOOST_LEAF_ESC(...) __VA_ARGS__
+	template <class Enum, BOOST_LEAF_MATCH_ARGS(BOOST_LEAF_ESC(match_enum_type<condition<Enum, Enum>>), V1, V)>
+	struct match<condition<Enum, Enum>, V1, V...>: leaf_detail::pred<std::error_code const &>
+	{
+		using error_type = std::error_code;
+
+		BOOST_LEAF_CONSTEXPR explicit match(std::error_code const * e) noexcept:
+			leaf_detail::pred<std::error_code const &>(*e)
+		{
+		}
+
+		BOOST_LEAF_CONSTEXPR static bool evaluate(std::error_code const * e)
+		{
+			return e && leaf_detail::cmp_value_pack(*e, V1, V...);
+		}
+	};
+#undef BOOST_LEAF_ESC
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		template <class E>
+		struct match_value_enum_type
+		{
+			using type = typename std::remove_reference<decltype(std::declval<E>().value)>::type;
+		};
+
+		template <class E, class Enum>
+		struct match_value_enum_type<condition<E, Enum>>
+		{
+			using type = Enum;
+		};
+
+		template <class Enum>
+		struct match_value_enum_type<condition<Enum, Enum>>
+		{
+			static_assert(sizeof(Enum)==0, "leaf::condition<Enum> should be used with leaf::match<>, not with leaf::match_value<>");
+		};
+	}
+
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_value_enum_type<E>, V1, V)>
+	struct match_value: leaf_detail::pred<E const &>
+	{
+		using error_type = E;
+
+		BOOST_LEAF_CONSTEXPR explicit match_value(E const * e) noexcept:
+			leaf_detail::pred<E const &>(*e)
+		{
+		}
+
+		BOOST_LEAF_CONSTEXPR static bool evaluate(E const * e)
+		{
+			return e && leaf_detail::cmp_value_pack(e->value, V1, V...);
+		}
+	};
+
+
+#define BOOST_LEAF_ESC(...) __VA_ARGS__
+	template <class E, class Enum, BOOST_LEAF_MATCH_ARGS(BOOST_LEAF_ESC(match_value_enum_type<condition<E, Enum>>), V1, V)>
+	struct match_value<condition<E, Enum>, V1, V...>: leaf_detail::pred<E const &>
+	{
+		using error_type = E;
+
+		BOOST_LEAF_CONSTEXPR explicit match_value(E const * e) noexcept:
+			leaf_detail::pred<E const &>(*e)
+		{
+		}
+
+		BOOST_LEAF_CONSTEXPR static bool evaluate(E const * e)
+		{
+			return e && leaf_detail::cmp_value_pack(e->value, V1, V...);
+		}
+	};
+#undef BOOST_LEAF_ESC
+
+	////////////////////////////////////////
+
+#if __cplusplus >= 201703L
+
+	template <class T, class E, T E::* P, auto V1, auto... V>
+	struct match_member<P, V1, V...>: leaf_detail::pred<E const &>
+	{
+		using error_type = E;
+
+		BOOST_LEAF_CONSTEXPR explicit match_member(E const * e) noexcept:
+			leaf_detail::pred<E const &>(*e)
+		{
+		}
+
+		BOOST_LEAF_CONSTEXPR static bool evaluate(E const * e)
+		{
+			return e && leaf_detail::cmp_value_pack(e->*P, V1, V...);
+		}
+	};
+
+#endif
+
+	////////////////////////////////////////
+
+	namespace leaf_detail
+	{
+		template <class Ex>
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * ex, Ex const * ) noexcept
+		{
+			return dynamic_cast<Ex const *>(ex)!=0;
+		}
+
+		template <class Ex, class... ExRest>
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * ex, Ex const *, ExRest const * ... ex_rest ) noexcept
+		{
+			return dynamic_cast<Ex const *>(ex)!=0 || check_exception_pack(ex, ex_rest...);
+		}
+
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const * )
+		{
+			return true;
+		}
+	}
+
+	template <class... Ex>
+	struct catch_: leaf_detail::pred<std::exception const &>
+	{
+		using error_type = void;
+
+		BOOST_LEAF_CONSTEXPR explicit catch_(std::exception const * ex) noexcept:
+			leaf_detail::pred<std::exception const &>(*ex)
+		{
+		}
+
+		BOOST_LEAF_CONSTEXPR static bool evaluate(std::exception const * ex)
+		{
+			return ex && leaf_detail::check_exception_pack(ex, static_cast<Ex const *>(0)...);
+		}
+	};
+
+	template <class Ex>
+	struct catch_<Ex>: leaf_detail::pred<Ex const &>
+	{
+		using error_type = void;
+
+		BOOST_LEAF_CONSTEXPR explicit catch_(std::exception const * ex) noexcept:
+			leaf_detail::pred<Ex const &>(*dynamic_cast<Ex const *>(ex))
+		{
+		}
+
+		BOOST_LEAF_CONSTEXPR static bool evaluate(std::exception const * ex)
+		{
+			return dynamic_cast<Ex const *>(ex) != 0;
+		}
+	};
 } }
 
 // Boost Exception Integration
@@ -191,16 +268,33 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
+		template <class Tag, class T>
+		struct match_enum_type<boost::error_info<Tag, T>>
+		{
+			using type = T;
+		};
+	}
+
+	template <class Tag, class T, BOOST_LEAF_MATCH_ARGS(match_enum_type<T>, V1, V)>
+	struct match<boost::error_info<Tag, T>, V1, V...>: leaf_detail::pred<T>
+	{
+		using error_type = boost::error_info<Tag, T>;
+
+		BOOST_LEAF_CONSTEXPR explicit match(T const * x) noexcept:
+			leaf_detail::pred<T>(*x)
+		{
+		}
+
+		BOOST_LEAF_CONSTEXPR static bool evaluate(T const * x)
+		{
+			return x && leaf_detail::cmp_value_pack(*x, V1, V...);
+		}
+	};
+
+	namespace leaf_detail
+	{
 		template <class Ex>
 		BOOST_LEAF_CONSTEXPR Ex * get_exception( error_info const & );
-
-		template <class Tag, class T>
-		struct match_traits<boost::error_info<Tag, T>>
-		{
-			using enum_type = T;
-			using error_type = boost::error_info<Tag, T>;
-			using match_type = T;
-		};
 
 		template <class, class T>
 		struct dependent_type { using type = T; };
