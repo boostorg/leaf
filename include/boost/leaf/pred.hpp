@@ -266,16 +266,7 @@ namespace boost { namespace exception_detail { template <class ErrorInfo> struct
 
 namespace boost { namespace leaf {
 
-	namespace leaf_detail
-	{
-		template <class Tag, class T>
-		struct match_enum_type<boost::error_info<Tag, T>>
-		{
-			using type = T;
-		};
-	}
-
-	template <class Tag, class T, BOOST_LEAF_MATCH_ARGS(match_enum_type<T>, V1, V)>
+	template <class Tag, class T, T V1, T... V>
 	struct match<boost::error_info<Tag, T>, V1, V...>: leaf_detail::pred<T>
 	{
 		using error_type = boost::error_info<Tag, T>;
