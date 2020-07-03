@@ -289,6 +289,15 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
+		template <class T>
+		struct match_enum_type;
+
+		template <class Tag, class T>
+		struct match_enum_type<boost::error_info<Tag, T>>
+		{
+			using type = T;
+		};
+
 		template <class Ex>
 		BOOST_LEAF_CONSTEXPR Ex * get_exception( error_info const & );
 

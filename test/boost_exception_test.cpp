@@ -30,6 +30,12 @@ typedef boost::error_info<struct test_info_, int> test_info;
 
 int main()
 {
+	static_assert(std::is_same<test_info, decltype(std::declval<leaf::match<test_info, 42>>().matched)>::value, "handler_argument_traits deduction bug");
+
+	using tr = leaf::leaf_detail::handler_argument_traits<leaf::match<test_info, 42>>;
+	static_assert(tr::requires_catch, "handler_argument_traits deduction bug");
+	static_assert(std::is_same<void, tr::error_type>::value, "handler_argument_traits deduction bug");
+
 	{
 		int r = leaf::try_catch(
 			[]

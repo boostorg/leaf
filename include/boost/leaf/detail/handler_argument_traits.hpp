@@ -38,12 +38,12 @@ namespace boost { namespace leaf {
 #endif
 
 		template <class T>
-		using has_member_matched_impl = decltype(std::declval<T>().matched);
+		using is_predicate_impl = decltype(T::evaluate(std::declval<T>().matched));
 
 		template <class T>
-		struct has_member_matched
+		struct is_predicate
 		{
-			constexpr static bool value = leaf_detail_mp11::mp_valid<has_member_matched_impl, typename std::decay<T>::type>::value;
+			constexpr static bool value = leaf_detail_mp11::mp_valid<is_predicate_impl, typename std::decay<T>::type>::value;
 		};
 
 		template <class T>
@@ -54,7 +54,7 @@ namespace boost { namespace leaf {
 		template <class E>
 		struct handler_argument_traits;
 
-		template <class E, bool RequiresCatch = is_exception<E>::value, bool IsPredicate = has_member_matched<E>::value>
+		template <class E, bool RequiresCatch = is_exception<E>::value, bool IsPredicate = is_predicate<E>::value>
 		struct handler_argument_traits_defaults;
 
 		template <class E, bool RequiresCatch>
@@ -82,26 +82,24 @@ namespace boost { namespace leaf {
 		};
 
 		template <class Pred>
-		struct handler_argument_traits_defaults<Pred, false, true>
+		struct handler_argument_traits_defaults<Pred, false, true>: handler_argument_traits<typename std::decay<decltype(std::declval<typename std::decay<Pred>::type>().matched)>::type>
 		{
 			static_assert(!std::is_reference<Pred>::value && !std::is_pointer<Pred>::value, "Handlers must take Pred arguments by value");
 
-			using matched_traits = handler_argument_traits<decltype(std::declval<Pred>().matched)>;
-			using error_type = typename matched_traits::error_type;
-			constexpr static bool requires_catch = matched_traits::requires_catch;
-			constexpr static bool always_available = false;
+			using base = handler_argument_traits<typename std::decay<decltype(std::declval<typename std::decay<Pred>::type>().matched)>::type>;
+			static_assert(!base::always_available, "Predicates can't use types that are always_available");
 
 			template <class Tup>
 			BOOST_LEAF_CONSTEXPR static bool check( Tup & tup, error_info const & ei ) noexcept
 			{
-				auto e = matched_traits::check(tup, ei);
+				auto e = base::check(tup, ei);
 				return e && Pred::evaluate(*e);
 			};
 
 			template <class Tup>
 			BOOST_LEAF_CONSTEXPR static Pred get( Tup const & tup, error_info const & ei ) noexcept
 			{
-				return Pred{*matched_traits::check(tup, ei)};
+				return Pred{*base::check(tup, ei)};
 			}
 		};
 
