@@ -38,8 +38,8 @@ bool test(E const & e )
 {
 	if( M::evaluate(e) )
 	{
-		M m(e);
-		BOOST_TEST(e == m.matched());
+		M m{e};
+		BOOST_TEST(e == m.matched);
 		return true;
 	}
 	else

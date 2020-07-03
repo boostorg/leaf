@@ -207,30 +207,125 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
+	template <class... Ex>
+	struct catch_
+	{
+		std::exception const & caught;
+
+		explicit catch_( std::exception const & ex ):
+			caught(ex)
+		{
+		}
+	};
+
+	template <class Ex>
+	struct catch_<Ex>
+	{
+		Ex const & caught;
+
+		explicit catch_( std::exception const & ex ):
+			caught(*dynamic_cast<Ex const *>(&ex))
+		{
+		}
+	};
+
 	namespace leaf_detail
 	{
-		template <class... Ex>
-		template <class Tup>
-		BOOST_LEAF_CONSTEXPR inline
-		bool
-		handler_argument_traits<catch_<Ex...>>::
-		check( Tup &, error_info const & ei ) noexcept
+		template <class Ex>
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const * ) noexcept
 		{
-			if( ei.exception_caught() )
-				if( std::exception const * ex = ei.exception() )
-					return catch_<Ex...>::evaluate(*ex);
-			return false;
-		};
+			return dynamic_cast<Ex const *>(&ex)!=0;
+		}
+
+		template <class Ex, class... ExRest>
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const *, ExRest const * ... ex_rest ) noexcept
+		{
+			return dynamic_cast<Ex const *>(&ex)!=0 || check_exception_pack(ex, ex_rest...);
+		}
+
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ) noexcept
+		{
+			return true;
+		}
 
 		template <class... Ex>
-		template <class Tup>
-		BOOST_LEAF_CONSTEXPR inline
-		catch_<Ex...>
-		handler_argument_traits<catch_<Ex...>>::
-		get( Tup const &, error_info const & ei ) noexcept
+		struct handler_argument_traits<catch_<Ex...>>
 		{
-			return catch_<Ex...>(*ei.exception());
-		}
+			using error_type = void;
+			constexpr static bool requires_catch = true;
+			constexpr static bool always_available = false;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static bool check( Tup & tup, error_info const & ei ) noexcept
+			{
+				if( ei.exception_caught() )
+					if( std::exception const * ex = ei.exception() )
+						return leaf_detail::check_exception_pack(*ex, static_cast<Ex const *>(0)...);
+				return false;
+			}
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static catch_<Ex...> get( Tup const & tup, error_info const & ei ) noexcept
+			{
+				return catch_<Ex...>(*ei.exception());
+			}
+		};
+
+		template <class... Ex> struct handler_argument_traits<catch_<Ex...> const &>: handler_argument_traits_require_by_value<catch_<Ex...>> { };
+		template <class... Ex> struct handler_argument_traits<catch_<Ex...> const *>: handler_argument_traits_require_by_value<catch_<Ex...>> { };
+		template <class... Ex> struct handler_argument_traits<catch_<Ex...> &>: handler_argument_traits_require_by_value<catch_<Ex...>> { };
+		template <class... Ex> struct handler_argument_traits<catch_<Ex...> *>: handler_argument_traits_require_by_value<catch_<Ex...>> { };
+	}
+
+} }
+
+// Boost Exception Integration
+
+namespace boost { class exception; }
+namespace boost { template <class Tag,class T> class error_info; }
+namespace boost { namespace exception_detail { template <class ErrorInfo> struct get_info; } }
+
+namespace boost { namespace leaf {
+
+	namespace leaf_detail
+	{
+		template <class Ex>
+		BOOST_LEAF_CONSTEXPR Ex * get_exception( error_info const & );
+
+		template <class, class T>
+		struct dependent_type { using type = T; };
+
+		template <class Dep, class T>
+		using dependent_type_t = typename dependent_type<Dep, T>::type;
+
+		template <class Tag, class T>
+		struct handler_argument_traits<boost::error_info<Tag, T>>
+		{
+			using error_type = void;
+			constexpr static bool requires_catch = true;
+			constexpr static bool always_available = false;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static T * check( Tup & tup, error_info const & ei ) noexcept
+			{
+				using boost_exception = dependent_type_t<T, boost::exception>;
+				if( auto * be = get_exception<boost_exception>(ei) )
+					return exception_detail::get_info<boost::error_info<Tag, T>>::get(*be);
+				else
+					return 0;
+			}
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static boost::error_info<Tag, T> get( Tup const & tup, error_info const & ei ) noexcept
+			{
+				return boost::error_info<Tag, T>(*check(tup, ei));
+			}
+		};
+
+		template <class Tag, class T> struct handler_argument_traits<boost::error_info<Tag, T> const &>: handler_argument_traits_require_by_value<boost::error_info<Tag, T>> { };
+		template <class Tag, class T> struct handler_argument_traits<boost::error_info<Tag, T> const *>: handler_argument_traits_require_by_value<boost::error_info<Tag, T>> { };
+		template <class Tag, class T> struct handler_argument_traits<boost::error_info<Tag, T> &>: handler_argument_traits_require_by_value<boost::error_info<Tag, T>> { };
+		template <class Tag, class T> struct handler_argument_traits<boost::error_info<Tag, T> *>: handler_argument_traits_require_by_value<boost::error_info<Tag, T>> { };
 	}
 
 } }

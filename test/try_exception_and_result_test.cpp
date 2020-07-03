@@ -363,7 +363,7 @@ int main()
 			},
 			[]( leaf::match_value<my_exception, 42> m )
 			{
-				return m.matched().value;
+				return m.matched.value;
 			} );
 		BOOST_TEST(r);
 		BOOST_TEST_EQ(r.value(), 42);
@@ -376,7 +376,7 @@ int main()
 			},
 			[]( leaf::match_value<my_exception, 42> m )
 			{
-				return m.matched().value;
+				return m.matched.value;
 			} );
 		BOOST_TEST(r);
 		BOOST_TEST_EQ(r.value(), 42);
@@ -389,7 +389,7 @@ int main()
 			},
 			[]( leaf::match_value<my_exception, 41> m )
 			{
-				return m.matched().value;
+				return m.matched.value;
 			},
 			[]( leaf::error_info const & unmatched )
 			{
@@ -405,7 +405,7 @@ int main()
 			},
 			[]( leaf::match_value<my_exception, 41> m )
 			{
-				return m.matched().value;
+				return m.matched.value;
 			},
 			[]( leaf::error_info const & unmatched )
 			{
@@ -423,7 +423,7 @@ int main()
 			},
 			[]( leaf::match_value<my_exception, 42> m )
 			{
-				return m.matched().value;
+				return m.matched.value;
 			},
 			[]
 			{
@@ -439,7 +439,7 @@ int main()
 			},
 			[]( leaf::match_value<my_exception, 42> m )
 			{
-				return m.matched().value;
+				return m.matched.value;
 			},
 			[]
 			{
@@ -455,7 +455,7 @@ int main()
 			},
 			[]( leaf::match_value<my_exception, 41> m )
 			{
-				return m.matched().value;
+				return m.matched.value;
 			},
 			[]
 			{
@@ -471,7 +471,7 @@ int main()
 			},
 			[]( leaf::match_value<my_exception, 41> m )
 			{
-				return m.matched().value;
+				return m.matched.value;
 			},
 			[]
 			{

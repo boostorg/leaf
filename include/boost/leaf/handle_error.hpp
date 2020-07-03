@@ -419,8 +419,8 @@ namespace boost { namespace leaf {
 		template <class A, bool RequiresCatch>
 		template <class Tup>
 		BOOST_LEAF_CONSTEXPR inline
-		typename handler_argument_traits_defaults<A, RequiresCatch>::error_type const *
-		handler_argument_traits_defaults<A, RequiresCatch>::
+		typename handler_argument_traits_defaults<A, RequiresCatch, false>::error_type const *
+		handler_argument_traits_defaults<A, RequiresCatch, false>::
 		check( Tup const & tup, error_info const & ei ) noexcept
 		{
 			return peek<typename std::decay<A>::type>(tup, ei);
@@ -429,8 +429,8 @@ namespace boost { namespace leaf {
 		template <class A, bool RequiresCatch>
 		template <class Tup>
 		BOOST_LEAF_CONSTEXPR inline
-		typename handler_argument_traits_defaults<A, RequiresCatch>::error_type *
-		handler_argument_traits_defaults<A, RequiresCatch>::
+		typename handler_argument_traits_defaults<A, RequiresCatch, false>::error_type *
+		handler_argument_traits_defaults<A, RequiresCatch, false>::
 		check( Tup & tup, error_info const & ei ) noexcept
 		{
 			return peek<typename std::decay<A>::type>(tup, ei);

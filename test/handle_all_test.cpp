@@ -109,7 +109,7 @@ int main()
 			},
 			[&c]( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST_EQ(ec.matched(), make_error_code(errc_a::a0));
+				BOOST_TEST_EQ(ec.matched, make_error_code(errc_a::a0));
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				BOOST_TEST_EQ(c, 0);
@@ -140,7 +140,7 @@ int main()
 			},
 			[&c]( leaf::match_value<leaf::condition<e_std_error_code, cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST_EQ(ec.matched().value, make_error_code(errc_a::a0));
+				BOOST_TEST_EQ(ec.matched.value, make_error_code(errc_a::a0));
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				BOOST_TEST_EQ(c, 0);
@@ -171,7 +171,7 @@ int main()
 			},
 			[&c]( leaf::match<my_error_code, my_error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.matched()==my_error_code::error1);
+				BOOST_TEST(ec.matched==my_error_code::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				BOOST_TEST_EQ(c, 0);
@@ -202,7 +202,7 @@ int main()
 			},
 			[&c]( leaf::match<my_error_code, my_error_code::error2, my_error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.matched()==my_error_code::error1);
+				BOOST_TEST(ec.matched==my_error_code::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				BOOST_TEST_EQ(c, 0);
@@ -233,7 +233,7 @@ int main()
 			},
 			[&c]( leaf::match_value<e_my_error_code, my_error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.matched().value==my_error_code::error1);
+				BOOST_TEST(ec.matched.value==my_error_code::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				BOOST_TEST_EQ(c, 0);
@@ -264,7 +264,7 @@ int main()
 			},
 			[&c]( leaf::match_value<e_my_error_code, my_error_code::error2, my_error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.matched().value==my_error_code::error1);
+				BOOST_TEST(ec.matched.value==my_error_code::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				BOOST_TEST_EQ(c, 0);
@@ -331,7 +331,7 @@ int main()
 			},
 			[]( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST_EQ(ec.matched(), make_error_code(errc_a::a0));
+				BOOST_TEST_EQ(ec.matched, make_error_code(errc_a::a0));
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
@@ -357,7 +357,7 @@ int main()
 			},
 			[]( leaf::match_value<leaf::condition<e_std_error_code, cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST_EQ(ec.matched().value, make_error_code(errc_a::a0));
+				BOOST_TEST_EQ(ec.matched.value, make_error_code(errc_a::a0));
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
@@ -383,7 +383,7 @@ int main()
 			},
 			[]( leaf::match<my_error_code, my_error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.matched()==my_error_code::error1);
+				BOOST_TEST(ec.matched==my_error_code::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
@@ -409,7 +409,7 @@ int main()
 			},
 			[]( leaf::match<my_error_code, my_error_code::error2, my_error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.matched()==my_error_code::error1);
+				BOOST_TEST(ec.matched==my_error_code::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
@@ -435,7 +435,7 @@ int main()
 			},
 			[]( leaf::match_value<e_my_error_code, my_error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.matched().value==my_error_code::error1);
+				BOOST_TEST(ec.matched.value==my_error_code::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
@@ -461,7 +461,7 @@ int main()
 			},
 			[]( leaf::match_value<e_my_error_code, my_error_code::error2, my_error_code::error1> ec, info<1> const & x, info<2> y )
 			{
-				BOOST_TEST(ec.matched().value==my_error_code::error1);
+				BOOST_TEST(ec.matched.value==my_error_code::error1);
 				BOOST_TEST_EQ(x.value, 1);
 				BOOST_TEST_EQ(y.value, 2);
 				return 2;
