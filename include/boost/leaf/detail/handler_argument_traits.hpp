@@ -36,10 +36,10 @@ namespace boost { namespace leaf {
 		struct e_unexpected_info;
 #endif
 
-		template <class A, bool RequiresCatch = std::is_base_of<std::exception, typename std::decay<A>::type>::value>
+		template <class E, bool RequiresCatch = std::is_base_of<std::exception, typename std::decay<E>::type>::value>
 		struct handler_argument_traits_defaults
 		{
-			using error_type = typename std::decay<A>::type;
+			using error_type = typename std::decay<E>::type;
 			constexpr static bool requires_catch = RequiresCatch;
 			constexpr static bool always_available = false;
 
@@ -50,20 +50,20 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_CONSTEXPR static error_type * check( Tup &, error_info const & ) noexcept;
 
 			template <class Tup>
-			BOOST_LEAF_CONSTEXPR static A get( Tup & tup, error_info const & ei ) noexcept
+			BOOST_LEAF_CONSTEXPR static E get( Tup & tup, error_info const & ei ) noexcept
 			{
 				return *check(tup, ei);
 			}
 
-			static_assert(!std::is_same<A, error_info>::value, "Handlers must take leaf::error_info arguments by const &");
-			static_assert(!std::is_same<A, diagnostic_info>::value, "Handlers must take leaf::diagnostic_info arguments by const &");
-			static_assert(!std::is_same<A, verbose_diagnostic_info>::value, "Handlers must take leaf::verbose_diagnostic_info arguments by const &");
+			static_assert(!std::is_same<E, error_info>::value, "Handlers must take leaf::error_info arguments by const &");
+			static_assert(!std::is_same<E, diagnostic_info>::value, "Handlers must take leaf::diagnostic_info arguments by const &");
+			static_assert(!std::is_same<E, verbose_diagnostic_info>::value, "Handlers must take leaf::verbose_diagnostic_info arguments by const &");
 		};
 
-		template <class A>
+		template <class E>
 		struct handler_argument_always_available
 		{
-			using error_type = A;
+			using error_type = E;
 			constexpr static bool requires_catch = false;
 			constexpr static bool always_available = true;
 
@@ -74,24 +74,24 @@ namespace boost { namespace leaf {
 			};
 		};
 
-		template <class A>
-		struct handler_argument_traits: handler_argument_traits_defaults<A>
+		template <class E>
+		struct handler_argument_traits: handler_argument_traits_defaults<E>
 		{
 		};
 
-		template <class A>
-		struct handler_argument_traits<A &&>
+		template <class E>
+		struct handler_argument_traits<E &&>
 		{
-			static_assert(sizeof(A) == 0, "Error handlers may not take rvalue ref arguments");
+			static_assert(sizeof(E) == 0, "Error handlers may not take rvalue ref arguments");
 		};
 
-		template <class A>
-		struct handler_argument_traits<A *>: handler_argument_always_available<typename std::remove_const<A>::type>
+		template <class E>
+		struct handler_argument_traits<E *>: handler_argument_always_available<typename std::remove_const<E>::type>
 		{
 			template <class Tup>
-			BOOST_LEAF_CONSTEXPR static A * get( Tup & tup, error_info const & ei) noexcept
+			BOOST_LEAF_CONSTEXPR static E * get( Tup & tup, error_info const & ei) noexcept
 			{
-				return handler_argument_traits_defaults<A>::check(tup, ei);
+				return handler_argument_traits_defaults<E>::check(tup, ei);
 			}
 		};
 
@@ -160,23 +160,32 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class MatchType>
-		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & x, bool (*pred)(MatchType const &) noexcept ) noexcept
+#if __cplusplus >= 201703L
+		template <class MatchType, class T>
+		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & e, bool (*P)(T) noexcept ) noexcept
 		{
-			BOOST_LEAF_ASSERT(pred != 0);
-			return pred(x);
+			BOOST_LEAF_ASSERT(P != 0);
+			return P(e);
 		}
 
-		template <class MatchType, class V>
-		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & x, V v ) noexcept
+		template <class MatchType, class T>
+		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & e, bool (*P)(T) )
 		{
-			return x == v;
+			BOOST_LEAF_ASSERT(P != 0);
+			return P(e);
+		}
+#endif
+
+		template <class MatchType, class V>
+		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & e, V v )
+		{
+			return e == v;
 		}
 
 		template <class MatchType, class VCar, class... VCdr>
-		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & x, VCar car, VCdr ... cdr ) noexcept
+		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & e, VCar car, VCdr ... cdr )
 		{
-			return cmp_value_pack(x, car) || cmp_value_pack(x, cdr...);
+			return cmp_value_pack(e, car) || cmp_value_pack(e, cdr...);
 		}
 	}
 
@@ -292,43 +301,6 @@ namespace boost { namespace leaf {
 	}
 
 #endif
-
-	////////////////////////////////////////
-
-	template <class E, bool (*F)(E const &)>
-	struct match_if;
-
-	namespace leaf_detail
-	{
-		template <class E, bool (*F)(E const &)>
-		struct handler_argument_traits<match_if<E, F>>: handler_argument_pred<match_if<E, F>>
-		{
-		};
-
-		template <class E, bool (*F)(E const &)> struct handler_argument_traits<match_if<E, F> const &>: bad_predicate<match_if<E, F>> { };
-		template <class E, bool (*F)(E const &)> struct handler_argument_traits<match_if<E, F> const *>: bad_predicate<match_if<E, F>> { };
-		template <class E, bool (*F)(E const &)> struct handler_argument_traits<match_if<E, F> &>: bad_predicate<match_if<E, F>> { };
-		template <class E, bool (*F)(E const &)> struct handler_argument_traits<match_if<E, F> *>: bad_predicate<match_if<E, F>> { };
-	}
-
-	////////////////////////////////////////
-
-	template <class P>
-	struct if_not;
-
-	namespace leaf_detail
-	{
-		template <class P>
-		struct handler_argument_traits<if_not<P>>: handler_argument_pred<if_not<P>>
-		{
-		};
-
-		template <class P> struct handler_argument_traits<if_not<P> const &>: bad_predicate<if_not<P>> { };
-		template <class P> struct handler_argument_traits<if_not<P> const *>: bad_predicate<if_not<P>> { };
-		template <class P> struct handler_argument_traits<if_not<P> &>: bad_predicate<if_not<P>> { };
-		template <class P> struct handler_argument_traits<if_not<P> *>: bad_predicate<if_not<P>> { };
-	}
-
 
 } }
 

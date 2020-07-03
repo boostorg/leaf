@@ -56,12 +56,14 @@ namespace boost { namespace leaf {
 		static_assert(std::is_error_condition_enum<Enum>::value || std::is_error_code_enum<Enum>::value, "leaf::condition<Enum> requires Enum to be registered either with std::is_error_condition_enum or std::is_error_code_enum.");
 	};
 
+#if __cplusplus >= 201703L
 	template <class ErrorCodeEnum>
 	BOOST_LEAF_CONSTEXPR inline bool category( std::error_code const & ec ) noexcept
 	{
 		static_assert(std::is_error_code_enum<ErrorCodeEnum>::value, "leaf::category requires an error code enum");
 		return &ec.category() == &std::error_code(ErrorCodeEnum{}).category();
 	}
+#endif
 
 	////////////////////////////////////////
 
@@ -255,24 +257,6 @@ namespace boost { namespace leaf {
 	};
 
 #endif
-
-	////////////////////////////////////////
-
-	template <class E, bool(*F)(E const &)>
-	struct match_if: leaf_detail::pred<E const &>
-	{
-		using error_type = E;
-
-		BOOST_LEAF_CONSTEXPR explicit match_if(E const & e) noexcept:
-			leaf_detail::pred<E const &>(e)
-		{
-		}
-
-		BOOST_LEAF_CONSTEXPR static bool evaluate(E const & e) noexcept
-		{
-			return F(e);
-		}
-	};
 
 	////////////////////////////////////////
 

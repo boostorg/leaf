@@ -14,6 +14,14 @@ namespace leaf = boost::leaf;
 
 enum class my_error { e1=1, e2, e3 };
 
+#if __cplusplus >= 201703L
+template <my_error value>
+bool cmp_my_error( my_error const & e ) noexcept
+{
+	return e == value;
+};
+#endif
+
 struct my_exception: std::exception
 {
 	int value;
@@ -86,6 +94,15 @@ int main()
 		BOOST_TEST(( !test<leaf::if_not<leaf::match<std::error_code, errc_a::a2, errc_a::a0>>>(e) ));
 #endif
 	}
+
+#if __cplusplus >= 201703L
+	{
+		my_error e = my_error::e1;
+
+		BOOST_TEST(( test<leaf::match<my_error, cmp_my_error<my_error::e1>>>(e) ));
+		BOOST_TEST(( !test<leaf::match<my_error, cmp_my_error<my_error::e2>>>(e) ));
+	}
+#endif
 
 	{
 		int r = leaf::try_handle_all(
@@ -172,6 +189,46 @@ int main()
 			} );
 		BOOST_TEST_EQ(r, 3);
 	}
+
+#if __cplusplus >= 201703L
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				return leaf::new_error(my_error::e1);
+			},
+
+			[]( leaf::match<my_error, cmp_my_error<my_error::e1>> )
+			{
+				return 1;
+			},
+
+			[]
+			{
+				return 2;
+			} );
+		BOOST_TEST_EQ(r, 1);
+	}
+
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				return leaf::new_error(my_error::e1);
+			},
+
+			[]( leaf::match<my_error, cmp_my_error<my_error::e2>> )
+			{
+				return 1;
+			},
+
+			[]
+			{
+				return 2;
+			} );
+		BOOST_TEST_EQ(r, 2);
+	}
+#endif
 
 	return boost::report_errors();
 }

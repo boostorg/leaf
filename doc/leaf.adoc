@@ -41,7 +41,7 @@ LEAF is a lightweight error handling library for {CPP}11. Features:
 ifndef::backend-pdf[]
 [grid=none, frame=none]
 |====
-| <<introduction,Introduction>> \| <<tutorial>> \| <<synopsis>> \| https://github.com/zajo/leaf/blob/master/doc/whitepaper.md[Whitepaper] \| https://github.com/zajo/leaf/blob/master/benchmark/benchmark.md[Benchmark] >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<traits,Traits>> \| <<macros,Macros>>
+| <<introduction,Introduction>> \| <<tutorial>> \| <<synopsis>> \| https://github.com/zajo/leaf/blob/master/doc/whitepaper.md[Whitepaper] \| https://github.com/zajo/leaf/blob/master/benchmark/benchmark.md[Benchmark] >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<predicates,Predicates>> \| <<traits,Traits>> \| <<macros,Macros>>
 |====
 endif::[]
 
@@ -658,6 +658,125 @@ void read_file(FILE * f) {
 Above, if a `throw` statement is reached, LEAF will invoke the function passed to `on_error` and associate the returned `e_errno` object with the exception.
 
 The final type of arguments that can be passed to `on_error` is a function that takes a single mutable error object reference. In this case, `on_error` uses it similarly to how such functios are used by `load`; see <<tutorial-loading>>.
+
+'''
+
+[[tutorial-predicates]]
+=== Using Predicates to Handle Errors
+
+LEAF error handlers are usually selected based on the type of the arguments they take and the type of the available error objects. When an error handler takes a predicate type as an argument, the <<handler_selection_procedure,handler selection procedure>> is able to also consider the _values_ of the available error objects.
+
+Consider this error code enum:
+
+[source,c++]
+----
+enum class my_error
+{
+  e1=1,
+  e2,
+  e3
+};
+----
+
+We could handle `my_error` errors like so:
+
+[source,c++]
+----
+return leaf::try_handle_some(
+  []
+  {
+    return f();
+  },
+
+  []( my_error e )
+  { <1>
+    switch(e)
+    {
+      case my_error::e1:
+        ....; <2>
+        break;
+      case my_error::e2:
+      case my_error::e3:
+        ....; <3>
+        break;
+      default:
+        ....; <4>
+        break;
+  } );
+----
+<1> This handler will be selected if we've got a `my_error` object.
+<2> Handle `e1` errors.
+<3> Handle `e2` and `e3` errors.
+<4> Handle bad `my_error` values.
+
+If `my_error` object is available, LEAF will call our error handler. If not, the failure will be forwarded back to the caller of `try_handle_some`.
+
+This can be rewritten to use the <<match>> predicate. The following is equivalent:
+
+[source,c++]
+----
+return leaf::try_handle_some(
+  []
+  {
+    return f();
+  },
+
+  []( leaf::match<my_error, my_error::e1> )
+  { <1>
+    ....;
+  },
+
+  []( leaf::match<my_error, my_error::e2, my_error::e3> )
+  { <2>
+    ....;
+  },
+
+  []( my_error e )
+  { <3>
+    ....;
+  } );
+----
+<1> We've got a `my_error` object that compares equal to `e1`.
+<2> We`ve got a `my_error` object that compares equal to either `e2` or `e3`.
+<3> Handle bad `my_error` values.
+
+The first argument to the `match` template generally specifies the type `E` of the error object `e` that must be available for the error handler to be considered at all. The rest of the arguments are values, and cause the handler to be dropped if `e` does not compare equal to any of them.
+
+In particular, `match` works great with `std::error_code`. The following handler is designed to handle `ENOENT` errors:
+
+[source,c++]
+----
+[]( leaf::match<std::error_code, std::errc::no_such_file_or_directory> )
+{
+}
+----
+
+This, however, requires {CPP}17 or newer, because it is impossible to infer the type of the error enum (in this case, `std::errc`) from the specified type `std::error_code`, and {CPP}11 does not allow `auto` template arguments. LEAF provides the following workaround, compatible with {CPP}11:
+
+[source,c++]
+----
+[]( leaf::match<leaf::condition<std::errc>, std::errc::no_such_file_or_directory> )
+{
+}
+----
+
+In addition, it is possible to select a handler based on `std::error_category`. The following handler will match any `std::error_code` of the `std::generic_category` (requires {CPP}17 or newer):
+
+[source,c++]
+----
+[]( std::error_code, leaf::category<std::errc>> )
+{
+}
+----
+
+LEAF supports the following useful predicates:
+
+* <<match>>: as described above.
+* <<match_value>>: where `match<E, V...>` compares the object `e` of type `E` with the values `V...`, `match_value<E, V...>` compare `e.value` with the values `V...`.
+* <<match_member>>: similar to `match_value`, but takes a pointer to the data member to compare; that is, `match_member<&E::value, V...>` is equvialent to `match_value<E, V...>`. Note, however, that `match_member` requires {CPP}17 or newer, while `match_value` does not.
+* <<if_not>> is a special predicate that takes any other predicate `P` and requires that an error object of type `E` is available and that `P` evaluates to `false`. For example, `if_not<match<E, V...>>` requires that an object `e` of type `E` is available, and that it does not compare equal to any of the specified `V...`.
+
+NOTE: See also <<tutorial-std_error_code>>.
 
 '''
 
@@ -1462,7 +1581,7 @@ TIP: The automatically-generated diagnostic messages are developer-friendly, but
 
 '''
 
-[[tutorial-working_with_std_error_code]]
+[[tutorial-std_error_code]]
 === Working with `std::error_code`, `std::error_condition`
 
 ==== Introduction
@@ -3800,155 +3919,6 @@ The `operator<<` overload prints diagnostic information about each error object 
 
 '''
 
-[[match]]
-=== `match`
-
-.#include <boost/leaf/handle_error.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class E, auto... V>
-  class match
-  {
-  public:
-
-    explicit match( E const & e ) noexcept;
-
-    bool operator()() const noexcept;
-
-    E const & matched() const noexcept;
-  };
-
-} }
-----
-
-When an instance of the `match` template is used in an error handler declaration, the <<handler_selection_procedure,handler selection procedure>> first checks if an error object `e` of type `E` is available. If it is not available, the handler is dropped. Otherwise, the `match` object `m` is initialized with `e` and the handler is dropped if the expression `m()` evaluates to `false`.
-
-The expression `m()` is equivalent to:
-
-[.text-center]
-`p~1~(V~1~) || p~2~(V~2~) || ... p~n~(V~n~)`
-
-Each `p~i~` is a boolean predicate that compares `e` against `V~i~`. Generally, `p~i~` is equivalent to `e == V~i~`, with the following exceptions:
-
-* If `E` has an accessible data member `value`, `p~i~` works with `e.value` rather than with `e` itself;
-* If `E` has an accessible member function `value()`, `p~i~` works with `e.value()` rather than with `e` itself;
-* If `E` is `std::error_code`, any `V~i~` may be an instance of the `leaf::category<Enum>` template. In this case it is required that `std::is_error_code_enum<Enum>::value` is `true`, and `p~i~` is equivalent to:
-
-[.text-center]
-`&e.category() == &std::error_code(Enum{}).category()`.
-
-.Example 1:
-[source,c++]
-----
-enum class my_enum { e1, e2, e3 };
-
-leaf::try_handle_some(
-  []
-  {
-    ....
-  },
-
-  []( leaf::match<my_enum, my_enum::e1, my_enum::e2> ) <1>
-  {
-    ....
-  } );
-----
-<1> The handler is selected if an object of type `my_enum`, which compares equal to `e1` or to `e2`, is associated with the detected error.
-
-.Example 2:
-[source,c++]
-----
-struct e_errno { int value; }
-
-leaf::try_handle_some(
-  []
-  {
-    ....
-  },
-
-  []( leaf::match<e_errno, ENOENT> ) <1>
-  {
-    ....
-  } );
-----
-<1> The handler is selected if an object of type `e_errno`, with `.value` equal to `ENOENT`, is associated with the detected error.
-
-.Example 3:
-[source,c++]
-----
-enum class my_enum { e1=1, e2, e3 };
-
-namespace std
-{
-  template <> struct is_error_code_enum<my_enum>: std::true_type { };
-}
-
-leaf::try_handle_some(
-  []
-  {
-    ....
-  },
-
-  []( leaf::match<std::error_code, my_enum::e1, my_enum::e2> ) <1>
-  {
-    ....
-  } );
-----
-<1> The handler is selected if an object of type std::error_code, which compares equal to e1 or to e2, is associated with the detected error
-
-.Example 4:
-[source,c++]
-----
-enum class enum_a { a1=1, a2, a3 };
-enum class enum_b { b1=1, b2, b3 };
-
-namespace std
-{
-  template <> struct is_error_code_enum<enum_a>: std::true_type { };
-  template <> struct is_error_code_enum<enum_b>: std::true_type { };
-}
-
-leaf::try_handle_some(
-  []
-  {
-    ....
-  },
-
-  []( leaf::match<std::error_code, leaf::category<enum_a>, enum_b::b2> ) <1>
-  {
-    ....
-  } );
-----
-<1> The handler is selected if an object of type `std::error_code`, which either has the same `std::error_category` as that of `enum_a` or compares equal to `enum_b::b2`, is associated with the detected error.
-
-The use of the `leaf::category` template requires automatic deduction of the type of each `V~i~`, which in turn requires {CPP}17 or newer. The same applies to the use of `std::error_code` as `E`, but LEAF provides a compatible {CPP}11 workaround for this case, using the template `condition`. The following is equivalent to Example 3:
-
-.Example 5:
-[source,c++]
-----
-enum class my_enum { e1=1, e2, e3 };
-
-namespace std
-{
-  template <> struct is_error_code_enum<my_enum>: std::true_type { };
-}
-
-leaf::try_handle_some(
-  []
-  {
-    return f();
-  },
-
-  []( leaf::match<leaf::condition<my_enum>, my_enum::e1, my_enum::e2> )
-  {
-    ....
-  } );
-----
-
-'''
-
 [[polymorphic_context]]
 === `polymorphic_context`
 
@@ -4268,6 +4238,224 @@ The behavior of `verbose_diagnostic_info` (and <<diagnostic_info>>) is affected 
 --
 
 WARNING: Using `verbose_diagnostic_info` will likely allocate memory dynamically.
+
+[[predicates]]
+== Reference: Predicates
+
+Predicates are a special types of error handler arguments which cause the <<handler_selection_procedure,handler selection procedure>> to consider the _value_ of available error objects, not only their type. See <<tutorial-predicates>>.
+
+'''
+
+[[match]]
+=== `match`
+
+.#include <boost/leaf/pred.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class E, auto... V>
+  class match
+  {
+  public:
+
+    E const & matched() const noexcept;
+  };
+
+} }
+----
+
+When an instance of the `match` template is used as an argument to an error handler, the <<handler_selection_procedure,handler selection procedure>> first checks if an error object `e` of type `E` is available. If it is not available, the handler is dropped. Otherwise, the handler is dropped if the following condition does not hold:
+
+[.text-center]
+`p~1~ || p~2~ || ... p~n~`.
+
+Generally, `p~i~` is equivalent to `e == V~i~`, except if `V~i~` is pointer to a function
+
+[.text-center]
+`bool (*V~i~)(T x)`.
+
+In this case it is required that `V~i~ != 0` and that `x` can be initialized with `E const &`, and `p~i~` is equivalent to:
+
+[.text-center]
+`V~i~(e)`.
+
+In particular, it is valid to pass pointer to the function `leaf::category<Enum>` for any `V~i~`, where:
+
+[.text-center]
+`std::is_error_code_enum<Enum>::value || std::is_error_condition_enum<Enum>::value`.
+
+In this case, `p~i~` is equivalent to:
+
+[.text-center]
+`&e.category() == &std::error_code(Enum{}).category()`.
+
+In the end, if the condition holds and the handler is called, it is valid to call the member function `matched` to access the matched object `e`.
+
+NOTE: See also <<tutorial-predicates>>.
+
+.Example 1:
+[source,c++]
+----
+enum class my_enum { e1, e2, e3 };
+
+leaf::try_handle_some(
+  []
+  {
+    ....
+  },
+
+  []( leaf::match<my_enum, my_enum::e1, my_enum::e2> ) <1>
+  {
+    ....
+  } );
+----
+<1> The handler is selected if an object of type `my_enum`, which compares equal to `e1` or to `e2`, is associated with the detected error.
+
+.Example 2:
+[source,c++]
+----
+enum class my_enum { e1=1, e2, e3 };
+
+namespace std
+{
+  template <> struct is_error_code_enum<my_enum>: std::true_type { };
+}
+
+leaf::try_handle_some(
+  []
+  {
+    ....
+  },
+
+  []( leaf::match<std::error_code, my_enum::e1, my_enum::e2> ) <1>
+  {
+    ....
+  } );
+----
+<1> The handler is selected if an object of type `std::error_code`, which compares equal to `e1` or to `e2`, is associated with the detected error.
+
+.Example 3:
+[source,c++]
+----
+enum class enum_a { a1=1, a2, a3 };
+enum class enum_b { b1=1, b2, b3 };
+
+namespace std
+{
+  template <> struct is_error_code_enum<enum_a>: std::true_type { };
+  template <> struct is_error_code_enum<enum_b>: std::true_type { };
+}
+
+leaf::try_handle_some(
+  []
+  {
+    ....
+  },
+
+  []( leaf::match<std::error_code, leaf::category<enum_a>, enum_b::b2> ) <1>
+  {
+    ....
+  } );
+----
+<1> The handler is selected if an object of type `std::error_code`, which either has the same `std::error_category` as that of `enum_a` or compares equal to `enum_b::b2`, is associated with the detected error.
+
+The use of the `leaf::category` template requires automatic deduction of the type of each `V~i~`, which in turn requires {CPP}17 or newer. The same applies to the use of `std::error_code` as `E`, but LEAF provides a compatible {CPP}11 workaround for this case, using the template `condition`. The following is equivalent to Example 2:
+
+.Example 4:
+[source,c++]
+----
+enum class my_enum { e1=1, e2, e3 };
+
+namespace std
+{
+  template <> struct is_error_code_enum<my_enum>: std::true_type { };
+}
+
+leaf::try_handle_some(
+  []
+  {
+    return f();
+  },
+
+  []( leaf::match<leaf::condition<my_enum>, my_enum::e1, my_enum::e2> )
+  {
+    ....
+  } );
+----
+
+'''
+
+[[match_member]]
+=== `match_member`
+
+.#include <boost/leaf/pred.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <auto, auto... V>
+  class match_member;
+
+  template <class E, class T, T E::* P, auto... V>
+  class match_member<P, V...>
+  {
+  public:
+
+    E const & matched() const noexcept;
+  };
+
+} }
+----
+
+This predicate is similar to <<match_value>>, but is able to bind any accessible data member of `E`; e.g. `match_member<&E::value, V...>` is equivalent to `match_value<E, V...>`.
+
+WARNING: `match_member` requires at least {CPP}17, whereas `match_value` does not.
+
+NOTE: See also <<tutorial-predicates>>.
+
+'''
+
+[[match_value]]
+=== `match_value`
+
+.#include <boost/leaf/pred.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class E, auto... V>
+  class match_value
+  {
+  public:
+
+    E const & matched() const noexcept;
+  };
+
+} }
+----
+
+This predicate is similar to <<match>>, but where `match` compares the available error object `e` of type `E` to the specified values `V...`, `match_value` compares `e.value` to the specified values `V...`.
+
+NOTE: See also <<tutorial-predicates>>.
+
+.Example:
+[source,c++]
+----
+struct e_errno { int value; }
+
+leaf::try_handle_some(
+  []
+  {
+    ....
+  },
+
+  []( leaf::match<e_errno, ENOENT> ) <1>
+  {
+    ....
+  } );
+----
+<1> The handler is selected if an object of type <<e_errno>>, with `.value` equal to `ENOENT`, is associated with the detected error.
 
 [[macros]]
 == Reference: Macros

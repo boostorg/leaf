@@ -115,7 +115,6 @@ tests = [
 	'match_test',
 	'match_member_test',
 	'match_value_test',
-	'match_if_test',
 	'multiple_errors_test',
 	'optional_test',
 	'preload_basic_test',

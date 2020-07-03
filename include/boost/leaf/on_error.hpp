@@ -54,7 +54,7 @@ namespace boost { namespace leaf {
 			}
 		}
 
-		BOOST_LEAF_CONSTEXPR int get_id() const noexcept
+		int get_id() const noexcept
 		{
 			int err_id = leaf_detail::current_id();
 			if( err_id != err_id_ )
@@ -63,12 +63,12 @@ namespace boost { namespace leaf {
 				return leaf_detail::new_id();
 		}
 
-		BOOST_LEAF_CONSTEXPR error_id check() const noexcept
+		error_id check() const noexcept
 		{
 			return leaf_detail::make_error_id(check_id());
 		}
 
-		BOOST_LEAF_CONSTEXPR error_id assigned_error_id() const noexcept
+		error_id assigned_error_id() const noexcept
 		{
 			return leaf_detail::make_error_id(get_id());
 		}

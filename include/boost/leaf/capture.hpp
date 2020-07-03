@@ -96,7 +96,7 @@ namespace boost { namespace leaf {
 
 		public:
 
-			BOOST_LEAF_CONSTEXPR capturing_exception(std::exception_ptr && ex, context_ptr && ctx) noexcept:
+			capturing_exception(std::exception_ptr && ex, context_ptr && ctx) noexcept:
 				ex_(std::move(ex)),
 				ctx_(std::move(ctx))
 			{
