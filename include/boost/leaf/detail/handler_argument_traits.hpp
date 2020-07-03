@@ -29,14 +29,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		struct diagnostic_info_;
-		struct verbose_diagnostic_info_;
-
-#if BOOST_LEAF_DIAGNOSTICS
-		struct e_unexpected_count;
-		struct e_unexpected_info;
-#endif
-
 		template <class T>
 		using is_predicate_impl = decltype(T::evaluate(std::declval<T>().matched));
 
@@ -146,28 +138,6 @@ namespace boost { namespace leaf {
 			{
 				return ei;
 			}
-		};
-
-		template <>
-#if BOOST_LEAF_DIAGNOSTICS
-		struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<e_unexpected_count>
-#else
-		struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<void>
-#endif
-		{
-			template <class Tup>
-			BOOST_LEAF_CONSTEXPR static diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept;
-		};
-
-		template <>
-#if BOOST_LEAF_DIAGNOSTICS
-		struct handler_argument_traits<verbose_diagnostic_info const &>: handler_argument_always_available<e_unexpected_info>
-#else
-		struct handler_argument_traits<verbose_diagnostic_info const &>: handler_argument_always_available<void>
-#endif
-		{
-			template <class Tup>
-			BOOST_LEAF_CONSTEXPR static verbose_diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept;
 		};
 
 		template <class E>

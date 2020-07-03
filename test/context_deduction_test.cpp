@@ -4,11 +4,12 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
+#include <boost/leaf/context.hpp>
+#include <boost/leaf/pred.hpp>
+#include <boost/leaf/handle_error.hpp>
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 #	include <boost/leaf/handle_exception.hpp>
 #endif
-#include <boost/leaf/context.hpp>
-#include <boost/leaf/pred.hpp>
 #include "_test_ec.hpp"
 
 namespace leaf = boost::leaf;
