@@ -3940,7 +3940,6 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <>
 		template <class Tup>
 		BOOST_LEAF_CONSTEXPR inline
 		std::exception const *
