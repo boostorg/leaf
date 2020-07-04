@@ -12,6 +12,8 @@
 // (C) Copyright Martin Wille 2003.
 // (C) Copyright Guillaume Melquiond 2003.
 
+#ifdef BOOST_LEAF_STANDALONE
+
 #if defined(__clang__)
 #	pragma clang system_header
 #elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
@@ -19,8 +21,6 @@
 #elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
 #	pragma warning(push,1)
 #endif
-
-#include <cassert>
 
 ////////////////////////////////////////
 
@@ -103,6 +103,16 @@
 
 #endif
 
+#else // BOOST_LEAF_STANDALONE
+
+#include <boost/config.hpp>
+
+#ifdef BOOST_NO_EXCEPTIONS
+#   define BOOST_LEAF_NO_EXCEPTIONS
+#endif
+
+#endif
+
 ////////////////////////////////////////
 
 #ifndef BOOST_LEAF_DIAGNOSTICS
@@ -149,7 +159,8 @@
 #	ifdef BOOST_ASSERT
 #		define BOOST_LEAF_ASSERT BOOST_ASSERT
 #	else
-#		define BOOST_LEAF_ASSERT assert
+#       include <cassert>
+#       define BOOST_LEAF_ASSERT assert
 #	endif
 #endif
 

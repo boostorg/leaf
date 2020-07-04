@@ -1,3 +1,17 @@
+#ifndef BOOST_LEAF_HPP_INCLUDED
+#define BOOST_LEAF_HPP_INCLUDED
+
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#ifndef BOOST_LEAF_STANDALONE
+#   define BOOST_LEAF_STANDALONE
+#endif
+
+// >>> #include <boost/leaf/detail/all.hpp>
+#line 1 "boost/leaf/detail/all.hpp"
 #ifndef BOOST_LEAF_ALL_HPP_INCLUDED
 #define BOOST_LEAF_ALL_HPP_INCLUDED
 
@@ -176,7 +190,7 @@
 
 #endif
 // <<< #include <boost/leaf/config.hpp>
-#line 10 "../../include/boost/leaf/detail/all.hpp"
+#line 10 "boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/capture.hpp>
 #line 1 "boost/leaf/capture.hpp"
 #ifndef BOOST_LEAF_CAPTURE_HPP_INCLUDED
@@ -2392,7 +2406,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/capture.hpp>
-#line 11 "../../include/boost/leaf/detail/all.hpp"
+#line 11 "boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/common.hpp>
 #line 1 "boost/leaf/common.hpp"
 #ifndef BOOST_LEAF_COMMON_HPP_INCLUDED
@@ -2489,7 +2503,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/common.hpp>
-#line 12 "../../include/boost/leaf/detail/all.hpp"
+#line 12 "boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/context.hpp>
 #line 1 "boost/leaf/context.hpp"
 #ifndef BOOST_LEAF_CONTEXT_HPP_INCLUDED
@@ -3068,7 +3082,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/context.hpp>
-#line 13 "../../include/boost/leaf/detail/all.hpp"
+#line 13 "boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/handle_error.hpp>
 #line 1 "boost/leaf/handle_error.hpp"
 #ifndef BOOST_LEAF_HANDLE_ERROR_HPP_INCLUDED
@@ -3769,7 +3783,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/handle_error.hpp>
-#line 16 "../../include/boost/leaf/detail/all.hpp"
+#line 16 "boost/leaf/detail/all.hpp"
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 // >>> #	include <boost/leaf/handle_exception.hpp>
 #line 1 "boost/leaf/handle_exception.hpp"
@@ -4245,7 +4259,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #	include <boost/leaf/handle_exception.hpp>
-#line 18 "../../include/boost/leaf/detail/all.hpp"
+#line 18 "boost/leaf/detail/all.hpp"
 #endif
 // >>> #include <boost/leaf/pred.hpp>
 #line 1 "boost/leaf/pred.hpp"
@@ -4478,7 +4492,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/pred.hpp>
-#line 21 "../../include/boost/leaf/detail/all.hpp"
+#line 21 "boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/result.hpp>
 #line 1 "boost/leaf/result.hpp"
 #ifndef BOOST_LEAF_RESULT_HPP_INCLUDED
@@ -4901,6 +4915,10 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/result.hpp>
-#line 22 "../../include/boost/leaf/detail/all.hpp"
+#line 22 "boost/leaf/detail/all.hpp"
+
+#endif
+// <<< #include <boost/leaf/detail/all.hpp>
+#line 14 "../../include/boost/leaf/detail/leaf.hpp"
 
 #endif

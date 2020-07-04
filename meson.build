@@ -48,6 +48,20 @@ if get_option('leaf_all_hpp')
 		output: 'all.hpp',
 		build_always_stale: true,
 		build_by_default: true)
+	custom_target(
+		'leaf_hpp',
+		command:
+		[
+			prog_python,
+			files('gen/generate_single_header.py'),
+			'-i', files('include/boost/leaf/detail/leaf.hpp'),
+			'-p', join_paths(meson.source_root(),'include'),
+			'-o', join_paths(meson.source_root(),'include/leaf.hpp'),
+			'boost/leaf'
+		],
+		output: 'leaf.hpp',
+		build_always_stale: true,
+		build_by_default: true)
 endif
 
 boost_headers = declare_dependency(include_directories: '../..')
@@ -62,9 +76,10 @@ if not get_option('leaf_suppress_warnings')
 endif
 
 mp11 = [ ]
-if get_option('leaf_use_boost_mp11')
-	mp11 = [ boost_headers ]
-	defines += [ '-DBOOST_LEAF_USE_BOOST_MP11' ]
+if get_option('leaf_standalone')
+	defines += [ '-DBOOST_LEAF_STANDALONE' ]
+else
+	mp11 += [ boost_headers ]
 endif
 
 thread_dep = dependency('threads')
@@ -142,12 +157,13 @@ tests = [
 	'_hpp_exception_test',
 	'_hpp_handle_error_test',
 	'_hpp_handle_exception_test',
+	'_hpp_leaf_test',
 	'_hpp_on_error_test',
 	'_hpp_pred_test',
 	'_hpp_result_test',
 	'_hpp_all_test',
 ]
-if get_option('leaf_boost')
+if not get_option('leaf_standalone')
 	tests += 'boost_exception_test'
 endif
 foreach t : tests
@@ -177,7 +193,7 @@ if exceptions
 		executable(e, 'examples/'+e+'.cpp', dependencies: [leaf,thread_dep]+mp11 )
 	endforeach
 
-	if get_option('leaf_boost')
+	if not get_option('leaf_standalone')
 #		executable('asio_beast_leaf_rpc', 'examples/asio_beast_leaf_rpc.cpp', dependencies: [leaf,thread_dep,boost_headers], override_options: ['cpp_std=c++17'] )
 		executable('print_file_outcome_result', 'examples/print_file/print_file_outcome_result.cpp', dependencies: [leaf,boost_headers], override_options: ['cpp_std=c++17'] )
 	endif
@@ -193,7 +209,7 @@ if not exceptions
 	if diagnostics == 0
 		executable('deep_stack_leaf', 'benchmark/deep_stack_leaf.cpp', dependencies: [leaf], override_options: ['cpp_std=c++17'])
 	endif
-	if get_option('leaf_boost')
+	if not get_option('leaf_standalone')
 		executable('deep_stack_tl', 'benchmark/deep_stack_other.cpp', override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=0' )
 		executable('deep_stack_result', 'benchmark/deep_stack_other.cpp', dependencies: [boost_headers], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=1' )
 		executable('deep_stack_outcome', 'benchmark/deep_stack_other.cpp', dependencies: [boost_headers], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=2' )

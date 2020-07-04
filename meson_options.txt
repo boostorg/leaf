@@ -1,6 +1,5 @@
+option('leaf_standalone',type:'boolean',value:true,description:'Enable LEAF to be used independently of Boost')
 option('leaf_lua',type:'boolean',value:false,description:'Enable or disable downloading of Lua and building the Lua examples')
-option('leaf_boost',type:'boolean',value:false,description:'Enable or disable building of examples that need Boost')
 option('leaf_all_hpp',type:'boolean',value:false,description:'Enable or disable the automatic generation of include/boost/leaf/all.hpp')
-option('leaf_use_boost_mp11',type:'boolean',value:false,description:'Use <boost/mp11.hpp> instead of internal copied&pasted mp11 code')
 option('leaf_diagnostics',type:'integer',value:1,description:'BOOST_LEAF_DIAGNOSTICS value')
 option('leaf_suppress_warnings',type:'boolean',value:true,description:'Suppress compiler warnings (#pragma system_header)')
