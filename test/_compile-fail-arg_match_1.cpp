@@ -16,7 +16,7 @@ int main()
 		{
 			return 0;
 		},
-		[]( leaf::match<int,4> const & ) // leaf::match_<> must be taken by value
+		[]( leaf::match<int,4> const & ) // leaf::match<> must be taken by value
 		{
 			return 1;
 		},

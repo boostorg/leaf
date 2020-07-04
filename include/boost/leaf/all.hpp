@@ -2528,19 +2528,15 @@ namespace boost { namespace leaf {
 	class diagnostic_info;
 	class verbose_diagnostic_info;
 
+	template <class>
+	struct is_predicate: std::false_type
+	{
+	};
+
 	////////////////////////////////////////
 
 	namespace leaf_detail
 	{
-		template <class T>
-		using is_predicate_impl = decltype(T::evaluate(std::declval<T>().matched));
-
-		template <class T>
-		struct is_predicate
-		{
-			constexpr static bool value = leaf_detail_mp11::mp_valid<is_predicate_impl, typename std::decay<T>::type>::value;
-		};
-
 		template <class T>
 		struct is_exception: std::is_base_of<std::exception, typename std::decay<T>::type>
 		{
@@ -2571,6 +2567,7 @@ namespace boost { namespace leaf {
 				return *check(tup, ei);
 			}
 
+			static_assert(!is_predicate<error_type>::value, "Handlers must take predicate arguments by value");
 			static_assert(!std::is_same<E, error_info>::value, "Handlers must take leaf::error_info arguments by const &");
 			static_assert(!std::is_same<E, diagnostic_info>::value, "Handlers must take leaf::diagnostic_info arguments by const &");
 			static_assert(!std::is_same<E, verbose_diagnostic_info>::value, "Handlers must take leaf::verbose_diagnostic_info arguments by const &");
@@ -2579,8 +2576,6 @@ namespace boost { namespace leaf {
 		template <class Pred>
 		struct handler_argument_traits_defaults<Pred, false, true>: handler_argument_traits<typename std::decay<decltype(std::declval<typename std::decay<Pred>::type>().matched)>::type>
 		{
-			static_assert(!std::is_reference<Pred>::value && !std::is_pointer<Pred>::value, "Handlers must take Pred arguments by value");
-
 			using base = handler_argument_traits<typename std::decay<decltype(std::declval<typename std::decay<Pred>::type>().matched)>::type>;
 			static_assert(!base::always_available, "Predicates can't use types that are always_available");
 
@@ -4374,6 +4369,11 @@ namespace boost { namespace leaf {
 		}
 	};
 
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_enum_type<E>, V1, V)>
+	struct is_predicate<match<E, V1, V...>>: std::true_type
+	{
+	};
+
 	////////////////////////////////////////
 
 	namespace leaf_detail
@@ -4408,7 +4408,6 @@ namespace boost { namespace leaf {
 		}
 	};
 
-
 	template <class E, class Enum, BOOST_LEAF_MATCH_ARGS(BOOST_LEAF_ESC(match_value_enum_type<condition<E, Enum>>), V1, V)>
 	struct match_value<condition<E, Enum>, V1, V...>
 	{
@@ -4418,6 +4417,11 @@ namespace boost { namespace leaf {
 		{
 			return leaf_detail::cmp_value_pack(e.value, V1, V...);
 		}
+	};
+
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_value_enum_type<E>, V1, V)>
+	struct is_predicate<match_value<E, V1, V...>>: std::true_type
+	{
 	};
 
 	////////////////////////////////////////
@@ -4436,6 +4440,12 @@ namespace boost { namespace leaf {
 			return leaf_detail::cmp_value_pack(e.*P, V1, V...);
 		}
 	};
+
+	template <auto P, auto V1, auto... V>
+	struct is_predicate<match_member<P, V1, V...>>: std::true_type
+	{
+	};
+
 #endif
 
 	////////////////////////////////////////
@@ -4450,6 +4460,11 @@ namespace boost { namespace leaf {
 		{
 			return !P::evaluate(std::forward<E>(e));
 		}
+	};
+
+	template <class P>
+	struct is_predicate<if_not<P>>: std::true_type
+	{
 	};
 
 } }

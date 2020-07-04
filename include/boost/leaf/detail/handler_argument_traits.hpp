@@ -15,7 +15,6 @@
 #endif
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/detail/mp11.hpp>
 #include <utility>
 #include <exception>
 
@@ -25,19 +24,15 @@ namespace boost { namespace leaf {
 	class diagnostic_info;
 	class verbose_diagnostic_info;
 
+	template <class>
+	struct is_predicate: std::false_type
+	{
+	};
+
 	////////////////////////////////////////
 
 	namespace leaf_detail
 	{
-		template <class T>
-		using is_predicate_impl = decltype(T::evaluate(std::declval<T>().matched));
-
-		template <class T>
-		struct is_predicate
-		{
-			constexpr static bool value = leaf_detail_mp11::mp_valid<is_predicate_impl, typename std::decay<T>::type>::value;
-		};
-
 		template <class T>
 		struct is_exception: std::is_base_of<std::exception, typename std::decay<T>::type>
 		{
@@ -68,6 +63,7 @@ namespace boost { namespace leaf {
 				return *check(tup, ei);
 			}
 
+			static_assert(!is_predicate<error_type>::value, "Handlers must take predicate arguments by value");
 			static_assert(!std::is_same<E, error_info>::value, "Handlers must take leaf::error_info arguments by const &");
 			static_assert(!std::is_same<E, diagnostic_info>::value, "Handlers must take leaf::diagnostic_info arguments by const &");
 			static_assert(!std::is_same<E, verbose_diagnostic_info>::value, "Handlers must take leaf::verbose_diagnostic_info arguments by const &");
@@ -76,8 +72,6 @@ namespace boost { namespace leaf {
 		template <class Pred>
 		struct handler_argument_traits_defaults<Pred, false, true>: handler_argument_traits<typename std::decay<decltype(std::declval<typename std::decay<Pred>::type>().matched)>::type>
 		{
-			static_assert(!std::is_reference<Pred>::value && !std::is_pointer<Pred>::value, "Handlers must take Pred arguments by value");
-
 			using base = handler_argument_traits<typename std::decay<decltype(std::declval<typename std::decay<Pred>::type>().matched)>::type>;
 			static_assert(!base::always_available, "Predicates can't use types that are always_available");
 

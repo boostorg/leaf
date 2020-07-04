@@ -126,6 +126,11 @@ namespace boost { namespace leaf {
 		}
 	};
 
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_enum_type<E>, V1, V)>
+	struct is_predicate<match<E, V1, V...>>: std::true_type
+	{
+	};
+
 	////////////////////////////////////////
 
 	namespace leaf_detail
@@ -160,7 +165,6 @@ namespace boost { namespace leaf {
 		}
 	};
 
-
 	template <class E, class Enum, BOOST_LEAF_MATCH_ARGS(BOOST_LEAF_ESC(match_value_enum_type<condition<E, Enum>>), V1, V)>
 	struct match_value<condition<E, Enum>, V1, V...>
 	{
@@ -170,6 +174,11 @@ namespace boost { namespace leaf {
 		{
 			return leaf_detail::cmp_value_pack(e.value, V1, V...);
 		}
+	};
+
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_value_enum_type<E>, V1, V)>
+	struct is_predicate<match_value<E, V1, V...>>: std::true_type
+	{
 	};
 
 	////////////////////////////////////////
@@ -188,6 +197,12 @@ namespace boost { namespace leaf {
 			return leaf_detail::cmp_value_pack(e.*P, V1, V...);
 		}
 	};
+
+	template <auto P, auto V1, auto... V>
+	struct is_predicate<match_member<P, V1, V...>>: std::true_type
+	{
+	};
+
 #endif
 
 	////////////////////////////////////////
@@ -202,6 +217,11 @@ namespace boost { namespace leaf {
 		{
 			return !P::evaluate(std::forward<E>(e));
 		}
+	};
+
+	template <class P>
+	struct is_predicate<if_not<P>>: std::true_type
+	{
 	};
 
 } }
