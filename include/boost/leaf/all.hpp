@@ -2761,39 +2761,23 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class T>
-		using translate_type = typename handler_argument_traits<T>::error_type;
-
-		template <class... T>
-		struct translate_list_impl;
-
-		template <template<class...> class L, class... T>
-		struct translate_list_impl<L<T...>>
-		{
-			using type = leaf_detail_mp11::mp_list<translate_type<T>...>;
-		};
-
-		template <class L> using translate_list = typename translate_list_impl<L>::type;
-
 		template <class T> struct does_not_participate_in_context_deduction: std::false_type { };
 		template <> struct does_not_participate_in_context_deduction<void>: std::true_type { };
 
 		template <class L>
-		struct transform_e_type_list_impl;
+		struct deduce_e_type_list;
 
 		template <template<class...> class L, class... T>
-		struct transform_e_type_list_impl<L<T...>>
+		struct deduce_e_type_list<L<T...>>
 		{
 			using type =
 				leaf_detail_mp11::mp_remove_if<
 					leaf_detail_mp11::mp_unique<
-						translate_list<L<T...>>
+						leaf_detail_mp11::mp_list<typename handler_argument_traits<T>::error_type...>
 					>,
 					does_not_participate_in_context_deduction
 				>;
 		};
-
-		template <class L> using transform_e_type_list = typename transform_e_type_list_impl<L>::type;
 
 		template <class L>
 		struct deduce_e_tuple_impl;
@@ -2805,7 +2789,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class... E>
-		using deduce_e_tuple = typename deduce_e_tuple_impl<transform_e_type_list<leaf_detail_mp11::mp_list<E...>>>::type;
+		using deduce_e_tuple = typename deduce_e_tuple_impl<typename deduce_e_type_list<leaf_detail_mp11::mp_list<E...>>::type>::type;
 	}
 
 	////////////////////////////////////////////
