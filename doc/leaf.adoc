@@ -2302,6 +2302,11 @@ This header defines error handler predicates. See <<tutorial-predicates>>.
 ----
 namespace boost { namespace leaf {
 
+  template <class T>
+  struct is_predicate: std::false_type
+  {
+  };
+
   template <class E, auto... V>
   struct match
   {
@@ -2311,11 +2316,21 @@ namespace boost { namespace leaf {
   };
 
   template <class E, auto... V>
+  struct is_predicate<match<E, V...>>: std::true_type
+  {
+  };
+
+  template <class E, auto... V>
   struct match_value
   {
     E matched;
 
     // Other members not specified
+  };
+
+  template <class E, auto... V>
+  struct is_predicate<match_value<E, V...>>: std::true_type
+  {
   };
 
   template <auto, auto...>
@@ -2329,12 +2344,22 @@ namespace boost { namespace leaf {
     // Other members not specified
   };
 
+  template <auto P, auto... V>
+  struct is_predicate<match_member<P, V...>>: std::true_type
+  {
+  };
+
   template <class Pred>
   struct if_not
   {
     E matched;
 
     // Other members not specified
+  };
+
+  template <class Pred>
+  struct is_predicate<if_not<Pred>>: std::true_type
+  {
   };
 
   template <class ErrorCodeEnum>
@@ -2930,7 +2955,7 @@ Requires: ::
 * Each of the `h...` functions:
 ** must return a type that can be used to initialize an object of the type `R`; in case R is a `result<void>` (that is, in case of success it does not communicate a value), handlers that return `void` are permitted. If such a handler is selected, the `try_handle_some` return value is initialized by `{}`;
 ** may take any error objects, by value, by (`const`) reference, or as pointer (to `const`);
-** may take arguments, by value, of any predicate type: <<catch_>>, <<match>>, <<match_value>>, <<match_member>>, <<if_not>>;
+** may take arguments, by value, of any predicate type: <<catch_>>, <<match>>, <<match_value>>, <<match_member>>, <<if_not>>, or of any user-defined predicate type `Pred` for which `<<is_predicate,is_predicate>><Pred>::value` is `true`;
 ** may take an <<error_info>> argument by `const &`;
 ** may take a <<diagnostic_info>> argument by `const &`;
 ** may take a <<verbose_diagnostic_info>> argument by `const &`.
@@ -3015,7 +3040,12 @@ try_handle_some(
 <1> This handler can be selected to handle any error, because it takes `e_file_name` as a `const *` (and nothing else).
 <2> If an `e_file_name` is available with the current error, print it.
 +
-* If `a~i~` is a predicate type `Pred`, LEAF deduces the type `E` based on its type (usually this is simply the first argument to the predicate template). If an error object `e` of type `E`, associated with `err`, is currently stored in `ctx`, and if the predicate evaluates to `true`, `a~i~` is initialized with `Pred{e}`. Otherwise, the handler is dropped.
+* If `a~i~` is of a predicate type `Pred` (for which `<<is_predicate,is_predicate>><Pred>::value` is `true`), LEAF deduces:
++
+[.text-center]
+`using E = typename std::decay<decltype(std::declval<Pred>().matched)>::type;`
++
+If an error object `e` of type `E`, associated with `err`, is currently stored in `ctx`, and if the expression `Pred::evaluate(e)` is `true`, `a~i~` is initialized with `Pred{e}`. Otherwise, the handler is dropped.
 +
 NOTE: See also: <<predicates,Predicates>>.
 +
@@ -4163,6 +4193,58 @@ The following predicates are available:
 * <<match_member>>
 * <<if_not>>
 
+In addition, any user-defined type `Pred` for which `<<is_predicate,is_predicate>><Pred>::value` is `true` is treated as a predicate. In this case, it is required that:
+
+* `Pred` defines an accessible data member `matched`.
+* `Pred` defines an accessible static member function `evaluate`, which returns a boolean type, and can be invoked with an object of type `E const &`, deduced as:
++
+[.text-center]
+`using E = typename std::decay<decltype(std::declval<Pred>().matched)>::type`.
+
+When an error handler takes an argument of a predicate type `Pred`, the <<handler_selection_procedure,handler selection procedure>> will first ensure that an error object `e` of type `E` is available, and then if `Pred::evaluate(e)` returns `true`, the `Pred` argument is initialized with `Pred{e}` to invoke the error handler.
+
+.Example 1:
+[source,c++]
+----
+enum class my_error { e1 = 1, e2, e3 };
+
+struct my_pred
+{
+  my_error matched;
+
+  static bool evaluate(my_error) noexcept;
+}
+
+namespace boost { namespace leaf {
+
+  template <>
+  struct is_predicate<my_pred>: std::true_type
+  {
+  };
+
+} }
+----
+
+.Example 2:
+[source,c++]
+----
+struct my_pred
+{
+  leaf::e_errno const & matched;
+
+  static bool evaluate(leaf::e_errno const &) noexcept;
+}
+
+namespace boost { namespace leaf {
+
+  template <>
+  struct is_predicate<my_pred>: std::true_type
+  {
+  };
+
+} }
+----
+
 '''
 
 [[catch_]]
@@ -4542,6 +4624,26 @@ leaf::try_handle_some(
 
 [[traits]]
 == Reference: Traits
+
+[[is_predicate]]
+=== `is_predicate`
+
+[source,c++]
+.#include <boost/leaf/pred.hpp>>
+----
+namespace boost { namespace leaf {
+
+  template <class T>
+  struct is_predicate: std::false_type
+  {
+  };
+
+} }
+----
+
+The `is_predicate` template is used by the <<handler_selection_procedure,handler selection procedure>> to detect predicate types. See <<tutorial-predicates>>.
+
+'''
 
 [[is_result_type]]
 === `is_result_type`

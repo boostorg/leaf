@@ -106,6 +106,7 @@ namespace boost { namespace leaf {
 	template <class E, BOOST_LEAF_MATCH_ARGS(match_enum_type<E>, V1, V)>
 	struct match
 	{
+		using error_type = E;
 		E matched;
 
 		template <class T>
@@ -118,6 +119,7 @@ namespace boost { namespace leaf {
 	template <class Enum, BOOST_LEAF_MATCH_ARGS(BOOST_LEAF_ESC(match_enum_type<condition<Enum, Enum>>), V1, V)>
 	struct match<condition<Enum, Enum>, V1, V...>
 	{
+		using error_type = std::error_code;
 		std::error_code const & matched;
 
 		BOOST_LEAF_CONSTEXPR static bool evaluate(std::error_code const & e) noexcept
@@ -126,13 +128,10 @@ namespace boost { namespace leaf {
 		}
 	};
 
-	namespace leaf_detail
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_enum_type<E>, V1, V)>
+	struct is_predicate<match<E, V1, V...>>: std::true_type
 	{
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_enum_type<E>, V1, V)>
-		struct is_predicate<match<E, V1, V...>>: std::true_type
-		{
-		};
-	}
+	};
 
 	////////////////////////////////////////
 
@@ -160,6 +159,7 @@ namespace boost { namespace leaf {
 	template <class E, BOOST_LEAF_MATCH_ARGS(match_value_enum_type<E>, V1, V)>
 	struct match_value
 	{
+		using error_type = E;
 		E const & matched;
 
 		BOOST_LEAF_CONSTEXPR static bool evaluate(E const & e) noexcept
@@ -171,6 +171,7 @@ namespace boost { namespace leaf {
 	template <class E, class Enum, BOOST_LEAF_MATCH_ARGS(BOOST_LEAF_ESC(match_value_enum_type<condition<E, Enum>>), V1, V)>
 	struct match_value<condition<E, Enum>, V1, V...>
 	{
+		using error_type = E;
 		E const & matched;
 
 		BOOST_LEAF_CONSTEXPR static bool evaluate(E const & e)
@@ -179,13 +180,10 @@ namespace boost { namespace leaf {
 		}
 	};
 
-	namespace leaf_detail
+	template <class E, BOOST_LEAF_MATCH_ARGS(match_value_enum_type<E>, V1, V)>
+	struct is_predicate<match_value<E, V1, V...>>: std::true_type
 	{
-		template <class E, BOOST_LEAF_MATCH_ARGS(match_value_enum_type<E>, V1, V)>
-		struct is_predicate<match_value<E, V1, V...>>: std::true_type
-		{
-		};
-	}
+	};
 
 	////////////////////////////////////////
 
@@ -196,6 +194,7 @@ namespace boost { namespace leaf {
 	template <class T, class E, T E::* P, auto V1, auto... V>
 	struct match_member<P, V1, V...>
 	{
+		using error_type = E;
 		E const & matched;
 
 		BOOST_LEAF_CONSTEXPR static bool evaluate(E const & e) noexcept
@@ -204,13 +203,10 @@ namespace boost { namespace leaf {
 		}
 	};
 
-	namespace leaf_detail
+	template <auto P, auto V1, auto... V>
+	struct is_predicate<match_member<P, V1, V...>>: std::true_type
 	{
-		template <auto P, auto V1, auto... V>
-		struct is_predicate<match_member<P, V1, V...>>: std::true_type
-		{
-		};
-	}
+	};
 
 #endif
 
@@ -219,6 +215,7 @@ namespace boost { namespace leaf {
 	template <class P>
 	struct if_not
 	{
+		using error_type = typename P::error_type;;
 		decltype(std::declval<P>().matched) matched;
 
 		template <class E>
@@ -228,13 +225,10 @@ namespace boost { namespace leaf {
 		}
 	};
 
-	namespace leaf_detail
+	template <class P>
+	struct is_predicate<if_not<P>>: std::true_type
 	{
-		template <class P>
-		struct is_predicate<if_not<P>>: std::true_type
-		{
-		};
-	}
+	};
 
 } }
 

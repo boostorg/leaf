@@ -24,17 +24,17 @@ namespace boost { namespace leaf {
 	class diagnostic_info;
 	class verbose_diagnostic_info;
 
+	template <class>
+	struct is_predicate: std::false_type
+	{
+	};
+
 	////////////////////////////////////////
 
 	namespace leaf_detail
 	{
 		template <class T>
 		struct is_exception: std::is_base_of<std::exception, typename std::decay<T>::type>
-		{
-		};
-
-		template <class>
-		struct is_predicate: std::false_type
 		{
 		};
 
@@ -70,9 +70,9 @@ namespace boost { namespace leaf {
 		};
 
 		template <class Pred>
-		struct handler_argument_traits_defaults<Pred, false, true>: handler_argument_traits<typename std::decay<decltype(std::declval<typename std::decay<Pred>::type>().matched)>::type>
+		struct handler_argument_traits_defaults<Pred, false, true>: handler_argument_traits<typename Pred::error_type>
 		{
-			using base = handler_argument_traits<typename std::decay<decltype(std::declval<typename std::decay<Pred>::type>().matched)>::type>;
+			using base = handler_argument_traits<typename Pred::error_type>;
 			static_assert(!base::always_available, "Predicates can't use types that are always_available");
 
 			template <class Tup>
