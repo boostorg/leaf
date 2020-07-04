@@ -14,12 +14,20 @@ namespace leaf = boost::leaf;
 
 enum class my_error { e1=1, e2, e3 };
 
+struct e_my_error { int value; };
+
 #if __cplusplus >= 201703L
 template <my_error value>
-bool cmp_my_error( my_error const & e ) noexcept
+constexpr bool cmp_my_error( my_error const & e ) noexcept
 {
 	return e == value;
 };
+
+template <int S>
+constexpr bool e_my_error_gt( e_my_error const & e ) noexcept
+{
+  return e.value > S;
+}
 #endif
 
 struct my_exception: std::exception
@@ -218,6 +226,44 @@ int main()
 			},
 
 			[]( leaf::match<my_error, cmp_my_error<my_error::e2>> )
+			{
+				return 1;
+			},
+
+			[]
+			{
+				return 2;
+			} );
+		BOOST_TEST_EQ(r, 2);
+	}
+
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				return leaf::new_error(e_my_error{42});
+			},
+
+			[]( leaf::match<e_my_error, e_my_error_gt<41>> m )
+			{
+				return 1;
+			},
+
+			[]
+			{
+				return 2;
+			} );
+		BOOST_TEST_EQ(r, 1);
+	}
+
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				return leaf::new_error(e_my_error{42});
+			},
+
+			[]( leaf::match<e_my_error, e_my_error_gt<42>> m )
 			{
 				return 1;
 			},

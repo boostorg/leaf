@@ -24,17 +24,17 @@ namespace boost { namespace leaf {
 	class diagnostic_info;
 	class verbose_diagnostic_info;
 
-	template <class>
-	struct is_predicate: std::false_type
-	{
-	};
-
 	////////////////////////////////////////
 
 	namespace leaf_detail
 	{
 		template <class T>
 		struct is_exception: std::is_base_of<std::exception, typename std::decay<T>::type>
+		{
+		};
+
+		template <class>
+		struct is_predicate: std::false_type
 		{
 		};
 
