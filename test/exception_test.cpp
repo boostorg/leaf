@@ -39,7 +39,7 @@ int get_val( my_exception const & ex )
 
 int get_val( leaf::catch_<my_exception> const & ex )
 {
-	return ex.caught.val;
+	return ex.matched.val;
 }
 
 template <class Ex, class F>

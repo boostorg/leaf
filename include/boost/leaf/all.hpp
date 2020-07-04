@@ -2619,6 +2619,17 @@ namespace boost { namespace leaf {
 		{
 		};
 
+		template <>
+		struct handler_argument_traits<void>
+		{
+			using error_type = void;
+			constexpr static bool requires_catch = true;
+			constexpr static bool always_available = false;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static std::exception const * check( Tup const &, error_info const & ) noexcept;
+		};
+
 		template <class E>
 		struct handler_argument_traits<E &&>
 		{
@@ -3931,6 +3942,22 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
+		template <>
+		template <class Tup>
+		BOOST_LEAF_CONSTEXPR inline
+		std::exception const *
+		handler_argument_traits<void>::
+		check( Tup const &, error_info const & ei ) noexcept
+		{
+			if( ei.exception_caught() )
+				return ei.exception();
+			else
+				return 0;
+		}
+	}
+
+	namespace leaf_detail
+	{
 		template <class... E>
 		template <class TryBlock, class... H>
 		BOOST_LEAF_CONSTEXPR inline
@@ -4111,28 +4138,6 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	template <class... Ex>
-	struct catch_
-	{
-		std::exception const & caught;
-
-		explicit catch_( std::exception const & ex ):
-			caught(ex)
-		{
-		}
-	};
-
-	template <class Ex>
-	struct catch_<Ex>
-	{
-		Ex const & caught;
-
-		explicit catch_( std::exception const & ex ):
-			caught(*dynamic_cast<Ex const *>(&ex))
-		{
-		}
-	};
-
 	namespace leaf_detail
 	{
 		template <class Ex>
@@ -4151,35 +4156,41 @@ namespace boost { namespace leaf {
 		{
 			return true;
 		}
-
-		template <class... Ex>
-		struct handler_argument_traits<catch_<Ex...>>
-		{
-			using error_type = void;
-			constexpr static bool requires_catch = true;
-			constexpr static bool always_available = false;
-
-			template <class Tup>
-			BOOST_LEAF_CONSTEXPR static bool check( Tup & tup, error_info const & ei ) noexcept
-			{
-				if( ei.exception_caught() )
-					if( std::exception const * ex = ei.exception() )
-						return leaf_detail::check_exception_pack(*ex, static_cast<Ex const *>(0)...);
-				return false;
-			}
-
-			template <class Tup>
-			BOOST_LEAF_CONSTEXPR static catch_<Ex...> get( Tup const & tup, error_info const & ei ) noexcept
-			{
-				return catch_<Ex...>(*ei.exception());
-			}
-		};
-
-		template <class... Ex> struct handler_argument_traits<catch_<Ex...> const &>: handler_argument_traits_require_by_value<catch_<Ex...>> { };
-		template <class... Ex> struct handler_argument_traits<catch_<Ex...> const *>: handler_argument_traits_require_by_value<catch_<Ex...>> { };
-		template <class... Ex> struct handler_argument_traits<catch_<Ex...> &>: handler_argument_traits_require_by_value<catch_<Ex...>> { };
-		template <class... Ex> struct handler_argument_traits<catch_<Ex...> *>: handler_argument_traits_require_by_value<catch_<Ex...>> { };
 	}
+
+	template <class... Ex>
+	struct catch_
+	{
+		using error_type = void;
+		std::exception const & matched;
+
+		BOOST_LEAF_CONSTEXPR static bool evaluate(std::exception const & ex) noexcept
+		{
+			return leaf_detail::check_exception_pack(ex, static_cast<Ex const *>(0)...);
+		}
+	};
+
+	template <class Ex>
+	struct catch_<Ex>
+	{
+		using error_type = void;
+		Ex const & matched;
+
+		BOOST_LEAF_CONSTEXPR static Ex const * evaluate(std::exception const & ex) noexcept
+		{
+			return dynamic_cast<Ex const *>(&ex);
+		}
+
+		explicit catch_( std::exception const & ex ):
+			matched(*dynamic_cast<Ex const *>(&ex))
+		{
+		}
+	};
+
+	template <class... Ex>
+	struct is_predicate<catch_<Ex...>>: std::true_type
+	{
+	};
 
 } }
 

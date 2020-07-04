@@ -108,6 +108,17 @@ namespace boost { namespace leaf {
 		{
 		};
 
+		template <>
+		struct handler_argument_traits<void>
+		{
+			using error_type = void;
+			constexpr static bool requires_catch = true;
+			constexpr static bool always_available = false;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static std::exception const * check( Tup const &, error_info const & ) noexcept;
+		};
+
 		template <class E>
 		struct handler_argument_traits<E &&>
 		{
