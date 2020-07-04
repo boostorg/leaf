@@ -9,8 +9,6 @@
 //  See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt
 
-#ifdef BOOST_LEAF_STANDALONE
-
 #include <type_traits>
 #include <cstddef>
 
@@ -301,13 +299,5 @@ template<template<class...> class F, class... T> struct mp_valid_impl
 template<template<class...> class F, class... T> using mp_valid = typename detail::mp_valid_impl<F, T...>::type;
 
 } } }
-
-#else // BOOST_LEAF_STANDALONE
-
-#include <boost/mp11/algorithm.hpp>
-
-namespace boost { namespace leaf { namespace leaf_detail_mp11 = ::boost::mp11; } }
-
-#endif
 
 #endif

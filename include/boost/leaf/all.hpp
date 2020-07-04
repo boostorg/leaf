@@ -22,8 +22,6 @@
 // (C) Copyright Martin Wille 2003.
 // (C) Copyright Guillaume Melquiond 2003.
 
-#ifdef BOOST_LEAF_STANDALONE
-
 #if defined(__clang__)
 #	pragma clang system_header
 #elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
@@ -110,16 +108,6 @@
 #			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 #	endif
-
-#endif
-
-#else // BOOST_LEAF_STANDALONE
-
-#include <boost/config.hpp>
-
-#ifdef BOOST_NO_EXCEPTIONS
-#   define BOOST_LEAF_NO_EXCEPTIONS
-#endif
 
 #endif
 
@@ -261,8 +249,6 @@
 //
 //  See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt
-
-#ifdef BOOST_LEAF_STANDALONE
 
 #include <type_traits>
 #include <cstddef>
@@ -554,14 +540,6 @@ template<template<class...> class F, class... T> struct mp_valid_impl
 template<template<class...> class F, class... T> using mp_valid = typename detail::mp_valid_impl<F, T...>::type;
 
 } } }
-
-#else // BOOST_LEAF_STANDALONE
-
-#include <boost/mp11/algorithm.hpp>
-
-namespace boost { namespace leaf { namespace leaf_detail_mp11 = ::boost::mp11; } }
-
-#endif
 
 #endif
 // <<< #include <boost/leaf/detail/mp11.hpp>

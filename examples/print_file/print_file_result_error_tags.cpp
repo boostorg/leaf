@@ -73,7 +73,7 @@ int main( int argc, char const * argv[] )
 			std::cout << buffer;
 			std::cout.flush();
 			if( std::cout.fail() )
-				throw leaf::exception(output_error{}, leaf::e_errno{errno});
+				return leaf::new_error(output_error{}, leaf::e_errno{errno});
 
 			return 0;
 		},
@@ -203,3 +203,24 @@ result<void> file_read( FILE & f, void * buf, int size )
 
 	return { };
 }
+
+////////////////////////////////////////
+
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace boost
+{
+	void throw_exception( std::exception const & e )
+	{
+		std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
+		std::terminate();
+	}
+
+	struct source_location;
+	void throw_exception( std::exception const & e, boost::source_location const & )
+	{
+		throw_exception(e);
+	}
+}
+
+#endif

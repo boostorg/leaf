@@ -125,3 +125,24 @@ int main()
 			} );
 	return 0;
 }
+
+////////////////////////////////////////
+
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace boost
+{
+	void throw_exception( std::exception const & e )
+	{
+		std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
+		std::terminate();
+	}
+
+	struct source_location;
+	void throw_exception( std::exception const & e, boost::source_location const & )
+	{
+		throw_exception(e);
+	}
+}
+
+#endif
