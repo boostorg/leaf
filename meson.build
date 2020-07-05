@@ -207,7 +207,7 @@ if option_exceptions
 	endif
 	if option_boost
 		examples += [
-			'asio_beast_leaf_rpc'
+#			'asio_beast_leaf_rpc' #FIXME
 		]
 	endif
 endif
