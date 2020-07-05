@@ -42,14 +42,14 @@ The most common check-only use case looks almost identically in LEAF and in Boos
 }
 ```
 
-However, when we want to handle failures, in Boost Outcome and in `tl::expected`, accessing the error object (which is always stored in the return value) is a simple continuation of the error check:
+When we want to handle failures, in Boost Outcome and in `tl::expected`, accessing the error object (which is always stored in the return value) is a simple continuation of the error check:
 
 ```c++
 // Outcome, tl::expected
 if( auto r = f() )
   return r.value()+1; // No error
 else
-{	// Error!
+{ // Error!
   switch( r.error() )
   {
   error_enum::error1:
@@ -119,11 +119,11 @@ Which on clang 9 outputs:
 
 ```x86asm
 val():
-    mov     eax, 42
-    ret
+	mov     eax, 42
+	ret
 main:
-    mov     eax, 42
-    ret
+	mov     eax, 42
+	ret
 ```
 
 It does not appear that anything like this is occurring in our case, but it is still a possibility.
@@ -147,55 +147,48 @@ leaf::result<int> g()
 }
 ```
 
-Generates this code on clang ([Godbolt](https://godbolt.org/z/4AtHMk)):
+Generates this code on clang ([Godbolt](https://godbolt.org/z/edhz7N)):
 
 ```x86asm
 g():                                  # @g()
-    push    rbx
-    sub     rsp, 32
-    mov     rbx, rdi
-    mov     rdi, rsp
-    call    f()
-    mov     eax, dword ptr [rsp + 16]
-    mov     ecx, eax
-    and     ecx, 3
-    cmp     ecx, 2
-    je      .LBB0_4
-    cmp     ecx, 3
-    jne     .LBB0_2
-    mov     eax, dword ptr [rsp]
-    add     eax, 1
-    mov     dword ptr [rbx], eax
-    mov     dword ptr [rbx + 16], 3
-    mov     rax, rbx
-    add     rsp, 32
-    pop     rbx
-    ret
+	push    rbx
+	sub     rsp, 32
+	mov     rbx, rdi
+	mov     rdi, rsp
+	call    f()
+	mov     eax, dword ptr [rsp + 16]
+	mov     ecx, eax
+	and     ecx, 3
+	cmp     ecx, 2
+	je      .LBB0_3
+	cmp     ecx, 3
+	jne     .LBB0_4
+	mov     eax, dword ptr [rsp]
+	add     eax, 1
+	mov     dword ptr [rbx], eax
+	mov     eax, 3
+	jmp     .LBB0_4
+.LBB0_3:
+	movaps  xmm0, xmmword ptr [rsp]
+	mov     qword ptr [rsp + 8], 0
+	movups  xmmword ptr [rbx], xmm0
+	mov     qword ptr [rsp], 0
+	mov     eax, 2
 .LBB0_4:
-    movaps  xmm0, xmmword ptr [rsp]
-    mov     qword ptr [rsp + 8], 0
-    movups  xmmword ptr [rbx], xmm0
-    mov     qword ptr [rsp], 0
-    mov     dword ptr [rbx + 16], 2
-    mov     rax, rbx
-    add     rsp, 32
-    pop     rbx
-    ret
-.LBB0_2:
-    mov     dword ptr [rbx + 16], eax
-    mov     rax, rbx
-    add     rsp, 32
-    pop     rbx
-    ret
+	mov     dword ptr [rbx + 16], eax
+	mov     rax, rbx
+	add     rsp, 32
+	pop     rbx
+	ret
 ```
 
 > Description:
 >
-> * The default no-jump path is the happy path (ends at the first `ret`); the returned `result<T>` holds the `int` discriminant and the `T` (`int` in this case).
+> * The happy path can be recognized by the `add eax,1` instruction generated for `x+1`.
 >
-> * `.LBB0_2`: Regular failure; the returned `result<T>` object holds only the `int` discriminant.
+> * `.LBB0_4`: Regular failure; the returned `result<T>` object holds only the `int` discriminant.
 >
-> * `.LBB0_4`: Failure; the returned `result<T>` holds the `int` discriminant and a `std::shared_ptr<leaf::polymorphic_context>` (used to hold error objects transported from another thread).
+> * `.LBB0_3`: Failure; the returned `result<T>` holds the `int` discriminant and a `std::shared_ptr<leaf::polymorphic_context>` (used to hold error objects transported from another thread).
 
 Note that `f` is undefined, hence the `call` instruction. Predictably, if we provide a trivial definition for `f`:
 
@@ -216,10 +209,10 @@ We get:
 
 ```x86asm
 g():                                  # @g()
-    mov     rax, rdi
-    mov     dword ptr [rdi], 43
-    mov     dword ptr [rdi + 16], 3
-    ret
+	mov     rax, rdi
+	mov     dword ptr [rdi], 43
+	mov     dword ptr [rdi + 16], 3
+	ret
 ```
 
 With a less trivial definition of `f`:
@@ -240,31 +233,32 @@ leaf::result<int> g()
 }
 ```
 
-We get ([Godbolt](https://godbolt.org/z/4P7Jvv)):
+We get ([Godbolt](https://godbolt.org/z/aPEtyb)):
 
 ```x86asm
 g():                                  # @g()
-    push    rbx
-    mov     rbx, rdi
-    call    rand
-    test    al, 1
-    jne     .LBB1_2
-    mov     eax, 4
-    lock            xadd    dword ptr [rip + boost::leaf::leaf_detail::id_factory<void>::counter], eax
-    add     eax, 4
-    mov     dword ptr fs:[boost::leaf::leaf_detail::id_factory<void>::last_id@TPOFF], eax
-    and     eax, -4
-    or      eax, 1
-    mov     dword ptr [rbx + 16], eax
-    mov     rax, rbx
-    pop     rbx
-    ret
+	push    rbx
+	mov     rbx, rdi
+	call    rand
+	test    al, 1
+	jne     .LBB1_2
+	mov     eax, 4
+	lock xadd dword ptr [rip + boost::leaf::leaf_detail::id_factory<void>::counter], eax
+	add     eax, 4
+	mov     dword ptr fs:[boost::leaf::leaf_detail::id_factory<void>::current_id@TPOFF], eax
+	and     eax, -4
+	or      eax, 1
+	mov     dword ptr [rbx + 16], eax
+	mov     rax, rbx
+	pop     rbx
+	ret
 .LBB1_2:
-    mov     dword ptr [rbx], 43
-    mov     dword ptr [rbx + 16], 3
-    mov     rax, rbx
-    pop     rbx
-    ret
+	mov     dword ptr [rbx], 43
+	mov     eax, 3
+	mov     dword ptr [rbx + 16], eax
+	mov     rax, rbx
+	pop     rbx
+	ret
 ```
 
 Above, the call to `f()` is inlined:
@@ -287,7 +281,7 @@ The benchmark matrix has 2 dimensions:
 
 2. Error rate: 2%, 98%
 
-Now, transporting a large error object might seem unusual, but this is only because it is impractical to return a large object as *the* the return value in case of an error. LEAF has two features that make communicating any, even large error objects, practical:
+Now, transporting a large error object might seem unusual, but this is only because it is impractical to return a large object as *the* return value in case of an error. LEAF has two features that make communicating any, even large error objects, practical:
 
 * The return type of error-neutral functions is not coupled with the error object types that may be reported. This means that in case of a failure, any function can easily contribute any error information it has available.
 
@@ -303,21 +297,21 @@ Now, transporting a large error object might seem unusual, but this is only beca
 
 Godbolt has built-in support for Boost (Outcome), but LEAF and `tl::expected` both provide a single header, which makes it very easy to use them online as well. To see the generated code for the benchmark program, you can copy and paste the following into Godbolt:
 
-`leaf::result<T>` (https://godbolt.org/z/DTk4N4):
+`leaf::result<T>` ([godbolt](https://godbolt.org/z/Trf2fc))
 
 ```c++
 #include "https://raw.githubusercontent.com/zajo/leaf/master/include/boost/leaf/all.hpp"
-#include "https://raw.githubusercontent.com/zajo/leaf/master/benchmark/> deep_stack_leaf.cpp"
+#include "https://raw.githubusercontent.com/zajo/leaf/master/benchmark/deep_stack_leaf.cpp"
 ```
 
-`tl::expected<T, E>` (https://godbolt.org/z/GDB43h):
+`tl::expected<T, E>` ([godbolt](https://godbolt.org/z/sHwtTU))
 
 ```c++
 #include "https://raw.githubusercontent.com/TartanLlama/expected/master/include/tl/expected.hpp"
-#include "https://raw.githubusercontent.com/zajo/leaf/master/benchmark/> deep_stack_other.cpp"
+#include "https://raw.githubusercontent.com/zajo/leaf/master/benchmark/deep_stack_other.cpp"
 ```
 
-`outcome::result<T, E>` (https://godbolt.org/z/-tqHfN):
+`outcome::result<T, E>` ([godbolt](https://godbolt.org/z/ZrfRRA))
 
 ```c++
 #define BENCHMARK_WHAT 1
