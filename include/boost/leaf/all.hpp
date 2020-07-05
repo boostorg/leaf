@@ -4719,7 +4719,7 @@ namespace boost { namespace leaf {
 		}
 
 		BOOST_LEAF_CONSTEXPR result( value_type && v ) noexcept:
-			stored_(std::move(v)),
+			stored_(std::forward<value_type>(v)),
 			what_(result_discriminant::kind_val{})
 		{
 		}
@@ -4884,6 +4884,32 @@ namespace boost { namespace leaf {
 		using base::get_error_id;
 		using base::error;
 		using base::load;
+	};
+
+	////////////////////////////////////////
+
+	class success
+	{
+		success( success const & ) = delete;
+		success & operator=( success const & ) = delete;
+
+		bool const succeeded_;
+
+	public:
+
+		constexpr explicit success( bool succeeded = true ) noexcept:
+			succeeded_(succeeded)
+		{
+		}
+
+		template <class T>
+		operator result<T>() const noexcept
+		{
+			if( succeeded_ )
+				return { };
+			else
+				return new_error();
+		}
 	};
 
 	////////////////////////////////////////

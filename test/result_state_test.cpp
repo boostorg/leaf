@@ -572,11 +572,11 @@ int main()
 	BOOST_TEST_EQ(val::count, 0);
 
 	{
-		leaf::result<int> r;
+		leaf::result<int> r = leaf::success();
 		BOOST_TEST(r);
 	}
 	{
-		leaf::result<void> r;
+		leaf::result<void> r = leaf::success();
 		BOOST_TEST(r);
 	}
 
