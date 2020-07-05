@@ -205,15 +205,15 @@ if option_exceptions
 			'lua_callback_eh'
 		]
 	endif
+	if option_boost
+		examples += [
+			'asio_beast_leaf_rpc'
+		]
+	endif
 endif
 if option_lua
 	examples += [
 		'lua_callback_result'
-	]
-endif
-if option_boost
-	examples += [
-		'asio_beast_leaf_rpc'
 	]
 endif
 

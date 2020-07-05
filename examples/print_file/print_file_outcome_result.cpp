@@ -9,7 +9,7 @@
 // It reads a text file in a buffer and prints it to std::cout, using LEAF to handle errors.
 // This version does not use exception handling.
 
-#include <boost/outcome/result.hpp>
+#include <boost/outcome/std_result.hpp>
 #include <boost/leaf/handle_error.hpp>
 #include <boost/leaf/pred.hpp>
 #include <boost/leaf/on_error.hpp>
@@ -206,3 +206,24 @@ result<void> file_read( FILE & f, void * buf, int size )
 
 	return outcome::success();
 }
+
+////////////////////////////////////////
+
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace boost
+{
+	BOOST_LEAF_NORETURN void throw_exception( std::exception const & e )
+	{
+		std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
+		std::terminate();
+	}
+
+	struct source_location;
+	BOOST_LEAF_NORETURN void throw_exception( std::exception const & e, boost::source_location const & )
+	{
+		throw_exception(e);
+	}
+}
+
+#endif

@@ -20,13 +20,13 @@
 
 namespace boost
 {
-	[[noreturn]] void throw_exception( std::exception const & ); // user defined
+	BOOST_LEAF_NORETURN void throw_exception( std::exception const & ); // user defined
 }
 
 namespace boost { namespace leaf {
 
 	template <class T>
-	[[noreturn]] void throw_exception( T const & e )
+	BOOST_LEAF_NORETURN void throw_exception( T const & e )
 	{
 		::boost::throw_exception(e);
 	}
@@ -38,7 +38,7 @@ namespace boost { namespace leaf {
 namespace boost { namespace leaf {
 
 	template <class T>
-	[[noreturn]] void throw_exception( T const & e )
+	BOOST_LEAF_NORETURN void throw_exception( T const & e )
 	{
 		throw e;
 	}
