@@ -17,7 +17,6 @@
 #include <boost/leaf/config.hpp>
 #include <utility>
 #include <new>
-#include <ostream>
 
 namespace boost { namespace leaf {
 
@@ -106,12 +105,6 @@ namespace boost { namespace leaf {
 				return key_;
 			}
 
-			BOOST_LEAF_CONSTEXPR void set_key( int key ) noexcept
-			{
-				BOOST_LEAF_ASSERT(!empty());
-				key_ = key;
-			}
-
 			BOOST_LEAF_CONSTEXPR void reset() noexcept
 			{
 				if( key_ )
@@ -153,34 +146,32 @@ namespace boost { namespace leaf {
 
 			BOOST_LEAF_CONSTEXPR T const & value(int key) const & noexcept
 			{
-				BOOST_LEAF_ASSERT(has_value(key)!=0);
+				BOOST_LEAF_ASSERT(has_value(key) != 0);
 				return value_;
 			}
 
 			BOOST_LEAF_CONSTEXPR T & value(int key) & noexcept
 			{
-				BOOST_LEAF_ASSERT(has_value(key)!=0);
+				BOOST_LEAF_ASSERT(has_value(key) != 0);
 				return value_;
 			}
 
 			BOOST_LEAF_CONSTEXPR T const && value(int key) const && noexcept
 			{
-				BOOST_LEAF_ASSERT(has_value(key)!=0);
+				BOOST_LEAF_ASSERT(has_value(key) != 0);
 				return value_;
 			}
 
 			BOOST_LEAF_CONSTEXPR T value(int key) && noexcept
 			{
-				BOOST_LEAF_ASSERT(has_value(key)!=0);
+				BOOST_LEAF_ASSERT(has_value(key) != 0);
 				T tmp(std::move(value_));
 				reset();
 				return tmp;
 			}
-
-			void print( std::ostream &, int key_to_print ) const;
 		};
 
-	} // leaf_detail
+	}
 
 } }
 

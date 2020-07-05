@@ -11,6 +11,7 @@
 
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/handle_exception.hpp>
+#include <boost/leaf/pred.hpp>
 #include <boost/leaf/on_error.hpp>
 #include <boost/leaf/common.hpp>
 #include <iostream>
@@ -79,7 +80,7 @@ int main( int argc, char const * argv[] )
 		// - an object of type open_error, and
 		// - an object of type leaf::e_errno that has .value equal to ENOENT, and
 		// - an object of type leaf::e_file_name.
-		[]( open_error &, leaf::match<leaf::e_errno,ENOENT>, leaf::e_file_name const & fn )
+		[]( open_error &, leaf::match_value<leaf::e_errno, ENOENT>, leaf::e_file_name const & fn )
 		{
 			std::cerr << "File not found: " << fn.value << std::endl;
 			return 1;

@@ -4,6 +4,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/pred.hpp>
 #include "_test_res.hpp"
 #include "lightweight_test.hpp"
 
@@ -57,7 +58,7 @@ void test()
 			{
 				called = 1;
 				BOOST_TEST_EQ(x.value, 42);
-				return ec.matched();
+				return ec.matched;
 			} );
 		BOOST_TEST(!r);
 		BOOST_TEST_EQ(r.error(), make_error_code(errc_a::a0));

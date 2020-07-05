@@ -43,6 +43,11 @@ struct val
 	{
 		return a.id==b.id;
 	}
+
+	friend std::ostream & operator<<( std::ostream & os, val const & v )
+	{
+		return os << v.id;
+	}
 };
 int val::count = 0;
 int val::id_count = 0;

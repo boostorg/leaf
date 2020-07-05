@@ -18,6 +18,7 @@ int main()
 
 #include <boost/leaf/handle_exception.hpp>
 #include <boost/leaf/exception.hpp>
+#include <boost/leaf/pred.hpp>
 #include "lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
@@ -35,7 +36,7 @@ int main()
 		},
 		[]( my_error const & x, leaf::catch_<leaf::error_id> id )
 		{
-			BOOST_TEST(dynamic_cast<leaf::error_id const *>(&id.value())!=0 && dynamic_cast<leaf::error_id const *>(&id.value())->value()==1);
+			BOOST_TEST(dynamic_cast<leaf::error_id const *>(&id.matched)!=0 && dynamic_cast<leaf::error_id const *>(&id.matched)->value()==1);
 			return 1;
 		},
 		[]

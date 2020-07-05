@@ -17,6 +17,7 @@ int main()
 #else
 
 #include <boost/leaf/handle_exception.hpp>
+#include <boost/leaf/pred.hpp>
 #include <boost/leaf/result.hpp>
 #include "lightweight_test.hpp"
 
@@ -24,7 +25,7 @@ namespace leaf = boost::leaf;
 
 struct e_test { int value; };
 
-int check( leaf::bad_result const &, leaf::match<e_test, 42> )
+int check( leaf::bad_result const &, leaf::match_value<e_test, 42> )
 {
 	return 1;
 }

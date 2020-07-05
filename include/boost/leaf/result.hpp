@@ -14,7 +14,8 @@
 #	pragma warning(push,1)
 #endif
 
-#include <boost/leaf/exception.hpp>
+#include <boost/leaf/error.hpp>
+#include <boost/leaf/detail/throw_exception.hpp>
 #include <memory>
 #include <climits>
 
@@ -42,6 +43,22 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
+		template <class T>
+		struct stored
+		{
+			using type = T;
+			using value_type_const = T const;
+			using value_type = T;
+		};
+
+		template <class T>
+		struct stored<T &>
+		{
+			using type = std::reference_wrapper<T>;
+			using value_type_const = T;
+			using value_type = T;
+		};
+
 		class result_discriminant
 		{
 			unsigned state_;
@@ -82,7 +99,7 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_CONSTEXPR error_id get_error_id() const noexcept
 			{
 				BOOST_LEAF_ASSERT(kind()==no_error || kind()==err_id);
-				return leaf_detail::make_error_id(state_);
+				return make_error_id(state_);
 			}
 		};
 	}
@@ -142,9 +159,15 @@ namespace boost { namespace leaf {
 			}
 		};
 
+		using stored_type = typename leaf_detail::stored<T>::type;
+		using value_type_const = typename leaf_detail::stored<T>::value_type_const;
+	public:
+		using value_type = typename leaf_detail::stored<T>::value_type;
+	private:
+
 		union
 		{
-			T value_;
+			stored_type stored_;
 			context_ptr ctx_;
 		};
 
@@ -155,7 +178,7 @@ namespace boost { namespace leaf {
 			switch(this->what_.kind())
 			{
 			case result_discriminant::val:
-				value_.~T();
+				stored_.~stored_type();
 				break;
 			case result_discriminant::ctx_ptr:
 				BOOST_LEAF_ASSERT(!ctx_ || ctx_->captured_id_);
@@ -172,7 +195,7 @@ namespace boost { namespace leaf {
 			switch(x_what.kind())
 			{
 			case result_discriminant::val:
-				(void) new(&value_) T(std::move(x.value_));
+				(void) new(&stored_) stored_type(std::move(x.stored_));
 				break;
 			case result_discriminant::ctx_ptr:
 				BOOST_LEAF_ASSERT(!x.ctx_ || x.ctx_->captured_id_);
@@ -197,8 +220,6 @@ namespace boost { namespace leaf {
 
 	public:
 
-		using value_type = T;
-
 		BOOST_LEAF_CONSTEXPR result( result && x ) noexcept:
 			what_(move_from(std::move(x)))
 		{
@@ -212,19 +233,19 @@ namespace boost { namespace leaf {
 		}
 
 		BOOST_LEAF_CONSTEXPR result():
-			value_(T()),
+			stored_(stored_type()),
 			what_(result_discriminant::kind_val{})
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR result( T && v ) noexcept:
-			value_(std::move(v)),
+		BOOST_LEAF_CONSTEXPR result( value_type && v ) noexcept:
+			stored_(std::move(v)),
 			what_(result_discriminant::kind_val{})
 		{
 		}
 
-		BOOST_LEAF_CONSTEXPR result( T const & v ):
-			value_(v),
+		BOOST_LEAF_CONSTEXPR result( value_type_const & v ):
+			stored_(v),
 			what_(result_discriminant::kind_val{})
 		{
 		}
@@ -270,38 +291,38 @@ namespace boost { namespace leaf {
 			return what_.kind() == result_discriminant::val;
 		}
 
-		BOOST_LEAF_CONSTEXPR T const & value() const
+		BOOST_LEAF_CONSTEXPR value_type_const & value() const
 		{
 			if( what_.kind() == result_discriminant::val )
-				return value_;
+				return stored_;
 			else
 				::boost::leaf::throw_exception(bad_result(get_error_id()));
 		}
 
-		BOOST_LEAF_CONSTEXPR T & value()
+		BOOST_LEAF_CONSTEXPR value_type & value()
 		{
 			if( what_.kind() == result_discriminant::val )
-				return value_;
+				return stored_;
 			else
 				::boost::leaf::throw_exception(bad_result(get_error_id()));
 		}
 
-		BOOST_LEAF_CONSTEXPR T const & operator*() const
+		BOOST_LEAF_CONSTEXPR value_type_const & operator*() const
 		{
 			return value();
 		}
 
-		BOOST_LEAF_CONSTEXPR T & operator*()
+		BOOST_LEAF_CONSTEXPR value_type & operator*()
 		{
 			return value();
 		}
 
-		BOOST_LEAF_CONSTEXPR T const * operator->() const
+		BOOST_LEAF_CONSTEXPR value_type_const * operator->() const
 		{
 			return &value();
 		}
 
-		BOOST_LEAF_CONSTEXPR T * operator->()
+		BOOST_LEAF_CONSTEXPR value_type * operator->()
 		{
 			return &value();
 		}
@@ -394,6 +415,7 @@ namespace boost { namespace leaf {
 	struct is_result_type<result<T>>: std::true_type
 	{
 	};
+
 } }
 
 #endif

@@ -17,6 +17,7 @@ int main()
 #else
 
 #include <boost/leaf/handle_exception.hpp>
+#include <boost/leaf/pred.hpp>
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/on_error.hpp>
 #include "lightweight_test.hpp"
@@ -38,7 +39,7 @@ int get_val( my_exception const & ex )
 
 int get_val( leaf::catch_<my_exception> const & ex )
 {
-	return ex.value().val;
+	return ex.matched.val;
 }
 
 template <class Ex, class F>
@@ -51,12 +52,12 @@ int test( F && f )
 			return 0;
 		},
 
-		[]( Ex ex, leaf::match<info,42>, leaf::e_source_location )
+		[]( Ex ex, leaf::match_value<info,42>, leaf::e_source_location )
 		{
 			BOOST_TEST_EQ(get_val(ex), 42);
 			return 20;
 		},
-		[]( Ex ex, leaf::match<info,42>, info x )
+		[]( Ex ex, leaf::match_value<info,42>, info x )
 		{
 			BOOST_TEST_EQ(get_val(ex), 42);
 			return 21;
@@ -71,11 +72,11 @@ int test( F && f )
 			BOOST_TEST_EQ(get_val(ex), 42);
 			return 23;
 		},
-		[]( leaf::match<info,42>, leaf::e_source_location )
+		[]( leaf::match_value<info,42>, leaf::e_source_location )
 		{
 			return 40;
 		},
-		[]( leaf::match<info,42>, info x )
+		[]( leaf::match_value<info,42>, info x )
 		{
 			return 41;
 		},

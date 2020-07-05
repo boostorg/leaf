@@ -17,6 +17,7 @@ int main()
 #else
 
 #include <boost/leaf/handle_exception.hpp>
+#include <boost/leaf/pred.hpp>
 #include "lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
@@ -26,6 +27,8 @@ template <int> struct info { int value; };
 struct error1: std::exception { };
 struct error2: std::exception { };
 struct error3: std::exception { };
+
+struct exc_val: std::exception { int value; explicit exc_val(int v): value(v) { } };
 
 template <class R,class Ex>
 R failing( Ex && ex )
@@ -516,7 +519,7 @@ int main()
 				BOOST_TEST_EQ(r, 1);
 				return r;
 			},
-			[](error1 const &  )
+			[]( error1 const & )
 			{
 				return 2;
 			},
@@ -525,6 +528,78 @@ int main()
 				return 3;
 			} );
 		BOOST_TEST_EQ(r, 1);
+	}
+
+	//////////////////////////////////////
+
+	// match<> with exceptions
+	{
+		int r = leaf::try_catch(
+			[]
+			{
+				throw leaf::exception(exc_val{42});
+				return 0;
+			},
+			[]( leaf::match_value<exc_val, 42> )
+			{
+				return 1;
+			},
+			[]
+			{
+				return 2;
+			} );
+		BOOST_TEST_EQ(r, 1);
+	}
+	{
+		int r = leaf::try_catch(
+			[]
+			{
+				throw leaf::exception(exc_val{42});
+				return 0;
+			},
+			[]( leaf::match_value<exc_val, 41> )
+			{
+				return 1;
+			},
+			[]
+			{
+				return 2;
+			} );
+		BOOST_TEST_EQ(r, 2);
+	}
+	{
+		int r = leaf::try_catch(
+			[]
+			{
+				throw exc_val{42};
+				return 0;
+			},
+			[]( leaf::match_value<exc_val, 42> )
+			{
+				return 1;
+			},
+			[]
+			{
+				return 2;
+			} );
+		BOOST_TEST_EQ(r, 1);
+	}
+	{
+		int r = leaf::try_catch(
+			[]
+			{
+				throw exc_val{42};
+				return 0;
+			},
+			[]( leaf::match_value<exc_val, 41> )
+			{
+				return 1;
+			},
+			[]
+			{
+				return 2;
+			} );
+		BOOST_TEST_EQ(r, 2);
 	}
 
 	//////////////////////////////////////

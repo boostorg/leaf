@@ -11,6 +11,7 @@
 
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/pred.hpp>
 #include <boost/leaf/on_error.hpp>
 #include <boost/leaf/common.hpp>
 #include <iostream>
@@ -85,7 +86,7 @@ int main( int argc, char const * argv[] )
 		// - an object of type error_code equal to open_error, and
 		// - an object of type leaf::e_errno that has .value equal to ENOENT, and
 		// - an object of type leaf::e_file_name.
-		[]( leaf::match<error_code, open_error>, leaf::match<leaf::e_errno, ENOENT>, leaf::e_file_name const & fn )
+		[]( leaf::match<error_code, open_error>, leaf::match_value<leaf::e_errno, ENOENT>, leaf::e_file_name const & fn )
 		{
 			std::cerr << "File not found: " << fn.value << std::endl;
 			return 1;
@@ -199,3 +200,24 @@ result<void> file_read( FILE & f, void * buf, int size )
 
 	return { };
 }
+
+////////////////////////////////////////
+
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace boost
+{
+	BOOST_LEAF_NORETURN void throw_exception( std::exception const & e )
+	{
+		std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
+		std::terminate();
+	}
+
+	struct source_location;
+	BOOST_LEAF_NORETURN void throw_exception( std::exception const & e, boost::source_location const & )
+	{
+		throw_exception(e);
+	}
+}
+
+#endif

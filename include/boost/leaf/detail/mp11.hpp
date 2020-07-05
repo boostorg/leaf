@@ -9,18 +9,6 @@
 //  See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt
 
-// LEAF needs a few mp11 utilities, which have been copied into the internal
-// namespace boost::leaf::leaf_detail_mp11 in order to avoid a dependency on
-// the entire mp11 library. The BOOST_LEAF_USE_BOOST_MP11 configuration macro
-// tells LEAF to not bother and just use <boost/mp11/algorithm.hpp> instead.
-#ifdef BOOST_LEAF_USE_BOOST_MP11
-
-#include <boost/mp11/algorithm.hpp>
-
-namespace boost { namespace leaf { namespace leaf_detail_mp11 = ::boost::mp11; } }
-
-#else
-
 #include <type_traits>
 #include <cstddef>
 
@@ -311,7 +299,5 @@ template<template<class...> class F, class... T> struct mp_valid_impl
 template<template<class...> class F, class... T> using mp_valid = typename detail::mp_valid_impl<F, T...>::type;
 
 } } }
-
-#endif
 
 #endif

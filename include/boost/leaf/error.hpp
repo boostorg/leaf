@@ -22,34 +22,18 @@
 #include <memory>
 #include <set>
 
-#ifdef BOOST_LEAF_NO_THREADS
-#	define BOOST_LEAF_THREAD_LOCAL
-	namespace boost { namespace leaf {
-		namespace leaf_detail
-		{
-			using atomic_unsigned_int = unsigned int;
-		}
-	} }
-#else
-#	include <atomic>
-#	include <thread>
-#	define BOOST_LEAF_THREAD_LOCAL thread_local
-	namespace boost { namespace leaf {
-		namespace leaf_detail
-		{
-			using atomic_unsigned_int = std::atomic<unsigned int>;
-		}
-	} }
-#endif
+#define BOOST_LEAF_TOKEN_PASTE(x, y) x ## y
+#define BOOST_LEAF_TOKEN_PASTE2(x, y) BOOST_LEAF_TOKEN_PASTE(x, y)
 
-#define BOOST_LEAF_NEW_ERROR ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
+#define BOOST_LEAF_VAR(v,r)\
+	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "The BOOST_LEAF_VAR macro requires a result type as the second argument");\
+	auto && BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__) = r;\
+	if( !BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__) )\
+		return BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).error();\
+	v = BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).value()
 
-#define BOOST_LEAF_AUTO(v,r)\
-	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "BOOST_LEAF_AUTO requires a result type");\
-	auto && _r_##v = r;\
-	if( !_r_##v )\
-		return _r_##v.error();\
-	auto && v = _r_##v.value()
+#define BOOST_LEAF_AUTO(v, r)\
+	BOOST_LEAF_VAR(auto && v, r)
 
 #define BOOST_LEAF_CHECK(r)\
 	{\
@@ -59,7 +43,7 @@
 			return _r.error();\
 	}
 
-////////////////////////////////////////
+#define BOOST_LEAF_NEW_ERROR ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
 
 namespace boost { namespace leaf {
 
@@ -84,6 +68,119 @@ namespace boost { namespace leaf {
 
 ////////////////////////////////////////
 
+#ifdef BOOST_LEAF_NO_THREADS
+#	define BOOST_LEAF_THREAD_LOCAL
+	namespace boost { namespace leaf {
+		namespace leaf_detail
+		{
+			using atomic_unsigned_int = unsigned int;
+		}
+	} }
+#else
+#	include <atomic>
+#	include <thread>
+#	define BOOST_LEAF_THREAD_LOCAL thread_local
+	namespace boost { namespace leaf {
+		namespace leaf_detail
+		{
+			using atomic_unsigned_int = std::atomic<unsigned int>;
+		}
+	} }
+#endif
+
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
+
+#if BOOST_LEAF_DIAGNOSTICS
+
+	namespace leaf_detail
+	{
+		class e_unexpected_count
+		{
+		public:
+
+			char const * (*first_type)();
+			int count;
+
+			BOOST_LEAF_CONSTEXPR explicit e_unexpected_count(char const * (*first_type)()) noexcept:
+				first_type(first_type),
+				count(1)
+			{
+			}
+
+			void print(std::ostream & os) const
+			{
+				BOOST_LEAF_ASSERT(first_type != 0);
+				BOOST_LEAF_ASSERT(count>0);
+				os << "Detected ";
+				if( count==1 )
+					os << "1 attempt to communicate an unexpected error object";
+				else
+					os << count << " attempts to communicate unexpected error objects, the first one";
+				os << " of type " << first_type() << std::endl;
+			}
+		};
+
+		template <>
+		struct diagnostic<e_unexpected_count, false, false>
+		{
+			static constexpr bool is_invisible = true;
+			BOOST_LEAF_CONSTEXPR static void print(std::ostream &, e_unexpected_count const &) noexcept { }
+		};
+
+		class e_unexpected_info
+		{
+			std::string s_;
+			std::set<char const *(*)()> already_;
+
+		public:
+
+			e_unexpected_info() noexcept
+			{
+			}
+
+			template <class E>
+			void add(E const & e)
+			{
+				if( !diagnostic<E>::is_invisible && already_.insert(&type<E>).second  )
+				{
+					std::stringstream s;
+					diagnostic<E>::print(s,e);
+					s << std::endl;
+					s_ += s.str();
+				}
+			}
+
+			void print(std::ostream & os) const
+			{
+				os << "Unexpected error objects:\n" << s_;
+			}
+		};
+
+		template <>
+		struct diagnostic<e_unexpected_info, false, false>
+		{
+			static constexpr bool is_invisible = true;
+			BOOST_LEAF_CONSTEXPR static void print(std::ostream &, e_unexpected_info const &) noexcept { }
+		};
+
+		template <class=void>
+		struct tl_unexpected_enabled
+		{
+			static BOOST_LEAF_THREAD_LOCAL int counter;
+		};
+
+		template <class T>
+		BOOST_LEAF_THREAD_LOCAL int tl_unexpected_enabled<T>::counter;
+	}
+
+#endif
+
+} }
+
+////////////////////////////////////////
+
 namespace boost { namespace leaf {
 
 	struct e_source_location
@@ -100,114 +197,19 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-#if BOOST_LEAF_DIAGNOSTICS
-
-	namespace leaf_detail
-	{
-		class e_unexpected_count
-		{
-		public:
-
-			char const * (*first_type)();
-			int count;
-
-			BOOST_LEAF_CONSTEXPR explicit e_unexpected_count( char const * (*first_type)() ) noexcept:
-				first_type(first_type),
-				count(1)
-			{
-			}
-
-			void print( std::ostream & os ) const
-			{
-				BOOST_LEAF_ASSERT(first_type!=0);
-				BOOST_LEAF_ASSERT(count>0);
-				os << "Detected ";
-				if( count==1 )
-					os << "1 attempt to communicate an unexpected error object";
-				else
-					os << count << " attempts to communicate unexpected error objects, the first one";
-				os << " of type " << first_type() << std::endl;
-			}
-		};
-
-		template <>
-		struct diagnostic<e_unexpected_count,false,false>
-		{
-			static constexpr bool is_invisible = true;
-			BOOST_LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_count const & ) noexcept
-			{
-			}
-		};
-
-		class e_unexpected_info
-		{
-			std::string s_;
-			std::set<char const *(*)()> already_;
-
-		public:
-
-			e_unexpected_info() noexcept
-			{
-			}
-
-			void reset() noexcept
-			{
-				s_.clear();
-				already_.clear();
-			}
-
-			template <class E>
-			void add( E const & e )
-			{
-				std::stringstream s;
-				if( !leaf_detail::diagnostic<E>::is_invisible )
-				{
-					leaf_detail::diagnostic<E>::print(s,e);
-					if( already_.insert(&type<E>).second  )
-					{
-						s << std::endl;
-						s_ += s.str();
-					}
-				}
-			}
-
-			void print( std::ostream & os ) const
-			{
-				os << "Unexpected error objects:\n" << s_;
-			}
-		};
-
-		template <>
-		struct diagnostic<e_unexpected_info,false,false>
-		{
-			static constexpr bool is_invisible = true;
-			BOOST_LEAF_CONSTEXPR static void print( std::ostream &, e_unexpected_info const & ) noexcept
-			{
-			}
-		};
-
-		inline int & tl_unexpected_enabled_counter() noexcept
-		{
-			static BOOST_LEAF_THREAD_LOCAL int c;
-			return c;
-		}
-	}
-
-#endif
-
-	////////////////////////////////////////
-
 	namespace leaf_detail
 	{
 		template <class E>
 		class slot;
 
 		template <class E>
-		inline slot<E> * & tl_slot_ptr() noexcept
+		struct tl_slot_ptr
 		{
-			static BOOST_LEAF_THREAD_LOCAL slot<E> * s;
-			return s;
-		}
+			static BOOST_LEAF_THREAD_LOCAL slot<E> * p;
+		};
+
+		template <class E>
+		BOOST_LEAF_THREAD_LOCAL slot<E> * tl_slot_ptr<E>::p;
 
 		template <class E>
 		class slot:
@@ -216,7 +218,7 @@ namespace boost { namespace leaf {
 			slot( slot const & ) = delete;
 			slot & operator=( slot const & ) = delete;
 
-			typedef optional<E> impl;
+			using impl = optional<E>;
 			slot<E> * * top_;
 			slot<E> * prev_;
 
@@ -237,7 +239,7 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_CONSTEXPR void activate() noexcept
 			{
 				BOOST_LEAF_ASSERT(top_==0 || *top_!=this);
-				top_ = &tl_slot_ptr<E>();
+				top_ = &tl_slot_ptr<E>::p;
 				prev_ = *top_;
 				*top_ = this;
 			}
@@ -250,10 +252,26 @@ namespace boost { namespace leaf {
 
 			BOOST_LEAF_CONSTEXPR void propagate() noexcept;
 
+			void print( std::ostream & os, int key_to_print ) const
+			{
+				if( !diagnostic<E>::is_invisible )
+					if( int k = this->key() )
+					{
+						if( key_to_print )
+						{
+							if( key_to_print!=k )
+								return;
+						}
+						else
+							os << '[' << k << ']';
+						diagnostic<E>::print(os, value(k));
+						os << std::endl;
+					}
+			}
+
 			using impl::put;
 			using impl::has_value;
 			using impl::value;
-			using impl::print;
 		};
 
 #if BOOST_LEAF_DIAGNOSTICS
@@ -261,7 +279,7 @@ namespace boost { namespace leaf {
 		template <class E>
 		BOOST_LEAF_CONSTEXPR inline void load_unexpected_count( int err_id ) noexcept
 		{
-			if( slot<e_unexpected_count> * sl = tl_slot_ptr<e_unexpected_count>() )
+			if( slot<e_unexpected_count> * sl = tl_slot_ptr<e_unexpected_count>::p )
 				if( e_unexpected_count * unx = sl->has_value(err_id) )
 					++unx->count;
 				else
@@ -271,7 +289,7 @@ namespace boost { namespace leaf {
 		template <class E>
 		BOOST_LEAF_CONSTEXPR inline void load_unexpected_info( int err_id, E && e ) noexcept
 		{
-			if( slot<e_unexpected_info> * sl = tl_slot_ptr<e_unexpected_info>() )
+			if( slot<e_unexpected_info> * sl = tl_slot_ptr<e_unexpected_info>::p )
 				if( e_unexpected_info * unx = sl->has_value(err_id) )
 					unx->add(e);
 				else
@@ -303,7 +321,7 @@ namespace boost { namespace leaf {
 #if BOOST_LEAF_DIAGNOSTICS
 			else
 			{
-				int c = tl_unexpected_enabled_counter();
+				int c = tl_unexpected_enabled<>::counter;
 				BOOST_LEAF_ASSERT(c>=0);
 				if( c )
 					if( int err_id = impl::key() )
@@ -315,15 +333,15 @@ namespace boost { namespace leaf {
 		template <class E>
 		BOOST_LEAF_CONSTEXPR inline int load_slot( int err_id, E && e ) noexcept
 		{
-			static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not supported");
+			static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
 			using T = typename std::decay<E>::type;
 			BOOST_LEAF_ASSERT((err_id&3)==1);
-			if( slot<T> * p = tl_slot_ptr<T>() )
+			if( slot<T> * p = tl_slot_ptr<T>::p )
 				(void) p->put(err_id, std::forward<E>(e));
 #if BOOST_LEAF_DIAGNOSTICS
 			else
 			{
-				int c = tl_unexpected_enabled_counter();
+				int c = tl_unexpected_enabled<>::counter;
 				BOOST_LEAF_ASSERT(c>=0);
 				if( c )
 					load_unexpected(err_id, std::forward<E>(e));
@@ -337,16 +355,16 @@ namespace boost { namespace leaf {
 		{
 			static_assert(function_traits<F>::arity==1, "Lambdas passed to accumulate must take a single e-type argument by reference");
 			using E = typename std::decay<fn_arg_type<F,0>>::type;
-			static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not supported");
+			static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
 			BOOST_LEAF_ASSERT((err_id&3)==1);
-			if( auto sl = tl_slot_ptr<E>() )
+			if( auto sl = tl_slot_ptr<E>::p )
 				if( auto v = sl->has_value(err_id) )
 					(void) std::forward<F>(f)(*v);
 				else
 					(void) std::forward<F>(f)(sl->put(err_id,E()));
 			return 0;
 		}
-	} // leaf_detail
+	}
 
 	////////////////////////////////////////
 
@@ -602,27 +620,17 @@ namespace boost { namespace leaf {
 		return leaf_detail::make_error_id(leaf_detail::current_id());
 	}
 
-	namespace leaf_detail
-	{
-		template <class... E>
-		inline error_id new_error_at( char const * file, int line, char const * function ) noexcept
-		{
-			BOOST_LEAF_ASSERT(file&&*file);
-			BOOST_LEAF_ASSERT(line>0);
-			BOOST_LEAF_ASSERT(function&&*function);
-			e_source_location sl { file, line, function }; // Temp object MSVC workaround
-			return new_error(std::move(sl));
-		}
-	}
-
 	////////////////////////////////////////////
 
 	class polymorphic_context
 	{
 	protected:
+
 		polymorphic_context() noexcept = default;
 		~polymorphic_context() noexcept = default;
+
 	public:
+
 		virtual error_id propagate_captured_errors() noexcept = 0;
 		virtual void activate() noexcept = 0;
 		virtual void deactivate() noexcept = 0;
@@ -702,22 +710,6 @@ namespace boost { namespace leaf {
 	struct is_result_type<R const>: is_result_type<R>
 	{
 	};
-
-	namespace leaf_detail
-	{
-		template <class R, bool IsResult = is_result_type<R>::value>
-		struct is_result_tag;
-
-		template <class R>
-		struct is_result_tag<R, false>
-		{
-		};
-
-		template <class R>
-		struct is_result_tag<R, true>
-		{
-		};
-	}
 
 } }
 

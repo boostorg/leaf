@@ -17,6 +17,7 @@ int main()
 #else
 
 #include <boost/leaf/handle_exception.hpp>
+#include <boost/leaf/pred.hpp>
 #include <boost/exception/info.hpp>
 #include <boost/exception/get_error_info.hpp>
 #include "lightweight_test.hpp"
@@ -29,40 +30,90 @@ typedef boost::error_info<struct test_info_, int> test_info;
 
 int main()
 {
-	leaf::try_catch(
-		[]
-		{
-			try
-			{
-				boost::throw_exception(test_ex());
-			}
-			catch( boost::exception & ex )
-			{
-				ex << test_info(42);
-				throw;
-			}
-		},
-		[]( test_info const & x )
-		{
-			BOOST_TEST_EQ(x.value(), 42);
-		} );
+	static_assert(std::is_same<test_info, decltype(std::declval<leaf::match<test_info, 42>>().matched)>::value, "handler_argument_traits deduction bug");
 
-	leaf::try_catch(
-		[]
-		{
-			try
+	using tr = leaf::leaf_detail::handler_argument_traits<leaf::match<test_info, 42>>;
+	static_assert(tr::requires_catch, "handler_argument_traits deduction bug");
+	static_assert(std::is_same<void, tr::error_type>::value, "handler_argument_traits deduction bug");
+
+	{
+		int r = leaf::try_catch(
+			[]
 			{
-				boost::throw_exception(test_ex());
-			}
-			catch( boost::exception & ex )
+				try
+				{
+					boost::throw_exception(test_ex());
+				}
+				catch( boost::exception & ex )
+				{
+					ex << test_info(42);
+					throw;
+				}
+				return 0;
+			},
+			[]( test_info x )
 			{
-				ex << test_info(42);
-				throw;
-			}
-		},
-		[]( leaf::match<test_info, 42> )
-		{
-		} );
+				BOOST_TEST_EQ(x.value(), 42);
+				return 1;
+			},
+			[]
+			{
+				return 2;
+			} );
+		BOOST_TEST_EQ(r, 1);
+	}
+
+	{
+		int r = leaf::try_catch(
+			[]
+			{
+				try
+				{
+					boost::throw_exception(test_ex());
+				}
+				catch( boost::exception & ex )
+				{
+					ex << test_info(42);
+					throw;
+				}
+				return 0;
+			},
+			[]( leaf::match<test_info, 42> )
+			{
+				return 1;
+			},
+			[]
+			{
+				return 2;
+			} );
+		BOOST_TEST_EQ(r, 1);
+	}
+
+	{
+		int r = leaf::try_catch(
+			[]
+			{
+				try
+				{
+					boost::throw_exception(test_ex());
+				}
+				catch( boost::exception & ex )
+				{
+					ex << test_info(42);
+					throw;
+				}
+				return 0;
+			},
+			[]( leaf::match<test_info, 41> )
+			{
+				return 1;
+			},
+			[]
+			{
+				return 2;
+			} );
+		BOOST_TEST_EQ(r, 2);
+	}
 
 	return boost::report_errors();
 }

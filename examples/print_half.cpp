@@ -7,6 +7,7 @@
 // https://github.com/ned14/outcome/blob/master/doc/src/snippets/using_result.cpp
 
 #include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/pred.hpp>
 #include <boost/leaf/result.hpp>
 #include <algorithm>
 #include <ctype.h>
@@ -55,7 +56,7 @@ leaf::result<void> print_half(const std::string& text)
 			std::cout << r / 2 << std::endl;
 			return { };
 		},
-		[&]( leaf::match<ConversionErrc,ConversionErrc::TooLong> ) -> leaf::result<void>
+		[&]( leaf::match<ConversionErrc, ConversionErrc::TooLong> ) -> leaf::result<void>
 		{
 			BOOST_LEAF_AUTO(i, BigInt::fromString(text));
 			std::cout << i.half() << std::endl;
@@ -73,13 +74,13 @@ int main( int argc, char const * argv[] )
 			return 0;
 		},
 
-		[]( leaf::match<ConversionErrc,ConversionErrc::EmptyString> )
+		[]( leaf::match<ConversionErrc, ConversionErrc::EmptyString> )
 		{
 			std::cerr << "Empty string!" << std::endl;
 			return 1;
 		},
 
-		[]( leaf::match<ConversionErrc,ConversionErrc::IllegalChar> )
+		[]( leaf::match<ConversionErrc, ConversionErrc::IllegalChar> )
 		{
 			std::cerr << "Illegal char!" << std::endl;
 			return 2;
@@ -96,3 +97,24 @@ int main( int argc, char const * argv[] )
 			return 3;
 		} );
 }
+
+////////////////////////////////////////
+
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace boost
+{
+	BOOST_LEAF_NORETURN void throw_exception( std::exception const & e )
+	{
+		std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
+		std::terminate();
+	}
+
+	struct source_location;
+	BOOST_LEAF_NORETURN void throw_exception( std::exception const & e, boost::source_location const & )
+	{
+		throw_exception(e);
+	}
+}
+
+#endif

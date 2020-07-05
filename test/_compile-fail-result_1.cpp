@@ -3,7 +3,13 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/error.hpp>
+#include <boost/leaf/result.hpp>
 
-int a;
-auto x = boost::leaf::new_error(&a);
+namespace leaf = boost::leaf;
+
+leaf::result<int *> f();
+
+leaf::result<int> g()
+{
+	return f(); // Types are incompatible
+}
