@@ -1846,6 +1846,9 @@ namespace boost { namespace leaf {
 
     error_id() noexcept;
 
+    template <class Enum>
+    error_id( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
     error_id( std::error_code const & ec ) noexcept;
 
     int value() const noexcept;
@@ -2001,8 +2004,12 @@ namespace boost { namespace leaf {
     result( T const & v );
 
     result( error_id err ) noexcept;
-    result( std::error_code const & ec ) noexcept;
     result( std::shared_ptr<polymorphic_context> && ctx ) noexcept;
+
+    template <class Enum>
+    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
+    result( std::error_code const & ec ) noexcept;
 
     result( result && r ) noexcept;
 
@@ -2024,6 +2031,41 @@ namespace boost { namespace leaf {
 
     T const * operator->() const;
     T * operator->();
+
+    <<unspecified-type>> error() noexcept;
+
+    template <class... Item>
+    error_id load( Item && ... item ) noexcept;
+  };
+
+  template <>
+  class result<void>
+  {
+  public:
+
+    result() noexcept;
+
+    result( error_id err ) noexcept;
+    result( std::shared_ptr<polymorphic_context> && ctx ) noexcept;
+
+    template <class Enum>
+    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
+    result( std::error_code const & ec ) noexcept;
+
+    result( result && r ) noexcept;
+
+    template <class U>
+    result( result<U> && r ) noexcept;
+
+    result & operator=( result && r ) noexcept;
+
+    template <class U>
+    result & operator=( result<U> && r ) noexcept;
+
+    explicit operator bool() const noexcept;
+
+    void value() const;
 
     <<unspecified-type>> error() noexcept;
 
@@ -3327,6 +3369,9 @@ namespace boost { namespace leaf {
 
     error_id() noexcept;
 
+    template <class Enum>
+    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
     error_id( std::error_code const & ec ) noexcept;
 
     int value() const noexcept;
@@ -3371,18 +3416,23 @@ namespace boost { namespace leaf {
 
   error_id::error_id() noexcept = default;
 
+  template <class Enum>
+  error_id::error_id( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
   error_id::error_id( std::error_code const & ec ) noexcept;
 
 } }
 ----
 
-A default-initialized `error_id` object does not represent a failure. It compares equal to any other default-initialized `error_id` object. All other `error_id` objects identify a specific occurrence of a failure.
+A default-initialized `error_id` object does not represent a specific failure. It compares equal to any other default-initialized `error_id` object. All other `error_id` objects identify a specific occurrence of a failure.
+
+CAUTION: When using an object of type `error_id` to initialize a `result<T>` object, it will be initialized in error state, even when passing a default-initialized `error_id` value.
 
 Converting an `error_id` object to `std::error_code` uses an unspecified `std::error_category` which LEAF recognizes. This allows an `error_id` to be transported through interfaces that work with `std::error_code`. The `std::error_code` constructor allows the original `error_id` to be restored.
 
 TIP: To check if a given `std::error_code` is actually carrying an `error_id`, use <<is_error_id>>.
 
-Typically, users create new `error_id` objects by invoking <<new_error>>. The constructor that takes `std::error_code` has the following effects:
+Typically, users create new `error_id` objects by invoking <<new_error>>. The constructor that takes `std::error_code`, and the one that takes a type `Enum` for which `std::is_error_code_enum<Enum>::value` is `true`, have the following effects:
 
 * If `ec.value()` is `0`, the effect is the same as using the default constructor.
 * Otherwise, if `<<is_error_id,is_error_id>>(ec)` is `true`, the original `error_id` value is used to initialize `*this`;
@@ -3806,8 +3856,12 @@ namespace boost { namespace leaf {
     result( T const & v );
 
     result( error_id err ) noexcept;
-    result( std::error_code const & ec ) noexcept;
     result( std::shared_ptr<polymorphic_context> && ctx ) noexcept;
+
+    template <class Enum>
+    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
+    result( std::error_code const & ec ) noexcept;
 
     result( result && r ) noexcept;
 
@@ -3829,6 +3883,41 @@ namespace boost { namespace leaf {
 
     T const * operator->() const;
     T * operator->();
+
+    <<unspecified-type>> error() noexcept;
+
+    template <class... Item>
+    error_id load( Item && ... item ) noexcept;
+  };
+
+  template <>
+  class result<void>
+  {
+  public:
+
+    result() noexcept;
+
+    result( error_id err ) noexcept;
+    result( std::shared_ptr<polymorphic_context> && ctx ) noexcept;
+
+    template <class Enum>
+    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
+    result( std::error_code const & ec ) noexcept;
+
+    result( result && r ) noexcept;
+
+    template <class U>
+    result( result<U> && r ) noexcept;
+
+    result & operator=( result && r ) noexcept;
+
+    template <class U>
+    result & operator=( result<U> && r ) noexcept;
+
+    explicit operator bool() const noexcept;
+
+    void value() const;
 
     <<unspecified-type>> error() noexcept;
 
@@ -3859,6 +3948,7 @@ Invariant: :: A `result<T>` object is in one of three states:
 [[result::result]]
 ==== Constructors
 
+--
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
@@ -3868,10 +3958,17 @@ namespace boost { namespace leaf {
   result<T>::result() noexcept;
 
   template <class T>
-  result<T>::result( T && v ) noexcept;
+  result<T>::result( T && v ) noexcept; <1>
+
+  template <class T>
+  result<T>::result( T const & v ); <1>
 
   template <class T>
   result<T>::result( leaf::error_id err ) noexcept;
+
+  template <class T>
+  template <class Enum>
+  result<T>::result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
 
   template <class T>
   result<T>::result( std::error_code const & ec ) noexcept;
@@ -3888,8 +3985,10 @@ namespace boost { namespace leaf {
 
 } }
 ----
+<1> Not available if `T` is `void`.
+--
 
-Requires: :: `T` must be movable, and its move constructor may not throw.
+Requires: :: `T` must be movable, and its move constructor may not throw; or `void`.
 
 Effects: ::
 
@@ -3897,7 +3996,13 @@ Establishes the `result<T>` invariant:
 +
 --
 * To get a `result<T>` in <<result,Value state>>, initialize it with an object of type `T` or use the default constructor.
-* To get a `result<T>` in <<result,Error state>>, initialize it with an <<error_id>> object or with  a `std::error_code`.
+* To get a `result<T>` in <<result,Error state>>, initialize it with:
+** an <<error_id>> object.
++
+CAUTION: Initializing a `result<T>` with a default-initialized `error_id` object (for which `.value()` returns `0`) will still result in <<result,Error state>>!
++
+** a `std::error_code` object.
+** an object of type `Enum` for which `std::is_error_code_enum<Enum>::value` is `true`.
 * To get a `result<T>` in <<result,Error-capture state>>, initialize it with a `std::shared_ptr<<<polymorphic_context,polymorphic_context>>>` (which can be obtained by calling e.g. <<make_shared_context>>).
 --
 +
@@ -4013,28 +4118,32 @@ Returns: :: If `*this` is in <<result,value state>>, returns `true`, otherwise r
 ----
 namespace boost { namespace leaf {
 
+  void result<void>::value() const; <1>
+
   template <class T>
-  T const & result<T>::value() const;
+  T const & result<T>::value() const; <2>
 
   template <class T>
   T & result<T>::value();
 
   template <class T>
-  T const & result<T>::operator*() const;
+  T const & result<T>::operator*() const; <2>
 
   template <class T>
   T & result<T>::operator*();
 
   template <class T>
-  T const * result<T>::operator->() const;
+  T const * result<T>::operator->() const; <2>
 
   template <class T>
-  T * result<T>::operator->();
+  T * result<T>::operator->(); <2>
 
   struct bad_result: std::exception { };
 
 } }
 ----
+<1> Only when `T` is `void`.
+<2> Only when `T` is not `void`.
 
 [[result::bad_result]]
 Effects: :: If `*this` is in <<result,value state>>, returns a reference (or pointer) to the stored value, otherwise throws `bad_result`.
