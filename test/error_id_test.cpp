@@ -117,5 +117,6 @@ int main()
 	std::sort(all_ids.begin(), all_ids.end());
 	auto u = std::unique(all_ids.begin(), all_ids.end());
 	BOOST_TEST(u==all_ids.end());
+
 	return boost::report_errors();
 }

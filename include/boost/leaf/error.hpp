@@ -528,6 +528,12 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_ASSERT(!value_ || ((value_&3)==1));
 		}
 
+		template <class Enum>
+		error_id( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept:
+			value_(leaf_detail::import_error_code(e))
+		{
+		}
+
 		BOOST_LEAF_CONSTEXPR error_id load() const noexcept
 		{
 			return *this;

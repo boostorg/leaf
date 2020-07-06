@@ -32,6 +32,13 @@ public:
 		which_(variant::error)
 	{
 	}
+	template <class Enum>
+	test_res( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ):
+		value_(),
+		error_(make_error_code(e)),
+		which_(variant::error)
+	{
+	}
 	explicit operator bool() const noexcept
 	{
 		return which_==variant::value;

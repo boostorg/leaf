@@ -80,7 +80,7 @@ void test()
 		int r = leaf::try_handle_all(
 			[]() -> R
 			{
-				return make_error_code(errc_a::a0);
+				return errc_a::a0; // testing without make_error_code
 			},
 			[]( std::error_code const & ec )
 			{

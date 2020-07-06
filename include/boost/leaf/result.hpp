@@ -260,6 +260,12 @@ namespace boost { namespace leaf {
 		{
 		}
 
+		template <class Enum>
+		result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept:
+			what_(error_id(e))
+		{
+		}
+
 		BOOST_LEAF_CONSTEXPR result( context_ptr && ctx ) noexcept:
 			ctx_(std::move(ctx)),
 			what_(result_discriminant::kind_ctx_ptr{})
@@ -382,6 +388,12 @@ namespace boost { namespace leaf {
 
 		BOOST_LEAF_CONSTEXPR result( std::error_code const & ec ) noexcept:
 			base(ec)
+		{
+		}
+
+		template <class Enum>
+		result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept:
+			base(e)
 		{
 		}
 
