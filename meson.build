@@ -90,7 +90,7 @@ tests = [
 	'accumulate_nested_success_exception_test',
 	'accumulate_nested_success_result_test',
 	'BOOST_LEAF_AUTO_test',
-	'BOOST_LEAF_VAR_test',
+	'BOOST_LEAF_ASSIGN_test',
 	'capture_exception_async_test',
 	'capture_exception_result_async_test',
 	'capture_exception_state_test',

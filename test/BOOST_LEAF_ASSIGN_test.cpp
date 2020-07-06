@@ -18,15 +18,15 @@ int main()
 				int x = 42;
 
 				leaf::result<int> r1(x);
-				BOOST_LEAF_VAR(auto && rx1, r1);
+				BOOST_LEAF_ASSIGN(auto && rx1, r1);
 				BOOST_TEST_EQ(r1.value(), rx1);
 
 				leaf::result<int &> r2(x);
-				BOOST_LEAF_VAR(auto && rx2, r2);
+				BOOST_LEAF_ASSIGN(auto && rx2, r2);
 				BOOST_TEST_EQ(r2.value(), rx2);
 
 				leaf::result<int &> r3(x);
-				BOOST_LEAF_VAR(auto & rx3, r3);
+				BOOST_LEAF_ASSIGN(auto & rx3, r3);
 				BOOST_TEST_EQ(&r3.value(), &rx3);
 
 				return 0;

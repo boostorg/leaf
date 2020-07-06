@@ -988,7 +988,7 @@ return leaf::try_handle_some(
 ----
 
 [.text-right]
-<<try_handle_some>> | <<result>> | <<BOOST_LEAF_VAR>>
+<<try_handle_some>> | <<result>> | <<BOOST_LEAF_ASSIGN>>
 
 The reason this works is that in case it communicates a failure, `leaf::result<T>` is able to hold a `shared_ptr<polymorphic_context>` object. That is why earlier instead of calling `task()` directly, we called `leaf::capture`: it calls the passed function and, in case that fails, it stores the `shared_ptr<polymorphic_context>` we created in the returned `result<T>`, which now doesn't just communicate the fact that an error has occurred, but also holds the `context` object that `try_handle_some` needs in order to supply a suitable handler with arguments.
 
@@ -1302,7 +1302,7 @@ leaf::result<void> print_answer() noexcept
 ----
 
 [.text-right]
-<<result>> | <<BOOST_LEAF_VAR>>
+<<result>> | <<BOOST_LEAF_ASSIGN>>
 
 Finally, here is a scope that handles the errors -- it will work correctly regardless of whether `error_a` and `error_b` objects are thrown as exceptions or not.
 
@@ -1485,7 +1485,7 @@ int main() noexcept
   }
 ----
 [.text-right]
-<<try_handle_all>> | <<result>> | <<BOOST_LEAF_VAR>> | <<error_info>>
+<<try_handle_all>> | <<result>> | <<BOOST_LEAF_ASSIGN>> | <<error_info>>
 
 <1> If the call to `call_lua` succeeded, just print the answer.
 <2> Handle `do_work` failures.
@@ -1920,14 +1920,14 @@ namespace boost { namespace leaf {
 
 } }
 
-#define BOOST_LEAF_VAR(v, r)\
+#define BOOST_LEAF_ASSIGN(v, r)\
   auto && <<temp>> = r;\
   if( !<<temp>> )\
     return <<temp>>.error();\
   v = <<temp>>.value()
 
 #define BOOST_LEAF_AUTO(v, r)\
-  BOOST_LEAF_VAR(auto && v, r)
+  BOOST_LEAF_ASSIGN(auto && v, r)
 
 #define BOOST_LEAF_CHECK(r)\
 	{\
@@ -1940,7 +1940,7 @@ namespace boost { namespace leaf {
 ----
 
 [.text-right]
-Reference: <<error_id>> | <<is_error_id>> | <<new_error>> | <<current_error>> | <<polymorphic_context>> | <<context_activator>> | <<activate_context>> | <<is_result_type>> | <<BOOST_LEAF_VAR>> | <<BOOST_LEAF_AUTO>> | <<BOOST_LEAF_CHECK>> | <<BOOST_LEAF_NEW_ERROR>>
+Reference: <<error_id>> | <<is_error_id>> | <<new_error>> | <<current_error>> | <<polymorphic_context>> | <<context_activator>> | <<activate_context>> | <<is_result_type>> | <<BOOST_LEAF_ASSIGN>> | <<BOOST_LEAF_AUTO>> | <<BOOST_LEAF_CHECK>> | <<BOOST_LEAF_NEW_ERROR>>
 ====
 
 [[common.hpp]]
@@ -2628,7 +2628,7 @@ return leaf::try_handle_some(
 ----
 
 [.text-right]
-<<try_handle_some>> | <<result>> | <<BOOST_LEAF_VAR>>
+<<try_handle_some>> | <<result>> | <<BOOST_LEAF_ASSIGN>>
 
 WARNING: When a handler takes an argument of an exception type (that is, a type that derives from `std::exception`), if the object is thrown, the argument will be matched dynamically (using `dynamic_cast`); otherwise (e.g. after being converted by `exception_to_result`) it will be matched based on its static type only (which is the same behavior used for types that do not derive from `std::exception`).
 
@@ -4589,10 +4589,10 @@ TIP: The contents of each Reference section are organized alphabetically.
 [source,c++]
 ----
 #define BOOST_LEAF_AUTO(v, r)\
-  BOOST_LEAF_VAR(auto && v, r)
+  BOOST_LEAF_ASSIGN(auto && v, r)
 ----
 [.text-right]
-<<BOOST_LEAF_VAR>>
+<<BOOST_LEAF_ASSIGN>>
 
 `BOOST_LEAF_AUTO` is useful when calling a function that returns `result<T>` (other than `result<void>`), if the desired behavior is to forward any errors to the caller verbatim.
 
@@ -4628,7 +4628,7 @@ leaf::result<float> add_values()
 }
 ----
 
-NOTE: See also <<BOOST_LEAF_VAR>>.
+NOTE: See also <<BOOST_LEAF_ASSIGN>>.
 
 '''
 
@@ -4718,22 +4718,22 @@ Effects: :: Throws the exception object returned by <<BOOST_LEAF_EXCEPTION>>.
 
 '''
 
-[[BOOST_LEAF_VAR]]
-=== `BOOST_LEAF_VAR`
+[[BOOST_LEAF_ASSIGN]]
+=== `BOOST_LEAF_ASSIGN`
 
 .#include <boost/leaf/error.hpp>
 [source,c++]
 ----
-#define BOOST_LEAF_VAR(v, r)\
+#define BOOST_LEAF_ASSIGN(v, r)\
   auto && <<temp>> = r;\
   if( !<<temp>> )\
     return <<temp>>.error();\
   v = <<temp>>.value()
 ----
 
-`BOOST_LEAF_VAR` is useful when calling a function that returns `result<T>` (other than `result<void>`), if the desired behavior is to forward any errors to the caller verbatim.
+`BOOST_LEAF_ASSIGN` is useful when calling a function that returns `result<T>` (other than `result<void>`), if the desired behavior is to forward any errors to the caller verbatim.
 
-In case of success, the result `value()` of type `T` is assigned to the specified variable `v`, which must have been declared prior to invoking `BOOST_LEAF_VAR`. However, it is possible to use `BOOST_LEAF_VAR` to declare a new variable, by passing in `v` its type together with its name, e.g. `BOOST_LEAF_VAR(auto && x, f())` calls `f`, forwards errors to the caller, while capturing successful values in `x`.
+In case of success, the result `value()` of type `T` is assigned to the specified variable `v`, which must have been declared prior to invoking `BOOST_LEAF_ASSIGN`. However, it is possible to use `BOOST_LEAF_ASSIGN` to declare a new variable, by passing in `v` its type together with its name, e.g. `BOOST_LEAF_ASSIGN(auto && x, f())` calls `f`, forwards errors to the caller, while capturing successful values in `x`.
 
 NOTE: See also <<BOOST_LEAF_AUTO>>.
 
@@ -5038,7 +5038,7 @@ leaf::result<parsed_line> read_and_parse_line( reader & r )
 }
 ----
 [.text-right]
-<<result>> | <<BOOST_LEAF_VAR>>
+<<result>> | <<BOOST_LEAF_ASSIGN>>
 
 <1> Read a line, forward errors to the caller.
 <2> Parse the line, forward errors to the caller.
