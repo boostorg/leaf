@@ -140,6 +140,7 @@ tests = [
 	'result_load_test',
 	'result_ref_test',
 	'result_state_test',
+	'success_failure_test',
 	'try_catch_error_id_test',
 	'try_catch_test',
 	'try_exception_and_result_test',

@@ -88,6 +88,7 @@ run result_bad_result_test.cpp ;
 run result_load_test.cpp ;
 run result_ref_test.cpp ;
 run result_state_test.cpp ;
+run success_failure_test.cpp ;
 run context_deduction_test.cpp ;
 run try_catch_error_id_test.cpp ;
 run try_catch_test.cpp ;

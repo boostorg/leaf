@@ -408,29 +408,44 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	class success
+	inline result<void> success() noexcept
 	{
-		success( success const & ) = delete;
-		success & operator=( success const & ) = delete;
+		return { };
+	}
 
-		bool const succeeded_;
+	template <class T>
+	inline result<T> success() noexcept
+	{
+		return { };
+	}
 
-	public:
+	template <class T>
+	inline result<T> success( T && v ) noexcept
+	{
+		return { std::forward<T>(v) };
+	}
 
-		constexpr explicit success( bool succeeded = true ) noexcept:
-			succeeded_(succeeded)
-		{
-		}
+	inline result<void> failure( error_id err ) noexcept
+	{
+		return { err };
+	}
 
-		template <class T>
-		operator result<T>() const noexcept
-		{
-			if( succeeded_ )
-				return { };
-			else
-				return new_error();
-		}
-	};
+	inline result<void> failure() noexcept
+	{
+		return { new_error() };
+	}
+
+	template <class T>
+	inline result<T> failure( error_id err ) noexcept
+	{
+		return { err };
+	}
+
+	template <class T>
+	inline result<T> failure() noexcept
+	{
+		return { new_error() };
+	}
 
 	////////////////////////////////////////
 
