@@ -4906,47 +4906,6 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	inline result<void> success() noexcept
-	{
-		return { };
-	}
-
-	template <class T>
-	inline result<T> success() noexcept
-	{
-		return { };
-	}
-
-	template <class T>
-	inline result<T> success( T && v ) noexcept
-	{
-		return { std::forward<T>(v) };
-	}
-
-	inline result<void> failure( error_id err ) noexcept
-	{
-		return { err };
-	}
-
-	inline result<void> failure() noexcept
-	{
-		return { new_error() };
-	}
-
-	template <class T>
-	inline result<T> failure( error_id err ) noexcept
-	{
-		return { err };
-	}
-
-	template <class T>
-	inline result<T> failure() noexcept
-	{
-		return { new_error() };
-	}
-
-	////////////////////////////////////////
-
 	template <class R>
 	struct is_result_type;
 
