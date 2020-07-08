@@ -161,9 +161,7 @@ namespace boost { namespace leaf {
 
 		using stored_type = typename leaf_detail::stored<T>::type;
 		using value_type_const = typename leaf_detail::stored<T>::value_type_const;
-	public:
 		using value_type = typename leaf_detail::stored<T>::value_type;
-	private:
 
 		union
 		{
@@ -252,6 +250,14 @@ namespace boost { namespace leaf {
 
 		BOOST_LEAF_CONSTEXPR result( error_id err ) noexcept:
 			what_(err)
+		{
+		}
+
+		// SFINAE: T can be initialized with a U, e.g. result<std::string>("literal")
+		template <class U>
+		BOOST_LEAF_CONSTEXPR result( U && u, decltype(T{std::forward<U>(u)}) * = 0 ):
+			stored_(std::forward<U>(u)),
+			what_(result_discriminant::kind_val{})
 		{
 		}
 
