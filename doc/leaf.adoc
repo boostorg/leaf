@@ -2003,6 +2003,9 @@ namespace boost { namespace leaf {
     result( T && v ) noexcept;
     result( T const & v );
 
+    template <class U>
+    result( U && u, <<enabled_if_T_can_be_inited_with_U>> );
+
     result( error_id err ) noexcept;
     result( std::shared_ptr<polymorphic_context> && ctx ) noexcept;
 
@@ -3855,6 +3858,9 @@ namespace boost { namespace leaf {
     result( T && v ) noexcept;
     result( T const & v );
 
+    template <class U>
+    result( U &&, <<enabled_if_T_can_be_inited_with_U>> );
+
     result( error_id err ) noexcept;
     result( std::shared_ptr<polymorphic_context> && ctx ) noexcept;
 
@@ -3963,6 +3969,9 @@ namespace boost { namespace leaf {
   template <class T>
   result<T>::result( T const & v ); <1>
 
+  template <class U>
+  result<T>::result( U && u, <<enabled_if_T_can_be_inited_with_U>> ); <2>
+
   template <class T>
   result<T>::result( leaf::error_id err ) noexcept;
 
@@ -3986,6 +3995,7 @@ namespace boost { namespace leaf {
 } }
 ----
 <1> Not available if `T` is `void`.
+<2> Available if an object of type `T` can be initialized with `std::forward<U>(u)`. This is to enable e.g. `result<std::string>` to be initialized with a string literal.
 --
 
 Requires: :: `T` must be movable, and its move constructor may not throw; or `void`.
