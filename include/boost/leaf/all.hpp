@@ -4702,6 +4702,8 @@ namespace boost { namespace leaf {
 			return what_.kind()==result_discriminant::ctx_ptr ? ctx_->captured_id_ : what_.get_error_id();
 		}
 
+		static int init_T_with_U( T && );
+
 	public:
 
 		BOOST_LEAF_CONSTEXPR result( result && x ) noexcept:
@@ -4741,7 +4743,7 @@ namespace boost { namespace leaf {
 
 		// SFINAE: T can be initialized with a U, e.g. result<std::string>("literal")
 		template <class U>
-		BOOST_LEAF_CONSTEXPR result( U && u, decltype(T{std::forward<U>(u)}) * = 0 ):
+		BOOST_LEAF_CONSTEXPR result( U && u, decltype(init_T_with_U(std::forward<U>(u))) * = 0 ):
 			stored_(std::forward<U>(u)),
 			what_(result_discriminant::kind_val{})
 		{
@@ -4753,7 +4755,7 @@ namespace boost { namespace leaf {
 		}
 
 		template <class Enum>
-		result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept:
+		result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type * = 0 ) noexcept:
 			what_(error_id(e))
 		{
 		}
