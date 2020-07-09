@@ -14,8 +14,7 @@
 #	pragma warning(push,1)
 #endif
 
-#include <boost/leaf/detail/handler_argument_traits.hpp>
-#include <system_error>
+#include <boost/leaf/handle_errors.hpp>
 
 #if __cplusplus >= 201703L
 #	define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v

@@ -2513,26 +2513,6 @@ namespace boost { namespace leaf {
 #	pragma warning(push,1)
 #endif
 
-// >>> #include <boost/leaf/detail/handler_argument_traits.hpp>
-#line 1 "boost/leaf/detail/handler_argument_traits.hpp"
-#ifndef BOOST_LEAF_DETAIL_HANDLER_ARGUMENT_TRAITS_HPP_INCLUDED
-#define BOOST_LEAF_DETAIL_HANDLER_ARGUMENT_TRAITS_HPP_INCLUDED
-
-// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
-
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
-#endif
-
-#include <utility>
-#include <exception>
 
 namespace boost { namespace leaf {
 
@@ -2544,8 +2524,6 @@ namespace boost { namespace leaf {
 	struct is_predicate: std::false_type
 	{
 	};
-
-	////////////////////////////////////////
 
 	namespace leaf_detail
 	{
@@ -2665,13 +2643,7 @@ namespace boost { namespace leaf {
 		};
 	}
 
-} }
-
-#endif
-// <<< #include <boost/leaf/detail/handler_argument_traits.hpp>
-#line 18 "boost/leaf/context.hpp"
-
-namespace boost { namespace leaf {
+	////////////////////////////////////////
 
 	namespace leaf_detail
 	{
@@ -2802,13 +2774,9 @@ namespace boost { namespace leaf {
 		context( context const & ) = delete;
 		context & operator=( context const & ) = delete;
 
-	public:
-
 		using Tup = leaf_detail::deduce_e_tuple<E...>;
-
-	private:
-
 		Tup tup_;
+
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
 		std::thread::id thread_id_;
 #endif
@@ -3985,7 +3953,6 @@ namespace boost { namespace leaf {
 #	pragma warning(push,1)
 #endif
 
-#include <system_error>
 
 #if __cplusplus >= 201703L
 #	define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v

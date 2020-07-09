@@ -27,7 +27,7 @@ struct unwrap_tuple<std::tuple<S<E>...>>
 };
 
 template <class... H>
-typename unwrap_tuple<typename leaf::context_type_from_handlers<H...>::Tup>::type * expd( H && ... )
+typename unwrap_tuple<typename std::decay<decltype(std::declval<typename leaf::context_type_from_handlers<H...>>().tup())>::type>::type * expd( H && ... )
 {
 	return 0;
 }

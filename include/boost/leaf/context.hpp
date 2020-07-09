@@ -14,10 +14,138 @@
 #	pragma warning(push,1)
 #endif
 
-#include <boost/leaf/detail/handler_argument_traits.hpp>
 #include <boost/leaf/error.hpp>
 
 namespace boost { namespace leaf {
+
+	class error_info;
+	class diagnostic_info;
+	class verbose_diagnostic_info;
+
+	template <class>
+	struct is_predicate: std::false_type
+	{
+	};
+
+	namespace leaf_detail
+	{
+		template <class T>
+		struct is_exception: std::is_base_of<std::exception, typename std::decay<T>::type>
+		{
+		};
+
+		template <class E>
+		struct handler_argument_traits;
+
+		template <class E, bool IsPredicate = is_predicate<E>::value>
+		struct handler_argument_traits_defaults;
+
+		template <class E>
+		struct handler_argument_traits_defaults<E, false>
+		{
+			using error_type = typename std::decay<E>::type;
+			constexpr static bool always_available = false;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static error_type const * check( Tup const &, error_info const & ) noexcept;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static error_type * check( Tup &, error_info const & ) noexcept;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static E get( Tup & tup, error_info const & ei ) noexcept
+			{
+				return *check(tup, ei);
+			}
+
+			static_assert(!is_predicate<error_type>::value, "Handlers must take predicate arguments by value");
+			static_assert(!std::is_same<E, error_info>::value, "Handlers must take leaf::error_info arguments by const &");
+			static_assert(!std::is_same<E, diagnostic_info>::value, "Handlers must take leaf::diagnostic_info arguments by const &");
+			static_assert(!std::is_same<E, verbose_diagnostic_info>::value, "Handlers must take leaf::verbose_diagnostic_info arguments by const &");
+		};
+
+		template <class Pred>
+		struct handler_argument_traits_defaults<Pred, true>: handler_argument_traits<typename Pred::error_type>
+		{
+			using base = handler_argument_traits<typename Pred::error_type>;
+			static_assert(!base::always_available, "Predicates can't use types that are always_available");
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static bool check( Tup & tup, error_info const & ei ) noexcept
+			{
+				auto e = base::check(tup, ei);
+				return e && Pred::evaluate(*e);
+			};
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static Pred get( Tup const & tup, error_info const & ei ) noexcept
+			{
+				return Pred{*base::check(tup, ei)};
+			}
+		};
+
+		template <class E>
+		struct handler_argument_always_available
+		{
+			using error_type = E;
+			constexpr static bool always_available = true;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static bool check( Tup &, error_info const & ) noexcept
+			{
+				return true;
+			};
+		};
+
+		template <class E>
+		struct handler_argument_traits: handler_argument_traits_defaults<E>
+		{
+		};
+
+		template <>
+		struct handler_argument_traits<void>
+		{
+			using error_type = void;
+			constexpr static bool always_available = false;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static std::exception const * check( Tup const &, error_info const & ) noexcept;
+		};
+
+		template <class E>
+		struct handler_argument_traits<E &&>
+		{
+			static_assert(sizeof(E) == 0, "Error handlers may not take rvalue ref arguments");
+		};
+
+		template <class E>
+		struct handler_argument_traits<E *>: handler_argument_always_available<typename std::remove_const<E>::type>
+		{
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static E * get( Tup & tup, error_info const & ei) noexcept
+			{
+				return handler_argument_traits_defaults<E>::check(tup, ei);
+			}
+		};
+
+		template <>
+		struct handler_argument_traits<error_info const &>: handler_argument_always_available<void>
+		{
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static error_info const & get( Tup const &, error_info const & ei ) noexcept
+			{
+				return ei;
+			}
+		};
+
+		template <class E>
+		struct handler_argument_traits_require_by_value
+		{
+			static_assert(sizeof(E) == 0, "Error handlers must take this type by value");
+		};
+	}
+
+	////////////////////////////////////////
 
 	namespace leaf_detail
 	{
@@ -148,13 +276,9 @@ namespace boost { namespace leaf {
 		context( context const & ) = delete;
 		context & operator=( context const & ) = delete;
 
-	public:
-
 		using Tup = leaf_detail::deduce_e_tuple<E...>;
-
-	private:
-
 		Tup tup_;
+
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
 		std::thread::id thread_id_;
 #endif
