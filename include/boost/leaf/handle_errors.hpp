@@ -608,7 +608,7 @@ namespace boost { namespace leaf {
 	template <class TryBlock, class... H>
 	BOOST_LEAF_CONSTEXPR inline
 	typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-	try_handle_all( TryBlock && try_block, H && ... h )
+	try_handle_all( TryBlock && try_block, H && ... h ) noexcept
 	{
 		using namespace leaf_detail;
 		context_type_from_handlers<H...> ctx;
@@ -628,7 +628,7 @@ namespace boost { namespace leaf {
 	template <class TryBlock, class... H>
 	BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR inline
 	typename std::decay<decltype(std::declval<TryBlock>()())>::type
-	try_handle_some( TryBlock && try_block, H && ... h )
+	try_handle_some( TryBlock && try_block, H && ... h ) noexcept
 	{
 		using namespace leaf_detail;
 		context_type_from_handlers<H...> ctx;
