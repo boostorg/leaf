@@ -15,7 +15,6 @@
 #endif
 
 #include <boost/leaf/error.hpp>
-#include <boost/leaf/detail/throw_exception.hpp>
 #include <exception>
 
 #define BOOST_LEAF_EXCEPTION ::boost::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception

@@ -15,7 +15,6 @@
 #endif
 
 #include <boost/leaf/error.hpp>
-#include <boost/leaf/detail/throw_exception.hpp>
 #include <memory>
 #include <climits>
 

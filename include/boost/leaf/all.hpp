@@ -1015,6 +1015,39 @@ namespace boost { namespace leaf {
 
 ////////////////////////////////////////
 
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace boost
+{
+	BOOST_LEAF_NORETURN void throw_exception( std::exception const & ); // user defined
+}
+
+namespace boost { namespace leaf {
+
+	template <class T>
+	BOOST_LEAF_NORETURN void throw_exception( T const & e )
+	{
+		::boost::throw_exception(e);
+	}
+
+} }
+
+#else
+
+namespace boost { namespace leaf {
+
+	template <class T>
+	BOOST_LEAF_NORETURN void throw_exception( T const & e )
+	{
+		throw e;
+	}
+
+} }
+
+#endif
+
+////////////////////////////////////////
+
 #ifdef BOOST_LEAF_NO_THREADS
 #	define BOOST_LEAF_THREAD_LOCAL
 	namespace boost { namespace leaf {
@@ -1671,59 +1704,6 @@ namespace boost { namespace leaf {
 #endif
 // <<< #include <boost/leaf/error.hpp>
 #line 18 "boost/leaf/exception.hpp"
-// >>> #include <boost/leaf/detail/throw_exception.hpp>
-#line 1 "boost/leaf/detail/throw_exception.hpp"
-#ifndef BOOST_LEAF_DETAIL_THROW_EXCEPTION_HPP_INCLUDED
-#define BOOST_LEAF_DETAIL_THROW_EXCEPTION_HPP_INCLUDED
-
-// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
-
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
-#endif
-
-
-#ifdef BOOST_LEAF_NO_EXCEPTIONS
-
-namespace boost
-{
-	BOOST_LEAF_NORETURN void throw_exception( std::exception const & ); // user defined
-}
-
-namespace boost { namespace leaf {
-
-	template <class T>
-	BOOST_LEAF_NORETURN void throw_exception( T const & e )
-	{
-		::boost::throw_exception(e);
-	}
-
-} }
-
-#else
-
-namespace boost { namespace leaf {
-
-	template <class T>
-	BOOST_LEAF_NORETURN void throw_exception( T const & e )
-	{
-		throw e;
-	}
-
-} }
-
-#endif
-
-#endif
-// <<< #include <boost/leaf/detail/throw_exception.hpp>
-#line 19 "boost/leaf/exception.hpp"
 #include <exception>
 
 #define BOOST_LEAF_EXCEPTION ::boost::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception

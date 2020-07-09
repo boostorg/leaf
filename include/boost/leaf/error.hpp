@@ -68,6 +68,39 @@ namespace boost { namespace leaf {
 
 ////////////////////////////////////////
 
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace boost
+{
+	BOOST_LEAF_NORETURN void throw_exception( std::exception const & ); // user defined
+}
+
+namespace boost { namespace leaf {
+
+	template <class T>
+	BOOST_LEAF_NORETURN void throw_exception( T const & e )
+	{
+		::boost::throw_exception(e);
+	}
+
+} }
+
+#else
+
+namespace boost { namespace leaf {
+
+	template <class T>
+	BOOST_LEAF_NORETURN void throw_exception( T const & e )
+	{
+		throw e;
+	}
+
+} }
+
+#endif
+
+////////////////////////////////////////
+
 #ifdef BOOST_LEAF_NO_THREADS
 #	define BOOST_LEAF_THREAD_LOCAL
 	namespace boost { namespace leaf {
