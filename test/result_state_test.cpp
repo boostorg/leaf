@@ -577,5 +577,11 @@ int main()
 		BOOST_TEST_EQ(r.value(), "hello");
 	}
 
+	{ // Initialization forwarding constructor
+		leaf::result<std::string> r; r = "hello";
+		BOOST_TEST(r);
+		BOOST_TEST_EQ(r.value(), "hello");
+	}
+
 	return boost::report_errors();
 }
