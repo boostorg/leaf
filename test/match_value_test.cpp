@@ -23,9 +23,6 @@ struct my_exception: std::exception
 	int value;
 };
 
-static_assert(!leaf::leaf_detail::handler_argument_traits<leaf::match_value<e_my_error, my_error::e1>>::requires_catch, "requires_catch deduction error");
-static_assert(leaf::leaf_detail::handler_argument_traits<leaf::match_value<my_exception, 42>>::requires_catch, "requires_catch deduction error");
-
 template <class M, class E>
 bool test(E const & e )
 {

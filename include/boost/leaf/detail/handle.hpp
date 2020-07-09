@@ -346,7 +346,7 @@ namespace boost { namespace leaf {
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
-		template <class E, bool = handler_argument_traits<E>::requires_catch>
+		template <class E, bool = std::is_class<E>::value>
 		struct peek_exception;
 
 		template <>
@@ -413,21 +413,21 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class A, bool RequiresCatch>
+		template <class A>
 		template <class Tup>
 		BOOST_LEAF_CONSTEXPR inline
-		typename handler_argument_traits_defaults<A, RequiresCatch, false>::error_type const *
-		handler_argument_traits_defaults<A, RequiresCatch, false>::
+		typename handler_argument_traits_defaults<A, false>::error_type const *
+		handler_argument_traits_defaults<A, false>::
 		check( Tup const & tup, error_info const & ei ) noexcept
 		{
 			return peek<typename std::decay<A>::type>(tup, ei);
 		}
 
-		template <class A, bool RequiresCatch>
+		template <class A>
 		template <class Tup>
 		BOOST_LEAF_CONSTEXPR inline
-		typename handler_argument_traits_defaults<A, RequiresCatch, false>::error_type *
-		handler_argument_traits_defaults<A, RequiresCatch, false>::
+		typename handler_argument_traits_defaults<A, false>::error_type *
+		handler_argument_traits_defaults<A, false>::
 		check( Tup & tup, error_info const & ei ) noexcept
 		{
 			return peek<typename std::decay<A>::type>(tup, ei);

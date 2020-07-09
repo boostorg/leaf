@@ -2557,14 +2557,13 @@ namespace boost { namespace leaf {
 		template <class E>
 		struct handler_argument_traits;
 
-		template <class E, bool RequiresCatch = is_exception<E>::value, bool IsPredicate = is_predicate<E>::value>
+		template <class E, bool IsPredicate = is_predicate<E>::value>
 		struct handler_argument_traits_defaults;
 
-		template <class E, bool RequiresCatch>
-		struct handler_argument_traits_defaults<E, RequiresCatch, false>
+		template <class E>
+		struct handler_argument_traits_defaults<E, false>
 		{
 			using error_type = typename std::decay<E>::type;
-			constexpr static bool requires_catch = RequiresCatch;
 			constexpr static bool always_available = false;
 
 			template <class Tup>
@@ -2586,7 +2585,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class Pred>
-		struct handler_argument_traits_defaults<Pred, false, true>: handler_argument_traits<typename Pred::error_type>
+		struct handler_argument_traits_defaults<Pred, true>: handler_argument_traits<typename Pred::error_type>
 		{
 			using base = handler_argument_traits<typename Pred::error_type>;
 			static_assert(!base::always_available, "Predicates can't use types that are always_available");
@@ -2609,7 +2608,6 @@ namespace boost { namespace leaf {
 		struct handler_argument_always_available
 		{
 			using error_type = E;
-			constexpr static bool requires_catch = false;
 			constexpr static bool always_available = true;
 
 			template <class Tup>
@@ -2628,7 +2626,6 @@ namespace boost { namespace leaf {
 		struct handler_argument_traits<void>
 		{
 			using error_type = void;
-			constexpr static bool requires_catch = true;
 			constexpr static bool always_available = false;
 
 			template <class Tup>
@@ -3372,7 +3369,7 @@ namespace boost { namespace leaf {
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
-		template <class E, bool = handler_argument_traits<E>::requires_catch>
+		template <class E, bool = std::is_class<E>::value>
 		struct peek_exception;
 
 		template <>
@@ -3439,21 +3436,21 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class A, bool RequiresCatch>
+		template <class A>
 		template <class Tup>
 		BOOST_LEAF_CONSTEXPR inline
-		typename handler_argument_traits_defaults<A, RequiresCatch, false>::error_type const *
-		handler_argument_traits_defaults<A, RequiresCatch, false>::
+		typename handler_argument_traits_defaults<A, false>::error_type const *
+		handler_argument_traits_defaults<A, false>::
 		check( Tup const & tup, error_info const & ei ) noexcept
 		{
 			return peek<typename std::decay<A>::type>(tup, ei);
 		}
 
-		template <class A, bool RequiresCatch>
+		template <class A>
 		template <class Tup>
 		BOOST_LEAF_CONSTEXPR inline
-		typename handler_argument_traits_defaults<A, RequiresCatch, false>::error_type *
-		handler_argument_traits_defaults<A, RequiresCatch, false>::
+		typename handler_argument_traits_defaults<A, false>::error_type *
+		handler_argument_traits_defaults<A, false>::
 		check( Tup & tup, error_info const & ei ) noexcept
 		{
 			return peek<typename std::decay<A>::type>(tup, ei);
@@ -4125,7 +4122,6 @@ namespace boost { namespace leaf {
 		struct handler_argument_traits<boost::error_info<Tag, T>>
 		{
 			using error_type = void;
-			constexpr static bool requires_catch = true;
 			constexpr static bool always_available = false;
 
 			template <class Tup>

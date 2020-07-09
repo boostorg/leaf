@@ -41,14 +41,13 @@ namespace boost { namespace leaf {
 		template <class E>
 		struct handler_argument_traits;
 
-		template <class E, bool RequiresCatch = is_exception<E>::value, bool IsPredicate = is_predicate<E>::value>
+		template <class E, bool IsPredicate = is_predicate<E>::value>
 		struct handler_argument_traits_defaults;
 
-		template <class E, bool RequiresCatch>
-		struct handler_argument_traits_defaults<E, RequiresCatch, false>
+		template <class E>
+		struct handler_argument_traits_defaults<E, false>
 		{
 			using error_type = typename std::decay<E>::type;
-			constexpr static bool requires_catch = RequiresCatch;
 			constexpr static bool always_available = false;
 
 			template <class Tup>
@@ -70,7 +69,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class Pred>
-		struct handler_argument_traits_defaults<Pred, false, true>: handler_argument_traits<typename Pred::error_type>
+		struct handler_argument_traits_defaults<Pred, true>: handler_argument_traits<typename Pred::error_type>
 		{
 			using base = handler_argument_traits<typename Pred::error_type>;
 			static_assert(!base::always_available, "Predicates can't use types that are always_available");
@@ -93,7 +92,6 @@ namespace boost { namespace leaf {
 		struct handler_argument_always_available
 		{
 			using error_type = E;
-			constexpr static bool requires_catch = false;
 			constexpr static bool always_available = true;
 
 			template <class Tup>
@@ -112,7 +110,6 @@ namespace boost { namespace leaf {
 		struct handler_argument_traits<void>
 		{
 			using error_type = void;
-			constexpr static bool requires_catch = true;
 			constexpr static bool always_available = false;
 
 			template <class Tup>

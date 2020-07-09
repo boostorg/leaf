@@ -36,11 +36,6 @@ struct my_exception: std::exception
 	bool operator==(int);
 };
 
-static_assert(!leaf::leaf_detail::handler_argument_traits<leaf::match<my_error, my_error::e1>>::requires_catch, "requires_catch deduction error");
-#if __cplusplus >= 201703L
-static_assert(leaf::leaf_detail::handler_argument_traits<leaf::match<my_exception, 42>>::requires_catch, "requires_catch deduction error");
-#endif
-
 template <class M, class E>
 bool test(E const & e )
 {

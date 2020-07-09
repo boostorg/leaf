@@ -255,7 +255,6 @@ namespace boost { namespace leaf {
 		struct handler_argument_traits<boost::error_info<Tag, T>>
 		{
 			using error_type = void;
-			constexpr static bool requires_catch = true;
 			constexpr static bool always_available = false;
 
 			template <class Tup>
