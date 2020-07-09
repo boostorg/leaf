@@ -251,16 +251,6 @@ namespace boost { namespace leaf {
 
 		template <class TryBlock, class... H>
 		decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... );
-
-		template <class TryBlock, class... H>
-		BOOST_LEAF_CONSTEXPR
-		typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-		try_handle_all( TryBlock &&, H && ... h );
-
-		template <class TryBlock, class... H>
-		BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR
-		typename std::decay<decltype(std::declval<TryBlock>()())>::type
-		try_handle_some( TryBlock &&, H && ... );
 	};
 
 	////////////////////////////////////////
