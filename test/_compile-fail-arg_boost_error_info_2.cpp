@@ -5,7 +5,6 @@
 
 #include <boost/leaf/handle_errors.hpp>
 #include <boost/exception/info.hpp>
-#include <boost/exception/get_error_info.hpp>
 
 namespace leaf = boost::leaf;
 
@@ -18,15 +17,6 @@ int main()
 	leaf::try_catch(
 		[]
 		{
-			try
-			{
-				boost::throw_exception(test_ex());
-			}
-			catch( boost::exception & ex )
-			{
-				ex << test_info(42);
-				throw;
-			}
 		},
 		[]( test_info const & x ) // boost::error_info must be taken by value
 		{
