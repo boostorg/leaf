@@ -64,10 +64,24 @@ int main()
 			[]( my_exception const &, info<1> const & x )
 			{
 				BOOST_TEST_EQ(x.value, 1);
-				return 42;
+				return 1;
 			} );
 		BOOST_TEST(r);
-		BOOST_TEST_EQ(r.value(), 42);
+		BOOST_TEST_EQ(r.value(), 1);
+	}
+	{
+		leaf::result<int> r = leaf::try_handle_some(
+			[]() -> leaf::result<int>
+			{
+				throw leaf::exception( info<1>{1} );
+			},
+			[]( info<1> const & x )
+			{
+				BOOST_TEST_EQ(x.value, 1);
+				return 1;
+			} );
+		BOOST_TEST(r);
+		BOOST_TEST_EQ(r.value(), 1);
 	}
 	{
 		leaf::result<int> r = leaf::try_handle_some(
@@ -78,23 +92,25 @@ int main()
 			[]( info<1> const & x )
 			{
 				BOOST_TEST_EQ(x.value, 1);
-				return -42;
+				return 1;
 			} );
 		BOOST_TEST(r);
-		BOOST_TEST_EQ(r.value(), -42);
+		BOOST_TEST_EQ(r.value(), 1);
 	}
+
+	///////////////////////////
 
 	{
 		auto error_handlers = std::make_tuple(
 			[]( my_exception const &, info<1> const & x ) -> leaf::result<int>
 			{
 				BOOST_TEST_EQ(x.value, 1);
-				return 42;
+				return 1;
 			},
 			[]( info<1> const & x ) -> leaf::result<int>
 			{
 				BOOST_TEST_EQ(x.value, 1);
-				return -42;
+				return 2;
 			} );
 		{
 			leaf::result<int> r = leaf::try_handle_some(
@@ -114,7 +130,17 @@ int main()
 				},
 				error_handlers );
 			BOOST_TEST(r);
-			BOOST_TEST_EQ(r.value(), 42);
+			BOOST_TEST_EQ(r.value(), 1);
+		}
+		{
+			leaf::result<int> r = leaf::try_handle_some(
+				[]() -> leaf::result<int>
+				{
+					throw leaf::exception( info<1>{1} );
+				},
+				error_handlers );
+			BOOST_TEST(r);
+			BOOST_TEST_EQ(r.value(), 2);
 		}
 		{
 			leaf::result<int> r = leaf::try_handle_some(
@@ -124,9 +150,11 @@ int main()
 				},
 				error_handlers );
 			BOOST_TEST(r);
-			BOOST_TEST_EQ(r.value(), -42);
+			BOOST_TEST_EQ(r.value(), 2);
 		}
 	}
+
+	///////////////////////////
 
 	{
 		int r = leaf::try_handle_all(
@@ -149,13 +177,30 @@ int main()
 			[]( my_exception const &, info<1> const & x )
 			{
 				BOOST_TEST_EQ(x.value, 1);
-				return 42;
+				return 1;
 			},
 			[]
 			{
-				return 1;
+				return 2;
 			} );
-		BOOST_TEST_EQ(r, 42);
+		BOOST_TEST_EQ(r, 1);
+	}
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				throw leaf::exception( info<1>{1} );
+			},
+			[]( info<1> const & x )
+			{
+				BOOST_TEST_EQ(x.value, 1);
+				return 1;
+			},
+			[]
+			{
+				return 2;
+			} );
+		BOOST_TEST_EQ(r, 1);
 	}
 	{
 		int r = leaf::try_handle_all(
@@ -166,26 +211,28 @@ int main()
 			[]( info<1> const & x )
 			{
 				BOOST_TEST_EQ(x.value, 1);
-				return 42;
+				return 1;
 			},
 			[]
 			{
-				return 1;
+				return 2;
 			} );
-		BOOST_TEST_EQ(r, 42);
+		BOOST_TEST_EQ(r, 1);
 	}
+
+	///////////////////////////
 
 	{
 		auto error_handlers = std::make_tuple(
 			[]( my_exception const &, info<1> const & x )
 			{
 				BOOST_TEST_EQ(x.value, 1);
-				return 42;
+				return 1;
 			},
 			[]( info<1> const & x )
 			{
 				BOOST_TEST_EQ(x.value, 1);
-				return -42;
+				return 2;
 			},
 			[]
 			{
@@ -207,7 +254,16 @@ int main()
 					throw leaf::exception( my_exception(), info<1>{1} );
 				},
 				error_handlers );
-			BOOST_TEST_EQ(r, 42);
+			BOOST_TEST_EQ(r, 1);
+		}
+		{
+			int r = leaf::try_handle_all(
+				[]() -> leaf::result<int>
+				{
+					throw leaf::exception( info<1>{1} );
+				},
+				error_handlers );
+			BOOST_TEST_EQ(r, 2);
 		}
 		{
 			int r = leaf::try_handle_all(
@@ -216,10 +272,12 @@ int main()
 					return leaf::new_error( info<1>{1} );
 				},
 				error_handlers );
-			BOOST_TEST_EQ(r, -42);
+			BOOST_TEST_EQ(r, 2);
 		}
 	}
 
+	///////////////////////////
+
 	{
 		int r = leaf::try_handle_all(
 			[]() -> leaf::result<int>
@@ -232,17 +290,17 @@ int main()
 					[]( info<1> const & ) -> int
 					{
 						BOOST_LEAF_THROW_EXCEPTION(my_exception());
-					},
-					[]( leaf::catch_<> )
-					{
-						return 1;
 					},
 					[]
 					{
-						return 2;
+						return 1;
 					} );
 			},
-			[]( leaf::catch_<> )
+			[]( my_exception const &, info<1> )
+			{
+				return 2;
+			},
+			[]( my_exception const & )
 			{
 				return 3;
 			},
@@ -253,20 +311,53 @@ int main()
 
 		BOOST_TEST_EQ(r, 3);
 	}
-
 	{
-		auto error_handlers = std::make_tuple(
-			[]( info<1> const & ) -> int
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
 			{
-				BOOST_LEAF_THROW_EXCEPTION(my_exception());
+				return leaf::try_handle_all(
+					[]() -> leaf::result<int>
+					{
+						return leaf::new_error( info<1>{1} );
+					},
+					[]( info<1> const & x ) -> int
+					{
+						BOOST_TEST_EQ(x.value, 1);
+						BOOST_LEAF_THROW_EXCEPTION();
+					},
+					[]
+					{
+						return 1;
+					} );
 			},
-			[]( leaf::catch_<> )
+			[]( my_exception const &, info<1> )
 			{
-				return 1;
+				return 2;
+			},
+			[]( my_exception const & )
+			{
+				return 3;
 			},
 			[]
 			{
-				return 2;
+				return 4;
+			} );
+
+		BOOST_TEST_EQ(r, 4);
+	}
+
+	///////////////////////////
+
+	{
+		auto error_handlers = std::make_tuple(
+			[]( info<1> const & x ) -> int
+			{
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_LEAF_THROW_EXCEPTION(my_exception());
+			},
+			[]
+			{
+				return 1;
 			} );
 		int r = leaf::try_handle_all(
 			[&]() -> leaf::result<int>
@@ -278,7 +369,11 @@ int main()
 					},
 					error_handlers );
 			},
-			[]( leaf::catch_<> )
+			[]( my_exception const &, info<1> )
+			{
+				return 2;
+			},
+			[]( my_exception const & )
 			{
 				return 3;
 			},
@@ -289,6 +384,44 @@ int main()
 
 		BOOST_TEST_EQ(r, 3);
 	}
+	{
+		auto error_handlers = std::make_tuple(
+			[]( info<1> const & x ) -> int
+			{
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_LEAF_THROW_EXCEPTION();
+			},
+			[]
+			{
+				return 1;
+			} );
+		int r = leaf::try_handle_all(
+			[&]() -> leaf::result<int>
+			{
+				return leaf::try_handle_all(
+					[&]() -> leaf::result<int>
+					{
+						return leaf::new_error( info<1>{1} );
+					},
+					error_handlers );
+			},
+			[]( my_exception const &, info<1> )
+			{
+				return 2;
+			},
+			[]( my_exception const & )
+			{
+				return 3;
+			},
+			[]
+			{
+				return 4;
+			} );
+
+		BOOST_TEST_EQ(r, 4);
+	}
+
+	///////////////////////////
 
 	{
 		int r = leaf::try_handle_all(
@@ -299,34 +432,76 @@ int main()
 					{
 						return leaf::new_error( info<1>{1} );
 					},
-					[]( info<1> const & ) -> int
+					[]( info<1> const & x ) -> int
 					{
+						BOOST_TEST_EQ(x.value, 1);
 						BOOST_LEAF_THROW_EXCEPTION(my_exception());
 					},
-					[]( leaf::catch_<> )
+					[]
 					{
 						return 1;
 					} );
 			},
-			[]( leaf::catch_<> )
+			[]( my_exception const &, info<1> )
 			{
 				return 3;
 			},
-			[]
+			[]( my_exception const & )
 			{
 				return 4;
+			},
+			[]
+			{
+				return 5;
 			} );
 
-		BOOST_TEST_EQ(r, 3);
+		BOOST_TEST_EQ(r, 4);
 	}
+	{
+		int r = leaf::try_handle_all(
+			[]() -> leaf::result<int>
+			{
+				return leaf::try_handle_some(
+					[]() -> leaf::result<int>
+					{
+						return leaf::new_error( info<1>{1} );
+					},
+					[]( info<1> const & x ) -> int
+					{
+						BOOST_TEST_EQ(x.value, 1);
+						BOOST_LEAF_THROW_EXCEPTION();
+					},
+					[]
+					{
+						return 1;
+					} );
+			},
+			[]( my_exception const &, info<1> )
+			{
+				return 3;
+			},
+			[]( my_exception const & )
+			{
+				return 4;
+			},
+			[]
+			{
+				return 5;
+			} );
+
+		BOOST_TEST_EQ(r, 5);
+	}
+
+	///////////////////////////
 
 	{
 		auto error_handlers = std::make_tuple(
-			[]( info<1> const & ) -> leaf::result<int>
+			[]( info<1> const & x ) -> leaf::result<int>
 			{
+				BOOST_TEST_EQ(x.value, 1);
 				BOOST_LEAF_THROW_EXCEPTION(my_exception());
 			},
-			[]( leaf::catch_<> ) -> leaf::result<int>
+			[]() -> leaf::result<int>
 			{
 				return 1;
 			} );
@@ -340,16 +515,56 @@ int main()
 					},
 					error_handlers );
 			},
-			[]( leaf::catch_<> )
+			[]( my_exception const &, info<1> )
 			{
 				return 3;
 			},
-			[]
+			[]( my_exception const & )
 			{
 				return 4;
+			},
+			[]
+			{
+				return 5;
 			} );
 
-		BOOST_TEST_EQ(r, 3);
+		BOOST_TEST_EQ(r, 4);
+	}
+	{
+		auto error_handlers = std::make_tuple(
+			[]( info<1> const & x ) -> leaf::result<int>
+			{
+				BOOST_TEST_EQ(x.value, 1);
+				BOOST_LEAF_THROW_EXCEPTION();
+			},
+			[]() -> leaf::result<int>
+			{
+				return 1;
+			} );
+		int r = leaf::try_handle_all(
+			[&]() -> leaf::result<int>
+			{
+				return leaf::try_handle_some(
+					[&]() -> leaf::result<int>
+					{
+						return leaf::new_error( info<1>{1} );
+					},
+					error_handlers );
+			},
+			[]( my_exception const &, info<1> )
+			{
+				return 3;
+			},
+			[]( my_exception const & )
+			{
+				return 4;
+			},
+			[]
+			{
+				return 5;
+			} );
+
+		BOOST_TEST_EQ(r, 5);
 	}
 
 	//////////////////////////////////////
@@ -413,6 +628,8 @@ int main()
 			} );
 		BOOST_TEST(!r);
 	}
+
+	//////////////////////////////////////
 
 	// match_value<> with exceptions, try_handle_all
 	{
