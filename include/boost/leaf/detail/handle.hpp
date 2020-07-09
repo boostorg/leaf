@@ -15,35 +15,37 @@
 #endif
 
 #include <boost/leaf/context.hpp>
+#include <boost/leaf/detail/demangle.hpp>
 
 namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		class exception_info_base
+		class exception_info_
 		{
-		protected:
-
-			BOOST_LEAF_CONSTEXPR explicit exception_info_base( std::exception * ) noexcept;
-			~exception_info_base() noexcept;
+			exception_info_( exception_info_ const & ) = delete;
+			exception_info_ & operator=( exception_info_ const & ) = delete;
 
 		public:
 
 			std::exception * const ex_;
 
-			virtual void print( std::ostream & os ) const = 0;
-		};
+			void print( std::ostream & os ) const
+			{
+				if( ex_ )
+				{
+					os <<
+						"\nException dynamic type: " << demangle(typeid(*ex_).name()) <<
+						"\nstd::exception::what(): " << ex_->what();
+				}
+				else
+					os << "\nUnknown exception type (not a std::exception)";
+			}
 
-		class exception_info_: public exception_info_base
-		{
-			exception_info_( exception_info_ const & ) = delete;
-			exception_info_ & operator=( exception_info_ const & ) = delete;
-
-			void print( std::ostream & os ) const final override;
-
-		public:
-
-			BOOST_LEAF_CONSTEXPR explicit exception_info_( std::exception * ex ) noexcept;
+			BOOST_LEAF_CONSTEXPR exception_info_( std::exception * ex ) noexcept:
+				ex_(ex)
+			{
+			}
 		};
 	}
 
@@ -53,7 +55,7 @@ namespace boost { namespace leaf {
 	{
 		error_info & operator=( error_info const & ) = delete;
 
-		leaf_detail::exception_info_base const * const xi_;
+		leaf_detail::exception_info_ const * const xi_;
 		error_id const err_id_;
 
 	protected:

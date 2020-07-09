@@ -19,7 +19,6 @@
 #endif
 
 #include <boost/leaf/capture.hpp>
-#include <boost/leaf/detail/demangle.hpp>
 
 namespace boost { namespace leaf {
 
@@ -95,28 +94,6 @@ namespace boost { namespace leaf {
 		}
 	}
 
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		inline void exception_info_::print( std::ostream & os ) const
-		{
-			if( ex_ )
-			{
-				os <<
-					"\nException dynamic type: " << demangle(typeid(*ex_).name()) <<
-					"\nstd::exception::what(): " << ex_->what();
-			}
-			else
-				os << "\nUnknown exception type (not a std::exception)";
-		}
-
-		BOOST_LEAF_CONSTEXPR inline exception_info_::exception_info_( std::exception * ex ) noexcept:
-			exception_info_base(ex)
-		{
-		}
-	}
-
 	template <class... E>
 	template <class TryBlock, class... H>
 	inline
@@ -178,16 +155,6 @@ namespace boost { namespace leaf {
 				return *err_id;
 			else
 				return current_error();
-		}
-
-		BOOST_LEAF_CONSTEXPR inline exception_info_base::exception_info_base( std::exception * ex ) noexcept:
-			ex_(ex)
-		{
-			BOOST_LEAF_ASSERT(!dynamic_cast<capturing_exception const *>(ex_));
-		}
-
-		inline exception_info_base::~exception_info_base() noexcept
-		{
 		}
 	}
 
