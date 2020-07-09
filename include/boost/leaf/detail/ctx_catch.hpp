@@ -30,10 +30,7 @@ namespace boost { namespace leaf {
 		handler_argument_traits<void>::
 		check( Tup const &, error_info const & ei ) noexcept
 		{
-			if( ei.exception_caught() )
-				return ei.exception();
-			else
-				return 0;
+			return ei.exception();
 		}
 	}
 
@@ -117,51 +114,28 @@ namespace boost { namespace leaf {
 			catch( std::exception & ex )
 			{
 				deactivate();
-				return handle_error_<R>(this->tup(), error_info(exception_info_(&ex)), std::forward<H>(h)...,
+				return handle_error_<R>(this->tup(), error_info(&ex), std::forward<H>(h)...,
 					[]() -> R { throw; } );
 			}
 			catch(...)
 			{
 				deactivate();
-				return handle_error_<R>(this->tup(), error_info(exception_info_(0)), std::forward<H>(h)...,
+				return handle_error_<R>(this->tup(), error_info(nullptr), std::forward<H>(h)...,
 					[]() -> R { throw; } );
 			}
 		}
 		catch( std::exception & ex )
 		{
 			deactivate();
-			return handle_error_<R>(this->tup(), error_info(exception_info_(&ex)), std::forward<H>(h)...,
+			return handle_error_<R>(this->tup(), error_info(&ex), std::forward<H>(h)...,
 				[]() -> R { throw; } );
 		}
 		catch(...)
 		{
 			deactivate();
-			return handle_error_<R>(this->tup(), error_info(exception_info_(0)), std::forward<H>(h)...,
+			return handle_error_<R>(this->tup(), error_info(nullptr), std::forward<H>(h)...,
 				[]() -> R { throw; } );
 		}
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		inline error_id unpack_error_id( std::exception const * ex ) noexcept
-		{
-			if( std::system_error const * se = dynamic_cast<std::system_error const *>(ex) )
-				return error_id(se->code());
-			else if( std::error_code const * ec = dynamic_cast<std::error_code const *>(ex) )
-				return error_id(*ec);
-			else if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
-				return *err_id;
-			else
-				return current_error();
-		}
-	}
-
-	inline error_info::error_info( leaf_detail::exception_info_ const & xi ) noexcept:
-		xi_(&xi),
-		err_id_(leaf_detail::unpack_error_id(xi_->ex_))
-	{
 	}
 
 	////////////////////////////////////////
@@ -206,10 +180,7 @@ namespace boost { namespace leaf {
 		template <class Ex>
 		BOOST_LEAF_CONSTEXPR inline Ex * get_exception( error_info const & ei )
 		{
-			if( ei.exception_caught() )
-				if( Ex * ex = dynamic_cast<Ex *>(ei.exception()) )
-					return ex;
-			return 0;
+			return dynamic_cast<Ex *>(ei.exception());
 		}
 
 		template <class, class T>

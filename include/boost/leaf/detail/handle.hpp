@@ -19,44 +19,24 @@
 
 namespace boost { namespace leaf {
 
-	namespace leaf_detail
-	{
-		class exception_info_
-		{
-			exception_info_( exception_info_ const & ) = delete;
-			exception_info_ & operator=( exception_info_ const & ) = delete;
-
-		public:
-
-			std::exception * const ex_;
-
-			void print( std::ostream & os ) const
-			{
-				if( ex_ )
-				{
-					os <<
-						"\nException dynamic type: " << demangle(typeid(*ex_).name()) <<
-						"\nstd::exception::what(): " << ex_->what();
-				}
-				else
-					os << "\nUnknown exception type (not a std::exception)";
-			}
-
-			BOOST_LEAF_CONSTEXPR exception_info_( std::exception * ex ) noexcept:
-				ex_(ex)
-			{
-			}
-		};
-	}
-
-	////////////////////////////////////////
-
 	class error_info
 	{
 		error_info & operator=( error_info const & ) = delete;
 
-		leaf_detail::exception_info_ const * const xi_;
+		std::exception * const ex_;
 		error_id const err_id_;
+
+		static error_id unpack_error_id( std::exception const * ex ) noexcept
+		{
+			if( std::system_error const * se = dynamic_cast<std::system_error const *>(ex) )
+				return error_id(se->code());
+			else if( std::error_code const * ec = dynamic_cast<std::error_code const *>(ex) )
+				return error_id(*ec);
+			else if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
+				return *err_id;
+			else
+				return current_error();
+		}
 
 	protected:
 
@@ -65,34 +45,36 @@ namespace boost { namespace leaf {
 		void print( std::ostream & os ) const
 		{
 			os << "Error ID = " << err_id_.value();
-			if( xi_ )
-				xi_->print(os);
+			if( ex_ )
+			{
+				os <<
+					"\nException dynamic type: " << leaf_detail::demangle(typeid(*ex_).name()) <<
+					"\nstd::exception::what(): " << ex_->what();
+			}
 		}
 
 	public:
 
 		BOOST_LEAF_CONSTEXPR explicit error_info( error_id id ) noexcept:
-			xi_(0),
+			ex_(0),
 			err_id_(id)
 		{
 		}
 
-		explicit error_info( leaf_detail::exception_info_ const & ) noexcept;
+		explicit error_info( std::exception * ex ) noexcept:
+			ex_(ex),
+			err_id_(unpack_error_id(ex_))
+		{
+		}
 
 		BOOST_LEAF_CONSTEXPR error_id error() const noexcept
 		{
 			return err_id_;
 		}
 
-		BOOST_LEAF_CONSTEXPR bool exception_caught() const noexcept
-		{
-			return xi_!=0;
-		}
-
 		BOOST_LEAF_CONSTEXPR std::exception * exception() const noexcept
 		{
-			BOOST_LEAF_ASSERT(exception_caught());
-			return xi_->ex_;
+			return ex_;
 		}
 
 		friend std::ostream & operator<<( std::ostream & os, error_info const & x )
@@ -356,7 +338,7 @@ namespace boost { namespace leaf {
 		{
 			BOOST_LEAF_CONSTEXPR static std::exception * peek( error_info const & ei ) noexcept
 			{
-				return ei.exception_caught() ? ei.exception() : 0;
+				return ei.exception();
 			}
 		};
 
@@ -365,7 +347,7 @@ namespace boost { namespace leaf {
 		{
 			BOOST_LEAF_CONSTEXPR static E * peek( error_info const & ei ) noexcept
 			{
-				return ei.exception_caught() ? dynamic_cast<E *>(ei.exception()) : 0;
+				return dynamic_cast<E *>(ei.exception());
 			}
 		};
 
