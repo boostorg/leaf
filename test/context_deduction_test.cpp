@@ -6,10 +6,7 @@
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/context.hpp>
 #include <boost/leaf/pred.hpp>
-#include <boost/leaf/handle_error.hpp>
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-#	include <boost/leaf/handle_exception.hpp>
-#endif
+#include <boost/leaf/handle_errors.hpp>
 #include "_test_ec.hpp"
 
 namespace leaf = boost::leaf;

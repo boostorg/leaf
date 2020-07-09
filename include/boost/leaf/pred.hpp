@@ -230,6 +230,67 @@ namespace boost { namespace leaf {
 	{
 	};
 
+	////////////////////////////////////////
+
+
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
+	namespace leaf_detail
+	{
+		template <class Ex>
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const * ) noexcept
+		{
+			return dynamic_cast<Ex const *>(&ex)!=0;
+		}
+
+		template <class Ex, class... ExRest>
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const *, ExRest const * ... ex_rest ) noexcept
+		{
+			return dynamic_cast<Ex const *>(&ex)!=0 || check_exception_pack(ex, ex_rest...);
+		}
+
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ) noexcept
+		{
+			return true;
+		}
+	}
+
+	template <class... Ex>
+	struct catch_
+	{
+		using error_type = void;
+		std::exception const & matched;
+
+		BOOST_LEAF_CONSTEXPR static bool evaluate(std::exception const & ex) noexcept
+		{
+			return leaf_detail::check_exception_pack(ex, static_cast<Ex const *>(0)...);
+		}
+	};
+
+	template <class Ex>
+	struct catch_<Ex>
+	{
+		using error_type = void;
+		Ex const & matched;
+
+		BOOST_LEAF_CONSTEXPR static Ex const * evaluate(std::exception const & ex) noexcept
+		{
+			return dynamic_cast<Ex const *>(&ex);
+		}
+
+		explicit catch_( std::exception const & ex ):
+			matched(*dynamic_cast<Ex const *>(&ex))
+		{
+		}
+	};
+
+	template <class... Ex>
+	struct is_predicate<catch_<Ex...>>: std::true_type
+	{
+	};
+
+#endif
+
 } }
 
 #endif

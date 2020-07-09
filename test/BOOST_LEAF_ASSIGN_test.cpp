@@ -4,7 +4,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/result.hpp>
-#include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/handle_errors.hpp>
 #include "lightweight_test.hpp"
 
 namespace leaf = boost::leaf;

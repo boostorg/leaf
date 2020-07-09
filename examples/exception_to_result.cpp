@@ -9,8 +9,7 @@
 
 #include <boost/leaf/capture.hpp>
 #include <boost/leaf/result.hpp>
-#include <boost/leaf/handle_error.hpp>
-#include <boost/leaf/handle_exception.hpp>
+#include <boost/leaf/handle_errors.hpp>
 #include <iostream>
 
 namespace leaf = boost::leaf;

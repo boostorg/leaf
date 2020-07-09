@@ -10,7 +10,7 @@
 // This version does not use exception handling.
 
 #include <boost/outcome/std_result.hpp>
-#include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/handle_errors.hpp>
 #include <boost/leaf/pred.hpp>
 #include <boost/leaf/on_error.hpp>
 #include <boost/leaf/common.hpp>
@@ -39,7 +39,7 @@ using result = outcome::std_result<T>;
 
 // To enable LEAF to work with outcome::result, we need to specialize the is_result_type template:
 namespace boost { namespace leaf {
-	template <class T> struct is_result_type<result<T>>: std::true_type { };
+	template <class T> struct is_result_type<outcome::std_result<T>>: std::true_type { };
 } }
 
 
