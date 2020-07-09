@@ -248,9 +248,6 @@ namespace boost { namespace leaf {
 
 		template <class R, class... H>
 		BOOST_LEAF_CONSTEXPR R handle_error( error_id, H && ... );
-
-		template <class TryBlock, class... H>
-		decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... );
 	};
 
 	////////////////////////////////////////
