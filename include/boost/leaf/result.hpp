@@ -215,6 +215,8 @@ namespace boost { namespace leaf {
 			return what_.kind()==result_discriminant::ctx_ptr ? ctx_->captured_id_ : what_.get_error_id();
 		}
 
+		static int init_T_with_U( T && );
+
 	public:
 
 		BOOST_LEAF_CONSTEXPR result( result && x ) noexcept:
@@ -252,9 +254,10 @@ namespace boost { namespace leaf {
 		{
 		}
 
-		// SFINAE: T can be initialized with a U, e.g. result<std::string>("literal")
+		// SFINAE: T can be initialized with a U, e.g. result<std::string>("literal").
+		// Not using is_constructible on purpose, bug with COMPILER=/usr/bin/clang++ CXXSTD=11 clang 3.3.
 		template <class U>
-		BOOST_LEAF_CONSTEXPR result( U && u, typename std::enable_if<std::is_constructible<T, U>::value, int>::type * = 0 ):
+		BOOST_LEAF_CONSTEXPR result( U && u, decltype(init_T_with_U(std::forward<U>(u))) * = 0 ):
 			stored_(std::forward<U>(u)),
 			what_(result_discriminant::kind_val{})
 		{
