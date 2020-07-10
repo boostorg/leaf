@@ -24,6 +24,7 @@ if not meson.is_subproject()
 		add_global_arguments(
 			'-Wno-dangling-else',
 			'-Wno-non-virtual-dtor',
+			'-Wno-delete-non-abstract-non-virtual-dtor',
 			language:'cpp' )
 	elif compiler_id=='gcc'
 		if get_option('buildtype')!='debug'

@@ -16,12 +16,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 // >>> #include <boost/leaf/exception.hpp>
@@ -34,12 +36,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 // >>> #include <boost/leaf/error.hpp>
@@ -52,12 +56,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 // >>> #include <boost/leaf/detail/function_traits.hpp>
@@ -70,12 +76,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 // >>> #include <boost/leaf/detail/mp11.hpp>
@@ -384,7 +392,7 @@ template<template<class...> class F, class... T> using mp_valid = typename detai
 
 #endif
 // <<< #include <boost/leaf/detail/mp11.hpp>
-#line 18 "boost/leaf/detail/function_traits.hpp"
+#line 20 "boost/leaf/detail/function_traits.hpp"
 #include <tuple>
 
 namespace boost { namespace leaf {
@@ -467,7 +475,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/detail/function_traits.hpp>
-#line 18 "boost/leaf/error.hpp"
+#line 20 "boost/leaf/error.hpp"
 // >>> #include <boost/leaf/detail/print.hpp>
 #line 1 "boost/leaf/detail/print.hpp"
 #ifndef BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
@@ -478,12 +486,14 @@ namespace boost { namespace leaf {
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 // >>> #include <boost/leaf/detail/optional.hpp>
@@ -496,12 +506,14 @@ namespace boost { namespace leaf {
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 // >>> #include <boost/leaf/config.hpp>
@@ -520,12 +532,14 @@ namespace boost { namespace leaf {
 // (C) Copyright Martin Wille 2003.
 // (C) Copyright Guillaume Melquiond 2003.
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 ////////////////////////////////////////
@@ -683,7 +697,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/config.hpp>
-#line 18 "boost/leaf/detail/optional.hpp"
+#line 20 "boost/leaf/detail/optional.hpp"
 #include <utility>
 #include <new>
 
@@ -846,7 +860,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/detail/optional.hpp>
-#line 18 "boost/leaf/detail/print.hpp"
+#line 20 "boost/leaf/detail/print.hpp"
 #include <exception>
 #include <ostream>
 #include <cstring>
@@ -962,7 +976,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/detail/print.hpp>
-#line 19 "boost/leaf/error.hpp"
+#line 21 "boost/leaf/error.hpp"
 #include <system_error>
 #include <type_traits>
 #include <sstream>
@@ -1006,7 +1020,7 @@ namespace boost { namespace leaf {
 			friend T operator+( inject_loc loc, T && x ) noexcept
 			{
 				x.load_source_location_(loc.file, loc.line, loc.fn);
-				return x;
+				return std::move(x);
 			}
 		};
 	}
@@ -1703,7 +1717,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/error.hpp>
-#line 18 "boost/leaf/exception.hpp"
+#line 20 "boost/leaf/exception.hpp"
 #include <exception>
 
 #define BOOST_LEAF_EXCEPTION ::boost::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
@@ -1829,7 +1843,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/exception.hpp>
-#line 18 "boost/leaf/capture.hpp"
+#line 20 "boost/leaf/capture.hpp"
 // >>> #include <boost/leaf/on_error.hpp>
 #line 1 "boost/leaf/on_error.hpp"
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
@@ -1840,12 +1854,14 @@ namespace boost { namespace leaf {
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 
@@ -2095,7 +2111,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/on_error.hpp>
-#line 19 "boost/leaf/capture.hpp"
+#line 21 "boost/leaf/capture.hpp"
 #include <memory>
 
 namespace boost { namespace leaf {
@@ -2388,12 +2404,14 @@ namespace boost { namespace leaf {
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 #include <string>
@@ -2485,12 +2503,14 @@ namespace boost { namespace leaf {
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 
@@ -2947,12 +2967,14 @@ namespace boost { namespace leaf {
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 // >>> #include <boost/leaf/detail/demangle.hpp>
@@ -2974,12 +2996,14 @@ namespace boost { namespace leaf {
 // See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 #include <string>
@@ -3087,7 +3111,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/detail/demangle.hpp>
-#line 19 "boost/leaf/handle_errors.hpp"
+#line 21 "boost/leaf/handle_errors.hpp"
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 #endif
 
@@ -3939,12 +3963,14 @@ namespace boost { namespace leaf {
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 
@@ -4237,12 +4263,14 @@ namespace boost { namespace leaf {
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 #include <memory>
