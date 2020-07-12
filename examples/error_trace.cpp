@@ -13,7 +13,7 @@
 // a std::deque, rather than just printed in-place.
 
 #include <boost/leaf/on_error.hpp>
-#include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/handle_errors.hpp>
 #include <boost/leaf/result.hpp>
 #include <iostream>
 #include <deque>

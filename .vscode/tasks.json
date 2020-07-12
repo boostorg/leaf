@@ -96,12 +96,12 @@
 			}
 		},
 		{
-			"label": "BOOST_LEAF_VAR_test",
+			"label": "BOOST_LEAF_ASSIGN_test",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test BOOST_LEAF_VAR_test",
+			"command": "cd ${workspaceRoot}/bld/debug && meson test BOOST_LEAF_ASSIGN_test",
 			"problemMatcher": { "base": "$gcc", "fileLocation": ["relative","${workspaceRoot}/bld/debug"] },
 			"windows": {
-				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test BOOST_LEAF_VAR_test"
+				"command": "${workspaceRoot}/.vscode/msvc.bat && cd ${workspaceRoot}/bld/debug && meson test BOOST_LEAF_ASSIGN_test"
 			}
 		},
 		{

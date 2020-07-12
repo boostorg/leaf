@@ -988,7 +988,7 @@ return leaf::try_handle_some(
 ----
 
 [.text-right]
-<<try_handle_some>> | <<result>> | <<BOOST_LEAF_VAR>>
+<<try_handle_some>> | <<result>> | <<BOOST_LEAF_ASSIGN>>
 
 The reason this works is that in case it communicates a failure, `leaf::result<T>` is able to hold a `shared_ptr<polymorphic_context>` object. That is why earlier instead of calling `task()` directly, we called `leaf::capture`: it calls the passed function and, in case that fails, it stores the `shared_ptr<polymorphic_context>` we created in the returned `result<T>`, which now doesn't just communicate the fact that an error has occurred, but also holds the `context` object that `try_handle_some` needs in order to supply a suitable handler with arguments.
 
@@ -1302,7 +1302,7 @@ leaf::result<void> print_answer() noexcept
 ----
 
 [.text-right]
-<<result>> | <<BOOST_LEAF_VAR>>
+<<result>> | <<BOOST_LEAF_ASSIGN>>
 
 Finally, here is a scope that handles the errors -- it will work correctly regardless of whether `error_a` and `error_b` objects are thrown as exceptions or not.
 
@@ -1485,7 +1485,7 @@ int main() noexcept
   }
 ----
 [.text-right]
-<<try_handle_all>> | <<result>> | <<BOOST_LEAF_VAR>> | <<error_info>>
+<<try_handle_all>> | <<result>> | <<BOOST_LEAF_ASSIGN>> | <<error_info>>
 
 <1> If the call to `call_lua` succeeded, just print the answer.
 <2> Handle `do_work` failures.
@@ -1767,7 +1767,7 @@ We can rewrite `g` to access `my_info` using LEAF:
 
 [source,c++]
 ----
-#include <boost/leaf/handle_exception.hpp>
+#include <boost/leaf/handle_errors.hpp>
 
 void g()
 {
@@ -1846,6 +1846,9 @@ namespace boost { namespace leaf {
 
     error_id() noexcept;
 
+    template <class Enum>
+    error_id( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
     error_id( std::error_code const & ec ) noexcept;
 
     int value() const noexcept;
@@ -1920,14 +1923,14 @@ namespace boost { namespace leaf {
 
 } }
 
-#define BOOST_LEAF_VAR(v, r)\
+#define BOOST_LEAF_ASSIGN(v, r)\
   auto && <<temp>> = r;\
   if( !<<temp>> )\
     return <<temp>>.error();\
   v = <<temp>>.value()
 
 #define BOOST_LEAF_AUTO(v, r)\
-  BOOST_LEAF_VAR(auto && v, r)
+  BOOST_LEAF_ASSIGN(auto && v, r)
 
 #define BOOST_LEAF_CHECK(r)\
 	{\
@@ -1940,7 +1943,7 @@ namespace boost { namespace leaf {
 ----
 
 [.text-right]
-Reference: <<error_id>> | <<is_error_id>> | <<new_error>> | <<current_error>> | <<polymorphic_context>> | <<context_activator>> | <<activate_context>> | <<is_result_type>> | <<BOOST_LEAF_VAR>> | <<BOOST_LEAF_AUTO>> | <<BOOST_LEAF_CHECK>> | <<BOOST_LEAF_NEW_ERROR>>
+Reference: <<error_id>> | <<is_error_id>> | <<new_error>> | <<current_error>> | <<polymorphic_context>> | <<context_activator>> | <<activate_context>> | <<is_result_type>> | <<BOOST_LEAF_ASSIGN>> | <<BOOST_LEAF_AUTO>> | <<BOOST_LEAF_CHECK>> | <<BOOST_LEAF_NEW_ERROR>>
 ====
 
 [[common.hpp]]
@@ -2000,9 +2003,16 @@ namespace boost { namespace leaf {
     result( T && v ) noexcept;
     result( T const & v );
 
+    template <class U>
+    result( U && u, <<enabled_if_T_can_be_inited_with_U>> );
+
     result( error_id err ) noexcept;
-    result( std::error_code const & ec ) noexcept;
     result( std::shared_ptr<polymorphic_context> && ctx ) noexcept;
+
+    template <class Enum>
+    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
+    result( std::error_code const & ec ) noexcept;
 
     result( result && r ) noexcept;
 
@@ -2024,6 +2034,41 @@ namespace boost { namespace leaf {
 
     T const * operator->() const;
     T * operator->();
+
+    <<unspecified-type>> error() noexcept;
+
+    template <class... Item>
+    error_id load( Item && ... item ) noexcept;
+  };
+
+  template <>
+  class result<void>
+  {
+  public:
+
+    result() noexcept;
+
+    result( error_id err ) noexcept;
+    result( std::shared_ptr<polymorphic_context> && ctx ) noexcept;
+
+    template <class Enum>
+    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
+    result( std::error_code const & ec ) noexcept;
+
+    result( result && r ) noexcept;
+
+    template <class U>
+    result( result<U> && r ) noexcept;
+
+    result & operator=( result && r ) noexcept;
+
+    template <class U>
+    result & operator=( result<U> && r ) noexcept;
+
+    explicit operator bool() const noexcept;
+
+    void value() const;
 
     <<unspecified-type>> error() noexcept;
 
@@ -2081,8 +2126,6 @@ Reference: <<on_error>> | <<error_monitor>>
 .#include <boost/leaf/exception.hpp>
 [source,c++]
 ----
-#include <boost/leaf/error.hpp>
-
 namespace boost { namespace leaf {
 
   template <class Ex, class... E> <1>
@@ -2192,6 +2235,64 @@ namespace boost { namespace leaf {
 Reference: <<context>> | <<context_type_from_handlers>> | <<make_context>> | <<make_shared_context>>
 ====
 
+[[handle_errors.hpp]]
+==== `handle_errors.hpp`
+
+====
+.#include <boost/leaf/handle_errors.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class TryBlock, class... H>
+  typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+  try_handle_all( TryBlock && try_block, H && ... h );
+
+  template <class TryBlock, class... H>
+  typename std::decay<decltype(std::declval<TryBlock>()())>::type
+  try_handle_some( TryBlock && try_block, H && ... h );
+
+  template <class TryBlock, class... H>
+  typename std::decay<decltype(std::declval<TryBlock>()())>::type
+  try_catch( TryBlock && try_block, H && ... h );
+
+  //////////////////////////////////////////
+
+  class error_info
+  {
+    //No public constructors
+
+  public:
+
+    error_id error() const noexcept;
+
+    bool exception_caught() const noexcept;
+    std::exception const * exception() const noexcept;
+
+    friend std::ostream & operator<<( std::ostream & os, error_info const & x );
+  };
+
+  class diagnostic_info: public error_info
+  {
+    //No public constructors
+
+    friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x );
+  };
+
+  class verbose_diagnostic_info: public error_info
+  {
+    //No public constructors
+
+    friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x );
+  };
+
+} }
+----
+
+[.text-right]
+Reference: <<try_handle_all>> | <<try_handle_some>> | <<try_catch>> | <<error_info>> | <<diagnostic_info>> | <<verbose_diagnostic_info>>
+====
+
 [[pred.hpp]]
 ==== `pred.hpp`
 
@@ -2248,6 +2349,27 @@ namespace boost { namespace leaf {
   {
   };
 
+  template <class... Ex>
+  struct catch_
+  {
+    std::exception const & matched;
+
+    // Other members not specified
+  };
+
+  template <class Ex>
+  struct catch_<Ex>
+  {
+    Ex const & matched;
+
+    // Other members not specified
+  };
+
+  template <class... Ex>
+  struct is_predicate<catch_<Ex...>>: std::true_type
+  {
+  };
+
   template <class Pred>
   struct if_not
   {
@@ -2271,101 +2393,7 @@ namespace boost { namespace leaf {
 ----
 
 [.text-right]
-Reference: <<match>> | <<match_value>> | <<match_member>> | <<if_not>> | <<category,`category`>> | <<condition,`condition`>>
-====
-
-[[handle_error.hpp]]
-==== `handle_error.hpp`
-
-====
-.#include <boost/leaf/handle_error.hpp>
-[source,c++]
-----
-#include <boost/leaf/context.hpp>
-
-namespace boost { namespace leaf {
-
-  template <class TryBlock, class... H>
-  typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-  try_handle_all( TryBlock && try_block, H && ... h );
-
-  template <class TryBlock, class... H>
-  typename std::decay<decltype(std::declval<TryBlock>()())>::type
-  try_handle_some( TryBlock && try_block, H && ... h );
-
-  //////////////////////////////////////////
-
-  class error_info
-  {
-    //No public constructors
-
-  public:
-
-    error_id error() const noexcept;
-
-    bool exception_caught() const noexcept;
-    std::exception const * exception() const noexcept;
-
-    friend std::ostream & operator<<( std::ostream & os, error_info const & x );
-  };
-
-  class diagnostic_info: public error_info
-  {
-    //No public constructors
-
-    friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x );
-  };
-
-  class verbose_diagnostic_info: public error_info
-  {
-    //No public constructors
-
-    friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x );
-  };
-
-} }
-----
-
-[.text-right]
-Reference: <<context.hpp>> | <<try_handle_all>> | <<try_handle_some>> | <<error_info>> | <<diagnostic_info>> | <<verbose_diagnostic_info>>
-====
-
-[[handle_exception.hpp]]
-==== `handle_exception.hpp`
-
-====
-.#include <boost/leaf/handle_exception.hpp>
-[source,c++]
-----
-#include <boost/leaf/handle_error.hpp>
-
-namespace boost { namespace leaf {
-
-  template <class TryBlock, class... H>
-  typename std::decay<decltype(std::declval<TryBlock>()())>::type
-  try_catch( TryBlock && try_block, H && ... h );
-
-  template <class... Ex>
-  struct catch_
-  {
-    std::exception const & matched;
-
-    // Other members not specified
-  };
-
-  template <class Ex>
-  struct catch_<Ex>
-  {
-    Ex const & matched;
-
-    // Other members not specified
-  };
-
-} }
-----
-
-[.text-right]
-Reference: <<handle_error.hpp>> | <<try_catch>> | <<catch_>>
+Reference: <<match>> | <<match_value>> | <<match_member>> | <<catch_>> | <<if_not>> | <<category,`category`>> | <<condition,`condition`>>
 ====
 
 [[functions]]
@@ -2628,7 +2656,7 @@ return leaf::try_handle_some(
 ----
 
 [.text-right]
-<<try_handle_some>> | <<result>> | <<BOOST_LEAF_VAR>>
+<<try_handle_some>> | <<result>> | <<BOOST_LEAF_ASSIGN>>
 
 WARNING: When a handler takes an argument of an exception type (that is, a type that derives from `std::exception`), if the object is thrown, the argument will be matched dynamically (using `dynamic_cast`); otherwise (e.g. after being converted by `exception_to_result`) it will be matched based on its static type only (which is the same behavior used for types that do not derive from `std::exception`).
 
@@ -2779,7 +2807,7 @@ TIP: See <<tutorial-on_error>> from the Tutorial.
 [[try_catch]]
 === `try_catch`
 
-.#include <boost/leaf/handle_exception.hpp>
+.#include <boost/leaf/handle_errors.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
@@ -2803,7 +2831,7 @@ TIP: See also Five Minute Introduction <<introduction-eh>>.
 [[try_handle_all]]
 === `try_handle_all`
 
-.#include <boost/leaf/handle_error.hpp>
+.#include <boost/leaf/handle_errors.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
@@ -2828,7 +2856,7 @@ TIP: See also <<introduction-result,Five Minute Introduction>>.
 [[try_handle_some]]
 === `try_handle_some`
 
-.#include <boost/leaf/handle_error.hpp>
+.#include <boost/leaf/handle_errors.hpp>
 
 [source,c++]
 ----
@@ -2856,7 +2884,7 @@ Effects: ::
 
 * Creates a local `<<context,context>><E...>` object `ctx`, where the `E...` types are automatically deduced from the types of arguments taken by each of `h...`, which guarantees that `ctx` is able to store all of the types required to handle errors.
 * Invokes the `try_block`:
-** if the returned object `r` indicates success, it is forwarded to the caller.
+** if the returned object `r` indicates success [.underline]#and# the `try_block` did not throw, `r` is forwarded to the caller.
 ** otherwise, LEAF  considers each of the `h...` handlers, in order, until it finds one that it can supply with arguments using the error objects currently stored in `ctx`, associated with `r.error()`. The first such handler is invoked and its return value is used to initialize the return value of `try_handle_some`, which can indicate success if the handler was able to handle the error, or failure if it was not.
 +
 ** if `try_handle_some` is unable to find a suitable handler, it returns `r`.
@@ -2879,8 +2907,6 @@ If `err` is the `error_id` obtained from `r.error()`, each argument `a~i~` taken
 ** If `A~i~` derives from `std::exception`, and the `try_block` throws an object `ex` of type that derives from `std::exception`, LEAF obtains `A~i~* p = dynamic_cast<A~i~*>(&ex)`. The handler is dropped if `p` is null, otherwise `a~i~` is initialized with `*p`.
 ** Otherwise the handler is dropped.
 --
-+
-CAUTION: Handling of types that derive from `std::exception` requires `#include <boost/leaf/handle_exception.hpp>`.
 +
 .Example:
 [source,c++]
@@ -3167,7 +3193,7 @@ When a context is deactivated, the thread-local pointers that currently point to
 ==== `handle_error`
 
 [source,c++]
-.#include <boost/leaf/handle_error.hpp>
+.#include <boost/leaf/handle_errors.hpp>
 ----
 namespace boost { namespace leaf {
 
@@ -3282,7 +3308,7 @@ For automatic deduction of `Ctx`, use <<activate_context>>.
 [[diagnostic_info]]
 === `diagnostic_info`
 
-.#include <boost/leaf/handle_error.hpp>
+.#include <boost/leaf/handle_errors.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
@@ -3326,6 +3352,9 @@ namespace boost { namespace leaf {
   public:
 
     error_id() noexcept;
+
+    template <class Enum>
+    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
 
     error_id( std::error_code const & ec ) noexcept;
 
@@ -3371,18 +3400,23 @@ namespace boost { namespace leaf {
 
   error_id::error_id() noexcept = default;
 
+  template <class Enum>
+  error_id::error_id( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
   error_id::error_id( std::error_code const & ec ) noexcept;
 
 } }
 ----
 
-A default-initialized `error_id` object does not represent a failure. It compares equal to any other default-initialized `error_id` object. All other `error_id` objects identify a specific occurrence of a failure.
+A default-initialized `error_id` object does not represent a specific failure. It compares equal to any other default-initialized `error_id` object. All other `error_id` objects identify a specific occurrence of a failure.
+
+CAUTION: When using an object of type `error_id` to initialize a `result<T>` object, it will be initialized in error state, even when passing a default-initialized `error_id` value.
 
 Converting an `error_id` object to `std::error_code` uses an unspecified `std::error_category` which LEAF recognizes. This allows an `error_id` to be transported through interfaces that work with `std::error_code`. The `std::error_code` constructor allows the original `error_id` to be restored.
 
 TIP: To check if a given `std::error_code` is actually carrying an `error_id`, use <<is_error_id>>.
 
-Typically, users create new `error_id` objects by invoking <<new_error>>. The constructor that takes `std::error_code` has the following effects:
+Typically, users create new `error_id` objects by invoking <<new_error>>. The constructor that takes `std::error_code`, and the one that takes a type `Enum` for which `std::is_error_code_enum<Enum>::value` is `true`, have the following effects:
 
 * If `ec.value()` is `0`, the effect is the same as using the default constructor.
 * Otherwise, if `<<is_error_id,is_error_id>>(ec)` is `true`, the original `error_id` value is used to initialize `*this`;
@@ -3719,7 +3753,7 @@ namespace boost { namespace leaf {
 [[error_info]]
 === `error_info`
 
-.#include <boost/leaf/handle_error.hpp>
+.#include <boost/leaf/handle_errors.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
@@ -3805,9 +3839,16 @@ namespace boost { namespace leaf {
     result( T && v ) noexcept;
     result( T const & v );
 
+    template <class U>
+    result( U &&, <<enabled_if_T_can_be_inited_with_U>> );
+
     result( error_id err ) noexcept;
-    result( std::error_code const & ec ) noexcept;
     result( std::shared_ptr<polymorphic_context> && ctx ) noexcept;
+
+    template <class Enum>
+    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
+    result( std::error_code const & ec ) noexcept;
 
     result( result && r ) noexcept;
 
@@ -3829,6 +3870,41 @@ namespace boost { namespace leaf {
 
     T const * operator->() const;
     T * operator->();
+
+    <<unspecified-type>> error() noexcept;
+
+    template <class... Item>
+    error_id load( Item && ... item ) noexcept;
+  };
+
+  template <>
+  class result<void>
+  {
+  public:
+
+    result() noexcept;
+
+    result( error_id err ) noexcept;
+    result( std::shared_ptr<polymorphic_context> && ctx ) noexcept;
+
+    template <class Enum>
+    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
+    result( std::error_code const & ec ) noexcept;
+
+    result( result && r ) noexcept;
+
+    template <class U>
+    result( result<U> && r ) noexcept;
+
+    result & operator=( result && r ) noexcept;
+
+    template <class U>
+    result & operator=( result<U> && r ) noexcept;
+
+    explicit operator bool() const noexcept;
+
+    void value() const;
 
     <<unspecified-type>> error() noexcept;
 
@@ -3859,6 +3935,7 @@ Invariant: :: A `result<T>` object is in one of three states:
 [[result::result]]
 ==== Constructors
 
+--
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
@@ -3868,10 +3945,20 @@ namespace boost { namespace leaf {
   result<T>::result() noexcept;
 
   template <class T>
-  result<T>::result( T && v ) noexcept;
+  result<T>::result( T && v ) noexcept; <1>
+
+  template <class T>
+  result<T>::result( T const & v ); <1>
+
+  template <class U>
+  result<T>::result( U && u, <<enabled_if_T_can_be_inited_with_U>> ); <2>
 
   template <class T>
   result<T>::result( leaf::error_id err ) noexcept;
+
+  template <class T>
+  template <class Enum>
+  result<T>::result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
 
   template <class T>
   result<T>::result( std::error_code const & ec ) noexcept;
@@ -3888,8 +3975,11 @@ namespace boost { namespace leaf {
 
 } }
 ----
+<1> Not available if `T` is `void`.
+<2> Available if an object of type `T` can be initialized with `std::forward<U>(u)`. This is to enable e.g. `result<std::string>` to be initialized with a string literal.
+--
 
-Requires: :: `T` must be movable, and its move constructor may not throw.
+Requires: :: `T` must be movable, and its move constructor may not throw; or `void`.
 
 Effects: ::
 
@@ -3897,7 +3987,13 @@ Establishes the `result<T>` invariant:
 +
 --
 * To get a `result<T>` in <<result,Value state>>, initialize it with an object of type `T` or use the default constructor.
-* To get a `result<T>` in <<result,Error state>>, initialize it with an <<error_id>> object or with  a `std::error_code`.
+* To get a `result<T>` in <<result,Error state>>, initialize it with:
+** an <<error_id>> object.
++
+CAUTION: Initializing a `result<T>` with a default-initialized `error_id` object (for which `.value()` returns `0`) will still result in <<result,Error state>>!
++
+** a `std::error_code` object.
+** an object of type `Enum` for which `std::is_error_code_enum<Enum>::value` is `true`.
 * To get a `result<T>` in <<result,Error-capture state>>, initialize it with a `std::shared_ptr<<<polymorphic_context,polymorphic_context>>>` (which can be obtained by calling e.g. <<make_shared_context>>).
 --
 +
@@ -4013,28 +4109,32 @@ Returns: :: If `*this` is in <<result,value state>>, returns `true`, otherwise r
 ----
 namespace boost { namespace leaf {
 
+  void result<void>::value() const; <1>
+
   template <class T>
-  T const & result<T>::value() const;
+  T const & result<T>::value() const; <2>
 
   template <class T>
   T & result<T>::value();
 
   template <class T>
-  T const & result<T>::operator*() const;
+  T const & result<T>::operator*() const; <2>
 
   template <class T>
   T & result<T>::operator*();
 
   template <class T>
-  T const * result<T>::operator->() const;
+  T const * result<T>::operator->() const; <2>
 
   template <class T>
-  T * result<T>::operator->();
+  T * result<T>::operator->(); <2>
 
   struct bad_result: std::exception { };
 
 } }
 ----
+<1> Only when `T` is `void`.
+<2> Only when `T` is not `void`.
 
 [[result::bad_result]]
 Effects: :: If `*this` is in <<result,value state>>, returns a reference (or pointer) to the stored value, otherwise throws `bad_result`.
@@ -4044,7 +4144,7 @@ Effects: :: If `*this` is in <<result,value state>>, returns a reference (or poi
 [[verbose_diagnostic_info]]
 === `verbose_diagnostic_info`
 
-.#include <boost/leaf/handle_error.hpp>
+.#include <boost/leaf/handle_errors.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
@@ -4155,7 +4255,7 @@ namespace boost { namespace leaf {
 [[catch_]]
 === `catch_`
 
-.#include <boost/leaf/handle_exception.hpp>
+.#include <boost/leaf/pred.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
@@ -4176,8 +4276,15 @@ namespace boost { namespace leaf {
     // Other members not specified
   };
 
+  template <class... Ex>
+  struct is_predicate<catch_<Ex...>>: std::true_type
+  {
+  };
+
 } }
 ----
+[.text-right]
+<<is_predicate>>
 
 When an error handler takes an argument of type that is an instance of the `catch_` template, the <<handler_selection_procedure,handler selection procedure>> first checks if a `std::exception` was caught. If not, the handler is dropped. Otherwise, the handler is dropped if the caught `std::exception` can not be `dynamic_cast` to any of the specified types `Ex...`.
 
@@ -4243,8 +4350,16 @@ namespace boost { namespace leaf {
     // Other members not specified
   };
 
+  template <class P>
+  struct is_predicate<if_not<P>>: std::true_type
+  {
+  };
+
 } }
 ----
+[.text-right]
+<<is_predicate>>
+
 
 When an error handler takes an argument of type `if_not<P>`, where `P` is another predicate type, the <<handler_selection_procedure,handler selection procedure>> first checks if an error object of the type `E` required by `P` is available. If not, the handler is dropped. Otherwise, the handler is dropped if `P` evaluates to `true`.
 
@@ -4292,8 +4407,16 @@ namespace boost { namespace leaf {
     // Other members not specified
   };
 
+  template <class E, auto... V>
+  struct is_predicate<match<E, V...>>: std::true_type
+  {
+  };
+
 } }
 ----
+[.text-right]
+<<is_predicate>>
+
 
 When an error handler takes an argument of type `match<E, V...>`, the <<handler_selection_procedure,handler selection procedure>> first checks if an error object `e` of type `E` is available. If it is not available, the handler is dropped. Otherwise, the handler is dropped if the following condition is not met:
 
@@ -4473,8 +4596,16 @@ namespace boost { namespace leaf {
     // Other members not specified
   };
 
+  template <auto P, auto... V>
+  struct is_predicate<match_member<P, V...>>: std::true_type
+  {
+  };
+
 } }
 ----
+[.text-right]
+<<is_predicate>>
+
 
 This predicate is similar to <<match_value>>, but able to bind any accessible data member of `E`; e.g. `match_member<&E::value, V...>` is equivalent to `match_value<E, V...>`.
 
@@ -4500,8 +4631,16 @@ namespace boost { namespace leaf {
     // Other members not specified
   };
 
+  template <class E, auto... V>
+  struct is_predicate<match_value<E, V...>>: std::true_type
+  {
+  };
+
 } }
 ----
+[.text-right]
+<<is_predicate>>
+
 
 This predicate is similar to <<match>>, but where `match` compares the available error object `e` of type `E` to the specified values `V...`, `match_value` works with `e.value`.
 
@@ -4582,6 +4721,27 @@ TIP: The contents of each Reference section are organized alphabetically.
 
 '''
 
+[[BOOST_LEAF_ASSIGN]]
+=== `BOOST_LEAF_ASSIGN`
+
+.#include <boost/leaf/error.hpp>
+[source,c++]
+----
+#define BOOST_LEAF_ASSIGN(v, r)\
+  auto && <<temp>> = r;\
+  if( !<<temp>> )\
+    return <<temp>>.error();\
+  v = <<temp>>.value()
+----
+
+`BOOST_LEAF_ASSIGN` is useful when calling a function that returns `result<T>` (other than `result<void>`), if the desired behavior is to forward any errors to the caller verbatim.
+
+In case of success, the result `value()` of type `T` is assigned to the specified variable `v`, which must have been declared prior to invoking `BOOST_LEAF_ASSIGN`. However, it is possible to use `BOOST_LEAF_ASSIGN` to declare a new variable, by passing in `v` its type together with its name, e.g. `BOOST_LEAF_ASSIGN(auto && x, f())` calls `f`, forwards errors to the caller, while capturing successful values in `x`.
+
+NOTE: See also <<BOOST_LEAF_AUTO>>.
+
+'''
+
 [[BOOST_LEAF_AUTO]]
 === `BOOST_LEAF_AUTO`
 
@@ -4589,10 +4749,10 @@ TIP: The contents of each Reference section are organized alphabetically.
 [source,c++]
 ----
 #define BOOST_LEAF_AUTO(v, r)\
-  BOOST_LEAF_VAR(auto && v, r)
+  BOOST_LEAF_ASSIGN(auto && v, r)
 ----
 [.text-right]
-<<BOOST_LEAF_VAR>>
+<<BOOST_LEAF_ASSIGN>>
 
 `BOOST_LEAF_AUTO` is useful when calling a function that returns `result<T>` (other than `result<void>`), if the desired behavior is to forward any errors to the caller verbatim.
 
@@ -4628,7 +4788,7 @@ leaf::result<float> add_values()
 }
 ----
 
-NOTE: See also <<BOOST_LEAF_VAR>>.
+NOTE: See also <<BOOST_LEAF_ASSIGN>>.
 
 '''
 
@@ -4715,27 +4875,6 @@ Effects: :: `BOOST_LEAF_NEW_ERROR(e...)` is equivalent to `leaf::<<new_error,new
 ----
 
 Effects: :: Throws the exception object returned by <<BOOST_LEAF_EXCEPTION>>.
-
-'''
-
-[[BOOST_LEAF_VAR]]
-=== `BOOST_LEAF_VAR`
-
-.#include <boost/leaf/error.hpp>
-[source,c++]
-----
-#define BOOST_LEAF_VAR(v, r)\
-  auto && <<temp>> = r;\
-  if( !<<temp>> )\
-    return <<temp>>.error();\
-  v = <<temp>>.value()
-----
-
-`BOOST_LEAF_VAR` is useful when calling a function that returns `result<T>` (other than `result<void>`), if the desired behavior is to forward any errors to the caller verbatim.
-
-In case of success, the result `value()` of type `T` is assigned to the specified variable `v`, which must have been declared prior to invoking `BOOST_LEAF_VAR`. However, it is possible to use `BOOST_LEAF_VAR` to declare a new variable, by passing in `v` its type together with its name, e.g. `BOOST_LEAF_VAR(auto && x, f())` calls `f`, forwards errors to the caller, while capturing successful values in `x`.
-
-NOTE: See also <<BOOST_LEAF_AUTO>>.
 
 [[rationale]]
 == Design
@@ -5038,7 +5177,7 @@ leaf::result<parsed_line> read_and_parse_line( reader & r )
 }
 ----
 [.text-right]
-<<result>> | <<BOOST_LEAF_VAR>>
+<<result>> | <<BOOST_LEAF_ASSIGN>>
 
 <1> Read a line, forward errors to the caller.
 <2> Parse the line, forward errors to the caller.

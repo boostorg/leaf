@@ -6,12 +6,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 #include <boost/leaf/detail/function_traits.hpp>
@@ -25,15 +27,15 @@
 #define BOOST_LEAF_TOKEN_PASTE(x, y) x ## y
 #define BOOST_LEAF_TOKEN_PASTE2(x, y) BOOST_LEAF_TOKEN_PASTE(x, y)
 
-#define BOOST_LEAF_VAR(v,r)\
-	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "The BOOST_LEAF_VAR macro requires a result type as the second argument");\
+#define BOOST_LEAF_ASSIGN(v,r)\
+	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "The BOOST_LEAF_ASSIGN macro requires a result type as the second argument");\
 	auto && BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__) = r;\
 	if( !BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__) )\
 		return BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).error();\
 	v = BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).value()
 
 #define BOOST_LEAF_AUTO(v, r)\
-	BOOST_LEAF_VAR(auto && v, r)
+	BOOST_LEAF_ASSIGN(auto && v, r)
 
 #define BOOST_LEAF_CHECK(r)\
 	{\
@@ -59,12 +61,45 @@ namespace boost { namespace leaf {
 			friend T operator+( inject_loc loc, T && x ) noexcept
 			{
 				x.load_source_location_(loc.file, loc.line, loc.fn);
-				return x;
+				return std::move(x);
 			}
 		};
 	}
 
 } }
+
+////////////////////////////////////////
+
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace boost
+{
+	BOOST_LEAF_NORETURN void throw_exception( std::exception const & ); // user defined
+}
+
+namespace boost { namespace leaf {
+
+	template <class T>
+	BOOST_LEAF_NORETURN void throw_exception( T const & e )
+	{
+		::boost::throw_exception(e);
+	}
+
+} }
+
+#else
+
+namespace boost { namespace leaf {
+
+	template <class T>
+	BOOST_LEAF_NORETURN void throw_exception( T const & e )
+	{
+		throw e;
+	}
+
+} }
+
+#endif
 
 ////////////////////////////////////////
 
@@ -526,6 +561,12 @@ namespace boost { namespace leaf {
 			value_(leaf_detail::import_error_code(ec))
 		{
 			BOOST_LEAF_ASSERT(!value_ || ((value_&3)==1));
+		}
+
+		template <class Enum>
+		error_id( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept:
+			value_(leaf_detail::import_error_code(e))
+		{
 		}
 
 		BOOST_LEAF_CONSTEXPR error_id load() const noexcept

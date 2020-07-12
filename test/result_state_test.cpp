@@ -5,7 +5,7 @@
 
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/capture.hpp>
-#include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/handle_errors.hpp>
 #include "lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
@@ -571,13 +571,16 @@ int main()
 	}
 	BOOST_TEST_EQ(val::count, 0);
 
-	{
-		leaf::result<int> r;
+	{ // Initialization forwarding constructor
+		leaf::result<std::string> r = "hello";
 		BOOST_TEST(r);
+		BOOST_TEST_EQ(r.value(), "hello");
 	}
-	{
-		leaf::result<void> r;
+
+	{ // Initialization forwarding constructor
+		leaf::result<std::string> r; r = "hello";
 		BOOST_TEST(r);
+		BOOST_TEST_EQ(r.value(), "hello");
 	}
 
 	return boost::report_errors();

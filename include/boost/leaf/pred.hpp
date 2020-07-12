@@ -6,16 +6,17 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
-#include <boost/leaf/detail/handler_argument_traits.hpp>
-#include <system_error>
+#include <boost/leaf/handle_errors.hpp>
 
 #if __cplusplus >= 201703L
 #	define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -229,6 +230,67 @@ namespace boost { namespace leaf {
 	struct is_predicate<if_not<P>>: std::true_type
 	{
 	};
+
+	////////////////////////////////////////
+
+
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
+	namespace leaf_detail
+	{
+		template <class Ex>
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const * ) noexcept
+		{
+			return dynamic_cast<Ex const *>(&ex)!=0;
+		}
+
+		template <class Ex, class... ExRest>
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const *, ExRest const * ... ex_rest ) noexcept
+		{
+			return dynamic_cast<Ex const *>(&ex)!=0 || check_exception_pack(ex, ex_rest...);
+		}
+
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ) noexcept
+		{
+			return true;
+		}
+	}
+
+	template <class... Ex>
+	struct catch_
+	{
+		using error_type = void;
+		std::exception const & matched;
+
+		BOOST_LEAF_CONSTEXPR static bool evaluate(std::exception const & ex) noexcept
+		{
+			return leaf_detail::check_exception_pack(ex, static_cast<Ex const *>(0)...);
+		}
+	};
+
+	template <class Ex>
+	struct catch_<Ex>
+	{
+		using error_type = void;
+		Ex const & matched;
+
+		BOOST_LEAF_CONSTEXPR static Ex const * evaluate(std::exception const & ex) noexcept
+		{
+			return dynamic_cast<Ex const *>(&ex);
+		}
+
+		explicit catch_( std::exception const & ex ):
+			matched(*dynamic_cast<Ex const *>(&ex))
+		{
+		}
+	};
+
+	template <class... Ex>
+	struct is_predicate<catch_<Ex...>>: std::true_type
+	{
+	};
+
+#endif
 
 } }
 

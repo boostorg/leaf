@@ -24,6 +24,7 @@ if not meson.is_subproject()
 		add_global_arguments(
 			'-Wno-dangling-else',
 			'-Wno-non-virtual-dtor',
+			'-Wno-delete-non-abstract-non-virtual-dtor',
 			language:'cpp' )
 	elif compiler_id=='gcc'
 		if get_option('buildtype')!='debug'
@@ -90,7 +91,7 @@ tests = [
 	'accumulate_nested_success_exception_test',
 	'accumulate_nested_success_result_test',
 	'BOOST_LEAF_AUTO_test',
-	'BOOST_LEAF_VAR_test',
+	'BOOST_LEAF_ASSIGN_test',
 	'capture_exception_async_test',
 	'capture_exception_result_async_test',
 	'capture_exception_state_test',
@@ -148,8 +149,7 @@ tests = [
 	'_hpp_context_test',
 	'_hpp_error_test',
 	'_hpp_exception_test',
-	'_hpp_handle_error_test',
-	'_hpp_handle_exception_test',
+	'_hpp_handle_errors_test',
 	'_hpp_on_error_test',
 	'_hpp_pred_test',
 	'_hpp_result_test',

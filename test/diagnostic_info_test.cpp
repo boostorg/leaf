@@ -4,10 +4,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-#	include <boost/leaf/handle_exception.hpp>
-#endif
-#include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/handle_errors.hpp>
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/common.hpp>
 #include "lightweight_test.hpp"

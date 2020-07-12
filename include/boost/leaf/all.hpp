@@ -6,186 +6,6 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// >>> #include <boost/leaf/config.hpp>
-#line 1 "boost/leaf/config.hpp"
-#ifndef BOOST_LEAF_CONFIG_HPP_INCLUDED
-#define BOOST_LEAF_CONFIG_HPP_INCLUDED
-
-// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
-
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-// The following is based on Boost Config.
-
-// (C) Copyright John Maddock 2001 - 2003.
-// (C) Copyright Martin Wille 2003.
-// (C) Copyright Guillaume Melquiond 2003.
-
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
-#endif
-
-////////////////////////////////////////
-
-// Configure BOOST_LEAF_NO_EXCEPTIONS, unless already #defined
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-
-#	if defined __clang__ && !defined(__ibmxl__)
-//	Clang C++ emulates GCC, so it has to appear early.
-
-#		if !__has_feature(cxx_exceptions)
-#			define BOOST_LEAF_NO_EXCEPTIONS
-#		endif
-
-#	elif defined __DMC__
-//	Digital Mars C++
-
-#		if !defined(_CPPUNWIND)
-#			define BOOST_LEAF_NO_EXCEPTIONS
-#		endif
-
-#	elif defined(__GNUC__) && !defined(__ibmxl__)
-//	GNU C++:
-
-#		if !defined(__EXCEPTIONS)
-#			define BOOST_LEAF_NO_EXCEPTIONS
-#		endif
-
-#	elif defined __KCC
-//	Kai C++
-
-#		if !defined(_EXCEPTIONS)
-#			define BOOST_LEAF_NO_EXCEPTIONS
-#		endif
-
-#	elif defined __CODEGEARC__
-//	CodeGear - must be checked for before Borland
-
-#		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
-#			define BOOST_LEAF_NO_EXCEPTIONS
-#		endif
-
-#	elif defined __BORLANDC__
-//	Borland
-
-#		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
-# 			define BOOST_LEAF_NO_EXCEPTIONS
-#		endif
-
-#	elif defined  __MWERKS__
-//	Metrowerks CodeWarrior
-
-#		if !__option(exceptions)
-#			define BOOST_LEAF_NO_EXCEPTIONS
-#		endif
-
-#	elif defined(__IBMCPP__) && defined(__COMPILER_VER__) && defined(__MVS__)
-//	IBM z/OS XL C/C++
-
-#		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
-#			define BOOST_LEAF_NO_EXCEPTIONS
-#		endif
-
-#	elif defined(__ibmxl__)
-//	IBM XL C/C++ for Linux (Little Endian)
-
-#		if !__has_feature(cxx_exceptions)
-#			define BOOST_LEAF_NO_EXCEPTIONS
-#		endif
-
-#	elif defined _MSC_VER
-//	Microsoft Visual C++
-//
-//	Must remain the last #elif since some other vendors (Metrowerks, for
-//	example) also #define _MSC_VER
-
-#		if !defined(_CPPUNWIND)
-#			define BOOST_LEAF_NO_EXCEPTIONS
-#		endif
-#	endif
-
-#endif
-
-#ifdef BOOST_NORETURN
-#	define BOOST_LEAF_NORETURN BOOST_NORETURN
-#else
-#	if defined(_MSC_VER)
-#		define BOOST_LEAF_NORETURN __declspec(noreturn)
-#	elif defined(__GNUC__)
-#		define BOOST_LEAF_NORETURN __attribute__ ((__noreturn__))
-#	elif defined(__has_attribute) && defined(__SUNPRO_CC) && (__SUNPRO_CC > 0x5130)
-#		if __has_attribute(noreturn)
-#			define BOOST_LEAF_NORETURN [[noreturn]]
-#		endif
-#	elif defined(__has_cpp_attribute)
-#		if __has_cpp_attribute(noreturn)
-#			define BOOST_LEAF_NORETURN [[noreturn]]
-#		endif
-#	endif
-#endif
-#if !defined(BOOST_LEAF_NORETURN)
-#  define BOOST_LEAF_NORETURN
-#endif
-
-////////////////////////////////////////
-
-#ifndef BOOST_LEAF_DIAGNOSTICS
-#	define BOOST_LEAF_DIAGNOSTICS 1
-#endif
-
-#if BOOST_LEAF_DIAGNOSTICS!=0 && BOOST_LEAF_DIAGNOSTICS!=1
-#	error BOOST_LEAF_DIAGNOSTICS must be 0 or 1.
-#endif
-
-////////////////////////////////////////
-
-#ifdef _MSC_VER
-#	define BOOST_LEAF_ALWAYS_INLINE __forceinline
-#else
-#	define BOOST_LEAF_ALWAYS_INLINE __attribute__((always_inline)) inline
-#endif
-
-////////////////////////////////////////
-
-#ifndef BOOST_LEAF_NODISCARD
-#	if __cplusplus >= 201703L
-#		define BOOST_LEAF_NODISCARD [[nodiscard]]
-#	else
-#		define BOOST_LEAF_NODISCARD
-#	endif
-#endif
-
-////////////////////////////////////////
-
-#ifndef BOOST_LEAF_CONSTEXPR
-#	if __cplusplus > 201402L
-#		define BOOST_LEAF_CONSTEXPR constexpr
-#		define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 1
-#	else
-#		define BOOST_LEAF_CONSTEXPR
-#		define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 0
-#	endif
-#endif
-
-////////////////////////////////////////
-
-#ifndef BOOST_LEAF_ASSERT
-#	ifdef BOOST_ASSERT
-#		define BOOST_LEAF_ASSERT BOOST_ASSERT
-#	else
-#       include <cassert>
-#       define BOOST_LEAF_ASSERT assert
-#	endif
-#endif
-
-#endif
-// <<< #include <boost/leaf/config.hpp>
-#line 10 "../../include/boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/capture.hpp>
 #line 1 "boost/leaf/capture.hpp"
 #ifndef BOOST_LEAF_CAPTURE_HPP_INCLUDED
@@ -196,12 +16,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 // >>> #include <boost/leaf/exception.hpp>
@@ -214,12 +36,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 // >>> #include <boost/leaf/error.hpp>
@@ -232,12 +56,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 // >>> #include <boost/leaf/detail/function_traits.hpp>
@@ -250,12 +76,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 // >>> #include <boost/leaf/detail/mp11.hpp>
@@ -564,7 +392,7 @@ template<template<class...> class F, class... T> using mp_valid = typename detai
 
 #endif
 // <<< #include <boost/leaf/detail/mp11.hpp>
-#line 18 "boost/leaf/detail/function_traits.hpp"
+#line 20 "boost/leaf/detail/function_traits.hpp"
 #include <tuple>
 
 namespace boost { namespace leaf {
@@ -647,7 +475,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/detail/function_traits.hpp>
-#line 18 "boost/leaf/error.hpp"
+#line 20 "boost/leaf/error.hpp"
 // >>> #include <boost/leaf/detail/print.hpp>
 #line 1 "boost/leaf/detail/print.hpp"
 #ifndef BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
@@ -658,12 +486,14 @@ namespace boost { namespace leaf {
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 // >>> #include <boost/leaf/detail/optional.hpp>
@@ -676,14 +506,198 @@ namespace boost { namespace leaf {
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
+// >>> #include <boost/leaf/config.hpp>
+#line 1 "boost/leaf/config.hpp"
+#ifndef BOOST_LEAF_CONFIG_HPP_INCLUDED
+#define BOOST_LEAF_CONFIG_HPP_INCLUDED
+
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+// The following is based on Boost Config.
+
+// (C) Copyright John Maddock 2001 - 2003.
+// (C) Copyright Martin Wille 2003.
+// (C) Copyright Guillaume Melquiond 2003.
+
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
+#endif
+
+////////////////////////////////////////
+
+// Configure BOOST_LEAF_NO_EXCEPTIONS, unless already #defined
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
+#	if defined __clang__ && !defined(__ibmxl__)
+//	Clang C++ emulates GCC, so it has to appear early.
+
+#		if !__has_feature(cxx_exceptions)
+#			define BOOST_LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined __DMC__
+//	Digital Mars C++
+
+#		if !defined(_CPPUNWIND)
+#			define BOOST_LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined(__GNUC__) && !defined(__ibmxl__)
+//	GNU C++:
+
+#		if !defined(__EXCEPTIONS)
+#			define BOOST_LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined __KCC
+//	Kai C++
+
+#		if !defined(_EXCEPTIONS)
+#			define BOOST_LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined __CODEGEARC__
+//	CodeGear - must be checked for before Borland
+
+#		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
+#			define BOOST_LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined __BORLANDC__
+//	Borland
+
+#		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
+# 			define BOOST_LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined  __MWERKS__
+//	Metrowerks CodeWarrior
+
+#		if !__option(exceptions)
+#			define BOOST_LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined(__IBMCPP__) && defined(__COMPILER_VER__) && defined(__MVS__)
+//	IBM z/OS XL C/C++
+
+#		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
+#			define BOOST_LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined(__ibmxl__)
+//	IBM XL C/C++ for Linux (Little Endian)
+
+#		if !__has_feature(cxx_exceptions)
+#			define BOOST_LEAF_NO_EXCEPTIONS
+#		endif
+
+#	elif defined _MSC_VER
+//	Microsoft Visual C++
+//
+//	Must remain the last #elif since some other vendors (Metrowerks, for
+//	example) also #define _MSC_VER
+
+#		if !defined(_CPPUNWIND)
+#			define BOOST_LEAF_NO_EXCEPTIONS
+#		endif
+#	endif
+
+#endif
+
+#ifdef BOOST_NORETURN
+#	define BOOST_LEAF_NORETURN BOOST_NORETURN
+#else
+#	if defined(_MSC_VER)
+#		define BOOST_LEAF_NORETURN __declspec(noreturn)
+#	elif defined(__GNUC__)
+#		define BOOST_LEAF_NORETURN __attribute__ ((__noreturn__))
+#	elif defined(__has_attribute) && defined(__SUNPRO_CC) && (__SUNPRO_CC > 0x5130)
+#		if __has_attribute(noreturn)
+#			define BOOST_LEAF_NORETURN [[noreturn]]
+#		endif
+#	elif defined(__has_cpp_attribute)
+#		if __has_cpp_attribute(noreturn)
+#			define BOOST_LEAF_NORETURN [[noreturn]]
+#		endif
+#	endif
+#endif
+#if !defined(BOOST_LEAF_NORETURN)
+#  define BOOST_LEAF_NORETURN
+#endif
+
+////////////////////////////////////////
+
+#ifndef BOOST_LEAF_DIAGNOSTICS
+#	define BOOST_LEAF_DIAGNOSTICS 1
+#endif
+
+#if BOOST_LEAF_DIAGNOSTICS!=0 && BOOST_LEAF_DIAGNOSTICS!=1
+#	error BOOST_LEAF_DIAGNOSTICS must be 0 or 1.
+#endif
+
+////////////////////////////////////////
+
+#ifdef _MSC_VER
+#	define BOOST_LEAF_ALWAYS_INLINE __forceinline
+#else
+#	define BOOST_LEAF_ALWAYS_INLINE __attribute__((always_inline)) inline
+#endif
+
+////////////////////////////////////////
+
+#ifndef BOOST_LEAF_NODISCARD
+#	if __cplusplus >= 201703L
+#		define BOOST_LEAF_NODISCARD [[nodiscard]]
+#	else
+#		define BOOST_LEAF_NODISCARD
+#	endif
+#endif
+
+////////////////////////////////////////
+
+#ifndef BOOST_LEAF_CONSTEXPR
+#	if __cplusplus > 201402L
+#		define BOOST_LEAF_CONSTEXPR constexpr
+#		define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 1
+#	else
+#		define BOOST_LEAF_CONSTEXPR
+#		define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 0
+#	endif
+#endif
+
+////////////////////////////////////////
+
+#ifndef BOOST_LEAF_ASSERT
+#	ifdef BOOST_ASSERT
+#		define BOOST_LEAF_ASSERT BOOST_ASSERT
+#	else
+#       include <cassert>
+#       define BOOST_LEAF_ASSERT assert
+#	endif
+#endif
+
+#endif
+// <<< #include <boost/leaf/config.hpp>
+#line 20 "boost/leaf/detail/optional.hpp"
 #include <utility>
 #include <new>
 
@@ -846,7 +860,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/detail/optional.hpp>
-#line 18 "boost/leaf/detail/print.hpp"
+#line 20 "boost/leaf/detail/print.hpp"
 #include <exception>
 #include <ostream>
 #include <cstring>
@@ -962,7 +976,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/detail/print.hpp>
-#line 19 "boost/leaf/error.hpp"
+#line 21 "boost/leaf/error.hpp"
 #include <system_error>
 #include <type_traits>
 #include <sstream>
@@ -972,15 +986,15 @@ namespace boost { namespace leaf {
 #define BOOST_LEAF_TOKEN_PASTE(x, y) x ## y
 #define BOOST_LEAF_TOKEN_PASTE2(x, y) BOOST_LEAF_TOKEN_PASTE(x, y)
 
-#define BOOST_LEAF_VAR(v,r)\
-	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "The BOOST_LEAF_VAR macro requires a result type as the second argument");\
+#define BOOST_LEAF_ASSIGN(v,r)\
+	static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "The BOOST_LEAF_ASSIGN macro requires a result type as the second argument");\
 	auto && BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__) = r;\
 	if( !BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__) )\
 		return BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).error();\
 	v = BOOST_LEAF_TOKEN_PASTE2(boost_leaf_temp_, __LINE__).value()
 
 #define BOOST_LEAF_AUTO(v, r)\
-	BOOST_LEAF_VAR(auto && v, r)
+	BOOST_LEAF_ASSIGN(auto && v, r)
 
 #define BOOST_LEAF_CHECK(r)\
 	{\
@@ -1006,12 +1020,45 @@ namespace boost { namespace leaf {
 			friend T operator+( inject_loc loc, T && x ) noexcept
 			{
 				x.load_source_location_(loc.file, loc.line, loc.fn);
-				return x;
+				return std::move(x);
 			}
 		};
 	}
 
 } }
+
+////////////////////////////////////////
+
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace boost
+{
+	BOOST_LEAF_NORETURN void throw_exception( std::exception const & ); // user defined
+}
+
+namespace boost { namespace leaf {
+
+	template <class T>
+	BOOST_LEAF_NORETURN void throw_exception( T const & e )
+	{
+		::boost::throw_exception(e);
+	}
+
+} }
+
+#else
+
+namespace boost { namespace leaf {
+
+	template <class T>
+	BOOST_LEAF_NORETURN void throw_exception( T const & e )
+	{
+		throw e;
+	}
+
+} }
+
+#endif
 
 ////////////////////////////////////////
 
@@ -1475,6 +1522,12 @@ namespace boost { namespace leaf {
 			BOOST_LEAF_ASSERT(!value_ || ((value_&3)==1));
 		}
 
+		template <class Enum>
+		error_id( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept:
+			value_(leaf_detail::import_error_code(e))
+		{
+		}
+
 		BOOST_LEAF_CONSTEXPR error_id load() const noexcept
 		{
 			return *this;
@@ -1664,60 +1717,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/error.hpp>
-#line 18 "boost/leaf/exception.hpp"
-// >>> #include <boost/leaf/detail/throw_exception.hpp>
-#line 1 "boost/leaf/detail/throw_exception.hpp"
-#ifndef BOOST_LEAF_DETAIL_THROW_EXCEPTION_HPP_INCLUDED
-#define BOOST_LEAF_DETAIL_THROW_EXCEPTION_HPP_INCLUDED
-
-// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
-
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
-#endif
-
-
-#ifdef BOOST_LEAF_NO_EXCEPTIONS
-
-namespace boost
-{
-	BOOST_LEAF_NORETURN void throw_exception( std::exception const & ); // user defined
-}
-
-namespace boost { namespace leaf {
-
-	template <class T>
-	BOOST_LEAF_NORETURN void throw_exception( T const & e )
-	{
-		::boost::throw_exception(e);
-	}
-
-} }
-
-#else
-
-namespace boost { namespace leaf {
-
-	template <class T>
-	BOOST_LEAF_NORETURN void throw_exception( T const & e )
-	{
-		throw e;
-	}
-
-} }
-
-#endif
-
-#endif
-// <<< #include <boost/leaf/detail/throw_exception.hpp>
-#line 19 "boost/leaf/exception.hpp"
+#line 20 "boost/leaf/exception.hpp"
 #include <exception>
 
 #define BOOST_LEAF_EXCEPTION ::boost::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
@@ -1843,7 +1843,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/exception.hpp>
-#line 18 "boost/leaf/capture.hpp"
+#line 20 "boost/leaf/capture.hpp"
 // >>> #include <boost/leaf/on_error.hpp>
 #line 1 "boost/leaf/on_error.hpp"
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
@@ -1854,12 +1854,14 @@ namespace boost { namespace leaf {
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 
@@ -2109,7 +2111,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/on_error.hpp>
-#line 19 "boost/leaf/capture.hpp"
+#line 21 "boost/leaf/capture.hpp"
 #include <memory>
 
 namespace boost { namespace leaf {
@@ -2391,7 +2393,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/capture.hpp>
-#line 11 "../../include/boost/leaf/detail/all.hpp"
+#line 10 "../../include/boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/common.hpp>
 #line 1 "boost/leaf/common.hpp"
 #ifndef BOOST_LEAF_COMMON_HPP_INCLUDED
@@ -2402,12 +2404,14 @@ namespace boost { namespace leaf {
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 #include <string>
@@ -2488,7 +2492,7 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/common.hpp>
-#line 12 "../../include/boost/leaf/detail/all.hpp"
+#line 11 "../../include/boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/context.hpp>
 #line 1 "boost/leaf/context.hpp"
 #ifndef BOOST_LEAF_CONTEXT_HPP_INCLUDED
@@ -2499,34 +2503,16 @@ namespace boost { namespace leaf {
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
-// >>> #include <boost/leaf/detail/handler_argument_traits.hpp>
-#line 1 "boost/leaf/detail/handler_argument_traits.hpp"
-#ifndef BOOST_LEAF_DETAIL_HANDLER_ARGUMENT_TRAITS_HPP_INCLUDED
-#define BOOST_LEAF_DETAIL_HANDLER_ARGUMENT_TRAITS_HPP_INCLUDED
-
-// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
-
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
-#endif
-
-#include <utility>
-#include <exception>
 
 namespace boost { namespace leaf {
 
@@ -2539,8 +2525,6 @@ namespace boost { namespace leaf {
 	{
 	};
 
-	////////////////////////////////////////
-
 	namespace leaf_detail
 	{
 		template <class T>
@@ -2551,14 +2535,13 @@ namespace boost { namespace leaf {
 		template <class E>
 		struct handler_argument_traits;
 
-		template <class E, bool RequiresCatch = is_exception<E>::value, bool IsPredicate = is_predicate<E>::value>
+		template <class E, bool IsPredicate = is_predicate<E>::value>
 		struct handler_argument_traits_defaults;
 
-		template <class E, bool RequiresCatch>
-		struct handler_argument_traits_defaults<E, RequiresCatch, false>
+		template <class E>
+		struct handler_argument_traits_defaults<E, false>
 		{
 			using error_type = typename std::decay<E>::type;
-			constexpr static bool requires_catch = RequiresCatch;
 			constexpr static bool always_available = false;
 
 			template <class Tup>
@@ -2580,7 +2563,7 @@ namespace boost { namespace leaf {
 		};
 
 		template <class Pred>
-		struct handler_argument_traits_defaults<Pred, false, true>: handler_argument_traits<typename Pred::error_type>
+		struct handler_argument_traits_defaults<Pred, true>: handler_argument_traits<typename Pred::error_type>
 		{
 			using base = handler_argument_traits<typename Pred::error_type>;
 			static_assert(!base::always_available, "Predicates can't use types that are always_available");
@@ -2603,7 +2586,6 @@ namespace boost { namespace leaf {
 		struct handler_argument_always_available
 		{
 			using error_type = E;
-			constexpr static bool requires_catch = false;
 			constexpr static bool always_available = true;
 
 			template <class Tup>
@@ -2622,7 +2604,6 @@ namespace boost { namespace leaf {
 		struct handler_argument_traits<void>
 		{
 			using error_type = void;
-			constexpr static bool requires_catch = true;
 			constexpr static bool always_available = false;
 
 			template <class Tup>
@@ -2662,13 +2643,7 @@ namespace boost { namespace leaf {
 		};
 	}
 
-} }
-
-#endif
-// <<< #include <boost/leaf/detail/handler_argument_traits.hpp>
-#line 18 "boost/leaf/context.hpp"
-
-namespace boost { namespace leaf {
+	////////////////////////////////////////
 
 	namespace leaf_detail
 	{
@@ -2793,189 +2768,108 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////////
 
-	namespace leaf_detail
-	{
-		template <class... E>
-		class context_base
-		{
-			context_base( context_base const & ) = delete;
-			context_base & operator=( context_base const & ) = delete;
-
-		public:
-
-			using Tup = deduce_e_tuple<E...>;
-
-		private:
-
-			Tup tup_;
-#if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
-			std::thread::id thread_id_;
-#endif
-			bool is_active_;
-
-		protected:
-
-			BOOST_LEAF_CONSTEXPR error_id propagate_captured_errors( error_id err_id ) noexcept
-			{
-				tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate_captured(tup_, err_id.value());
-				return err_id;
-			}
-
-			BOOST_LEAF_CONSTEXPR context_base( context_base && x ) noexcept:
-				tup_(std::move(x.tup_)),
-				is_active_(false)
-			{
-				BOOST_LEAF_ASSERT(!x.is_active());
-			}
-
-		public:
-
-			BOOST_LEAF_CONSTEXPR context_base() noexcept:
-				is_active_(false)
-			{
-			}
-
-			~context_base() noexcept
-			{
-				BOOST_LEAF_ASSERT(!is_active());
-			}
-
-			BOOST_LEAF_CONSTEXPR Tup const & tup() const noexcept
-			{
-				return tup_;
-			}
-
-			BOOST_LEAF_CONSTEXPR Tup & tup() noexcept
-			{
-				return tup_;
-			}
-
-			BOOST_LEAF_CONSTEXPR void activate() noexcept
-			{
-				using namespace leaf_detail;
-				BOOST_LEAF_ASSERT(!is_active());
-				tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
-#if BOOST_LEAF_DIAGNOSTICS
-				if( unexpected_requested<Tup>::value )
-					++tl_unexpected_enabled<>::counter;
-#endif
-#if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
-				thread_id_ = std::this_thread::get_id();
-#endif
-				is_active_ = true;
-			}
-
-			BOOST_LEAF_CONSTEXPR void deactivate() noexcept
-			{
-				using namespace leaf_detail;
-				BOOST_LEAF_ASSERT(is_active());
-				is_active_ = false;
-#if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
-				BOOST_LEAF_ASSERT(std::this_thread::get_id() == thread_id_);
-				thread_id_ = std::thread::id();
-#endif
-#if BOOST_LEAF_DIAGNOSTICS
-				if( unexpected_requested<Tup>::value )
-					--tl_unexpected_enabled<>::counter;
-#endif
-				tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_);
-			}
-
-			BOOST_LEAF_CONSTEXPR void propagate() noexcept
-			{
-				tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_);
-			}
-
-			BOOST_LEAF_CONSTEXPR bool is_active() const noexcept
-			{
-				return is_active_;
-			}
-
-			void print( std::ostream & os ) const
-			{
-				tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, &tup_, 0);
-			}
-
-			template <class R, class... H>
-			BOOST_LEAF_CONSTEXPR R handle_error( error_id, H && ... ) const;
-
-			template <class R, class... H>
-			BOOST_LEAF_CONSTEXPR R handle_error( error_id, H && ... );
-
-			template <class TryBlock, class... H>
-			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... );
-		};
-
-		template <class... E>
-		class nocatch_context: public context_base<E...>
-		{
-		public:
-
-			template <class TryBlock, class... H>
-			BOOST_LEAF_CONSTEXPR
-			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-			try_handle_all( TryBlock &&, H && ... h );
-
-			template <class TryBlock, class... H>
-			BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type
-			try_handle_some( TryBlock &&, H && ... );
-		};
-
-		template <class... E>
-		class catch_context: public context_base<E...>
-		{
-		public:
-
-			template <class TryBlock, class... H>
-			BOOST_LEAF_CONSTEXPR
-			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-			try_handle_all( TryBlock &&, H && ... );
-
-			template <class TryBlock, class... H>
-			BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type
-			try_handle_some( TryBlock &&, H && ... );
-		};
-
-		template <class... E>
-		struct catch_requested;
-
-		template <>
-		struct catch_requested<>
-		{
-			constexpr static bool value = false;
-		};
-
-		template <class Car, class... Cdr>
-		struct catch_requested<Car, Cdr...>
-		{
-			constexpr static bool value = handler_argument_traits<Car>::requires_catch || catch_requested<Cdr...>::value;
-		};
-
-		template <bool CatchRequested, class... E>
-		struct select_context_base_impl;
-
-		template <class... E>
-		struct select_context_base_impl<false, E...>
-		{
-			using type = nocatch_context<E...>;
-		};
-
-
-		template <class... E>
-		struct select_context_base_impl<true, E...>
-		{
-			using type = catch_context<E...>;
-		};
-
-		template <class... E>
-		using select_context_base = typename select_context_base_impl<catch_requested<E...>::value, E...>::type;
-	}
-
 	template <class... E>
-	class context: public leaf_detail::select_context_base<E...>
+	class context
 	{
+		context( context const & ) = delete;
+		context & operator=( context const & ) = delete;
+
+		using Tup = leaf_detail::deduce_e_tuple<E...>;
+		Tup tup_;
+
+#if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
+		std::thread::id thread_id_;
+#endif
+		bool is_active_;
+
+	protected:
+
+		BOOST_LEAF_CONSTEXPR error_id propagate_captured_errors( error_id err_id ) noexcept
+		{
+			leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate_captured(tup_, err_id.value());
+			return err_id;
+		}
+
+	public:
+
+		BOOST_LEAF_CONSTEXPR context( context && x ) noexcept:
+			tup_(std::move(x.tup_)),
+			is_active_(false)
+		{
+			BOOST_LEAF_ASSERT(!x.is_active());
+		}
+
+		BOOST_LEAF_CONSTEXPR context() noexcept:
+			is_active_(false)
+		{
+		}
+
+		~context() noexcept
+		{
+			BOOST_LEAF_ASSERT(!is_active());
+		}
+
+		BOOST_LEAF_CONSTEXPR Tup const & tup() const noexcept
+		{
+			return tup_;
+		}
+
+		BOOST_LEAF_CONSTEXPR Tup & tup() noexcept
+		{
+			return tup_;
+		}
+
+		BOOST_LEAF_CONSTEXPR void activate() noexcept
+		{
+			using namespace leaf_detail;
+			BOOST_LEAF_ASSERT(!is_active());
+			tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
+#if BOOST_LEAF_DIAGNOSTICS
+			if( unexpected_requested<Tup>::value )
+				++tl_unexpected_enabled<>::counter;
+#endif
+#if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
+			thread_id_ = std::this_thread::get_id();
+#endif
+			is_active_ = true;
+		}
+
+		BOOST_LEAF_CONSTEXPR void deactivate() noexcept
+		{
+			using namespace leaf_detail;
+			BOOST_LEAF_ASSERT(is_active());
+			is_active_ = false;
+#if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
+			BOOST_LEAF_ASSERT(std::this_thread::get_id() == thread_id_);
+			thread_id_ = std::thread::id();
+#endif
+#if BOOST_LEAF_DIAGNOSTICS
+			if( unexpected_requested<Tup>::value )
+				--tl_unexpected_enabled<>::counter;
+#endif
+			tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_);
+		}
+
+		BOOST_LEAF_CONSTEXPR void propagate() noexcept
+		{
+			leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_);
+		}
+
+		BOOST_LEAF_CONSTEXPR bool is_active() const noexcept
+		{
+			return is_active_;
+		}
+
+		void print( std::ostream & os ) const
+		{
+			leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, &tup_, 0);
+		}
+
+		template <class R, class... H>
+		BOOST_LEAF_CONSTEXPR R handle_error( error_id, H && ... ) const;
+
+		template <class R, class... H>
+		BOOST_LEAF_CONSTEXPR R handle_error( error_id, H && ... );
 	};
 
 	////////////////////////////////////////
@@ -3062,64 +2956,187 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/context.hpp>
-#line 13 "../../include/boost/leaf/detail/all.hpp"
-// >>> #include <boost/leaf/handle_error.hpp>
-#line 1 "boost/leaf/handle_error.hpp"
-#ifndef BOOST_LEAF_HANDLE_ERROR_HPP_INCLUDED
-#define BOOST_LEAF_HANDLE_ERROR_HPP_INCLUDED
+#line 12 "../../include/boost/leaf/detail/all.hpp"
+// >>> #include <boost/leaf/handle_errors.hpp>
+#line 1 "boost/leaf/handle_errors.hpp"
+#ifndef BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
+#define BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
 
 // Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
+// >>> #include <boost/leaf/detail/demangle.hpp>
+#line 1 "boost/leaf/detail/demangle.hpp"
+#ifndef BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
+#define BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
+
+// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+// core::demangle
+//
+// Copyright 2014 Peter Dimov
+// Copyright 2014 Andrey Semashev
+//
+// Distributed under the Boost Software License, Version 1.0.
+// See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt
+
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
+#endif
+
+#include <string>
+
+#if !defined(_MSC_VER)
+#	if defined(__has_include) && __has_include(<cxxabi.h>)
+#		define BOOST_LEAF_HAS_CXXABI_H
+#	endif
+#endif
+
+#if defined( BOOST_LEAF_HAS_CXXABI_H )
+#	include <cxxabi.h>
+// For some architectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
+// (https://android.googlesource.com/platform/ndk/+/master/sources/cxx-stl/gabi++/), which does not implement
+// abi::__cxa_demangle(). We detect this implementation by checking the include guard here.
+#	if defined( __GABIXX_CXXABI_H__ )
+#		undef BOOST_LEAF_HAS_CXXABI_H
+#	else
+#		include <cstdlib>
+#		include <cstddef>
+#	endif
+#endif
 
 namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		class exception_info_base
-		{
-		protected:
+		inline char const * demangle_alloc( char const * name ) noexcept;
+		inline void demangle_free( char const * name ) noexcept;
 
-			BOOST_LEAF_CONSTEXPR explicit exception_info_base( std::exception * ) noexcept;
-			~exception_info_base() noexcept;
+		class scoped_demangled_name
+		{
+		private:
+
+			char const * m_p;
 
 		public:
 
-			std::exception * const ex_;
+			explicit scoped_demangled_name( char const * name ) noexcept :
+				m_p( demangle_alloc( name ) )
+			{
+			}
 
-			virtual void print( std::ostream & os ) const = 0;
+			~scoped_demangled_name() noexcept
+			{
+				demangle_free( m_p );
+			}
+
+			char const * get() const noexcept
+			{
+				return m_p;
+			}
+
+			scoped_demangled_name( scoped_demangled_name const& ) = delete;
+			scoped_demangled_name& operator= ( scoped_demangled_name const& ) = delete;
 		};
 
-		class exception_info_: public exception_info_base
+#if defined( BOOST_LEAF_HAS_CXXABI_H )
+
+		inline char const * demangle_alloc( char const * name ) noexcept
 		{
-			exception_info_( exception_info_ const & ) = delete;
-			exception_info_ & operator=( exception_info_ const & ) = delete;
+			int status = 0;
+			std::size_t size = 0;
+			return abi::__cxa_demangle( name, NULL, &size, &status );
+		}
 
-			void print( std::ostream & os ) const final override;
+		inline void demangle_free( char const * name ) noexcept
+		{
+			std::free( const_cast< char* >( name ) );
+		}
 
-		public:
+		inline std::string demangle( char const * name )
+		{
+			scoped_demangled_name demangled_name( name );
+			char const * p = demangled_name.get();
+			if( !p )
+				p = name;
+			return p;
+		}
 
-			BOOST_LEAF_CONSTEXPR explicit exception_info_( std::exception * ex ) noexcept;
-		};
+#else
+
+		inline char const * demangle_alloc( char const * name ) noexcept
+		{
+			return name;
+		}
+
+		inline void demangle_free( char const * ) noexcept
+		{
+		}
+
+		inline std::string demangle( char const * name )
+		{
+			return name;
+		}
+
+#endif
 	}
 
-	////////////////////////////////////////
+} }
+
+#ifdef BOOST_LEAF_HAS_CXXABI_H
+#	undef BOOST_LEAF_HAS_CXXABI_H
+#endif
+
+#endif
+// <<< #include <boost/leaf/detail/demangle.hpp>
+#line 21 "boost/leaf/handle_errors.hpp"
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+#endif
+
+namespace boost { namespace leaf {
 
 	class error_info
 	{
 		error_info & operator=( error_info const & ) = delete;
 
-		leaf_detail::exception_info_base const * const xi_;
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+		static error_id unpack_error_id( std::exception const * ex ) noexcept
+		{
+			if( std::system_error const * se = dynamic_cast<std::system_error const *>(ex) )
+				return error_id(se->code());
+			else if( std::error_code const * ec = dynamic_cast<std::error_code const *>(ex) )
+				return error_id(*ec);
+			else if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
+				return *err_id;
+			else
+				return current_error();
+		}
+
+		std::exception * const ex_;
+#endif
+
 		error_id const err_id_;
 
 	protected:
@@ -3129,34 +3146,46 @@ namespace boost { namespace leaf {
 		void print( std::ostream & os ) const
 		{
 			os << "Error ID = " << err_id_.value();
-			if( xi_ )
-				xi_->print(os);
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+			if( ex_ )
+			{
+				os <<
+					"\nException dynamic type: " << leaf_detail::demangle(typeid(*ex_).name()) <<
+					"\nstd::exception::what(): " << ex_->what();
+			}
+#endif
 		}
 
 	public:
 
 		BOOST_LEAF_CONSTEXPR explicit error_info( error_id id ) noexcept:
-			xi_(0),
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+			ex_(0),
+#endif			
 			err_id_(id)
 		{
 		}
 
-		explicit error_info( leaf_detail::exception_info_ const & ) noexcept;
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+		explicit error_info( std::exception * ex ) noexcept:
+			ex_(ex),
+			err_id_(unpack_error_id(ex_))
+		{
+		}
+#endif		
 
 		BOOST_LEAF_CONSTEXPR error_id error() const noexcept
 		{
 			return err_id_;
 		}
 
-		BOOST_LEAF_CONSTEXPR bool exception_caught() const noexcept
-		{
-			return xi_!=0;
-		}
-
 		BOOST_LEAF_CONSTEXPR std::exception * exception() const noexcept
 		{
-			BOOST_LEAF_ASSERT(exception_caught());
-			return xi_->ex_;
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+			return nullptr;
+#else
+			return ex_;
+#endif
 		}
 
 		friend std::ostream & operator<<( std::ostream & os, error_info const & x )
@@ -3166,24 +3195,6 @@ namespace boost { namespace leaf {
 			return os << '\n';
 		}
 	};
-
-	////////////////////////////////////////
-
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-
-	namespace leaf_detail
-	{
-		template <class Ex>
-		BOOST_LEAF_CONSTEXPR inline Ex * get_exception( error_info const & ei )
-		{
-			if( ei.exception_caught() )
-				if( Ex * ex = dynamic_cast<Ex *>(ei.exception()) )
-					return ex;
-			return 0;
-		}
-	}
-
-#endif
 
 	////////////////////////////////////////
 
@@ -3430,7 +3441,7 @@ namespace boost { namespace leaf {
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
-		template <class E, bool = handler_argument_traits<E>::requires_catch>
+		template <class E, bool = std::is_class<E>::value>
 		struct peek_exception;
 
 		template <>
@@ -3438,7 +3449,7 @@ namespace boost { namespace leaf {
 		{
 			BOOST_LEAF_CONSTEXPR static std::exception * peek( error_info const & ei ) noexcept
 			{
-				return ei.exception_caught() ? ei.exception() : 0;
+				return ei.exception();
 			}
 		};
 
@@ -3447,7 +3458,7 @@ namespace boost { namespace leaf {
 		{
 			BOOST_LEAF_CONSTEXPR static E * peek( error_info const & ei ) noexcept
 			{
-				return ei.exception_caught() ? dynamic_cast<E *>(ei.exception()) : 0;
+				return dynamic_cast<E *>(ei.exception());
 			}
 		};
 
@@ -3497,24 +3508,33 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		template <class A, bool RequiresCatch>
+		template <class A>
 		template <class Tup>
 		BOOST_LEAF_CONSTEXPR inline
-		typename handler_argument_traits_defaults<A, RequiresCatch, false>::error_type const *
-		handler_argument_traits_defaults<A, RequiresCatch, false>::
+		typename handler_argument_traits_defaults<A, false>::error_type const *
+		handler_argument_traits_defaults<A, false>::
 		check( Tup const & tup, error_info const & ei ) noexcept
 		{
 			return peek<typename std::decay<A>::type>(tup, ei);
 		}
 
-		template <class A, bool RequiresCatch>
+		template <class A>
 		template <class Tup>
 		BOOST_LEAF_CONSTEXPR inline
-		typename handler_argument_traits_defaults<A, RequiresCatch, false>::error_type *
-		handler_argument_traits_defaults<A, RequiresCatch, false>::
+		typename handler_argument_traits_defaults<A, false>::error_type *
+		handler_argument_traits_defaults<A, false>::
 		check( Tup & tup, error_info const & ei ) noexcept
 		{
 			return peek<typename std::decay<A>::type>(tup, ei);
+		}
+
+		template <class Tup>
+		BOOST_LEAF_CONSTEXPR inline
+		std::exception const *
+		handler_argument_traits<void>::
+		check( Tup const &, error_info const & ei ) noexcept
+		{
+			return ei.exception();
 		}
 
 		template <class Tup, class... List>
@@ -3667,367 +3687,93 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////
 
-	namespace leaf_detail
+	template <class... E>
+	template <class R, class... H>
+	BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE
+	R
+	context<E...>::
+	handle_error( error_id id, H && ... h ) const
 	{
-		template <class... E>
-		template <class R, class... H>
-		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE
-		R
-		context_base<E...>::
-		handle_error( error_id id, H && ... h ) const
-		{
-			BOOST_LEAF_ASSERT(!is_active());
-			return handle_error_<R>(tup(), error_info(id), std::forward<H>(h)...);
-		}
+		BOOST_LEAF_ASSERT(!is_active());
+		return leaf_detail::handle_error_<R>(tup(), error_info(id), std::forward<H>(h)...);
+	}
 
-		template <class... E>
-		template <class R, class... H>
-		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE
-		R
-		context_base<E...>::
-		handle_error( error_id id, H && ... h )
-		{
-			BOOST_LEAF_ASSERT(!is_active());
-			return handle_error_<R>(tup(), error_info(id), std::forward<H>(h)...);
-		}
-
-		template <class... E>
-		template <class TryBlock, class... H>
-		BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE
-		typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-		nocatch_context<E...>::
-		try_handle_all( TryBlock && try_block, H && ... h )
-		{
-			using namespace leaf_detail;
-			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
-			auto active_context = activate_context(*this);
-			if( auto r = std::forward<TryBlock>(try_block)() )
-				return r.value();
-			else
-			{
-				error_id id = r.error();
-				this->deactivate();
-				using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
-				return this->template handle_error<R>(std::move(id), std::forward<H>(h)...);
-			}
-		}
-
-		template <class... E>
-		template <class TryBlock, class... H>
-		BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE
-		typename std::decay<decltype(std::declval<TryBlock>()())>::type
-		nocatch_context<E...>::
-		try_handle_some( TryBlock && try_block, H && ... h )
-		{
-			using namespace leaf_detail;
-			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
-			auto active_context = activate_context(*this);
-			if( auto r = std::forward<TryBlock>(try_block)() )
-				return r;
-			else
-			{
-				error_id id = r.error();
-				this->deactivate();
-				using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
-				auto rr = this->template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
-				if( !rr )
-					this->propagate();
-				return rr;
-			}
-		}
+	template <class... E>
+	template <class R, class... H>
+	BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE
+	R
+	context<E...>::
+	handle_error( error_id id, H && ... h )
+	{
+		BOOST_LEAF_ASSERT(!is_active());
+		return leaf_detail::handle_error_<R>(tup(), error_info(id), std::forward<H>(h)...);
 	}
 
 	////////////////////////////////////////
 
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
 	template <class TryBlock, class... H>
 	BOOST_LEAF_CONSTEXPR inline
 	typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-	try_handle_all( TryBlock && try_block, H && ... h )
+	try_handle_all( TryBlock && try_block, H && ... h ) noexcept
 	{
-		// Creating a named temp on purpose, to avoid C++11 and C++14 zero-initializing the context.
-		context_type_from_handlers<H...> c;
-		return c.try_handle_all( std::forward<TryBlock>(try_block), std::forward<H>(h)... );
+		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
+		context_type_from_handlers<H...> ctx;
+		auto active_context = activate_context(ctx);
+		if( auto r = std::forward<TryBlock>(try_block)() )
+			return r.value();
+		else
+		{
+			error_id id = r.error();
+			ctx.deactivate();
+			using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
+			return ctx.template handle_error<R>(std::move(id), std::forward<H>(h)...);
+		}
 	}
 
 	template <class TryBlock, class... H>
 	BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR inline
 	typename std::decay<decltype(std::declval<TryBlock>()())>::type
-	try_handle_some( TryBlock && try_block, H && ... h )
+	try_handle_some( TryBlock && try_block, H && ... h ) noexcept
 	{
-		// Creating a named temp on purpose, to avoid C++11 and C++14 zero-initializing the context.
-		context_type_from_handlers<H...> c;
-		return c.try_handle_some( std::forward<TryBlock>(try_block), std::forward<H>(h)... );
+		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
+		context_type_from_handlers<H...> ctx;
+		auto active_context = activate_context(ctx);
+		if( auto r = std::forward<TryBlock>(try_block)() )
+			return r;
+		else
+		{
+			error_id id = r.error();
+			ctx.deactivate();
+			using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
+			auto rr = ctx.template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
+			if( !rr )
+				ctx.propagate();
+			return rr;
+		}
 	}
 
-} }
-
-#endif
-// <<< #include <boost/leaf/handle_error.hpp>
-#line 16 "../../include/boost/leaf/detail/all.hpp"
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-// >>> #	include <boost/leaf/handle_exception.hpp>
-#line 1 "boost/leaf/handle_exception.hpp"
-#ifndef BOOST_LEAF_HANDLE_EXCEPTION_HPP_INCLUDED
-#define BOOST_LEAF_HANDLE_EXCEPTION_HPP_INCLUDED
-
-// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
-
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
-#endif
-
-#ifdef BOOST_LEAF_NO_EXCEPTIONS
-#	error This header requires exception handling
-#endif
-
-// >>> #include <boost/leaf/detail/demangle.hpp>
-#line 1 "boost/leaf/detail/demangle.hpp"
-#ifndef BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
-#define BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
-
-// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
-
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-// core::demangle
-//
-// Copyright 2014 Peter Dimov
-// Copyright 2014 Andrey Semashev
-//
-// Distributed under the Boost Software License, Version 1.0.
-// See accompanying file LICENSE_1_0.txt or copy at
-// http://www.boost.org/LICENSE_1_0.txt
-
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
-#endif
-
-#include <string>
-
-#if !defined(_MSC_VER)
-#	if defined(__has_include) && __has_include(<cxxabi.h>)
-#		define BOOST_LEAF_HAS_CXXABI_H
-#	endif
-#endif
-
-#if defined( BOOST_LEAF_HAS_CXXABI_H )
-#	include <cxxabi.h>
-// For some architectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
-// (https://android.googlesource.com/platform/ndk/+/master/sources/cxx-stl/gabi++/), which does not implement
-// abi::__cxa_demangle(). We detect this implementation by checking the include guard here.
-#	if defined( __GABIXX_CXXABI_H__ )
-#		undef BOOST_LEAF_HAS_CXXABI_H
-#	else
-#		include <cstdlib>
-#		include <cstddef>
-#	endif
-#endif
-
-namespace boost { namespace leaf {
-
-	namespace leaf_detail
+	template <class TryBlock, class... H>
+	BOOST_LEAF_CONSTEXPR inline
+	decltype(std::declval<TryBlock>()())
+	try_catch( TryBlock && try_block, H && ... ) noexcept
 	{
-		inline char const * demangle_alloc( char const * name ) noexcept;
-		inline void demangle_free( char const * name ) noexcept;
-
-		class scoped_demangled_name
-		{
-		private:
-
-			char const * m_p;
-
-		public:
-
-			explicit scoped_demangled_name( char const * name ) noexcept :
-				m_p( demangle_alloc( name ) )
-			{
-			}
-
-			~scoped_demangled_name() noexcept
-			{
-				demangle_free( m_p );
-			}
-
-			char const * get() const noexcept
-			{
-				return m_p;
-			}
-
-			scoped_demangled_name( scoped_demangled_name const& ) = delete;
-			scoped_demangled_name& operator= ( scoped_demangled_name const& ) = delete;
-		};
-
-#if defined( BOOST_LEAF_HAS_CXXABI_H )
-
-		inline char const * demangle_alloc( char const * name ) noexcept
-		{
-			int status = 0;
-			std::size_t size = 0;
-			return abi::__cxa_demangle( name, NULL, &size, &status );
-		}
-
-		inline void demangle_free( char const * name ) noexcept
-		{
-			std::free( const_cast< char* >( name ) );
-		}
-
-		inline std::string demangle( char const * name )
-		{
-			scoped_demangled_name demangled_name( name );
-			char const * p = demangled_name.get();
-			if( !p )
-				p = name;
-			return p;
-		}
+		context_type_from_handlers<H...> ctx;
+		(void) ctx;
+		return std::forward<TryBlock>(try_block)();
+	}
 
 #else
 
-		inline char const * demangle_alloc( char const * name ) noexcept
-		{
-			return name;
-		}
-
-		inline void demangle_free( char const * ) noexcept
-		{
-		}
-
-		inline std::string demangle( char const * name )
-		{
-			return name;
-		}
-
-#endif
-	}
-
-} }
-
-#ifdef BOOST_LEAF_HAS_CXXABI_H
-#	undef BOOST_LEAF_HAS_CXXABI_H
-#endif
-
-#endif
-// <<< #include <boost/leaf/detail/demangle.hpp>
-#line 25 "boost/leaf/handle_exception.hpp"
-
-namespace boost { namespace leaf {
-
 	namespace leaf_detail
 	{
-		template <class Tup>
-		BOOST_LEAF_CONSTEXPR inline
-		std::exception const *
-		handler_argument_traits<void>::
-		check( Tup const &, error_info const & ei ) noexcept
-		{
-			if( ei.exception_caught() )
-				return ei.exception();
-			else
-				return 0;
-		}
-	}
-
-	namespace leaf_detail
-	{
-		template <class... E>
-		template <class TryBlock, class... H>
-		BOOST_LEAF_CONSTEXPR inline
-		typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-		catch_context<E...>::
-		try_handle_all( TryBlock && try_block, H && ... h )
-		{
-			using namespace leaf_detail;
-			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
-			auto active_context = activate_context(*this);
-			if(	auto r = this->try_catch_(
-					[&]
-					{
-						return std::forward<TryBlock>(try_block)();
-					},
-					std::forward<H>(h)...) )
-				return r.value();
-			else
-			{
-				error_id id = r.error();
-				if( this->is_active() )
-					this->deactivate();
-				using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
-				return this->template handle_error<R>(std::move(id), std::forward<H>(h)...);
-			}
-		}
-
-		template <class... E>
-		template <class TryBlock, class... H>
-		BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR inline
-		typename std::decay<decltype(std::declval<TryBlock>()())>::type
-		catch_context<E...>::
-		try_handle_some( TryBlock && try_block, H && ... h )
-		{
-			using namespace leaf_detail;
-			static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
-			auto active_context = activate_context(*this);
-			if(	auto r = this->try_catch_(
-					[&]
-					{
-						return std::forward<TryBlock>(try_block)();
-					},
-					std::forward<H>(h)...) )
-				return r;
-			else
-			{
-				error_id id = r.error();
-				if( this->is_active() )
-					this->deactivate();
-				using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
-				auto rr = this->template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
-				if( !rr )
-					this->propagate();
-				return rr;
-			}
-		}
-	}
-
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		inline void exception_info_::print( std::ostream & os ) const
-		{
-			if( ex_ )
-			{
-				os <<
-					"\nException dynamic type: " << demangle(typeid(*ex_).name()) <<
-					"\nstd::exception::what(): " << ex_->what();
-			}
-			else
-				os << "\nUnknown exception type (not a std::exception)";
-		}
-
-		BOOST_LEAF_CONSTEXPR inline exception_info_::exception_info_( std::exception * ex ) noexcept:
-			exception_info_base(ex)
-		{
-		}
-
-		template <class... E>
-		template <class TryBlock, class... H>
-		inline
+		template <class Ctx, class TryBlock, class... H>
 		decltype(std::declval<TryBlock>()())
-		context_base<E...>::
-		try_catch_( TryBlock && try_block, H && ... h )
+		try_catch_( Ctx & ctx, TryBlock && try_block, H && ... h )
 		{
 			using namespace leaf_detail;
-			BOOST_LEAF_ASSERT(is_active());
+			BOOST_LEAF_ASSERT(ctx.is_active());
 			using R = decltype(std::declval<TryBlock>()());
 			try
 			{
@@ -4041,76 +3787,96 @@ namespace boost { namespace leaf {
 				}
 				catch( std::exception & ex )
 				{
-					deactivate();
-					return handle_error_<R>(this->tup(), error_info(exception_info_(&ex)), std::forward<H>(h)...,
+					ctx.deactivate();
+					return handle_error_<R>(ctx.tup(), error_info(&ex), std::forward<H>(h)...,
 						[]() -> R { throw; } );
 				}
 				catch(...)
 				{
-					deactivate();
-					return handle_error_<R>(this->tup(), error_info(exception_info_(0)), std::forward<H>(h)...,
+					ctx.deactivate();
+					return handle_error_<R>(ctx.tup(), error_info(nullptr), std::forward<H>(h)...,
 						[]() -> R { throw; } );
 				}
 			}
 			catch( std::exception & ex )
 			{
-				deactivate();
-				return handle_error_<R>(this->tup(), error_info(exception_info_(&ex)), std::forward<H>(h)...,
+				ctx.deactivate();
+				return handle_error_<R>(ctx.tup(), error_info(&ex), std::forward<H>(h)...,
 					[]() -> R { throw; } );
 			}
 			catch(...)
 			{
-				deactivate();
-				return handle_error_<R>(this->tup(), error_info(exception_info_(0)), std::forward<H>(h)...,
+				ctx.deactivate();
+				return handle_error_<R>(ctx.tup(), error_info(nullptr), std::forward<H>(h)...,
 					[]() -> R { throw; } );
 			}
 		}
 	}
 
-	////////////////////////////////////////
-
-	namespace leaf_detail
+	template <class TryBlock, class... H>
+	BOOST_LEAF_CONSTEXPR inline
+	typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+	try_handle_all( TryBlock && try_block, H && ... h )
 	{
-		inline error_id unpack_error_id( std::exception const * ex ) noexcept
+		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
+		context_type_from_handlers<H...> ctx;
+		auto active_context = activate_context(ctx);
+		if(	auto r = leaf_detail::try_catch_(
+				ctx,
+				[&]
+				{
+					return std::forward<TryBlock>(try_block)();
+				},
+				std::forward<H>(h)...) )
+			return r.value();
+		else
 		{
-			if( std::system_error const * se = dynamic_cast<std::system_error const *>(ex) )
-				return error_id(se->code());
-			else if( std::error_code const * ec = dynamic_cast<std::error_code const *>(ex) )
-				return error_id(*ec);
-			else if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
-				return *err_id;
-			else
-				return current_error();
-		}
-
-		BOOST_LEAF_CONSTEXPR inline exception_info_base::exception_info_base( std::exception * ex ) noexcept:
-			ex_(ex)
-		{
-			BOOST_LEAF_ASSERT(!dynamic_cast<capturing_exception const *>(ex_));
-		}
-
-		inline exception_info_base::~exception_info_base() noexcept
-		{
+			error_id id = r.error();
+			if( ctx.is_active() )
+				ctx.deactivate();
+			using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
+			return ctx.template handle_error<R>(std::move(id), std::forward<H>(h)...);
 		}
 	}
 
-	inline error_info::error_info( leaf_detail::exception_info_ const & xi ) noexcept:
-		xi_(&xi),
-		err_id_(leaf_detail::unpack_error_id(xi_->ex_))
+	template <class TryBlock, class... H>
+	BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR inline
+	typename std::decay<decltype(std::declval<TryBlock>()())>::type
+	try_handle_some( TryBlock && try_block, H && ... h )
 	{
+		static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
+		context_type_from_handlers<H...> ctx;
+		auto active_context = activate_context(ctx);
+		if(	auto r = leaf_detail::try_catch_(
+				ctx,
+				[&]
+				{
+					return std::forward<TryBlock>(try_block)();
+				},
+				std::forward<H>(h)...) )
+			return r;
+		else
+		{
+			error_id id = r.error();
+			if( ctx.is_active() )
+				ctx.deactivate();
+			using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
+			auto rr = ctx.template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
+			if( !rr )
+				ctx.propagate();
+			return rr;
+		}
 	}
-
-	////////////////////////////////////////
 
 	template <class TryBlock, class... H>
 	BOOST_LEAF_CONSTEXPR inline
 	decltype(std::declval<TryBlock>()())
 	try_catch( TryBlock && try_block, H && ... h )
 	{
-		using namespace leaf_detail;
 		context_type_from_handlers<H...> ctx;
 		auto active_context = activate_context(ctx);
-		return ctx.try_catch_(
+		return leaf_detail::try_catch_(
+			ctx,
 			[&]
 			{
 				return std::forward<TryBlock>(try_block)();
@@ -4118,61 +3884,7 @@ namespace boost { namespace leaf {
 			std::forward<H>(h)...);
 	}
 
-	////////////////////////////////////////
-
-	namespace leaf_detail
-	{
-		template <class Ex>
-		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const * ) noexcept
-		{
-			return dynamic_cast<Ex const *>(&ex)!=0;
-		}
-
-		template <class Ex, class... ExRest>
-		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const *, ExRest const * ... ex_rest ) noexcept
-		{
-			return dynamic_cast<Ex const *>(&ex)!=0 || check_exception_pack(ex, ex_rest...);
-		}
-
-		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ) noexcept
-		{
-			return true;
-		}
-	}
-
-	template <class... Ex>
-	struct catch_
-	{
-		using error_type = void;
-		std::exception const & matched;
-
-		BOOST_LEAF_CONSTEXPR static bool evaluate(std::exception const & ex) noexcept
-		{
-			return leaf_detail::check_exception_pack(ex, static_cast<Ex const *>(0)...);
-		}
-	};
-
-	template <class Ex>
-	struct catch_<Ex>
-	{
-		using error_type = void;
-		Ex const & matched;
-
-		BOOST_LEAF_CONSTEXPR static Ex const * evaluate(std::exception const & ex) noexcept
-		{
-			return dynamic_cast<Ex const *>(&ex);
-		}
-
-		explicit catch_( std::exception const & ex ):
-			matched(*dynamic_cast<Ex const *>(&ex))
-		{
-		}
-	};
-
-	template <class... Ex>
-	struct is_predicate<catch_<Ex...>>: std::true_type
-	{
-	};
+#endif
 
 } }
 
@@ -4196,7 +3908,10 @@ namespace boost { namespace leaf {
 		};
 
 		template <class Ex>
-		BOOST_LEAF_CONSTEXPR Ex * get_exception( error_info const & );
+		BOOST_LEAF_CONSTEXPR inline Ex * get_exception( error_info const & ei )
+		{
+			return dynamic_cast<Ex *>(ei.exception());
+		}
 
 		template <class, class T>
 		struct dependent_type { using type = T; };
@@ -4208,7 +3923,6 @@ namespace boost { namespace leaf {
 		struct handler_argument_traits<boost::error_info<Tag, T>>
 		{
 			using error_type = void;
-			constexpr static bool requires_catch = true;
 			constexpr static bool always_available = false;
 
 			template <class Tup>
@@ -4237,9 +3951,8 @@ namespace boost { namespace leaf {
 } }
 
 #endif
-// <<< #	include <boost/leaf/handle_exception.hpp>
-#line 18 "../../include/boost/leaf/detail/all.hpp"
-#endif
+// <<< #include <boost/leaf/handle_errors.hpp>
+#line 15 "../../include/boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/pred.hpp>
 #line 1 "boost/leaf/pred.hpp"
 #ifndef BOOST_LEAF_PRED_HPP_INCLUDED
@@ -4250,15 +3963,16 @@ namespace boost { namespace leaf {
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
-#include <system_error>
 
 #if __cplusplus >= 201703L
 #	define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -4473,11 +4187,72 @@ namespace boost { namespace leaf {
 	{
 	};
 
+	////////////////////////////////////////
+
+
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
+	namespace leaf_detail
+	{
+		template <class Ex>
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const * ) noexcept
+		{
+			return dynamic_cast<Ex const *>(&ex)!=0;
+		}
+
+		template <class Ex, class... ExRest>
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const *, ExRest const * ... ex_rest ) noexcept
+		{
+			return dynamic_cast<Ex const *>(&ex)!=0 || check_exception_pack(ex, ex_rest...);
+		}
+
+		BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ) noexcept
+		{
+			return true;
+		}
+	}
+
+	template <class... Ex>
+	struct catch_
+	{
+		using error_type = void;
+		std::exception const & matched;
+
+		BOOST_LEAF_CONSTEXPR static bool evaluate(std::exception const & ex) noexcept
+		{
+			return leaf_detail::check_exception_pack(ex, static_cast<Ex const *>(0)...);
+		}
+	};
+
+	template <class Ex>
+	struct catch_<Ex>
+	{
+		using error_type = void;
+		Ex const & matched;
+
+		BOOST_LEAF_CONSTEXPR static Ex const * evaluate(std::exception const & ex) noexcept
+		{
+			return dynamic_cast<Ex const *>(&ex);
+		}
+
+		explicit catch_( std::exception const & ex ):
+			matched(*dynamic_cast<Ex const *>(&ex))
+		{
+		}
+	};
+
+	template <class... Ex>
+	struct is_predicate<catch_<Ex...>>: std::true_type
+	{
+	};
+
+#endif
+
 } }
 
 #endif
 // <<< #include <boost/leaf/pred.hpp>
-#line 21 "../../include/boost/leaf/detail/all.hpp"
+#line 17 "../../include/boost/leaf/detail/all.hpp"
 // >>> #include <boost/leaf/result.hpp>
 #line 1 "boost/leaf/result.hpp"
 #ifndef BOOST_LEAF_RESULT_HPP_INCLUDED
@@ -4488,12 +4263,14 @@ namespace boost { namespace leaf {
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 #include <memory>
@@ -4641,9 +4418,7 @@ namespace boost { namespace leaf {
 
 		using stored_type = typename leaf_detail::stored<T>::type;
 		using value_type_const = typename leaf_detail::stored<T>::value_type_const;
-	public:
 		using value_type = typename leaf_detail::stored<T>::value_type;
-	private:
 
 		union
 		{
@@ -4698,6 +4473,8 @@ namespace boost { namespace leaf {
 			return what_.kind()==result_discriminant::ctx_ptr ? ctx_->captured_id_ : what_.get_error_id();
 		}
 
+		static int init_T_with_U( T && );
+
 	public:
 
 		BOOST_LEAF_CONSTEXPR result( result && x ) noexcept:
@@ -4719,7 +4496,7 @@ namespace boost { namespace leaf {
 		}
 
 		BOOST_LEAF_CONSTEXPR result( value_type && v ) noexcept:
-			stored_(std::move(v)),
+			stored_(std::forward<value_type>(v)),
 			what_(result_discriminant::kind_val{})
 		{
 		}
@@ -4735,8 +4512,23 @@ namespace boost { namespace leaf {
 		{
 		}
 
+		// SFINAE: T can be initialized with a U, e.g. result<std::string>("literal").
+		// Not using is_constructible on purpose, bug with COMPILER=/usr/bin/clang++ CXXSTD=11 clang 3.3.
+		template <class U>
+		BOOST_LEAF_CONSTEXPR result( U && u, decltype(init_T_with_U(std::forward<U>(u))) * = 0 ):
+			stored_(std::forward<U>(u)),
+			what_(result_discriminant::kind_val{})
+		{
+		}
+
 		BOOST_LEAF_CONSTEXPR result( std::error_code const & ec ) noexcept:
 			what_(error_id(ec))
+		{
+		}
+
+		template <class Enum>
+		result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type * = 0 ) noexcept:
+			what_(error_id(e))
 		{
 		}
 
@@ -4865,6 +4657,12 @@ namespace boost { namespace leaf {
 		{
 		}
 
+		template <class Enum>
+		result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept:
+			base(e)
+		{
+		}
+
 		BOOST_LEAF_CONSTEXPR result( context_ptr && ctx ) noexcept:
 			base(std::move(ctx))
 		{
@@ -4900,6 +4698,6 @@ namespace boost { namespace leaf {
 
 #endif
 // <<< #include <boost/leaf/result.hpp>
-#line 22 "../../include/boost/leaf/detail/all.hpp"
+#line 18 "../../include/boost/leaf/detail/all.hpp"
 
 #endif

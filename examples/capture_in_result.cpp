@@ -8,7 +8,7 @@
 // for the version that uses exception handling.
 
 #include <boost/leaf/capture.hpp>
-#include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/handle_errors.hpp>
 #include <boost/leaf/result.hpp>
 #include <vector>
 #include <string>

@@ -32,6 +32,13 @@ public:
 		which_(variant::error)
 	{
 	}
+	template <class Enum>
+	test_res( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ):
+		value_(),
+		error_(make_error_code(e)),
+		which_(variant::error)
+	{
+	}
 	explicit operator bool() const noexcept
 	{
 		return which_==variant::value;
@@ -40,6 +47,48 @@ public:
 	{
 		BOOST_LEAF_ASSERT(which_==variant::value);
 		return value_;
+	}
+	E const & error() const
+	{
+		BOOST_LEAF_ASSERT(which_==variant::error);
+		return error_;
+	}
+};
+
+template <class E>
+class test_res<void, E>
+{
+	enum class variant
+	{
+		value,
+		error
+	};
+	E error_;
+	variant which_;
+public:
+	test_res() noexcept:
+		error_(),
+		which_(variant::value)
+	{
+	}
+	test_res( E const & error ) noexcept:
+		error_(error),
+		which_(variant::error)
+	{
+	}
+	template <class Enum>
+	test_res( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ):
+		error_(make_error_code(e)),
+		which_(variant::error)
+	{
+	}
+	explicit operator bool() const noexcept
+	{
+		return which_==variant::value;
+	}
+	void value() const
+	{
+		BOOST_LEAF_ASSERT(which_==variant::value);
 	}
 	E const & error() const
 	{

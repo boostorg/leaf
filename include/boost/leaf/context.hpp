@@ -6,18 +6,148 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
-#include <boost/leaf/detail/handler_argument_traits.hpp>
 #include <boost/leaf/error.hpp>
 
 namespace boost { namespace leaf {
+
+	class error_info;
+	class diagnostic_info;
+	class verbose_diagnostic_info;
+
+	template <class>
+	struct is_predicate: std::false_type
+	{
+	};
+
+	namespace leaf_detail
+	{
+		template <class T>
+		struct is_exception: std::is_base_of<std::exception, typename std::decay<T>::type>
+		{
+		};
+
+		template <class E>
+		struct handler_argument_traits;
+
+		template <class E, bool IsPredicate = is_predicate<E>::value>
+		struct handler_argument_traits_defaults;
+
+		template <class E>
+		struct handler_argument_traits_defaults<E, false>
+		{
+			using error_type = typename std::decay<E>::type;
+			constexpr static bool always_available = false;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static error_type const * check( Tup const &, error_info const & ) noexcept;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static error_type * check( Tup &, error_info const & ) noexcept;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static E get( Tup & tup, error_info const & ei ) noexcept
+			{
+				return *check(tup, ei);
+			}
+
+			static_assert(!is_predicate<error_type>::value, "Handlers must take predicate arguments by value");
+			static_assert(!std::is_same<E, error_info>::value, "Handlers must take leaf::error_info arguments by const &");
+			static_assert(!std::is_same<E, diagnostic_info>::value, "Handlers must take leaf::diagnostic_info arguments by const &");
+			static_assert(!std::is_same<E, verbose_diagnostic_info>::value, "Handlers must take leaf::verbose_diagnostic_info arguments by const &");
+		};
+
+		template <class Pred>
+		struct handler_argument_traits_defaults<Pred, true>: handler_argument_traits<typename Pred::error_type>
+		{
+			using base = handler_argument_traits<typename Pred::error_type>;
+			static_assert(!base::always_available, "Predicates can't use types that are always_available");
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static bool check( Tup & tup, error_info const & ei ) noexcept
+			{
+				auto e = base::check(tup, ei);
+				return e && Pred::evaluate(*e);
+			};
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static Pred get( Tup const & tup, error_info const & ei ) noexcept
+			{
+				return Pred{*base::check(tup, ei)};
+			}
+		};
+
+		template <class E>
+		struct handler_argument_always_available
+		{
+			using error_type = E;
+			constexpr static bool always_available = true;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static bool check( Tup &, error_info const & ) noexcept
+			{
+				return true;
+			};
+		};
+
+		template <class E>
+		struct handler_argument_traits: handler_argument_traits_defaults<E>
+		{
+		};
+
+		template <>
+		struct handler_argument_traits<void>
+		{
+			using error_type = void;
+			constexpr static bool always_available = false;
+
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static std::exception const * check( Tup const &, error_info const & ) noexcept;
+		};
+
+		template <class E>
+		struct handler_argument_traits<E &&>
+		{
+			static_assert(sizeof(E) == 0, "Error handlers may not take rvalue ref arguments");
+		};
+
+		template <class E>
+		struct handler_argument_traits<E *>: handler_argument_always_available<typename std::remove_const<E>::type>
+		{
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static E * get( Tup & tup, error_info const & ei) noexcept
+			{
+				return handler_argument_traits_defaults<E>::check(tup, ei);
+			}
+		};
+
+		template <>
+		struct handler_argument_traits<error_info const &>: handler_argument_always_available<void>
+		{
+			template <class Tup>
+			BOOST_LEAF_CONSTEXPR static error_info const & get( Tup const &, error_info const & ei ) noexcept
+			{
+				return ei;
+			}
+		};
+
+		template <class E>
+		struct handler_argument_traits_require_by_value
+		{
+			static_assert(sizeof(E) == 0, "Error handlers must take this type by value");
+		};
+	}
+
+	////////////////////////////////////////
 
 	namespace leaf_detail
 	{
@@ -142,189 +272,108 @@ namespace boost { namespace leaf {
 
 	////////////////////////////////////////////
 
-	namespace leaf_detail
-	{
-		template <class... E>
-		class context_base
-		{
-			context_base( context_base const & ) = delete;
-			context_base & operator=( context_base const & ) = delete;
-
-		public:
-
-			using Tup = deduce_e_tuple<E...>;
-
-		private:
-
-			Tup tup_;
-#if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
-			std::thread::id thread_id_;
-#endif
-			bool is_active_;
-
-		protected:
-
-			BOOST_LEAF_CONSTEXPR error_id propagate_captured_errors( error_id err_id ) noexcept
-			{
-				tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate_captured(tup_, err_id.value());
-				return err_id;
-			}
-
-			BOOST_LEAF_CONSTEXPR context_base( context_base && x ) noexcept:
-				tup_(std::move(x.tup_)),
-				is_active_(false)
-			{
-				BOOST_LEAF_ASSERT(!x.is_active());
-			}
-
-		public:
-
-			BOOST_LEAF_CONSTEXPR context_base() noexcept:
-				is_active_(false)
-			{
-			}
-
-			~context_base() noexcept
-			{
-				BOOST_LEAF_ASSERT(!is_active());
-			}
-
-			BOOST_LEAF_CONSTEXPR Tup const & tup() const noexcept
-			{
-				return tup_;
-			}
-
-			BOOST_LEAF_CONSTEXPR Tup & tup() noexcept
-			{
-				return tup_;
-			}
-
-			BOOST_LEAF_CONSTEXPR void activate() noexcept
-			{
-				using namespace leaf_detail;
-				BOOST_LEAF_ASSERT(!is_active());
-				tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
-#if BOOST_LEAF_DIAGNOSTICS
-				if( unexpected_requested<Tup>::value )
-					++tl_unexpected_enabled<>::counter;
-#endif
-#if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
-				thread_id_ = std::this_thread::get_id();
-#endif
-				is_active_ = true;
-			}
-
-			BOOST_LEAF_CONSTEXPR void deactivate() noexcept
-			{
-				using namespace leaf_detail;
-				BOOST_LEAF_ASSERT(is_active());
-				is_active_ = false;
-#if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
-				BOOST_LEAF_ASSERT(std::this_thread::get_id() == thread_id_);
-				thread_id_ = std::thread::id();
-#endif
-#if BOOST_LEAF_DIAGNOSTICS
-				if( unexpected_requested<Tup>::value )
-					--tl_unexpected_enabled<>::counter;
-#endif
-				tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_);
-			}
-
-			BOOST_LEAF_CONSTEXPR void propagate() noexcept
-			{
-				tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_);
-			}
-
-			BOOST_LEAF_CONSTEXPR bool is_active() const noexcept
-			{
-				return is_active_;
-			}
-
-			void print( std::ostream & os ) const
-			{
-				tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, &tup_, 0);
-			}
-
-			template <class R, class... H>
-			BOOST_LEAF_CONSTEXPR R handle_error( error_id, H && ... ) const;
-
-			template <class R, class... H>
-			BOOST_LEAF_CONSTEXPR R handle_error( error_id, H && ... );
-
-			template <class TryBlock, class... H>
-			decltype(std::declval<TryBlock>()()) try_catch_( TryBlock &&, H && ... );
-		};
-
-		template <class... E>
-		class nocatch_context: public context_base<E...>
-		{
-		public:
-
-			template <class TryBlock, class... H>
-			BOOST_LEAF_CONSTEXPR
-			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-			try_handle_all( TryBlock &&, H && ... h );
-
-			template <class TryBlock, class... H>
-			BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type
-			try_handle_some( TryBlock &&, H && ... );
-		};
-
-		template <class... E>
-		class catch_context: public context_base<E...>
-		{
-		public:
-
-			template <class TryBlock, class... H>
-			BOOST_LEAF_CONSTEXPR
-			typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-			try_handle_all( TryBlock &&, H && ... );
-
-			template <class TryBlock, class... H>
-			BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR
-			typename std::decay<decltype(std::declval<TryBlock>()())>::type
-			try_handle_some( TryBlock &&, H && ... );
-		};
-
-		template <class... E>
-		struct catch_requested;
-
-		template <>
-		struct catch_requested<>
-		{
-			constexpr static bool value = false;
-		};
-
-		template <class Car, class... Cdr>
-		struct catch_requested<Car, Cdr...>
-		{
-			constexpr static bool value = handler_argument_traits<Car>::requires_catch || catch_requested<Cdr...>::value;
-		};
-
-		template <bool CatchRequested, class... E>
-		struct select_context_base_impl;
-
-		template <class... E>
-		struct select_context_base_impl<false, E...>
-		{
-			using type = nocatch_context<E...>;
-		};
-
-
-		template <class... E>
-		struct select_context_base_impl<true, E...>
-		{
-			using type = catch_context<E...>;
-		};
-
-		template <class... E>
-		using select_context_base = typename select_context_base_impl<catch_requested<E...>::value, E...>::type;
-	}
-
 	template <class... E>
-	class context: public leaf_detail::select_context_base<E...>
+	class context
 	{
+		context( context const & ) = delete;
+		context & operator=( context const & ) = delete;
+
+		using Tup = leaf_detail::deduce_e_tuple<E...>;
+		Tup tup_;
+
+#if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
+		std::thread::id thread_id_;
+#endif
+		bool is_active_;
+
+	protected:
+
+		BOOST_LEAF_CONSTEXPR error_id propagate_captured_errors( error_id err_id ) noexcept
+		{
+			leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate_captured(tup_, err_id.value());
+			return err_id;
+		}
+
+	public:
+
+		BOOST_LEAF_CONSTEXPR context( context && x ) noexcept:
+			tup_(std::move(x.tup_)),
+			is_active_(false)
+		{
+			BOOST_LEAF_ASSERT(!x.is_active());
+		}
+
+		BOOST_LEAF_CONSTEXPR context() noexcept:
+			is_active_(false)
+		{
+		}
+
+		~context() noexcept
+		{
+			BOOST_LEAF_ASSERT(!is_active());
+		}
+
+		BOOST_LEAF_CONSTEXPR Tup const & tup() const noexcept
+		{
+			return tup_;
+		}
+
+		BOOST_LEAF_CONSTEXPR Tup & tup() noexcept
+		{
+			return tup_;
+		}
+
+		BOOST_LEAF_CONSTEXPR void activate() noexcept
+		{
+			using namespace leaf_detail;
+			BOOST_LEAF_ASSERT(!is_active());
+			tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
+#if BOOST_LEAF_DIAGNOSTICS
+			if( unexpected_requested<Tup>::value )
+				++tl_unexpected_enabled<>::counter;
+#endif
+#if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
+			thread_id_ = std::this_thread::get_id();
+#endif
+			is_active_ = true;
+		}
+
+		BOOST_LEAF_CONSTEXPR void deactivate() noexcept
+		{
+			using namespace leaf_detail;
+			BOOST_LEAF_ASSERT(is_active());
+			is_active_ = false;
+#if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
+			BOOST_LEAF_ASSERT(std::this_thread::get_id() == thread_id_);
+			thread_id_ = std::thread::id();
+#endif
+#if BOOST_LEAF_DIAGNOSTICS
+			if( unexpected_requested<Tup>::value )
+				--tl_unexpected_enabled<>::counter;
+#endif
+			tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_);
+		}
+
+		BOOST_LEAF_CONSTEXPR void propagate() noexcept
+		{
+			leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_);
+		}
+
+		BOOST_LEAF_CONSTEXPR bool is_active() const noexcept
+		{
+			return is_active_;
+		}
+
+		void print( std::ostream & os ) const
+		{
+			leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, &tup_, 0);
+		}
+
+		template <class R, class... H>
+		BOOST_LEAF_CONSTEXPR R handle_error( error_id, H && ... ) const;
+
+		template <class R, class... H>
+		BOOST_LEAF_CONSTEXPR R handle_error( error_id, H && ... );
 	};
 
 	////////////////////////////////////////

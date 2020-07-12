@@ -6,10 +6,7 @@
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/context.hpp>
 #include <boost/leaf/pred.hpp>
-#include <boost/leaf/handle_error.hpp>
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-#	include <boost/leaf/handle_exception.hpp>
-#endif
+#include <boost/leaf/handle_errors.hpp>
 #include "_test_ec.hpp"
 
 namespace leaf = boost::leaf;
@@ -30,7 +27,7 @@ struct unwrap_tuple<std::tuple<S<E>...>>
 };
 
 template <class... H>
-typename unwrap_tuple<typename leaf::context_type_from_handlers<H...>::Tup>::type * expd( H && ... )
+typename unwrap_tuple<typename std::decay<decltype(std::declval<typename leaf::context_type_from_handlers<H...>>().tup())>::type>::type * expd( H && ... )
 {
 	return 0;
 }

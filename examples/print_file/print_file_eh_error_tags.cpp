@@ -10,7 +10,7 @@
 // handling is in print_file_result.cpp.
 
 #include <boost/leaf/exception.hpp>
-#include <boost/leaf/handle_exception.hpp>
+#include <boost/leaf/handle_errors.hpp>
 #include <boost/leaf/pred.hpp>
 #include <boost/leaf/on_error.hpp>
 #include <boost/leaf/common.hpp>

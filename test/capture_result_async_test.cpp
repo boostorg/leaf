@@ -18,7 +18,7 @@ int main()
 
 #include <boost/leaf/capture.hpp>
 #include <boost/leaf/result.hpp>
-#include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/handle_errors.hpp>
 #include <boost/leaf/on_error.hpp>
 #include "lightweight_test.hpp"
 #include <vector>

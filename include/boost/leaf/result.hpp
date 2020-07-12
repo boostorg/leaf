@@ -6,16 +6,17 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if defined(__clang__)
-#	pragma clang system_header
-#elif (__GNUC__*100+__GNUC_MINOR__>301) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma GCC system_header
-#elif defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#	pragma warning(push,1)
+#ifndef BOOST_LEAF_ENABLE_WARNINGS
+#	if defined(__clang__)
+#		pragma clang system_header
+#	elif (__GNUC__*100+__GNUC_MINOR__>301)
+#		pragma GCC system_header
+#	elif defined(_MSC_VER)
+#		pragma warning(push,1)
+#	endif
 #endif
 
 #include <boost/leaf/error.hpp>
-#include <boost/leaf/detail/throw_exception.hpp>
 #include <memory>
 #include <climits>
 
@@ -161,9 +162,7 @@ namespace boost { namespace leaf {
 
 		using stored_type = typename leaf_detail::stored<T>::type;
 		using value_type_const = typename leaf_detail::stored<T>::value_type_const;
-	public:
 		using value_type = typename leaf_detail::stored<T>::value_type;
-	private:
 
 		union
 		{
@@ -218,6 +217,8 @@ namespace boost { namespace leaf {
 			return what_.kind()==result_discriminant::ctx_ptr ? ctx_->captured_id_ : what_.get_error_id();
 		}
 
+		static int init_T_with_U( T && );
+
 	public:
 
 		BOOST_LEAF_CONSTEXPR result( result && x ) noexcept:
@@ -239,7 +240,7 @@ namespace boost { namespace leaf {
 		}
 
 		BOOST_LEAF_CONSTEXPR result( value_type && v ) noexcept:
-			stored_(std::move(v)),
+			stored_(std::forward<value_type>(v)),
 			what_(result_discriminant::kind_val{})
 		{
 		}
@@ -255,8 +256,23 @@ namespace boost { namespace leaf {
 		{
 		}
 
+		// SFINAE: T can be initialized with a U, e.g. result<std::string>("literal").
+		// Not using is_constructible on purpose, bug with COMPILER=/usr/bin/clang++ CXXSTD=11 clang 3.3.
+		template <class U>
+		BOOST_LEAF_CONSTEXPR result( U && u, decltype(init_T_with_U(std::forward<U>(u))) * = 0 ):
+			stored_(std::forward<U>(u)),
+			what_(result_discriminant::kind_val{})
+		{
+		}
+
 		BOOST_LEAF_CONSTEXPR result( std::error_code const & ec ) noexcept:
 			what_(error_id(ec))
+		{
+		}
+
+		template <class Enum>
+		result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type * = 0 ) noexcept:
+			what_(error_id(e))
 		{
 		}
 
@@ -382,6 +398,12 @@ namespace boost { namespace leaf {
 
 		BOOST_LEAF_CONSTEXPR result( std::error_code const & ec ) noexcept:
 			base(ec)
+		{
+		}
+
+		template <class Enum>
+		result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept:
+			base(e)
 		{
 		}
 

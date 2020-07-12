@@ -3,7 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/handle_error.hpp>
+#include <boost/leaf/handle_errors.hpp>
 #include <boost/leaf/pred.hpp>
 #include <boost/leaf/result.hpp>
 #include <exception>
@@ -22,9 +22,6 @@ struct my_exception: std::exception
 {
 	int value;
 };
-
-static_assert(!leaf::leaf_detail::handler_argument_traits<leaf::match_value<e_my_error, my_error::e1>>::requires_catch, "requires_catch deduction error");
-static_assert(leaf::leaf_detail::handler_argument_traits<leaf::match_value<my_exception, 42>>::requires_catch, "requires_catch deduction error");
 
 template <class M, class E>
 bool test(E const & e )
