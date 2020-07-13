@@ -561,10 +561,42 @@ leaf::result<void> g( char const * fn ) noexcept
 Besides error objects, `load` can take function arguments:
 
 * If we pass a function that takes no arguments, it is invoked, and the returned error object is loaded.
++
+Consider that if we pass to `load` an error object that is not needed by any error handler, it will be discarded. If the object is expensive to compute, it would be better if the computation can be skipped as well. Passing a function with no arguments to `load` is an excellent way to achieve this behavior:
++
+[source,c++]
+----
+struct info { .... };
+
+info compute_info() noexcept;
+
+leaf::result<void> operation( char const * file_name ) noexcept
+{
+  if( leaf::result<int> r = try_something() )
+  { <1>
+    ....
+    return { };
+  }
+  else
+  {
+    return r.load( <2>
+      [&]
+      {
+        return compute_info();
+      } );
+  }
+}
+----
+[.text-right]
+<<result>> | <<result::load>>
++
+<1> Success! Use `r.value()`.
+<2> `try_something` has failed; `compute_info` will only be called if an error handler exists which takes a `info` argument.
++
 * If we pass a function that takes a single argument of type `E &`, LEAF calls the function with the object of type `E` currently loaded in an active `context`, associated with the error. If no such object is available, a new one is default-initialized and then passed to the function.
-
++
 For example, if an operation that involves many different files fails, a program may provide for collecting all relevant file names in a `e_relevant_file_names` object:
-
++
 [source,c++]
 ----
 struct e_relevant_file_names
@@ -591,7 +623,7 @@ leaf::result<void> operation( char const * file_name ) noexcept
 ----
 [.text-right]
 <<result>> | <<result::load>>
-
++
 <1> Success! Use `r.value()`.
 <2> `try_something` has failed -- add `file_name` to the `e_relevant_file_names` object, associated with the `error_id` communicated in `r`. Note, however, that the passed function will only be called iff in the call stack there are error handlers that take an `e_relevant_file_names` object.
 
@@ -988,7 +1020,7 @@ return leaf::try_handle_some(
 ----
 
 [.text-right]
-<<try_handle_some>> | <<result>> | <<BOOST_LEAF_ASSIGN>>
+<<try_handle_some>> | <<result>> | <<BOOST_LEAF_AUTO>>
 
 The reason this works is that in case it communicates a failure, `leaf::result<T>` is able to hold a `shared_ptr<polymorphic_context>` object. That is why earlier instead of calling `task()` directly, we called `leaf::capture`: it calls the passed function and, in case that fails, it stores the `shared_ptr<polymorphic_context>` we created in the returned `result<T>`, which now doesn't just communicate the fact that an error has occurred, but also holds the `context` object that `try_handle_some` needs in order to supply a suitable handler with arguments.
 
@@ -1249,6 +1281,8 @@ Remarkably, because the classification of the failure does not depend on error c
 
 It is sometimes necessary to catch exceptions thrown by a lower-level library function, and report the error through different means, to a higher-level library which may not use exception handling.
 
+NOTE: Understand that error handlers that take arguments of types that derive from `std::exception` work correctly -- regardless of whether the error object itself is thrown as an exception, or <<tutorial-loading,loaded>> into a <<context>>. The technique described here is only needed when the exception must be communicated through functions which are not exception-safe, or are compiled with exception-handling disabled.
+
 Suppose we have an exception type hierarchy and a function `compute_answer_throws`:
 
 [source,c++]
@@ -1287,7 +1321,9 @@ leaf::result<int> compute_answer() noexcept
 [.text-right]
 <<result>> | <<exception_to_result>>
 
-(As a demonstration, `compute_answer` specifically converts exceptions of type `error_a` or `error_b`, while it leaves `error_c` to be captured by `std::exception_ptr`).
+The `exception_to_result` template takes any number of exception types. All exception types thrown by the passed function are caught, and an attempt is made to convert the exception object to each of the specified types. Each successfully-converted slice of the caught exception object, as well as the return value of `std::current_exception`, are copied and <<tutorial-loading,loaded>>, and in the end the exception is converted to a `<<result,result>><T>` object.
+
+(In our example, `error_a` and `error_b` slices as communicated as error objects, but `error_c` exceptions will still be captured by `std::exception_ptr`).
 
 Here is a simple function which prints successfully computed answers, forwarding any error (originally reported by throwing an exception) to its caller:
 
@@ -1302,7 +1338,7 @@ leaf::result<void> print_answer() noexcept
 ----
 
 [.text-right]
-<<result>> | <<BOOST_LEAF_ASSIGN>>
+<<result>> | <<BOOST_LEAF_AUTO>>
 
 Finally, here is a scope that handles the errors -- it will work correctly regardless of whether `error_a` and `error_b` objects are thrown as exceptions or not.
 
@@ -1485,7 +1521,7 @@ int main() noexcept
   }
 ----
 [.text-right]
-<<try_handle_all>> | <<result>> | <<BOOST_LEAF_ASSIGN>> | <<error_info>>
+<<try_handle_all>> | <<result>> | <<BOOST_LEAF_AUTO>> | <<error_info>>
 
 <1> If the call to `call_lua` succeeded, just print the answer.
 <2> Handle `do_work` failures.
@@ -2656,7 +2692,7 @@ return leaf::try_handle_some(
 ----
 
 [.text-right]
-<<try_handle_some>> | <<result>> | <<BOOST_LEAF_ASSIGN>>
+<<try_handle_some>> | <<result>> | <<BOOST_LEAF_AUTO>>
 
 WARNING: When a handler takes an argument of an exception type (that is, a type that derives from `std::exception`), if the object is thrown, the argument will be matched dynamically (using `dynamic_cast`); otherwise (e.g. after being converted by `exception_to_result`) it will be matched based on its static type only (which is the same behavior used for types that do not derive from `std::exception`).
 
@@ -5177,7 +5213,7 @@ leaf::result<parsed_line> read_and_parse_line( reader & r )
 }
 ----
 [.text-right]
-<<result>> | <<BOOST_LEAF_ASSIGN>>
+<<result>> | <<BOOST_LEAF_AUTO>>
 
 <1> Read a line, forward errors to the caller.
 <2> Parse the line, forward errors to the caller.
