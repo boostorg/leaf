@@ -157,11 +157,17 @@
 #ifndef BOOST_LEAF_CONSTEXPR
 #	if __cplusplus > 201402L
 #		define BOOST_LEAF_CONSTEXPR constexpr
-#		define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 1
 #	else
 #		define BOOST_LEAF_CONSTEXPR
-#		define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 0
 #	endif
+#endif
+
+////////////////////////////////////////
+
+#if __cplusplus > 201402L
+#	define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 1
+#else
+#	define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 0
 #endif
 
 ////////////////////////////////////////
