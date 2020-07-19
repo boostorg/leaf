@@ -15,10 +15,12 @@ branches:
 environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      TOOLSET: msvc-14.1
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      TOOLSET: msvc-14.1
-      CXXSTD: 17
+      TOOLSET: msvc-14.1,clang-win
+      CXXSTD: 14,17
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      TOOLSET: msvc-14.2
+      CXXSTD: 14,17
+
 
 install:
   - set BOOST_BRANCH=develop
@@ -40,19 +42,4 @@ build: off
 
 test_script:
   - if not "%CXXSTD%" == "" set CXXSTD=cxxstd=%CXXSTD%
-  - b2 -j3 libs/leaf/test toolset=%TOOLSET% variant=debug %CXXSTD%
-  - b2 -j3 libs/leaf/test toolset=%TOOLSET% variant=release %CXXSTD%
-  - b2 -j3 libs/leaf/test toolset=%TOOLSET% variant=debug-diagnostics0 %CXXSTD%
-  - b2 -j3 libs/leaf/test toolset=%TOOLSET% variant=release-diagnostics0 %CXXSTD%
-  - b2 -j3 exception-handling=off rtti=off libs/leaf/test toolset=%TOOLSET% variant=debug %CXXSTD%
-  - b2 -j3 exception-handling=off rtti=off libs/leaf/test toolset=%TOOLSET% variant=release %CXXSTD%
-  - b2 -j3 exception-handling=off rtti=off libs/leaf/test toolset=%TOOLSET% variant=debug-diagnostics0 %CXXSTD%
-  - b2 -j3 exception-handling=off rtti=off libs/leaf/test toolset=%TOOLSET% variant=release-diagnostics0 %CXXSTD%
-  - b2 -j3 threading=single libs/leaf/test toolset=%TOOLSET% variant=debug %CXXSTD%
-  - b2 -j3 threading=single libs/leaf/test toolset=%TOOLSET% variant=release %CXXSTD%
-  - b2 -j3 threading=single libs/leaf/test toolset=%TOOLSET% variant=debug-diagnostics0 %CXXSTD%
-  - b2 -j3 threading=single libs/leaf/test toolset=%TOOLSET% variant=release-diagnostics0 %CXXSTD%
-  - b2 -j3 threading=single exception-handling=off rtti=off libs/leaf/test toolset=%TOOLSET% variant=debug %CXXSTD%
-  - b2 -j3 threading=single exception-handling=off rtti=off libs/leaf/test toolset=%TOOLSET% variant=release %CXXSTD%
-  - b2 -j3 threading=single exception-handling=off rtti=off libs/leaf/test toolset=%TOOLSET% variant=debug-diagnostics0 %CXXSTD%
-  - b2 -j3 threading=single exception-handling=off rtti=off libs/leaf/test toolset=%TOOLSET% variant=release-diagnostics0 %CXXSTD%
+  - b2 -j3 libs/leaf/test toolset=%TOOLSET% exception-handling=on,off variant=debug,release,debug-diagnostics0,release-diagnostics0 %CXXSTD%
