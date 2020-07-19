@@ -291,7 +291,7 @@ namespace boost { namespace leaf {
 		{
 			return leaf::new_error(std::current_exception());
 		}
-	};
+	}
 
 #endif
 

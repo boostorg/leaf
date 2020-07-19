@@ -677,11 +677,17 @@ namespace boost { namespace leaf {
 #ifndef BOOST_LEAF_CONSTEXPR
 #	if __cplusplus > 201402L
 #		define BOOST_LEAF_CONSTEXPR constexpr
-#		define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 1
 #	else
 #		define BOOST_LEAF_CONSTEXPR
-#		define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 0
 #	endif
+#endif
+
+////////////////////////////////////////
+
+#if __cplusplus > 201402L
+#	define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 1
+#else
+#	define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 0
 #endif
 
 ////////////////////////////////////////
@@ -2385,7 +2391,7 @@ namespace boost { namespace leaf {
 		{
 			return leaf::new_error(std::current_exception());
 		}
-	};
+	}
 
 #endif
 
@@ -3161,7 +3167,7 @@ namespace boost { namespace leaf {
 		BOOST_LEAF_CONSTEXPR explicit error_info( error_id id ) noexcept:
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 			ex_(0),
-#endif			
+#endif
 			err_id_(id)
 		{
 		}
@@ -3172,7 +3178,7 @@ namespace boost { namespace leaf {
 			err_id_(unpack_error_id(ex_))
 		{
 		}
-#endif		
+#endif
 
 		BOOST_LEAF_CONSTEXPR error_id error() const noexcept
 		{
@@ -3759,8 +3765,8 @@ namespace boost { namespace leaf {
 	decltype(std::declval<TryBlock>()())
 	try_catch( TryBlock && try_block, H && ... ) noexcept
 	{
-		context_type_from_handlers<H...> ctx;
-		(void) ctx;
+		static_assert(sizeof(context_type_from_handlers<H...>) > 0,
+			"When exceptions are disabled, try_catch can't fail and has no use for the handlers, but this ensures that the supplied H... types are compatible.");
 		return std::forward<TryBlock>(try_block)();
 	}
 
