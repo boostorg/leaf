@@ -516,8 +516,8 @@ namespace boost { namespace leaf {
 #	endif
 #endif
 
-// >>> #include <boost/leaf/config.hpp>
-#line 1 "boost/leaf/config.hpp"
+// >>> #include <boost/leaf/detail/config.hpp>
+#line 1 "boost/leaf/detail/config.hpp"
 #ifndef BOOST_LEAF_CONFIG_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_HPP_INCLUDED
 
@@ -702,7 +702,7 @@ namespace boost { namespace leaf {
 #endif
 
 #endif
-// <<< #include <boost/leaf/config.hpp>
+// <<< #include <boost/leaf/detail/config.hpp>
 #line 20 "boost/leaf/detail/optional.hpp"
 #include <utility>
 #include <new>
