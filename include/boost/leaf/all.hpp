@@ -516,8 +516,8 @@ namespace boost { namespace leaf {
 #	endif
 #endif
 
-// >>> #include <boost/leaf/config.hpp>
-#line 1 "boost/leaf/config.hpp"
+// >>> #include <boost/leaf/detail/config.hpp>
+#line 1 "boost/leaf/detail/config.hpp"
 #ifndef BOOST_LEAF_CONFIG_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_HPP_INCLUDED
 
@@ -547,14 +547,14 @@ namespace boost { namespace leaf {
 // Configure BOOST_LEAF_NO_EXCEPTIONS, unless already #defined
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
-#	if defined __clang__ && !defined(__ibmxl__)
+#	if defined(__clang__) && !defined(__ibmxl__)
 //	Clang C++ emulates GCC, so it has to appear early.
 
 #		if !__has_feature(cxx_exceptions)
 #			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
-#	elif defined __DMC__
+#	elif defined(__DMC__)
 //	Digital Mars C++
 
 #		if !defined(_CPPUNWIND)
@@ -568,28 +568,28 @@ namespace boost { namespace leaf {
 #			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
-#	elif defined __KCC
+#	elif defined(__KCC)
 //	Kai C++
 
 #		if !defined(_EXCEPTIONS)
 #			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
-#	elif defined __CODEGEARC__
+#	elif defined(__CODEGEARC__)
 //	CodeGear - must be checked for before Borland
 
 #		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
 #			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
-#	elif defined __BORLANDC__
+#	elif defined(__BORLANDC__)
 //	Borland
 
 #		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
 # 			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
-#	elif defined  __MWERKS__
+#	elif defined(__MWERKS__)
 //	Metrowerks CodeWarrior
 
 #		if !__option(exceptions)
@@ -610,7 +610,7 @@ namespace boost { namespace leaf {
 #			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
-#	elif defined _MSC_VER
+#	elif defined(_MSC_VER)
 //	Microsoft Visual C++
 //
 //	Must remain the last #elif since some other vendors (Metrowerks, for
@@ -677,11 +677,17 @@ namespace boost { namespace leaf {
 #ifndef BOOST_LEAF_CONSTEXPR
 #	if __cplusplus > 201402L
 #		define BOOST_LEAF_CONSTEXPR constexpr
-#		define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 1
 #	else
 #		define BOOST_LEAF_CONSTEXPR
-#		define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 0
 #	endif
+#endif
+
+////////////////////////////////////////
+
+#if __cplusplus > 201402L
+#	define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 1
+#else
+#	define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 0
 #endif
 
 ////////////////////////////////////////
@@ -696,7 +702,7 @@ namespace boost { namespace leaf {
 #endif
 
 #endif
-// <<< #include <boost/leaf/config.hpp>
+// <<< #include <boost/leaf/detail/config.hpp>
 #line 20 "boost/leaf/detail/optional.hpp"
 #include <utility>
 #include <new>
@@ -2385,7 +2391,7 @@ namespace boost { namespace leaf {
 		{
 			return leaf::new_error(std::current_exception());
 		}
-	};
+	}
 
 #endif
 
@@ -3161,7 +3167,7 @@ namespace boost { namespace leaf {
 		BOOST_LEAF_CONSTEXPR explicit error_info( error_id id ) noexcept:
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 			ex_(0),
-#endif			
+#endif
 			err_id_(id)
 		{
 		}
@@ -3172,7 +3178,7 @@ namespace boost { namespace leaf {
 			err_id_(unpack_error_id(ex_))
 		{
 		}
-#endif		
+#endif
 
 		BOOST_LEAF_CONSTEXPR error_id error() const noexcept
 		{
@@ -3759,8 +3765,8 @@ namespace boost { namespace leaf {
 	decltype(std::declval<TryBlock>()())
 	try_catch( TryBlock && try_block, H && ... ) noexcept
 	{
-		context_type_from_handlers<H...> ctx;
-		(void) ctx;
+		static_assert(sizeof(context_type_from_handlers<H...>) > 0,
+			"When exceptions are disabled, try_catch can't fail and has no use for the handlers, but this ensures that the supplied H... types are compatible.");
 		return std::forward<TryBlock>(try_block)();
 	}
 
