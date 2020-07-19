@@ -21,7 +21,6 @@ environment:
       TOOLSET: msvc-14.2
       CXXSTD: 14,17
 
-
 install:
   - set BOOST_BRANCH=develop
   - if "%APPVEYOR_REPO_BRANCH%" == "master" set BOOST_BRANCH=master
