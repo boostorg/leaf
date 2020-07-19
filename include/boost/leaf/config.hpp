@@ -27,14 +27,14 @@
 // Configure BOOST_LEAF_NO_EXCEPTIONS, unless already #defined
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
-#	if defined __clang__ && !defined(__ibmxl__)
+#	if defined(__clang__) && !defined(__ibmxl__)
 //	Clang C++ emulates GCC, so it has to appear early.
 
 #		if !__has_feature(cxx_exceptions)
 #			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
-#	elif defined __DMC__
+#	elif defined(__DMC__)
 //	Digital Mars C++
 
 #		if !defined(_CPPUNWIND)
@@ -48,28 +48,28 @@
 #			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
-#	elif defined __KCC
+#	elif defined(__KCC)
 //	Kai C++
 
 #		if !defined(_EXCEPTIONS)
 #			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
-#	elif defined __CODEGEARC__
+#	elif defined(__CODEGEARC__)
 //	CodeGear - must be checked for before Borland
 
 #		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
 #			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
-#	elif defined __BORLANDC__
+#	elif defined(__BORLANDC__)
 //	Borland
 
 #		if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
 # 			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
-#	elif defined  __MWERKS__
+#	elif defined(__MWERKS__)
 //	Metrowerks CodeWarrior
 
 #		if !__option(exceptions)
@@ -90,7 +90,7 @@
 #			define BOOST_LEAF_NO_EXCEPTIONS
 #		endif
 
-#	elif defined _MSC_VER
+#	elif defined(_MSC_VER)
 //	Microsoft Visual C++
 //
 //	Must remain the last #elif since some other vendors (Metrowerks, for
