@@ -49,6 +49,23 @@ if not meson.is_subproject()
 			'-Wno-non-virtual-dtor',
 			'-Wno-misleading-indentation',
 			language:'cpp' )
+	elif host_machine.system()=='emscripten'
+		add_global_arguments(
+			'-s', 'WASM=1',
+			'-s', 'USE_PTHREADS=1',
+			'-s', 'EXIT_RUNTIME=1',
+			'-s', 'PROXY_TO_PTHREAD=1',
+			'-s', 'DISABLE_EXCEPTION_CATCHING=0',
+				language:'cpp' )
+		add_global_link_arguments(
+			'-s', 'EXPORT_ALL=1',
+			'-s', 'WASM=1',
+			'-s', 'USE_PTHREADS=1',
+			'-s', 'EXIT_RUNTIME=1',
+			'-s', 'PROXY_TO_PTHREAD=1',
+			'-s', 'DISABLE_EXCEPTION_CATCHING=0',
+			'-s', 'INITIAL_MEMORY=268435456',
+				language:'cpp' )
 	endif
 endif
 
