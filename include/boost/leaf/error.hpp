@@ -176,7 +176,7 @@ namespace boost { namespace leaf {
 			}
 
 			template <class E>
-			void add(E const & e)
+			void add(E && e)
 			{
 				if( !diagnostic<E>::is_invisible && already_.insert(&type<E>).second  )
 				{
@@ -326,16 +326,16 @@ namespace boost { namespace leaf {
 		{
 			if( slot<e_unexpected_info> * sl = tl_slot_ptr<e_unexpected_info>::p )
 				if( e_unexpected_info * unx = sl->has_value(err_id) )
-					unx->add(e);
+					unx->add(std::forward<E>(e));
 				else
-					sl->put(err_id, e_unexpected_info()).add(e);
+					sl->put(err_id, e_unexpected_info()).add(std::forward<E>(e));
 		}
 
 		template <class E>
 		BOOST_LEAF_CONSTEXPR inline void load_unexpected( int err_id, E && e  ) noexcept
 		{
 			load_unexpected_count<E>(err_id);
-			load_unexpected_info(err_id, std::move(e));
+			load_unexpected_info(err_id, std::forward<E>(e));
 		}
 
 #endif
