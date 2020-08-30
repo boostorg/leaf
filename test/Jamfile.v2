@@ -5,8 +5,8 @@
 
 import testing ;
 
-variant leaf-debug-diag0 : debug : <define>BOOST_LEAF_DIAGNOSTICS=0 ;
-variant leaf-release-diag0 : release : <define>BOOST_LEAF_DIAGNOSTICS=0 ;
+variant leaf_debug_diag0 : debug : <define>BOOST_LEAF_DIAGNOSTICS=0 ;
+variant leaf_release_diag0 : release : <define>BOOST_LEAF_DIAGNOSTICS=0 ;
 
 project
     : default-build
