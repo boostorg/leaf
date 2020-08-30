@@ -8,5 +8,5 @@
 namespace leaf = boost::leaf;
 
 leaf::diagnostic_info f();
-
-leaf::diagnostic_info x = f();
+leaf::diagnostic_info a = f();
+leaf::diagnostic_info b = a;

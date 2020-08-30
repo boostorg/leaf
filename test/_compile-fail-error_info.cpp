@@ -8,5 +8,5 @@
 namespace leaf = boost::leaf;
 
 leaf::error_info f();
-
-leaf::error_info x = f();
+leaf::error_info a = f();
+leaf::error_info b = a;

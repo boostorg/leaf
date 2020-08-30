@@ -33,7 +33,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class Name>
-	inline char const * type() noexcept
+	inline char const * type()
 	{
 		using leaf_detail::check_prefix;
 	char const * t =
