@@ -1,6 +1,6 @@
 LEAF is a lightweight error handling library for C++11.
 
-Official documentation: https://zajo.github.io/leaf/
+Official documentation: https://boostorg.github.io/leaf/
 
 Features:
 

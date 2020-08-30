@@ -439,7 +439,7 @@ The idea of `OUTCOME_TRY` is to support generic response to failures in *error-n
 1. That the [*failure flag* can be observed generically](#1-the-semantics-of-a-failure), and
 2. That it is safe to simply return from an [*error-neutral* function](#2-classification-of-functions-based-on-their-affinity-to-errors) in case of a failure, forwarding error objects to the caller.
 
-Logically, this behavior is equivalent to the compiler-generated code when calling a function which may throw an exception. Consequently, all reasoning applicable to object invariants when throwing exceptions applies equally when using `OUTCOME_TRY` (or the [LEAF](https://zajo.github.io/leaf) analog, `BOOST_LEAF_AUTO`).
+Logically, this behavior is equivalent to the compiler-generated code when calling a function which may throw an exception. Consequently, all reasoning applicable to object invariants when throwing exceptions applies equally when using `OUTCOME_TRY` (or the [LEAF](https://boostorg.github.io/leaf) analog, `BOOST_LEAF_AUTO`).
 
 > **NOTE:** Lately there seems to be a debate in the C++ community whether the *basic guarantee* should be the minimum requirement for all user-defined types, that is, whether it should be required that even when operations fail, the basic object invariants are in place. Arguably this is beyond the scope of this paper, but the previous paragraph holds regardless: *safety-guarantees* are equally applicable, with or without exception handling.
 
@@ -489,7 +489,7 @@ http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0709r1.pdf
 
 [6](#63-leaf). Emil Dotchevski\
 Lightweight Error Augmentation Framework (library documentation)\
-https://zajo.github.io/leaf
+https://boostorg.github.io/leaf
 
 [7](#7-exception-safety-vs-failure-safety). David Abrahams\
 Exception-Safety in Generic Components\
