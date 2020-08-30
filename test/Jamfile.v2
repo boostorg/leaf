@@ -5,12 +5,13 @@
 
 import testing ;
 
-variant debug-diagnostics0 : debug : <define>BOOST_LEAF_DIAGNOSTICS=0 ;
-variant release-diagnostics0 : release : <define>BOOST_LEAF_DIAGNOSTICS=0 ;
+variant leaf-debug-diag0 : debug : <define>BOOST_LEAF_DIAGNOSTICS=0 ;
+variant leaf-release-diag0 : release : <define>BOOST_LEAF_DIAGNOSTICS=0 ;
 
 project
-    : requirements
+    : default-build
         <cxxstd>11
+    : requirements
         <threading>single:<define>BOOST_LEAF_NO_THREADS
         <toolset>gcc:<cxxflags>"-Wno-delete-non-virtual-dtor -Wno-parentheses"
         <toolset>clang:<cxxflags>"-Wno-dangling-else"

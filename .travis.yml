@@ -71,7 +71,7 @@ matrix:
           echo "using asciidoctor ;" > ~/user-config.jam
         - ../../b2 doc
       deploy:
-        local-dir: ../boost-root/libs/leaf/doc/out
+        local-dir: ../boost-root/libs/leaf/doc/html
         provider: pages
         skip-cleanup: true
         github-token: $GH_PAGES_TOKEN
@@ -387,10 +387,10 @@ install:
 script:
   - |-
     echo "using $TOOLSET : : $COMPILER ;" > ~/user-config.jam
-  - ../../b2 test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,debug-diagnostics0,release-diagnostics0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
-  - ../../b2 exception-handling=off rtti=off test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,debug-diagnostics0,release-diagnostics0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
-  - ../../b2 threading=single test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,debug-diagnostics0,release-diagnostics0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
-  - ../../b2 threading=single exception-handling=off rtti=off test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,debug-diagnostics0,release-diagnostics0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
+  - ../../b2 test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,leaf-debug-diag0,leaf-release-diag0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
+  - ../../b2 exception-handling=off rtti=off test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,leaf-debug-diag0,leaf-release-diag0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
+  - ../../b2 threading=single test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,leaf-debug-diag0,leaf-release-diag0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
+  - ../../b2 threading=single exception-handling=off rtti=off test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,leaf-debug-diag0,leaf-release-diag0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
 
 notifications:
   email:
