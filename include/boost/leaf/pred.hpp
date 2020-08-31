@@ -74,7 +74,7 @@ namespace boost { namespace leaf {
 
 #if __cplusplus >= 201703L
 	template <class ErrorCodeEnum>
-	BOOST_LEAF_CONSTEXPR inline bool category( std::error_code const & ec ) noexcept
+	BOOST_LEAF_CONSTEXPR inline bool category( std::error_code const & ec )
 	{
 		static_assert(std::is_error_code_enum<ErrorCodeEnum>::value, "leaf::category requires an error code enum");
 		return &ec.category() == &std::error_code(ErrorCodeEnum{}).category();
