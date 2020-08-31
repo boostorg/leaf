@@ -532,6 +532,8 @@ namespace boost { namespace leaf {
 // (C) Copyright Martin Wille 2003.
 // (C) Copyright Guillaume Melquiond 2003.
 
+#include <exception>
+
 #ifndef BOOST_LEAF_ENABLE_WARNINGS
 #	if defined(__clang__)
 #		pragma clang system_header
@@ -684,7 +686,7 @@ namespace boost { namespace leaf {
 
 ////////////////////////////////////////
 
-#if __cplusplus > 201402L
+#if (defined(__cpp_lib_uncaught_exceptions) && __cpp_lib_uncaught_exceptions >= 201411L) || (defined(_MSC_VER) && _MSC_VER >= 1900)
 #	define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 1
 #else
 #	define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 0
@@ -867,7 +869,6 @@ namespace boost { namespace leaf {
 #endif
 // <<< #include <boost/leaf/detail/optional.hpp>
 #line 20 "boost/leaf/detail/print.hpp"
-#include <exception>
 #include <ostream>
 #include <cstring>
 
@@ -1724,7 +1725,6 @@ namespace boost { namespace leaf {
 #endif
 // <<< #include <boost/leaf/error.hpp>
 #line 20 "boost/leaf/exception.hpp"
-#include <exception>
 
 #define BOOST_LEAF_EXCEPTION ::boost::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
 #define BOOST_LEAF_THROW_EXCEPTION ::boost::leaf::leaf_detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception

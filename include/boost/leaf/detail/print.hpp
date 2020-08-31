@@ -17,7 +17,6 @@
 #endif
 
 #include <boost/leaf/detail/optional.hpp>
-#include <exception>
 #include <ostream>
 #include <cstring>
 
