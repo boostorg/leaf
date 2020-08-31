@@ -5490,8 +5490,6 @@ The following support options are available:
 * https://lists.boost.org/mailman/listinfo.cgi/boost-users[Boost Users Mailing List]
 * https://lists.boost.org/mailman/listinfo.cgi/boost[Boost Developers Mailing List]
 
-(LEAF is not part of Boost).
-
 == Acknowledgements
 
 Special thanks to Peter Dimov and Sorin Fetche.
