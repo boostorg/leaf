@@ -24,7 +24,7 @@ endif::[]
 [abstract]
 == Abstract
 
-LEAF is a lightweight error handling library for {CPP}11. Features:
+Boost LEAF is a lightweight error handling library for {CPP}11. Features:
 
 ====
 * Small single-header format, no dependencies.
@@ -43,7 +43,7 @@ LEAF is a lightweight error handling library for {CPP}11. Features:
 ifndef::backend-pdf[]
 [grid=none, frame=none]
 |====
-| <<introduction,Introduction>> \| <<tutorial>> \| <<synopsis>> \| https://github.com/boostorg/leaf/blob/master/doc/whitepaper.md[Whitepaper] \| https://github.com/boostorg/leaf/blob/master/benchmark/benchmark.md[Benchmark] >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<predicates,Predicates>> \| <<traits,Traits>> \| <<macros,Macros>>
+| <<introduction,Introduction>> \| <<tutorial>> \| <<synopsis>> \| https://github.com/boostorg/leaf/blob/master/doc/whitepaper.md[Whitepaper] \| https://github.com/boostorg/leaf/blob/master/benchmark/benchmark.md[Benchmark] \| <<portability>> >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<predicates,Predicates>> \| <<traits,Traits>> \| <<macros,Macros>>
 |====
 endif::[]
 
@@ -1824,7 +1824,7 @@ LEAF headers are designed to minimize coupling:
 * Headers needed to report or forward but not handle errors are lighter than headers providing error-handling functionality.
 * Headers that provide exception handling or throwing functionality are separate from headers that provide error-handling or reporting but do not use exceptions.
 
-A standalone single-header option is available; please `#include <boost/leaf/all.hpp>`.
+A standalone single-header option is available; please `#include <boost/leaf.hpp>`.
 
 '''
 
@@ -5023,7 +5023,7 @@ return leaf::try_handle_some(
 [.text-right]
 <<result>> | <<try_handle_some>> | <<match>> | <<e_file_name>> | <<e_errno>>
 
-NOTE: Please post questions and feedback on the Boost Developers Mailing List (LEAF is not part of Boost).
+NOTE: Please post questions and feedback on the Boost Developers Mailing List.
 
 '''
 
@@ -5209,7 +5209,7 @@ Therefore, we're left with *2)*. There's almost nothing wrong with this option, 
 * https://ned14.github.io/outcome[Boost Outcome]
 * https://github.com/TartanLlama/expected[`tl::expected`]
 
-Below we offer a comparison of LEAF to Boost Exception and to Boost Outcome.
+Below we offer a comparison of Boost LEAF to Boost Exception and to Boost Outcome.
 
 [[boost_exception]]
 === Comparison to Boost Exception
@@ -5443,9 +5443,9 @@ Copyright (c) 2018-2020 Emil Dotchevski. Distributed under the http://www.boost.
 [[portability]]
 == Portability
 
-LEAF requires {CPP}11 or newer compiler.
+LEAF requires a {CPP}11 or newer compiler, including support for thread-local storage.
 
-LEAF is formatted as a Boost library, but it does not depend on Boost or anything else.
+While it is part of Boost, LEAF does not depend on any other library.
 
 == Running the Unit Tests
 

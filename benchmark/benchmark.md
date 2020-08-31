@@ -300,7 +300,7 @@ Godbolt has built-in support for Boost (Outcome), but LEAF and `tl::expected` bo
 `leaf::result<T>` ([godbolt](https://godbolt.org/z/Trf2fc))
 
 ```c++
-#include "https://raw.githubusercontent.com/boostorg/leaf/master/include/boost/leaf/all.hpp"
+#include "https://raw.githubusercontent.com/boostorg/leaf/master/include/boost/leaf.hpp"
 #include "https://raw.githubusercontent.com/boostorg/leaf/master/benchmark/deep_stack_leaf.cpp"
 ```
 

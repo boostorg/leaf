@@ -32,7 +32,7 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/format.hpp>
-#include <boost/leaf/all.hpp>
+#include <boost/leaf.hpp>
 #include <boost/spirit/include/qi_numeric.hpp>
 #include <boost/spirit/include/qi_parse.hpp>
 #include <deque>

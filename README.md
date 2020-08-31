@@ -1,10 +1,10 @@
-LEAF is a lightweight error handling library for C++11.
+Boost LEAF is a lightweight error handling library for C++11.
 
 Official documentation: https://boostorg.github.io/leaf/
 
 Features:
 
-* Small single-header format, no dependencies.
+* Small single-header format, **no dependencies**.
 * Designed for maximum efficiency ("happy" path and "sad" path).
 * No dynamic memory allocations, even with heavy payloads.
 * O(1) transport of arbitrary error types (independent of call stack depth).

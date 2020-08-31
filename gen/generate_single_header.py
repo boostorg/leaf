@@ -1,17 +1,23 @@
-""" Generates a single header file from a file including multiple C/C++ headers.
+"""
 
-	Contributed by Sorin Fetche
+	Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
+	Copyright (c) Sorin Fetche
+
+	Distributed under the Boost Software License, Version 1.0. (See accompanying
+	file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+	This program generates a single header file from a file including multiple C/C++ headers.
 
 	Usage:
 
 		python3 generate_single_header.py  --help
 
-		e.g. python3 generate_single_header.py -i boost/leaf/all.hpp -o leaf_all.hpp boost/leaf
+		e.g. python3 generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include  -o include/boost/leaf.hpp boost/leaf
 
 	Note:
 
-		If unit tests are build by meson, you can enable the 'build_all_hpp' option (see meson_options.txt),
-		in which case each time the tests are built, first all.hpp will be rebuilt (no dependency checks).
+		If unit tests are build by meson, you can enable the 'leaf_hpp' option (see meson_options.txt),
+		in which case each time the tests are built, first boost/leaf.hpp will be rebuilt.
 
 """
 

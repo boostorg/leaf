@@ -20,7 +20,6 @@ project
 		<include>../../..
     ;
 
-compile _hpp_all_test.cpp ;
 compile _hpp_capture_test.cpp ;
 compile _hpp_common_test.cpp ;
 compile _hpp_context_test.cpp ;
@@ -28,6 +27,7 @@ compile _hpp_error_test.cpp ;
 compile _hpp_exception_test.cpp ;
 compile _hpp_handle_errors_test.cpp ;
 compile _hpp_on_error_test.cpp ;
+compile _hpp_leaf_test.cpp ;
 compile _hpp_pred_test.cpp ;
 compile _hpp_result_test.cpp ;
 
