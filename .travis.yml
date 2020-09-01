@@ -164,7 +164,7 @@ matrix:
 
     - os: linux
       compiler: g++-7
-      env: TOOLSET=gcc COMPILER=g++-7 CXXSTD=11,14,17
+      env: TOOLSET=gcc COMPILER=g++-7 CXXSTD=11,14
       addons:
         apt:
           packages:
@@ -174,7 +174,7 @@ matrix:
 
     - os: linux
       compiler: g++-6
-      env: TOOLSET=gcc COMPILER=g++-6 CXXSTD=11,14,1z
+      env: TOOLSET=gcc COMPILER=g++-6 CXXSTD=11,14
       addons:
         apt:
           packages:
@@ -184,7 +184,7 @@ matrix:
 
     - os: linux
       compiler: g++-5
-      env: TOOLSET=gcc COMPILER=g++-5 CXXSTD=11,14,1z
+      env: TOOLSET=gcc COMPILER=g++-5 CXXSTD=11,14
       addons:
         apt:
           packages:
