@@ -117,6 +117,7 @@ namespace boost { namespace leaf {
 			}
 		};
 
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 		template <>
 		struct diagnostic<std::exception_ptr, false, false>
 		{
@@ -125,6 +126,7 @@ namespace boost { namespace leaf {
 			{
 			}
 		};
+#endif
 	}
 
 } }

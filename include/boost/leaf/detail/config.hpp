@@ -12,8 +12,6 @@
 // (C) Copyright Martin Wille 2003.
 // (C) Copyright Guillaume Melquiond 2003.
 
-#include <exception>
-
 #ifndef BOOST_LEAF_ENABLE_WARNINGS
 #	if defined(__clang__)
 #		pragma clang system_header
@@ -166,14 +164,6 @@
 
 ////////////////////////////////////////
 
-#if (defined(__cpp_lib_uncaught_exceptions) && __cpp_lib_uncaught_exceptions >= 201411L) || (defined(_MSC_VER) && _MSC_VER >= 1900)
-#	define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 1
-#else
-#	define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 0
-#endif
-
-////////////////////////////////////////
-
 #ifndef BOOST_LEAF_ASSERT
 #	ifdef BOOST_ASSERT
 #		define BOOST_LEAF_ASSERT BOOST_ASSERT
@@ -181,6 +171,17 @@
 #       include <cassert>
 #       define BOOST_LEAF_ASSERT assert
 #	endif
+#endif
+
+////////////////////////////////////////
+
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+#   include <exception>
+#   if (defined(__cpp_lib_uncaught_exceptions) && __cpp_lib_uncaught_exceptions >= 201411L) || (defined(_MSC_VER) && _MSC_VER >= 1900)
+#	    define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 1
+#   else
+#   	define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 0
+#   endif
 #endif
 
 #endif

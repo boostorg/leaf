@@ -6,6 +6,7 @@
 #include <boost/leaf/handle_errors.hpp>
 #include <boost/leaf/pred.hpp>
 #include <boost/leaf/result.hpp>
+#include <exception>
 #include "_test_ec.hpp"
 #include "lightweight_test.hpp"
 

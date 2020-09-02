@@ -7,6 +7,7 @@
 #include <boost/leaf/handle_errors.hpp>
 
 #include <boost/leaf/result.hpp>
+#include <exception>
 #include "lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
