@@ -9,7 +9,7 @@ ifdef::backend-pdf[]
 = LEAF
 endif::[]
 ifndef::backend-pdf[]
-= LEAFpass:[<a href="https://ci.appveyor.com/project/zajo/leaf/branch/master"><img style="margin-left:8px; margin-top:21px; float:right; vertical-align: top" src="https://ci.appveyor.com/api/projects/status/u7mq10n8y5ewpre3/branch/master?svg=true"></a> <a href="https://travis-ci.org/zajo/leaf"><img style="margin-top:21px; float:right; vertical-align: top" src="https://travis-ci.org/zajo/leaf.svg?branch=master"></a><div style="z-index: 3; bottom:-16px; right:4px; position:fixed"><input width="32" height="32" type="image" alt="Skin" src="./skin.png" onclick="this.blur();switch_style();return false;"/></div>]
+= LEAFpass:[<a href="https://ci.appveyor.com/project/boostorg/leaf/branch/master"><img style="margin-left:8px; margin-top:21px; float:right; vertical-align: top" src="https://ci.appveyor.com/api/projects/status/u7mq10n8y5ewpre3/branch/master?svg=true"></a> <a href="https://travis-ci.org/boostorg/leaf"><img style="margin-top:21px; float:right; vertical-align: top" src="https://travis-ci.org/boostorg/leaf.svg?branch=master"></a><div style="z-index: 3; bottom:-16px; right:4px; position:fixed"><input width="32" height="32" type="image" alt="Skin" src="./skin.png" onclick="this.blur();switch_style();return false;"/></div>]
 endif::[]
 Lightweight Error Augmentation Framework | Emil Dotchevski
 ifndef::backend-pdf[]
@@ -18,13 +18,13 @@ ifndef::backend-pdf[]
 :toc-title:
 
 [.text-right]
-https://github.com/zajo/leaf[GitHub] | link:./leaf.pdf[PDF]
+https://github.com/boostorg/leaf[GitHub] | link:./leaf.pdf[PDF]
 endif::[]
 
 [abstract]
 == Abstract
 
-LEAF is a lightweight error handling library for {CPP}11. Features:
+Boost LEAF is a lightweight error handling library for {CPP}11. Features:
 
 ====
 * Small single-header format, no dependencies.
@@ -43,7 +43,7 @@ LEAF is a lightweight error handling library for {CPP}11. Features:
 ifndef::backend-pdf[]
 [grid=none, frame=none]
 |====
-| <<introduction,Introduction>> \| <<tutorial>> \| <<synopsis>> \| https://github.com/zajo/leaf/blob/master/doc/whitepaper.md[Whitepaper] \| https://github.com/zajo/leaf/blob/master/benchmark/benchmark.md[Benchmark] >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<predicates,Predicates>> \| <<traits,Traits>> \| <<macros,Macros>>
+| <<introduction,Introduction>> \| <<tutorial>> \| <<synopsis>> \| https://github.com/boostorg/leaf/blob/master/doc/whitepaper.md[Whitepaper] \| https://github.com/boostorg/leaf/blob/master/benchmark/benchmark.md[Benchmark] \| <<portability>> >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<predicates,Predicates>> \| <<traits,Traits>> \| <<macros,Macros>>
 |====
 endif::[]
 
@@ -269,7 +269,7 @@ int main( int argc, char const * argv[] )
 
 Nice and simple! Writing the `TryBlock`, we focus on the "happy" path -- if we encounter any error we just return it to `try_handle_all` for processing. Well, that's if we're being good and using RAII for automatic clean-up -- which we are, `shared_ptr` will automatically close the file for us.
 
-TIP: The complete program from this tutorial is available https://github.com/zajo/leaf/blob/master/examples/print_file/print_file_result.cpp?ts=4[here]. The https://github.com/zajo/leaf/blob/master/examples/print_file/print_file_eh.cpp?ts=4[other] version of the same program uses exception handling to report errors (see <<introduction-eh,below>>).
+TIP: The complete program from this tutorial is available https://github.com/boostorg/leaf/blob/master/examples/print_file/print_file_result.cpp?ts=4[here]. The https://github.com/boostorg/leaf/blob/master/examples/print_file/print_file_eh.cpp?ts=4[other] version of the same program uses exception handling to report errors (see <<introduction-eh,below>>).
 
 '''
 
@@ -459,7 +459,7 @@ If `fopen` succeeds, it returns a `shared_ptr` which will automatically call `fc
 
 NOTE: `try_catch` works with any exception, not only exceptions thrown using `leaf::exception`.
 
-TIP: The complete program from this tutorial is available https://github.com/zajo/leaf/blob/master/examples/print_file/print_file_eh.cpp?ts=4[here]. The https://github.com/zajo/leaf/blob/master/examples/print_file/print_file_result.cpp?ts=4[other] version of the same program does not use exception handling to report errors (see the <<introduction-result,previous introduction>>).
+TIP: The complete program from this tutorial is available https://github.com/boostorg/leaf/blob/master/examples/print_file/print_file_eh.cpp?ts=4[here]. The https://github.com/boostorg/leaf/blob/master/examples/print_file/print_file_result.cpp?ts=4[other] version of the same program does not use exception handling to report errors (see the <<introduction-result,previous introduction>>).
 
 [[tutorial]]
 == Tutorial
@@ -1024,7 +1024,7 @@ return leaf::try_handle_some(
 
 The reason this works is that in case it communicates a failure, `leaf::result<T>` is able to hold a `shared_ptr<polymorphic_context>` object. That is why earlier instead of calling `task()` directly, we called `leaf::capture`: it calls the passed function and, in case that fails, it stores the `shared_ptr<polymorphic_context>` we created in the returned `result<T>`, which now doesn't just communicate the fact that an error has occurred, but also holds the `context` object that `try_handle_some` needs in order to supply a suitable handler with arguments.
 
-NOTE: Follow this link to see a complete example program: https://github.com/zajo/leaf/blob/master/examples/capture_in_result.cpp?ts=4[capture_in_result.cpp].
+NOTE: Follow this link to see a complete example program: https://github.com/boostorg/leaf/blob/master/examples/capture_in_result.cpp?ts=4[capture_in_result.cpp].
 
 '''
 
@@ -1101,7 +1101,7 @@ return leaf::try_catch(
 
 This works similarly to using `result<T>`, except that the `std::shared_ptr<polymorphic_context>` is transported in an exception object (of unspecified type which <<try_catch>> recognizes and then automatically unwraps the original exception).
 
-NOTE: Follow this link to see a complete example program: https://github.com/zajo/leaf/blob/master/examples/capture_in_exception.cpp?ts=4[capture_in_exception.cpp].
+NOTE: Follow this link to see a complete example program: https://github.com/boostorg/leaf/blob/master/examples/capture_in_exception.cpp?ts=4[capture_in_exception.cpp].
 
 '''
 
@@ -1182,7 +1182,7 @@ struct eof_error { };
 ....
 ----
 
-With this in place, `file_read` from the https://github.com/zajo/leaf/blob/master/examples/print_file/print_file_result.cpp?ts=4[print_file_result.cpp] example can be rewritten like this:
+With this in place, `file_read` from the https://github.com/boostorg/leaf/blob/master/examples/print_file/print_file_result.cpp?ts=4[print_file_result.cpp] example can be rewritten like this:
 
 [source,c++]
 ----
@@ -1271,8 +1271,8 @@ And now we can write a future-proof handler that can handle any `input_error`:
 
 Remarkably, because the classification of the failure does not depend on error codes or on exception types, this error handler can be used with `try_catch` if we use exception handling, or with `try_handle_some`/`try_handle_all` if we do not. Here is the complete example from the introduction section, rewritten to use this technique:
 
-* https://github.com/zajo/leaf/blob/master/examples/print_file/print_file_result_error_tags.cpp?ts=4[print_file_result_error_tags.cpp] (using `leaf::result<T>`).
-* https://github.com/zajo/leaf/blob/master/examples/print_file/print_file_eh_error_tags.cpp?ts=4[print_file_eh_error_tags.cpp] (using exception handling).
+* https://github.com/boostorg/leaf/blob/master/examples/print_file/print_file_result_error_tags.cpp?ts=4[print_file_result_error_tags.cpp] (using `leaf::result<T>`).
+* https://github.com/boostorg/leaf/blob/master/examples/print_file/print_file_eh_error_tags.cpp?ts=4[print_file_eh_error_tags.cpp] (using exception handling).
 
 '''
 
@@ -1370,7 +1370,7 @@ leaf::try_handle_all(
 [.text-right]
 <<try_handle_all>> | <<result>> | <<BOOST_LEAF_CHECK>>
 
-NOTE: The complete program illustrating this technique is available https://github.com/zajo/leaf/blob/master/examples/exception_to_result.cpp?ts=4[here].
+NOTE: The complete program illustrating this technique is available https://github.com/boostorg/leaf/blob/master/examples/exception_to_result.cpp?ts=4[here].
 
 '''
 
@@ -1529,9 +1529,9 @@ int main() noexcept
 
 [NOTE]
 --
-Follow this link to see the complete program: https://github.com/zajo/leaf/blob/master/examples/lua_callback_result.cpp?ts=4[lua_callback_result.cpp].
+Follow this link to see the complete program: https://github.com/boostorg/leaf/blob/master/examples/lua_callback_result.cpp?ts=4[lua_callback_result.cpp].
 
-Remarkably, the Lua interpreter is {CPP} exception-safe, even though it is written in C. Here is the same program, this time using a {CPP} exception to report failures from `do_work`: https://github.com/zajo/leaf/blob/master/examples/lua_callback_eh.cpp?ts=4[lua_callback_eh.cpp].
+Remarkably, the Lua interpreter is {CPP} exception-safe, even though it is written in C. Here is the same program, this time using a {CPP} exception to report failures from `do_work`: https://github.com/boostorg/leaf/blob/master/examples/lua_callback_eh.cpp?ts=4[lua_callback_eh.cpp].
 --
 
 '''
@@ -1848,7 +1848,7 @@ Above, the handler will be selected if the caught exception object carries `my_i
 [[examples]]
 == Examples
 
-See https://github.com/zajo/leaf/tree/master/examples[github].
+See https://github.com/boostorg/leaf/tree/master/examples[github].
 
 [[synopsis]]
 == Synopsis
@@ -1860,7 +1860,7 @@ LEAF headers are designed to minimize coupling:
 * Headers needed to report or forward but not handle errors are lighter than headers providing error-handling functionality.
 * Headers that provide exception handling or throwing functionality are separate from headers that provide error-handling or reporting but do not use exceptions.
 
-A standalone single-header option is available; please `#include <boost/leaf/all.hpp>`.
+A standalone single-header option is available; please `#include <boost/leaf.hpp>`.
 
 '''
 
@@ -5059,7 +5059,7 @@ return leaf::try_handle_some(
 [.text-right]
 <<result>> | <<try_handle_some>> | <<match>> | <<e_file_name>> | <<e_errno>>
 
-NOTE: Please post questions and feedback on the Boost Developers Mailing List (LEAF is not part of Boost).
+NOTE: Please post questions and feedback on the Boost Developers Mailing List.
 
 '''
 
@@ -5245,7 +5245,7 @@ Therefore, we're left with *2)*. There's almost nothing wrong with this option, 
 * https://ned14.github.io/outcome[Boost Outcome]
 * https://github.com/TartanLlama/expected[`tl::expected`]
 
-Below we offer a comparison of LEAF to Boost Exception and to Boost Outcome.
+Below we offer a comparison of Boost LEAF to Boost Exception and to Boost Outcome.
 
 [[boost_exception]]
 === Comparison to Boost Exception
@@ -5429,7 +5429,7 @@ The `leaf::result<>` template deletes both `EC` and `EP`, which decouples it fro
 * Authors of lower-level library functions lack context to determine which of the information that is both relevant to the error _and_ naturally available to them needs to be communicated in order for a particular client program to recover from that error;
 * Authors of higher-level error-handling functions can easily and confidently make this determination, which they communicate naturally to LEAF, by simply writing the different error handlers. LEAF will transport the needed error objects while discarding the ones handlers don't care to use, saving resources.
 
-TIP: The LEAF examples include an adaptation of the program from the https://ned14.github.io/outcome/tutorial/essential/result/[Boost Outcome `result<>` tutorial]. You can https://github.com/zajo/leaf/blob/master/examples/print_half.cpp?ts=4[view it on GitHub].
+TIP: The LEAF examples include an adaptation of the program from the https://ned14.github.io/outcome/tutorial/essential/result/[Boost Outcome `result<>` tutorial]. You can https://github.com/boostorg/leaf/blob/master/examples/print_half.cpp?ts=4[view it on GitHub].
 
 NOTE: Programs using LEAF for error-handling are not required to use `leaf::result<T>`; for example, it is possible to use `outcome::result<T>` with LEAF.
 
@@ -5467,21 +5467,21 @@ In contrast, the design of LEAF acknowledges that {CPP} programmers don't even a
 
 === Benchmark
 
-https://github.com/zajo/leaf/blob/master/benchmark/benchmark.md[This benchmark] compares the performance of LEAF, Boost Outcome and `tl::expected`.
+https://github.com/boostorg/leaf/blob/master/benchmark/benchmark.md[This benchmark] compares the performance of LEAF, Boost Outcome and `tl::expected`.
 
 [[distribution]]
 == Distribution
 
-The source code is https://github.com/zajo/leaf[available] on GitHub.
+The source code is https://github.com/boostorg/leaf[available] on GitHub.
 
 Copyright (c) 2018-2020 Emil Dotchevski. Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
 
 [[portability]]
 == Portability
 
-LEAF requires {CPP}11 or newer compiler.
+LEAF requires a {CPP}11 or newer compiler, including support for thread-local storage.
 
-LEAF is formatted as a Boost library, but it does not depend on Boost or anything else.
+While it is part of Boost, LEAF does not depend on any other library.
 
 == Running the Unit Tests
 
@@ -5525,8 +5525,6 @@ The following support options are available:
 * https://Cpplang.slack.com[cpplang on Slack] (use the `#boost` channel)
 * https://lists.boost.org/mailman/listinfo.cgi/boost-users[Boost Users Mailing List]
 * https://lists.boost.org/mailman/listinfo.cgi/boost[Boost Developers Mailing List]
-
-(LEAF is not part of Boost).
 
 == Acknowledgements
 

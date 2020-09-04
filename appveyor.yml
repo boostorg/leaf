@@ -41,4 +41,4 @@ build: off
 
 test_script:
   - if not "%CXXSTD%" == "" set CXXSTD=cxxstd=%CXXSTD%
-  - b2 -j3 libs/leaf/test toolset=%TOOLSET% exception-handling=on,off variant=debug,release,debug-diagnostics0,release-diagnostics0 %CXXSTD%
+  - b2 -j3 libs/leaf/test toolset=%TOOLSET% exception-handling=on,off variant=debug,release,leaf_debug_diag0,leaf_release_diag0 %CXXSTD%

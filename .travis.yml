@@ -71,7 +71,7 @@ matrix:
           echo "using asciidoctor ;" > ~/user-config.jam
         - ../../b2 doc
       deploy:
-        local-dir: ../boost-root/libs/leaf/doc/out
+        local-dir: ../boost-root/libs/leaf/doc/html
         provider: pages
         skip-cleanup: true
         github-token: $GH_PAGES_TOKEN
@@ -83,7 +83,11 @@ matrix:
 
     - os: osx
       compiler: clang++
-      env: UBSAN=1 TOOLSET=clang COMPILER=clang++ CXXSTD=11,14,1z UBSAN_OPTIONS=print_stacktrace=1
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++ CXXSTD=11,14 UBSAN_OPTIONS=print_stacktrace=1
+
+    - os: osx
+      compiler: clang++
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++ CXXSTD=1z,2a UBSAN_OPTIONS=print_stacktrace=1
 
     - os: osx
       osx_image: xcode11.5
@@ -134,7 +138,17 @@ matrix:
 
     - os: linux
       compiler: g++-9
-      env: UBSAN=1 TOOLSET=gcc COMPILER=g++-9 CXXSTD=11,14,17,2a UBSAN_OPTIONS=print_stacktrace=1 LINKFLAGS=-fuse-ld=gold
+      env: UBSAN=1 TOOLSET=gcc COMPILER=g++-9 CXXSTD=11,14 UBSAN_OPTIONS=print_stacktrace=1 LINKFLAGS=-fuse-ld=gold
+      addons:
+        apt:
+          packages:
+            - g++-9
+          sources:
+            - ubuntu-toolchain-r-test
+
+    - os: linux
+      compiler: g++-9
+      env: UBSAN=1 TOOLSET=gcc COMPILER=g++-9 CXXSTD=17,2a UBSAN_OPTIONS=print_stacktrace=1 LINKFLAGS=-fuse-ld=gold
       addons:
         apt:
           packages:
@@ -164,7 +178,7 @@ matrix:
 
     - os: linux
       compiler: g++-7
-      env: TOOLSET=gcc COMPILER=g++-7 CXXSTD=11,14,17
+      env: TOOLSET=gcc COMPILER=g++-7 CXXSTD=11,14
       addons:
         apt:
           packages:
@@ -174,7 +188,7 @@ matrix:
 
     - os: linux
       compiler: g++-6
-      env: TOOLSET=gcc COMPILER=g++-6 CXXSTD=11,14,1z
+      env: TOOLSET=gcc COMPILER=g++-6 CXXSTD=11,14
       addons:
         apt:
           packages:
@@ -184,7 +198,7 @@ matrix:
 
     - os: linux
       compiler: g++-5
-      env: TOOLSET=gcc COMPILER=g++-5 CXXSTD=11,14,1z
+      env: TOOLSET=gcc COMPILER=g++-5 CXXSTD=11,14
       addons:
         apt:
           packages:
@@ -206,7 +220,18 @@ matrix:
 
     - os: linux
       compiler: clang++-8
-      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-8 CXXSTD=11,14,17,2a UBSAN_OPTIONS=print_stacktrace=1
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-8 CXXSTD=11,14 UBSAN_OPTIONS=print_stacktrace=1
+      addons:
+        apt:
+          packages:
+            - clang-8
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-8
+
+    - os: linux
+      compiler: clang++-8
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-8 CXXSTD=17,2a UBSAN_OPTIONS=print_stacktrace=1
       addons:
         apt:
           packages:
@@ -387,10 +412,10 @@ install:
 script:
   - |-
     echo "using $TOOLSET : : $COMPILER ;" > ~/user-config.jam
-  - ../../b2 test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,debug-diagnostics0,release-diagnostics0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
-  - ../../b2 exception-handling=off rtti=off test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,debug-diagnostics0,release-diagnostics0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
-  - ../../b2 threading=single test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,debug-diagnostics0,release-diagnostics0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
-  - ../../b2 threading=single exception-handling=off rtti=off test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,debug-diagnostics0,release-diagnostics0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
+  - ../../b2 test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,leaf_debug_diag0,leaf_release_diag0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
+  - ../../b2 exception-handling=off rtti=off test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,leaf_debug_diag0,leaf_release_diag0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
+  - ../../b2 threading=single test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,leaf_debug_diag0,leaf_release_diag0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
+  - ../../b2 threading=single exception-handling=off rtti=off test toolset=$TOOLSET cxxstd=$CXXSTD variant=debug,release,leaf_debug_diag0,leaf_release_diag0 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}
 
 notifications:
   email:

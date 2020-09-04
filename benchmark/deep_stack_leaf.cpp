@@ -6,7 +6,7 @@
 // See benchmark.md
 
 #ifndef BOOST_LEAF_ALL_HPP_INCLUDED
-#	include <boost/leaf/all.hpp>
+#	include <boost/leaf.hpp>
 #endif
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS

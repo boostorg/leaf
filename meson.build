@@ -5,7 +5,7 @@
 
 project('leaf', 'cpp', default_options : ['cpp_std=c++17', 'b_pch=false'], license : 'boost')
 
-option_all_hpp = get_option('leaf_all_hpp')
+option_leaf_hpp = get_option('leaf_hpp')
 option_boost = get_option('leaf_boost_examples')
 option_lua = get_option('leaf_lua_examples')
 option_diagnostics = get_option('leaf_diagnostics')
@@ -49,23 +49,40 @@ if not meson.is_subproject()
 			'-Wno-non-virtual-dtor',
 			'-Wno-misleading-indentation',
 			language:'cpp' )
+	elif host_machine.system()=='emscripten'
+		add_global_arguments(
+			'-s', 'WASM=1',
+			'-s', 'USE_PTHREADS=1',
+			'-s', 'EXIT_RUNTIME=1',
+			'-s', 'PROXY_TO_PTHREAD=1',
+			'-s', 'DISABLE_EXCEPTION_CATCHING=0',
+				language:'cpp' )
+		add_global_link_arguments(
+			'-s', 'EXPORT_ALL=1',
+			'-s', 'WASM=1',
+			'-s', 'USE_PTHREADS=1',
+			'-s', 'EXIT_RUNTIME=1',
+			'-s', 'PROXY_TO_PTHREAD=1',
+			'-s', 'DISABLE_EXCEPTION_CATCHING=0',
+			'-s', 'INITIAL_MEMORY=268435456',
+				language:'cpp' )
 	endif
 endif
 
-if option_all_hpp
+if option_leaf_hpp
 	prog_python = import('python').find_installation('python3')
 	custom_target(
-		'all_hpp',
+		'leaf_hpp',
 		command:
 		[
 			prog_python,
 			files('gen/generate_single_header.py'),
 			'-i', files('include/boost/leaf/detail/all.hpp'),
 			'-p', join_paths(meson.source_root(),'include'),
-			'-o', join_paths(meson.source_root(),'include/boost/leaf/all.hpp'),
+			'-o', join_paths(meson.source_root(),'include/boost/leaf.hpp'),
 			'boost/leaf'
 		],
-		output: 'all.hpp',
+		output: 'leaf.hpp',
 		build_always_stale: true,
 		build_by_default: true)
 endif
@@ -164,10 +181,10 @@ if option_enable_unit_tests
 		'_hpp_error_test',
 		'_hpp_exception_test',
 		'_hpp_handle_errors_test',
+		'_hpp_leaf_test',
 		'_hpp_on_error_test',
 		'_hpp_pred_test',
 		'_hpp_result_test',
-		'_hpp_all_test',
 	]
 	if option_boost and option_exceptions
 		tests += [

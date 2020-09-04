@@ -3,7 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// This is the program presented in https://zajo.github.io/leaf/#introduction-result,
+// This is the program presented in https://boostorg.github.io/leaf/#introduction-result,
 // converted to use outcome::result instead of leaf::result.
 
 // It reads a text file in a buffer and prints it to std::cout, using LEAF to handle errors.

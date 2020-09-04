@@ -17,7 +17,6 @@
 #endif
 
 #include <boost/leaf/detail/optional.hpp>
-#include <exception>
 #include <ostream>
 #include <cstring>
 
@@ -33,7 +32,7 @@ namespace boost { namespace leaf {
 	}
 
 	template <class Name>
-	inline char const * type() noexcept
+	inline char const * type()
 	{
 		using leaf_detail::check_prefix;
 	char const * t =
@@ -118,6 +117,7 @@ namespace boost { namespace leaf {
 			}
 		};
 
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
 		template <>
 		struct diagnostic<std::exception_ptr, false, false>
 		{
@@ -126,6 +126,7 @@ namespace boost { namespace leaf {
 			{
 			}
 		};
+#endif
 	}
 
 } }

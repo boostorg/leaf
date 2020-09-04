@@ -3,7 +3,7 @@
 The LEAF github repository contains two similar benchmarking programs, one using LEAF, the other configurable to use `tl::expected` or Boost Outcome, that simulate transporting error objects across 10 levels of stack frames, measuring the performance of the three libraries.
 
 Links:
-* LEAF: https://zajo.github.io/leaf
+* LEAF: https://boostorg.github.io/leaf
 * `tl::expected`: https://github.com/TartanLlama/expected
 * Boost Outcome V2: https://www.boost.org/doc/libs/release/libs/outcome/doc/html/index.html
 
@@ -300,22 +300,22 @@ Godbolt has built-in support for Boost (Outcome), but LEAF and `tl::expected` bo
 `leaf::result<T>` ([godbolt](https://godbolt.org/z/Trf2fc))
 
 ```c++
-#include "https://raw.githubusercontent.com/zajo/leaf/master/include/boost/leaf/all.hpp"
-#include "https://raw.githubusercontent.com/zajo/leaf/master/benchmark/deep_stack_leaf.cpp"
+#include "https://raw.githubusercontent.com/boostorg/leaf/master/include/boost/leaf.hpp"
+#include "https://raw.githubusercontent.com/boostorg/leaf/master/benchmark/deep_stack_leaf.cpp"
 ```
 
 `tl::expected<T, E>` ([godbolt](https://godbolt.org/z/sHwtTU))
 
 ```c++
 #include "https://raw.githubusercontent.com/TartanLlama/expected/master/include/tl/expected.hpp"
-#include "https://raw.githubusercontent.com/zajo/leaf/master/benchmark/deep_stack_other.cpp"
+#include "https://raw.githubusercontent.com/boostorg/leaf/master/benchmark/deep_stack_other.cpp"
 ```
 
 `outcome::result<T, E>` ([godbolt](https://godbolt.org/z/ZrfRRA))
 
 ```c++
 #define BENCHMARK_WHAT 1
-#include "https://raw.githubusercontent.com/zajo/leaf/master/benchmark/deep_stack_other.cpp"
+#include "https://raw.githubusercontent.com/boostorg/leaf/master/benchmark/deep_stack_other.cpp"
 ```
 
 ## Build options
@@ -329,7 +329,7 @@ To build both versions of the benchmark program, the compilers are invoked using
 
 In addition, the LEAF version is compiled with:
 
-* `-DBOOST_LEAF_DIAGNOSTICS=0`: Disable diagnostic information for error objects not recognized by the program. This is a debugging feature, see [Configuration Macros](https://zajo.github.io/leaf/#_configuration_macros).
+* `-DBOOST_LEAF_DIAGNOSTICS=0`: Disable diagnostic information for error objects not recognized by the program. This is a debugging feature, see [Configuration Macros](https://boostorg.github.io/leaf/#_configuration_macros).
 
 ## Results
 
