@@ -183,7 +183,7 @@ int main()
 			BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
 			BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
 			BOOST_TEST_NE(s.find(": {Non-Printable}"), s.npos);
-			BOOST_TEST_NE(s.find("Unexpected error objects:"), s.npos);
+			BOOST_TEST_NE(s.find("Unhandled error objects:"), s.npos);
 			BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
 			BOOST_TEST_NE(s.find("unexpected_test<2>"), s.npos);
 			BOOST_TEST_NE(s.find(": 1"), s.npos);
@@ -317,7 +317,7 @@ int main()
 			BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
 			BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
 			BOOST_TEST_NE(s.find(": {Non-Printable}"), s.npos);
-			BOOST_TEST_NE(s.find("Unexpected error objects:"), s.npos);
+			BOOST_TEST_NE(s.find("Unhandled error objects:"), s.npos);
 			BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
 			BOOST_TEST_NE(s.find("unexpected_test<2>"), s.npos);
 			BOOST_TEST_NE(s.find(": 1"), s.npos);

@@ -1158,7 +1158,7 @@ namespace boost { namespace leaf {
 
 			void print(std::ostream & os) const
 			{
-				os << "Unexpected error objects:\n" << s_;
+				os << "Unhandled error objects:\n" << s_;
 			}
 		};
 
