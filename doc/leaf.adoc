@@ -43,11 +43,26 @@ Boost LEAF is a lightweight error handling library for {CPP}11. Features:
 ifndef::backend-pdf[]
 [grid=none, frame=none]
 |====
-| <<introduction,Introduction>> \| <<tutorial>> \| <<synopsis>> \| https://github.com/boostorg/leaf/blob/master/doc/whitepaper.md[Whitepaper] \| https://github.com/boostorg/leaf/blob/master/benchmark/benchmark.md[Benchmark] \| <<portability>> >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<predicates,Predicates>> \| <<traits,Traits>> \| <<macros,Macros>>
+| <<introduction,Introduction>> \| <<tutorial>> \| <<synopsis>> \| https://github.com/boostorg/leaf/blob/master/doc/whitepaper.md[Whitepaper] \| https://github.com/boostorg/leaf/blob/master/benchmark/benchmark.md[Benchmark] >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<predicates,Predicates>> \| <<traits,Traits>> \| <<macros,Macros>>
 |====
 endif::[]
 
-LEAF is designed with a strong bias towards the common use case where callers of functions which may fail check for success and forward errors up the call stack but do not handle them. In this case, only a simple success-or-failure discriminant is transported. Actual error objects are communicated directly to the error-handling scope, skipping the intermediate check-only frames altogether.
+LEAF is designed with a strong bias towards the common use case where callers of functions which may fail check for success and forward errors up the call stack but do not handle them. In this case, only a trivial success-or-failure discriminant is transported. Actual error objects are communicated directly to the error-handling scope, skipping the intermediate check-only frames altogether.
+
+[[support]]
+== Support
+
+* https://Cpplang.slack.com[cpplang on Slack] (use the `#boost` channel)
+* https://lists.boost.org/mailman/listinfo.cgi/boost-users[Boost Users Mailing List]
+* https://lists.boost.org/mailman/listinfo.cgi/boost[Boost Developers Mailing List]
+* https://github.com/boostorg/leaf/issues[Report an issue] on GitHub
+
+[[distribution]]
+== Distribution and Portability
+
+Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
+
+LEAF requires only {CPP}11 (including support for thread-local storage).
 
 [[introduction]]
 == Five Minute Introduction
@@ -5463,25 +5478,9 @@ Further, consider that Outcome aims to hopefully become _the_ one error-handling
 
 In contrast, the design of LEAF acknowledges that {CPP} programmers don't even agree on what a string is. If your project uses 10 different libraries, this probably means 15 different ways to report errors, sometimes across uncooperative interfaces (e.g. C APIs). LEAF helps you get the job done.
 
-'''
-
-=== Benchmark
+== Benchmark
 
 https://github.com/boostorg/leaf/blob/master/benchmark/benchmark.md[This benchmark] compares the performance of LEAF, Boost Outcome and `tl::expected`.
-
-[[distribution]]
-== Distribution
-
-The source code is https://github.com/boostorg/leaf[available] on GitHub.
-
-Copyright (c) 2018-2020 Emil Dotchevski. Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
-
-[[portability]]
-== Portability
-
-LEAF requires a {CPP}11 or newer compiler, including support for thread-local storage.
-
-While it is part of Boost, LEAF does not depend on any other library.
 
 == Running the Unit Tests
 
@@ -5517,14 +5516,6 @@ The following configuration macros are recognized:
 * `BOOST_LEAF_DIAGNOSTICS`: Defining this macro to `0` stubs out both <<diagnostic_info>> and <<verbose_diagnostic_info>>, which could improve the performance of the error path in some programs (if the macro is left undefined, LEAF defines it as `1`).
 * `BOOST_LEAF_NO_EXCEPTIONS`: Disables all exception handling support. If left undefined, LEAF defines it based on the compiler configuration (e.g. `-fno-exceptions`).
 * `BOOST_LEAF_NO_THREADS`: Disable all multi-thread support.
-
-== Support
-
-The following support options are available:
-
-* https://Cpplang.slack.com[cpplang on Slack] (use the `#boost` channel)
-* https://lists.boost.org/mailman/listinfo.cgi/boost-users[Boost Users Mailing List]
-* https://lists.boost.org/mailman/listinfo.cgi/boost[Boost Developers Mailing List]
 
 == Acknowledgements
 
