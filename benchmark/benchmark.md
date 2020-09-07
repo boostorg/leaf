@@ -150,7 +150,7 @@ leaf::result<int> g()
 }
 ```
 
-Generates this code on clang ([Godbolt](https://godbolt.org/z/edhz7N)):
+Generates this code on clang ([Godbolt](https://godbolt.org/z/aMh4zo)):
 
 ```x86asm
 g():                                  # @g()
@@ -236,7 +236,7 @@ leaf::result<int> g()
 }
 ```
 
-We get ([Godbolt](https://godbolt.org/z/aPEtyb)):
+We get ([Godbolt](https://godbolt.org/z/nezE7s)):
 
 ```x86asm
 g():                                  # @g()
@@ -299,7 +299,7 @@ Now, transporting a large error object might seem unusual, but this is only beca
 
 Godbolt has built-in support for Boost (Outcome), but LEAF and `tl::expected` both provide a single header, which makes it very easy to use them online as well. To see the generated code for the benchmark program, you can copy and paste the following into Godbolt:
 
-`leaf::result<T>` ([godbolt](https://godbolt.org/z/Trf2fc))
+`leaf::result<T>` ([godbolt](https://godbolt.org/z/Thdq1d))
 
 ```c++
 #include "https://raw.githubusercontent.com/boostorg/leaf/master/include/boost/leaf.hpp"

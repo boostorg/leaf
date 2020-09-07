@@ -83,7 +83,11 @@ matrix:
 
     - os: osx
       compiler: clang++
-      env: UBSAN=1 TOOLSET=clang COMPILER=clang++ CXXSTD=11,14,1z UBSAN_OPTIONS=print_stacktrace=1
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++ CXXSTD=11,14 UBSAN_OPTIONS=print_stacktrace=1
+
+    - os: osx
+      compiler: clang++
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++ CXXSTD=1z,2a UBSAN_OPTIONS=print_stacktrace=1
 
     - os: osx
       osx_image: xcode11.5
@@ -134,7 +138,17 @@ matrix:
 
     - os: linux
       compiler: g++-9
-      env: UBSAN=1 TOOLSET=gcc COMPILER=g++-9 CXXSTD=11,14,17,2a UBSAN_OPTIONS=print_stacktrace=1 LINKFLAGS=-fuse-ld=gold
+      env: UBSAN=1 TOOLSET=gcc COMPILER=g++-9 CXXSTD=11,14 UBSAN_OPTIONS=print_stacktrace=1 LINKFLAGS=-fuse-ld=gold
+      addons:
+        apt:
+          packages:
+            - g++-9
+          sources:
+            - ubuntu-toolchain-r-test
+
+    - os: linux
+      compiler: g++-9
+      env: UBSAN=1 TOOLSET=gcc COMPILER=g++-9 CXXSTD=17,2a UBSAN_OPTIONS=print_stacktrace=1 LINKFLAGS=-fuse-ld=gold
       addons:
         apt:
           packages:
@@ -206,7 +220,18 @@ matrix:
 
     - os: linux
       compiler: clang++-8
-      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-8 CXXSTD=11,14,17,2a UBSAN_OPTIONS=print_stacktrace=1
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-8 CXXSTD=11,14 UBSAN_OPTIONS=print_stacktrace=1
+      addons:
+        apt:
+          packages:
+            - clang-8
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-8
+
+    - os: linux
+      compiler: clang++-8
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-8 CXXSTD=17,2a UBSAN_OPTIONS=print_stacktrace=1
       addons:
         apt:
           packages:
