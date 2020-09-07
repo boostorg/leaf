@@ -47,7 +47,10 @@ When we want to handle failures, in Boost Outcome and in `tl::expected`, accessi
 ```c++
 // Outcome, tl::expected
 if( auto r = f() )
-  return r.value()+1; // No error
+{
+  auto v = r.value();
+  // No error, use v
+}
 else
 { // Error!
   switch( r.error() )
@@ -104,7 +107,7 @@ The primary approach we use to prevent the compiler from optimizing everything o
 
 When benchmarking error handling, it makes sense to measure the time it takes to return a result or error across multiple stack frames. This calls for disabling inlining.
 
-The technique used to disable inlining in this benchmark is to mark functions as `__attribute__((noinline))`. This is imperfect, because optimizers can still peek into the body of the function and optimize things out, as is seen in this example:
+The technique used to disable inlining in this benchmark is to mark functions with `__attribute__((noinline))`. This is imperfect, because optimizers can still peek into the body of the function and optimize things out, as is seen in this example:
 
 ```c++
 __attribute__((noinline)) int val() {return 42;}
@@ -184,7 +187,7 @@ g():                                  # @g()
 
 > Description:
 >
-> * The happy path can be recognized by the `add eax,1` instruction generated for `x+1`.
+> * The happy path can be recognized by the `add eax, 1` instruction generated for `x + 1`.
 >
 > * `.LBB0_4`: Regular failure; the returned `result<T>` object holds only the `int` discriminant.
 >
@@ -266,7 +269,6 @@ Above, the call to `f()` is inlined:
 * `.LBB1_2`: Success
 * The atomic `add` is from the initial error reporting machinery in LEAF, generating a unique error ID for the error being reported.
 
-
 ## Benchmark matrix dimensions
 
 The benchmark matrix has 2 dimensions:
@@ -285,7 +287,7 @@ Now, transporting a large error object might seem unusual, but this is only beca
 
 * The return type of error-neutral functions is not coupled with the error object types that may be reported. This means that in case of a failure, any function can easily contribute any error information it has available.
 
-* LEAF will only bother to transport an error object if an active error handling scope needs it. This means that library functions can and should contribute any and all relevant information when reporting a failure, because if the program doesn't need it, it will simply be discarded.
+* LEAF will only bother with transporting a given error object if an active error handling scope needs it. This means that library functions can and should contribute any and all relevant information when reporting a failure, because if the program doesn't need it, it will simply be discarded.
 
 ## Source code
 
