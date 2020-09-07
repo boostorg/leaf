@@ -481,7 +481,7 @@ namespace boost { namespace leaf {
 
 	namespace leaf_detail
 	{
-		class leaf_category: public std::error_category
+		class leaf_category final: public std::error_category
 		{
 			bool equivalent( int,  std::error_condition const & ) const noexcept final override { return false; }
 			bool equivalent( std::error_code const &, int ) const noexcept final override { return false; }
