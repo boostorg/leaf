@@ -77,7 +77,7 @@ Is it important to know the name of the file which we failed to read or parse? I
 
 ## 4. Handling of error information
 
-In the previous section we didn't specify how the error information (`errno`, `pathname`, etc.) is handled, we were only reasoning what we need to know in case a failure occurs. But the question remains: yes, the `pathname` and `flags` passed to `open()` are relevant to any failure in any operation related to that file, but what are we supposed to do with them?
+In the previous section we weren't concerned with how the error information (`errno`, `pathname`, etc.) is handled, we were only reasoning about what we need to know in case a failure occurs. But the question remains: yes, the `pathname` and `flags` passed to `open()` are relevant to any failure in any operation related to that file, but what are we supposed to do with them?
 
 There are several options:
 
@@ -92,7 +92,7 @@ We'll examine each option in more detail below.
 
 This approach is actually perfect for low-level libraries. The burden of transporting additional necessary information is shifted to the caller, which is arguably where it should be in this case: all relevant information leading to failures detected in a low-level function is available in the calling scopes. For example, it would be inappropriate if a function like `read()` tries to log anything or return error information beyond an error code, because all other relevant information is available in the various scopes leading to the failure.
 
-However, this approach does not compose: as the error code bubbles up, each scope may hold additional relevant information that needs to be communicated or lost forever as that scope is exited; and that can't be done with a simple error code. For example, it is difficult to deal with `ENOENT` without knowing the relevant `pathname` -- and if we're aborting a scope where than information is available, we must communicate it at that point.
+However, this approach does not compose: as the error code bubbles up, each scope may hold additional relevant information that needs to be communicated or lost forever as that scope is exited; and that can't be done with a simple error code. For example, it may be difficult to deal with `ENOENT` without knowing the relevant `pathname` -- and if we're aborting a scope where that information is available, we should communicate it at that point.
 
 ### 4.2. Communicating an error code, logging other relevant information
 
@@ -102,7 +102,7 @@ There are several problems with this approach:
 
 * It couples us with a logging system, which may not be a problem in the domain of a particular project, but certainly is not ideal for a universal library.
 * Depending on the use case, it may be too costly to hit the file system or some other logging target while handling errors.
-* The information in the log is developer-friendly, but not user-friendly. There are many projects where this is not a problem (for example, internet servers), but generally it is not appropriate to present a wall of cryptic diagnostic information to a user in hopes he will find clues in it to help fix the problem. Even a developer-facing command line utility has to print error information in plain English -- and the typical user-friendly app has to be able to use different languages.
+* The information in the log is developer-friendly, but not user-friendly. There are many projects where this is not a problem (for example, internet servers), but generally it is not appropriate to present a wall of cryptic diagnostic information to a user in hopes he will find clues in it to help fix the problem. But even a developer-facing command line utility has to print error information in plain English -- and the typical user-friendly app has to be able to use different languages.
 
 ### 4.3. Communicating an error code + a string
 
@@ -227,9 +227,9 @@ But there is another important benefit to this approach which is easy to overloo
 ```c
 float read_data_and_compute_value(const char *pathname)
 {
-  // Open the file, return in case that fails:
+  // Open the file, return INVALID_VALUE in case that fails:
   int fh = open(pathname, O_RDONLY);
-  if (fh==-1)
+  if (fh == -1)
     return INVALID_VALUE;
 
   // Read data, compute the value
@@ -259,13 +259,13 @@ Contemporary C++ exception handling is notorious for overhead<sup>[3](#reference
 
 Table-based exception handling has been designed based on the questionable assumption that it is critical to eliminate speed overhead in programs that don't `throw`. I'm saying questionable, because in practice such programs are compiled with `-fno-exceptions`.
 
-Ironically, the (older and less sophisticated) frame-based approach is preferable when we need to better control the cost of exception handling. The reason is that the already light overhead added to the happy path can be easily eliminated by inlining. This leaves only the cost of the sad path, which is also much more predictable, compared to the table-based approach.
+Ironically, the (older and less sophisticated) frame-based approach is preferable when we need to better control the cost of exception handling. The reason is that the overhead added to the happy path can be easily eliminated by inlining -- which is what we do anyway to deal with all other function-call overhead. This leaves only the cost of the sad path, which is also much more predictable, compared to the table-based approach.
 
 #### 6.2.2. Communicating the *failure flag*
 
 Current implementations do not communicate the *failure flag* explicitly. Instead, when throwing an exception, the compiler uses some form of automatic stack unwinding (possibly similar to `longjmp`) to reach the appropriate `catch` block, and to know which destructors to call.
 
-A much better approach would be for functions which may throw to communicate the *failure flag* explicitly. For example, an ABI can be designed to transport this bit of information in the Carry flag. This would allow each exception-neutral function to implement the error check, as well as to call the correct destructors in case of an error, with virtually no overhead.
+A much better approach would be for functions which may throw to communicate the *failure flag* explicitly, hopefully in the registers rather than spilling it to memory. This would allow each exception-neutral function to implement the error check, as well as to call the correct destructors in case of an error, with very little overhead.
 
 #### 6.2.3. Allocation of exception objects
 
@@ -338,7 +338,7 @@ main:
         ret
 ```
 
-Bluntly, this is not acceptable, since it is trivial to determine at compile time that the `throw`/`catch` pair is noop. More generally, what if the generated code is improved _only_ in this simple use case, where the `throw` and the matching `catch` are in the same stack frame? Under this condition, there is no need to invoke the ABI machinery to allocate an exception object or navigate the unwind tables; the analysis of the control flow can and should happen at compile time. We'd end up with simply
+Bluntly, this is not acceptable, since it is trivial to determine at compile time that the `throw`/`catch` pair is noop. What if the generated code is improved _only_ in this simple use case, where the `throw` and the matching `catch` are in the same stack frame? Under this condition, there is no need to invoke the ABI machinery to allocate an exception object or navigate the unwind tables; the analysis of the control flow can and should happen at compile time. We'd end up with simply
 
 ```x86asm
 main:
@@ -348,16 +348,16 @@ main:
 
 Why is optimizing this simplest of use cases important? Because this leads to complete and total elimination of exception handling overhead whenever function inlining occurs; and in C++ the critical path is already heavily reliant on inlining, because the function call overhead is not insignificant even if exception handling is disabled.
 
-### 6.3. LEAF
+### 6.3. Boost LEAF
 
-LEAF<sup>[6](#reference)</sup> is a universal error-handling library for C++ which works with or without exception handling. It provides a low-cost alternative to transporting error objects in return values.
+Boost LEAF<sup>[6](#reference)</sup> is a universal error-handling library for C++ which works with or without exception handling. It provides a low-cost alternative to transporting error objects in return values.
 
 Using LEAF, *error-handling* functions match error objects similarly to the way `catch` matches exceptions, with two important differences:
 
 * Each handler can specify multiple objects to be matched by type, rather than only one.
-* The error objects are not matched dynamically, but solely based on their static type. This allows *all* error objects to be allocated on the stack, using automatic storage duration.
+* The error objects are matched dynamically, but solely based on their static type. This allows *all* error objects to be allocated on the stack, using automatic storage duration.
 
-This is achieved using the following syntax:
+Whithout exception handling, this is achieved using the following syntax:
 
 ```c++
 leaf::handle_all(
@@ -365,8 +365,9 @@ leaf::handle_all(
   // The first function passed to handle_all is akin to a try-block.
   []() -> leaf::result<T>
   {
-    // Operations which may fail, returning a T in case of success,
-    // or a result<U> in case of an error.
+    // Operations which may fail, returning a T in case of success.
+    // If case of an error, any number of error objects of arbitrary
+    // types can be associated with the returned result<T> object.
   },
 
   // The handler below is invoked if both an object of type my_error
@@ -393,7 +394,44 @@ leaf::handle_all(
 );
 ```
 
-In LEAF, error objects are allocated using automatic duration, stored in a `std::tuple` in the scope of `leaf::handle_all`. The type arguments of the `std::tuple` template are automatically deduced from the types of the arguments of the error-handling lambdas passed to `leaf::handle_all`. If the user attempts to communicate error objects of any other type, these objects are discarded, since no error handler can make any use of them.
+With exception handling:
+
+```c++
+leaf::try_catch(
+
+  // The first function passed to handle_all is akin to a try-block.
+  []() -> T
+  {
+    // Operations which may fail, returning a T in case of success.
+    // If case of an error, any number of error objects of arbitrary
+    // types can be associated with the thrown exception object.
+  },
+
+  // The handler below is invoked if both an object of type my_error
+  // and an object of another_type are associated with the exception
+  // thrown by the try-block (above).
+  [](my_error const & e1, another_type const & e2)
+  {
+    ....
+  },
+
+  // This handler is invoked if an object of type my_error is associated
+  // with the exception thrown by the try-block.
+  [](my_error const & e1)
+  {
+    ....
+  },
+
+  // This handler is invoked in all other cases, similarly to catch(...)
+  []
+  {
+    ....
+  }
+
+);
+```
+
+In LEAF, error objects are allocated using automatic duration, stored in a `std::tuple` in the scope of `leaf::handle_all` (or `leaf::try_catch`). The type arguments of the `std::tuple` template are automatically deduced from the types of the arguments of the error-handling lambdas. If the try-block attempts to communicate error objects of any other type, these objects are discarded, since no error handler can make any use of them.
 
 The `leaf::result<T>` template can be used as a return value for functions that may fail to produce a `T`. It carries the [*failure flag*](#1-the-semantics-of-a-failure) and, in case it is set, an integer serial number of the failure, while actual error objects are immediately moved into the matching storage reserved in the scope of an error-handling function (e.g. `handle_all`) found in the call stack.
 
@@ -449,9 +487,9 @@ Logically, this behavior is equivalent to the compiler-generated code when calli
 
 * We demonstrated that [generally](#44-communicating-all-error-information-with-type-safety) it is not a good idea to [couple function signatures with the types of all error objects they need to communicate](#5-error-handling-and-function-signatures).
 
-* We presented a novel method for transporting of error objects of arbitrary static types without using dynamic memory allocation, implemented by the [LEAF](#63-leaf) library.
+* We presented a novel method for transporting of error objects of arbitrary static types without using dynamic memory allocation, implemented by the [Boost LEAF library](#63-boost-leaf).
 
-* We described an [alternative approach to implementing C++ exception handling](#62-c-exceptions) which would eliminate all overhead in practice.
+* We described an [alternative approach to implementing C++ exception handling](#62-c-exceptions) which would eliminate most overhead in practice.
 
 * We showed that the three formal safety guarantees (*Basic*, *Strong*, *~~Nothrow~~ No-fail*) are useful when reasoning about object invariants, [regardless of how errors are communicated](#7-exception-safety-vs-failure-safety).
 
