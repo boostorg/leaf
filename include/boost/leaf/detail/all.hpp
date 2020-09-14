@@ -1,5 +1,5 @@
-#ifndef BOOST_LEAF_ALL_HPP_INCLUDED
-#define BOOST_LEAF_ALL_HPP_INCLUDED
+#ifndef BOOST_LEAF_HPP_INCLUDED
+#define BOOST_LEAF_HPP_INCLUDED
 
 // Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
