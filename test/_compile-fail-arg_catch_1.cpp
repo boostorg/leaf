@@ -11,18 +11,18 @@ namespace leaf = boost::leaf;
 
 int main()
 {
-	return leaf::try_handle_all(
-		[]() -> leaf::result<int>
-		{
-			return 0;
-		},
-		[]( leaf::catch_<int> const & ) // leaf::catch_<> must be taken by value
-		{
-			return 1;
-		},
-		[]
-		{
-			return 2;
-		});
-	return 0;
+    return leaf::try_handle_all(
+        []() -> leaf::result<int>
+        {
+            return 0;
+        },
+        []( leaf::catch_<int> const & ) // leaf::catch_<> must be taken by value
+        {
+            return 1;
+        },
+        []
+        {
+            return 2;
+        });
+    return 0;
 }

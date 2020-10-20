@@ -10,8 +10,8 @@
 
 int main()
 {
-	std::cout << "Unit test not applicable." << std::endl;
-	return 0;
+    std::cout << "Unit test not applicable." << std::endl;
+    return 0;
 }
 
 #else
@@ -28,60 +28,60 @@ int count = 0;
 template <int>
 struct info
 {
-	info() noexcept
-	{
-		++count;
-	}
+    info() noexcept
+    {
+        ++count;
+    }
 
-	info( info const & ) noexcept
-	{
-		++count;
-	}
+    info( info const & ) noexcept
+    {
+        ++count;
+    }
 
-	~info() noexcept
-	{
-		--count;
-	}
+    ~info() noexcept
+    {
+        --count;
+    }
 };
 
 int main()
 {
-	auto error_handlers = std::make_tuple(
-		[]( info<1>, info<3> )
-		{
-			return 1;
-		},
-		[]
-		{
-			return 2;
-		} );
-	BOOST_TEST_EQ(count, 0);
-	std::exception_ptr ep;
-	try
-	{
-		leaf::capture(
-			leaf::make_shared_context(error_handlers),
-			[]
-			{
-				throw leaf::exception(info<1>{}, info<3>{});
-			} );
-		BOOST_TEST(false);
-	}
-	catch(...)
-	{
-		ep = std::current_exception();
-	}
-	BOOST_TEST_EQ(count, 2);
-	int r = leaf::try_catch(
-		[&]() -> int
-		{
-			std::rethrow_exception(ep);
-		},
-		error_handlers );
-	BOOST_TEST_EQ(r, 1);
-	ep = std::exception_ptr();
-	BOOST_TEST_EQ(count, 0);
-	return boost::report_errors();
+    auto error_handlers = std::make_tuple(
+        []( info<1>, info<3> )
+        {
+            return 1;
+        },
+        []
+        {
+            return 2;
+        } );
+    BOOST_TEST_EQ(count, 0);
+    std::exception_ptr ep;
+    try
+    {
+        leaf::capture(
+            leaf::make_shared_context(error_handlers),
+            []
+            {
+                throw leaf::exception(info<1>{}, info<3>{});
+            } );
+        BOOST_TEST(false);
+    }
+    catch(...)
+    {
+        ep = std::current_exception();
+    }
+    BOOST_TEST_EQ(count, 2);
+    int r = leaf::try_catch(
+        [&]() -> int
+        {
+            std::rethrow_exception(ep);
+        },
+        error_handlers );
+    BOOST_TEST_EQ(r, 1);
+    ep = std::exception_ptr();
+    BOOST_TEST_EQ(count, 0);
+    return boost::report_errors();
 }
 
 #endif

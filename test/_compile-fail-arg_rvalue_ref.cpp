@@ -10,18 +10,18 @@ namespace leaf = boost::leaf;
 
 int main()
 {
-	return leaf::try_handle_all(
-		[]() -> leaf::result<int>
-		{
-			return 0;
-		},
-		[]( int && ) // && arguments are not allowed
-		{
-			return 1;
-		},
-		[]
-		{
-			return 2;
-		});
-	return 0;
+    return leaf::try_handle_all(
+        []() -> leaf::result<int>
+        {
+            return 0;
+        },
+        []( int && ) // && arguments are not allowed
+        {
+            return 1;
+        },
+        []
+        {
+            return 2;
+        });
+    return 0;
 }

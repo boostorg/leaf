@@ -26,24 +26,24 @@ namespace leaf = boost::leaf;
 // The error trace is activated only if an error-handling scope provides a handler for e_error_trace.
 struct e_error_trace
 {
-	struct rec
-	{
-		char const * file;
-		int line;
-		friend std::ostream & operator<<( std::ostream & os, rec const & x )
-		{
-			return os << x.file << '(' << x.line << ')' << std::endl;
-		}
-	};
+    struct rec
+    {
+        char const * file;
+        int line;
+        friend std::ostream & operator<<( std::ostream & os, rec const & x )
+        {
+            return os << x.file << '(' << x.line << ')' << std::endl;
+        }
+    };
 
-	std::deque<rec> value;
+    std::deque<rec> value;
 
-	friend std::ostream & operator<<( std::ostream & os, e_error_trace const & tr )
-	{
-		for( auto & i : tr.value )
-			os << i;
-		return os;
-	}
+    friend std::ostream & operator<<( std::ostream & os, e_error_trace const & tr )
+    {
+        for( auto & i : tr.value )
+            os << i;
+        return os;
+    }
 };
 
 // The ERROR_TRACE macro is designed for use in functions that detect or forward errors
@@ -58,71 +58,71 @@ int const failure_percent = 25;
 
 leaf::result<void> f1()
 {
-	ERROR_TRACE;
-	if( (std::rand()%100) > failure_percent )
-		return { };
-	else
-		return leaf::new_error();
+    ERROR_TRACE;
+    if( (std::rand()%100) > failure_percent )
+        return { };
+    else
+        return leaf::new_error();
 }
 
 leaf::result<void> f2()
 {
-	ERROR_TRACE;
-	if( (std::rand()%100) > failure_percent )
-		return f1();
-	else
-		return leaf::new_error();
+    ERROR_TRACE;
+    if( (std::rand()%100) > failure_percent )
+        return f1();
+    else
+        return leaf::new_error();
 }
 
 leaf::result<void> f3()
 {
-	ERROR_TRACE;
-	if( (std::rand()%100) > failure_percent )
-		return f2();
-	else
-		return leaf::new_error();
+    ERROR_TRACE;
+    if( (std::rand()%100) > failure_percent )
+        return f2();
+    else
+        return leaf::new_error();
 }
 
 leaf::result<void> f4()
 {
-	ERROR_TRACE;
-	if( (std::rand()%100) > failure_percent )
-		return f3();
-	else
-		return leaf::new_error();
+    ERROR_TRACE;
+    if( (std::rand()%100) > failure_percent )
+        return f3();
+    else
+        return leaf::new_error();
 }
 
 leaf::result<void> f5()
 {
-	ERROR_TRACE;
-	if( (std::rand()%100) > failure_percent )
-		return f4();
-	else
-		return leaf::new_error();
+    ERROR_TRACE;
+    if( (std::rand()%100) > failure_percent )
+        return f4();
+    else
+        return leaf::new_error();
 }
 
 int main()
 {
-	for( int i=0; i!=10; ++i )
-		leaf::try_handle_all(
-			[&]() -> leaf::result<void>
-			{
-				std::cout << "Run # " << i << ": ";
-				BOOST_LEAF_CHECK(f5());
-				std::cout << "Success!" << std::endl;
-				return { };
-			},
+    for( int i=0; i!=10; ++i )
+        leaf::try_handle_all(
+            [&]() -> leaf::result<void>
+            {
+                std::cout << "Run # " << i << ": ";
+                BOOST_LEAF_CHECK(f5());
+                std::cout << "Success!" << std::endl;
+                return { };
+            },
 #if ENABLE_ERROR_TRACE // This single #if enables or disables the capturing of the error trace.
-			[]( e_error_trace const & tr )
-			{
-				std::cerr << "Error! Trace:" << std::endl << tr;
-			},
+            []( e_error_trace const & tr )
+            {
+                std::cerr << "Error! Trace:" << std::endl << tr;
+            },
 #endif
-			[]
-			{
-				std::cerr << "Error!" << std::endl;
-			} );
-	return 0;
+            []
+            {
+                std::cerr << "Error!" << std::endl;
+            } );
+    return 0;
 }
 
 ////////////////////////////////////////
@@ -131,17 +131,17 @@ int main()
 
 namespace boost
 {
-	BOOST_LEAF_NORETURN void throw_exception( std::exception const & e )
-	{
-		std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
-		std::terminate();
-	}
+    BOOST_LEAF_NORETURN void throw_exception( std::exception const & e )
+    {
+        std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
+        std::terminate();
+    }
 
-	struct source_location;
-	BOOST_LEAF_NORETURN void throw_exception( std::exception const & e, boost::source_location const & )
-	{
-		throw_exception(e);
-	}
+    struct source_location;
+    BOOST_LEAF_NORETURN void throw_exception( std::exception const & e, boost::source_location const & )
+    {
+        throw_exception(e);
+    }
 }
 
 #endif

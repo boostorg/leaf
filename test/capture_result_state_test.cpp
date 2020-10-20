@@ -15,52 +15,52 @@ int count = 0;
 template <int>
 struct info
 {
-	info() noexcept
-	{
-		++count;
-	}
+    info() noexcept
+    {
+        ++count;
+    }
 
-	info( info const & ) noexcept
-	{
-		++count;
-	}
+    info( info const & ) noexcept
+    {
+        ++count;
+    }
 
-	~info() noexcept
-	{
-		--count;
-	}
+    ~info() noexcept
+    {
+        --count;
+    }
 };
 
 int main()
 {
-	auto error_handlers = std::make_tuple(
-		[]( info<1>, info<3> )
-		{
-			return 42;
-		},
-		[]
-		{
-			return -42;
-		} );
+    auto error_handlers = std::make_tuple(
+        []( info<1>, info<3> )
+        {
+            return 42;
+        },
+        []
+        {
+            return -42;
+        } );
 
-	{
-		auto r = leaf::capture(
-			leaf::make_shared_context(error_handlers),
-			[]() -> leaf::result<int>
-			{
-				return leaf::new_error( info<1>{}, info<3>{} );
-			} );
-		BOOST_TEST_EQ(count, 2);
+    {
+        auto r = leaf::capture(
+            leaf::make_shared_context(error_handlers),
+            []() -> leaf::result<int>
+            {
+                return leaf::new_error( info<1>{}, info<3>{} );
+            } );
+        BOOST_TEST_EQ(count, 2);
 
-		int answer = leaf::try_handle_all(
-			[&r]
-			{
-				return std::move(r);
-			},
-			error_handlers);
-		BOOST_TEST_EQ(answer, 42);
-	}
-	BOOST_TEST_EQ(count, 0);
+        int answer = leaf::try_handle_all(
+            [&r]
+            {
+                return std::move(r);
+            },
+            error_handlers);
+        BOOST_TEST_EQ(answer, 42);
+    }
+    BOOST_TEST_EQ(count, 0);
 
-	return boost::report_errors();
+    return boost::report_errors();
 }

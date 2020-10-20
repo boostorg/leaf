@@ -11,5 +11,5 @@ leaf::result<int *> f();
 
 leaf::result<int> g()
 {
-	return f(); // Types are incompatible
+    return f(); // Types are incompatible
 }

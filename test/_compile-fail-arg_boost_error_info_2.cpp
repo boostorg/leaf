@@ -14,13 +14,13 @@ typedef boost::error_info<struct test_info_, int> test_info;
 
 int main()
 {
-	leaf::try_catch(
-		[]
-		{
-		},
-		[]( test_info const & x ) // boost::error_info must be taken by value
-		{
-		} );
+    leaf::try_catch(
+        []
+        {
+        },
+        []( test_info const & x ) // boost::error_info must be taken by value
+        {
+        } );
 
-	return 0;
+    return 0;
 }

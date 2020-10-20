@@ -10,8 +10,8 @@
 
 int main()
 {
-	std::cout << "Unit test not applicable." << std::endl;
-	return 0;
+    std::cout << "Unit test not applicable." << std::endl;
+    return 0;
 }
 
 #else
@@ -29,22 +29,22 @@ struct my_error: std::exception { };
 
 int main()
 {
-	int r = leaf::try_catch(
-		[]() -> int
-		{
-			throw leaf::exception( my_error(), info{42} );
-		},
-		[]( my_error const & x, leaf::catch_<leaf::error_id> id )
-		{
-			BOOST_TEST(dynamic_cast<leaf::error_id const *>(&id.matched)!=0 && dynamic_cast<leaf::error_id const *>(&id.matched)->value()==1);
-			return 1;
-		},
-		[]
-		{
-			return 2;
-		} );
-	BOOST_TEST_EQ(r, 1);
-	return boost::report_errors();
+    int r = leaf::try_catch(
+        []() -> int
+        {
+            throw leaf::exception( my_error(), info{42} );
+        },
+        []( my_error const & x, leaf::catch_<leaf::error_id> id )
+        {
+            BOOST_TEST(dynamic_cast<leaf::error_id const *>(&id.matched)!=0 && dynamic_cast<leaf::error_id const *>(&id.matched)->value()==1);
+            return 1;
+        },
+        []
+        {
+            return 2;
+        } );
+    BOOST_TEST_EQ(r, 1);
+    return boost::report_errors();
 }
 
 #endif

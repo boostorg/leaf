@@ -14,38 +14,38 @@ namespace leaf = boost::leaf;
 template <int>
 struct info
 {
-	int value;
+    int value;
 };
 
 template <class Ctx>
 leaf::result<int> f( Ctx & ctx )
 {
-	auto active_context = activate_context(ctx);
-	return leaf::new_error( info<1>{1} );
+    auto active_context = activate_context(ctx);
+    return leaf::new_error( info<1>{1} );
 }
 
 int main()
 {
-	leaf::context<info<1>, leaf::verbose_diagnostic_info const &> ctx;
+    leaf::context<info<1>, leaf::verbose_diagnostic_info const &> ctx;
 
-	{
-		leaf::result<int> r1 = f(ctx);
-		BOOST_TEST(!r1);
+    {
+        leaf::result<int> r1 = f(ctx);
+        BOOST_TEST(!r1);
 
-		int r2 = ctx.handle_error<int>(
-			r1.error(),
-			[]( info<1> x )
-			{
-				BOOST_TEST(x.value==1);
-				return 1;
-			},
-			[]( leaf::verbose_diagnostic_info const & info )
-			{
-				std::cout << info;
-				return 2;
-			} );
-		BOOST_TEST_EQ(r2, 1);
-	}
+        int r2 = ctx.handle_error<int>(
+            r1.error(),
+            []( info<1> x )
+            {
+                BOOST_TEST(x.value==1);
+                return 1;
+            },
+            []( leaf::verbose_diagnostic_info const & info )
+            {
+                std::cout << info;
+                return 2;
+            } );
+        BOOST_TEST_EQ(r2, 1);
+    }
 
-	return boost::report_errors();
+    return boost::report_errors();
 }

@@ -14,40 +14,40 @@ struct info { int value; };
 
 leaf::result<void> g1()
 {
-	auto load = leaf::on_error( []( info & x ) { ++x.value; } );
-	return { };
+    auto load = leaf::on_error( []( info & x ) { ++x.value; } );
+    return { };
 }
 
 leaf::result<void> g2()
 {
-	return leaf::new_error();
+    return leaf::new_error();
 }
 
 leaf::result<void> f()
 {
-	auto load = leaf::on_error( info{2} );
-	BOOST_LEAF_CHECK(g1());
-	return g2();
+    auto load = leaf::on_error( info{2} );
+    BOOST_LEAF_CHECK(g1());
+    return g2();
 }
 
 int main()
 {
-	int r = leaf::try_handle_all(
-		[]() -> leaf::result<int>
-		{
-			BOOST_LEAF_CHECK(f());
-			return 1;
-		},
-		[]( info x )
-		{
-			BOOST_TEST_EQ(x.value, 2);
-			return 2;
-		},
-		[]
-		{
-			return 3;
-		 } );
-	BOOST_TEST_EQ(r, 2);
+    int r = leaf::try_handle_all(
+        []() -> leaf::result<int>
+        {
+            BOOST_LEAF_CHECK(f());
+            return 1;
+        },
+        []( info x )
+        {
+            BOOST_TEST_EQ(x.value, 2);
+            return 2;
+        },
+        []
+        {
+            return 3;
+         } );
+    BOOST_TEST_EQ(r, 2);
 
-	return boost::report_errors();
+    return boost::report_errors();
 }

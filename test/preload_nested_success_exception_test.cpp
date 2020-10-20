@@ -10,8 +10,8 @@
 
 int main()
 {
-	std::cout << "Unit test not applicable." << std::endl;
-	return 0;
+    std::cout << "Unit test not applicable." << std::endl;
+    return 0;
 }
 
 #else
@@ -26,41 +26,41 @@ struct info { int value; };
 
 void g1()
 {
-	auto load = leaf::on_error( info{1} );
+    auto load = leaf::on_error( info{1} );
 }
 
 void g2()
 {
-	throw std::exception();
+    throw std::exception();
 }
 
 void f()
 {
-	auto load = leaf::on_error( info{2} );
-	g1();
-	g2();
+    auto load = leaf::on_error( info{2} );
+    g1();
+    g2();
 }
 
 int main()
 {
-	int r = leaf::try_catch(
-		[]
-		{
-			f();
-			return 0;
-		},
-		[]( info x )
-		{
-			BOOST_TEST_EQ(x.value, 2);
-			return 1;
-		},
-		[]
-		{
-			return 2;
-		 } );
-	BOOST_TEST_EQ(r, 1);
+    int r = leaf::try_catch(
+        []
+        {
+            f();
+            return 0;
+        },
+        []( info x )
+        {
+            BOOST_TEST_EQ(x.value, 2);
+            return 1;
+        },
+        []
+        {
+            return 2;
+         } );
+    BOOST_TEST_EQ(r, 1);
 
-	return boost::report_errors();
+    return boost::report_errors();
 }
 
 #endif

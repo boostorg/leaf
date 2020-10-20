@@ -11,28 +11,28 @@ namespace leaf = boost::leaf;
 
 int main()
 {
-	{
-		int r = leaf::try_handle_all(
-			[]() -> leaf::result<int>
-			{
-				int x = 42;
+    {
+        int r = leaf::try_handle_all(
+            []() -> leaf::result<int>
+            {
+                int x = 42;
 
-				leaf::result<int> r1(x);
-				BOOST_LEAF_AUTO(rx1, r1);
-				BOOST_TEST_EQ(r1.value(), rx1);
+                leaf::result<int> r1(x);
+                BOOST_LEAF_AUTO(rx1, r1);
+                BOOST_TEST_EQ(r1.value(), rx1);
 
-				leaf::result<int &> r2(x);
-				BOOST_LEAF_AUTO(rx2, r2);
-				BOOST_TEST_EQ(r2.value(), rx2);
+                leaf::result<int &> r2(x);
+                BOOST_LEAF_AUTO(rx2, r2);
+                BOOST_TEST_EQ(r2.value(), rx2);
 
-				return 0;
-			},
-			[]
-			{
-				return 1;
-			} );
-		BOOST_TEST_EQ(r, 0);
-	}
+                return 0;
+            },
+            []
+            {
+                return 1;
+            } );
+        BOOST_TEST_EQ(r, 0);
+    }
 
-	return boost::report_errors();
+    return boost::report_errors();
 }
