@@ -990,6 +990,7 @@ namespace boost { namespace leaf {
 #include <system_error>
 #include <type_traits>
 #include <memory>
+#include <string>
 
 #if BOOST_LEAF_DIAGNOSTICS
 #   include <sstream>
