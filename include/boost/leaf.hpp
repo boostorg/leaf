@@ -870,7 +870,7 @@ namespace boost { namespace leaf {
 #endif
 // <<< #include <boost/leaf/detail/optional.hpp>
 #line 20 "boost/leaf/detail/print.hpp"
-#include <ostream>
+#include <iosfwd>
 #include <cstring>
 
 namespace boost { namespace leaf {
@@ -989,9 +989,12 @@ namespace boost { namespace leaf {
 #line 21 "boost/leaf/error.hpp"
 #include <system_error>
 #include <type_traits>
-#include <sstream>
 #include <memory>
-#include <set>
+
+#if BOOST_LEAF_DIAGNOSTICS
+#   include <sstream>
+#   include <set>
+#endif
 
 #define BOOST_LEAF_TOKEN_PASTE(x, y) x ## y
 #define BOOST_LEAF_TOKEN_PASTE2(x, y) BOOST_LEAF_TOKEN_PASTE(x, y)
@@ -1113,7 +1116,8 @@ namespace boost { namespace leaf {
             {
             }
 
-            void print(std::ostream & os) const
+            template <class CharT, class Traits>
+            void print( std::basic_ostream<CharT, Traits> & os ) const
             {
                 BOOST_LEAF_ASSERT(first_type != 0);
                 BOOST_LEAF_ASSERT(count>0);
@@ -1122,7 +1126,7 @@ namespace boost { namespace leaf {
                     os << "1 attempt to communicate an unexpected error object";
                 else
                     os << count << " attempts to communicate unexpected error objects, the first one";
-                os << " of type " << first_type() << std::endl;
+                (os << " of type " << first_type() << '\n').flush();
             }
         };
 
@@ -1151,12 +1155,13 @@ namespace boost { namespace leaf {
                 {
                     std::stringstream s;
                     diagnostic<E>::print(s,e);
-                    s << std::endl;
+                    (s << '\n').flush();
                     s_ += s.str();
                 }
             }
 
-            void print(std::ostream & os) const
+            template <class CharT, class Traits>
+            void print( std::basic_ostream<CharT, Traits> & os ) const
             {
                 os << "Unhandled error objects:\n" << s_;
             }
@@ -1193,7 +1198,8 @@ namespace boost { namespace leaf {
         int const line;
         char const * const function;
 
-        friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, e_source_location const & x )
         {
             return os << leaf::type<e_source_location>() << ": " << x.file << '(' << x.line << ") in function " << x.function;
         }
@@ -1256,7 +1262,8 @@ namespace boost { namespace leaf {
 
             BOOST_LEAF_CONSTEXPR void propagate() noexcept;
 
-            void print( std::ostream & os, int key_to_print ) const
+            template <class CharT, class Traits>
+            void print( std::basic_ostream<CharT, Traits> & os, int key_to_print ) const
             {
                 if( !diagnostic<E>::is_invisible )
                     if( int k = this->key() )
@@ -1269,7 +1276,7 @@ namespace boost { namespace leaf {
                         else
                             os << '[' << k << ']';
                         diagnostic<E>::print(os, value(k));
-                        os << std::endl;
+                        (os << '\n').flush();
                     }
             }
 
@@ -1590,7 +1597,8 @@ namespace boost { namespace leaf {
             return a.value_ < b.value_;
         }
 
-        friend std::ostream & operator<<( std::ostream & os, error_id x )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, error_id x )
         {
             return os << x.value_;
         }
@@ -2122,7 +2130,6 @@ namespace boost { namespace leaf {
 #endif
 // <<< #include <boost/leaf/on_error.hpp>
 #line 21 "boost/leaf/capture.hpp"
-#include <memory>
 
 namespace boost { namespace leaf {
 
@@ -2219,7 +2226,8 @@ namespace boost { namespace leaf {
                 std::rethrow_exception(ex_);
             }
 
-            void print( std::ostream & os ) const
+            template <class CharT, class Traits>
+            void print( std::basic_ostream<CharT, Traits> & os ) const
             {
                 ctx_->print(os);
             }
@@ -2447,7 +2455,8 @@ namespace boost { namespace leaf {
     {
         int value;
 
-        friend std::ostream & operator<<( std::ostream & os, e_errno const & err )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, e_errno const & err )
         {
             return os << type<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
         }
@@ -2464,7 +2473,8 @@ namespace boost { namespace leaf {
             unsigned value;
 
 #ifdef _WIN32
-            friend std::ostream & operator<<( std::ostream & os, e_LastError const & err )
+            template <class CharT, class Traits>
+            friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> os, e_LastError const & err )
             {
                 struct msg_buf
                 {
@@ -3016,8 +3026,6 @@ namespace boost { namespace leaf {
 #   endif
 #endif
 
-#include <string>
-
 #if !defined(_MSC_VER)
 #   if defined(__has_include) && __has_include(<cxxabi.h>)
 #       define BOOST_LEAF_HAS_CXXABI_H
@@ -3032,7 +3040,6 @@ namespace boost { namespace leaf {
 #   if defined( __GABIXX_CXXABI_H__ )
 #       undef BOOST_LEAF_HAS_CXXABI_H
 #   else
-#       include <cstdlib>
 #       include <cstddef>
 #   endif
 #endif
@@ -3085,7 +3092,7 @@ namespace boost { namespace leaf {
             std::free( const_cast< char* >( name ) );
         }
 
-        inline std::string demangle( char const * name )
+        inline char const * demangle( char const * name )
         {
             scoped_demangled_name demangled_name( name );
             char const * p = demangled_name.get();
@@ -3105,7 +3112,7 @@ namespace boost { namespace leaf {
         {
         }
 
-        inline std::string demangle( char const * name )
+        inline char const * demangle( char const * name )
         {
             return name;
         }
@@ -3153,7 +3160,8 @@ namespace boost { namespace leaf {
 
         error_info( error_info const & ) noexcept = default;
 
-        void print( std::ostream & os ) const
+        template <class CharT, class Traits>
+        void print( std::basic_ostream<CharT, Traits> & os ) const
         {
             os << "Error ID = " << err_id_.value();
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
@@ -3198,7 +3206,8 @@ namespace boost { namespace leaf {
 #endif
         }
 
-        friend std::ostream & operator<<( std::ostream & os, error_info const & x )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, error_info const & x )
         {
             os << "leaf::error_info: ";
             x.print(os);
@@ -3231,7 +3240,8 @@ namespace boost { namespace leaf {
 
     public:
 
-        friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
         {
             os << "leaf::diagnostic_info for ";
             x.print(os);
@@ -3280,7 +3290,8 @@ namespace boost { namespace leaf {
 
     public:
 
-        friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
         {
             os <<
                 "leaf::diagnostic_info requires #define BOOST_LEAF_DIAGNOSTICS 1\n"
@@ -3338,7 +3349,8 @@ namespace boost { namespace leaf {
 
     public:
 
-        friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, verbose_diagnostic_info const & x )
         {
             os << "leaf::verbose_diagnostic_info for ";
             x.print(os);
@@ -3387,7 +3399,8 @@ namespace boost { namespace leaf {
 
     public:
 
-        friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, verbose_diagnostic_info const & x )
         {
             os <<
                 "leaf::verbose_diagnostic_info requires #define BOOST_LEAF_DIAGNOSTICS 1\n"
@@ -4283,7 +4296,6 @@ namespace boost { namespace leaf {
 #   endif
 #endif
 
-#include <memory>
 #include <climits>
 
 namespace boost { namespace leaf {

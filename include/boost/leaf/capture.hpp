@@ -18,7 +18,6 @@
 
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/on_error.hpp>
-#include <memory>
 
 namespace boost { namespace leaf {
 
@@ -115,7 +114,8 @@ namespace boost { namespace leaf {
                 std::rethrow_exception(ex_);
             }
 
-            void print( std::ostream & os ) const
+            template <class CharT, class Traits>
+            void print( std::basic_ostream<CharT, Traits> & os ) const
             {
                 ctx_->print(os);
             }

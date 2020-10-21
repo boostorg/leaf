@@ -25,8 +25,6 @@
 #   endif
 #endif
 
-#include <string>
-
 #if !defined(_MSC_VER)
 #   if defined(__has_include) && __has_include(<cxxabi.h>)
 #       define BOOST_LEAF_HAS_CXXABI_H
@@ -41,7 +39,6 @@
 #   if defined( __GABIXX_CXXABI_H__ )
 #       undef BOOST_LEAF_HAS_CXXABI_H
 #   else
-#       include <cstdlib>
 #       include <cstddef>
 #   endif
 #endif
@@ -94,7 +91,7 @@ namespace boost { namespace leaf {
             std::free( const_cast< char* >( name ) );
         }
 
-        inline std::string demangle( char const * name )
+        inline char const * demangle( char const * name )
         {
             scoped_demangled_name demangled_name( name );
             char const * p = demangled_name.get();
@@ -114,7 +111,7 @@ namespace boost { namespace leaf {
         {
         }
 
-        inline std::string demangle( char const * name )
+        inline char const * demangle( char const * name )
         {
             return name;
         }

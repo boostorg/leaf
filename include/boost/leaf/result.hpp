@@ -17,7 +17,6 @@
 #endif
 
 #include <boost/leaf/error.hpp>
-#include <memory>
 #include <climits>
 
 namespace boost { namespace leaf {

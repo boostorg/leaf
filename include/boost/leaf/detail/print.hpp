@@ -17,7 +17,7 @@
 #endif
 
 #include <boost/leaf/detail/optional.hpp>
-#include <ostream>
+#include <iosfwd>
 #include <cstring>
 
 namespace boost { namespace leaf {

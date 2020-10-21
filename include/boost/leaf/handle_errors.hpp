@@ -50,7 +50,8 @@ namespace boost { namespace leaf {
 
         error_info( error_info const & ) noexcept = default;
 
-        void print( std::ostream & os ) const
+        template <class CharT, class Traits>
+        void print( std::basic_ostream<CharT, Traits> & os ) const
         {
             os << "Error ID = " << err_id_.value();
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
@@ -95,7 +96,8 @@ namespace boost { namespace leaf {
 #endif
         }
 
-        friend std::ostream & operator<<( std::ostream & os, error_info const & x )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, error_info const & x )
         {
             os << "leaf::error_info: ";
             x.print(os);
@@ -128,7 +130,8 @@ namespace boost { namespace leaf {
 
     public:
 
-        friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
         {
             os << "leaf::diagnostic_info for ";
             x.print(os);
@@ -177,7 +180,8 @@ namespace boost { namespace leaf {
 
     public:
 
-        friend std::ostream & operator<<( std::ostream & os, diagnostic_info const & x )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
         {
             os <<
                 "leaf::diagnostic_info requires #define BOOST_LEAF_DIAGNOSTICS 1\n"
@@ -235,7 +239,8 @@ namespace boost { namespace leaf {
 
     public:
 
-        friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, verbose_diagnostic_info const & x )
         {
             os << "leaf::verbose_diagnostic_info for ";
             x.print(os);
@@ -284,7 +289,8 @@ namespace boost { namespace leaf {
 
     public:
 
-        friend std::ostream & operator<<( std::ostream & os, verbose_diagnostic_info const & x )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, verbose_diagnostic_info const & x )
         {
             os <<
                 "leaf::verbose_diagnostic_info requires #define BOOST_LEAF_DIAGNOSTICS 1\n"

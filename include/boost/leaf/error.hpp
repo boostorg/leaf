@@ -20,9 +20,12 @@
 #include <boost/leaf/detail/print.hpp>
 #include <system_error>
 #include <type_traits>
-#include <sstream>
 #include <memory>
-#include <set>
+
+#if BOOST_LEAF_DIAGNOSTICS
+#   include <sstream>
+#   include <set>
+#endif
 
 #define BOOST_LEAF_TOKEN_PASTE(x, y) x ## y
 #define BOOST_LEAF_TOKEN_PASTE2(x, y) BOOST_LEAF_TOKEN_PASTE(x, y)
@@ -144,7 +147,8 @@ namespace boost { namespace leaf {
             {
             }
 
-            void print(std::ostream & os) const
+            template <class CharT, class Traits>
+            void print( std::basic_ostream<CharT, Traits> & os ) const
             {
                 BOOST_LEAF_ASSERT(first_type != 0);
                 BOOST_LEAF_ASSERT(count>0);
@@ -153,7 +157,7 @@ namespace boost { namespace leaf {
                     os << "1 attempt to communicate an unexpected error object";
                 else
                     os << count << " attempts to communicate unexpected error objects, the first one";
-                os << " of type " << first_type() << std::endl;
+                (os << " of type " << first_type() << '\n').flush();
             }
         };
 
@@ -182,12 +186,13 @@ namespace boost { namespace leaf {
                 {
                     std::stringstream s;
                     diagnostic<E>::print(s,e);
-                    s << std::endl;
+                    (s << '\n').flush();
                     s_ += s.str();
                 }
             }
 
-            void print(std::ostream & os) const
+            template <class CharT, class Traits>
+            void print( std::basic_ostream<CharT, Traits> & os ) const
             {
                 os << "Unhandled error objects:\n" << s_;
             }
@@ -224,7 +229,8 @@ namespace boost { namespace leaf {
         int const line;
         char const * const function;
 
-        friend std::ostream & operator<<( std::ostream & os, e_source_location const & x )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, e_source_location const & x )
         {
             return os << leaf::type<e_source_location>() << ": " << x.file << '(' << x.line << ") in function " << x.function;
         }
@@ -287,7 +293,8 @@ namespace boost { namespace leaf {
 
             BOOST_LEAF_CONSTEXPR void propagate() noexcept;
 
-            void print( std::ostream & os, int key_to_print ) const
+            template <class CharT, class Traits>
+            void print( std::basic_ostream<CharT, Traits> & os, int key_to_print ) const
             {
                 if( !diagnostic<E>::is_invisible )
                     if( int k = this->key() )
@@ -300,7 +307,7 @@ namespace boost { namespace leaf {
                         else
                             os << '[' << k << ']';
                         diagnostic<E>::print(os, value(k));
-                        os << std::endl;
+                        (os << '\n').flush();
                     }
             }
 
@@ -621,7 +628,8 @@ namespace boost { namespace leaf {
             return a.value_ < b.value_;
         }
 
-        friend std::ostream & operator<<( std::ostream & os, error_id x )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, error_id x )
         {
             return os << x.value_;
         }

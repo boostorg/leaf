@@ -40,7 +40,8 @@ namespace boost { namespace leaf {
     {
         int value;
 
-        friend std::ostream & operator<<( std::ostream & os, e_errno const & err )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, e_errno const & err )
         {
             return os << type<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
         }
@@ -57,7 +58,8 @@ namespace boost { namespace leaf {
             unsigned value;
 
 #ifdef _WIN32
-            friend std::ostream & operator<<( std::ostream & os, e_LastError const & err )
+            template <class CharT, class Traits>
+            friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> os, e_LastError const & err )
             {
                 struct msg_buf
                 {
