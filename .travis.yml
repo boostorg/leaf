@@ -62,7 +62,7 @@ matrix:
         - cd boost-root
         - git submodule update --init tools/build
         - git submodule update --init libs/config
-        - mkdir libs/leaf
+        - mkdir -p libs/leaf
         - cp -r $TRAVIS_BUILD_DIR/* libs/leaf
         - ./bootstrap.sh
         - cd libs/leaf
@@ -402,7 +402,7 @@ install:
   - git submodule update --init tools/inspect
   - git submodule update --init libs/config
   - git submodule update --init tools/boostdep
-  - mkdir libs/leaf
+  - mkdir -p libs/leaf
   - cp -r $TRAVIS_BUILD_DIR/* libs/leaf
   - python tools/boostdep/depinst/depinst.py leaf -I example
   - ./bootstrap.sh
