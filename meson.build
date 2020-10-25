@@ -34,6 +34,7 @@ if not meson.is_subproject()
 				language:'cpp' )
 		endif
 		add_global_arguments(
+			'-fdiagnostics-absolute-paths',
 			'-Wno-dangling-else',
 			'-Wno-non-virtual-dtor',
 			'-Wno-delete-non-abstract-non-virtual-dtor',
