@@ -1978,10 +1978,10 @@ namespace boost { namespace leaf {
   auto && <<temp>> = r;\
   if( !<<temp>> )\
     return <<temp>>.error();\
-  v = <<temp>>.value()
+  v = std::forward<decltype(<<temp>>)>(<<temp>>).value()
 
 #define BOOST_LEAF_AUTO(v, r)\
-  BOOST_LEAF_ASSIGN(auto && v, r)
+  BOOST_LEAF_ASSIGN(auto v, r)
 
 #define BOOST_LEAF_CHECK(r)\
 	{\
@@ -4782,7 +4782,7 @@ TIP: The contents of each Reference section are organized alphabetically.
   auto && <<temp>> = r;\
   if( !<<temp>> )\
     return <<temp>>.error();\
-  v = <<temp>>.value()
+  v = std::forward<decltype(<<temp>>)>(<<temp>>).value()
 ----
 
 `BOOST_LEAF_ASSIGN` is useful when calling a function that returns `result<T>` (other than `result<void>`), if the desired behavior is to forward any errors to the caller verbatim.
@@ -4800,7 +4800,7 @@ NOTE: See also <<BOOST_LEAF_AUTO>>.
 [source,c++]
 ----
 #define BOOST_LEAF_AUTO(v, r)\
-  BOOST_LEAF_ASSIGN(auto && v, r)
+  BOOST_LEAF_ASSIGN(auto v, r)
 ----
 [.text-right]
 <<BOOST_LEAF_ASSIGN>>
@@ -4851,9 +4851,9 @@ NOTE: See also <<BOOST_LEAF_ASSIGN>>.
 ----
 #define BOOST_LEAF_CHECK(r)\
   {\
-    auto && _r = r;\
-    if(!_r)\
-      return _r.error();\
+    auto && <<temp>> = r;\
+    if(!<<temp>>)\
+      return <<temp>>.error();\
   }
 ----
 
