@@ -9,8 +9,36 @@
 
 namespace leaf = boost::leaf;
 
+struct value
+{
+    int x;
+
+    value( value const & ) = delete;
+    value( value && ) = default;
+};
+
+leaf::result<value> f1()
+{
+    return value { 21 };
+}
+
+leaf::result<value> f2()
+{
+    BOOST_LEAF_ASSIGN(auto a, f1());
+    return a; // Doesn't need to be return std::move(a);
+}
+
+leaf::result<value> f3()
+{
+    BOOST_LEAF_ASSIGN(auto a, f2());
+    BOOST_LEAF_ASSIGN(auto b, f2()); // Invoking the macro twice in the same scope, testing the temp name generation
+    return value { a.x + b.x };
+}
+
 int main()
 {
+    BOOST_TEST_EQ(f3()->x, 42);
+
     {
         int r = leaf::try_handle_all(
             []() -> leaf::result<int>

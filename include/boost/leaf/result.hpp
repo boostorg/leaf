@@ -47,8 +47,12 @@ namespace boost { namespace leaf {
         struct stored
         {
             using type = T;
-            using value_type_const = T const;
             using value_type = T;
+            using value_type_const = T const;
+            using value_cref = T const &;
+            using value_ref = T &;
+            using value_rv_cref = T const &&;
+            using value_rv_ref = T &&;
         };
 
         template <class T>
@@ -57,6 +61,10 @@ namespace boost { namespace leaf {
             using type = std::reference_wrapper<T>;
             using value_type_const = T;
             using value_type = T;
+            using value_ref = T &;
+            using value_cref = T &;
+            using value_rv_ref = T &;
+            using value_rv_cref = T &;
         };
 
         class result_discriminant
@@ -160,8 +168,12 @@ namespace boost { namespace leaf {
         };
 
         using stored_type = typename leaf_detail::stored<T>::type;
-        using value_type_const = typename leaf_detail::stored<T>::value_type_const;
         using value_type = typename leaf_detail::stored<T>::value_type;
+        using value_type_const = typename leaf_detail::stored<T>::value_type_const;
+        using value_ref = typename leaf_detail::stored<T>::value_ref;
+        using value_cref = typename leaf_detail::stored<T>::value_cref;
+        using value_rv_ref = typename leaf_detail::stored<T>::value_rv_ref;
+        using value_rv_cref = typename leaf_detail::stored<T>::value_rv_cref;
 
         union
         {
@@ -218,6 +230,14 @@ namespace boost { namespace leaf {
 
         static int init_T_with_U( T && );
 
+    protected:
+
+        void enforce_value_state() const
+        {
+            if( what_.kind() != result_discriminant::val )
+                ::boost::leaf::throw_exception(bad_result(get_error_id()));
+        }
+
     public:
 
         result( result && x ) noexcept:
@@ -244,7 +264,7 @@ namespace boost { namespace leaf {
         {
         }
 
-        result( value_type_const & v ):
+        result( value_type const & v ):
             stored_(v),
             what_(result_discriminant::kind_val{})
         {
@@ -306,28 +326,46 @@ namespace boost { namespace leaf {
             return what_.kind() == result_discriminant::val;
         }
 
-        value_type_const & value() const
+        value_cref value() const &
         {
-            if( what_.kind() == result_discriminant::val )
-                return stored_;
-            else
-                ::boost::leaf::throw_exception(bad_result(get_error_id()));
+            enforce_value_state();
+            return stored_;
         }
 
-        value_type & value()
+        value_ref value() &
         {
-            if( what_.kind() == result_discriminant::val )
-                return stored_;
-            else
-                ::boost::leaf::throw_exception(bad_result(get_error_id()));
+            enforce_value_state();
+            return stored_;
         }
 
-        value_type_const & operator*() const
+        value_rv_cref value() const &&
+        {
+            enforce_value_state();
+            return std::move(stored_);
+        }
+
+        value_rv_ref value() &&
+        {
+            enforce_value_state();
+            return std::move(stored_);
+        }
+
+        value_cref operator*() const &
         {
             return value();
         }
 
-        value_type & operator*()
+        value_ref operator*() &
+        {
+            return value();
+        }
+
+        value_rv_cref operator*() const &&
+        {
+            return value();
+        }
+
+        value_rv_ref operator*() &&
         {
             return value();
         }
@@ -417,7 +455,7 @@ namespace boost { namespace leaf {
 
         void value() const
         {
-            (void) base::value();
+            base::enforce_value_state();
         }
 
         using base::operator=;

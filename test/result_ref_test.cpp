@@ -35,22 +35,101 @@ struct derived: base
 
 int main()
 {
+    {
+        leaf::result<val const> r1, r2;
+        leaf::result<val const> & ref = r1;
+        leaf::result<val const> const & cref = r1;
+        leaf::result<val const> && rvref = std::move(r1);
+        leaf::result<val const> const && rvcref = std::move(r2);
+
+        static_assert(std::is_same<decltype(ref.value()), val const &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(cref.value()), val const &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(rvref.value())), val const &&>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(rvcref.value())), val const &&>::value, "result type deduction bug");
+
+        static_assert(std::is_same<decltype(*ref), val const &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(*cref), val const &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(*rvref)), val const &&>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(*rvcref)), val const &&>::value, "result type deduction bug");
+
+        auto & ref_id = ref->id; static_assert(std::is_same<decltype(ref_id), int const &>::value, "result type deduction bug");
+        auto & cref_id = cref->id; static_assert(std::is_same<decltype(cref_id), int const &>::value, "result type deduction bug");
+        auto & rvref_id = rvref->id; static_assert(std::is_same<decltype(rvref_id), int const &>::value, "result type deduction bug");
+        auto & rvcref_id = rvcref->id; static_assert(std::is_same<decltype(rvcref_id), int const &>::value, "result type deduction bug");
+    }
+
+    {
+        leaf::result<val> r1, r2;
+        leaf::result<val> & ref = r1;
+        leaf::result<val> const & cref = r1;
+        leaf::result<val> && rvref = std::move(r1);
+        leaf::result<val> const && rvcref = std::move(r2);
+
+        static_assert(std::is_same<decltype(ref.value()), val &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(cref.value()), val const &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(rvref.value())), val &&>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(rvcref.value())), val const &&>::value, "result type deduction bug");
+
+        static_assert(std::is_same<decltype(*ref), val &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(*cref), val const &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(*rvref)), val &&>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(*rvcref)), val const &&>::value, "result type deduction bug");
+
+        auto & ref_id = ref->id; static_assert(std::is_same<decltype(ref_id), int &>::value, "result type deduction bug");
+        auto & cref_id = cref->id; static_assert(std::is_same<decltype(cref_id), int const &>::value, "result type deduction bug");
+        auto & rvref_id = rvref->id; static_assert(std::is_same<decltype(rvref_id), int &>::value, "result type deduction bug");
+        auto & rvcref_id = rvcref->id; static_assert(std::is_same<decltype(rvcref_id), int const &>::value, "result type deduction bug");
+    }
+
+    {
+        val v;
+        leaf::result<val const &> r1(v), r2(v);
+        leaf::result<val const &> & ref = r1;
+        leaf::result<val const &> const & cref = r1;
+        leaf::result<val const &> && rvref = std::move(r1);
+        leaf::result<val const &> const && rvcref = std::move(r2);
+
+        static_assert(std::is_same<decltype(ref.value()), val const &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(cref.value()), val const &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(rvref.value())), val const &&>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(rvcref.value())), val const &&>::value, "result type deduction bug");
+
+        static_assert(std::is_same<decltype(*ref), val const &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(*cref), val const &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(*rvref)), val const &&>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(*rvcref)), val const &&>::value, "result type deduction bug");
+
+        auto & ref_id = ref->id; static_assert(std::is_same<decltype(ref_id), int const &>::value, "result type deduction bug");
+        auto & cref_id = cref->id; static_assert(std::is_same<decltype(cref_id), int const &>::value, "result type deduction bug");
+        auto & rvref_id = rvref->id; static_assert(std::is_same<decltype(rvref_id), int const &>::value, "result type deduction bug");
+        auto & rvcref_id = rvcref->id; static_assert(std::is_same<decltype(rvcref_id), int const &>::value, "result type deduction bug");
+    }
+
+    {
+        val v;
+        leaf::result<val &> r1(v), r2(v);
+        leaf::result<val &> & ref = r1;
+        leaf::result<val &> const & cref = r1;
+        leaf::result<val &> && rvref = std::move(r1);
+        leaf::result<val &> const && rvcref = std::move(r2);
+
+        static_assert(std::is_same<decltype(ref.value()), val &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(cref.value()), val &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(rvref.value())), val &&>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(rvcref.value())), val &&>::value, "result type deduction bug");
+
+        static_assert(std::is_same<decltype(*ref), val &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(*cref), val &>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(*rvref)), val &&>::value, "result type deduction bug");
+        static_assert(std::is_same<decltype(std::move(*rvcref)), val &&>::value, "result type deduction bug");
+
+        auto & ref_id = ref->id; static_assert(std::is_same<decltype(ref_id), int &>::value, "result type deduction bug");
+        auto & cref_id = cref->id; static_assert(std::is_same<decltype(cref_id), int &>::value, "result type deduction bug");
+        auto & rvref_id = rvref->id; static_assert(std::is_same<decltype(rvref_id), int &>::value, "result type deduction bug");
+        auto & rvcref_id = rvcref->id; static_assert(std::is_same<decltype(rvcref_id), int &>::value, "result type deduction bug");
+    }
+
     // Mutable:
-
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val const>>().value()), val const &>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val>>().value()), val &>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val const &>>().value()), val const &>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val &>>().value()), val &>::value, "result type deduction bug");
-
-    static_assert(std::is_same<decltype(*std::declval<leaf::result<val const>>()), val const &>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(*std::declval<leaf::result<val>>()), val &>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(*std::declval<leaf::result<val const &>>()), val const &>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(*std::declval<leaf::result<val &>>()), val &>::value, "result type deduction bug");
-
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val const>>().operator->()), val const *>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val>>().operator->()), val *>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val const &>>().operator->()), val const *>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val &>>().operator->()), val *>::value, "result type deduction bug");
 
     {
         val x = { 42 };
@@ -115,21 +194,6 @@ int main()
     }
 
     // Const:
-
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val const> const>().value()), val const &>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val> const>().value()), val const &>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val const &> const>().value()), val const &>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val &> const>().value()), val &>::value, "result type deduction bug");
-
-    static_assert(std::is_same<decltype(*std::declval<leaf::result<val const> const>()), val const &>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(*std::declval<leaf::result<val> const>()), val const &>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(*std::declval<leaf::result<val const &> const>()), val const &>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(*std::declval<leaf::result<val &> const>()), val &>::value, "result type deduction bug");
-
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val const> const>().operator->()), val const *>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val> const>().operator->()), val const *>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val const &> const>().operator->()), val const *>::value, "result type deduction bug");
-    static_assert(std::is_same<decltype(std::declval<leaf::result<val &> const>().operator->()), val *>::value, "result type deduction bug");
 
     {
         val x = { 42 };
