@@ -13,6 +13,7 @@ struct value
 {
     int x;
 
+    explicit value( int x ): x(x) { };
     value( value const & ) = delete;
     value( value && ) = default;
 };
