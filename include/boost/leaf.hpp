@@ -1078,6 +1078,7 @@ namespace boost { namespace leaf {
 ////////////////////////////////////////
 
 #ifdef BOOST_LEAF_NO_THREADS
+
 #   define BOOST_LEAF_THREAD_LOCAL
     namespace boost { namespace leaf {
         namespace leaf_detail
@@ -1085,7 +1086,9 @@ namespace boost { namespace leaf {
             using atomic_unsigned_int = unsigned int;
         }
     } }
+
 #else
+
 #   include <atomic>
 #   include <thread>
 #   define BOOST_LEAF_THREAD_LOCAL thread_local
@@ -1095,6 +1098,7 @@ namespace boost { namespace leaf {
             using atomic_unsigned_int = std::atomic<unsigned int>;
         }
     } }
+
 #endif
 
 ////////////////////////////////////////
@@ -3131,6 +3135,7 @@ namespace boost { namespace leaf {
 #endif
 // <<< #include <boost/leaf/detail/demangle.hpp>
 #line 21 "boost/leaf/handle_errors.hpp"
+
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 #endif
 
@@ -4189,7 +4194,6 @@ namespace boost { namespace leaf {
     struct is_predicate<match_member<P, V1, V...>>: std::true_type
     {
     };
-
 #endif
 
     ////////////////////////////////////////

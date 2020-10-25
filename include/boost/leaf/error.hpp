@@ -109,6 +109,7 @@ namespace boost { namespace leaf {
 ////////////////////////////////////////
 
 #ifdef BOOST_LEAF_NO_THREADS
+
 #   define BOOST_LEAF_THREAD_LOCAL
     namespace boost { namespace leaf {
         namespace leaf_detail
@@ -116,7 +117,9 @@ namespace boost { namespace leaf {
             using atomic_unsigned_int = unsigned int;
         }
     } }
+
 #else
+
 #   include <atomic>
 #   include <thread>
 #   define BOOST_LEAF_THREAD_LOCAL thread_local
@@ -126,6 +129,7 @@ namespace boost { namespace leaf {
             using atomic_unsigned_int = std::atomic<unsigned int>;
         }
     } }
+
 #endif
 
 ////////////////////////////////////////

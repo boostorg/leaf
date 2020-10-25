@@ -208,7 +208,6 @@ namespace boost { namespace leaf {
     struct is_predicate<match_member<P, V1, V...>>: std::true_type
     {
     };
-
 #endif
 
     ////////////////////////////////////////
