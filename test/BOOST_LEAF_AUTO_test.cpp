@@ -5,6 +5,7 @@
 
 #include <boost/leaf/result.hpp>
 #include <boost/leaf/handle_errors.hpp>
+#include <boost/config/workaround.hpp>
 #include "lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
@@ -26,7 +27,11 @@ leaf::result<value> f1()
 leaf::result<value> f2()
 {
     BOOST_LEAF_AUTO(a, f1());
-    return a; // Doesn't need to be return std::move(a);
+#if BOOST_WORKAROUND( BOOST_GCC, <= 40900 ) || BOOST_WORKAROUND( BOOST_CLANG, <= 30800 )
+    return std::move(a); // Older compilers are confused, but...
+#else
+    return a; // ...this doesn't need to be return std::move(a);
+#endif
 }
 
 leaf::result<value> f3()
