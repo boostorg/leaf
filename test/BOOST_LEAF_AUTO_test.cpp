@@ -27,7 +27,7 @@ leaf::result<value> f1()
 leaf::result<value> f2()
 {
     BOOST_LEAF_AUTO(a, f1());
-#if BOOST_WORKAROUND( BOOST_GCC, <= 40900 ) || BOOST_WORKAROUND( BOOST_CLANG, <= 30800 )
+#if BOOST_WORKAROUND( BOOST_GCC, < 50000 ) || BOOST_WORKAROUND( BOOST_CLANG, <= 30800 )
     return std::move(a); // Older compilers are confused, but...
 #else
     return a; // ...this doesn't need to be return std::move(a);
