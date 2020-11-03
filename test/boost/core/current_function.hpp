@@ -32,7 +32,7 @@ inline void current_function_helper()
 
 # define BOOST_CURRENT_FUNCTION "(unknown)"
 
-#elif defined(__GNUC__) || (defined(__MWERKS__) && (__MWERKS__ >= 0x3000)) || (defined(__ICC) && (__ICC >= 600)) || defined(__ghs__)
+#elif defined(__GNUC__) || (defined(__MWERKS__) && (__MWERKS__ >= 0x3000)) || (defined(__ICC) && (__ICC >= 600)) || defined(__ghs__) || defined(__clang__)
 
 # define BOOST_CURRENT_FUNCTION __PRETTY_FUNCTION__
 
