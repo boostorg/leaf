@@ -174,6 +174,7 @@ if option_enable_unit_tests
 		'result_ref_test',
 		'result_state_test',
 		'try_catch_error_id_test',
+		'try_catch_system_error_test',
 		'try_catch_test',
 		'try_exception_and_result_test',
 		'_hpp_capture_test',
