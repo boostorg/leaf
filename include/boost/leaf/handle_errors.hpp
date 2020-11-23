@@ -29,24 +29,6 @@ namespace boost { namespace leaf {
     {
         error_info & operator=( error_info const & ) = delete;
 
-#if 0
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-        static error_id unpack_error_id( std::exception const * ex ) noexcept
-        {
-            if( std::system_error const * se = dynamic_cast<std::system_error const *>(ex) )
-                if( is_error_id(se->code()) )
-                    return error_id(se->code());
-            if( std::error_code const * ec = dynamic_cast<std::error_code const *>(ex) )
-                if( is_error_id(*ec) )
-                    return error_id(*ec);
-            if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
-                return *err_id;
-            return current_error();
-        }
-
-        std::exception * const ex_;
-#endif
-#else
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
         static error_id unpack_error_id( std::exception const * ex ) noexcept
         {
@@ -62,7 +44,6 @@ namespace boost { namespace leaf {
         }
 
         std::exception * const ex_;
-#endif
 #endif
 
         error_id const err_id_;
@@ -401,20 +382,11 @@ namespace boost { namespace leaf {
         {
             static std::error_code const * peek( error_info const & ei ) noexcept
             {
-                if( std::system_error * se = dynamic_cast<std::system_error *>(ei.exception()) )
+                auto const ex = ei.exception();
+                if( std::error_code const * ec = dynamic_cast<std::error_code const *>(ex) )
+                    return ec;
+                else if( std::system_error * se = dynamic_cast<std::system_error *>(ex) )
                     return &se->code();
-                else
-                    return 0;
-            }
-        };
-
-        template <>
-        struct peek_exception<std::error_code, true>
-        {
-            static std::error_code * peek( error_info const & ei ) noexcept
-            {
-                if( std::system_error * se = dynamic_cast<std::system_error *>(ei.exception()) )
-                    return const_cast<std::error_code *>(&se->code());
                 else
                     return 0;
             }

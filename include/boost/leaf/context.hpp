@@ -73,7 +73,7 @@ namespace boost { namespace leaf {
             static_assert(!base::always_available, "Predicates can't use types that are always_available");
 
             template <class Tup>
-            BOOST_LEAF_CONSTEXPR static bool check( Tup & tup, error_info const & ei ) noexcept
+            BOOST_LEAF_CONSTEXPR static bool check( Tup const & tup, error_info const & ei ) noexcept
             {
                 auto e = base::check(tup, ei);
                 return e && Pred::evaluate(*e);
