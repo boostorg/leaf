@@ -19,6 +19,7 @@ int main()
 #include <boost/leaf/handle_errors.hpp>
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/pred.hpp>
+#include "_test_ec.hpp"
 #include "lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
@@ -52,6 +53,24 @@ int main()
             },
             []( std::system_error const & se, info x )
             {
+                return 1;
+            },
+            []
+            {
+                return 2;
+            } );
+        BOOST_TEST_EQ(r, 1);
+    }
+    {
+        int r = leaf::try_catch(
+            []() -> int
+            {
+                throw leaf::exception( std::system_error(make_error_code(errc_a::a0), "hello world"), info{42} );
+            },
+            []( leaf::match<leaf::condition<errc_a>, errc_a::a0> code, info x )
+            {
+                std::error_code const & ec = code.matched;
+                BOOST_TEST_EQ(ec, errc_a::a0);
                 return 1;
             },
             []

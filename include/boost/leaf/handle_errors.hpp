@@ -379,6 +379,15 @@ namespace boost { namespace leaf {
         struct peek_exception;
 
         template <>
+        struct peek_exception<std::exception const, true>
+        {
+            BOOST_LEAF_CONSTEXPR static std::exception const * peek( error_info const & ei ) noexcept
+            {
+                return ei.exception();
+            }
+        };
+
+        template <>
         struct peek_exception<std::exception, true>
         {
             BOOST_LEAF_CONSTEXPR static std::exception * peek( error_info const & ei ) noexcept
@@ -387,10 +396,34 @@ namespace boost { namespace leaf {
             }
         };
 
+        template <>
+        struct peek_exception<std::error_code const, true>
+        {
+            static std::error_code const * peek( error_info const & ei ) noexcept
+            {
+                if( std::system_error * se = dynamic_cast<std::system_error *>(ei.exception()) )
+                    return &se->code();
+                else
+                    return 0;
+            }
+        };
+
+        template <>
+        struct peek_exception<std::error_code, true>
+        {
+            static std::error_code * peek( error_info const & ei ) noexcept
+            {
+                if( std::system_error * se = dynamic_cast<std::system_error *>(ei.exception()) )
+                    return const_cast<std::error_code *>(&se->code());
+                else
+                    return 0;
+            }
+        };
+
         template <class E>
         struct peek_exception<E, true>
         {
-            BOOST_LEAF_CONSTEXPR static E * peek( error_info const & ei ) noexcept
+            static E * peek( error_info const & ei ) noexcept
             {
                 return dynamic_cast<E *>(ei.exception());
             }
