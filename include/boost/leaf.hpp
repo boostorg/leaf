@@ -3498,9 +3498,11 @@ namespace boost { namespace leaf {
         {
             static std::error_code const * peek( error_info const & ei ) noexcept
             {
-                BOOST_LEAF_ASSERT( !dynamic_cast<std::error_code *>(ei.exception()) ); // Don't throw std::error_code
-                if( std::system_error * se = dynamic_cast<std::system_error *>(ei.exception()) )
+                auto const ex = ei.exception();
+                if( std::system_error * se = dynamic_cast<std::system_error *>(ex) )
                     return &se->code();
+                else if( std::error_code * ec = dynamic_cast<std::error_code *>(ex) )
+                    return ec;
                 else
                     return 0;
             }
@@ -3511,9 +3513,11 @@ namespace boost { namespace leaf {
         {
             static std::error_code * peek( error_info const & ei ) noexcept
             {
-                BOOST_LEAF_ASSERT( !dynamic_cast<std::error_code *>(ei.exception()) ); // Don't throw std::error_code
-                if( std::system_error * se = dynamic_cast<std::system_error *>(ei.exception()) )
+                auto const ex = ei.exception();
+                if( std::system_error * se = dynamic_cast<std::system_error *>(ex) )
                     return const_cast<std::error_code *>(&se->code());
+                else if( std::error_code * ec = dynamic_cast<std::error_code *>(ex) )
+                    return ec;
                 else
                     return 0;
             }
