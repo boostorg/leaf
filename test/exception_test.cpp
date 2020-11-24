@@ -229,6 +229,32 @@ int main()
         } ) );
     }
 
+    {
+        leaf::try_catch(
+            []
+            {
+                throw leaf::exception( info{42} );
+            },
+            []( info x )
+            {
+                BOOST_TEST_EQ(x.value, 42);
+            } );
+        int r = leaf::try_catch(
+            []() -> int
+            {
+                throw std::exception();
+            },
+            []( info x )
+            {
+                return -1;
+            },
+            []
+            {
+                return 1;
+            } );
+        BOOST_TEST_EQ(r, 1);
+    }
+
     return boost::report_errors();
 }
 
