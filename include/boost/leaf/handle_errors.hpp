@@ -33,13 +33,14 @@ namespace boost { namespace leaf {
         static error_id unpack_error_id( std::exception const * ex ) noexcept
         {
             if( std::system_error const * se = dynamic_cast<std::system_error const *>(ex) )
-                return error_id(se->code());
-            else if( std::error_code const * ec = dynamic_cast<std::error_code const *>(ex) )
-                return error_id(*ec);
-            else if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
+                if( is_error_id(se->code()) )
+                    return leaf_detail::make_error_id(se->code().value());
+            if( std::error_code const * ec = dynamic_cast<std::error_code const *>(ex) )
+                if( is_error_id(*ec) )
+                    return leaf_detail::make_error_id(ec->value());
+            if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
                 return *err_id;
-            else
-                return current_error();
+            return current_error();
         }
 
         std::exception * const ex_;
@@ -359,6 +360,15 @@ namespace boost { namespace leaf {
         struct peek_exception;
 
         template <>
+        struct peek_exception<std::exception const, true>
+        {
+            BOOST_LEAF_CONSTEXPR static std::exception const * peek( error_info const & ei ) noexcept
+            {
+                return ei.exception();
+            }
+        };
+
+        template <>
         struct peek_exception<std::exception, true>
         {
             BOOST_LEAF_CONSTEXPR static std::exception * peek( error_info const & ei ) noexcept
@@ -367,10 +377,40 @@ namespace boost { namespace leaf {
             }
         };
 
+        template <>
+        struct peek_exception<std::error_code const, true>
+        {
+            static std::error_code const * peek( error_info const & ei ) noexcept
+            {
+                auto const ex = ei.exception();
+                if( std::system_error * se = dynamic_cast<std::system_error *>(ex) )
+                    return &se->code();
+                else if( std::error_code * ec = dynamic_cast<std::error_code *>(ex) )
+                    return ec;
+                else
+                    return 0;
+            }
+        };
+
+        template <>
+        struct peek_exception<std::error_code, true>
+        {
+            static std::error_code * peek( error_info const & ei ) noexcept
+            {
+                auto const ex = ei.exception();
+                if( std::system_error * se = dynamic_cast<std::system_error *>(ex) )
+                    return const_cast<std::error_code *>(&se->code());
+                else if( std::error_code * ec = dynamic_cast<std::error_code *>(ex) )
+                    return ec;
+                else
+                    return 0;
+            }
+        };
+
         template <class E>
         struct peek_exception<E, true>
         {
-            BOOST_LEAF_CONSTEXPR static E * peek( error_info const & ei ) noexcept
+            static E * peek( error_info const & ei ) noexcept
             {
                 return dynamic_cast<E *>(ei.exception());
             }
