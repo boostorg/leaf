@@ -32,10 +32,11 @@ int main()
         int r = leaf::try_catch(
             []() -> int
             {
-                throw leaf::exception( std::system_error(EDOM, std::generic_category(), "hello world"), info{42} );
+                throw leaf::exception( std::system_error(make_error_code(errc_a::a0)), info{42} );
             },
-            []( std::system_error const & se, info x )
+            []( std::system_error const & se, leaf::match_value<info, 42> )
             {
+                BOOST_TEST_EQ(se.code(), errc_a::a0);
                 return 1;
             },
             []
@@ -49,10 +50,11 @@ int main()
             []() -> int
             {
                 auto load = leaf::on_error(info{42});
-                throw std::system_error(EDOM, std::generic_category(), "hello world");
+                throw std::system_error(make_error_code(errc_a::a0));
             },
-            []( std::system_error const & se, info x )
+            []( std::system_error const & se, leaf::match_value<info, 42> )
             {
+                BOOST_TEST_EQ(se.code(), errc_a::a0);
                 return 1;
             },
             []
@@ -65,9 +67,28 @@ int main()
         int r = leaf::try_catch(
             []() -> int
             {
-                throw leaf::exception( std::system_error(make_error_code(errc_a::a0), "hello world"), info{42} );
+                throw leaf::exception( std::system_error(make_error_code(errc_a::a0)), info{42} );
             },
-            []( leaf::match<leaf::condition<errc_a>, errc_a::a0> code, info x )
+            []( leaf::match<leaf::condition<errc_a>, errc_a::a0> code, leaf::match_value<info, 42> )
+            {
+                std::error_code const & ec = code.matched;
+                BOOST_TEST_EQ(ec, errc_a::a0);
+                return 1;
+            },
+            []
+            {
+                return 2;
+            } );
+        BOOST_TEST_EQ(r, 1);
+    }
+    {
+        int r = leaf::try_catch(
+            []() -> int
+            {
+                auto load = leaf::on_error(info{42});
+                throw std::system_error(make_error_code(errc_a::a0));
+            },
+            []( leaf::match<leaf::condition<errc_a>, errc_a::a0> code, leaf::match_value<info, 42> )
             {
                 std::error_code const & ec = code.matched;
                 BOOST_TEST_EQ(ec, errc_a::a0);
