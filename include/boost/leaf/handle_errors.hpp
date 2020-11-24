@@ -382,11 +382,22 @@ namespace boost { namespace leaf {
         {
             static std::error_code const * peek( error_info const & ei ) noexcept
             {
-                auto const ex = ei.exception();
-                if( std::error_code const * ec = dynamic_cast<std::error_code const *>(ex) )
-                    return ec;
-                else if( std::system_error * se = dynamic_cast<std::system_error *>(ex) )
+                BOOST_LEAF_ASSERT( !dynamic_cast<std::error_code *>(ei.exception()) ); // Don't throw std::error_code
+                if( std::system_error * se = dynamic_cast<std::system_error *>(ei.exception()) )
                     return &se->code();
+                else
+                    return 0;
+            }
+        };
+
+        template <>
+        struct peek_exception<std::error_code, true>
+        {
+            static std::error_code * peek( error_info const & ei ) noexcept
+            {
+                BOOST_LEAF_ASSERT( !dynamic_cast<std::error_code *>(ei.exception()) ); // Don't throw std::error_code
+                if( std::system_error * se = dynamic_cast<std::system_error *>(ei.exception()) )
+                    return const_cast<std::error_code *>(&se->code());
                 else
                     return 0;
             }
