@@ -3,10 +3,11 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// PLEASE NOTE: This example requires the Boost 1.70 version of Asio and Beast, which at the time of this
-// writing is in beta.
+// PLEASE NOTE: This example requires the Boost 1.70 version of Asio and Beast,
+// which at the time of this writing is in beta.
 
-// Example of a composed asynchronous operation which uses the LEAF library for error handling and reporting.
+// Example of a composed asynchronous operation which uses the LEAF library for
+// error handling and reporting.
 //
 // Examples of running:
 // - in one terminal (re)run: ./asio_beast_leaf_rpc_v3 0.0.0.0 8080
@@ -62,24 +63,24 @@ using response_t = http::response<http::string_body>;
 
 response_t handle_request(request_t &&request);
 
-// A composed asynchronous operation that implements a basic remote calculator over HTTP.
-// It receives from the remote side commands such as:
+// A composed asynchronous operation that implements a basic remote calculator
+// over HTTP. It receives from the remote side commands such as:
 //      sum 1 2 3
 //      div 3 2
 //      mod 1 0
 // in the body of POST requests and sends back the result.
 //
 // Besides the calculator related commands, it also offer a special command:
-// - `error_quit` that asks the server to simulate a server side error that leads to the connection being dropped
-// .
+// - `error_quit` that asks the server to simulate a server side error that
+//   leads to the connection being dropped.
 //
 // From the error handling perspective there are three parts of the implementation:
 // - the handling of an HTTP request and creating the response to send back
 //      (see handle_request)
-// - the parsing and execution of the remote command we received as the body of an an HTTP POST request
+// - the parsing and execution of the remote command we received as the body of
+//   an an HTTP POST request
 //      (see execute_command())
-// - this composed asynchronous operation which calls them
-// .
+// - this composed asynchronous operation which calls them,
 //
 // This example operation is based on:
 // - https://github.com/boostorg/beast/blob/b02f59ff9126c5a17f816852efbbd0ed20305930/example/echo-op/echo_op.cpp
@@ -137,28 +138,35 @@ auto async_demo_rpc(AsyncStream &stream, ErrorContext &error_context, Completion
 
                         // If getting here, we completed a write operation.
                         m_data.response.reset();
-                        // And start reading a new message if not quitting
-                        // (i.e. the message semantics of the last response we sent required an end of file)
+                        // And start reading a new message if not quitting (i.e.
+                        // the message semantics of the last response we sent
+                        // required an end of file)
                         if (!m_write_and_quit) {
                             start_read_request();
                             return true;
                         }
 
-                        // We didn't initiate any new async operation above, so we will not continue the execution.
+                        // We didn't initiate any new async operation above, so
+                        // we will not continue the execution.
                         return false;
                     });
                 }
-                // The activation object and load_last_operation need to be reset before calling the completion handler
-                // This is because, in general, the completion handler may be called directly or posted and if posted,
-                // it could execute in another thread. This means that regardless of how the handler gets to be actually
-                // called we must ensure that it is not called with the error context active.
-                // Note: An error context cannot be activated twice
+                // The activation object and load_last_operation need to be
+                // reset before calling the completion handler This is because,
+                // in general, the completion handler may be called directly or
+                // posted and if posted, it could execute in another thread.
+                // This means that regardless of how the handler gets to be
+                // actually called we must ensure that it is not called with the
+                // error context active. Note: An error context cannot be
+                // activated twice
             }
             if (!result_continue_execution) {
-                // We don't continue the execution due to an error, calling the completion handler
+                // We don't continue the execution due to an error, calling the
+                // completion handler
                 this->complete_now(result_continue_execution.error());
             } else if( !*result_continue_execution ) {
-                // We don't continue the execution due to the flag not being set, calling the completion handler
+                // We don't continue the execution due to the flag not being
+                // set, calling the completion handler
                 this->complete_now(leaf::result<void>{});
             }
         }
@@ -179,8 +187,8 @@ auto async_demo_rpc(AsyncStream &stream, ErrorContext &error_context, Completion
     return net::async_initiate<CompletionToken, void(leaf::result<void>)>(initiation, token, &stream, &error_context);
 }
 
-// The location of a int64 parse error.
-// It refers the range of characters from which the parsing was done.
+// The location of a int64 parse error. It refers the range of characters from
+// which the parsing was done.
 struct e_parse_int64_error {
     using location_base = std::pair<std::string_view const, std::string_view::const_iterator>;
     struct location : public location_base {
@@ -216,14 +224,15 @@ leaf::result<std::int64_t> parse_int64(std::string_view word) {
     return value;
 }
 
-// The command being executed while we get an error.
-// It refers the range of characters from which the command was extracted.
+// The command being executed while we get an error. It refers the range of
+// characters from which the command was extracted.
 struct e_command {
     std::string_view value;
 };
 
-// The details about an incorrect number of arguments error
-// Some commands may accept a variable number of arguments (e.g. greater than 1 would mean [2, SIZE_MAX]).
+// The details about an incorrect number of arguments error Some commands may
+// accept a variable number of arguments (e.g. greater than 1 would mean [2,
+// SIZE_MAX]).
 struct e_unexpected_arg_count {
     struct arg_info {
         std::size_t count;
@@ -349,7 +358,8 @@ leaf::result<std::string> execute_command(std::string_view line) {
         for (auto const &w : words) {
             BOOST_LEAF_AUTO(i, parse_int64(w));
             if (i == 0) {
-                // In some cases this command execution function might throw, not just return an error.
+                // In some cases this command execution function might throw,
+                // not just return an error.
                 throw std::runtime_error{"division by zero"};
             }
             div /= i;
@@ -364,7 +374,8 @@ leaf::result<std::string> execute_command(std::string_view line) {
         BOOST_LEAF_AUTO(i2, parse_int64(words.front()));
         words.pop_front();
         if (i2 == 0) {
-            // In some cases this command execution function might throw, not just return an error.
+            // In some cases this command execution function might throw, not
+            // just return an error.
             throw leaf::exception(std::runtime_error{"division by zero"});
         }
         response = std::to_string(i1 % i2);
@@ -396,8 +407,9 @@ response_t handle_request(request_t &&request) {
                               std::move(response));
     };
 
-    // In this variant of the RPC example we execute the remote command and handle any errors coming from it
-    // in one place (using `leaf::try_handle_all`).
+    // In this variant of the RPC example we execute the remote command and
+    // handle any errors coming from it in one place (using
+    // `leaf::try_handle_all`).
     auto pair_status_response = leaf::try_handle_all(
         [&]() -> leaf::result<std::pair<http::status, std::string>> {
             if (request.method() != http::verb::post) {
@@ -407,14 +419,16 @@ response_t handle_request(request_t &&request) {
             BOOST_LEAF_AUTO(response, execute_command(request.body()));
             return std::make_pair(http::status::ok, std::move(response));
         },
-        // For the `error_quit` command and associated error condition we have the error handler itself fail
-        // (by throwing). This means that the server will not send any response to the client, it will just
-        // shutdown the connection.
-        // This implementation showcases two aspects:
+        // For the `error_quit` command and associated error condition we have
+        // the error handler itself fail (by throwing). This means that the
+        // server will not send any response to the client, it will just
+        // shutdown the connection. This implementation showcases two aspects:
         // - that the implementation of error handling can fail, too
-        // - how the asynchronous operation calling this error handling function reacts to this failure.
+        // - how the asynchronous operation calling this error handling function
+        //   reacts to this failure.
         [](e_error_quit const &) -> std::pair<http::status, std::string> { throw std::runtime_error("error_quit"); },
-        // For the rest of error conditions we just build a message to be sent to the remote client.
+        // For the rest of error conditions we just build a message to be sent
+        // to the remote client.
         [&](e_parse_int64_error const &e, e_http_status const *status, e_command const *cmd,
             leaf::verbose_diagnostic_info const &diag) {
             return make_sr(status, boost::str(boost::format("%1% int64 parse error: %2%") % msg_prefix(cmd) % e.value) +
@@ -459,7 +473,8 @@ int main(int argc, char **argv) {
         return std::string("Error: ");
     };
 
-    // Error handler for internal server internal errors (not communicated to the remote client).
+    // Error handler for internal server internal errors (not communicated to
+    // the remote client).
     auto error_handlers = std::make_tuple(
         [&](std::exception_ptr const &ep, e_last_operation const *op) {
             return leaf::try_handle_all(
@@ -487,9 +502,9 @@ int main(int argc, char **argv) {
             return -23;
         });
 
-    // Top level try block and error handler.
-    // It will handle errors from starting the server for example failure to bind to a given port
-    // (e.g. ports less than 1024 if not running as root)
+    // Top level try block and error handler. It will handle errors from
+    // starting the server for example failure to bind to a given port (e.g.
+    // ports less than 1024 if not running as root)
     return leaf::try_handle_all(
         [&]() -> leaf::result<int> {
             auto load = leaf::on_error(e_last_operation{"main"});
@@ -526,8 +541,9 @@ int main(int argc, char **argv) {
             auto error_context = leaf::make_context(error_handlers);
             int rv = 0;
             async_demo_rpc(socket, error_context, [&](leaf::result<void> result) {
-                // Note: In case we wanted to add some additional information to the error associated with the result
-                // we would need to activate the error-context
+                // Note: In case we wanted to add some additional information to
+                // the error associated with the result we would need to
+                // activate the error-context
                 auto active_context = activate_context(error_context);
                 if (result) {
                     std::cout << "Server: Client work completed successfully" << std::endl;

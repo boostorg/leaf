@@ -3,11 +3,12 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// This is the program presented in https://boostorg.github.io/leaf/#introduction-eh.
+// This is the program presented in
+// https://boostorg.github.io/leaf/#introduction-eh.
 
-// It reads a text file in a buffer and prints it to std::cout, using LEAF to handle errors.
-// This version does not use exception handling. The version that does use exception
-// handling is in print_file_eh.cpp.
+// It reads a text file in a buffer and prints it to std::cout, using LEAF to
+// handle errors. This version does not use exception handling. The version that
+// does use exception handling is in print_file_eh.cpp.
 
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/result.hpp>
@@ -36,8 +37,9 @@ template <class T>
 using result = leaf::result<T>;
 
 
-// We will handle all failures in our main function, but first, here are the declarations of the functions it calls, each
-// communicating failures using result<T>:
+// We will handle all failures in our main function, but first, here are the
+// declarations of the functions it calls, each communicating failures using
+// result<T>:
 
 // Parse the command line, return the file name.
 result<char const *> parse_command_line( int argc, char const * argv[] );
@@ -78,12 +80,14 @@ int main( int argc, char const * argv[] )
             return 0;
         },
 
-        // Each of the lambdas below is an error handler. LEAF will consider them, in order, and call the first one that matches
-        // the available error objects.
+        // Each of the lambdas below is an error handler. LEAF will consider
+        // them, in order, and call the first one that matches the available
+        // error objects.
 
         // This handler will be called if the error includes:
         // - an object of type open_error, and
-        // - an object of type leaf::e_errno that has .value equal to ENOENT, and
+        // - an object of type leaf::e_errno that has .value equal to ENOENT,
+        //   and
         // - an object of type leaf::e_file_name.
         []( open_error &, leaf::match_value<leaf::e_errno, ENOENT>, leaf::e_file_name const & fn )
         {
@@ -103,7 +107,8 @@ int main( int argc, char const * argv[] )
 
         // This handler will be called if the error includes:
         // - an object of type input_error, and
-        // - an optional object of type leaf::e_errno (regardless of its .value), and
+        // - an optional object of type leaf::e_errno (regardless of its
+        //   .value), and
         // - an object of type leaf::e_file_name.
         []( input_error &, leaf::e_errno const * errn, leaf::e_file_name const & fn )
         {
@@ -130,9 +135,10 @@ int main( int argc, char const * argv[] )
             return 5;
         },
 
-        // This last handler matches any error: it prints diagnostic information to help debug logic errors in the program, since it
-        // failed to match  an appropriate error handler to the error condition it encountered. In this program this handler will
-        // never be called.
+        // This last handler matches any error: it prints diagnostic information
+        // to help debug logic errors in the program, since it failed to match
+        // an appropriate error handler to the error condition it encountered.
+        // In this program this handler will never be called.
         []( leaf::error_info const & unmatched )
         {
             std::cerr <<

@@ -46,7 +46,8 @@ struct BigInt
     friend std::ostream& operator<<(std::ostream& o, const BigInt&) { return o << "big int half"; }
 };
 
-// This function handles ConversionErrc::TooLong errors, forwards any other error to the caller.
+// This function handles ConversionErrc::TooLong errors, forwards any other
+// error to the caller.
 leaf::result<void> print_half(const std::string& text)
 {
     return leaf::try_handle_some(
@@ -88,8 +89,9 @@ int main( int argc, char const * argv[] )
 
         []( leaf::error_info const & unmatched )
         {
-            // This will never execute in this program, but it would detect logic errors where an unknown error reaches main.
-            // In this case, we print diagnostic information.
+            // This will never execute in this program, but it would detect
+            // logic errors where an unknown error reaches main. In this case,
+            // we print diagnostic information.
             std::cerr <<
                 "Unknown failure detected" << std::endl <<
                 "Cryptic diagnostic information follows" << std::endl <<

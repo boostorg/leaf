@@ -3,14 +3,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// This program demonstrates the use of leaf::on_error to print the path an error takes
-// as it bubbles up the call stack. The printing code only runs if:
+// This program demonstrates the use of leaf::on_error to print the path an
+// error takes as it bubbles up the call stack. The printing code only runs if:
 // - An error occurs, and
-// - A handler that takes e_error_log argument is present.
-// Otherwise none of the error log machinery will be invoked by LEAF.
+// - A handler that takes e_error_log argument is present. Otherwise none of the
+//   error log machinery will be invoked by LEAF.
 
-// This example is similar to error_trace, except the path the error takes is not captured,
-// only printed.
+// This example is similar to error_trace, except the path the error takes is
+// not captured, only printed.
 
 #include <boost/leaf/on_error.hpp>
 #include <boost/leaf/handle_errors.hpp>
@@ -22,7 +22,8 @@
 
 namespace leaf = boost::leaf;
 
-// The error log is activated only if an error-handling scope provides a handler for e_error_log.
+// The error log is activated only if an error-handling scope provides a handler
+// for e_error_log.
 struct e_error_log
 {
     struct rec
@@ -40,7 +41,8 @@ struct e_error_log
         std::cerr << "Error! Log:" << std::endl;
     }
 
-    // Our e_error_log instance is stateless, used only as a target to operator<<.
+    // Our e_error_log instance is stateless, used only as a target to
+    // operator<<.
     template <class T>
     friend std::ostream & operator<<( e_error_log const &, T const & x )
     {
@@ -48,14 +50,15 @@ struct e_error_log
     }
 };
 
-// The ERROR_LOG macro is designed for use in functions that detect or forward errors
-// up the call stack. If an error occurs, and if an error-handling scope provides a handler
-// for e_error_log, the supplied lambda is executed as the error bubbles up.
+// The ERROR_LOG macro is designed for use in functions that detect or forward
+// errors up the call stack. If an error occurs, and if an error-handling scope
+// provides a handler for e_error_log, the supplied lambda is executed as the
+// error bubbles up.
 #define ERROR_LOG auto _log = leaf::on_error( []( e_error_log & log ) { log << e_error_log::rec{__FILE__, __LINE__}; } )
 
-// Each function in the sequence below calls the previous function, and each function has
-// failure_percent chance of failing. If a failure occurs, the ERROR_LOG macro will cause
-// the path the error takes to be printed.
+// Each function in the sequence below calls the previous function, and each
+// function has failure_percent chance of failing. If a failure occurs, the
+// ERROR_LOG macro will cause the path the error takes to be printed.
 int const failure_percent = 25;
 
 leaf::result<void> f1()

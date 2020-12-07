@@ -27,7 +27,8 @@ struct e_failure_info2 { int value; };
 // A type that represents a successfully returned result from a task.
 struct task_result { };
 
- // This is our task function. It produces objects of type task_result, but it may fail...
+ // This is our task function. It produces objects of type task_result, but it
+ // may fail.
 task_result task()
 {
     bool succeed = (rand()%4) != 0; //...at random.
@@ -44,9 +45,9 @@ int main()
 {
     int const task_count = 42;
 
-    // The error_handlers are used in this thread (see leaf::try_catch below). The
-    // arguments passed to individual lambdas are transported from the worker thread
-    // to the main thread automatically.
+    // The error_handlers are used in this thread (see leaf::try_catch below).
+    // The arguments passed to individual lambdas are transported from the
+    // worker thread to the main thread automatically.
     auto error_handlers = std::make_tuple(
         []( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
         {
@@ -63,11 +64,11 @@ int main()
     // Container to collect the generated std::future objects.
     std::vector<std::future<task_result>> fut;
 
-    // Launch the tasks, but rather than launching the task function directly, we launch a
-    // wrapper function which calls leaf::capture, passing a context object that will hold
-    // the error objects reported from the task in case it throws. The error types the
-    // context is able to hold statically are automatically deduced from the type of the
-    // error_handlers tuple.
+    // Launch the tasks, but rather than launching the task function directly,
+    // we launch a wrapper function which calls leaf::capture, passing a context
+    // object that will hold the error objects reported from the task in case it
+    // throws. The error types the context is able to hold statically are
+    // automatically deduced from the type of the error_handlers tuple.
     std::generate_n( std::back_inserter(fut), task_count,
         [&]
         {
