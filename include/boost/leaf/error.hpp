@@ -33,7 +33,6 @@
 #define BOOST_LEAF_TMP BOOST_LEAF_TOKEN_PASTE2(boost_leaf_tmp_, __LINE__)
 
 #define BOOST_LEAF_ASSIGN(v,r)\
-    static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "The BOOST_LEAF_ASSIGN macro requires a result type as the second argument");\
     auto && BOOST_LEAF_TMP = r;\
     if( !BOOST_LEAF_TMP )\
         return BOOST_LEAF_TMP.error();\
@@ -43,7 +42,6 @@
     BOOST_LEAF_ASSIGN(auto v, r)
 
 #define BOOST_LEAF_CHECK(r)\
-    static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "BOOST_LEAF_CHECK requires a result type");\
     auto && BOOST_LEAF_TMP = r;\
     if( BOOST_LEAF_TMP )\
         ;\

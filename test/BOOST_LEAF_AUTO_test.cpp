@@ -34,10 +34,26 @@ leaf::result<value> f2()
 #endif
 }
 
+template <class Lambda>
+leaf::result<value> f2_lambda( Lambda )
+{
+    BOOST_LEAF_AUTO(a, f1());
+#if BOOST_WORKAROUND( BOOST_GCC, < 50000 ) || BOOST_WORKAROUND( BOOST_CLANG, <= 30800 )
+    return std::move(a); // Older compilers are confused, but...
+#else
+    return a; // ...this doesn't need to be return std::move(a);
+#endif
+}
+
 leaf::result<value> f3()
 {
     BOOST_LEAF_AUTO(a, f2());
-    BOOST_LEAF_AUTO(b, f2()); // Invoking the macro twice in the same scope, testing the temp name generation
+
+    // Invoking the macro twice in the same scope, testing the temp name
+    // generation. Also making sure we can pass a lambda (See
+    // https://github.com/boostorg/leaf/issues/16).
+    BOOST_LEAF_AUTO(b, f2_lambda([]{}));
+
     return value { a.x + b.x };
 }
 
