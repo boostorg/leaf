@@ -268,16 +268,20 @@ endif
 
 if option_enable_benchmarks
 
+	if get_option('optimization')=='0'
+		error('The option leaf_enable_benchmarks requires optimizations to be enabled. Aborting.')
+	endif
+
 	if option_exceptions
 		error('The option leaf_enable_benchmarks requires the built-in option cpp_eh set to none. Aborting.')
-	else
-		dep_tl_expected = subproject('tl_expected').get_variable('headers')
-		executable('deep_stack_tl', 'benchmark/deep_stack_other.cpp', override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=0', dependencies: [dep_tl_expected] )
-		executable('deep_stack_leaf', 'benchmark/deep_stack_leaf.cpp', dependencies: [leaf], override_options: ['cpp_std=c++17'], cpp_args: '-DBOOST_LEAF_DIAGNOSTICS=0')
-		if option_boost
-			executable('deep_stack_result', 'benchmark/deep_stack_other.cpp', dependencies: [dep_boost], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=1' )
-			executable('deep_stack_outcome', 'benchmark/deep_stack_other.cpp', dependencies: [dep_boost], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=2' )
-		endif
+	endif
+
+	dep_tl_expected = subproject('tl_expected').get_variable('headers')
+	executable('deep_stack_tl', 'benchmark/deep_stack_other.cpp', override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=0', dependencies: [dep_tl_expected] )
+	executable('deep_stack_leaf', 'benchmark/deep_stack_leaf.cpp', dependencies: [leaf], override_options: ['cpp_std=c++17'], cpp_args: '-DBOOST_LEAF_DIAGNOSTICS=0')
+	if option_boost
+		executable('deep_stack_result', 'benchmark/deep_stack_other.cpp', dependencies: [dep_boost], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=1' )
+		executable('deep_stack_outcome', 'benchmark/deep_stack_other.cpp', dependencies: [dep_boost], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=2' )
 	endif
 
 endif
