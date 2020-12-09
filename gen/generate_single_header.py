@@ -85,8 +85,7 @@ def _main():
 			'#   elif (__GNUC__*100+__GNUC_MINOR__>301)\n'
 			'#       pragma GCC system_header\n'
 			'#   endif\n'
-			'#endif\n'
-			'\n' )
+			'#endif\n' )
 		append(args.input, input_file, output_file, regex_includes, args.path)
 		output_file.write(
 			'\n'

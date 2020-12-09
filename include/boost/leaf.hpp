@@ -16,7 +16,6 @@
 #   endif
 #endif
 
-
 // >>> #include <boost/leaf/capture.hpp>
 #line 1 "boost/leaf/capture.hpp"
 #ifndef BOOST_LEAF_CAPTURE_HPP_INCLUDED
