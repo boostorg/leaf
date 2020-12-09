@@ -177,6 +177,21 @@ if option_enable_unit_tests
 		'try_catch_system_error_test',
 		'try_catch_test',
 		'try_exception_and_result_test',
+	]
+	if option_boost and option_exceptions
+		tests += [
+			'boost_exception_test'
+		]
+	endif
+
+	dep_single_header = declare_dependency(compile_args: ['-DBOOST_LEAF_TEST_SINGLE_HEADER'])
+
+	foreach t : tests
+		test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf, dep_thread, dep_boost]) )
+		test(t+'_', executable(t+'_', 'test/'+t+'.cpp', dependencies: [leaf, dep_thread, dep_boost, dep_single_header]) )
+	endforeach
+
+	header_tests = [
 		'_hpp_capture_test',
 		'_hpp_common_test',
 		'_hpp_context_test',
@@ -188,13 +203,7 @@ if option_enable_unit_tests
 		'_hpp_pred_test',
 		'_hpp_result_test',
 	]
-	if option_boost and option_exceptions
-		tests += [
-			'boost_exception_test'
-		]
-	endif
-
-	foreach t : tests
+	foreach t : header_tests
 		test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf, dep_thread, dep_boost]) )
 	endforeach
 

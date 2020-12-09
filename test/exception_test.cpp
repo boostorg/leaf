@@ -16,10 +16,15 @@ int main()
 
 #else
 
-#include <boost/leaf/handle_errors.hpp>
-#include <boost/leaf/pred.hpp>
-#include <boost/leaf/exception.hpp>
-#include <boost/leaf/on_error.hpp>
+#ifdef BOOST_LEAF_TEST_SINGLE_HEADER
+#   include <boost/leaf.hpp>
+#else
+#   include <boost/leaf/handle_errors.hpp>
+#   include <boost/leaf/pred.hpp>
+#   include <boost/leaf/exception.hpp>
+#   include <boost/leaf/on_error.hpp>
+#endif
+
 #include "lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
