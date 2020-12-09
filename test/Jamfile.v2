@@ -100,6 +100,8 @@ compile-fail _compile-fail-arg_catch_2.cpp ;
 compile-fail _compile-fail-arg_match_1.cpp ;
 compile-fail _compile-fail-arg_match_2.cpp ;
 compile-fail _compile-fail-arg_rvalue_ref.cpp ;
+compile-fail _compile-fail-BOOST_LEAF_ASSIGN.cpp ;
+compile-fail _compile-fail-BOOST_LEAF_AUTO.cpp ;
 compile-fail _compile-fail-diagnostic_info.cpp ;
 compile-fail _compile-fail-error_info.cpp ;
 compile-fail _compile-fail-new_error.cpp ;

@@ -34,6 +34,7 @@
 
 #define BOOST_LEAF_ASSIGN(v,r)\
     auto && BOOST_LEAF_TMP = r;\
+    static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value, "BOOST_LEAF_ASSIGN and BOOST_LEAF_AUTO require a result object as the second argument (see is_result_type)");\
     if( !BOOST_LEAF_TMP )\
         return BOOST_LEAF_TMP.error();\
     v = std::forward<decltype(BOOST_LEAF_TMP)>(BOOST_LEAF_TMP).value()
@@ -43,6 +44,7 @@
 
 #define BOOST_LEAF_CHECK(r)\
     auto && BOOST_LEAF_TMP = r;\
+    static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value, "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
     if( BOOST_LEAF_TMP )\
         ;\
     else\
