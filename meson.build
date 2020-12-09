@@ -70,24 +70,6 @@ if not meson.is_subproject()
 	endif
 endif
 
-if option_leaf_hpp
-	prog_python = import('python').find_installation('python3')
-	custom_target(
-		'leaf_hpp',
-		command:
-		[
-			prog_python,
-			files('gen/generate_single_header.py'),
-			'-i', files('include/boost/leaf/detail/all.hpp'),
-			'-p', join_paths(meson.source_root(),'include'),
-			'-o', join_paths(meson.source_root(),'include/boost/leaf.hpp'),
-			'boost/leaf'
-		],
-		output: 'leaf.hpp',
-		build_always_stale: true,
-		build_by_default: true)
-endif
-
 dep_boost = [ ]
 if option_boost # Requires that LEAF resides under boost_root/libs/leaf.
 	dep_boost = declare_dependency(include_directories: '../..')
@@ -184,11 +166,13 @@ if option_enable_unit_tests
 		]
 	endif
 
-	dep_single_header = declare_dependency(compile_args: ['-DBOOST_LEAF_TEST_SINGLE_HEADER'])
+	dep_test_single_header = []
+	if option_leaf_hpp
+		dep_test_single_header = declare_dependency(compile_args: ['-DBOOST_LEAF_TEST_SINGLE_HEADER'])
+	endif
 
 	foreach t : tests
-		test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf, dep_thread, dep_boost]) )
-		test(t+'_', executable(t+'_', 'test/'+t+'.cpp', dependencies: [leaf, dep_thread, dep_boost, dep_single_header]) )
+		test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf, dep_thread, dep_boost, dep_test_single_header]) )
 	endforeach
 
 	header_tests = [
