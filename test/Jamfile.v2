@@ -8,6 +8,9 @@ import testing ;
 variant leaf_debug_diag0 : debug : <define>BOOST_LEAF_DIAGNOSTICS=0 ;
 variant leaf_release_diag0 : release : <define>BOOST_LEAF_DIAGNOSTICS=0 ;
 
+variant leaf_debug_leaf_hpp : debug : <define>BOOST_LEAF_TEST_SINGLE_HEADER ;
+variant leaf_release_leaf_hpp : release : <define>BOOST_LEAF_TEST_SINGLE_HEADER ;
+
 project
     : default-build
         <cxxstd>11

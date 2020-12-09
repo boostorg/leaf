@@ -78,6 +78,28 @@
 			}
 		},
 		{
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"label": "Run all unit tests (b2, all configurations)",
+			"type": "shell",
+			"dependsOn": [
+				"Generate leaf.hpp"
+			],
+			"command": "../../b2 test variant=debug,release,leaf_debug_diag0,leaf_release_diag0,leaf_debug_leaf_hpp,leaf_release_leaf_hpp exception-handling=on,off && ../../b2 test variant=debug,release,leaf_debug_diag0,leaf_release_diag0,leaf_debug_leaf_hpp,leaf_release_leaf_hpp exception-handling=off rtti=off",
+			"problemMatcher": {
+				"base": "$gcc",
+				"fileLocation": [
+					"relative",
+					"${workspaceRoot}/bld/release"
+				]
+			},
+			"windows": {
+				"command": "${workspaceRoot}/.vscode/msvc.bat && ../../b2 test variant=debug,release,leaf_debug_diag0,leaf_release_diag0,leaf_debug_leaf_hpp,leaf_release_leaf_hpp exception-handling=on,off && ../../b2 test variant=debug,release,leaf_debug_diag0,leaf_release_diag0,leaf_debug_leaf_hpp,leaf_release_leaf_hpp exception-handling=off rtti=off"
+			}
+		},
+		{
 			"label": "accumulate_basic_test",
 			"type": "shell",
 			"command": "cd ${workspaceRoot}/bld/debug && meson test accumulate_basic_test",
