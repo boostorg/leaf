@@ -3790,7 +3790,7 @@ namespace boost { namespace leaf {
         context_type_from_handlers<H...> ctx;
         auto active_context = activate_context(ctx);
         if( auto r = std::forward<TryBlock>(try_block)() )
-            return r.value();
+            return std::move(r).value();
         else
         {
             error_id id = r.error();
@@ -3896,7 +3896,7 @@ namespace boost { namespace leaf {
                     return std::forward<TryBlock>(try_block)();
                 },
                 std::forward<H>(h)...) )
-            return r.value();
+            return std::move(r).value();
         else
         {
             error_id id = r.error();

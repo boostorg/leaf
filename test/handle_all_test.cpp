@@ -46,6 +46,14 @@ leaf::result<R> f_errc_wrapped( Errc ec )
     return leaf::new_error(e_std_error_code{make_error_code(ec)}, info<1>{1}, info<2>{2}, info<3>{3});
 }
 
+struct move_only
+{
+    move_only( move_only const & ) = delete;
+    move_only( move_only && ) = default;
+    move_only( int value ): value(value) { }
+    int value;
+};
+
 int main()
 {
     // void, try_handle_all (success)
@@ -471,6 +479,201 @@ int main()
                 return 3;
             } );
         BOOST_TEST_EQ(r, 2);
+    }
+
+    //////////////////////////////////////
+
+    // move_only, try_handle_all (success)
+    {
+        move_only r = leaf::try_handle_all(
+            []() -> leaf::result<move_only>
+            {
+                BOOST_LEAF_AUTO(answer, f<move_only>(my_error_code::ok));
+                return answer;
+            },
+            []
+            {
+                return 1;
+            } );
+        BOOST_TEST_EQ(r.value, 42);
+    }
+
+    // move_only, try_handle_all (failure)
+    {
+        move_only r = leaf::try_handle_all(
+            []() -> leaf::result<move_only>
+            {
+                BOOST_LEAF_AUTO(answer, f<move_only>(my_error_code::error1));
+                return answer;
+            },
+            []( my_error_code ec, info<1> const & x, info<2> y )
+            {
+                BOOST_TEST(ec==my_error_code::error1);
+                BOOST_TEST_EQ(x.value, 1);
+                BOOST_TEST_EQ(y.value, 2);
+                return 1;
+            },
+            []
+            {
+                return 2;
+            } );
+        BOOST_TEST_EQ(r.value, 1);
+    }
+
+    // move_only, try_handle_all (failure), match cond_x (single enum value)
+    {
+        move_only r = leaf::try_handle_all(
+            []() -> leaf::result<move_only>
+            {
+                BOOST_LEAF_AUTO(answer, f_errc<move_only>(errc_a::a0));
+                return answer;
+            },
+            []( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
+            {
+                return 1;
+            },
+            []( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
+            {
+                BOOST_TEST_EQ(ec.matched, make_error_code(errc_a::a0));
+                BOOST_TEST_EQ(x.value, 1);
+                BOOST_TEST_EQ(y.value, 2);
+                return 2;
+            },
+            []
+            {
+                return 3;
+            } );
+        BOOST_TEST_EQ(r.value, 2);
+    }
+
+    // move_only, try_handle_all (failure), match cond_x (wrapped std::error_code)
+    {
+        move_only r = leaf::try_handle_all(
+            []() -> leaf::result<move_only>
+            {
+                BOOST_LEAF_AUTO(answer, f_errc_wrapped<move_only>(errc_a::a0));
+                return answer;
+            },
+            []( leaf::match<leaf::condition<cond_x>, cond_x::x11> )
+            {
+                return 1;
+            },
+            []( leaf::match_value<leaf::condition<e_std_error_code, cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
+            {
+                BOOST_TEST_EQ(ec.matched.value, make_error_code(errc_a::a0));
+                BOOST_TEST_EQ(x.value, 1);
+                BOOST_TEST_EQ(y.value, 2);
+                return 2;
+            },
+            []
+            {
+                return 3;
+            } );
+        BOOST_TEST_EQ(r.value, 2);
+    }
+
+    // move_only, try_handle_all (failure), match enum (single enum value)
+    {
+        move_only r = leaf::try_handle_all(
+            []() -> leaf::result<move_only>
+            {
+                BOOST_LEAF_AUTO(answer, f<move_only>(my_error_code::error1));
+                return answer;
+            },
+            []( leaf::match<my_error_code, my_error_code::error2> )
+            {
+                return 1;
+            },
+            []( leaf::match<my_error_code, my_error_code::error1> ec, info<1> const & x, info<2> y )
+            {
+                BOOST_TEST(ec.matched==my_error_code::error1);
+                BOOST_TEST_EQ(x.value, 1);
+                BOOST_TEST_EQ(y.value, 2);
+                return 2;
+            },
+            []
+            {
+                return 3;
+            } );
+        BOOST_TEST_EQ(r.value, 2);
+    }
+
+    // move_only, try_handle_all (failure), match enum (multiple enum values)
+    {
+        move_only r = leaf::try_handle_all(
+            []() -> leaf::result<move_only>
+            {
+                BOOST_LEAF_AUTO(answer, f<move_only>(my_error_code::error1));
+                return answer;
+            },
+            []( leaf::match<my_error_code, my_error_code::error2> )
+            {
+                return 1;
+            },
+            []( leaf::match<my_error_code, my_error_code::error2, my_error_code::error1> ec, info<1> const & x, info<2> y )
+            {
+                BOOST_TEST(ec.matched==my_error_code::error1);
+                BOOST_TEST_EQ(x.value, 1);
+                BOOST_TEST_EQ(y.value, 2);
+                return 2;
+            },
+            []
+            {
+                return 3;
+            } );
+        BOOST_TEST_EQ(r.value, 2);
+    }
+
+    // move_only, try_handle_all (failure), match value (single value)
+    {
+        move_only r = leaf::try_handle_all(
+            []() -> leaf::result<move_only>
+            {
+                BOOST_LEAF_AUTO(answer, f<move_only>(my_error_code::error1));
+                return answer;
+            },
+            []( leaf::match_value<e_my_error_code, my_error_code::error2> )
+            {
+                return 1;
+            },
+            []( leaf::match_value<e_my_error_code, my_error_code::error1> ec, info<1> const & x, info<2> y )
+            {
+                BOOST_TEST(ec.matched.value==my_error_code::error1);
+                BOOST_TEST_EQ(x.value, 1);
+                BOOST_TEST_EQ(y.value, 2);
+                return 2;
+            },
+            []
+            {
+                return 3;
+            } );
+        BOOST_TEST_EQ(r.value, 2);
+    }
+
+    // move_only, try_handle_all (failure), match value (multiple values)
+    {
+        move_only r = leaf::try_handle_all(
+            []() -> leaf::result<move_only>
+            {
+                BOOST_LEAF_AUTO(answer, f<move_only>(my_error_code::error1));
+                return answer;
+            },
+            []( leaf::match_value<e_my_error_code, my_error_code::error2> )
+            {
+                return 1;
+            },
+            []( leaf::match_value<e_my_error_code, my_error_code::error2, my_error_code::error1> ec, info<1> const & x, info<2> y )
+            {
+                BOOST_TEST(ec.matched.value==my_error_code::error1);
+                BOOST_TEST_EQ(x.value, 1);
+                BOOST_TEST_EQ(y.value, 2);
+                return 2;
+            },
+            []
+            {
+                return 3;
+            } );
+        BOOST_TEST_EQ(r.value, 2);
     }
 
     return boost::report_errors();
