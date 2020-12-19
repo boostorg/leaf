@@ -1,20 +1,20 @@
 #ifndef BOOST_LEAF_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ERROR_HPP_INCLUDED
 
-// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
+/// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
 
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+/// Distributed under the Boost Software License, Version 1.0. (See accompanying
+/// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef BOOST_LEAF_ENABLE_WARNINGS
-#   if defined(__clang__)
-#       pragma clang system_header
-#   elif (__GNUC__*100+__GNUC_MINOR__>301)
-#       pragma GCC system_header
-#   elif defined(_MSC_VER)
-#       pragma warning(push,1)
-#   endif
-#endif
+#ifndef BOOST_LEAF_ENABLE_WARNINGS ///
+#   if defined(_MSC_VER) ///
+#       pragma warning(push,1) ///
+#   elif defined(__clang__) ///
+#       pragma clang system_header ///
+#   elif (__GNUC__*100+__GNUC_MINOR__>301) ///
+#       pragma GCC system_header ///
+#   endif ///
+#endif ///
 
 #include <boost/leaf/detail/function_traits.hpp>
 #include <boost/leaf/detail/print.hpp>
@@ -33,8 +33,8 @@
 #define BOOST_LEAF_TMP BOOST_LEAF_TOKEN_PASTE2(boost_leaf_tmp_, __LINE__)
 
 #define BOOST_LEAF_ASSIGN(v,r)\
-    static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "The BOOST_LEAF_ASSIGN macro requires a result type as the second argument");\
     auto && BOOST_LEAF_TMP = r;\
+    static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value, "BOOST_LEAF_ASSIGN and BOOST_LEAF_AUTO require a result object as the second argument (see is_result_type)");\
     if( !BOOST_LEAF_TMP )\
         return BOOST_LEAF_TMP.error();\
     v = std::forward<decltype(BOOST_LEAF_TMP)>(BOOST_LEAF_TMP).value()
@@ -43,12 +43,12 @@
     BOOST_LEAF_ASSIGN(auto v, r)
 
 #define BOOST_LEAF_CHECK(r)\
-    {\
-        static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(r)>::type>::value, "BOOST_LEAF_CHECK requires a result type");\
-        auto && BOOST_LEAF_TMP = r;\
-        if( !BOOST_LEAF_TMP )\
-            return BOOST_LEAF_TMP.error();\
-    }
+    auto && BOOST_LEAF_TMP = r;\
+    static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value, "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
+    if( BOOST_LEAF_TMP )\
+        ;\
+    else\
+        return BOOST_LEAF_TMP.error()
 
 #define BOOST_LEAF_NEW_ERROR ::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
 
@@ -769,5 +769,9 @@ namespace boost { namespace leaf {
 } }
 
 #undef BOOST_LEAF_THREAD_LOCAL
+
+#if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///
+#pragma warning(pop) ///
+#endif ///
 
 #endif

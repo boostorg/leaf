@@ -3,9 +3,9 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// This example demonstrates how to transport exceptions thrown by a low level function
-// through an intermediate scopes that are not exception-safe, to be handled in a high
-// level function which may or may not be exception-safe.
+// This example demonstrates how to transport exceptions thrown by a low level
+// function through an intermediate scopes that are not exception-safe, to be
+// handled in a high level function which may or may not be exception-safe.
 
 #include <boost/leaf/capture.hpp>
 #include <boost/leaf/result.hpp>
@@ -37,8 +37,9 @@ int compute_answer_throws()
 // Call compute_answer_throws, switch to result<int> for error handling.
 leaf::result<int> compute_answer() noexcept
 {
-    // Convert exceptions of types error_a and error_b to be communicated by leaf::result.
-    // Any other exception will be communicated as a std::exception_ptr.
+    // Convert exceptions of types error_a and error_b to be communicated by
+    // leaf::result. Any other exception will be communicated as a
+    // std::exception_ptr.
     return leaf::exception_to_result<error_a, error_b>(
         []
         {
@@ -58,9 +59,9 @@ leaf::result<void> print_answer() noexcept
 
 int main()
 {
-    // Exercise print_answer a few times and handle errors. Note that the exception objects
-    // that compute_answer_throws throws are not handled as exceptions, but as regular
-    // LEAF error error objects...
+    // Exercise print_answer a few times and handle errors. Note that the
+    // exception objects that compute_answer_throws throws are not handled as
+    // exceptions, but as regular LEAF error error objects...
     for( int i=0; i!=42; ++i )
     {
         leaf::try_handle_all(
@@ -80,18 +81,21 @@ int main()
                 std::cerr << "Error B!" << std::endl;
             },
 
-            //...except for error_c errors, which (for demonstration) are captured as exceptions
-            // into std::exception_ptr as "unknown" exceptions. Presumably this should not
-            // happen, therefore at this point we treat this situation as a logic error: we print
+            // ...except for error_c errors, which (for demonstration) are
+            // captured as exceptions into std::exception_ptr as "unknown"
+            // exceptions. Presumably this should not happen, therefore at this
+            // point we treat this situation as a logic error: we print
             // diagnostic information and bail out.
             []( std::exception_ptr const * ep )
             {
                 std::cerr << "Got unknown error!" << std::endl;
 
-                // Above, why do we take ep as a pointer? Because handle_all requires that the last
-                // handler matches any error and, taken as a pointer, if there isn't a std::exception_ptr
-                // associated with the error, the handler will still be matched (with 0 passed for ep).
-                // Had we taken it by value or by const &, the program would not have compiled.
+                // Above, why do we take ep as a pointer? Because handle_all
+                // requires that the last handler matches any error and, taken
+                // as a pointer, if there isn't a std::exception_ptr associated
+                // with the error, the handler will still be matched (with 0
+                // passed for ep). Had we taken it by value or by const &, the
+                // program would not have compiled.
                 if( ep )
                     leaf::try_catch(
                         [&]

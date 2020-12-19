@@ -8,6 +8,9 @@ import testing ;
 variant leaf_debug_diag0 : debug : <define>BOOST_LEAF_DIAGNOSTICS=0 ;
 variant leaf_release_diag0 : release : <define>BOOST_LEAF_DIAGNOSTICS=0 ;
 
+variant leaf_debug_leaf_hpp : debug : <define>BOOST_LEAF_TEST_SINGLE_HEADER ;
+variant leaf_release_leaf_hpp : release : <define>BOOST_LEAF_TEST_SINGLE_HEADER ;
+
 project
     : default-build
         <cxxstd>11
@@ -100,6 +103,8 @@ compile-fail _compile-fail-arg_catch_2.cpp ;
 compile-fail _compile-fail-arg_match_1.cpp ;
 compile-fail _compile-fail-arg_match_2.cpp ;
 compile-fail _compile-fail-arg_rvalue_ref.cpp ;
+compile-fail _compile-fail-BOOST_LEAF_ASSIGN.cpp ;
+compile-fail _compile-fail-BOOST_LEAF_AUTO.cpp ;
 compile-fail _compile-fail-diagnostic_info.cpp ;
 compile-fail _compile-fail-error_info.cpp ;
 compile-fail _compile-fail-new_error.cpp ;

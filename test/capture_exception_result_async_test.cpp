@@ -16,9 +16,13 @@ int main()
 
 #else
 
-#include <boost/leaf/capture.hpp>
-#include <boost/leaf/result.hpp>
-#include <boost/leaf/handle_errors.hpp>
+#ifdef BOOST_LEAF_TEST_SINGLE_HEADER
+#   include <boost/leaf.hpp>
+#else
+#   include <boost/leaf/capture.hpp>
+#   include <boost/leaf/result.hpp>
+#   include <boost/leaf/handle_errors.hpp>
+#endif
 
 #include "lightweight_test.hpp"
 #include <vector>

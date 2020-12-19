@@ -28,7 +28,11 @@ int main()
 
 #else
 
-#include <boost/leaf/pred.hpp>
+#ifdef BOOST_LEAF_TEST_SINGLE_HEADER
+#   include <boost/leaf.hpp>
+#else
+#   include <boost/leaf/pred.hpp>
+#endif
 
 template <int> struct info { int value; };
 

@@ -5,12 +5,7 @@
 :stylesheet: zajo-dark.css
 :source-highlighter: rouge
 
-ifdef::backend-pdf[]
 = LEAF
-endif::[]
-ifndef::backend-pdf[]
-= LEAFpass:[<a href="https://ci.appveyor.com/project/zajo/leaf/branch/master"><img style="margin-left:8px; margin-top:21px; float:right; vertical-align: top" src="https://ci.appveyor.com/api/projects/status/u7mq10n8y5ewpre3/branch/master?svg=true"></a> <a href="https://travis-ci.com/boostorg/leaf"><img style="margin-top:21px; float:right; vertical-align: top" src="https://travis-ci.com/boostorg/leaf.svg?branch=master"></a><div style="z-index: 3; bottom:-16px; right:4px; position:fixed"><input width="32" height="32" type="image" alt="Skin" src="./skin.png" onclick="this.blur();switch_style();return false;"/></div>]
-endif::[]
 Lightweight Error Augmentation Framework | Emil Dotchevski
 ifndef::backend-pdf[]
 :toc: left
@@ -1984,11 +1979,11 @@ namespace boost { namespace leaf {
   BOOST_LEAF_ASSIGN(auto v, r)
 
 #define BOOST_LEAF_CHECK(r)\
-	{\
 		auto && <<temp>> = r;\
-		if( !<<temp>> )\
-			return <<temp>>.error();\
-	}
+		if( <<temp>> )\
+      ;\
+    else\
+			return <<temp>>.error()
 
 #define BOOST_LEAF_NEW_ERROR <<inject e_source_location voodoo>> ::boost::leaf::new_error
 ----
@@ -4850,11 +4845,11 @@ NOTE: See also <<BOOST_LEAF_ASSIGN>>.
 [source,c++]
 ----
 #define BOOST_LEAF_CHECK(r)\
-  {\
     auto && <<temp>> = r;\
-    if(!<<temp>>)\
-      return <<temp>>.error();\
-  }
+    if( <<temp>> )\
+      ;\
+    else\
+      return <<temp>>.error()
 ----
 
 `BOOST_LEAF_CHECK` is useful when calling a function that returns `result<void>`, if the desired behavior is to forward any errors to the caller verbatim.
