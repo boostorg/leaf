@@ -5,12 +5,7 @@
 :stylesheet: zajo-dark.css
 :source-highlighter: rouge
 
-ifdef::backend-pdf[]
 = LEAF
-endif::[]
-ifndef::backend-pdf[]
-= LEAFpass:[<a href="https://ci.appveyor.com/project/boostorg/leaf/branch/master"><img style="margin-left:8px; margin-top:21px; float:right; vertical-align: top" src="https://ci.appveyor.com/api/projects/status/u7mq10n8y5ewpre3/branch/master?svg=true"></a> <a href="https://travis-ci.org/boostorg/leaf"><img style="margin-top:21px; float:right; vertical-align: top" src="https://travis-ci.org/boostorg/leaf.svg?branch=master"></a><div style="z-index: 3; bottom:-16px; right:4px; position:fixed"><input width="32" height="32" type="image" alt="Skin" src="./skin.png" onclick="this.blur();switch_style();return false;"/></div>]
-endif::[]
 Lightweight Error Augmentation Framework | Emil Dotchevski
 ifndef::backend-pdf[]
 :toc: left
