@@ -7,9 +7,7 @@
 // function through an intermediate scopes that are not exception-safe, to be
 // handled in a high level function which may or may not be exception-safe.
 
-#include <boost/leaf/capture.hpp>
-#include <boost/leaf/result.hpp>
-#include <boost/leaf/handle_errors.hpp>
+#include <boost/leaf.hpp>
 #include <iostream>
 
 namespace leaf = boost::leaf;

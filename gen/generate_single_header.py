@@ -1,6 +1,6 @@
 """
 
-	Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
+	Copyright (c) 2018-2021 Emil Dotchevski and Reverge Studios, Inc.
 	Copyright (c) Sorin Fetche
 
 	Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -12,12 +12,7 @@
 
 		python3 generate_single_header.py  --help
 
-		e.g. python3 generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include  -o include/boost/leaf.hpp boost/leaf
-
-	Note:
-
-		If unit tests are build by meson, you can enable the 'leaf_hpp' option (see meson_options.txt),
-		in which case each time the tests are built, first boost/leaf.hpp will be rebuilt.
+		e.g. python3 generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include  -o test/leaf.hpp boost/leaf
 
 """
 
@@ -38,7 +33,7 @@ def append(input_file_name, input_file, output_file, regex_includes, include_fol
 			next_input_file_name = result.group("include")
 			if next_input_file_name not in included:
 				included.append(next_input_file_name)
-				print("%s" % next_input_file_name, flush=True)
+				print("%s" % next_input_file_name)
 				with open(os.path.join(include_folder, next_input_file_name), "r") as next_input_file:
 					output_file.write('// >>> %s#line 1 "%s"\n' % (line, next_input_file_name))
 					append(next_input_file_name, next_input_file, output_file, regex_includes, include_folder)

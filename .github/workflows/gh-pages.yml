@@ -35,6 +35,11 @@ jobs:
           cd ../boost-root/libs/leaf/doc
           ../../../b2
 
+      - name: Generate headers
+        run: |
+          cd ../boost-root/libs/leaf
+          python gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o doc/html/leaf.hpp boost/leaf
+
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:

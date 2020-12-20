@@ -29,7 +29,7 @@ int main()
 #else
 
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
-#   include <boost/leaf.hpp>
+#   include "leaf.hpp"
 #else
 #   include <boost/leaf/pred.hpp>
 #endif

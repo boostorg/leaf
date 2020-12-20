@@ -9,7 +9,6 @@ on:
       - feature/**
 
 env:
-  LIBRARY: leaf
   UBSAN_OPTIONS: print_stacktrace=1
 
 jobs:
@@ -117,9 +116,9 @@ jobs:
           cd ..
           git clone -b $BOOST_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
           cd boost-root
-          cp -r $GITHUB_WORKSPACE/* libs/$LIBRARY
+          cp -r $GITHUB_WORKSPACE/* libs/leaf
           git submodule update --init tools/boostdep
-          python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
+          python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" leaf
           ./bootstrap.sh
           ./b2 -d0 headers
 
@@ -128,10 +127,15 @@ jobs:
         run: |
           echo "using ${{matrix.toolset}} : : ${{matrix.compiler}} ;" > ~/user-config.jam
 
+      - name: Generate headers
+        run: |
+          cd ../boost-root/libs/leaf
+          python gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o test/leaf.hpp boost/leaf
+
       - name: Run tests
         run: |
           cd ../boost-root
-          ./b2 -j3 libs/$LIBRARY/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} variant=debug,release
+          ./b2 -j3 libs/leaf/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} variant=debug,release,leaf_debug_leaf_hpp,leaf_release_leaf_hpp,leaf_debug_diag0,leaf_release_diag0
 
   windows:
     strategy:
@@ -165,15 +169,19 @@ jobs:
           cd ..
           git clone -b %BOOST_BRANCH% --depth 1 https://github.com/boostorg/boost.git boost-root
           cd boost-root
-          xcopy /s /e /q %GITHUB_WORKSPACE% libs\%LIBRARY%\
+          xcopy /s /e /q %GITHUB_WORKSPACE% libs\leaf\
           git submodule update --init tools/boostdep
-          python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" %LIBRARY%
+          python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" leaf
           cmd /c bootstrap
           b2 -d0 headers
+
+      - name: Generate headers
+        run: |
+          cd ../boost-root/libs/leaf
+          python gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o test/leaf.hpp boost/leaf
 
       - name: Run tests
         shell: cmd
         run: |
           cd ../boost-root
-          b2 -j3 libs/%LIBRARY%/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} address-model=${{matrix.addrmd}} variant=debug,release
-        
+          b2 -j3 libs/leaf/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} address-model=${{matrix.addrmd}} variant=debug,release,leaf_debug_leaf_hpp,leaf_release_leaf_hpp,leaf_debug_diag0,leaf_release_diag0

@@ -13,9 +13,7 @@
 // This example is similar to error_log, except the path the error takes is
 // recorded in a std::deque, rather than just printed in-place.
 
-#include <boost/leaf/on_error.hpp>
-#include <boost/leaf/handle_errors.hpp>
-#include <boost/leaf/result.hpp>
+#include <boost/leaf.hpp>
 #include <iostream>
 #include <deque>
 #include <cstdlib>

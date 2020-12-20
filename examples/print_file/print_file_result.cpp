@@ -10,11 +10,7 @@
 // handle errors. This version does not use exception handling. The version that
 // does use exception handling is in print_file_eh.cpp.
 
-#include <boost/leaf/result.hpp>
-#include <boost/leaf/handle_errors.hpp>
-#include <boost/leaf/pred.hpp>
-#include <boost/leaf/on_error.hpp>
-#include <boost/leaf/common.hpp>
+#include <boost/leaf.hpp>
 #include <iostream>
 #include <memory>
 #include <stdio.h>

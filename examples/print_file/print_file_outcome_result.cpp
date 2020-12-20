@@ -11,10 +11,7 @@
 // handle errors. This version does not use exception handling.
 
 #include <boost/outcome/std_result.hpp>
-#include <boost/leaf/handle_errors.hpp>
-#include <boost/leaf/pred.hpp>
-#include <boost/leaf/on_error.hpp>
-#include <boost/leaf/common.hpp>
+#include <boost/leaf.hpp>
 #include <iostream>
 #include <memory>
 #include <stdio.h>

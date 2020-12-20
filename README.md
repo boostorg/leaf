@@ -1,8 +1,12 @@
-Boost LEAF is a lightweight error handling library for C++11.
+# LEAF
 
-Official documentation: https://boostorg.github.io/leaf/
+> A lightweight error handling library for C++11.
 
-Features:
+## Documentation
+
+https://boostorg.github.io/leaf/
+
+## Features
 
 * Small single-header format, **no dependencies**.
 * Designed for maximum efficiency ("happy" path and "sad" path).
@@ -11,12 +15,17 @@ Features:
 * Can be used with or without exception handling.
 * Support for multi-thread programming.
 
-Support is available via:
+## Support
 
 * [cpplang on Slack](https://Cpplang.slack.com) (use the `#boost` channel)
 * [Boost Users Mailing List](https://lists.boost.org/mailman/listinfo.cgi/boost-users)
 * [Boost Developers Mailing List](https://lists.boost.org/mailman/listinfo.cgi/boost)
 
-Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
+## Distribution
 
-Distributed under the [Boost Software License, Version 1.0](http://www.boost.org/LICENSE_1_0.txt).
+Besides GitHub, there are two other distribution channels:
+
+* LEAF is included in official [Boost](https://www.boost.org/) releases, starting with Boost 1.75.
+* For maximum portability, the library is also available in single-header format: simply download [leaf.hpp](https://boostorg.github.io/leaf/leaf.hpp) (direct download link).
+
+Copyright (C) 2018-2021 Emil Dotchevski. Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].

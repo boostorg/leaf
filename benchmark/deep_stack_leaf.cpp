@@ -5,9 +5,7 @@
 
 // See benchmark.md
 
-#ifndef BOOST_LEAF_ALL_HPP_INCLUDED
-#   include <boost/leaf.hpp>
-#endif
+#include <boost/leaf.hpp>
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 #   error Please disable exception handling.

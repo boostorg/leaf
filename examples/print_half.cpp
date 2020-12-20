@@ -6,9 +6,7 @@
 // This program is an adaptation of the following Boost Outcome example:
 // https://github.com/ned14/outcome/blob/master/doc/src/snippets/using_result.cpp
 
-#include <boost/leaf/handle_errors.hpp>
-#include <boost/leaf/pred.hpp>
-#include <boost/leaf/result.hpp>
+#include <boost/leaf.hpp>
 #include <algorithm>
 #include <ctype.h>
 #include <string>

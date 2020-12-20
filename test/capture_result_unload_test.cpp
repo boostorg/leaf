@@ -4,7 +4,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
-#   include <boost/leaf.hpp>
+#   include "leaf.hpp"
 #else
 #   include <boost/leaf/capture.hpp>
 #   include <boost/leaf/result.hpp>
