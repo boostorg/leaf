@@ -18,7 +18,7 @@ ifndef::backend-pdf[]
 :toc-title:
 
 [.text-right]
-https://github.com/boostorg/leaf[GitHub] | link:./leaf.pdf[PDF]
+https://github.com/boostorg/leaf[GitHub] | https://boostorg.github.io/leaf/leaf.pdf[PDF]
 endif::[]
 
 [abstract]
