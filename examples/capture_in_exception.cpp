@@ -7,9 +7,7 @@
 // objects between threads, using exception handling. See capture_in_result.cpp
 // for the version that does not use exception handling.
 
-#include <boost/leaf/capture.hpp>
-#include <boost/leaf/handle_errors.hpp>
-#include <boost/leaf/exception.hpp>
+#include <boost/leaf.hpp>
 #include <vector>
 #include <string>
 #include <future>

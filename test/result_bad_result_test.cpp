@@ -17,7 +17,7 @@ int main()
 #else
 
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
-#   include <boost/leaf.hpp>
+#   include "leaf.hpp"
 #else
 #   include <boost/leaf/handle_errors.hpp>
 #   include <boost/leaf/pred.hpp>

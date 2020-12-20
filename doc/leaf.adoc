@@ -5,8 +5,13 @@
 :stylesheet: zajo-dark.css
 :source-highlighter: rouge
 
+ifdef::backend-pdf[]
 = LEAF
-Lightweight Error Augmentation Framework | Emil Dotchevski
+endif::[]
+ifndef::backend-pdf[]
+= LEAFpass:[<div style="z-index: 3; bottom:-16px; right:4px; position:fixed"><input width="32" height="32" type="image" alt="Skin" src="./skin.png" onclick="this.blur();switch_style();return false;"/></div>]
+endif::[]
+Lightweight Error Augmentation Framework written in {CPP}11 | Emil Dotchevski
 ifndef::backend-pdf[]
 :toc: left
 :toclevels: 3
@@ -52,12 +57,25 @@ LEAF is designed with a strong bias towards the common use case where callers of
 * https://lists.boost.org/mailman/listinfo.cgi/boost[Boost Developers Mailing List]
 * https://github.com/boostorg/leaf/issues[Report an issue] on GitHub
 
+[[portability]]
+== Portability
+
+LEAF requires only {CPP}11, but is tested on many compiler versions and C++ standards.
+
+The library uses thread-local storage, except when multi-threading is disabled (e.g. on some embedded platforms). See <<configuration>>.
+
 [[distribution]]
-== Distribution and Portability
+== Distribution
 
-Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
+Copyright (C) 2018-2021 Emil Dotchevski. Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
 
-LEAF requires only {CPP}11 (including support for thread-local storage).
+There are three distribution channels:
+
+* LEAF is included in official https://www.boost.org/[Boost] releases, starting with Boost 1.75.
+* The source code is hosted on https://github.com/boostorg/leaf[GitHub].
+* For maximum portability, the library is also available in single-header format: simply download link:leaf.hpp[leaf.hpp] (direct download link).
+
+NOTE: LEAF does not depend on Boost or other libraries.
 
 [[introduction]]
 == Five Minute Introduction
@@ -5504,6 +5522,7 @@ Assuming the current working directory is `<boostroot>/libs/leaf`:
 ../../b2 test
 ----
 
+[[configuration]]
 == Configuration Macros
 
 The following configuration macros are recognized:

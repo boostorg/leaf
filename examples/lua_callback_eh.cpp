@@ -10,9 +10,7 @@ extern "C" {
     #include "lua.h"
     #include "lauxlib.h"
 }
-#include <boost/leaf/handle_errors.hpp>
-#include <boost/leaf/exception.hpp>
-#include <boost/leaf/on_error.hpp>
+#include <boost/leaf.hpp>
 #include <iostream>
 #include <stdlib.h>
 

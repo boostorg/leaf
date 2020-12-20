@@ -7,7 +7,7 @@
 #include <boost/leaf/handle_errors.hpp>
 
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
-#   include <boost/leaf.hpp>
+#   include "leaf.hpp"
 #else
 #   include <boost/leaf/result.hpp>
 #endif

@@ -12,9 +12,7 @@
 // This example is similar to error_trace, except the path the error takes is
 // not captured, only printed.
 
-#include <boost/leaf/on_error.hpp>
-#include <boost/leaf/handle_errors.hpp>
-#include <boost/leaf/result.hpp>
+#include <boost/leaf.hpp>
 #include <iostream>
 #include <cstdlib>
 
