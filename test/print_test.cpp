@@ -63,6 +63,11 @@ bool check( T const & x, char const * sub )
     return q.find(sub)!=q.npos;
 }
 
+struct my_exception: std::exception
+{
+    char const * what() const noexcept override { return "my_exception_what"; }
+};
+
 int main()
 {
     BOOST_TEST(check(c0{ },"c0"));
@@ -100,5 +105,6 @@ int main()
         BOOST_TEST(check(y,"c4"));
         BOOST_TEST(check(y,"{Non-Printable}"));
     }
+    BOOST_TEST(check(my_exception{}, "std::exception::what(): my_exception_what"));
     return boost::report_errors();
 }

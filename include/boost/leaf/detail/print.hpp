@@ -17,6 +17,8 @@
 #endif ///
 
 #include <boost/leaf/detail/optional.hpp>
+#include <type_traits>
+#include <exception>
 #include <iosfwd>
 #include <cstring>
 
@@ -84,11 +86,11 @@ namespace boost { namespace leaf {
 
         ////////////////////////////////////////
 
-        template <class Wrapper, bool WrapperPrintable=is_printable<Wrapper>::value, bool ValuePrintable=has_printable_member_value<Wrapper>::value>
+        template <class Wrapper, bool WrapperPrintable=is_printable<Wrapper>::value, bool ValuePrintable=has_printable_member_value<Wrapper>::value, bool IsException=std::is_base_of<std::exception,Wrapper>::value>
         struct diagnostic;
 
-        template <class Wrapper, bool ValuePrintable>
-        struct diagnostic<Wrapper, true, ValuePrintable>
+        template <class Wrapper, bool ValuePrintable, bool IsException>
+        struct diagnostic<Wrapper, true, ValuePrintable, IsException>
         {
             static constexpr bool is_invisible = false;
             static void print( std::ostream & os, Wrapper const & x )
@@ -97,8 +99,8 @@ namespace boost { namespace leaf {
             }
         };
 
-        template <class Wrapper>
-        struct diagnostic<Wrapper, false, true>
+        template <class Wrapper, bool IsException>
+        struct diagnostic<Wrapper, false, true, IsException>
         {
             static constexpr bool is_invisible = false;
             static void print( std::ostream & os, Wrapper const & x )
@@ -108,7 +110,17 @@ namespace boost { namespace leaf {
         };
 
         template <class Wrapper>
-        struct diagnostic<Wrapper, false, false>
+        struct diagnostic<Wrapper, false, false, true>
+        {
+            static constexpr bool is_invisible = false;
+            static void print( std::ostream & os, Wrapper const & ex )
+            {
+                os << type<Wrapper>() << ": std::exception::what(): " << ex.what();
+            }
+        };
+
+        template <class Wrapper>
+        struct diagnostic<Wrapper, false, false, false>
         {
             static constexpr bool is_invisible = false;
             static void print( std::ostream & os, Wrapper const & )
@@ -119,7 +131,7 @@ namespace boost { namespace leaf {
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
         template <>
-        struct diagnostic<std::exception_ptr, false, false>
+        struct diagnostic<std::exception_ptr, false, false, false>
         {
             static constexpr bool is_invisible = true;
             BOOST_LEAF_CONSTEXPR static void print( std::ostream &, std::exception_ptr const & )
