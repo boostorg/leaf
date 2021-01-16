@@ -15,6 +15,8 @@
 // See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt
 
+#include <string>
+
 #ifndef BOOST_LEAF_ENABLE_WARNINGS ///
 #   if defined(_MSC_VER) ///
 #       pragma warning(push,1) ///
@@ -91,7 +93,7 @@ namespace boost { namespace leaf {
             std::free( const_cast< char* >( name ) );
         }
 
-        inline char const * demangle( char const * name )
+        inline std::string demangle( char const * name )
         {
             scoped_demangled_name demangled_name( name );
             char const * p = demangled_name.get();
