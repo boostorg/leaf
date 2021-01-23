@@ -15,6 +15,7 @@ project
     : default-build
         <cxxstd>11
     : requirements
+        <define>BOOST_LEAF_BOOST_AVAILABLE
         <threading>single:<define>BOOST_LEAF_NO_THREADS
         <toolset>gcc:<cxxflags>"-Wno-delete-non-virtual-dtor -Wno-parentheses"
         <toolset>clang:<cxxflags>"-Wno-dangling-else"
