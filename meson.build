@@ -27,6 +27,11 @@ endif
 compiler = meson.get_compiler('cpp')
 compiler_id = compiler.get_id()
 if not meson.is_subproject()
+	if option_boost
+		add_global_arguments(
+			'-DBOOST_LEAF_BOOST_AVAILABLE',
+			language:'cpp' )
+	endif
 	if compiler_id=='clang'
 		if get_option('buildtype')!='debug'
 			add_global_arguments(

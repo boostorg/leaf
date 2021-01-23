@@ -11,7 +11,11 @@
 #endif
 
 #include "lightweight_test.hpp"
-#include <boost/config/workaround.hpp>
+#ifdef BOOST_LEAF_BOOST_AVAILABLE
+#   include <boost/config/workaround.hpp>
+#else
+#   define BOOST_WORKAROUND(a,b) 0
+#endif
 
 namespace leaf = boost::leaf;
 

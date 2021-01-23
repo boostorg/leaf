@@ -10,6 +10,12 @@
 			"problemMatcher": []
 		},
 		{
+			"label": "Configure Meson build directories (no Boost)",
+			"type": "shell",
+			"command": "cd ${workspaceRoot} && meson -D leaf_lua_examples=true -D leaf_suppress_warnings=false bld/debug && meson -D leaf_lua_examples=true -D leaf_suppress_warnings=false -D leaf_hpp=true bld/debug_leaf_hpp && meson -D leaf_lua_examples=true -D leaf_suppress_warnings=false bld/release --buildtype release && meson -D leaf_lua_examples=true -D leaf_suppress_warnings=false -D leaf_hpp=true bld/release_leaf_hpp --buildtype release",
+			"problemMatcher": []
+		},
+		{
 			"label": "Generate leaf.hpp",
 			"type": "shell",
 			"command": "cd ${workspaceRoot} && python gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p ${workspaceRoot}/include -o ${workspaceRoot}/test/leaf.hpp boost/leaf",
