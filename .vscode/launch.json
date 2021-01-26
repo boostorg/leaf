@@ -8,7 +8,7 @@
 			"name": "(lldb) Launch",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/bld/debug/continuation_test",
+			"program": "${workspaceFolder}/bld/debug/lua_callback_eh",
 			"args": [ ],
 			"cwd": "${workspaceFolder}",
 			"stopAtEntry": false,

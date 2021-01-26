@@ -22,7 +22,23 @@ enum do_work_error_code
     ec2
 };
 
-struct e_lua_pcall_error { int value; };
+struct e_lua_pcall_error
+{
+    int value;
+
+    friend std::ostream & operator<<( std::ostream & os, e_lua_pcall_error const & x )
+    {
+        os << "Lua error code = " << x.value;
+        switch( x.value )
+        {
+            case LUA_ERRRUN: return os << " (LUA_ERRRUN)";
+            case LUA_ERRMEM: return os << " (LUA_ERRMEM)";
+            case LUA_ERRERR: return os << " (LUA_ERRERR)";
+            default: return os << " (unknown)";
+        }
+    }
+};
+
 struct e_lua_error_message { std::string value; };
 
 
@@ -82,7 +98,7 @@ leaf::result<int> call_lua( lua_State * L )
     lua_getfield( L, LUA_GLOBALSINDEX, "call_do_work" );
     if( int err = lua_pcall(L, 0, 1, 0) ) // Ask Lua to call the global function call_do_work.
     {
-        auto load = leaf::on_error(e_lua_error_message{lua_tostring(L, 1)});
+        std::string msg = lua_tostring(L, 1);
         lua_pop(L,1);
 
         // We got a Lua error which may be the error we're reporting from
@@ -90,7 +106,7 @@ leaf::result<int> call_lua( lua_State * L )
         // cur_err.assigned_error_id() will return a new leaf::error_id,
         // otherwise we'll be working with the original value returned by
         // leaf::new_error in do_work.
-        return cur_err.assigned_error_id().load(e_lua_pcall_error{err});
+        return cur_err.assigned_error_id().load( e_lua_pcall_error{err}, e_lua_error_message{std::move(msg)} );
     }
     else
     {
@@ -116,14 +132,14 @@ int main()
                 return { };
             },
 
-            []( do_work_error_code e )
+            []( do_work_error_code e, e_lua_error_message const & msg )
             {
-                std::cout << "Got do_work_error_code = " << e <<  "!\n";
+                std::cout << "Got do_work_error_code = " << e << ", " << msg.value << "\n";
             },
 
             []( e_lua_pcall_error const & err, e_lua_error_message const & msg )
             {
-                std::cout << "Got e_lua_pcall_error, Lua error code = " << err.value << ", " << msg.value << "\n";
+                std::cout << "Got e_lua_pcall_error, " << err << ", " << msg.value << "\n";
             },
 
             []( leaf::error_info const & unmatched )

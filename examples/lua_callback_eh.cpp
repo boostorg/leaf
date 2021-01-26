@@ -4,7 +4,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // This is a simple program that shows how to report error objects out of a
-// C-callback that happens to be C++-exception safe.
+// C-callback (which may not throw exceptions).
 
 extern "C" {
     #include "lua.h"
@@ -22,15 +22,49 @@ enum do_work_error_code
     ec2
 };
 
-struct e_lua_pcall_error { int value; };
+struct e_lua_pcall_error
+{
+    int value;
+
+    friend std::ostream & operator<<( std::ostream & os, e_lua_pcall_error const & x )
+    {
+        os << "Lua error code = " << x.value;
+        switch( x.value )
+        {
+            case LUA_ERRRUN: return os << " (LUA_ERRRUN)";
+            case LUA_ERRMEM: return os << " (LUA_ERRMEM)";
+            case LUA_ERRERR: return os << " (LUA_ERRERR)";
+            default: return os << " (unknown)";
+        }
+    }
+};
+
 struct e_lua_error_message { std::string value; };
+
+struct e_lua_exception { std::exception_ptr value; };
+
+// A noexcept wrapper for a lua_CFunction pointer. We capture the
+// std::current_exception and wrap it in a e_lua_exception object.
+template <int (*F)( lua_State * L )>
+int wrap_lua_CFunction( lua_State * L ) noexcept
+{
+    return leaf::try_catch(
+        [&]
+        {
+            return F(L);
+        },
+        [&]( leaf::error_info const & ei )
+        {
+            ei.error().load( e_lua_exception{std::current_exception()} );
+            return luaL_error(L, "C++ Exception"); // luaL_error does not return (longjmp).
+        } );
+}
 
 
 // This is a C callback with a specific signature, callable from programs
 // written in Lua. If it succeeds, it returns an int answer, by pushing it onto
 // the Lua stack. But "sometimes" it fails, in which case it throws an
-// exception. This causes the Lua interpreter to abort and pop back into the C++
-// code which called it (see call_lua below).
+// exception, which will be processed by wrap_lua_CFunction (above).
 int do_work( lua_State * L )
 {
     bool success = rand()%2; // "Sometimes" do_work fails.
@@ -54,7 +88,7 @@ std::shared_ptr<lua_State> init_lua_state()
     // Register the do_work function (above) as a C callback, under the global
     // Lua name "do_work". With this, calls from Lua programs to do_work will
     // land in the do_work C function we've registered.
-    lua_register( &*L, "do_work", &do_work );
+    lua_register( &*L, "do_work", &wrap_lua_CFunction<&do_work> );
 
     // Pass some Lua code as a C string literal to Lua. This creates a global
     // Lua function called "call_do_work", which we will later ask Lua to
@@ -76,25 +110,39 @@ std::shared_ptr<lua_State> init_lua_state()
 // communicate that failure to our caller.
 int call_lua( lua_State * L )
 {
-    // Ask the Lua interpreter to call the global Lua function call_do_work.
-    lua_getfield( L, LUA_GLOBALSINDEX, "call_do_work" );
-    if( int err = lua_pcall(L, 0, 1, 0) ) // Ask Lua to call the global function call_do_work.
-    {
-        auto load = leaf::on_error(e_lua_error_message{lua_tostring(L, 1)});
-        lua_pop(L,1);
+    return leaf::try_catch(
+        [&]
+        {
+            leaf::error_monitor cur_err;
 
-        // We got a Lua error that is definitely not the error we're throwing in
-        // do_work. (if it did throw an exception, we won't be here). Throw a
-        // new exception to indicate that lua_pcall returned an error.
-        throw leaf::exception(e_lua_pcall_error{err});
-    }
-    else
-    {
-        // Success! Just return the int answer.
-        int answer=lua_tonumber(L, -1);
-        lua_pop(L,1);
-        return answer;
-    }
+            // Ask the Lua interpreter to call the global Lua function call_do_work.
+            lua_getfield( L, LUA_GLOBALSINDEX, "call_do_work" );
+            if( int err = lua_pcall(L, 0, 1, 0) )
+            {
+                std::string msg = lua_tostring(L, 1);
+                lua_pop(L,1);
+
+                // We got a Lua error which may be the error we're reporting
+                // from do_work, or some other error. If it is another error,
+                // cur_err.assigned_error_id() will return a new leaf::error_id,
+                // otherwise we'll be working with the original error reported
+                // by a C++ exception out of do_work.
+                throw leaf::exception( cur_err.assigned_error_id().load( e_lua_pcall_error{err}, e_lua_error_message{std::move(msg)} ) );
+            }
+            else
+            {
+                // Success! Just return the int answer.
+                int answer=lua_tonumber(L, -1);
+                lua_pop(L,1);
+                return answer;
+            }
+        },
+
+        []( e_lua_exception e ) -> int
+        {
+            // This is the exception communicated out of wrap_lua_CFunction.
+            std::rethrow_exception( e.value );
+        } );
 }
 
 int main()
@@ -112,14 +160,14 @@ int main()
 
             },
 
-            []( do_work_error_code e )
+            []( do_work_error_code e, e_lua_error_message const & msg )
             {
-                std::cout << "Got do_work_error_code = " << e <<  "!\n";
+                std::cout << "Got do_work_error_code = " << e << ", " << msg.value << "\n";
             },
 
             []( e_lua_pcall_error const & err, e_lua_error_message const & msg )
             {
-                std::cout << "Got e_lua_pcall_error, Lua error code = " << err.value << ", " << msg.value << "\n";
+                std::cout << "Got e_lua_pcall_error, " << err << ", " << msg.value << "\n";
             },
 
             []( leaf::error_info const & unmatched )

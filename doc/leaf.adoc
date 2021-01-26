@@ -1555,12 +1555,9 @@ int main() noexcept
 <2> Handle `do_work` failures.
 <3> Handle all other `lua_pcall` failures.
 
-[NOTE]
---
-Follow this link to see the complete program: https://github.com/boostorg/leaf/blob/master/examples/lua_callback_result.cpp?ts=4[lua_callback_result.cpp].
+NOTE: Follow this link to see the complete program: https://github.com/boostorg/leaf/blob/master/examples/lua_callback_result.cpp?ts=4[lua_callback_result.cpp].
 
-Remarkably, the Lua interpreter is {CPP} exception-safe, even though it is written in C. Here is the same program, this time using a {CPP} exception to report failures from `do_work`: https://github.com/boostorg/leaf/blob/master/examples/lua_callback_eh.cpp?ts=4[lua_callback_eh.cpp].
---
+TIP: When using Lua with {CPP}, we need to protect the Lua interpreter from exceptions that may be thrown from {CPP} functions installed as `lua_CFunction` callbacks. Here is the program from this section rewritten to use a {CPP} exception to safely communicate errors out of the `do_work` function: https://github.com/boostorg/leaf/blob/master/examples/lua_callback_eh.cpp?ts=4[lua_callback_eh.cpp]. 
 
 '''
 
@@ -2200,6 +2197,14 @@ namespace boost { namespace leaf {
 
   <<unspecified-exception-type>> exception() noexcept;
 
+  template <class Ex, class... E> <1>
+  <<unspecified-exception-type>> exception( error_id id, Ex &&, E && ... ) noexcept;
+
+  template <class E1, class... E> <2>
+  <<unspecified-exception-type>> exception( error_id id, E1 &&, E && ... ) noexcept;
+
+  <<unspecified-exception-type>> exception( error_id id ) noexcept;
+
 } }
 
 #define BOOST_LEAF_EXCEPTION <<inject e_source_location voodoo>> ::boost::leaf::exception
@@ -2611,18 +2616,45 @@ namespace boost { namespace leaf {
   template <class E1, class... E> <2>
   <<unspecified>> exception( E1 && e1, E && ... e ) noexcept;
 
-  <<unspecified>> exception() noexcept;
+  <<unspecified>> exception() noexcept; <3>
+
+  template <class Ex, class... E> <4>
+  <<unspecified>> exception( error_id id, Ex && ex, E && ... e ) noexcept;
+
+  template <class E1, class... E> <5>
+  <<unspecified>> exception( error_id id, E1 && e1, E && ... e ) noexcept;
+
+  <<unspecified>> exception( error_id id ) noexcept; <6>
 
 } }
 ----
-The `exception` function is overloaded: it can be invoked with no arguments, or else there are two alternatives, selected using `std::enable_if` based on the type of the first argument:
+The `exception` function is overloaded: it can be invoked with no arguments, or else there are several alternatives, selected using `std::enable_if` based on the type of the passed arguments:
 
-<1> Selected if the first argument is an exception object, that is, iff `Ex` derives publicly from `std::exception`. In this case the return value is of unspecified type which derives publicly from `Ex` *and* from class <<error_id>>, such that:
+<1> Selected if the first argument is not of type `error_id` and is an exception object, that is, iff `Ex` derives publicly from `std::exception`. In this case the return value is of unspecified type which derives publicly from `Ex` *and* from class <<error_id>>, such that:
 * its `Ex` subobject is initialized by `std::forward<Ex>(ex)`;
 * its `error_id` subobject is initialized by `<<new_error,new_error>>(std::forward<E>(e)...`).
-<2> Selected otherwise. In this case the return value is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
+
+<2> Selected if the first argument is not of type `error_id` and is not an exception object. In this case the return value is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
 ** its `std::exception` subobject is default-initialized;
 ** its `error_id` subobject is initialized by `<<new_error,new_error>>(std::forward<E1>(e1), std::forward<E>(e)...`).
+
+<3> If the fuction is invoked without arguments, the return value is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
+** its `std::exception` subobject is default-initialized;
+** its `error_id` subobject is initialized by `<<new_error,new_error>>()`.
+
+<4> Selected if the first argument is of type `error_id` and the second argument is an exception object, that is, iff `Ex` derives publicly from `std::exception`. In this case the return value is of unspecified type which derives publicly from `Ex` *and* from class <<error_id>>, such that:
+** its `Ex` subobject is initialized by `std::forward<Ex>(ex)`;
+** its `error_id` subobject is initialized by `id.<<error_id::load>>(std::forward<E>(e)...)`.
+
+<5> Selected if the first argument is of type `error_id` and the second argument is not an exception object. In this case the return value is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
+** its `std::exception` subobject is default-initialized;
+** its `error_id` subobject is initialized by `id.<<error_id::load>>(std::forward<E1>(e1), std::forward<E>(e)...`).
+
+<6> If `exception` is invoked with just an `error_id` object, the return value is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
+** its `std::exception` subobject is default-initialized;
+** its `error_id` subobject is initialized by copying from `id`.
+
+NOTE: The first three overloads return an exception object that is associated with a new `error_id`. The second three overloads return an exception object that is associated with the specified `error_id`.
 
 .Example 1:
 [source,c++]

@@ -54,6 +54,8 @@
 
 namespace boost { namespace leaf {
 
+    class error_id;
+
     namespace leaf_detail
     {
         struct inject_loc
@@ -382,6 +384,7 @@ namespace boost { namespace leaf {
         BOOST_LEAF_CONSTEXPR inline int load_slot( int err_id, E && e ) noexcept
         {
             static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
+            static_assert(!std::is_same<typename std::decay<E>::type, error_id>::value, "Error objects of type error_id are not allowed");
             using T = typename std::decay<E>::type;
             BOOST_LEAF_ASSERT((err_id&3)==1);
             if( slot<T> * p = tl_slot_ptr<T>::p )
@@ -543,8 +546,6 @@ namespace boost { namespace leaf {
     }
 
     ////////////////////////////////////////
-
-    class error_id;
 
     namespace leaf_detail
     {

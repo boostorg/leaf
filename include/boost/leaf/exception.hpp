@@ -116,11 +116,33 @@ namespace boost { namespace leaf {
     template <class Ex, class... E>
     inline
     typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type
+    exception( error_id err, Ex && ex, E && ... e ) noexcept
+    {
+        static_assert(!leaf_detail::at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
+        return leaf_detail::exception<Ex>( err.load(std::forward<E>(e)...), std::forward<Ex>(ex) );
+    }
+
+    template <class E1, class... E>
+    inline
+    typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type
+    exception( error_id err, E1 && car, E && ... cdr ) noexcept
+    {
+        static_assert(!leaf_detail::at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
+        return leaf_detail::exception<std::exception>( err.load(std::forward<E1>(car), std::forward<E>(cdr)...) );
+    }
+
+    inline leaf_detail::exception<std::exception> exception( error_id err ) noexcept
+    {
+        return leaf_detail::exception<std::exception>(err);
+    }
+
+    template <class Ex, class... E>
+    inline
+    typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type
     exception( Ex && ex, E && ... e ) noexcept
     {
         static_assert(!leaf_detail::at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
-        auto id = leaf::new_error(std::forward<E>(e)...);
-        return leaf_detail::exception<Ex>(id, std::forward<Ex>(ex));
+        return leaf_detail::exception<Ex>( new_error().load(std::forward<E>(e)...), std::forward<Ex>(ex) );
     }
 
     template <class E1, class... E>
@@ -129,8 +151,7 @@ namespace boost { namespace leaf {
     exception( E1 && car, E && ... cdr ) noexcept
     {
         static_assert(!leaf_detail::at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
-        auto id = leaf::new_error(std::forward<E1>(car), std::forward<E>(cdr)...);
-        return leaf_detail::exception<std::exception>(id);
+        return leaf_detail::exception<std::exception>( new_error().load(std::forward<E1>(car), std::forward<E>(cdr)...) );
     }
 
     inline leaf_detail::exception<std::exception> exception() noexcept
