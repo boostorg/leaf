@@ -67,7 +67,7 @@ def _main():
 			'#ifndef BOOST_LEAF_HPP_INCLUDED\n'
 			'#define BOOST_LEAF_HPP_INCLUDED\n'
 			'\n'
-			'// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.\n'
+			'// Copyright (c) 2018-2021 Emil Dotchevski and Reverge Studios, Inc.\n'
 			'\n'
 			'// Distributed under the Boost Software License, Version 1.0. (See accompanying\n'
 			'// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)\n'

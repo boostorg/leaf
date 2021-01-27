@@ -1,7 +1,7 @@
 #ifndef BOOST_LEAF_COMMON_HPP_INCLUDED
 #define BOOST_LEAF_COMMON_HPP_INCLUDED
 
-/// Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
+/// Copyright (c) 2018-2021 Emil Dotchevski and Reverge Studios, Inc.
 
 /// Distributed under the Boost Software License, Version 1.0. (See accompanying
 /// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -32,66 +32,66 @@
 
 namespace boost { namespace leaf {
 
-    struct e_api_function { char const * value; };
+struct e_api_function { char const * value; };
 
-    struct e_file_name { std::string value; };
+struct e_file_name { std::string value; };
 
-    struct e_errno
+struct e_errno
+{
+    int value;
+
+    template <class CharT, class Traits>
+    friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, e_errno const & err )
     {
-        int value;
+        return os << type<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
+    }
+};
 
-        template <class CharT, class Traits>
-        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, e_errno const & err )
-        {
-            return os << type<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
-        }
-    };
+struct e_type_info_name { char const * value; };
 
-    struct e_type_info_name { char const * value; };
+struct e_at_line { int value; };
 
-    struct e_at_line { int value; };
-
-    namespace windows
+namespace windows
+{
+    struct e_LastError
     {
-        struct e_LastError
-        {
-            unsigned value;
+        unsigned value;
 
 #ifdef _WIN32
-            template <class CharT, class Traits>
-            friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> os, e_LastError const & err )
+        template <class CharT, class Traits>
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> os, e_LastError const & err )
+        {
+            struct msg_buf
             {
-                struct msg_buf
-                {
-                    LPVOID * p;
-                    msg_buf(): p(0) { }
-                    ~msg_buf() noexcept { if(p) LocalFree(p); }
-                };
-                msg_buf mb;
-                if( FormatMessageA(
-                    FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS,
-                    0,
-                    err.value,
-                    MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
-                    (LPSTR)&mb.p,
-                    0,
-                    0) )
-                {
-                    BOOST_LEAF_ASSERT(mb.p != 0);
-                    char * z = std::strchr((LPSTR)mb.p,0);
-                    if( z[-1] == '\n' )
-                        *--z = 0;
-                    if( z[-1] == '\r' )
-                        *--z = 0;
-                    return os << type<e_LastError>() << ": " << err.value << ", \"" << (LPCSTR)mb.p << '"';
-                }
-                return os;
+                LPVOID * p;
+                msg_buf(): p(0) { }
+                ~msg_buf() noexcept { if(p) LocalFree(p); }
+            };
+            msg_buf mb;
+            if( FormatMessageA(
+                FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS,
+                0,
+                err.value,
+                MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
+                (LPSTR)&mb.p,
+                0,
+                0) )
+            {
+                BOOST_LEAF_ASSERT(mb.p != 0);
+                char * z = std::strchr((LPSTR)mb.p,0);
+                if( z[-1] == '\n' )
+                    *--z = 0;
+                if( z[-1] == '\r' )
+                    *--z = 0;
+                return os << type<e_LastError>() << ": " << err.value << ", \"" << (LPCSTR)mb.p << '"';
             }
+            return os;
+        }
 #else
-            // TODO : Other platforms
+        // TODO : Other platforms
 #endif
-        };
-    }
+    };
+}
 
 } }
 
