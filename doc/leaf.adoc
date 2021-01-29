@@ -4274,6 +4274,8 @@ WARNING: Using `verbose_diagnostic_info` will likely allocate memory dynamically
 [[predicates]]
 == Reference: Predicates
 
+TIP: The contents of each Reference section are organized alphabetically.
+
 A predicate is a special type of error handler argument which enables the <<handler_selection_procedure,handler selection procedure>> to consider the _value_ of available error objects, not only their type; see <<tutorial-predicates>>.
 
 The following predicates are available:
@@ -4765,6 +4767,8 @@ leaf::try_handle_some(
 [[traits]]
 == Reference: Traits
 
+TIP: The contents of each Reference section are organized alphabetically.
+
 [[is_predicate]]
 === `is_predicate`
 
@@ -4817,8 +4821,10 @@ TIP: The contents of each Reference section are organized alphabetically.
 
 '''
 
+=== `BOOST_LEAF_`
+
 [[BOOST_LEAF_ASSIGN]]
-=== `BOOST_LEAF_ASSIGN`
+==== `ASSIGN`
 
 .#include <boost/leaf/error.hpp>
 [source,c++]
@@ -4839,7 +4845,7 @@ NOTE: See also <<BOOST_LEAF_AUTO>>.
 '''
 
 [[BOOST_LEAF_AUTO]]
-=== `BOOST_LEAF_AUTO`
+==== `AUTO`
 
 .#include <boost/leaf/error.hpp>
 [source,c++]
@@ -4889,7 +4895,7 @@ NOTE: See also <<BOOST_LEAF_ASSIGN>>.
 '''
 
 [[BOOST_LEAF_CHECK]]
-=== `BOOST_LEAF_CHECK`
+==== `CHECK`
 
 .#include <boost/leaf/error.hpp>
 [source,c++]
@@ -4936,7 +4942,7 @@ leaf::result<float> add_values()
 '''
 
 [[BOOST_LEAF_EXCEPTION]]
-=== `BOOST_LEAF_EXCEPTION`
+==== `EXCEPTION`
 
 [source,c++]
 .#include <boost/leaf/exception.hpp>
@@ -4949,7 +4955,7 @@ Effects: :: `BOOST_LEAF_EXCEPTION(e...)` is equivalent to `leaf::<<exception,exc
 '''
 
 [[BOOST_LEAF_NEW_ERROR]]
-=== `BOOST_LEAF_NEW_ERROR`
+==== `NEW_ERROR`
 
 .#include <boost/leaf/error.hpp>
 [source,c++]
@@ -4962,7 +4968,7 @@ Effects: :: `BOOST_LEAF_NEW_ERROR(e...)` is equivalent to `leaf::<<new_error,new
 '''
 
 [[BOOST_LEAF_THROW_EXCEPTION]]
-=== `BOOST_LEAF_THROW_EXCEPTION`
+==== `THROW_EXCEPTION`
 
 [source,c++]
 .#include <boost/leaf/exception.hpp>
