@@ -577,8 +577,7 @@ namespace leaf_detail
     struct is_tuple<std::tuple<T...> &>: std::true_type { };
 
     template <class R, class Tup, class H>
-    BOOST_LEAF_CONSTEXPR
-    inline
+    BOOST_LEAF_CONSTEXPR inline
     typename std::enable_if<!is_tuple<H>::value, R>::type
     handle_error_( Tup & tup, error_info const & ei, H && h )
     {
