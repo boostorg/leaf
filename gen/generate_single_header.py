@@ -19,6 +19,8 @@
 import argparse
 import os
 import re
+from datetime import date
+import subprocess
 
 included = []
 
@@ -66,6 +68,13 @@ def _main():
 		output_file.write(
 			'#ifndef BOOST_LEAF_HPP_INCLUDED\n'
 			'#define BOOST_LEAF_HPP_INCLUDED\n'
+			'\n'
+			'// LEAF single header distribution. Do not edit.\n'
+			'\n'
+			'// Generated from https://github.com/boostorg/leaf on ' + date.today().strftime("%B %d, %Y") + ',\n'
+			'// Git hash ' + subprocess.check_output(['git', 'rev-parse', 'HEAD']).rstrip() + '.\n'
+			'\n'
+			'// Latest version: https://boostorg.github.io/leaf/leaf.hpp\n'
 			'\n'
 			'// Copyright (c) 2018-2021 Emil Dotchevski and Reverge Studios, Inc.\n'
 			'\n'
