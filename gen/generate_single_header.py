@@ -72,7 +72,7 @@ def _main():
 			'// LEAF single header distribution. Do not edit.\n'
 			'\n'
 			'// Generated from https://github.com/boostorg/leaf on ' + date.today().strftime("%B %d, %Y") + ',\n'
-			'// Git hash ' + subprocess.check_output(['git', 'rev-parse', 'HEAD']).rstrip() + '.\n'
+			'// Git hash ' + subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().rstrip() + '.\n'
 			'\n'
 			'// Latest version: https://boostorg.github.io/leaf/leaf.hpp\n'
 			'\n'
