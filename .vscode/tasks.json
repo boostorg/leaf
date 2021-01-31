@@ -6,7 +6,7 @@
 		{
 			"label": "Configure Meson build directories",
 			"type": "shell",
-			"command": "cd ${workspaceRoot} && meson -D leaf_boost_examples=true -D leaf_lua_examples=true -D leaf_suppress_warnings=false bld/debug && meson -D leaf_boost_examples=true -D leaf_lua_examples=true -D leaf_suppress_warnings=false -D leaf_hpp=true bld/debug_leaf_hpp && meson -D leaf_boost_examples=true -D leaf_lua_examples=true -D leaf_suppress_warnings=false bld/release --buildtype release && meson -D leaf_boost_examples=true -D leaf_lua_examples=true -D leaf_suppress_warnings=false -D leaf_hpp=true bld/release_leaf_hpp --buildtype release",
+			"command": "cd ${workspaceRoot} && meson -D leaf_boost_examples=true -D leaf_lua_examples=true -D leaf_suppress_warnings=false bld/debug && meson -D leaf_boost_examples=true -D leaf_lua_examples=true -D leaf_suppress_warnings=false -D leaf_hpp=true bld/debug_leaf_hpp && meson -D leaf_boost_examples=true -D leaf_lua_examples=true -D leaf_suppress_warnings=false bld/release --buildtype release && meson -D leaf_boost_examples=true -D leaf_lua_examples=true -D leaf_suppress_warnings=false -D leaf_hpp=true bld/release_leaf_hpp --buildtype release && meson -D leaf_diagnostics=0 -D cpp_eh=none -D b_ndebug=true -D b_lto=true -D leaf_enable_benchmarks=true bld/benchmark --buildtype release",
 			"problemMatcher": []
 		},
 		{
