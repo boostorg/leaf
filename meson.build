@@ -132,6 +132,8 @@ if option_enable_unit_tests
 		'defer_nested_success_exception_test',
 		'defer_nested_success_result_test',
 		'diagnostic_info_test',
+		'e_errno_test',
+		'e_LastError_test',
 		'error_code_test',
 		'error_id_test',
 		'exception_test',

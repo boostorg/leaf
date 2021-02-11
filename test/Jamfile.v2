@@ -64,6 +64,8 @@ run defer_nested_new_error_result_test.cpp ;
 run defer_nested_success_exception_test.cpp ;
 run defer_nested_success_result_test.cpp ;
 run diagnostic_info_test.cpp ;
+run e_errno_test.cpp ;
+run e_LastError_test.cpp ;
 run error_code_test.cpp ;
 run error_id_test.cpp ;
 run exception_test.cpp ;

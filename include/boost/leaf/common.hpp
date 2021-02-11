@@ -40,6 +40,8 @@ struct e_errno
 {
     int value;
 
+    explicit e_errno(int value=errno): value(value) { }
+
     template <class CharT, class Traits>
     friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, e_errno const & err )
     {
@@ -57,9 +59,13 @@ namespace windows
     {
         unsigned value;
 
+        explicit e_LastError(unsigned value): value(value) { }
+
 #ifdef _WIN32
+        e_LastError(): value(GetLastError()) { }
+
         template <class CharT, class Traits>
-        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> os, e_LastError const & err )
+        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, e_LastError const & err )
         {
             struct msg_buf
             {
