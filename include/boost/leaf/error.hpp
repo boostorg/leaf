@@ -124,7 +124,7 @@ namespace boost { namespace leaf {
 
 #   include <atomic>
 #   include <thread>
-#   define BOOST_LEAF_THREAD_LOCAL thread_local
+#   define BOOST_LEAF_THREAD_LOCAL BOOST_LEAF_SYMBOL_VISIBLE thread_local
 namespace boost { namespace leaf {
     namespace leaf_detail
     {
@@ -142,7 +142,7 @@ namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
-    class e_unexpected_count
+    class BOOST_LEAF_SYMBOL_VISIBLE e_unexpected_count
     {
     public:
 
@@ -176,7 +176,7 @@ namespace leaf_detail
         BOOST_LEAF_CONSTEXPR static void print(std::ostream &, e_unexpected_count const &) noexcept { }
     };
 
-    class e_unexpected_info
+    class BOOST_LEAF_SYMBOL_VISIBLE e_unexpected_info
     {
         std::string s_;
         std::set<char const *(*)()> already_;
@@ -214,7 +214,7 @@ namespace leaf_detail
     };
 
     template <class=void>
-    struct tl_unexpected_enabled
+    struct BOOST_LEAF_SYMBOL_VISIBLE tl_unexpected_enabled
     {
         static BOOST_LEAF_THREAD_LOCAL int counter;
     };
@@ -252,7 +252,7 @@ namespace leaf_detail
     class slot;
 
     template <class E>
-    struct tl_slot_ptr
+    struct BOOST_LEAF_SYMBOL_VISIBLE tl_slot_ptr
     {
         static BOOST_LEAF_THREAD_LOCAL slot<E> * p;
     };
@@ -422,7 +422,7 @@ namespace leaf_detail
 namespace leaf_detail
 {
     template <class=void>
-    struct id_factory
+    struct BOOST_LEAF_SYMBOL_VISIBLE id_factory
     {
         static atomic_unsigned_int counter;
         static BOOST_LEAF_THREAD_LOCAL unsigned current_id;
@@ -552,7 +552,7 @@ namespace leaf_detail
     BOOST_LEAF_CONSTEXPR error_id make_error_id(int) noexcept;
 }
 
-class error_id
+class BOOST_LEAF_SYMBOL_VISIBLE error_id
 {
     friend error_id BOOST_LEAF_CONSTEXPR leaf_detail::make_error_id(int) noexcept;
 

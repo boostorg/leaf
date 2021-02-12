@@ -5569,10 +5569,28 @@ The following configuration macros are recognized:
 * `BOOST_LEAF_NO_EXCEPTIONS`: Disables all exception handling support. If left undefined, LEAF defines it based on the compiler configuration (e.g. `-fno-exceptions`).
 * `BOOST_LEAF_NO_THREADS`: Disable all multi-thread support.
 
+== Limitations
+
+LEAF requires {CPP}11, including `thread_local` support, except when compiled with `BOOST_LEAF_NO_THREADS` (which can be useful on some embedded platforms).
+
+When using dynamic linking, it is required that error types are declared with `default` visibility, e.g.:
+
+[source,c++]
+----
+struct __attribute__ ((visibility ("default"))) my_error_info
+{
+    int value;
+};
+----
+
+This works as expected except on Windows, where thread-local storage is not shared between the individual binary modules. For this reason, to transport error objects across DLL boundaries, it is required that they're captured in a <<polymorphic_context>>, just like when <<tutorial-async>>.
+
+TIP: When using dynamic linking, it is always best to define module interfaces in terms of C (and implement them in {CPP} if appropriate).
+
 == Acknowledgements
 
 Special thanks to Peter Dimov and Sorin Fetche.
 
-Ivo Belchev, Sean Palmer, Jason King, Vinnie Falco, Glen Fernandes, Nir Friedman, Augustín Bergé -- thanks for the valuable feedback.
+Ivo Belchev, Sean Palmer, Jason King, Vinnie Falco, Glen Fernandes, Augustín Bergé -- thanks for the valuable feedback.
 
 Documentation rendered by https://asciidoctor.org/[Asciidoctor] with https://github.com/zajo/asciidoctor_skin[these customizations].

@@ -188,4 +188,10 @@
 #pragma warning(pop) ///
 #endif ///
 
+#ifdef __GNUC__
+#	define BOOST_LEAF_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
+#else
+#	define BOOST_LEAF_SYMBOL_VISIBLE
+#endif
+
 #endif

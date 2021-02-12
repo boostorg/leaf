@@ -76,7 +76,10 @@
 			"dependsOn": [
 				"Generate leaf.hpp"
 			],
-			"command": "../../b2 test variant=debug,release,leaf_debug_diag0,leaf_release_diag0,leaf_debug_leaf_hpp,leaf_release_leaf_hpp exception-handling=on,off && ../../b2 test variant=debug,release,leaf_debug_diag0,leaf_release_diag0,leaf_debug_leaf_hpp,leaf_release_leaf_hpp exception-handling=off rtti=off",
+			"command": "../../b2 test link=shared,static variant=debug,release,leaf_debug_diag0,leaf_release_diag0,leaf_debug_leaf_hpp,leaf_release_leaf_hpp exception-handling=on,off && ../../b2 test link=shared,static variant=debug,release,leaf_debug_diag0,leaf_release_diag0,leaf_debug_leaf_hpp,leaf_release_leaf_hpp exception-handling=off rtti=off",
+			"windows": {
+				"command": "..\\..\\b2 test variant=debug,release,leaf_debug_diag0,leaf_release_diag0,leaf_debug_leaf_hpp,leaf_release_leaf_hpp exception-handling=on,off && ..\\..\\b2 test variant=debug,release,leaf_debug_diag0,leaf_release_diag0,leaf_debug_leaf_hpp,leaf_release_leaf_hpp exception-handling=off rtti=off",
+			},
 			"problemMatcher": {
 				"base": "$gcc",
 				"fileLocation": [

@@ -53,7 +53,7 @@ namespace leaf_detail
 {
     inline void enforce_std_exception( std::exception const & ) noexcept { }
 
-    class exception_base
+    class BOOST_LEAF_SYMBOL_VISIBLE exception_base
     {
         std::shared_ptr<void const> auto_id_bump_;
     public:
@@ -71,7 +71,7 @@ namespace leaf_detail
     };
 
     template <class Ex>
-    class exception:
+    class BOOST_LEAF_SYMBOL_VISIBLE exception:
         public Ex,
         public exception_base,
         public error_id

@@ -99,6 +99,10 @@ run try_catch_error_id_test.cpp ;
 run try_catch_test.cpp ;
 run try_exception_and_result_test.cpp ;
 
+lib visibility_test_lib : visibility_test_lib.cpp : <visibility>hidden ;
+run visibility_test.cpp visibility_test_lib/<link>shared ;
+run visibility_test.cpp visibility_test_lib/<link>static : : : <target-os>windows ; # This can't work on Windows, so use static link for the test.
+
 compile-fail _compile-fail-arg_boost_error_info_1.cpp ;
 compile-fail _compile-fail-arg_boost_error_info_2.cpp ;
 compile-fail _compile-fail-arg_catch_1.cpp ;

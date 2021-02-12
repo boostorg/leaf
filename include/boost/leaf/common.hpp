@@ -32,11 +32,11 @@
 
 namespace boost { namespace leaf {
 
-struct e_api_function { char const * value; };
+struct BOOST_LEAF_SYMBOL_VISIBLE e_api_function { char const * value; };
 
-struct e_file_name { std::string value; };
+struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name { std::string value; };
 
-struct e_errno
+struct BOOST_LEAF_SYMBOL_VISIBLE e_errno
 {
     int value;
 
@@ -49,9 +49,9 @@ struct e_errno
     }
 };
 
-struct e_type_info_name { char const * value; };
+struct BOOST_LEAF_SYMBOL_VISIBLE e_type_info_name { char const * value; };
 
-struct e_at_line { int value; };
+struct BOOST_LEAF_SYMBOL_VISIBLE e_at_line { int value; };
 
 namespace windows
 {
