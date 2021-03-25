@@ -578,7 +578,7 @@ namespace leaf_detail
 
     template <class R, class Tup, class H>
     BOOST_LEAF_CONSTEXPR inline
-    typename std::enable_if<!is_tuple<H>::value, R>::type
+    typename std::enable_if<!is_tuple<typename std::decay<H>::type>::value, R>::type
     handle_error_( Tup & tup, error_info const & ei, H && h )
     {
         static_assert( handler_matches_any_error<fn_mp_args<H>>::value, "The last handler passed to handle_all must match any error." );
@@ -587,7 +587,7 @@ namespace leaf_detail
 
     template <class R, class Tup, class Car, class... Cdr>
     BOOST_LEAF_CONSTEXPR inline
-    typename std::enable_if<!is_tuple<Car>::value, R>::type
+    typename std::enable_if<!is_tuple<typename std::decay<Car>::type>::value, R>::type
     handle_error_( Tup & tup, error_info const & ei, Car && car, Cdr && ... cdr )
     {
         if( handler_matches_any_error<fn_mp_args<Car>>::value || check_handler_( tup, ei, fn_mp_args<Car>{ } ) )
@@ -614,7 +614,7 @@ namespace leaf_detail
 
     template <class R, class Tup, class H>
     BOOST_LEAF_CONSTEXPR inline
-    typename std::enable_if<is_tuple<H>::value, R>::type
+    typename std::enable_if<is_tuple<typename std::decay<H>::type>::value, R>::type
     handle_error_( Tup & tup, error_info const & ei, H && h )
     {
         return handle_error_tuple_<R>(
@@ -626,7 +626,7 @@ namespace leaf_detail
 
     template <class R, class Tup, class Car, class... Cdr>
     BOOST_LEAF_CONSTEXPR inline
-    typename std::enable_if<is_tuple<Car>::value, R>::type
+    typename std::enable_if<is_tuple<typename std::decay<Car>::type>::value, R>::type
     handle_error_( Tup & tup, error_info const & ei, Car && car, Cdr && ... cdr )
     {
         return handle_error_tuple_<R>(

@@ -402,6 +402,9 @@ namespace leaf_detail
     struct fn_mp_args_fwd<std::tuple<H...> &>: fn_mp_args_fwd<std::tuple<H...>> { };
 
     template <class... H>
+    struct fn_mp_args_fwd<const std::tuple<H...> &>: fn_mp_args_fwd<std::tuple<H...>> { };
+
+    template <class... H>
     struct fn_mp_args_fwd<std::tuple<H...>>
     {
         using type = leaf_detail_mp11::mp_append<typename fn_mp_args_fwd<H>::type...>;
