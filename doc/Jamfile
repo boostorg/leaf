@@ -11,7 +11,7 @@ import asciidoctor ;
 html index.html : leaf.adoc : <asciidoctor-attribute>stylesheet=zajo-dark.css <asciidoctor-attribute>linkcss ;
 install html_ : index.html LEAF-1.png LEAF-2.png skin.png zajo-dark.css zajo-light.css rouge-github.css : <location>html ;
 
-pdf leaf.pdf : leaf.adoc : <asciidoctor-doctype>book  <asciidoctor-attribute>pdf-themesdir=doc <asciidoctor-attribute>pdf-theme=leaf ;
+pdf leaf.pdf : leaf.adoc : <asciidoctor-doctype>book  <asciidoctor-attribute>pdf-themesdir=. <asciidoctor-attribute>pdf-theme=leaf ;
 install pdf_ : leaf.pdf : <location>html ;
 
 alias boostdoc ;
