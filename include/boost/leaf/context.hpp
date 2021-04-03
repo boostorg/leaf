@@ -402,7 +402,7 @@ namespace leaf_detail
     struct fn_mp_args_fwd<std::tuple<H...> &>: fn_mp_args_fwd<std::tuple<H...>> { };
 
     template <class... H>
-    struct fn_mp_args_fwd<const std::tuple<H...> &>: fn_mp_args_fwd<std::tuple<H...>> { };
+    struct fn_mp_args_fwd<std::tuple<H...> const &>: fn_mp_args_fwd<std::tuple<H...>> { };
 
     template <class... H>
     struct fn_mp_args_fwd<std::tuple<H...>>
