@@ -39,7 +39,7 @@ jobs:
           cd ../boost-root/libs/leaf/doc
           ../../../b2
 
-      - name: Generate headers
+      - name: Generate single header
         run: |
           cd ../boost-root/libs/leaf
           python gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o doc/html/leaf.hpp boost/leaf
