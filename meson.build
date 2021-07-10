@@ -159,6 +159,7 @@ if option_enable_unit_tests
 		'preload_nested_success_result_test',
 		'print_test',
 		'result_bad_result_test',
+		'result_implicit_conversion_test',
 		'result_load_test',
 		'result_ref_test',
 		'result_state_test',
