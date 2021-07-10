@@ -13,5 +13,5 @@ boost::leaf::result<std::size_t> g() {
 }
 
 boost::leaf::result<std::vector<std::string>> f() {
-  return g();
+  return g(); // vector constructor is explicit
 }
