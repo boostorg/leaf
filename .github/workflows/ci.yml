@@ -34,15 +34,20 @@ jobs:
           - toolset: gcc-8
             cxxstd: "11,14,17,2a"
             os: ubuntu-18.04
+            install: g++-8
           - toolset: gcc-9
             cxxstd: "11,14,17,2a"
             os: ubuntu-18.04
           - toolset: gcc-10
             cxxstd: "11,14,17,2a"
             os: ubuntu-18.04
+          - toolset: gcc-11
+            cxxstd: "11,14,17,2a"
+            os: ubuntu-18.04
+            install: g++-11
           - toolset: clang
             compiler: clang++-3.5
-            cxxstd: "11,14"
+            cxxstd: "11"
             os: ubuntu-16.04
             install: clang-3.5
           - toolset: clang
@@ -79,6 +84,7 @@ jobs:
             compiler: clang++-6.0
             cxxstd: "11,14,17"
             os: ubuntu-18.04
+            install: clang-6.0
           - toolset: clang
             compiler: clang++-7
             cxxstd: "11,14,17"
@@ -88,12 +94,22 @@ jobs:
             compiler: clang++-8
             cxxstd: "11,14,17"
             os: ubuntu-20.04
+            install: clang-8
           - toolset: clang
             compiler: clang++-9
             cxxstd: "11,14,17,2a"
             os: ubuntu-20.04
+            install: clang-9
           - toolset: clang
             compiler: clang++-10
+            cxxstd: "11,14,17,2a"
+            os: ubuntu-20.04
+          - toolset: clang
+            compiler: clang++-11
+            cxxstd: "11,14,17,2a"
+            os: ubuntu-20.04
+          - toolset: clang
+            compiler: clang++-12
             cxxstd: "11,14,17,2a"
             os: ubuntu-20.04
           - toolset: clang
