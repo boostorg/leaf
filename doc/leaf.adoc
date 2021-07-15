@@ -3698,7 +3698,7 @@ leaf::error<int> augmenter() noexcept
 - Else, `assigned_error_id` invokes `new_error` and returns that `error_id`.
 <4> The call was successful, return the computed value.
 
-The `check` function works similarly, but instead of invoking `new_error` it returns a defaul-initialized `error_id`.
+The `check` function works similarly, but instead of invoking `new_error` it returns a default-initialized `error_id`.
 
 TIP: See <<tutorial-on_error_in_c_callbacks>>.
 
