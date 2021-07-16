@@ -91,6 +91,7 @@ run preload_nested_success_exception_test.cpp ;
 run preload_nested_success_result_test.cpp ;
 run print_test.cpp ;
 run result_bad_result_test.cpp ;
+run result_implicit_conversion_test.cpp ;
 run result_load_test.cpp ;
 run result_ref_test.cpp ;
 run result_state_test.cpp ;
@@ -117,6 +118,8 @@ compile-fail _compile-fail-error_info.cpp ;
 compile-fail _compile-fail-new_error.cpp ;
 compile-fail _compile-fail-result_1.cpp ;
 compile-fail _compile-fail-result_2.cpp ;
+compile-fail _compile-fail-result_3.cpp ;
+compile-fail _compile-fail-result_4.cpp ;
 compile-fail _compile-fail-verbose_diagnostic_info.cpp ;
 
 exe capture_in_exception : ../examples/capture_in_exception.cpp : <threading>single:<build>no <exception-handling>off:<build>no ;

@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-size_t g() {
+boost::leaf::result<std::size_t> g() {
   return 42;
 }
 

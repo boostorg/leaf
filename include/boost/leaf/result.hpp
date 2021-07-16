@@ -228,8 +228,6 @@ class result
         return what_.kind()==result_discriminant::ctx_ptr ? ctx_->captured_id_ : what_.get_error_id();
     }
 
-    static int init_T_with_U( T && );
-
 protected:
 
     void enforce_value_state() const
@@ -245,10 +243,9 @@ public:
     {
     }
 
-    template <class U>
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
     result( result<U> && x ) noexcept:
         what_(move_from(std::move(x)))
-
     {
     }
 
@@ -275,16 +272,36 @@ public:
     {
     }
 
-    // SFINAE:
-    // T can be initialized with a U, e.g. result<std::string>("literal").
-    // Not using is_constructible on purpose, bug with
-    // COMPILER=/usr/bin/clang++ CXXSTD=11 clang 3.3.
+#if defined(BOOST_STRICT_CONFIG) || !defined(__clang__)
+
+    // This should be the default implementation, but std::is_convertible
+    // breaks under COMPILER=/usr/bin/clang++ CXXSTD=11 clang 3.3.
+    // On the other hand, the workaround exposes a rather severe bug in
+    //__GNUC__ under 11: https://github.com/boostorg/leaf/issues/25.
+
+    // SFINAE: T can be initialized with a U, e.g. result<std::string>("literal").
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
+    result( U && u ):
+        stored_(std::forward<U>(u)),
+        what_(result_discriminant::kind_val{})
+    {
+    }
+
+#else
+
+private:
+    static int init_T_with_U( T && );
+public:
+
+    // SFINAE: T can be initialized with a U, e.g. result<std::string>("literal").
     template <class U>
     result( U && u, decltype(init_T_with_U(std::forward<U>(u))) * = 0 ):
         stored_(std::forward<U>(u)),
         what_(result_discriminant::kind_val{})
     {
     }
+
+#endif
 
     result( std::error_code const & ec ) noexcept:
         what_(error_id(ec))
