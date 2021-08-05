@@ -82,6 +82,8 @@ namespace leaf_detail
     template<class R, class... A> struct function_traits<R(* const &)(A...)> : function_traits<R(A...)> { };
     template<class C, class R, class... A> struct function_traits<R(C::*)(A...)> : function_traits<R(C&,A...)> { };
     template<class C, class R, class... A> struct function_traits<R(C::*)(A...) const> : function_traits<R(C const &,A...)> { };
+    template<class C, class R, class... A> struct function_traits<R(C::*)(A...) noexcept> : function_traits<R(C::*)(A...)> { };
+    template<class C, class R, class... A> struct function_traits<R(C::*)(A...) const noexcept> : function_traits<R(C::*)(A...) const> { };
     template<class C, class R> struct function_traits<R(C::*)> : function_traits<R(C&)> { };
 
     template <class F>
