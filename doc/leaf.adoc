@@ -73,7 +73,7 @@ There are three distribution channels:
 
 * LEAF is included in official https://www.boost.org/[Boost] releases, starting with Boost 1.75.
 * The source code is hosted on https://github.com/boostorg/leaf[GitHub].
-* For maximum portability, the library is also available in single-header format: simply download link:leaf.hpp[leaf.hpp] (direct download link).
+* For maximum portability, the latest LEAF release is also available in single-header format: simply download link:https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp[leaf.hpp] (direct download link).
 
 NOTE: LEAF does not depend on Boost or other libraries.
 
@@ -1557,7 +1557,7 @@ int main() noexcept
 
 NOTE: Follow this link to see the complete program: https://github.com/boostorg/leaf/blob/master/examples/lua_callback_result.cpp?ts=4[lua_callback_result.cpp].
 
-TIP: When using Lua with {CPP}, we need to protect the Lua interpreter from exceptions that may be thrown from {CPP} functions installed as `lua_CFunction` callbacks. Here is the program from this section rewritten to use a {CPP} exception to safely communicate errors out of the `do_work` function: https://github.com/boostorg/leaf/blob/master/examples/lua_callback_eh.cpp?ts=4[lua_callback_eh.cpp]. 
+TIP: When using Lua with {CPP}, we need to protect the Lua interpreter from exceptions that may be thrown from {CPP} functions installed as `lua_CFunction` callbacks. Here is the program from this section rewritten to use a {CPP} exception to safely communicate errors out of the `do_work` function: https://github.com/boostorg/leaf/blob/master/examples/lua_callback_eh.cpp?ts=4[lua_callback_eh.cpp].
 
 '''
 
