@@ -18,16 +18,13 @@ jobs:
       - name: Setup Boost
         run: |
           REF=${GITHUB_BASE_REF:-$GITHUB_REF}
+          BOOST_BRANCH=develop && [ "$REF" == "master" ] && BOOST_BRANCH=master || true
           cd ..
-          git clone --depth 1 https://github.com/boostorg/boost.git boost-root
+          git clone -b $BOOST_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
           cd boost-root
+          cp -r $GITHUB_WORKSPACE/* libs/leaf
           git submodule update --init tools/build
           git submodule update --init libs/config
-          git submodule update --init libs/leaf
-          cd libs/leaf
-          git checkout master
-          git pull
-          cd ../..
           ./bootstrap.sh
 
       - name: Create user-config.jam
