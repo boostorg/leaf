@@ -4,7 +4,7 @@
 // LEAF single header distribution. Do not edit.
 
 // Generated from https://github.com/boostorg/leaf on August 24, 2021,
-// Git hash 28724cf818a98a347e3547e96257521c1f2df926.
+// Git hash ff6cd98ef7b77cfb49e979e12e53fa05bb076ede.
 
 // Latest version: https://boostorg.github.io/leaf/leaf.hpp
 
@@ -415,6 +415,13 @@ namespace leaf_detail
     template<class R, class... A> struct function_traits<R(* const &)(A...)> : function_traits<R(A...)> { };
     template<class C, class R, class... A> struct function_traits<R(C::*)(A...)> : function_traits<R(C&,A...)> { };
     template<class C, class R, class... A> struct function_traits<R(C::*)(A...) const> : function_traits<R(C const &,A...)> { };
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
+    template<class R, class... A> struct function_traits<R(*)(A...) noexcept> : function_traits<R(A...)> { };
+    template<class R, class... A> struct function_traits<R(* &)(A...) noexcept> : function_traits<R(A...)> { };
+    template<class R, class... A> struct function_traits<R(* const &)(A...) noexcept> : function_traits<R(A...)> { };
+    template<class C, class R, class... A> struct function_traits<R(C::*)(A...) noexcept> : function_traits<R(C::*)(A...)> { };
+    template<class C, class R, class... A> struct function_traits<R(C::*)(A...) const noexcept> : function_traits<R(C::*)(A...) const> { };
+#endif
     template<class C, class R> struct function_traits<R(C::*)> : function_traits<R(C&)> { };
 
     template <class F>
