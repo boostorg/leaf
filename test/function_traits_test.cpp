@@ -40,6 +40,10 @@ int main()
         {
             return 42;
         } );
+    check_traits( []( int const volatile, float const, int const &, float && ) noexcept -> double
+        {
+            return 42;
+        } );
     static_assert(leaf::leaf_detail::function_traits<int>::arity==-1, "int arity");
     return 0;
 }
