@@ -297,7 +297,7 @@ int main( int argc, char const * argv[] )
 
 Nice and simple! Writing the `TryBlock`, we focus on the "happy" path -- if we encounter any error we just return it to `try_handle_all` for processing. Well, that's if we're being good and using RAII for automatic clean-up -- which we are, `shared_ptr` will automatically close the file for us.
 
-TIP: The complete program from this tutorial is available https://github.com/boostorg/leaf/blob/master/examples/print_file/print_file_result.cpp?ts=4[here]. The https://github.com/boostorg/leaf/blob/master/examples/print_file/print_file_eh.cpp?ts=4[other] version of the same program uses exception handling to report errors (see <<introduction-eh,below>>).
+TIP: The complete program from this tutorial is available https://github.com/boostorg/leaf/blob/master/example/print_file/print_file_result.cpp?ts=4[here]. The https://github.com/boostorg/leaf/blob/master/example/print_file/print_file_eh.cpp?ts=4[other] version of the same program uses exception handling to report errors (see <<introduction-eh,below>>).
 
 '''
 
@@ -487,7 +487,7 @@ If `fopen` succeeds, it returns a `shared_ptr` which will automatically call `fc
 
 NOTE: `try_catch` works with any exception, not only exceptions thrown using `leaf::exception`.
 
-TIP: The complete program from this tutorial is available https://github.com/boostorg/leaf/blob/master/examples/print_file/print_file_eh.cpp?ts=4[here]. The https://github.com/boostorg/leaf/blob/master/examples/print_file/print_file_result.cpp?ts=4[other] version of the same program does not use exception handling to report errors (see the <<introduction-result,previous introduction>>).
+TIP: The complete program from this tutorial is available https://github.com/boostorg/leaf/blob/master/example/print_file/print_file_eh.cpp?ts=4[here]. The https://github.com/boostorg/leaf/blob/master/example/print_file/print_file_result.cpp?ts=4[other] version of the same program does not use exception handling to report errors (see the <<introduction-result,previous introduction>>).
 
 [[tutorial]]
 == Tutorial
@@ -1052,7 +1052,7 @@ return leaf::try_handle_some(
 
 The reason this works is that in case it communicates a failure, `leaf::result<T>` is able to hold a `shared_ptr<polymorphic_context>` object. That is why earlier instead of calling `task()` directly, we called `leaf::capture`: it calls the passed function and, in case that fails, it stores the `shared_ptr<polymorphic_context>` we created in the returned `result<T>`, which now doesn't just communicate the fact that an error has occurred, but also holds the `context` object that `try_handle_some` needs in order to supply a suitable handler with arguments.
 
-NOTE: Follow this link to see a complete example program: https://github.com/boostorg/leaf/blob/master/examples/capture_in_result.cpp?ts=4[capture_in_result.cpp].
+NOTE: Follow this link to see a complete example program: https://github.com/boostorg/leaf/blob/master/example/capture_in_result.cpp?ts=4[capture_in_result.cpp].
 
 '''
 
@@ -1129,7 +1129,7 @@ return leaf::try_catch(
 
 This works similarly to using `result<T>`, except that the `std::shared_ptr<polymorphic_context>` is transported in an exception object (of unspecified type which <<try_catch>> recognizes and then automatically unwraps the original exception).
 
-NOTE: Follow this link to see a complete example program: https://github.com/boostorg/leaf/blob/master/examples/capture_in_exception.cpp?ts=4[capture_in_exception.cpp].
+NOTE: Follow this link to see a complete example program: https://github.com/boostorg/leaf/blob/master/example/capture_in_exception.cpp?ts=4[capture_in_exception.cpp].
 
 '''
 
@@ -1210,7 +1210,7 @@ struct eof_error { };
 ....
 ----
 
-With this in place, `file_read` from the https://github.com/boostorg/leaf/blob/master/examples/print_file/print_file_result.cpp?ts=4[print_file_result.cpp] example can be rewritten like this:
+With this in place, `file_read` from the https://github.com/boostorg/leaf/blob/master/example/print_file/print_file_result.cpp?ts=4[print_file_result.cpp] example can be rewritten like this:
 
 [source,c++]
 ----
@@ -1299,8 +1299,8 @@ And now we can write a future-proof handler that can handle any `input_error`:
 
 Remarkably, because the classification of the failure does not depend on error codes or on exception types, this error handler can be used with `try_catch` if we use exception handling, or with `try_handle_some`/`try_handle_all` if we do not. Here is the complete example from the introduction section, rewritten to use this technique:
 
-* https://github.com/boostorg/leaf/blob/master/examples/print_file/print_file_result_error_tags.cpp?ts=4[print_file_result_error_tags.cpp] (using `leaf::result<T>`).
-* https://github.com/boostorg/leaf/blob/master/examples/print_file/print_file_eh_error_tags.cpp?ts=4[print_file_eh_error_tags.cpp] (using exception handling).
+* https://github.com/boostorg/leaf/blob/master/example/print_file/print_file_result_error_tags.cpp?ts=4[print_file_result_error_tags.cpp] (using `leaf::result<T>`).
+* https://github.com/boostorg/leaf/blob/master/example/print_file/print_file_eh_error_tags.cpp?ts=4[print_file_eh_error_tags.cpp] (using exception handling).
 
 '''
 
@@ -1398,7 +1398,7 @@ leaf::try_handle_all(
 [.text-right]
 <<try_handle_all>> | <<result>> | <<BOOST_LEAF_CHECK>>
 
-NOTE: The complete program illustrating this technique is available https://github.com/boostorg/leaf/blob/master/examples/exception_to_result.cpp?ts=4[here].
+NOTE: The complete program illustrating this technique is available https://github.com/boostorg/leaf/blob/master/example/exception_to_result.cpp?ts=4[here].
 
 '''
 
@@ -1555,9 +1555,9 @@ int main() noexcept
 <2> Handle `do_work` failures.
 <3> Handle all other `lua_pcall` failures.
 
-NOTE: Follow this link to see the complete program: https://github.com/boostorg/leaf/blob/master/examples/lua_callback_result.cpp?ts=4[lua_callback_result.cpp].
+NOTE: Follow this link to see the complete program: https://github.com/boostorg/leaf/blob/master/example/lua_callback_result.cpp?ts=4[lua_callback_result.cpp].
 
-TIP: When using Lua with {CPP}, we need to protect the Lua interpreter from exceptions that may be thrown from {CPP} functions installed as `lua_CFunction` callbacks. Here is the program from this section rewritten to use a {CPP} exception to safely communicate errors out of the `do_work` function: https://github.com/boostorg/leaf/blob/master/examples/lua_callback_eh.cpp?ts=4[lua_callback_eh.cpp].
+TIP: When using Lua with {CPP}, we need to protect the Lua interpreter from exceptions that may be thrown from {CPP} functions installed as `lua_CFunction` callbacks. Here is the program from this section rewritten to use a {CPP} exception to safely communicate errors out of the `do_work` function: https://github.com/boostorg/leaf/blob/master/example/lua_callback_eh.cpp?ts=4[lua_callback_eh.cpp].
 
 '''
 
@@ -1870,10 +1870,10 @@ void g()
 
 Above, the handler will be selected if the caught exception object carries `my_info` with `.value()` equal to 42.
 
-[[examples]]
+[[example]]
 == Examples
 
-See https://github.com/boostorg/leaf/tree/master/examples[github].
+See https://github.com/boostorg/leaf/tree/master/example[github].
 
 [[synopsis]]
 == Synopsis
@@ -5495,7 +5495,7 @@ The `leaf::result<>` template deletes both `EC` and `EP`, which decouples it fro
 * Authors of lower-level library functions lack context to determine which of the information that is both relevant to the error _and_ naturally available to them needs to be communicated in order for a particular client program to recover from that error;
 * Authors of higher-level error-handling functions can easily and confidently make this determination, which they communicate naturally to LEAF, by simply writing the different error handlers. LEAF will transport the needed error objects while discarding the ones handlers don't care to use, saving resources.
 
-TIP: The LEAF examples include an adaptation of the program from the https://ned14.github.io/outcome/tutorial/essential/result/[Boost Outcome `result<>` tutorial]. You can https://github.com/boostorg/leaf/blob/master/examples/print_half.cpp?ts=4[view it on GitHub].
+TIP: The LEAF examples include an adaptation of the program from the https://ned14.github.io/outcome/tutorial/essential/result/[Boost Outcome `result<>` tutorial]. You can https://github.com/boostorg/leaf/blob/master/example/print_half.cpp?ts=4[view it on GitHub].
 
 NOTE: Programs using LEAF for error-handling are not required to use `leaf::result<T>`; for example, it is possible to use `outcome::result<T>` with LEAF.
 

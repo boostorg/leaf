@@ -222,7 +222,7 @@ if option_enable_examples
 	endif
 
 	foreach e : print_file_examples
-		executable(e, 'examples/print_file/'+e+'.cpp', dependencies: [leaf, dep_thread, dep_boost] )
+		executable(e, 'example/print_file/'+e+'.cpp', dependencies: [leaf, dep_thread, dep_boost] )
 	endforeach
 
 endif
@@ -260,7 +260,7 @@ if option_enable_examples
 	endif
 
 	foreach e : examples
-		executable(e, 'examples/'+e+'.cpp', dependencies: [leaf, dep_thread, dep_boost, dep_lua] )
+		executable(e, 'example/'+e+'.cpp', dependencies: [leaf, dep_thread, dep_boost, dep_lua] )
 	endforeach
 
 endif
