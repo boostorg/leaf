@@ -23,6 +23,11 @@ namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
+    template <class T> struct remove_noexcept { using type = T; };
+    template <class R, class... A>  struct remove_noexcept<R(*)(A...) noexcept> { using type = R(*)(A...); };
+    template <class C, class R, class... A>  struct remove_noexcept<R(C::*)(A...) noexcept> { using type = R(C::*)(A...); };
+    template <class C, class R, class... A>  struct remove_noexcept<R(C::*)(A...) const noexcept> { using type = R(C::*)(A...) const; };
+
     template<class...>
     struct gcc49_workaround //Thanks Glen Fernandes
     {
@@ -33,17 +38,17 @@ namespace leaf_detail
     using void_t = typename gcc49_workaround<T...>::type;
 
     template<class F,class V=void>
-    struct function_traits
+    struct function_traits_impl
     {
         constexpr static int arity = -1;
     };
 
     template<class F>
-    struct function_traits<F, void_t<decltype(&F::operator())>>
+    struct function_traits_impl<F, void_t<decltype(&F::operator())>>
     {
     private:
 
-        using tr = function_traits<decltype(&F::operator())>;
+        using tr = function_traits_impl<typename remove_noexcept<decltype(&F::operator())>::type>;
 
     public:
 
@@ -60,7 +65,7 @@ namespace leaf_detail
     };
 
     template<class R, class... A>
-    struct function_traits<R(A...)>
+    struct function_traits_impl<R(A...)>
     {
         using return_type = R;
         static constexpr int arity = sizeof...(A);
@@ -75,21 +80,19 @@ namespace leaf_detail
         };
     };
 
-    template<class F> struct function_traits<F&> : function_traits<F> { };
-    template<class F> struct function_traits<F&&> : function_traits<F> { };
-    template<class R, class... A> struct function_traits<R(*)(A...)> : function_traits<R(A...)> { };
-    template<class R, class... A> struct function_traits<R(* &)(A...)> : function_traits<R(A...)> { };
-    template<class R, class... A> struct function_traits<R(* const &)(A...)> : function_traits<R(A...)> { };
-    template<class C, class R, class... A> struct function_traits<R(C::*)(A...)> : function_traits<R(C&,A...)> { };
-    template<class C, class R, class... A> struct function_traits<R(C::*)(A...) const> : function_traits<R(C const &,A...)> { };
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
-    template<class R, class... A> struct function_traits<R(*)(A...) noexcept> : function_traits<R(A...)> { };
-    template<class R, class... A> struct function_traits<R(* &)(A...) noexcept> : function_traits<R(A...)> { };
-    template<class R, class... A> struct function_traits<R(* const &)(A...) noexcept> : function_traits<R(A...)> { };
-    template<class C, class R, class... A> struct function_traits<R(C::*)(A...) noexcept> : function_traits<R(C::*)(A...)> { };
-    template<class C, class R, class... A> struct function_traits<R(C::*)(A...) const noexcept> : function_traits<R(C::*)(A...) const> { };
-#endif
-    template<class C, class R> struct function_traits<R(C::*)> : function_traits<R(C&)> { };
+    template<class F> struct function_traits_impl<F&> : function_traits_impl<F> { };
+    template<class F> struct function_traits_impl<F&&> : function_traits_impl<F> { };
+    template<class R, class... A> struct function_traits_impl<R(*)(A...)> : function_traits_impl<R(A...)> { };
+    template<class R, class... A> struct function_traits_impl<R(* &)(A...)> : function_traits_impl<R(A...)> { };
+    template<class R, class... A> struct function_traits_impl<R(* const &)(A...)> : function_traits_impl<R(A...)> { };
+    template<class C, class R, class... A> struct function_traits_impl<R(C::*)(A...)> : function_traits_impl<R(C&,A...)> { };
+    template<class C, class R, class... A> struct function_traits_impl<R(C::*)(A...) const> : function_traits_impl<R(C const &,A...)> { };
+    template<class C, class R> struct function_traits_impl<R(C::*)> : function_traits_impl<R(C&)> { };
+
+    template <class F>
+    struct function_traits: function_traits_impl<typename remove_noexcept<F>::type>
+    {
+    };
 
     template <class F>
     using fn_return_type = typename function_traits<F>::return_type;
@@ -99,7 +102,6 @@ namespace leaf_detail
 
     template <class F>
     using fn_mp_args = typename function_traits<F>::mp_args;
-
 }
 
 } }
