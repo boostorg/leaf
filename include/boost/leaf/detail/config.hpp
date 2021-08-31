@@ -184,14 +184,18 @@
 #   endif
 #endif
 
-#if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///
-#pragma warning(pop) ///
-#endif ///
+////////////////////////////////////////
 
 #ifdef __GNUC__
 #	define BOOST_LEAF_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
 #else
 #	define BOOST_LEAF_SYMBOL_VISIBLE
 #endif
+
+////////////////////////////////////////
+
+#if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///
+#pragma warning(pop) ///
+#endif ///
 
 #endif
