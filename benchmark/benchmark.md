@@ -150,39 +150,39 @@ leaf::result<int> g()
 }
 ```
 
-Generates this code on clang ([Godbolt](https://godbolt.org/z/aMh4zo)):
+Generates this code on clang ([Godbolt](https://godbolt.org/z/v58drTPhq)):
 
 ```x86asm
 g():                                  # @g()
-	push    rbx
-	sub     rsp, 32
-	mov     rbx, rdi
-	mov     rdi, rsp
-	call    f()
-	mov     eax, dword ptr [rsp + 16]
-	mov     ecx, eax
-	and     ecx, 3
-	cmp     ecx, 2
-	je      .LBB0_3
-	cmp     ecx, 3
-	jne     .LBB0_4
-	mov     eax, dword ptr [rsp]
-	add     eax, 1
-	mov     dword ptr [rbx], eax
-	mov     eax, 3
-	jmp     .LBB0_4
+        push    rbx
+        sub     rsp, 32
+        mov     rbx, rdi
+        lea     rdi, [rsp + 8]
+        call    f()
+        mov     eax, dword ptr [rsp + 24]
+        mov     ecx, eax
+        and     ecx, 3
+        cmp     ecx, 3
+        jne     .LBB0_1
+        mov     eax, dword ptr [rsp + 8]
+        add     eax, 1
+        mov     dword ptr [rbx], eax
+        mov     eax, 3
+        jmp     .LBB0_3
+.LBB0_1:
+        cmp     ecx, 2
+        jne     .LBB0_3
+        mov     rax, qword ptr [rsp + 8]
+        mov     qword ptr [rbx], rax
+        mov     rax, qword ptr [rsp + 16]
+        mov     qword ptr [rbx + 8], rax
+        mov     eax, 2
 .LBB0_3:
-	movaps  xmm0, xmmword ptr [rsp]
-	mov     qword ptr [rsp + 8], 0
-	movups  xmmword ptr [rbx], xmm0
-	mov     qword ptr [rsp], 0
-	mov     eax, 2
-.LBB0_4:
-	mov     dword ptr [rbx + 16], eax
-	mov     rax, rbx
-	add     rsp, 32
-	pop     rbx
-	ret
+        mov     dword ptr [rbx + 16], eax
+        mov     rax, rbx
+        add     rsp, 32
+        pop     rbx
+        ret
 ```
 
 > Description:
@@ -236,32 +236,32 @@ leaf::result<int> g()
 }
 ```
 
-We get ([Godbolt](https://godbolt.org/z/nezE7s)):
+We get ([Godbolt](https://godbolt.org/z/87Kezzrs4)):
 
 ```x86asm
 g():                                  # @g()
-	push    rbx
-	mov     rbx, rdi
-	call    rand
-	test    al, 1
-	jne     .LBB1_2
-	mov     eax, 4
-	lock xadd dword ptr [rip + boost::leaf::leaf_detail::id_factory<void>::counter], eax
-	add     eax, 4
-	mov     dword ptr fs:[boost::leaf::leaf_detail::id_factory<void>::current_id@TPOFF], eax
-	and     eax, -4
-	or      eax, 1
-	mov     dword ptr [rbx + 16], eax
-	mov     rax, rbx
-	pop     rbx
-	ret
+        push    rbx
+        mov     rbx, rdi
+        call    rand
+        test    al, 1
+        jne     .LBB1_2
+        mov     eax, 4
+        lock            xadd    dword ptr [rip + boost::leaf::leaf_detail::id_factory<void>::counter], eax
+        add     eax, 4
+        mov     dword ptr fs:[boost::leaf::leaf_detail::id_factory<void>::current_id@TPOFF], eax
+        and     eax, -4
+        or      eax, 1
+        mov     dword ptr [rbx + 16], eax
+        mov     rax, rbx
+        pop     rbx
+        ret
 .LBB1_2:
-	mov     dword ptr [rbx], 43
-	mov     eax, 3
-	mov     dword ptr [rbx + 16], eax
-	mov     rax, rbx
-	pop     rbx
-	ret
+        mov     dword ptr [rbx], 43
+        mov     eax, 3
+        mov     dword ptr [rbx + 16], eax
+        mov     rax, rbx
+        pop     rbx
+        ret
 ```
 
 Above, the call to `f()` is inlined:
@@ -297,23 +297,22 @@ Now, transporting a large error object might seem unusual, but this is only beca
 
 ## Godbolt
 
-Godbolt has built-in support for Boost (Outcome), but LEAF and `tl::expected` both provide a single header, which makes it very easy to use them online as well. To see the generated code for the benchmark program, you can copy and paste the following into Godbolt:
+Godbolt has built-in support for Boost (Outcome/LEAF), but `tl::expected` both provide a single header, which makes it very easy to use them online as well. To see the generated code for the benchmark program, you can copy and paste the following into Godbolt:
 
-`leaf::result<T>` ([godbolt](https://godbolt.org/z/Thdq1d))
+`leaf::result<T>` ([godbolt](https://godbolt.org/z/1hqqnfhMf))
 
 ```c++
-#include "https://raw.githubusercontent.com/boostorg/leaf/master/include/boost/leaf.hpp"
 #include "https://raw.githubusercontent.com/boostorg/leaf/master/benchmark/deep_stack_leaf.cpp"
 ```
 
-`tl::expected<T, E>` ([godbolt](https://godbolt.org/z/sHwtTU))
+`tl::expected<T, E>` ([godbolt](https://godbolt.org/z/6dfcdsPcc))
 
 ```c++
 #include "https://raw.githubusercontent.com/TartanLlama/expected/master/include/tl/expected.hpp"
 #include "https://raw.githubusercontent.com/boostorg/leaf/master/benchmark/deep_stack_other.cpp"
 ```
 
-`outcome::result<T, E>` ([godbolt](https://godbolt.org/z/ZrfRRA))
+`outcome::result<T, E>` ([godbolt](https://godbolt.org/z/jMEfGMrW9))
 
 ```c++
 #define BENCHMARK_WHAT 1
@@ -331,7 +330,7 @@ To build both versions of the benchmark program, the compilers are invoked using
 
 In addition, the LEAF version is compiled with:
 
-* `-DBOOST_LEAF_DIAGNOSTICS=0`: Disable diagnostic information for error objects not recognized by the program. This is a debugging feature, see [Configuration Macros](https://boostorg.github.io/leaf/#_configuration_macros).
+* `-DBOOST_LEAF_DIAGNOSTICS=0`: Disable diagnostic information for error objects not recognized by the program. This is a debugging feature, see [Configuration Macros](https://boostorg.github.io/leaf/#configuration).
 
 ## Results
 
