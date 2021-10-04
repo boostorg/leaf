@@ -122,11 +122,11 @@ Which on clang 9 outputs:
 
 ```x86asm
 val():
-	mov     eax, 42
-	ret
+        mov     eax, 42
+	      ret
 main:
-	mov     eax, 42
-	ret
+        mov     eax, 42
+        ret
 ```
 
 It does not appear that anything like this is occurring in our case, but it is still a possibility.
@@ -189,9 +189,9 @@ g():                                  # @g()
 >
 > * The happy path can be recognized by the `add eax, 1` instruction generated for `x + 1`.
 >
-> * `.LBB0_4`: Regular failure; the returned `result<T>` object holds only the `int` discriminant.
+> * `.LBB0_3`: Regular failure; the returned `result<T>` object holds only the `int` discriminant.
 >
-> * `.LBB0_3`: Failure; the returned `result<T>` holds the `int` discriminant and a `std::shared_ptr<leaf::polymorphic_context>` (used to hold error objects transported from another thread).
+> * `.LBB0_1`: Failure; the returned `result<T>` holds the `int` discriminant and a `std::shared_ptr<leaf::polymorphic_context>` (used to hold error objects transported from another thread).
 
 Note that `f` is undefined, hence the `call` instruction. Predictably, if we provide a trivial definition for `f`:
 
@@ -212,10 +212,10 @@ We get:
 
 ```x86asm
 g():                                  # @g()
-	mov     rax, rdi
-	mov     dword ptr [rdi], 43
-	mov     dword ptr [rdi + 16], 3
-	ret
+	      mov     rax, rdi
+	      mov     dword ptr [rdi], 43
+	      mov     dword ptr [rdi + 16], 3
+	      ret
 ```
 
 With a less trivial definition of `f`:
