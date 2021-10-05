@@ -17,16 +17,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - toolset: gcc-4.9
+          - toolset: gcc-4.8
             cxxstd: "11"
-            os: ubuntu-16.04
-            install: g++-4.9
+            os: ubuntu-18.04
+            install: g++-4.8
           - toolset: gcc-5
             cxxstd: "11,14,1z"
-            os: ubuntu-16.04
+            os: ubuntu-18.04
+            install: g++-5
           - toolset: gcc-6
             cxxstd: "11,14,1z"
-            os: ubuntu-16.04
+            os: ubuntu-18.04
             install: g++-6
           - toolset: gcc-7
             cxxstd: "11,14"
@@ -37,48 +38,29 @@ jobs:
             install: g++-8
           - toolset: gcc-9
             cxxstd: "11,14,17,2a"
-            os: ubuntu-18.04
+            os: ubuntu-20.04
           - toolset: gcc-10
             cxxstd: "11,14,17,2a"
-            os: ubuntu-18.04
+            os: ubuntu-20.04
+            install: g++-10
           - toolset: gcc-11
             cxxstd: "11,14,17,2a"
-            os: ubuntu-18.04
+            os: ubuntu-20.04
             install: g++-11
-          - toolset: clang
-            compiler: clang++-3.5
-            cxxstd: "11"
-            os: ubuntu-16.04
-            install: clang-3.5
-          - toolset: clang
-            compiler: clang++-3.6
-            cxxstd: "11,14"
-            os: ubuntu-16.04
-            install: clang-3.6
-          - toolset: clang
-            compiler: clang++-3.7
-            cxxstd: "11,14"
-            os: ubuntu-16.04
-            install: clang-3.7
-          - toolset: clang
-            compiler: clang++-3.8
-            cxxstd: "11,14"
-            os: ubuntu-16.04
-            install: clang-3.8
           - toolset: clang
             compiler: clang++-3.9
             cxxstd: "11,14"
-            os: ubuntu-16.04
+            os: ubuntu-18.04
             install: clang-3.9
           - toolset: clang
             compiler: clang++-4.0
             cxxstd: "11,14"
-            os: ubuntu-16.04
+            os: ubuntu-18.04
             install: clang-4.0
           - toolset: clang
             compiler: clang++-5.0
             cxxstd: "11,14,1z"
-            os: ubuntu-16.04
+            os: ubuntu-18.04
             install: clang-5.0
           - toolset: clang
             compiler: clang++-6.0
@@ -104,14 +86,17 @@ jobs:
             compiler: clang++-10
             cxxstd: "11,14,17,2a"
             os: ubuntu-20.04
+            install: clang-10
           - toolset: clang
             compiler: clang++-11
             cxxstd: "11,14,17,2a"
             os: ubuntu-20.04
+            install: clang-11
           - toolset: clang
             compiler: clang++-12
             cxxstd: "11,14,17,2a"
             os: ubuntu-20.04
+            install: clang-12
           - toolset: clang
             cxxstd: "11,14,17,2a"
             os: macos-10.15
