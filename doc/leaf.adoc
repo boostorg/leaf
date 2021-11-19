@@ -90,7 +90,7 @@ Therefore what would have been a `result<T, E>` becomes `result<T>`, which store
 
 The benefit of this decomposition is that `result<T>` becomes extremely lightweight, as it is not coupled with error types; further, error objects are communicated in O(1) time (independent of the call stack depth). Even very large objects are handled efficiently without dynamic memory allocation.
 
-=== Error reporting
+=== Reporting Errors
 
 A function that reports an error is pretty straight-forward:
 
@@ -108,7 +108,7 @@ leaf::result<T> f()
 }
 ----
 
-=== Error checking
+=== Checking for Errors
 
 Checking for errors communicated by a `leaf::result<T>` works as expected:
 
@@ -137,7 +137,7 @@ leaf::result<U> g()
 }
 ----
 
-=== Error handling
+=== Error Handling
 
 Error handling scopes must use a special syntax to indicate that they need to access error objects. The following excerpt attempts several operations and handles errors of type `err1`:
 
@@ -231,7 +231,7 @@ U r = leaf::try_handle_all(
 
 The `leaf::try_handle_all` function enforces at compile time that at least one of the supplied error handlers takes no arguments (and therefore is able to handle any failure). In addition, all error handlers are forced to return a valid `U`, rather than a `leaf::result<U>`, so that `leaf::try_handle_all` is guaranteed to succeed, always.
 
-=== Working with different error types
+=== Working with Different Error Types
 
 It is of course possible to provide different handlers for different error types:
 
@@ -265,7 +265,7 @@ leaf::result<U> r = leaf::try_handle_some(
 
 In this case, because we have supplied handlers for `err1` and for `err2`, `try_handle_some` knows to allocate storage on the stack for error objects of both types.
 
-=== Working with multiple error objects
+=== Working with Multiple Error Objects
 
 It is possible for an error handler to require more than one error object:
 
@@ -386,7 +386,7 @@ leaf::result<void> r = leaf::try_handle_some(
 
 In essence, the `e_line` argument is optional, LEAF will provide it if it is available, otherwise pass a null pointer.
 
-=== Exception handling
+=== Exception Handling
 
 What happens if an operation throws an exception? Not to worry, both `leaf::try_handle_some` and `leaf::try_handle_all` catch exceptions and are able to pass them to any compatible error handler:
 
