@@ -38,12 +38,12 @@ function switch_style()
 <li><a href="#distribution">Distribution</a></li>
 <li><a href="#introduction">Introduction</a>
 <ul class="sectlevel2">
-<li><a href="#_error_reporting">Error reporting</a></li>
-<li><a href="#_error_checking">Error checking</a></li>
-<li><a href="#_error_handling">Error handling</a></li>
-<li><a href="#_working_with_different_error_types">Working with different error types</a></li>
-<li><a href="#_working_with_multiple_error_objects">Working with multiple error objects</a></li>
-<li><a href="#_exception_handling">Exception handling</a></li>
+<li><a href="#_reporting_errors">Reporting Errors</a></li>
+<li><a href="#_checking_for_errors">Checking for Errors</a></li>
+<li><a href="#_error_handling">Error Handling</a></li>
+<li><a href="#_working_with_different_error_types">Working with Different Error Types</a></li>
+<li><a href="#_working_with_multiple_error_objects">Working with Multiple Error Objects</a></li>
+<li><a href="#_exception_handling">Exception Handling</a></li>
 </ul>
 </li>
 <li><a href="#tutorial">Tutorial</a>
@@ -371,7 +371,7 @@ LEAF does not depend on Boost or other libraries.
 <p>The benefit of this decomposition is that <code>result&lt;T&gt;</code> becomes extremely lightweight, as it is not coupled with error types; further, error objects are communicated in O(1) time (independent of the call stack depth). Even very large objects are handled efficiently without dynamic memory allocation.</p>
 </div>
 <div class="sect2">
-<h3 id="_error_reporting">Error reporting</h3>
+<h3 id="_reporting_errors">Reporting Errors</h3>
 <div class="paragraph">
 <p>A function that reports an error is pretty straight-forward:</p>
 </div>
@@ -391,7 +391,7 @@ LEAF does not depend on Boost or other libraries.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_error_checking">Error checking</h3>
+<h3 id="_checking_for_errors">Checking for Errors</h3>
 <div class="paragraph">
 <p>Checking for errors communicated by a <code>leaf::result&lt;T&gt;</code> works as expected:</p>
 </div>
@@ -423,7 +423,7 @@ LEAF does not depend on Boost or other libraries.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_error_handling">Error handling</h3>
+<h3 id="_error_handling">Error Handling</h3>
 <div class="paragraph">
 <p>Error handling scopes must use a special syntax to indicate that they need to access error objects. The following excerpt attempts several operations and handles errors of type <code>err1</code>:</p>
 </div>
@@ -532,7 +532,7 @@ LEAF does not depend on Boost or other libraries.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_working_with_different_error_types">Working with different error types</h3>
+<h3 id="_working_with_different_error_types">Working with Different Error Types</h3>
 <div class="paragraph">
 <p>It is of course possible to provide different handlers for different error types:</p>
 </div>
@@ -569,7 +569,7 @@ LEAF does not depend on Boost or other libraries.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_working_with_multiple_error_objects">Working with multiple error objects</h3>
+<h3 id="_working_with_multiple_error_objects">Working with Multiple Error Objects</h3>
 <div class="paragraph">
 <p>It is possible for an error handler to require more than one error object:</p>
 </div>
@@ -698,7 +698,7 @@ LEAF does not depend on Boost or other libraries.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_exception_handling">Exception handling</h3>
+<h3 id="_exception_handling">Exception Handling</h3>
 <div class="paragraph">
 <p>What happens if an operation throws an exception? Not to worry, both <code>leaf::try_handle_some</code> and <code>leaf::try_handle_all</code> catch exceptions and are able to pass them to any compatible error handler:</p>
 </div>
