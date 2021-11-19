@@ -3,8 +3,8 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated from https://github.com/boostorg/leaf on October 06, 2021,
-// Git hash c274ba315ac1dece6ce89928ae0b27d91f8d3d44.
+// Generated from https://github.com/boostorg/leaf on November 19, 2021,
+// Git hash ff97d4e61ad51072f23b2bb8a454b1bbba19c35f.
 
 // Latest version: https://boostorg.github.io/leaf/leaf.hpp
 
