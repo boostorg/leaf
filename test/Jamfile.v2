@@ -130,8 +130,6 @@ exe exception_to_result : ../example/exception_to_result.cpp : <exception-handli
 # exe lua_callback_result : ../example/lua_callback_result.cpp : <exception-handling>off:<build>no ;
 # exe lua_callback_eh : ../example/lua_callback_eh.cpp : <exception-handling>off:<build>no ;
 exe print_file_eh : ../example/print_file/print_file_eh.cpp : <exception-handling>off:<build>no ;
-exe print_file_eh_error_tags : ../example/print_file/print_file_eh_error_tags.cpp : <exception-handling>off:<build>no ;
 # exe print_file_outcome_result : ../example/print_file/print_file_outcome_result.cpp : <exception-handling>off:<build>no ;
 exe print_file_result : ../example/print_file/print_file_result.cpp : <exception-handling>off:<build>no ;
-exe print_file_result_error_tags : ../example/print_file/print_file_result_error_tags.cpp : <exception-handling>off:<build>no ;
 exe print_half : ../example/print_half.cpp : <exception-handling>off:<build>no ;

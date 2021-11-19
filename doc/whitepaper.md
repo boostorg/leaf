@@ -40,24 +40,24 @@ Of course, this reasoning applies in general: if a function reports a failure, i
 
 ## 2. Classification of functions based on their affinity to errors
 
-> **Definition:** Functions that create error objects and initiate error handling are called *error-initiating* functions.
+> **Definition:** Functions that create error objects and initiate error handling are called *error initiating* functions.
 
 These are functions which, based on the semantics of the operations they perform, flag certain outcomes as failures, reporting the causes to their caller.
 
-> **Definition:** Functions which forward to the caller error information communicated by lower-level functions are called *error-neutral* functions.
+> **Definition:** Functions which forward to the caller error information communicated by lower-level functions are called *error neutral* functions.
 
 These functions react solely based on the [*failure flag*](#1-the-semantics-of-a-failure) indicated by a lower-level function, forwarding failures to the caller without understanding the semantics of the error ("something went wrong").
 
-For example, an *error-initiating* function may initialize a new `std::error_code` object to describe a failure, while an *error-neutral* function may just forward the `std::error_code` returned by a lower-level function to its own caller.
+For example, an *error initiating* function may initialize a new `std::error_code` object to describe a failure, while an *error neutral* function may just forward the `std::error_code` returned by a lower-level function to its own caller.
 
-Of course, *error-neutral* functions may contribute additional error information. The key difference between *error-initiating* and *error-neutral* functions is that the latter do not understand the semantics of lower-level failures, they simply react based on the value of the *failure flag*.
+Of course, *error neutral* functions may contribute additional error information. The key difference between *error initiating* and *error neutral* functions is that the latter do not understand the semantics of lower-level failures, they simply react based on the value of the *failure flag*.
 
 > **Definition:**
-> Functions which dispose of error objects they have received and recover normal program operation are called *error-handling* functions.
+> Functions which dispose of error objects they have received and recover normal program operation are called *error handling* functions.
 
-All information communicated by *error-initiating* and *error-neutral* functions in case of a failure targets an *error-handling* function found up the call stack. In order to take appropriate action to resume normal program operation, that function must understand the semantics of at least some possible error conditions that may occur in lower-level functions (the exception is functions that act as catch-all handlers, which are designed to recover from any and all error conditions, possibly after logging all available relevant information.)
+All information communicated by *error initiating* and *error neutral* functions in case of a failure targets an *error handling* function found up the call stack. In order to take appropriate action to resume normal program operation, that function must understand the semantics of at least some possible error conditions that may occur in lower-level functions (the exception is functions that act as catch-all handlers, which are designed to recover from any and all error conditions, possibly after logging all available relevant information.)
 
-Note that an *error-handling* function may act as *error-neutral* as well, by forwarding to its caller some failures it does not recognize and therefore can not recover from.
+Note that an *error handling* function may act as *error neutral* as well, by forwarding to its caller some failures it does not recognize and therefore can not recover from.
 
 ## 3. Types of error information based on context
 
@@ -73,7 +73,7 @@ Secondly, if the file failed to open, we need to know the `pathname` passed to `
 
 Similar reasoning applies to the reading step, except there is an additional complication: in the function that reads the file we use the `int` handle to identify the file, and therefore we don't have access to the `pathname` to report in case the call to [`read()`](http://man7.org/linux/man-pages/man2/read.2.html) fails. And if the failure is detected in the parsing step, the file may be closed already, so we may not even have the handle available.
 
-Is it important to know the name of the file which we failed to read or parse? It sure is. What got us on the error-handling path (*error-neutral* functions forwarding the failure to their caller, until an *error-handling* scope is reached) may be a failure to read or parse the file, but once we reach a scope where the `pathname` is available, we should be able to report it in addition to the initial error information.
+Is it important to know the name of the file which we failed to read or parse? It sure is. What got us on the error handling path (*error neutral* functions forwarding the failure to their caller, until an *error handling* scope is reached) may be a failure to read or parse the file, but once we reach a scope where the `pathname` is available, we should be able to report it in addition to the initial error information.
 
 ## 4. Handling of error information
 
@@ -96,7 +96,7 @@ However, this approach does not compose: as the error code bubbles up, each scop
 
 ### 4.2. Communicating an error code, logging other relevant information
 
-This approach offers the simplicity of communicating just an error code, but it is usable in higher-level libraries. If a low-level function reports a failure, we log any relevant information we have, then return an error code to the caller, and the process repeats until an *error-handling* function is reached. Alternatively, the logging may be done as a matter of routine, not only in case a failure is detected.
+This approach offers the simplicity of communicating just an error code, but it is usable in higher-level libraries. If a low-level function reports a failure, we log any relevant information we have, then return an error code to the caller, and the process repeats until an *error handling* function is reached. Alternatively, the logging may be done as a matter of routine, not only in case a failure is detected.
 
 There are several problems with this approach:
 
@@ -108,7 +108,7 @@ There are several problems with this approach:
 
 The main appeal of this approach is that like logging error information, it composes nicely: if a lower level function communicates an error code, we can easily convert it to string, together with any other information available in our scope (e.g. the `pathname`), then return the string plus an error code to the caller. And of course this can be repeated in each calling scope: concatenate relevant information to the string and pass it on together with an(other) error code.
 
-What's more, in C++ the conversion of any type of error information to string is easy to define in terms of `std::ostream` `operator<<` overloads, so at each level we can process lower-level failures generically. In the end, the error-handling function gets an error code (so it knows what went wrong), plus a string with relevant information that can be presented (or even logged) as "the reason" for the failure.
+What's more, in C++ the conversion of any type of error information to string is easy to define in terms of `std::ostream` `operator<<` overloads, so at each level we can process lower-level failures generically. In the end, the error handling function gets an error code (so it knows what went wrong), plus a string with relevant information that can be presented (or even logged) as "the reason" for the failure.
 
 While this is similar to writing the relevant error information in a log, this approach is arguably better because we don't depend on a logging system; but other downsides remain:
 
@@ -118,7 +118,7 @@ While this is similar to writing the relevant error information in a log, this a
 
 ### 4.4. Communicating all error information with type-safety
 
-The error-handling strategies we discussed so far work well as long as automatically-printed (or logged) error information is sufficient. And while there are many problem domains where this is true, we still need a solution for the case when error-handling code has to react to failures intelligently and to understand the available error information, rather than just print it for a developer to analyze. This requires that the various error objects delivered to an *error-handling* function retain their static type even as they cross library boundaries; for example, in case of errors, the `flags` argument passed to `open()` should be communicated as an `int` rather than a `std::string`.
+The error handling strategies we discussed so far work well as long as automatically-printed (or logged) error information is sufficient. And while there are many problem domains where this is true, we still need a solution for the case when error handling code has to react to failures intelligently and to understand the available error information, rather than just print it for a developer to analyze. This requires that the various error objects delivered to an *error handling* function retain their static type even as they cross library boundaries; for example, in case of errors, the `flags` argument passed to `open()` should be communicated as an `int` rather than a `std::string`.
 
 More generally, this is known as "The Interoperability Problem". The following analysis is from Niall Douglas:<sup>[1](#reference)</sup>
 
@@ -164,7 +164,7 @@ In other words, in the presence of dynamic or static polymorphism, it is impract
 
 But what about non-generic contexts? Is the equivalent of statically-enforced exception specifications a good idea in that case? We'll discuss this important question next.
 
-## 5. Error-handling and function signatures
+## 5. Error handling and function signatures
 
 Designers of any programming language, but especially statically-typed languages, take care to provide for compile-time checks to ensure that function calls work as intended. For example, the compiler itself should be able to automatically detect bugs where the caller provides the wrong number or type of arguments.
 
@@ -176,11 +176,11 @@ On the other hand, not all objects a function needs to use should be passed thro
 
 When an object must be communicated down the call stack to a function several levels removed from the one that initiates the call, it is usually desirable to decouple the signature of all intermediate functions from that object, because their interface has nothing to do with it.
 
-The same reasoning applies to *error-neutral* functions with regards to failures originating in lower-level functions. While it is possible to couple the signatures of intermediate functions with the static type of all the [error information they may need to communicate](#4-handling-of-error-information), this essentially destroys their neutrality towards failures. That's because, in order for each function to define a specific type to report all possible error objects statically, it must understand the exact semantics of all lower level error types. This turns what would have been a chain of calls to *error-neutral* functions into a game of telephone, requiring each node to both understand and correctly re-encode each communicated failure.
+The same reasoning applies to *error neutral* functions with regards to failures originating in lower-level functions. While it is possible to couple the signatures of intermediate functions with the static type of all the [error information they may need to communicate](#4-handling-of-error-information), this essentially destroys their neutrality towards failures. That's because, in order for each function to define a specific type to report all possible error objects statically, it must understand the exact semantics of all lower level error types. This turns what would have been a chain of calls to *error neutral* functions into a game of telephone, requiring each node to both understand and correctly re-encode each communicated failure.
 
 ## 6. Alternative mechanisms for transporting of error objects
 
-So far we established that in general it is not a good idea to couple return values (or function signatures) of *error-neutral* functions with the static type of all error objects they may need to communicate. In this section we'll discuss the alternative approaches.
+So far we established that in general it is not a good idea to couple return values (or function signatures) of *error neutral* functions with the static type of all error objects they may need to communicate. In this section we'll discuss the alternative approaches.
 
 ### 6.1. `GetLastError` / `errno`
 
@@ -222,7 +222,7 @@ int open(const char *pathname, int flags);
 
 The function attempts to open the file, returning the file handle or the special value `-1` to indicate a failure. In this case, the caller inspects `errno` for the error code.
 
-But there is another important benefit to this approach which is easy to overlook: it is specifically designed to facilitate the implementation of *error-neutral* functions:
+But there is another important benefit to this approach which is easy to overlook: it is specifically designed to facilitate the implementation of *error neutral* functions:
 
 ```c
 float read_data_and_compute_value(const char *pathname)
@@ -239,9 +239,9 @@ float read_data_and_compute_value(const char *pathname)
 
 The above function computes a `float` value based on the contents of the specified file, reserving a single `INVALID_VALUE` (possibly a NaN) to allow the caller to effectively inspect the *failure flag*.
 
-In case of failure to `open()`, our function stays out of the way: the error code is communicated from `open()` (which sets the `errno`) *directly* to an *error-handling* function up the call stack (which examines the `errno` in order to understand the failure), while the return value of each intermediate function needs only communicate a single bit of data (the *failure flag*).
+In case of failure to `open()`, our function stays out of the way: the error code is communicated from `open()` (which sets the `errno`) *directly* to an *error handling* function up the call stack (which examines the `errno` in order to understand the failure), while the return value of each intermediate function needs only communicate a single bit of data (the *failure flag*).
 
-The major drawback of this appoach is that the *failure flag* is not communicated uniformly, which means that *error-neutral* functions can't check for errors generically (e.g. each layer needs to know about the different `INVALID_VALUE`s).
+The major drawback of this appoach is that the *failure flag* is not communicated uniformly, which means that *error neutral* functions can't check for errors generically (e.g. each layer needs to know about the different `INVALID_VALUE`s).
 
 ### 6.2. C++ Exceptions
 
@@ -288,7 +288,7 @@ catch(my_error & e)
 }
 ```
 
-If the above `catch` was only required to match objects of type `my_error`, they could be allocated on the stack, in the error-handling scope, using automatic storage duration. However, `catch` must also match objects of any type that derives from `my_error`, and therefore the size of the exception object can not in general be known in this scope. For this reason, contemporary implementations allocate the memory for exception objects dynamically.
+If the above `catch` was only required to match objects of type `my_error`, they could be allocated on the stack, in the error handling scope, using automatic storage duration. However, `catch` must also match objects of any type that derives from `my_error`, and therefore the size of the exception object can not in general be known in this scope. For this reason, contemporary implementations allocate the memory for exception objects dynamically.
 
 A better approach<sup>[4](#reference)</sup> is to pre-allocate a stack-based buffer of some generally sufficient static size, leaving the option to allocate very large exception objects dynamically, similarly to the way `std::string` is typically implemented using small string optimization.
 
@@ -350,9 +350,9 @@ Why is optimizing this simplest of use cases important? Because this leads to co
 
 ### 6.3. Boost LEAF
 
-Boost LEAF<sup>[6](#reference)</sup> is a universal error-handling library for C++ which works with or without exception handling. It provides a low-cost alternative to transporting error objects in return values.
+Boost LEAF<sup>[6](#reference)</sup> is a universal error handling library for C++ which works with or without exception handling. It provides a low-cost alternative to transporting error objects in return values.
 
-Using LEAF, *error-handling* functions match error objects similarly to the way `catch` matches exceptions, with two important differences:
+Using LEAF, *error handling* functions match error objects similarly to the way `catch` matches exceptions, with two important differences:
 
 * Each handler can specify multiple objects to be matched by type, rather than only one.
 * The error objects are matched dynamically, but solely based on their static type. This allows *all* error objects to be allocated on the stack, using automatic storage duration.
@@ -431,21 +431,21 @@ leaf::try_catch(
 );
 ```
 
-In LEAF, error objects are allocated using automatic duration, stored in a `std::tuple` in the scope of `leaf::handle_all` (or `leaf::try_catch`). The type arguments of the `std::tuple` template are automatically deduced from the types of the arguments of the error-handling lambdas. If the try-block attempts to communicate error objects of any other type, these objects are discarded, since no error handler can make any use of them.
+In LEAF, error objects are allocated using automatic duration, stored in a `std::tuple` in the scope of `leaf::handle_all` (or `leaf::try_catch`). The type arguments of the `std::tuple` template are automatically deduced from the types of the arguments of the error handling lambdas. If the try-block attempts to communicate error objects of any other type, these objects are discarded, since no error handler can make any use of them.
 
-The `leaf::result<T>` template can be used as a return value for functions that may fail to produce a `T`. It carries the [*failure flag*](#1-the-semantics-of-a-failure) and, in case it is set, an integer serial number of the failure, while actual error objects are immediately moved into the matching storage reserved in the scope of an error-handling function (e.g. `handle_all`) found in the call stack.
+The `leaf::result<T>` template can be used as a return value for functions that may fail to produce a `T`. It carries the [*failure flag*](#1-the-semantics-of-a-failure) and, in case it is set, an integer serial number of the failure, while actual error objects are immediately moved into the matching storage reserved in the scope of an error handling function (e.g. `handle_all`) found in the call stack.
 
 ## 7. Exception-safety vs. failure-safety
 
-Many programmers dread C++ exception-safety<sup>[7](#reference)</sup>: the ability of C++ programs to respond correctly to a function call that results in throwing an exception. This fear is well founded, though it shouldn't be limited to throwing exceptions, but to all error-handling, regardless of the underlying mechanism.
+Many programmers dread C++ exception-safety<sup>[7](#reference)</sup>: the ability of C++ programs to respond correctly to a function call that results in throwing an exception. This fear is well founded, though it shouldn't be limited to throwing exceptions, but to all error handling, regardless of the underlying mechanism.
 
 In "Exception Safety: Concepts and Techniques"<sup>[8](#reference)</sup> Bjarne Stroustrup explains:
 
-> An operation on an object is said to be exception safe if that operation leaves the object in a valid state when the operation is terminated by throwing an exception. This valid state could be an error state requiring cleanup, but it must be well defined so that reasonable error-handling code can be written for the object.
+> An operation on an object is said to be exception safe if that operation leaves the object in a valid state when the operation is terminated by throwing an exception. This valid state could be an error state requiring cleanup, but it must be well defined so that reasonable error handling code can be written for the object.
 
 Consider the following edits:
 
-> An operation on an object is said to be ~~exception-safe~~ failure-safe if that operation leaves the object in a valid state when the operation ~~is terminated by throwing an exception~~ fails. This valid state could be an error state requiring cleanup, but it must be well defined so that reasonable error-handling code can be written for the object.
+> An operation on an object is said to be ~~exception-safe~~ failure-safe if that operation leaves the object in a valid state when the operation ~~is terminated by throwing an exception~~ fails. This valid state could be an error state requiring cleanup, but it must be well defined so that reasonable error handling code can be written for the object.
 
 Without limiting the discussion to exception throwing, the second definition remains entirely correct. With this in mind, let's continue with Stroustrup's explanation of safety-guarantees of operations on standard library components after ~~an exception is thrown~~ a failure has occurred:
 
@@ -455,9 +455,9 @@ Without limiting the discussion to exception throwing, the second definition rem
 >
 > * *~~Nothrow~~ No-fail guarantee for some operations:* In addition to providing the basic guarantee, some operations are guaranteed not to ~~throw an exception~~ fail. This guarantee is provided for a few simple operations, such  as `swap()` and `pop_back()`.
 
-Does this generalization make sense? Is there a marked difference in safety-guarantees when throwing exceptions vs. any other error-reporting mechanism?
+Does this generalization make sense? Is there a marked difference in safety-guarantees when throwing exceptions vs. any other error reporting mechanism?
 
-The answer depends on how *error-neutral* functions respond to failures. For example, Boost Outcome offers the macro `OUTCOME_TRY`, which can be invoked with two arguments, like so:
+The answer depends on how *error neutral* functions respond to failures. For example, Boost Outcome offers the macro `OUTCOME_TRY`, which can be invoked with two arguments, like so:
 
 ```c++
 OUTCOME_TRY(i, BigInt::fromString(text));
@@ -472,10 +472,10 @@ if (!__result)
 auto&& i = __result.value();
 ```
 
-The idea of `OUTCOME_TRY` is to support generic response to failures in *error-neutral* functions. It relies on two things:
+The idea of `OUTCOME_TRY` is to support generic response to failures in *error neutral* functions. It relies on two things:
 
 1. That the [*failure flag* can be observed generically](#1-the-semantics-of-a-failure), and
-2. That it is safe to simply return from an [*error-neutral* function](#2-classification-of-functions-based-on-their-affinity-to-errors) in case of a failure, forwarding error objects to the caller.
+2. That it is safe to simply return from an [*error neutral* function](#2-classification-of-functions-based-on-their-affinity-to-errors) in case of a failure, forwarding error objects to the caller.
 
 Logically, this behavior is equivalent to the compiler-generated code when calling a function which may throw an exception. Consequently, all reasoning applicable to object invariants when throwing exceptions applies equally when using `OUTCOME_TRY` (or the [LEAF](https://boostorg.github.io/leaf) analog, `BOOST_LEAF_AUTO`).
 
@@ -495,11 +495,11 @@ Logically, this behavior is equivalent to the compiler-generated code when calli
 
 ## Conclusions
 
-* Error-handling is a dynamic process, so the static type system is of limited assistance; for example, `ENOENT` is a *value* and not a *type*, and therefore the appropriate error-handler has to be matched dynamically rather than statically.
+* Error handling is a dynamic process, so the static type system is of limited assistance; for example, `ENOENT` is a *value* and not a *type*, and therefore the appropriate error handler has to be matched dynamically rather than statically.
 
-* Because most of the functions in a program are *error-neutral*, the ability to automatically (e.g. when using exception handling) or at least generically (e.g. `OUTCOME_TRY`, `BOOST_LEAF_AUTO`) forward errors to the caller is critical for correctness.
+* Because most of the functions in a program are *error neutral*, the ability to automatically (e.g. when using exception handling) or at least generically (e.g. `OUTCOME_TRY`, `BOOST_LEAF_AUTO`) forward errors to the caller is critical for correctness.
 
-* The formal ~~exception-safety~~ failure-safety guarantees are applicable to *error-neutral* functions responding to failures generically, even when not using exception handling.
+* The formal ~~exception-safety~~ failure-safety guarantees are applicable to *error neutral* functions responding to failures generically, even when not using exception handling.
 
 * Exception-handling overhead can be virtually eliminated by ABI changes that require no changes in the C++ standard; in the case when exception-neutral functions are inlined, all overhead may be removed even without ABI changes.
 

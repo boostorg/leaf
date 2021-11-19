@@ -22,7 +22,7 @@
 
 namespace leaf = boost::leaf;
 
-// The error trace is activated only if an error-handling scope provides a
+// The error trace is activated only if an error handling scope provides a
 // handler for e_error_trace.
 struct e_error_trace
 {
@@ -47,7 +47,7 @@ struct e_error_trace
 };
 
 // The ERROR_TRACE macro is designed for use in functions that detect or forward
-// errors up the call stack. If an error occurs, and if an error-handling scope
+// errors up the call stack. If an error occurs, and if an error handling scope
 // provides a handler for e_error_trace, the supplied lambda is executed as the
 // error bubbles up.
 #define ERROR_TRACE auto _trace = leaf::on_error( []( e_error_trace & tr ) { tr.value.emplace_front(e_error_trace::rec{__FILE__, __LINE__}); } )

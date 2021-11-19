@@ -543,7 +543,7 @@ int main(int argc, char **argv) {
             async_demo_rpc(socket, error_context, [&](leaf::result<void> result) {
                 // Note: In case we wanted to add some additional information to
                 // the error associated with the result we would need to
-                // activate the error-context
+                // activate the error context
                 auto active_context = activate_context(error_context);
                 if (result) {
                     std::cout << "Server: Client work completed successfully" << std::endl;

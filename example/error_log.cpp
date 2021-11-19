@@ -20,7 +20,7 @@
 
 namespace leaf = boost::leaf;
 
-// The error log is activated only if an error-handling scope provides a handler
+// The error log is activated only if an error handling scope provides a handler
 // for e_error_log.
 struct e_error_log
 {
@@ -49,7 +49,7 @@ struct e_error_log
 };
 
 // The ERROR_LOG macro is designed for use in functions that detect or forward
-// errors up the call stack. If an error occurs, and if an error-handling scope
+// errors up the call stack. If an error occurs, and if an error handling scope
 // provides a handler for e_error_log, the supplied lambda is executed as the
 // error bubbles up.
 #define ERROR_LOG auto _log = leaf::on_error( []( e_error_log & log ) { log << e_error_log::rec{__FILE__, __LINE__}; } )

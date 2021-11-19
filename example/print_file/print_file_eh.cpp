@@ -18,14 +18,16 @@
 namespace leaf = boost::leaf;
 
 
-// Exception type hierarchy.
-struct bad_command_line: std::exception { };
-struct input_error: std::exception { };
-struct open_error: input_error { };
-struct read_error: input_error { };
-struct size_error: input_error { };
-struct eof_error: input_error { };
-struct output_error: std::exception { };
+// First, we need an enum to define our error codes:
+enum error_code
+{
+    bad_command_line = 1,
+    open_error,
+    read_error,
+    size_error,
+    eof_error,
+    output_error
+};
 
 
 // We will handle all failures in our main function, but first, here are the
@@ -66,7 +68,7 @@ int main( int argc, char const * argv[] )
             std::cout << buffer;
             std::cout.flush();
             if( std::cout.fail() )
-                throw leaf::exception(output_error{}, leaf::e_errno{errno});
+                throw leaf::exception(output_error, leaf::e_errno{errno});
 
             return 0;
         },
@@ -76,32 +78,33 @@ int main( int argc, char const * argv[] )
         // error objects.
 
         // This handler will be called if the error includes:
-        // - a caught exception of type open_error, and
+        // - an object of type error_code equal to open_error, and
         // - an object of type leaf::e_errno that has .value equal to ENOENT,
         //   and
         // - an object of type leaf::e_file_name.
-        []( open_error &, leaf::match_value<leaf::e_errno, ENOENT>, leaf::e_file_name const & fn )
+        []( leaf::match<error_code, open_error>, leaf::match_value<leaf::e_errno, ENOENT>, leaf::e_file_name const & fn )
         {
             std::cerr << "File not found: " << fn.value << std::endl;
             return 1;
         },
 
         // This handler will be called if the error includes:
-        // - a caught exception of type open_error, and
+        // - an object of type error_code equal to open_error, and
         // - an object of type leaf::e_errno (regardless of its .value), and
         // - an object of type leaf::e_file_name.
-        []( open_error &, leaf::e_errno const & errn, leaf::e_file_name const & fn )
+        []( leaf::match<error_code, open_error>, leaf::e_errno const & errn, leaf::e_file_name const & fn )
         {
             std::cerr << "Failed to open " << fn.value << ", errno=" << errn << std::endl;
             return 2;
         },
 
         // This handler will be called if the error includes:
-        // - a caught exception of type input_error, and
+        // - an object of type error_code equal to any of size_error,
+        //   read_error, eof_error, and
         // - an optional object of type leaf::e_errno (regardless of its
         //   .value), and
         // - an object of type leaf::e_file_name.
-        []( input_error &, leaf::e_errno const * errn, leaf::e_file_name const & fn )
+        []( leaf::match<error_code, size_error, read_error, eof_error>, leaf::e_errno const * errn, leaf::e_file_name const & fn )
         {
             std::cerr << "Failed to access " << fn.value;
             if( errn )
@@ -111,16 +114,16 @@ int main( int argc, char const * argv[] )
         },
 
         // This handler will be called if the error includes:
-        // - a caught exception of type std::ostream::failure, and
+        // - an object of type error_code equal to output_error, and
         // - an object of type leaf::e_errno (regardless of its .value),
-        []( output_error &, leaf::e_errno const & errn )
+        []( leaf::match<error_code, output_error>, leaf::e_errno const & errn )
         {
             std::cerr << "Output error, errno=" << errn << std::endl;
             return 4;
         },
 
         // This handler will be called if we've got a bad_command_line
-        []( bad_command_line & )
+        []( leaf::match<error_code, bad_command_line> )
         {
             std::cout << "Bad command line argument" << std::endl;
             return 5;
@@ -150,7 +153,7 @@ char const * parse_command_line( int argc, char const * argv[] )
     if( argc==2 )
         return argv[1];
     else
-        throw leaf::exception(bad_command_line{});
+        throw leaf::exception(bad_command_line);
 }
 
 
@@ -160,7 +163,7 @@ std::shared_ptr<FILE> file_open( char const * file_name )
     if( FILE * f = fopen(file_name, "rb") )
         return std::shared_ptr<FILE>(f, &fclose);
     else
-        throw leaf::exception(open_error{}, leaf::e_errno{errno});
+        throw leaf::exception(open_error, leaf::e_errno{errno});
 }
 
 
@@ -170,14 +173,14 @@ int file_size( FILE & f )
     auto load = leaf::on_error([] { return leaf::e_errno{errno}; });
 
     if( fseek(&f, 0, SEEK_END) )
-        throw leaf::exception(size_error{});
+        throw leaf::exception(size_error);
 
     int s = ftell(&f);
     if( s==-1L )
-        throw leaf::exception(size_error{});
+        throw leaf::exception(size_error);
 
     if( fseek(&f,0,SEEK_SET) )
-        throw leaf::exception(size_error{});
+        throw leaf::exception(size_error);
 
     return s;
 }
@@ -189,8 +192,8 @@ void file_read( FILE & f, void * buf, int size )
     int n = fread(buf, 1, size, &f);
 
     if( ferror(&f) )
-        throw leaf::exception(read_error{}, leaf::e_errno{errno});
+        throw leaf::exception(read_error, leaf::e_errno{errno});
 
     if( n!=size )
-        throw leaf::exception(eof_error{});
+        throw leaf::exception(eof_error);
 }
