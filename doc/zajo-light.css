@@ -451,8 +451,8 @@ h2 code{color:#4101a7; font-size:113%}
 h3 code{color:#4101a7; font-size:113%}
 h4 code{color:#4101a7; font-size:113%}
 h5 code{color:#4101a7; font-size:113%}
-#header>h1:first-child{font-family:"Poiret One";color:#4101a7;margin-top:2.25rem;margin-bottom:0;letter-spacing:-.07em}
-#author{color:#ff5100}
+#header>h1:first-child{font-family:"Poiret One";color:#ff5100;margin-top:2.25rem;margin-bottom:0;letter-spacing:-.07em}
+#author{color: #4101a7;}
 #toc ul{font-family:"Quicksand","DejaVu Sans",sans-serif;list-style-type:none}
 #toc a:hover{color:#4101a7}
 #toc.toc2{background-color:#f7f8f7}
