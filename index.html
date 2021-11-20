@@ -44,6 +44,7 @@ function switch_style()
 <li><a href="#_working_with_different_error_types">Working with Different Error Types</a></li>
 <li><a href="#_working_with_multiple_error_objects">Working with Multiple Error Objects</a></li>
 <li><a href="#_exception_handling">Exception Handling</a></li>
+<li><a href="#_using_external_result_types">Using External <code>result</code> Types</a></li>
 </ul>
 </li>
 <li><a href="#tutorial">Tutorial</a>
@@ -183,16 +184,12 @@ function switch_style()
 </li>
 <li><a href="#macros">Reference: Macros</a>
 <ul class="sectlevel2">
-<li><a href="#_boost_leaf"><code>BOOST_LEAF_</code></a>
-<ul class="sectlevel3">
-<li><a href="#BOOST_LEAF_ASSIGN"><code>ASSIGN</code></a></li>
-<li><a href="#BOOST_LEAF_AUTO"><code>AUTO</code></a></li>
-<li><a href="#BOOST_LEAF_CHECK"><code>CHECK</code></a></li>
-<li><a href="#BOOST_LEAF_EXCEPTION"><code>EXCEPTION</code></a></li>
-<li><a href="#BOOST_LEAF_NEW_ERROR"><code>NEW_ERROR</code></a></li>
-<li><a href="#BOOST_LEAF_THROW_EXCEPTION"><code>THROW_EXCEPTION</code></a></li>
-</ul>
-</li>
+<li><a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a></li>
+<li><a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a></li>
+<li><a href="#BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></a></li>
+<li><a href="#BOOST_LEAF_EXCEPTION"><code>BOOST_LEAF_EXCEPTION</code></a></li>
+<li><a href="#BOOST_LEAF_NEW_ERROR"><code>BOOST_LEAF_NEW_ERROR</code></a></li>
+<li><a href="#BOOST_LEAF_THROW_EXCEPTION"><code>BOOST_LEAF_THROW_EXCEPTION</code></a></li>
 </ul>
 </li>
 <li><a href="#rationale">Design</a>
@@ -389,6 +386,9 @@ LEAF does not depend on Boost or other libraries.
 <span class="p">}</span></code></pre>
 </div>
 </div>
+<div class="paragraph text-right">
+<p><a href="#result"><code>result</code></a> | <a href="#new_error"><code>new_error</code></a></p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_checking_for_errors">Checking for Errors</h3>
@@ -408,6 +408,9 @@ LEAF does not depend on Boost or other libraries.
 <span class="p">}</span></code></pre>
 </div>
 </div>
+<div class="paragraph text-right">
+<p><a href="#result"><code>result</code></a></p>
+</div>
 <div class="paragraph">
 <p>The boilerplate <code>if</code> statement can be avoided using <code>BOOST_LEAF_AUTO</code>:</p>
 </div>
@@ -420,6 +423,9 @@ LEAF does not depend on Boost or other libraries.
   <span class="c1">// Use v to produce a valid U</span>
 <span class="p">}</span></code></pre>
 </div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a> | <a href="#BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></a></p>
 </div>
 </div>
 <div class="sect2">
@@ -447,6 +453,9 @@ LEAF does not depend on Boost or other libraries.
       <span class="p">....</span> <span class="c1">// Handle any other err1 value</span>
   <span class="p">}</span> <span class="p">);</span></code></pre>
 </div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#try_handle_some"><code>try_handle_some</code></a> | <a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a></p>
 </div>
 <div class="paragraph">
 <p>The first lambda passed to <code>try_handle_some</code> is executed first; it attempts to produce a <code>result&lt;U&gt;</code>, but it may fail (we presume that <code>f1</code> and <code>f2</code> return <code>leaf::result&lt;T&gt;</code>, and <code>g</code> takes two arguments of type <code>T</code> and returns a <code>leaf::result&lt;U&gt;</code>).</p>
@@ -527,6 +536,9 @@ LEAF does not depend on Boost or other libraries.
   <span class="p">}</span> <span class="p">);</span></code></pre>
 </div>
 </div>
+<div class="paragraph text-right">
+<p><a href="#try_handle_all"><code>try_handle_all</code></a></p>
+</div>
 <div class="paragraph">
 <p>The <code>leaf::try_handle_all</code> function enforces at compile time that at least one of the supplied error handlers takes no arguments (and therefore is able to handle any failure). In addition, all error handlers are forced to return a valid <code>U</code>, rather than a <code>leaf::result&lt;U&gt;</code>, so that <code>leaf::try_handle_all</code> is guaranteed to succeed, always.</p>
 </div>
@@ -564,6 +576,9 @@ LEAF does not depend on Boost or other libraries.
   <span class="p">}</span> <span class="p">);</span></code></pre>
 </div>
 </div>
+<div class="paragraph text-right">
+<p><a href="#try_handle_some"><code>try_handle_some</code></a> | <a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a></p>
+</div>
 <div class="paragraph">
 <p>In this case, because we have supplied handlers for <code>err1</code> and for <code>err2</code>, <code>try_handle_some</code> knows to allocate storage on the stack for error objects of both types.</p>
 </div>
@@ -596,6 +611,9 @@ LEAF does not depend on Boost or other libraries.
   <span class="p">}</span> <span class="p">);</span></code></pre>
 </div>
 </div>
+<div class="paragraph text-right">
+<p><a href="#try_handle_some"><code>try_handle_some</code></a> | <a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a></p>
+</div>
 <div class="paragraph">
 <p>Naturally, <code>leaf::new_error</code> can be invoked with multiple error objects:</p>
 </div>
@@ -610,6 +628,9 @@ LEAF does not depend on Boost or other libraries.
   <span class="c1">// Produce and return a T.</span>
 <span class="p">}</span></code></pre>
 </div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#result"><code>result</code></a> | <a href="#new_error"><code>new_error</code></a></p>
 </div>
 <div class="paragraph">
 <p>As well, <code>leaf::on_error</code> can be used to automatically associate additional error objects with any failure that is "in flight":</p>
@@ -635,6 +656,9 @@ LEAF does not depend on Boost or other libraries.
   <span class="p">}</span>
 <span class="p">}</span></code></pre>
 </div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#on_error"><code>on_error</code></a> | <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a></p>
 </div>
 <div class="paragraph">
 <p>Presumably, <code>parse_line</code> could fail with an <code>io_error</code> or with a <code>parse_error</code>, but <code>process_file</code> does not handle errors, so it remains neutral to failures, except to attach the <code>current_line</code> if something goes wrong. The object returned by <code>on_error</code> holds a copy of the <code>current_line</code> wrapped in <code>struct e_line</code>. If <code>parse_line</code> succeeds, the <code>e_line</code> object is simply discarded; but if it fails, the <code>e_line</code> object will be automatically attached to the failure.</p>
@@ -666,6 +690,9 @@ LEAF does not depend on Boost or other libraries.
     <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"I/O error"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
   <span class="p">}</span> <span class="p">);</span></code></pre>
 </div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#try_handle_some"><code>try_handle_some</code></a> | <a href="#BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></a></p>
 </div>
 <div class="paragraph">
 <p>Remember, error handlers are considered in order, so the last one will be called if we get an <code>io_error</code> but no <code>e_line</code> was communicated to LEAF. Alternatively, we can provide a single <code>io_error</code> handler that takes <code>current_line</code> as a pointer-to-const:</p>
@@ -730,6 +757,9 @@ LEAF does not depend on Boost or other libraries.
   <span class="p">}</span> <span class="p">);</span></code></pre>
 </div>
 </div>
+<div class="paragraph text-right">
+<p><a href="#try_handle_some"><code>try_handle_some</code></a> | <a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></a></p>
+</div>
 <div class="paragraph">
 <p>Above, we have simply added an error handler that takes a <code>std::bad_alloc</code>, and everything "just works" as expected: LEAF will dispatch error handlers correctly no matter if failures are communicated via <code>leaf::result</code> or by an exception.</p>
 </div>
@@ -764,6 +794,9 @@ LEAF does not depend on Boost or other libraries.
   <span class="p">}</span> <span class="p">);</span></code></pre>
 </div>
 </div>
+<div class="paragraph text-right">
+<p><a href="#try_catch"><code>try_catch</code></a></p>
+</div>
 <div class="paragraph">
 <p>Remarkably, we did not have to change the error handlers! But how does this work? What kind of exceptions does <code>process_file</code> throw?</p>
 </div>
@@ -787,6 +820,9 @@ LEAF does not depend on Boost or other libraries.
 <span class="p">}</span></code></pre>
 </div>
 </div>
+<div class="paragraph text-right">
+<p><a href="#result"><code>result</code></a> | <a href="#new_error"><code>new_error</code></a></p>
+</div>
 <div class="paragraph">
 <p>When using exception handling this becomes:</p>
 </div>
@@ -803,6 +839,9 @@ LEAF does not depend on Boost or other libraries.
   <span class="c1">// Produce and return a T.</span>
 <span class="p">}</span></code></pre>
 </div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#exception"><code>exception</code></a></p>
 </div>
 <div class="paragraph">
 <p>The <code>leaf::exception</code> function handles the passed error objects just like <code>leaf::new_error</code> does, and then returns an object of a type that derives from <code>std::exception</code> (which the caller throws). Using this technique, the exception type is not important: <code>leaf::try_catch</code> catches all exceptions, then goes through the usual LEAF error handler selection machinery.</p>
@@ -841,6 +880,147 @@ LEAF does not depend on Boost or other libraries.
   <span class="p">}</span>
 <span class="p">}</span></code></pre>
 </div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#on_error"><code>on_error</code></a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_using_external_result_types">Using External <code>result</code> Types</h3>
+<div class="paragraph">
+<p>Static type checking creates difficulties in error handling interoperability in any non-trivial project. Using exception handling alleviates this problem somewhat because in that case error types are not burned into function signatures, so errors easily punch through multiple layers of APIs; but this doesn&#8217;t help C&#43;&#43; in general because the community is fractured on the issue of exception handling. Regardless of any arguments, the reality is that C&#43;&#43; programs need to be able to handle errors communicated through multiple layers of APIs via a plethora of error codes, <code>result</code> types and exceptions.</p>
+</div>
+<div class="paragraph">
+<p>LEAF enables application developers to shake error objects out of each individual library&#8217;s <code>result</code> type and send them to error handling scopes verbatim. Here is an example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">lib1</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="n">lib1</span><span class="o">::</span><span class="n">error_code</span><span class="o">&gt;</span> <span class="n">foo</span><span class="p">();</span>
+<span class="n">lib2</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="n">lib2</span><span class="o">::</span><span class="n">error_code</span><span class="o">&gt;</span> <span class="n">bar</span><span class="p">();</span>
+
+<span class="kt">int</span> <span class="nf">g</span><span class="p">(</span> <span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span> <span class="p">);</span>
+
+<span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">f</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">auto</span> <span class="n">a</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span>
+  <span class="k">if</span><span class="p">(</span> <span class="o">!</span><span class="n">a</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">leaf</span><span class="o">::</span><span class="n">new_error</span><span class="p">(</span> <span class="n">a</span><span class="p">.</span><span class="n">error</span><span class="p">()</span> <span class="p">);</span>
+
+  <span class="k">auto</span> <span class="n">b</span> <span class="o">=</span> <span class="n">bar</span><span class="p">();</span>
+  <span class="k">if</span><span class="p">(</span> <span class="o">!</span><span class="n">b</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">leaf</span><span class="o">::</span><span class="n">new_error</span><span class="p">(</span> <span class="n">b</span><span class="p">.</span><span class="n">error</span><span class="p">()</span> <span class="p">);</span>
+
+  <span class="k">return</span> <span class="n">g</span><span class="p">(</span> <span class="n">a</span><span class="p">.</span><span class="n">value</span><span class="p">(),</span> <span class="n">b</span><span class="p">.</span><span class="n">value</span><span class="p">()</span> <span class="p">);</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#result"><code>result</code></a> | <a href="#new_error"><code>new_error</code></a></p>
+</div>
+<div class="paragraph">
+<p>Later we simply call <code>leaf::try_handle_some</code> passing an error handler for each type:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">r</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_some</span><span class="p">(</span>
+
+  <span class="p">[]()</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>
+  <span class="p">{</span>
+    <span class="k">return</span> <span class="n">f</span><span class="p">();</span>
+  <span class="p">},</span>
+
+  <span class="p">[](</span> <span class="n">lib1</span><span class="o">::</span><span class="n">error_code</span> <span class="n">ec</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>
+  <span class="p">{</span>
+    <span class="c1">// Handle lib1::error_code</span>
+  <span class="p">},</span>
+
+  <span class="p">[](</span> <span class="n">lib2</span><span class="o">::</span><span class="n">error_code</span> <span class="n">ec</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>
+  <span class="p">{</span>
+    <span class="c1">// Handle lib2::error_code</span>
+  <span class="p">}</span> <span class="p">);</span>
+<span class="err">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#try_handle_some"><code>try_handle_some</code></a> | <a href="#result"><code>result</code></a></p>
+</div>
+<div class="paragraph">
+<p>A possible complication is that we might not have the option to return <code>leaf::result&lt;int&gt;</code> from <code>f</code>: a third party API may impose a specific signature on it, forcing it to return a library-specific <code>result</code> type. This would be the case when <code>f</code> is intended to be used as a callback:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="kt">void</span> <span class="nf">register_callback</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">lib3</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">()</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="n">callback</span> <span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Can we use LEAF in this case? Actually we can, as long as <code>lib3::result</code> is able to communicate a <code>std::error_code</code>. We just have to let LEAF know, by specializing the <code>is_result_type</code> template:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_result_type</span><span class="o">&lt;</span><span class="n">lib3</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span><span class="p">;</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#is_result_type"><code>is_result_type</code></a></p>
+</div>
+<div class="paragraph">
+<p>With this in place, <code>f</code> works as before, even though <code>lib3::result</code> isn&#8217;t capable of transporting <code>lib1</code> errors or <code>lib2</code> errors:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">lib1</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="n">lib1</span><span class="o">::</span><span class="n">error_type</span><span class="o">&gt;</span> <span class="n">foo</span><span class="p">();</span>
+<span class="n">lib2</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="n">lib2</span><span class="o">::</span><span class="n">error_type</span><span class="o">&gt;</span> <span class="n">bar</span><span class="p">();</span>
+
+<span class="kt">int</span> <span class="nf">g</span><span class="p">(</span> <span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span> <span class="p">);</span>
+
+<span class="n">lib3</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">f</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">auto</span> <span class="n">a</span> <span class="o">=</span> <span class="n">foo</span><span class="p">();</span>
+  <span class="k">if</span><span class="p">(</span> <span class="o">!</span><span class="n">a</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">leaf</span><span class="o">::</span><span class="n">new_error</span><span class="p">(</span> <span class="n">a</span><span class="p">.</span><span class="n">error</span><span class="p">()</span> <span class="p">);</span>
+
+  <span class="k">auto</span> <span class="n">b</span> <span class="o">=</span> <span class="n">bar</span><span class="p">();</span>
+  <span class="k">if</span><span class="p">(</span> <span class="o">!</span><span class="n">b</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">leaf</span><span class="o">::</span><span class="n">new_error</span><span class="p">(</span> <span class="n">b</span><span class="p">.</span><span class="n">error</span><span class="p">()</span> <span class="p">);</span>
+
+  <span class="k">return</span> <span class="n">g</span><span class="p">(</span> <span class="n">a</span><span class="p">.</span><span class="n">value</span><span class="p">(),</span> <span class="n">b</span><span class="p">.</span><span class="n">value</span><span class="p">()</span> <span class="p">);</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#new_error"><code>new_error</code></a></p>
+</div>
+<div class="paragraph">
+<p>The object returned by <code>leaf::new_error</code> converts implicitly to <code>std::error_code</code>, using a LEAF-specific <code>error_category</code>, which makes <code>lib3::result</code> compatible with <code>leaf::try_handle_some</code> (and with <code>leaf::try_handle_all</code>):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">lib3</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">r</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_some</span><span class="p">(</span>
+
+  <span class="p">[]()</span> <span class="o">-&gt;</span> <span class="n">lib3</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>
+  <span class="p">{</span>
+    <span class="k">return</span> <span class="n">f</span><span class="p">();</span>
+  <span class="p">},</span>
+
+  <span class="p">[](</span> <span class="n">lib1</span><span class="o">::</span><span class="n">error_code</span> <span class="n">ec</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">lib3</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>
+  <span class="p">{</span>
+    <span class="c1">// Handle lib1::error_code</span>
+  <span class="p">},</span>
+
+  <span class="p">[](</span> <span class="n">lib2</span><span class="o">::</span><span class="n">error_code</span> <span class="n">ec</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">lib3</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>
+  <span class="p">{</span>
+    <span class="c1">// Handle lib2::error_code</span>
+  <span class="p">}</span> <span class="p">);</span>
+<span class="err">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#try_handle_some"><code>try_handle_some</code></a></p>
 </div>
 </div>
 </div>
@@ -945,7 +1125,7 @@ LEAF does not depend on Boost or other libraries.
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-To avoid ambiguities, whenever possible, use the <a href="#exception"><code>exception</code></a> function template when throwing exceptions to ensure that the exception object transports a unique <code>error_id</code>; better yet, use the <a href="#BOOST_LEAF_THROW_EXCEPTION"><code>THROW_EXCEPTION</code></a> macro, which in addition will capture <code>__FILE__</code> and <code>__LINE__</code>.
+To avoid ambiguities, whenever possible, use the <a href="#exception"><code>exception</code></a> function template when throwing exceptions to ensure that the exception object transports a unique <code>error_id</code>; better yet, use the <a href="#BOOST_LEAF_THROW_EXCEPTION"><code>BOOST_LEAF_THROW_EXCEPTION</code></a> macro, which in addition will capture <code>__FILE__</code> and <code>__LINE__</code>.
 </td>
 </tr>
 </table>
@@ -1621,7 +1801,7 @@ See also <a href="#tutorial-std_error_code">Working with <code>std::error_code</
 </div>
 </div>
 <div class="paragraph text-right">
-<p><a href="#try_handle_some"><code>try_handle_some</code></a> | <a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>AUTO</code></a></p>
+<p><a href="#try_handle_some"><code>try_handle_some</code></a> | <a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a></p>
 </div>
 <div class="paragraph">
 <p>The reason this works is that in case it communicates a failure, <code>leaf::result&lt;T&gt;</code> is able to hold a <code>shared_ptr&lt;polymorphic_context&gt;</code> object. That is why earlier instead of calling <code>task()</code> directly, we called <code>leaf::capture</code>: it calls the passed function and, in case that fails, it stores the <code>shared_ptr&lt;polymorphic_context&gt;</code> we created in the returned <code>result&lt;T&gt;</code>, which now doesn&#8217;t just communicate the fact that an error has occurred, but also holds the <code>context</code> object that <code>try_handle_some</code> needs in order to supply a suitable handler with arguments.</p>
@@ -2034,7 +2214,7 @@ Understand that error handlers that take arguments of types that derive from <co
 </div>
 </div>
 <div class="paragraph text-right">
-<p><a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>AUTO</code></a></p>
+<p><a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a></p>
 </div>
 <div class="paragraph">
 <p>Finally, here is a scope that handles the errors&#8201;&#8212;&#8201;it will work correctly regardless of whether <code>error_a</code> and <code>error_b</code> objects are thrown as exceptions or not.</p>
@@ -2065,7 +2245,7 @@ Understand that error handlers that take arguments of types that derive from <co
 </div>
 </div>
 <div class="paragraph text-right">
-<p><a href="#try_handle_all"><code>try_handle_all</code></a> | <a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_CHECK"><code>CHECK</code></a></p>
+<p><a href="#try_handle_all"><code>try_handle_all</code></a> | <a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></a></p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -2282,7 +2462,7 @@ The complete program illustrating this technique is available <a href="https://g
 </div>
 </div>
 <div class="paragraph text-right">
-<p><a href="#try_handle_all"><code>try_handle_all</code></a> | <a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>AUTO</code></a> | <a href="#error_info"><code>error_info</code></a></p>
+<p><a href="#try_handle_all"><code>try_handle_all</code></a> | <a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a> | <a href="#error_info"><code>error_info</code></a></p>
 </div>
 <div class="colist arabic">
 <table>
@@ -2743,7 +2923,7 @@ See <a href="#match"><code>match</code></a> for examples.
 </ul>
 </div>
 <div class="paragraph">
-<p>A standalone single-header option is available; please <code>#include &lt;boost/leaf.hpp&gt;</code>.</p>
+<p>A standalone single-header option is available; please see <a href="#distribution">Distribution</a>.</p>
 </div>
 <hr>
 <div class="sect2">
@@ -2860,7 +3040,7 @@ See <a href="#match"><code>match</code></a> for examples.
 </div>
 </div>
 <div class="paragraph text-right">
-<p>Reference: <a href="#error_id"><code>error_id</code></a> | <a href="#is_error_id"><code>is_error_id</code></a> | <a href="#new_error"><code>new_error</code></a> | <a href="#current_error"><code>current_error</code></a> | <a href="#polymorphic_context"><code>polymorphic_context</code></a> | <a href="#context_activator"><code>context_activator</code></a> | <a href="#activate_context"><code>activate_context</code></a> | <a href="#is_result_type"><code>is_result_type</code></a> | <a href="#BOOST_LEAF_ASSIGN"><code>ASSIGN</code></a> | <a href="#BOOST_LEAF_AUTO"><code>AUTO</code></a> | <a href="#BOOST_LEAF_CHECK"><code>CHECK</code></a> | <a href="#BOOST_LEAF_NEW_ERROR"><code>NEW_ERROR</code></a></p>
+<p>Reference: <a href="#error_id"><code>error_id</code></a> | <a href="#is_error_id"><code>is_error_id</code></a> | <a href="#new_error"><code>new_error</code></a> | <a href="#current_error"><code>current_error</code></a> | <a href="#polymorphic_context"><code>polymorphic_context</code></a> | <a href="#context_activator"><code>context_activator</code></a> | <a href="#activate_context"><code>activate_context</code></a> | <a href="#is_result_type"><code>is_result_type</code></a> | <a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a> | <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a> | <a href="#BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></a> | <a href="#BOOST_LEAF_NEW_ERROR"><code>BOOST_LEAF_NEW_ERROR</code></a></p>
 </div>
 </div>
 </div>
@@ -3077,7 +3257,7 @@ See <a href="#match"><code>match</code></a> for examples.
 </div>
 </div>
 <div class="paragraph text-right">
-<p>Reference: <a href="#exception"><code>exception</code></a> | <a href="#BOOST_LEAF_EXCEPTION"><code>EXCEPTION</code></a> | <a href="#BOOST_LEAF_THROW_EXCEPTION"><code>THROW_EXCEPTION</code></a></p>
+<p>Reference: <a href="#exception"><code>exception</code></a> | <a href="#BOOST_LEAF_EXCEPTION"><code>BOOST_LEAF_EXCEPTION</code></a> | <a href="#BOOST_LEAF_THROW_EXCEPTION"><code>BOOST_LEAF_THROW_EXCEPTION</code></a></p>
 </div>
 <div class="colist arabic">
 <table>
@@ -3749,7 +3929,7 @@ The first three overloads return an exception object that is associated with a n
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-To automatically capture <code>__FILE__</code>, <code>__LINE__</code> and <code>__FUNCTION__</code> with the returned object, use <a href="#BOOST_LEAF_EXCEPTION"><code>EXCEPTION</code></a> instead of <code>leaf::exception</code>.
+To automatically capture <code>__FILE__</code>, <code>__LINE__</code> and <code>__FUNCTION__</code> with the returned object, use <a href="#BOOST_LEAF_EXCEPTION"><code>BOOST_LEAF_EXCEPTION</code></a> instead of <code>leaf::exception</code>.
 </td>
 </tr>
 </table>
@@ -3855,7 +4035,7 @@ An error handler that takes an argument of an exception type (that is, of a type
 </div>
 </div>
 <div class="paragraph text-right">
-<p><a href="#try_handle_some"><code>try_handle_some</code></a> | <a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>AUTO</code></a></p>
+<p><a href="#try_handle_some"><code>try_handle_some</code></a> | <a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a></p>
 </div>
 <div class="admonitionblock warning">
 <table>
@@ -5550,7 +5730,7 @@ It is probably better to define your own file name wrappers to avoid clashes if 
 </div>
 </div>
 <div class="paragraph">
-<p>The <a href="#BOOST_LEAF_NEW_ERROR"><code>NEW_ERROR</code></a>, <a href="#BOOST_LEAF_EXCEPTION"><code>EXCEPTION</code></a> and <a href="#BOOST_LEAF_THROW_EXCEPTION"><code>THROW_EXCEPTION</code></a> macros capture <code>__FILE__</code>, <code>__LINE__</code> and <code>__FUNCTION__</code> into a <code>e_source_location</code> object.</p>
+<p>The <a href="#BOOST_LEAF_NEW_ERROR"><code>BOOST_LEAF_NEW_ERROR</code></a>, <a href="#BOOST_LEAF_EXCEPTION"><code>BOOST_LEAF_EXCEPTION</code></a> and <a href="#BOOST_LEAF_THROW_EXCEPTION"><code>BOOST_LEAF_THROW_EXCEPTION</code></a> macros capture <code>__FILE__</code>, <code>__LINE__</code> and <code>__FUNCTION__</code> into a <code>e_source_location</code> object.</p>
 </div>
 <hr>
 </div>
@@ -6988,9 +7168,7 @@ The contents of each Reference section are organized alphabetically.
 </div>
 <hr>
 <div class="sect2">
-<h3 id="_boost_leaf"><code>BOOST_LEAF_</code></h3>
-<div class="sect3">
-<h4 id="BOOST_LEAF_ASSIGN"><code>ASSIGN</code></h4>
+<h3 id="BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></h3>
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/error.hpp&gt;</div>
 <div class="content">
@@ -7014,15 +7192,15 @@ The contents of each Reference section are organized alphabetically.
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-See also <a href="#BOOST_LEAF_AUTO"><code>AUTO</code></a>.
+See also <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a>.
 </td>
 </tr>
 </table>
 </div>
 <hr>
 </div>
-<div class="sect3">
-<h4 id="BOOST_LEAF_AUTO"><code>AUTO</code></h4>
+<div class="sect2">
+<h3 id="BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></h3>
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/error.hpp&gt;</div>
 <div class="content">
@@ -7031,7 +7209,7 @@ See also <a href="#BOOST_LEAF_AUTO"><code>AUTO</code></a>.
 </div>
 </div>
 <div class="paragraph text-right">
-<p><a href="#BOOST_LEAF_ASSIGN"><code>ASSIGN</code></a></p>
+<p><a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a></p>
 </div>
 <div class="paragraph">
 <p><code>BOOST_LEAF_AUTO</code> is useful when calling a function that returns <code>result&lt;T&gt;</code> (other than <code>result&lt;void&gt;</code>), if the desired behavior is to forward any errors to the caller verbatim.</p>
@@ -7087,15 +7265,15 @@ See also <a href="#BOOST_LEAF_AUTO"><code>AUTO</code></a>.
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-See also <a href="#BOOST_LEAF_ASSIGN"><code>ASSIGN</code></a>.
+See also <a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a>.
 </td>
 </tr>
 </table>
 </div>
 <hr>
 </div>
-<div class="sect3">
-<h4 id="BOOST_LEAF_CHECK"><code>CHECK</code></h4>
+<div class="sect2">
+<h3 id="BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></h3>
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/error.hpp&gt;</div>
 <div class="content">
@@ -7149,8 +7327,8 @@ See also <a href="#BOOST_LEAF_ASSIGN"><code>ASSIGN</code></a>.
 </div>
 <hr>
 </div>
-<div class="sect3">
-<h4 id="BOOST_LEAF_EXCEPTION"><code>EXCEPTION</code></h4>
+<div class="sect2">
+<h3 id="BOOST_LEAF_EXCEPTION"><code>BOOST_LEAF_EXCEPTION</code></h3>
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/exception.hpp&gt;</div>
 <div class="content">
@@ -7167,8 +7345,8 @@ See also <a href="#BOOST_LEAF_ASSIGN"><code>ASSIGN</code></a>.
 </div>
 <hr>
 </div>
-<div class="sect3">
-<h4 id="BOOST_LEAF_NEW_ERROR"><code>NEW_ERROR</code></h4>
+<div class="sect2">
+<h3 id="BOOST_LEAF_NEW_ERROR"><code>BOOST_LEAF_NEW_ERROR</code></h3>
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/error.hpp&gt;</div>
 <div class="content">
@@ -7185,8 +7363,8 @@ See also <a href="#BOOST_LEAF_ASSIGN"><code>ASSIGN</code></a>.
 </div>
 <hr>
 </div>
-<div class="sect3">
-<h4 id="BOOST_LEAF_THROW_EXCEPTION"><code>THROW_EXCEPTION</code></h4>
+<div class="sect2">
+<h3 id="BOOST_LEAF_THROW_EXCEPTION"><code>BOOST_LEAF_THROW_EXCEPTION</code></h3>
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/exception.hpp&gt;</div>
 <div class="content">
@@ -7197,10 +7375,9 @@ See also <a href="#BOOST_LEAF_ASSIGN"><code>ASSIGN</code></a>.
 <dl>
 <dt class="hdlist1">Effects: </dt>
 <dd>
-<p>Throws the exception object returned by <a href="#BOOST_LEAF_EXCEPTION"><code>EXCEPTION</code></a>.</p>
+<p>Throws the exception object returned by <a href="#BOOST_LEAF_EXCEPTION"><code>BOOST_LEAF_EXCEPTION</code></a>.</p>
 </dd>
 </dl>
-</div>
 </div>
 </div>
 </div>
@@ -7641,7 +7818,7 @@ The short answer is that nobody knows how to fix exception specifications in any
 </div>
 </div>
 <div class="paragraph text-right">
-<p><a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>AUTO</code></a></p>
+<p><a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a></p>
 </div>
 <div class="colist arabic">
 <table>
