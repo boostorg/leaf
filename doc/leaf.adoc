@@ -107,6 +107,8 @@ leaf::result<T> f()
   // Produce and return a T.
 }
 ----
+[.text-right]
+<<result>> | <<new_error>>
 
 === Checking for Errors
 
@@ -124,6 +126,8 @@ leaf::result<U> g()
   // Use v to produce a valid U
 }
 ----
+[.text-right]
+<<result>>
 
 The boilerplate `if` statement can be avoided using `BOOST_LEAF_AUTO`:
 
@@ -136,6 +140,8 @@ leaf::result<U> g()
   // Use v to produce a valid U
 }
 ----
+[.text-right]
+<<BOOST_LEAF_AUTO>> | <<BOOST_LEAF_CHECK>>
 
 === Error Handling
 
@@ -161,6 +167,8 @@ leaf::result<U> r = leaf::try_handle_some(
       .... // Handle any other err1 value
   } );
 ----
+[.text-right]
+<<try_handle_some>> | <<result>> | <<BOOST_LEAF_AUTO>>
 
 The first lambda passed to `try_handle_some` is executed first; it attempts to produce a `result<U>`, but it may fail (we presume that `f1` and `f2` return `leaf::result<T>`, and `g` takes two arguments of type `T` and returns a `leaf::result<U>`).
 
@@ -228,6 +236,8 @@ U r = leaf::try_handle_all(
     // Handle any other failure
   } );
 ----
+[.text-right]
+<<try_handle_all>>
 
 The `leaf::try_handle_all` function enforces at compile time that at least one of the supplied error handlers takes no arguments (and therefore is able to handle any failure). In addition, all error handlers are forced to return a valid `U`, rather than a `leaf::result<U>`, so that `leaf::try_handle_all` is guaranteed to succeed, always.
 
@@ -262,6 +272,8 @@ leaf::result<U> r = leaf::try_handle_some(
     // Handle errors of type `err2`.
   } );
 ----
+[.text-right]
+<<try_handle_some>> | <<result>> | <<BOOST_LEAF_AUTO>>
 
 In this case, because we have supplied handlers for `err1` and for `err2`, `try_handle_some` knows to allocate storage on the stack for error objects of both types.
 
@@ -291,6 +303,8 @@ leaf::result<U> r = leaf::try_handle_some(
     // Handle failures which communicate both an err1 and an err2 object.
   } );
 ----
+[.text-right]
+<<try_handle_some>> | <<result>> | <<BOOST_LEAF_AUTO>>
 
 Naturally, `leaf::new_error` can be invoked with multiple error objects:
 
@@ -305,6 +319,8 @@ leaf::result<T> f()
   // Produce and return a T.
 }
 ----
+[.text-right]
+<<result>> | <<new_error>>
 
 As well, `leaf::on_error` can be used to automatically associate additional error objects with any failure that is "in flight":
 
@@ -329,6 +345,8 @@ leaf::result<void> process_file( FILE * f )
   }
 }
 ----
+[.text-right]
+<<on_error>> | <<BOOST_LEAF_AUTO>>
 
 Presumably, `parse_line` could fail with an `io_error` or with a `parse_error`, but `process_file` does not handle errors, so it remains neutral to failures, except to attach the `current_line` if something goes wrong. The object returned by `on_error` holds a copy of the `current_line` wrapped in `struct e_line`. If `parse_line` succeeds, the `e_line` object is simply discarded; but if it fails, the `e_line` object will be automatically attached to the failure.
 
@@ -358,6 +376,8 @@ leaf::result<void> r = leaf::try_handle_some(
     std::cerr << "I/O error" << std::endl;
   } );
 ----
+[.text-right]
+<<try_handle_some>> | <<BOOST_LEAF_CHECK>>
 
 Remember, error handlers are considered in order, so the last one will be called if we get an `io_error` but no `e_line` was communicated to LEAF. Alternatively, we can provide a single `io_error` handler that takes `current_line` as a pointer-to-const:
 
@@ -417,6 +437,8 @@ leaf::result<void> r = leaf::try_handle_some(
     std::cerr << std::endl;
   } );
 ----
+[.text-right]
+<<try_handle_some>> | <<result>> | <<BOOST_LEAF_CHECK>>
 
 Above, we have simply added an error handler that takes a `std::bad_alloc`, and everything "just works" as expected: LEAF will dispatch error handlers correctly no matter if failures are communicated via `leaf::result` or by an exception.
 
@@ -449,6 +471,8 @@ leaf::try_catch(
     std::cerr << std::endl;
   } );
 ----
+[.text-right]
+<<try_catch>>
 
 Remarkably, we did not have to change the error handlers! But how does this work? What kind of exceptions does `process_file` throw?
 
@@ -470,6 +494,8 @@ leaf::result<T> f()
   // Produce and return a T.
 }
 ----
+[.text-right]
+<<result>> | <<new_error>>
 
 When using exception handling this becomes:
 
@@ -486,6 +512,8 @@ T f()
   // Produce and return a T.
 }
 ----
+[.text-right]
+<<exception>>
 
 The `leaf::exception` function handles the passed error objects just like `leaf::new_error` does, and then returns an object of a type that derives from `std::exception` (which the caller throws). Using this technique, the exception type is not important: `leaf::try_catch` catches all exceptions, then goes through the usual LEAF error handler selection machinery.
 
@@ -520,6 +548,133 @@ void process_file( FILE * f )
   }
 }
 ----
+[.text-right]
+<<on_error>>
+
+=== Using External `result` Types
+
+Static type checking creates difficulties in error handling interoperability in any non-trivial project. Using exception handling alleviates this problem somewhat because in that case error types are not burned into function signatures, so errors easily punch through multiple layers of APIs; but this doesn't help {CPP} in general because the community is fractured on the issue of exception handling. Regardless of any arguments, the reality is that {CPP} programs need to be able to handle errors communicated through multiple layers of APIs via a plethora of error codes, `result` types and exceptions.
+
+LEAF enables application developers to shake error objects out of each individual library's `result` type and send them to error handling scopes verbatim. Here is an example:
+
+[source,c++]
+----
+lib1::result<int, lib1::error_code> foo();
+lib2::result<int, lib2::error_code> bar();
+
+int g( int a, int b );
+
+leaf::result<int> f()
+{
+  auto a = foo();
+  if( !a )
+    return leaf::new_error( a.error() );
+
+  auto b = bar();
+  if( !b )
+    return leaf::new_error( b.error() );
+
+  return g( a.value(), b.value() );
+}
+----
+[.text-right]
+<<result>> | <<new_error>>
+
+Later we simply call `leaf::try_handle_some` passing an error handler for each type:
+
+[source,c++]
+----
+leaf::result<int> r = leaf::try_handle_some(
+
+  []() -> leaf::result<int>
+  {
+    return f();
+  },
+
+  []( lib1::error_code ec ) -> leaf::result<int>
+  {
+    // Handle lib1::error_code
+  },
+
+  []( lib2::error_code ec ) -> leaf::result<int>
+  {
+    // Handle lib2::error_code
+  } );
+}
+----
+[.text-right]
+<<try_handle_some>> | <<result>>
+
+A possible complication is that we might not have the option to return `leaf::result<int>` from `f`: a third party API may impose a specific signature on it, forcing it to return a library-specific `result` type. This would be the case when `f` is intended to be used as a callback:
+
+[source,c++]
+----
+void register_callback( std::function<lib3::result<int>()> & callback );
+----
+
+Can we use LEAF in this case? Actually we can, as long as `lib3::result` is able to communicate a `std::error_code`. We just have to let LEAF know, by specializing the `is_result_type` template:
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+template <class T>
+struct is_result_type<lib3::result<T>>: std::true_type;
+
+} }
+----
+[.text-right]
+<<is_result_type>>
+
+With this in place, `f` works as before, even though `lib3::result` isn't capable of transporting `lib1` errors or `lib2` errors:
+
+[source,c++]
+----
+lib1::result<int, lib1::error_type> foo();
+lib2::result<int, lib2::error_type> bar();
+
+int g( int a, int b );
+
+lib3::result<int> f()
+{
+  auto a = foo();
+  if( !a )
+    return leaf::new_error( a.error() );
+
+  auto b = bar();
+  if( !b )
+    return leaf::new_error( b.error() );
+
+  return g( a.value(), b.value() );
+}
+----
+[.text-right]
+<<new_error>>
+
+The object returned by `leaf::new_error` converts implicitly to `std::error_code`, using a LEAF-specific `error_category`, which makes `lib3::result` compatible with `leaf::try_handle_some` (and with `leaf::try_handle_all`):
+
+[source,c++]
+----
+lib3::result<int> r = leaf::try_handle_some(
+
+  []() -> lib3::result<int>
+  {
+    return f();
+  },
+
+  []( lib1::error_code ec ) -> lib3::result<int>
+  {
+    // Handle lib1::error_code
+  },
+
+  []( lib2::error_code ec ) -> lib3::result<int>
+  {
+    // Handle lib2::error_code
+  } );
+}
+----
+[.text-right]
+<<try_handle_some>>
 
 [[tutorial]]
 == Tutorial
@@ -1917,7 +2072,7 @@ LEAF headers are designed to minimize coupling:
 * Headers needed to report or forward but not handle errors are lighter than headers providing error handling functionality.
 * Headers that provide exception handling or throwing functionality are separate from headers that provide error handling or reporting but do not use exceptions.
 
-A standalone single-header option is available; please `#include <boost/leaf.hpp>`.
+A standalone single-header option is available; please see <<distribution>>.
 
 '''
 
@@ -4853,10 +5008,8 @@ TIP: The contents of each Reference section are organized alphabetically.
 
 '''
 
-=== `BOOST_LEAF_`
-
 [[BOOST_LEAF_ASSIGN]]
-==== `ASSIGN`
+=== `BOOST_LEAF_ASSIGN`
 
 .#include <boost/leaf/error.hpp>
 [source,c++]
@@ -4877,7 +5030,7 @@ NOTE: See also <<BOOST_LEAF_AUTO>>.
 '''
 
 [[BOOST_LEAF_AUTO]]
-==== `AUTO`
+=== `BOOST_LEAF_AUTO`
 
 .#include <boost/leaf/error.hpp>
 [source,c++]
@@ -4927,7 +5080,7 @@ NOTE: See also <<BOOST_LEAF_ASSIGN>>.
 '''
 
 [[BOOST_LEAF_CHECK]]
-==== `CHECK`
+=== `BOOST_LEAF_CHECK`
 
 .#include <boost/leaf/error.hpp>
 [source,c++]
@@ -4974,7 +5127,7 @@ leaf::result<float> add_values()
 '''
 
 [[BOOST_LEAF_EXCEPTION]]
-==== `EXCEPTION`
+=== `BOOST_LEAF_EXCEPTION`
 
 [source,c++]
 .#include <boost/leaf/exception.hpp>
@@ -4987,7 +5140,7 @@ Effects: :: `BOOST_LEAF_EXCEPTION(e...)` is equivalent to `leaf::<<exception,exc
 '''
 
 [[BOOST_LEAF_NEW_ERROR]]
-==== `NEW_ERROR`
+=== `BOOST_LEAF_NEW_ERROR`
 
 .#include <boost/leaf/error.hpp>
 [source,c++]
@@ -5000,7 +5153,7 @@ Effects: :: `BOOST_LEAF_NEW_ERROR(e...)` is equivalent to `leaf::<<new_error,new
 '''
 
 [[BOOST_LEAF_THROW_EXCEPTION]]
-==== `THROW_EXCEPTION`
+=== `BOOST_LEAF_THROW_EXCEPTION`
 
 [source,c++]
 .#include <boost/leaf/exception.hpp>
