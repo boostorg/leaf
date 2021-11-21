@@ -381,12 +381,12 @@ public:
 
     value_rv_cref operator*() const &&
     {
-        return value();
+        return std::move(*this).value();
     }
 
     value_rv_ref operator*() &&
     {
-        return value();
+        return std::move(*this).value();
     }
 
     value_type_const * operator->() const
