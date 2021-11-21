@@ -3,8 +3,8 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated from https://github.com/boostorg/leaf on November 20, 2021,
-// Git hash 8de80ff5d4b2df75979e24e7c782b92770aa2541.
+// Generated from https://github.com/boostorg/leaf on November 21, 2021,
+// Git hash da880f772d7ef6654d780a275dbf39608c1462c7.
 
 // Latest version: https://boostorg.github.io/leaf/leaf.hpp
 
@@ -4466,12 +4466,12 @@ public:
 
     value_rv_cref operator*() const &&
     {
-        return value();
+        return std::move(*this).value();
     }
 
     value_rv_ref operator*() &&
     {
-        return value();
+        return std::move(*this).value();
     }
 
     value_type_const * operator->() const
