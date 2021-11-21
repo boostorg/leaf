@@ -86,6 +86,13 @@ namespace leaf_detail
         exception( exception const & ) = default;
         exception( exception && ) = default;
 
+        BOOST_LEAF_CONSTEXPR exception( error_id id, Ex const & ex ) noexcept:
+            Ex(ex),
+            error_id(id)
+        {
+            enforce_std_exception(*this);
+        }
+
         BOOST_LEAF_CONSTEXPR exception( error_id id, Ex && ex ) noexcept:
             Ex(std::move(ex)),
             error_id(id)
@@ -109,22 +116,22 @@ namespace leaf_detail
     template <class T, class... Rest>
     struct at_least_one_derives_from_std_exception<T, Rest...>
     {
-        constexpr static const bool value = std::is_base_of<std::exception,T>::value || at_least_one_derives_from_std_exception<Rest...>::value;
+        constexpr static const bool value = std::is_base_of<std::exception,typename std::remove_reference<T>::type>::value || at_least_one_derives_from_std_exception<Rest...>::value;
     };
 }
 
 template <class Ex, class... E>
 inline
-typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type
+typename std::enable_if<std::is_base_of<std::exception,typename std::remove_reference<Ex>::type>::value, leaf_detail::exception<typename std::remove_reference<Ex>::type>>::type
 exception( error_id err, Ex && ex, E && ... e ) noexcept
 {
     static_assert(!leaf_detail::at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
-    return leaf_detail::exception<Ex>( err.load(std::forward<E>(e)...), std::forward<Ex>(ex) );
+    return leaf_detail::exception<typename std::remove_reference<Ex>::type>( err.load(std::forward<E>(e)...), std::forward<Ex>(ex) );
 }
 
 template <class E1, class... E>
 inline
-typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type
+typename std::enable_if<!std::is_base_of<std::exception,typename std::remove_reference<E1>::type>::value, leaf_detail::exception<std::exception>>::type
 exception( error_id err, E1 && car, E && ... cdr ) noexcept
 {
     static_assert(!leaf_detail::at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
@@ -138,16 +145,16 @@ inline leaf_detail::exception<std::exception> exception( error_id err ) noexcept
 
 template <class Ex, class... E>
 inline
-typename std::enable_if<std::is_base_of<std::exception,Ex>::value, leaf_detail::exception<Ex>>::type
+typename std::enable_if<std::is_base_of<std::exception,typename std::remove_reference<Ex>::type>::value, leaf_detail::exception<typename std::remove_reference<Ex>::type>>::type
 exception( Ex && ex, E && ... e ) noexcept
 {
     static_assert(!leaf_detail::at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
-    return leaf_detail::exception<Ex>( new_error().load(std::forward<E>(e)...), std::forward<Ex>(ex) );
+    return leaf_detail::exception<typename std::remove_reference<Ex>::type>( new_error().load(std::forward<E>(e)...), std::forward<Ex>(ex) );
 }
 
 template <class E1, class... E>
 inline
-typename std::enable_if<!std::is_base_of<std::exception,E1>::value, leaf_detail::exception<std::exception>>::type
+typename std::enable_if<!std::is_base_of<std::exception,typename std::remove_reference<E1>::type>::value, leaf_detail::exception<std::exception>>::type
 exception( E1 && car, E && ... cdr ) noexcept
 {
     static_assert(!leaf_detail::at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");

@@ -115,6 +115,8 @@ compile-fail _compile-fail-BOOST_LEAF_ASSIGN.cpp ;
 compile-fail _compile-fail-BOOST_LEAF_AUTO.cpp ;
 compile-fail _compile-fail-diagnostic_info.cpp ;
 compile-fail _compile-fail-error_info.cpp ;
+compile-fail _compile-fail-exception_1.cpp ;
+compile-fail _compile-fail-exception_2.cpp ;
 compile-fail _compile-fail-new_error.cpp ;
 compile-fail _compile-fail-result_1.cpp ;
 compile-fail _compile-fail-result_2.cpp ;
