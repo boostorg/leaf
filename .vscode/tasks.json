@@ -95,7 +95,7 @@
 			},
 			"label": "Test current editor file",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && meson test ${fileBasenameNoExtension}",
+			"command": "cd ${workspaceRoot}/bld/debug && { meson test ${fileBasenameNoExtension} || cat ./meson-logs/testlog.txt }",
 			"problemMatcher": {
 				"base": "$gcc",
 				"fileLocation": [
