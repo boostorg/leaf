@@ -32,18 +32,23 @@ struct is_predicate: std::false_type
 namespace leaf_detail
 {
     template <class T>
-    struct is_exception: std::is_base_of<std::exception, typename std::decay<T>::type>
+    struct is_abstract_exception:
+        std::integral_constant<bool,
+            std::is_base_of<std::exception, typename std::decay<T>::type>::value &&
+            std::is_abstract<typename std::decay<T>::type>::value>
     {
     };
 
     template <class E>
     struct handler_argument_traits;
 
-    template <class E, bool IsPredicate = is_predicate<E>::value>
+    template <class E,
+              bool IsPredicate = is_predicate<E>::value,
+              bool IsAbstractException = is_abstract_exception<E>::value>
     struct handler_argument_traits_defaults;
 
     template <class E>
-    struct handler_argument_traits_defaults<E, false>
+    struct handler_argument_traits_defaults<E, false /* IsPredicate */, false /* IsAbstractException */>
     {
         using error_type = typename std::decay<E>::type;
         constexpr static bool always_available = false;
@@ -66,8 +71,35 @@ namespace leaf_detail
         static_assert(!std::is_same<E, verbose_diagnostic_info>::value, "Handlers must take leaf::verbose_diagnostic_info arguments by const &");
     };
 
+    template <class Exc>
+    struct handler_argument_traits_defaults<Exc, false /* IsPredicate */, true /* IsAbstractException */>
+    {
+        using error_type = void;
+        constexpr static bool always_available = false;
+
+        using exc_type = typename std::decay<Exc>::type;
+
+        template <class Tup>
+        BOOST_LEAF_CONSTEXPR static exc_type * check(Tup const &, error_info const & ei) noexcept
+        {
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+            return dynamic_cast<exc_type*>(ei.exception());
+#else
+            return nullptr;
+#endif
+        }
+
+        template <class Tup>
+        BOOST_LEAF_CONSTEXPR static exc_type & get(Tup const &, error_info const & ei) noexcept
+        {
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+            return dynamic_cast<exc_type&>(*ei.exception());
+#endif
+        }
+    };
+
     template <class Pred>
-    struct handler_argument_traits_defaults<Pred, true>: handler_argument_traits<typename Pred::error_type>
+    struct handler_argument_traits_defaults<Pred, true /* IsPredicate */, false /* IsAbstractException */>: handler_argument_traits<typename Pred::error_type>
     {
         using base = handler_argument_traits<typename Pred::error_type>;
         static_assert(!base::always_available, "Predicates can't use types that are always_available");

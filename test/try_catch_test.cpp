@@ -40,11 +40,43 @@ struct error1: std::exception { };
 struct error2: std::exception { };
 struct error3: std::exception { };
 
+struct abstract_error : std::exception {
+    virtual int get_value() const = 0;
+};
+
+struct concrete_error : abstract_error {
+    int value;
+    explicit concrete_error(int v)
+        : value(v) {}
+
+    int get_value() const override { return value; }
+};
+
 struct exc_val: std::exception { int value; explicit exc_val(int v): value(v) { } };
 
-template <class R,class Ex>
-R failing( Ex && ex )
+template <class E, int Value>
+struct match_get_value
 {
+    using error_type = E;
+
+    error_type const& matched;
+
+    static bool evaluate(error_type const & e)
+    {
+        return e.get_value() == Value;
+    }
+};
+
+namespace boost { namespace leaf
+{
+
+template <typename E, int V>
+struct is_predicate<match_get_value<E, V>> : std::true_type {};
+
+} }
+
+template <class R, class Ex>
+R failing(Ex&& ex) {
     throw leaf::exception(std::move(ex), info<1>{1}, info<2>{2}, info<3>{3});
 }
 
@@ -612,6 +644,66 @@ int main()
                 return 2;
             } );
         BOOST_TEST_EQ(r, 2);
+    }
+
+    // Handle abstract exception types
+    {
+        int r = leaf::try_catch(
+            [] {
+                throw concrete_error(1729);
+                return 0;
+            },
+            []( const abstract_error & error )
+            {
+                return error.get_value();
+            } );
+        BOOST_TEST_EQ(r, 1729);
+    }
+    {
+        int r = leaf::try_catch(
+            []
+            {
+                throw concrete_error{42};
+                return 0;
+            },
+            []( match_get_value<abstract_error, 41> )
+            {
+                return 1;
+            },
+            []
+            {
+                return 2;
+            } );
+        BOOST_TEST_EQ(r, 2);
+    }
+    {
+        int r = leaf::try_catch(
+            []
+            {
+                throw concrete_error{42};
+                return 0;
+            },
+            []( match_get_value<abstract_error, 42> )
+            {
+                return 1;
+            },
+            []
+            {
+                return 2;
+            } );
+        BOOST_TEST_EQ(r, 1);
+    }
+    {
+        int r = leaf::try_catch(
+            [] {
+                throw concrete_error(1729);
+                return 0;
+            },
+            []( leaf::catch_<abstract_error> error )
+            {
+                return error.matched.get_value();
+            } );
+        BOOST_TEST_EQ(r, 1729);
     }
 
     //////////////////////////////////////

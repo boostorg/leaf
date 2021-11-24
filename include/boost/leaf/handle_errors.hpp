@@ -465,8 +465,8 @@ namespace leaf_detail
     template <class A>
     template <class Tup>
     BOOST_LEAF_CONSTEXPR inline
-    typename handler_argument_traits_defaults<A, false>::error_type const *
-    handler_argument_traits_defaults<A, false>::
+    typename handler_argument_traits_defaults<A, false, false>::error_type const *
+    handler_argument_traits_defaults<A, false, false>::
     check( Tup const & tup, error_info const & ei ) noexcept
     {
         return peek<typename std::decay<A>::type>(tup, ei);
@@ -475,8 +475,8 @@ namespace leaf_detail
     template <class A>
     template <class Tup>
     BOOST_LEAF_CONSTEXPR inline
-    typename handler_argument_traits_defaults<A, false>::error_type *
-    handler_argument_traits_defaults<A, false>::
+    typename handler_argument_traits_defaults<A, false, false>::error_type *
+    handler_argument_traits_defaults<A, false, false>::
     check( Tup & tup, error_info const & ei ) noexcept
     {
         return peek<typename std::decay<A>::type>(tup, ei);
