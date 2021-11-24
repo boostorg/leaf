@@ -239,8 +239,9 @@ namespace leaf_detail
 
 namespace leaf_detail
 {
-    template <class T> struct does_not_participate_in_context_deduction: std::false_type { };
+    template <class T> struct does_not_participate_in_context_deduction: std::is_abstract<T> { };
     template <> struct does_not_participate_in_context_deduction<void>: std::true_type { };
+    template <> struct does_not_participate_in_context_deduction<error_id>: std::true_type { };
 
     template <class L>
     struct deduce_e_type_list;

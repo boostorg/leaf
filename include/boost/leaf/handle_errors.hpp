@@ -427,13 +427,48 @@ namespace leaf_detail
 
 #endif
 
+    template <class E, bool = does_not_participate_in_context_deduction<E>::value>
+    struct peek_tuple;
+
+    template <class E>
+    struct peek_tuple<E, true>
+    {
+        template <class SlotsTuple>
+        BOOST_LEAF_CONSTEXPR static E const * peek( SlotsTuple const &, error_id const & ) noexcept
+        {
+            return 0;
+        }
+        
+        template <class SlotsTuple>
+        BOOST_LEAF_CONSTEXPR static E * peek( SlotsTuple &, error_id const & ) noexcept
+        {
+            return 0;
+        }
+    };
+
+    template <class E>
+    struct peek_tuple<E, false>
+    {
+        template <class SlotsTuple>
+        BOOST_LEAF_CONSTEXPR static E const * peek( SlotsTuple const & tup, error_id const & err ) noexcept
+        {
+            return std::get<tuple_type_index<slot<E>,SlotsTuple>::value>(tup).has_value(err.value());
+        }
+
+        template <class SlotsTuple>
+        BOOST_LEAF_CONSTEXPR static E * peek( SlotsTuple & tup, error_id const & err ) noexcept
+        {
+            return std::get<tuple_type_index<slot<E>,SlotsTuple>::value>(tup).has_value(err.value());
+        }
+    };
+
     template <class E, class SlotsTuple>
     BOOST_LEAF_CONSTEXPR inline
     E const *
     peek( SlotsTuple const & tup, error_info const & ei ) noexcept
     {
         if( error_id err = ei.error() )
-            if( E const * e = std::get<tuple_type_index<slot<E>,SlotsTuple>::value>(tup).has_value(err.value()) )
+            if( E const * e = peek_tuple<E>::peek(tup, err) )
                 return e;
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             else
@@ -448,7 +483,7 @@ namespace leaf_detail
     peek( SlotsTuple & tup, error_info const & ei ) noexcept
     {
         if( error_id err = ei.error() )
-            if( E * e = std::get<tuple_type_index<slot<E>,SlotsTuple>::value>(tup).has_value(err.value()) )
+            if( E * e = peek_tuple<E>::peek(tup, err) )
                 return e;
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             else
