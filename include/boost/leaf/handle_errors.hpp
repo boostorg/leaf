@@ -482,6 +482,32 @@ namespace leaf_detail
         return peek<typename std::decay<A>::type>(tup, ei);
     }
 
+    template <class Exc>
+    template <class Tup>
+    BOOST_LEAF_CONSTEXPR inline
+    typename handler_argument_traits_defaults<Exc, false, true>::exc_type *
+    handler_argument_traits_defaults<Exc, false, true>::
+    check( Tup const &, error_info const & ei ) noexcept
+    {
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+        return dynamic_cast<exc_type*>(ei.exception());
+#else
+        return nullptr;
+#endif
+    }
+
+    template <class Exc>
+    template <class Tup>
+    BOOST_LEAF_CONSTEXPR inline
+    typename handler_argument_traits_defaults<Exc, false, true>::exc_type &
+    handler_argument_traits_defaults<Exc, false, true>::
+    get( Tup const &, error_info const & ei ) noexcept
+    {
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+        return dynamic_cast<exc_type&>(*ei.exception());
+#endif
+    }
+
     template <class Tup>
     BOOST_LEAF_CONSTEXPR inline
     std::exception const *

@@ -80,22 +80,10 @@ namespace leaf_detail
         using exc_type = typename std::decay<Exc>::type;
 
         template <class Tup>
-        BOOST_LEAF_CONSTEXPR static exc_type * check(Tup const &, error_info const & ei) noexcept
-        {
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-            return dynamic_cast<exc_type*>(ei.exception());
-#else
-            return nullptr;
-#endif
-        }
+        BOOST_LEAF_CONSTEXPR static exc_type * check( Tup const &, error_info const & ) noexcept;
 
         template <class Tup>
-        BOOST_LEAF_CONSTEXPR static exc_type & get(Tup const &, error_info const & ei) noexcept
-        {
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-            return dynamic_cast<exc_type&>(*ei.exception());
-#endif
-        }
+        BOOST_LEAF_CONSTEXPR static exc_type & get( Tup const &, error_info const & ) noexcept;
     };
 
     template <class Pred>
