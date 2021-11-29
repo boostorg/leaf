@@ -86,11 +86,11 @@ namespace leaf_detail
 
     ////////////////////////////////////////
 
-    template <class Wrapper, bool WrapperPrintable=is_printable<Wrapper>::value, bool ValuePrintable=has_printable_member_value<Wrapper>::value, bool IsException=std::is_base_of<std::exception,Wrapper>::value>
+    template <class Wrapper, bool WrapperPrintable=is_printable<Wrapper>::value, bool ValuePrintable=has_printable_member_value<Wrapper>::value, bool IsException=std::is_base_of<std::exception,Wrapper>::value, bool IsEnum=std::is_enum<Wrapper>::value>
     struct diagnostic;
 
-    template <class Wrapper, bool ValuePrintable, bool IsException>
-    struct diagnostic<Wrapper, true, ValuePrintable, IsException>
+    template <class Wrapper, bool ValuePrintable, bool IsException, bool IsEnum>
+    struct diagnostic<Wrapper, true, ValuePrintable, IsException, IsEnum>
     {
         static constexpr bool is_invisible = false;
         static void print( std::ostream & os, Wrapper const & x )
@@ -99,8 +99,8 @@ namespace leaf_detail
         }
     };
 
-    template <class Wrapper, bool IsException>
-    struct diagnostic<Wrapper, false, true, IsException>
+    template <class Wrapper, bool IsException, bool IsEnum>
+    struct diagnostic<Wrapper, false, true, IsException, IsEnum>
     {
         static constexpr bool is_invisible = false;
         static void print( std::ostream & os, Wrapper const & x )
@@ -109,8 +109,8 @@ namespace leaf_detail
         }
     };
 
-    template <class Wrapper>
-    struct diagnostic<Wrapper, false, false, true>
+    template <class Wrapper, bool IsEnum>
+    struct diagnostic<Wrapper, false, false, true, IsEnum>
     {
         static constexpr bool is_invisible = false;
         static void print( std::ostream & os, Wrapper const & ex )
@@ -120,12 +120,22 @@ namespace leaf_detail
     };
 
     template <class Wrapper>
-    struct diagnostic<Wrapper, false, false, false>
+    struct diagnostic<Wrapper, false, false, false, false>
     {
         static constexpr bool is_invisible = false;
         static void print( std::ostream & os, Wrapper const & )
         {
             os << type<Wrapper>() << ": {Non-Printable}";
+        }
+    };
+
+    template <class Wrapper>
+    struct diagnostic<Wrapper, false, false, false, true>
+    {
+        static constexpr bool is_invisible = false;
+        static void print( std::ostream & os, Wrapper const & w )
+        {
+            os << type<Wrapper>() << ": " << static_cast<typename std::underlying_type<Wrapper>::type>(w);
         }
     };
 
