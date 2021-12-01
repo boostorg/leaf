@@ -1800,7 +1800,7 @@ Unhandled error objects:
 [with Name = boost::leaf::e_file_name]: file.txt
 ----
 
-When printing each error object, LEAF attempts to bind an unqualified call to `operator<<`, passing a `std::ostream` and the error object. If that fails, it will also attempt to bind `operator<<` that takes the `.value` of the error type. If that also does not compile, the error object value will not appear in diagnostic messages, though LEAF will still print its type.
+To print each error object, LEAF attempts to bind an unqualified call to `operator<<`, passing a `std::ostream` and the error object. If that fails, it will also attempt to bind `operator<<` that takes the `.value` of the error type. If that also does not compile, the error object value will not appear in diagnostic messages, though LEAF will still print its type.
 
 Even with error types that define a printable `.value`, the user may still want to overload `operator<<` for the enclosing `struct`, e.g.:
 
