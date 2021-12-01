@@ -2553,7 +2553,7 @@ Unhandled error objects:
 </div>
 </div>
 <div class="paragraph">
-<p>When printing each error object, LEAF attempts to bind an unqualified call to <code>operator&lt;&lt;</code>, passing a <code>std::ostream</code> and the error object. If that fails, it will also attempt to bind <code>operator&lt;&lt;</code> that takes the <code>.value</code> of the error type. If that also does not compile, the error object value will not appear in diagnostic messages, though LEAF will still print its type.</p>
+<p>To print each error object, LEAF attempts to bind an unqualified call to <code>operator&lt;&lt;</code>, passing a <code>std::ostream</code> and the error object. If that fails, it will also attempt to bind <code>operator&lt;&lt;</code> that takes the <code>.value</code> of the error type. If that also does not compile, the error object value will not appear in diagnostic messages, though LEAF will still print its type.</p>
 </div>
 <div class="paragraph">
 <p>Even with error types that define a printable <code>.value</code>, the user may still want to overload <code>operator&lt;&lt;</code> for the enclosing <code>struct</code>, e.g.:</p>
