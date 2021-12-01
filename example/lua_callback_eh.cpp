@@ -67,7 +67,7 @@ int wrap_lua_CFunction( lua_State * L ) noexcept
 // exception, which will be processed by wrap_lua_CFunction (above).
 int do_work( lua_State * L )
 {
-    bool success = rand()%2; // "Sometimes" do_work fails.
+    bool success = rand() % 2; // "Sometimes" do_work fails.
     if( success )
     {
         lua_pushnumber(L, 42); // Success, push the result on the Lua stack, return to Lua.
@@ -132,8 +132,8 @@ int call_lua( lua_State * L )
             else
             {
                 // Success! Just return the int answer.
-                int answer=lua_tonumber(L, -1);
-                lua_pop(L,1);
+                int answer = lua_tonumber(L, -1);
+                lua_pop(L, 1);
                 return answer;
             }
         },

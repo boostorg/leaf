@@ -49,7 +49,7 @@ struct e_lua_error_message { std::string value; };
 // called it (see call_lua below).
 int do_work( lua_State * L )
 {
-    bool success = rand()%2; // "Sometimes" do_work fails.
+    bool success = rand() % 2; // "Sometimes" do_work fails.
     if( success )
     {
         lua_pushnumber(L, 42); // Success, push the result on the Lua stack, return to Lua.
@@ -99,7 +99,7 @@ leaf::result<int> call_lua( lua_State * L )
     if( int err = lua_pcall(L, 0, 1, 0) ) // Ask Lua to call the global function call_do_work.
     {
         std::string msg = lua_tostring(L, 1);
-        lua_pop(L,1);
+        lua_pop(L, 1);
 
         // We got a Lua error which may be the error we're reporting from
         // do_work, or some other error. If it is another error,
@@ -111,8 +111,8 @@ leaf::result<int> call_lua( lua_State * L )
     else
     {
         // Success! Just return the int answer.
-        int answer=lua_tonumber(L, -1);
-        lua_pop(L,1);
+        int answer = lua_tonumber(L, -1);
+        lua_pop(L, 1);
         return answer;
     }
 }
