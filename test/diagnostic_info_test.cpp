@@ -17,6 +17,11 @@
 
 namespace leaf = boost::leaf;
 
+enum class enum_class_payload
+{
+    value
+};
+
 template <int A>
 struct unexpected_test
 {
@@ -86,6 +91,7 @@ int main()
                 non_printable_info_non_printable_payload(),
                 unexpected_test<1>{1},
                 unexpected_test<2>{2},
+                enum_class_payload{},
                 leaf::e_errno{ENOENT} );
         },
         [](
@@ -94,6 +100,7 @@ int main()
             printable_info_non_printable_payload,
             non_printable_info_printable_payload,
             non_printable_info_non_printable_payload,
+            enum_class_payload,
             leaf::e_errno,
             leaf::error_info const & unmatched )
         {
@@ -120,6 +127,7 @@ int main()
                 non_printable_info_non_printable_payload(),
                 unexpected_test<1>{1},
                 unexpected_test<2>{2},
+                enum_class_payload{},
                 leaf::e_errno{ENOENT} );
         },
         [](
@@ -128,6 +136,7 @@ int main()
             printable_info_non_printable_payload,
             non_printable_info_printable_payload,
             non_printable_info_non_printable_payload,
+            enum_class_payload,
             leaf::e_errno,
             leaf::diagnostic_info const & unmatched )
         {
@@ -141,6 +150,7 @@ int main()
             BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
             BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
             BOOST_TEST_NE(s.find(": {Non-Printable}"), s.npos);
+            BOOST_TEST_NE(s.find("enum_class_payload"), s.npos);
             BOOST_TEST_NE(s.find("Detected 2 attempts"), s.npos);
             BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
             BOOST_TEST_EQ(s.find("unexpected_test<2>"), s.npos);
@@ -167,6 +177,7 @@ int main()
                 non_printable_info_non_printable_payload(),
                 unexpected_test<1>{1},
                 unexpected_test<2>{2},
+                enum_class_payload{},
                 leaf::e_errno{ENOENT} );
         },
         [](
@@ -175,6 +186,7 @@ int main()
             printable_info_non_printable_payload,
             non_printable_info_printable_payload,
             non_printable_info_non_printable_payload,
+            enum_class_payload,
             leaf::e_errno,
             leaf::verbose_diagnostic_info const & di )
         {
@@ -188,6 +200,7 @@ int main()
             BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
             BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
             BOOST_TEST_NE(s.find(": {Non-Printable}"), s.npos);
+            BOOST_TEST_NE(s.find("enum_class"), s.npos);
             BOOST_TEST_NE(s.find("Unhandled error objects:"), s.npos);
             BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
             BOOST_TEST_NE(s.find("unexpected_test<2>"), s.npos);
@@ -220,6 +233,7 @@ int main()
                 non_printable_info_non_printable_payload(),
                 unexpected_test<1>{1},
                 unexpected_test<2>{2},
+                enum_class_payload{},
                 leaf::e_errno{ENOENT} );
         },
         [](
@@ -228,6 +242,7 @@ int main()
             printable_info_non_printable_payload,
             non_printable_info_printable_payload,
             non_printable_info_non_printable_payload,
+            enum_class_payload,
             leaf::e_errno,
             leaf::error_info const & unmatched )
         {
@@ -250,6 +265,7 @@ int main()
                 printable_info_non_printable_payload(),
                 non_printable_info_printable_payload(),
                 non_printable_info_non_printable_payload(),
+                enum_class_payload{},
                 unexpected_test<1>{1},
                 unexpected_test<2>{2},
                 leaf::e_errno{ENOENT} );
@@ -260,6 +276,7 @@ int main()
             printable_info_non_printable_payload,
             non_printable_info_printable_payload,
             non_printable_info_non_printable_payload,
+            enum_class_payload,
             leaf::e_errno,
             leaf::diagnostic_info const & unmatched )
         {
@@ -275,6 +292,7 @@ int main()
             BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
             BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
             BOOST_TEST_NE(s.find(": {Non-Printable}"), s.npos);
+            BOOST_TEST_NE(s.find("enum_class_payload"), s.npos);
             BOOST_TEST_NE(s.find("Detected 2 attempts"), s.npos);
             BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
             BOOST_TEST_EQ(s.find("unexpected_test<2>"), s.npos);
@@ -297,6 +315,7 @@ int main()
                 printable_info_non_printable_payload(),
                 non_printable_info_printable_payload(),
                 non_printable_info_non_printable_payload(),
+                enum_class_payload{},
                 unexpected_test<1>{1},
                 unexpected_test<2>{2},
                 leaf::e_errno{ENOENT} );
@@ -307,6 +326,7 @@ int main()
             printable_info_non_printable_payload,
             non_printable_info_printable_payload,
             non_printable_info_non_printable_payload,
+            enum_class_payload,
             leaf::e_errno,
             leaf::verbose_diagnostic_info const & di )
         {
@@ -322,6 +342,7 @@ int main()
             BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
             BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
             BOOST_TEST_NE(s.find(": {Non-Printable}"), s.npos);
+            BOOST_TEST_NE(s.find("enum_class_payload"), s.npos);
             BOOST_TEST_NE(s.find("Unhandled error objects:"), s.npos);
             BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
             BOOST_TEST_NE(s.find("unexpected_test<2>"), s.npos);
