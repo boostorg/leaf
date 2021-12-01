@@ -36,19 +36,15 @@ function switch_style()
 <li><a href="#support">Support</a></li>
 <li><a href="#portability">Portability</a></li>
 <li><a href="#distribution">Distribution</a></li>
-<li><a href="#introduction">Introduction</a>
+<li><a href="#tutorial">Tutorial</a>
 <ul class="sectlevel2">
 <li><a href="#_reporting_errors">Reporting Errors</a></li>
 <li><a href="#_checking_for_errors">Checking for Errors</a></li>
-<li><a href="#_error_handling">Error Handling</a></li>
+<li><a href="#tutorial-result">Error Handling</a></li>
 <li><a href="#_working_with_different_error_types">Working with Different Error Types</a></li>
 <li><a href="#_working_with_multiple_error_objects">Working with Multiple Error Objects</a></li>
-<li><a href="#_exception_handling">Exception Handling</a></li>
+<li><a href="#tutorial-eh">Exception Handling</a></li>
 <li><a href="#_using_external_result_types">Using External <code>result</code> Types</a></li>
-</ul>
-</li>
-<li><a href="#tutorial">Tutorial</a>
-<ul class="sectlevel2">
 <li><a href="#tutorial-model">Error Communication Model</a>
 <ul class="sectlevel3">
 <li><a href="#_noexcept_api"><code>noexcept</code> API</a></li>
@@ -271,7 +267,7 @@ function switch_style()
 </colgroup>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#introduction">Introduction</a> | <a href="#tutorial">Tutorial</a> | <a href="#synopsis">Synopsis</a> | <a href="https://github.com/boostorg/leaf/blob/master/doc/whitepaper.md">Whitepaper</a> | <a href="https://github.com/boostorg/leaf/blob/master/benchmark/benchmark.md">Benchmark</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#tutorial">Tutorial</a> | <a href="#synopsis">Synopsis</a> | <a href="https://github.com/boostorg/leaf/blob/master/doc/whitepaper.md">Whitepaper</a> | <a href="https://github.com/boostorg/leaf/blob/master/benchmark/benchmark.md">Benchmark</a></p></td>
 <td class="tableblock halign-right valign-top"><p class="tableblock">Reference: <a href="#functions">Functions</a> | <a href="#types">Types</a> | <a href="#predicates">Predicates</a> | <a href="#traits">Traits</a> | <a href="#macros">Macros</a></p></td>
 </tr>
 </tbody>
@@ -350,7 +346,7 @@ LEAF does not depend on Boost or other libraries.
 </div>
 </div>
 <div class="sect1">
-<h2 id="introduction">Introduction</h2>
+<h2 id="tutorial">Tutorial</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>What is a failure? It is simply the inability of a function to return a valid result, instead producing an error object describing the reason for the failure.</p>
@@ -389,6 +385,7 @@ LEAF does not depend on Boost or other libraries.
 <div class="paragraph text-right">
 <p><a href="#result"><code>result</code></a> | <a href="#new_error"><code>new_error</code></a></p>
 </div>
+<hr>
 </div>
 <div class="sect2">
 <h3 id="_checking_for_errors">Checking for Errors</h3>
@@ -427,9 +424,10 @@ LEAF does not depend on Boost or other libraries.
 <div class="paragraph text-right">
 <p><a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a> | <a href="#BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></a></p>
 </div>
+<hr>
 </div>
 <div class="sect2">
-<h3 id="_error_handling">Error Handling</h3>
+<h3 id="tutorial-result">Error Handling</h3>
 <div class="paragraph">
 <p>Error handling scopes must use a special syntax to indicate that they need to access error objects. The following excerpt attempts several operations and handles errors of type <code>err1</code>:</p>
 </div>
@@ -542,6 +540,7 @@ LEAF does not depend on Boost or other libraries.
 <div class="paragraph">
 <p>The <code>leaf::try_handle_all</code> function enforces at compile time that at least one of the supplied error handlers takes no arguments (and therefore is able to handle any failure). In addition, all error handlers are forced to return a valid <code>U</code>, rather than a <code>leaf::result&lt;U&gt;</code>, so that <code>leaf::try_handle_all</code> is guaranteed to succeed, always.</p>
 </div>
+<hr>
 </div>
 <div class="sect2">
 <h3 id="_working_with_different_error_types">Working with Different Error Types</h3>
@@ -582,6 +581,7 @@ LEAF does not depend on Boost or other libraries.
 <div class="paragraph">
 <p>In this case, because we have supplied handlers for <code>err1</code> and for <code>err2</code>, <code>try_handle_some</code> knows to allocate storage on the stack for error objects of both types.</p>
 </div>
+<hr>
 </div>
 <div class="sect2">
 <h3 id="_working_with_multiple_error_objects">Working with Multiple Error Objects</h3>
@@ -721,11 +721,12 @@ LEAF does not depend on Boost or other libraries.
 </div>
 </div>
 <div class="paragraph">
-<p>In essence, the <code>e_line</code> argument is optional, LEAF will provide it if it is available, otherwise pass a null pointer.</p>
+<p>In essence, now the <code>e_line</code> argument is optional, LEAF will provide it if it is available, otherwise pass a null pointer.</p>
 </div>
+<hr>
 </div>
 <div class="sect2">
-<h3 id="_exception_handling">Exception Handling</h3>
+<h3 id="tutorial-eh">Exception Handling</h3>
 <div class="paragraph">
 <p>What happens if an operation throws an exception? Not to worry, both <code>leaf::try_handle_some</code> and <code>leaf::try_handle_all</code> catch exceptions and are able to pass them to any compatible error handler:</p>
 </div>
@@ -884,6 +885,7 @@ LEAF does not depend on Boost or other libraries.
 <div class="paragraph text-right">
 <p><a href="#on_error"><code>on_error</code></a></p>
 </div>
+<hr>
 </div>
 <div class="sect2">
 <h3 id="_using_external_result_types">Using External <code>result</code> Types</h3>
@@ -949,7 +951,7 @@ LEAF does not depend on Boost or other libraries.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="kt">void</span> <span class="nf">register_callback</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">lib3</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">()</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="n">callback</span> <span class="p">);</span></code></pre>
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="kt">void</span> <span class="nf">register_callback</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">lib3</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">()</span><span class="o">&gt;</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">callback</span> <span class="p">);</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1022,14 +1024,7 @@ LEAF does not depend on Boost or other libraries.
 <div class="paragraph text-right">
 <p><a href="#try_handle_some"><code>try_handle_some</code></a></p>
 </div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="tutorial">Tutorial</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>This section assumes the reader has basic understanding of using LEAF to handle errors; see <a href="#introduction">Introduction</a>.</p>
+<hr>
 </div>
 <div class="sect2">
 <h3 id="tutorial-model">Error Communication Model</h3>
@@ -1087,7 +1082,7 @@ LEAF does not depend on Boost or other libraries.
 <p>Alas, this is not always possible.</p>
 </div>
 <div class="paragraph">
-<p>For example, the error may need to be communicated through uncooperative 3rd-party interfaces. To facilitate this transmission, a error ID may be encoded in a <code>std::error_code</code>. As long as a 3rd-party interface understands <code>std::error_code</code>, it should be compatible with LEAF.</p>
+<p>For example, the error may need to be communicated through uncooperative 3rd-party interfaces. To facilitate this transmission, a error ID may be encoded in a <code>std::error_code</code>. As long as a 3rd-party interface is able to transport a <code>std::error_code</code>, it should be compatible with LEAF.</p>
 </div>
 <div class="paragraph">
 <p>Further, it is sometimes necessary to communicate errors through an interface that does not even use <code>std::error_code</code>. An example of this is when an external lower-level library throws an exception, which is unlikely to be able to carry an <code>error_id</code>.</p>
@@ -1117,6 +1112,9 @@ LEAF does not depend on Boost or other libraries.
 </div>
 <div class="paragraph">
 <p>Note that if the above logic is nested (e.g. one function calling another), <code>new_error</code> will be called only by the inner-most function, because that call guarantees that all calling functions will hit the <code>else</code> branch.</p>
+</div>
+<div class="paragraph">
+<p>For a detailed tutorial see <a href="#tutorial-on_error_in_c_callbacks">Using <code>error_monitor</code> to Report Arbitrary Errors from C-callbacks</a>.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -1285,7 +1283,7 @@ To avoid ambiguities, whenever possible, use the <a href="#exception"><code>exce
 <div class="sect2">
 <h3 id="tutorial-on_error">Using <code>on_error</code></h3>
 <div class="paragraph">
-<p>It is not typical for an error reporting function to be able to supply all of the data needed by a suitable error handling function in order to recover from the failure. For example, a function that reports <code>FILE</code> operation failures may not have access to the file name, yet an error handling function needs it in order to print a useful error message.</p>
+<p>It is not typical for an error reporting function to be able to supply all of the data needed by a suitable error handling function in order to recover from the failure. For example, a function that reports <code>FILE</code> failures may not have access to the file name, yet an error handling function needs it in order to print a useful error message.</p>
 </div>
 <div class="paragraph">
 <p>Of course the file name is typically readily available in the call stack leading to the failed <code>FILE</code> operation. Below, while <code>parse_info</code> can&#8217;t report the file name, <code>parse_file</code> can and does:</p>
@@ -1381,7 +1379,7 @@ To avoid ambiguities, whenever possible, use the <a href="#exception"><code>exce
 <p>Above, if a <code>throw</code> statement is reached, LEAF will invoke the function passed to <code>on_error</code> and associate the returned <code>e_errno</code> object with the exception.</p>
 </div>
 <div class="paragraph">
-<p>The final type of arguments that can be passed to <code>on_error</code> is a function that takes a single mutable error object reference. In this case, <code>on_error</code> uses it similarly to how such functios are used by <code>load</code>; see <a href="#tutorial-loading">Loading of Error Objects</a>.</p>
+<p>The final argument type that can be passed to <code>on_error</code> is a function that takes a single mutable error object reference. In this case, <code>on_error</code> uses it similarly to how such functions are used by <code>load</code>; see <a href="#tutorial-loading">Loading of Error Objects</a>.</p>
 </div>
 <hr>
 </div>
@@ -1409,6 +1407,7 @@ To avoid ambiguities, whenever possible, use the <a href="#exception"><code>exce
 <div class="listingblock">
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">return</span> <span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_some</span><span class="p">(</span>
+
   <span class="p">[]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// returns leaf::result&lt;T&gt;</span>
@@ -1460,6 +1459,7 @@ To avoid ambiguities, whenever possible, use the <a href="#exception"><code>exce
 <div class="listingblock">
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">return</span> <span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_some</span><span class="p">(</span>
+
   <span class="p">[]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// returns leaf::result&lt;T&gt;</span>
@@ -1500,7 +1500,7 @@ To avoid ambiguities, whenever possible, use the <a href="#exception"><code>exce
 </table>
 </div>
 <div class="paragraph">
-<p>The first argument to the <code>match</code> template generally specifies the type <code>E</code> of the error object <code>e</code> that must be available for the error handler to be considered at all. Typically, the rest of the arguments are values. The error handler to be dropped if <code>e</code> does not compare equal to any of them.</p>
+<p>The first argument to the <code>match</code> template generally specifies the type <code>E</code> of the error object <code>e</code> that must be available for the error handler to be considered at all. Typically, the rest of the arguments are values. The error handler is dropped if <code>e</code> does not compare equal to any of them.</p>
 </div>
 <div class="paragraph">
 <p>In particular, <code>match</code> works great with <code>std::error_code</code>. The following handler is designed to handle <code>ENOENT</code> errors:</p>
@@ -1591,6 +1591,7 @@ See also <a href="#tutorial-std_error_code">Working with <code>std::error_code</
 <div class="listingblock">
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_all</span><span class="p">(</span>
+
   <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// returns leaf::result&lt;T&gt;</span>
@@ -1621,6 +1622,7 @@ See also <a href="#tutorial-std_error_code">Working with <code>std::error_code</
 <div class="listingblock">
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_all</span><span class="p">(</span>
+
   <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">g</span><span class="p">();</span> <span class="c1">// returns leaf::result&lt;T&gt;</span>
@@ -1648,6 +1650,7 @@ See also <a href="#tutorial-std_error_code">Working with <code>std::error_code</
 <div class="listingblock">
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">auto</span> <span class="n">error_handlers</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_tuple</span><span class="p">(</span>
+
   <span class="p">[](</span><span class="n">my_error_enum</span> <span class="n">x</span><span class="p">)</span>
   <span class="p">{</span>
     <span class="p">...</span>
@@ -1670,6 +1673,7 @@ See also <a href="#tutorial-std_error_code">Working with <code>std::error_code</
 <div class="listingblock">
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_all</span><span class="p">(</span>
+
   <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span>
   <span class="p">{</span>
     <span class="c1">// Operations which may fail </span><i class="conum" data-value="1"></i><b>(1)</b>
@@ -1678,6 +1682,7 @@ See also <a href="#tutorial-std_error_code">Working with <code>std::error_code</
   <span class="n">error_handlers</span> <span class="p">);</span>
 
 <span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_all</span><span class="p">(</span>
+
   <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span>
   <span class="p">{</span>
     <span class="c1">// Different operations which may fail </span><i class="conum" data-value="2"></i><b>(2)</b>
@@ -1734,6 +1739,7 @@ See also <a href="#tutorial-std_error_code">Working with <code>std::error_code</
 <div class="listingblock">
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">auto</span> <span class="n">error_handlers</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_tuple</span><span class="p">(</span>
+
   <span class="p">[](</span><span class="n">E1</span> <span class="n">e1</span><span class="p">,</span> <span class="n">E2</span> <span class="n">e2</span><span class="p">)</span>
   <span class="p">{</span>
     <span class="c1">//Deal with E1, E2</span>
@@ -1804,7 +1810,7 @@ See also <a href="#tutorial-std_error_code">Working with <code>std::error_code</
 <p><a href="#try_handle_some"><code>try_handle_some</code></a> | <a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a></p>
 </div>
 <div class="paragraph">
-<p>The reason this works is that in case it communicates a failure, <code>leaf::result&lt;T&gt;</code> is able to hold a <code>shared_ptr&lt;polymorphic_context&gt;</code> object. That is why earlier instead of calling <code>task()</code> directly, we called <code>leaf::capture</code>: it calls the passed function and, in case that fails, it stores the <code>shared_ptr&lt;polymorphic_context&gt;</code> we created in the returned <code>result&lt;T&gt;</code>, which now doesn&#8217;t just communicate the fact that an error has occurred, but also holds the <code>context</code> object that <code>try_handle_some</code> needs in order to supply a suitable handler with arguments.</p>
+<p>The reason this works is that in case the <code>leaf::result&lt;T&gt;</code> communicates a failure, it is able to hold a <code>shared_ptr&lt;polymorphic_context&gt;</code> object. That is why earlier instead of calling <code>task()</code> directly, we called <code>leaf::capture</code>: it calls the passed function and, in case that fails, it stores the <code>shared_ptr&lt;polymorphic_context&gt;</code> we created in the returned <code>result&lt;T&gt;</code>, which now doesn&#8217;t just communicate the fact that an error has occurred, but also holds the <code>context</code> object that <code>try_handle_some</code> needs in order to supply a suitable handler with arguments.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -1818,7 +1824,6 @@ Follow this link to see a complete example program: <a href="https://github.com/
 </tr>
 </table>
 </div>
-<hr>
 </div>
 <div class="sect3">
 <h4 id="tutorial-async_eh">Using Exception Handling</h4>
@@ -1836,7 +1841,7 @@ Follow this link to see a complete example program: <a href="https://github.com/
 <div class="listingblock">
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">auto</span> <span class="n">handle_errors</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_tuple</span><span class="p">(</span>
-<span class="p">{</span>
+
   <span class="p">[](</span><span class="n">E1</span> <span class="n">e1</span><span class="p">,</span> <span class="n">E2</span> <span class="n">e2</span><span class="p">)</span>
   <span class="p">{</span>
     <span class="c1">//Deal with E1, E2</span>
@@ -1915,24 +1920,35 @@ Follow this link to see a complete example program: <a href="https://github.com/
 <div class="sect2">
 <h3 id="tutorial-classification">Classification of Failures</h3>
 <div class="paragraph">
-<p>It is common for any given interface to define an <code>enum</code> that lists all possible error codes that the API reports. The benefit of this approach is that the list is complete and usually contains comments, so we know where to go for reference.</p>
+<p>It is common for an interface to define an <code>enum</code> that lists all possible error codes that the API reports. The benefit of this approach is that the list is complete and usually well documented:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">enum</span> <span class="n">error_code</span>
+<span class="p">{</span>
+  <span class="p">....</span>
+  <span class="n">read_error</span><span class="p">,</span>
+  <span class="n">size_error</span><span class="p">,</span>
+  <span class="n">eof_error</span><span class="p">,</span>
+  <span class="p">....</span>
+<span class="p">};</span></code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p>The disadvantage of such flat enums is that they do not support handling a whole class of failures. Consider this error handler from the <a href="#introduction-result">introduction section</a>:</p>
+<p>The disadvantage of such flat enums is that they do not support handling of a whole class of failures. Consider the following LEAF error handler:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="p">....</span>
-<span class="p">[](</span><span class="n">leaf</span><span class="o">::</span><span class="n">match</span><span class="o">&lt;</span><span class="n">error_code</span><span class="p">,</span> <span class="n">size_error</span><span class="p">,</span> <span class="n">read_error</span><span class="p">,</span> <span class="n">eof_error</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">e_errno</span> <span class="k">const</span> <span class="o">*</span> <span class="n">errn</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">e_file_name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">fn</span><span class="p">)</span>
+<span class="p">[](</span><span class="n">leaf</span><span class="o">::</span><span class="n">match</span><span class="o">&lt;</span><span class="n">error_code</span><span class="p">,</span> <span class="n">size_error</span><span class="p">,</span> <span class="n">read_error</span><span class="p">,</span> <span class="n">eof_error</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">e_file_name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">fn</span><span class="p">)</span>
 <span class="p">{</span>
-  <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Failed to access "</span> <span class="o">&lt;&lt;</span> <span class="n">fn</span><span class="p">.</span><span class="n">value</span><span class="p">;</span>
-  <span class="k">if</span><span class="p">(</span> <span class="n">errn</span> <span class="p">)</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">", errno="</span> <span class="o">&lt;&lt;</span> <span class="o">*</span><span class="n">errn</span><span class="p">;</span>
-  <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-  <span class="k">return</span> <span class="mi">3</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Failed to access "</span> <span class="o">&lt;&lt;</span> <span class="n">fn</span><span class="p">.</span><span class="n">value</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
 <span class="p">},</span>
 <span class="p">....</span></code></pre>
 </div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#match"><code>match</code></a> | <a href="#e_file_name"><code>e_file_name</code></a></p>
 </div>
 <div class="paragraph">
 <p>It will get called if the value of the <code>error_code</code> enum communicated with the failure is one of <code>size_error</code>, <code>read_error</code> or <code>eof_error</code>. In short, the idea is to handle any input error.</p>
@@ -1956,13 +1972,9 @@ Follow this link to see a complete example program: <a href="https://github.com/
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="p">[](</span><span class="n">input_error</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">e_errno</span> <span class="k">const</span> <span class="o">*</span> <span class="n">errn</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">e_file_name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">fn</span><span class="p">)</span>
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="p">[](</span><span class="n">input_error</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">e_file_name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">fn</span><span class="p">)</span>
 <span class="p">{</span>
-  <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Failed to access "</span> <span class="o">&lt;&lt;</span> <span class="n">fn</span><span class="p">.</span><span class="n">value</span><span class="p">;</span>
-  <span class="k">if</span><span class="p">(</span> <span class="n">errn</span> <span class="p">)</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">", errno="</span> <span class="o">&lt;&lt;</span> <span class="o">*</span><span class="n">errn</span><span class="p">;</span>
-  <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-  <span class="k">return</span> <span class="mi">3</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Failed to access "</span> <span class="o">&lt;&lt;</span> <span class="n">fn</span><span class="p">.</span><span class="n">value</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
 <span class="p">},</span></code></pre>
 </div>
 </div>
@@ -1970,22 +1982,7 @@ Follow this link to see a complete example program: <a href="https://github.com/
 <p>This is future-proof, but still not ideal, because it is not possible to refine the classification of the failure after the exception object has been thrown.</p>
 </div>
 <div class="paragraph">
-<p>LEAF supports a novel style of error handling where the classification of failures does not use error code values or exception type hierarchies. If we go back to the introduction section, instead of defining:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">enum</span> <span class="n">error_code</span>
-<span class="p">{</span>
-  <span class="p">....</span>
-  <span class="n">read_error</span><span class="p">,</span>
-  <span class="n">size_error</span><span class="p">,</span>
-  <span class="n">eof_error</span><span class="p">,</span>
-  <span class="p">....</span>
-<span class="p">};</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>We could define:</p>
+<p>LEAF supports a novel style of error handling where the classification of failures does not use error code values or exception type hierarchies. Instead of our <code>error_code</code> enum, we could define:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1998,7 +1995,7 @@ Follow this link to see a complete example program: <a href="https://github.com/
 </div>
 </div>
 <div class="paragraph">
-<p>With this in place, <code>file_read</code> from the <a href="https://github.com/boostorg/leaf/blob/master/example/print_file/print_file_result.cpp?ts=4">print_file_result.cpp</a> example can be rewritten like this:</p>
+<p>With this in place, we could define a function <code>file_read</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2072,7 +2069,7 @@ Follow this link to see a complete example program: <a href="https://github.com/
 </table>
 </div>
 <div class="paragraph">
-<p>This technique works just as well if we choose to use exception handling:</p>
+<p>This technique works just as well if we choose to use exception handling, we just call <code>leaf::exception</code> instead of <code>leaf::new_error</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2106,34 +2103,20 @@ If the type of the first argument passed to <code>leaf::exception</code> derives
 </table>
 </div>
 <div class="paragraph">
-<p>And now we can write a future-proof handler that can handle any <code>input_error</code>:</p>
+<p>Now we can write a future-proof handler for any <code>input_error</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="p">....</span>
-<span class="p">[](</span><span class="n">input_error</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">e_errno</span> <span class="k">const</span> <span class="o">*</span> <span class="n">errn</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">e_file_name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">fn</span><span class="p">)</span>
+<span class="p">[](</span><span class="n">input_error</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">e_file_name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">fn</span><span class="p">)</span>
 <span class="p">{</span>
-  <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Failed to access "</span> <span class="o">&lt;&lt;</span> <span class="n">fn</span><span class="p">.</span><span class="n">value</span><span class="p">;</span>
-  <span class="k">if</span><span class="p">(</span> <span class="n">errn</span> <span class="p">)</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">", errno="</span> <span class="o">&lt;&lt;</span> <span class="o">*</span><span class="n">errn</span><span class="p">;</span>
-  <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-  <span class="k">return</span> <span class="mi">3</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Failed to access "</span> <span class="o">&lt;&lt;</span> <span class="n">fn</span><span class="p">.</span><span class="n">value</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
 <span class="p">},</span>
 <span class="p">....</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Remarkably, because the classification of the failure does not depend on error codes or on exception types, this error handler can be used with <code>try_catch</code> if we use exception handling, or with <code>try_handle_some</code>/<code>try_handle_all</code> if we do not. Here is the complete example from the introduction section, rewritten to use this technique:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><a href="https://github.com/boostorg/leaf/blob/master/example/print_file/print_file_result_error_tags.cpp?ts=4">print_file_result_error_tags.cpp</a> (using <code>leaf::result&lt;T&gt;</code>).</p>
-</li>
-<li>
-<p><a href="https://github.com/boostorg/leaf/blob/master/example/print_file/print_file_eh_error_tags.cpp?ts=4">print_file_eh_error_tags.cpp</a> (using exception handling).</p>
-</li>
-</ul>
+<p>Remarkably, because the classification of the failure does not depend on error codes or on exception types, this error handler can be used with <code>try_catch</code> if we use exception handling, or with <code>try_handle_some</code>/<code>try_handle_all</code> if we do not.</p>
 </div>
 <hr>
 </div>
@@ -2142,14 +2125,14 @@ If the type of the first argument passed to <code>leaf::exception</code> derives
 <div class="paragraph">
 <p>It is sometimes necessary to catch exceptions thrown by a lower-level library function, and report the error through different means, to a higher-level library which may not use exception handling.</p>
 </div>
-<div class="admonitionblock note">
+<div class="admonitionblock tip">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-Understand that error handlers that take arguments of types that derive from <code>std::exception</code> work correctly&#8201;&#8212;&#8201;regardless of whether the error object itself is thrown as an exception, or <a href="#tutorial-loading">loaded</a> into a <a href="#context"><code>context</code></a>. The technique described here is only needed when the exception must be communicated through functions which are not exception-safe, or are compiled with exception handling disabled.
+Error handlers that take arguments of types that derive from <code>std::exception</code> work correctly&#8201;&#8212;&#8201;regardless of whether the error object itself is thrown as an exception, or <a href="#tutorial-loading">loaded</a> into a <a href="#context"><code>context</code></a>. The technique described here is only needed when the exception must be communicated through functions which are not exception-safe, or are compiled with exception handling disabled.
 </td>
 </tr>
 </table>
@@ -2222,6 +2205,7 @@ Understand that error handlers that take arguments of types that derive from <co
 <div class="listingblock">
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_all</span><span class="p">(</span>
+
   <span class="p">[]()</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span>
   <span class="p">{</span>
     <span class="n">BOOST_LEAF_CHECK</span><span class="p">(</span><span class="n">print_answer</span><span class="p">());</span>
@@ -2281,7 +2265,7 @@ The complete program illustrating this technique is available <a href="https://g
 <p>Arguments are passed on the Lua stack (which is accessible through <code>L</code>). Results too are pushed onto the Lua stack.</p>
 </div>
 <div class="paragraph">
-<p>First, let&#8217;s initialize the Lua interpreter and register <code>do_work</code> as a C callback, available for Lua programs to call:</p>
+<p>First, let&#8217;s initialize the Lua interpreter and register a function, <code>do_work</code>, as a C callback available for Lua programs to call:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2335,7 +2319,7 @@ The complete program illustrating this technique is available <a href="https://g
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="kt">int</span> <span class="n">do_work</span><span class="p">(</span> <span class="n">lua_State</span> <span class="o">*</span> <span class="n">L</span> <span class="p">)</span> <span class="k">noexcept</span>
 <span class="p">{</span>
-  <span class="kt">bool</span> <span class="n">success</span> <span class="o">=</span> <span class="n">rand</span><span class="p">()</span><span class="o">%</span><span class="mi">2</span><span class="p">;</span> <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="kt">bool</span> <span class="n">success</span> <span class="o">=</span> <span class="n">rand</span><span class="p">()</span> <span class="o">%</span> <span class="mi">2</span><span class="p">;</span> <i class="conum" data-value="1"></i><b>(1)</b>
   <span class="k">if</span><span class="p">(</span> <span class="n">success</span> <span class="p">)</span>
   <span class="p">{</span>
     <span class="n">lua_pushnumber</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="mi">42</span><span class="p">);</span> <i class="conum" data-value="2"></i><b>(2)</b>
@@ -2343,7 +2327,7 @@ The complete program illustrating this technique is available <a href="https://g
   <span class="p">}</span>
   <span class="k">else</span>
   <span class="p">{</span>
-    <span class="n">leaf</span><span class="o">::</span><span class="n">new_error</span><span class="p">(</span><span class="n">ec1</span><span class="p">);</span> <i class="conum" data-value="3"></i><b>(3)</b>
+    <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="n">leaf</span><span class="o">::</span><span class="n">new_error</span><span class="p">(</span><span class="n">ec1</span><span class="p">);</span> <i class="conum" data-value="3"></i><b>(3)</b>
     <span class="k">return</span> <span class="n">luaL_error</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="s">"do_work_error"</span><span class="p">);</span> <i class="conum" data-value="4"></i><b>(4)</b>
   <span class="p">}</span>
 <span class="p">}</span></code></pre>
@@ -2382,7 +2366,7 @@ The complete program illustrating this technique is available <a href="https://g
   <span class="n">lua_getfield</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">LUA_GLOBALSINDEX</span><span class="p">,</span> <span class="s">"call_do_work"</span><span class="p">);</span>
 
   <span class="n">error_monitor</span> <span class="n">cur_err</span><span class="p">;</span>
-  <span class="k">if</span><span class="p">(</span> <span class="kt">int</span> <span class="n">err</span><span class="o">=</span><span class="n">lua_pcall</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="k">if</span><span class="p">(</span> <span class="kt">int</span> <span class="n">err</span> <span class="o">=</span> <span class="n">lua_pcall</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
   <span class="p">{</span>
     <span class="k">auto</span> <span class="n">load</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">::</span><span class="n">on_error</span><span class="p">(</span><span class="n">e_lua_error_message</span><span class="p">{</span><span class="n">lua_tostring</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="mi">1</span><span class="p">)});</span> <i class="conum" data-value="2"></i><b>(2)</b>
     <span class="n">lua_pop</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
@@ -2509,10 +2493,67 @@ When using Lua with C&#43;&#43;, we need to protect the Lua interpreter from exc
 <div class="sect2">
 <h3 id="tutorial-diagnostic_information">Diagnostic Information</h3>
 <div class="paragraph">
-<p>LEAF is able to automatically generate diagnostic messages that include information about all error objects available to error handlers. For this purpose, it needs to be able to print objects of user-defined error types.</p>
+<p>LEAF is able to automatically generate diagnostic messages that include information about all error objects available to error handlers:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">enum</span> <span class="k">class</span> <span class="nc">error_code</span>
+<span class="p">{</span>
+  <span class="n">read_error</span><span class="p">,</span>
+  <span class="n">write_error</span>
+<span class="p">};</span>
+
+<span class="p">....</span>
+
+<span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_all</span><span class="p">(</span>
+
+  <span class="p">[]()</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="p">{</span>
+    <span class="p">...</span>
+    <span class="k">return</span> <span class="n">leaf</span><span class="o">::</span><span class="n">new_error</span><span class="p">(</span> <span class="n">error_code</span><span class="o">::</span><span class="n">write_error</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">e_file_name</span><span class="p">{</span> <span class="s">"file.txt"</span> <span class="p">}</span> <span class="p">);</span>
+  <span class="p">},</span>
+
+  <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">match</span><span class="o">&lt;</span><span class="n">error_code</span><span class="p">,</span> <span class="n">error_code</span><span class="o">::</span><span class="n">read_error</span><span class="o">&gt;</span> <span class="p">)</span> <i class="conum" data-value="2"></i><b>(2)</b>
+  <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Read error!"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">verbose_diagnostic_info</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">info</span> <span class="p">)</span> <i class="conum" data-value="3"></i><b>(3)</b>
+  <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Unrecognized error detected, cryptic diagnostic information follows.</span><span class="se">\n</span><span class="s">"</span> <span class="o">&lt;&lt;</span> <span class="n">info</span><span class="p">;</span>
+  <span class="p">}</span> <span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We handle all failures that occur in this try block.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>One or more error handlers that should handle all possible failures.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The "catch all" error handler is required by <code>try_handle_all</code>. It will be called if LEAF is unable to use another error handler.</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
-<p>To do this, LEAF attempts to bind an unqualified call to <code>operator&lt;&lt;</code>, passing a <code>std::ostream</code> and the error object. If that fails, it will also attempt to bind <code>operator&lt;&lt;</code> that takes the <code>.value</code> of the error type. If that also doesn&#8217;t compile, the error object value will not appear in diagnostic messages, though LEAF will still print its type.</p>
+<p>The <code>verbose_diagnostic_info</code> output for the snippet above tells us that we got an <code>error_code</code> with value <code>1</code> (<code>write_error</code>), and an object of type <code>e_file_name</code> with <code>"file.txt"</code> stored in its <code>.value</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="nowrap">Unrecognized error detected, cryptic diagnostic information follows.
+leaf::verbose_diagnostic_info for Error ID = 1:
+[with Name = error_code]: 1
+Unhandled error objects:
+[with Name = boost::leaf::e_file_name]: file.txt</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When printing each error object, LEAF attempts to bind an unqualified call to <code>operator&lt;&lt;</code>, passing a <code>std::ostream</code> and the error object. If that fails, it will also attempt to bind <code>operator&lt;&lt;</code> that takes the <code>.value</code> of the error type. If that also does not compile, the error object value will not appear in diagnostic messages, though LEAF will still print its type.</p>
 </div>
 <div class="paragraph">
 <p>Even with error types that define a printable <code>.value</code>, the user may still want to overload <code>operator&lt;&lt;</code> for the enclosing <code>struct</code>, e.g.:</p>
@@ -2532,6 +2573,47 @@ When using Lua with C&#43;&#43;, we need to protect the Lua interpreter from exc
 </div>
 <div class="paragraph">
 <p>The <code>e_errno</code> type above is designed to hold <code>errno</code> values. The defined <code>operator&lt;&lt;</code> overload will automatically include the output from <code>strerror</code> when <code>e_errno</code> values are printed (LEAF defines <code>e_errno</code> in <code>&lt;boost/leaf/common.hpp&gt;</code>, together with other commonly-used error types).</p>
+</div>
+<div class="paragraph">
+<p>Using <code>verbose_diagnostic_info</code> comes at a cost. Normally, when the program attempts to communicate error objects of types which are not used in any error handling scope in the current call stack, they are discarded, which saves cycles. However, if an error handler is provided that takes <code>verbose_diagnostic_info</code> argument, before such objects are discarded, they are printed and appended to a <code>std::string</code> (this is the case with <code>e_file_name</code> in our example above). Such objects appear under <code>Unhandled error objects</code> in the output from <code>verbose_diagnostic_info</code>.</p>
+</div>
+<div class="paragraph">
+<p>If handling <code>verbose_diagnostic_info</code> is considered too costly, use <code>diagnostic_info</code> instead:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_all</span><span class="p">(</span>
+
+  <span class="p">[]()</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span>
+  <span class="p">{</span>
+    <span class="p">...</span>
+    <span class="k">return</span> <span class="n">leaf</span><span class="o">::</span><span class="n">new_error</span><span class="p">(</span> <span class="n">error_code</span><span class="o">::</span><span class="n">write_error</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">e_file_name</span><span class="p">{</span> <span class="s">"file.txt"</span> <span class="p">}</span> <span class="p">);</span>
+  <span class="p">},</span>
+
+  <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">match</span><span class="o">&lt;</span><span class="n">error_code</span><span class="p">,</span> <span class="n">error_code</span><span class="o">::</span><span class="n">read_error</span><span class="o">&gt;</span> <span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Read error!"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">diagnostic_info</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">info</span> <span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Unrecognized error detected, cryptic diagnostic information follows.</span><span class="se">\n</span><span class="s">"</span> <span class="o">&lt;&lt;</span> <span class="n">info</span><span class="p">;</span>
+  <span class="p">}</span> <span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this case, the output may look like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="nowrap">Unrecognized error detected, cryptic diagnostic information follows.
+leaf::diagnostic_info for Error ID = 1:
+[with Name = error_code]: 1
+Detected 1 attempt to communicate an unexpected error object of type [with Name = boost::leaf::e_file_name]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Notice how the diagnostic information for <code>e_file_name</code> changed: LEAF no longer prints it before discarding it, and so <code>diagnostic_info</code> can only inform about the type of the discarded object, but not its value.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -2783,35 +2865,26 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
 <div class="sect3">
 <h4 id="_support_in_leaf">Support in LEAF</h4>
 <div class="paragraph">
-<p>The following support for <code>std::error_code</code> and <code>std::error_condition</code> is available:</p>
+<p>The <code>match</code> predicate can be used as an argument to a LEAF error handler to match a <code>std::error_code</code> with a given error condition. For example, to handle <code>my_error_condition::c1</code> (see above), we could use:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p>The <a href="#match"><code>match</code></a> template can be used as an argument to a LEAF error handler, so it can be considered based on the value of a communicated <code>std::error_code</code>.</p>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-See <a href="#match"><code>match</code></a> for examples.
-</td>
-</tr>
-</table>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_some</span><span class="p">(</span>
+
+  <span class="p">[]</span>
+  <span class="p">{</span>
+    <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// returns leaf::result&lt;T&gt;</span>
+  <span class="p">},</span>
+
+  <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">match</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">error_code</span><span class="p">,</span> <span class="n">my_error_condition</span><span class="o">::</span><span class="n">c1</span><span class="o">&gt;</span> <span class="n">m</span> <span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">assert</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">matched</span> <span class="o">==</span> <span class="n">my_error_condition</span><span class="o">::</span><span class="n">c1</span><span class="p">);</span>
+    <span class="p">....</span>
+  <span class="p">}</span> <span class="p">);</span></code></pre>
 </div>
-</li>
-<li>
-<p>The <a href="#error_id"><code>error_id</code></a> type can be converted to a <code>std::error_code</code>; see <a href="#error_id::to_error_code"><code>to_error_code</code></a>. The returned object encodes the state of the <code>error_id</code> without any loss of information. This is useful if an <code>error_id</code> needs to be communicated through interfaces that support <code>std::error_code</code> but do not use LEAF.</p>
-</li>
-<li>
-<p>The <code>error_id</code> type can be implicitly initialized with a <code>std::error_code</code>. If the <code>std::error_code</code> was created using <code>to_error_code</code>, the original <code>error_id</code> state is restored. Otherwise, the <code>std::error_code</code> is <a href="#tutorial-loading">loaded</a> so it can be used by LEAF error handlers, while the <code>error_id</code> itself is initialized by <a href="#new_error"><code>new_error</code></a>.</p>
-</li>
-<li>
-<p>The <code>leaf::result&lt;T&gt;</code> type can be implicitly initialized with an <code>error_id</code>, which means that it can be implicitly initialized with a <code>std::error_code</code>.</p>
-</li>
-</ul>
+</div>
+<div class="paragraph">
+<p>See <a href="#match"><code>match</code></a> for more examples.</p>
 </div>
 <hr>
 </div>
@@ -2851,6 +2924,7 @@ See <a href="#match"><code>match</code></a> for examples.
 <span class="kt">void</span> <span class="nf">g</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">leaf</span><span class="o">::</span><span class="n">try_catch</span><span class="p">(</span>
+
     <span class="p">[]</span>
     <span class="p">{</span>
       <span class="n">f</span><span class="p">();</span>
@@ -2877,6 +2951,7 @@ See <a href="#match"><code>match</code></a> for examples.
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="kt">void</span> <span class="nf">g</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">leaf</span><span class="o">::</span><span class="n">try_catch</span><span class="p">(</span>
+
     <span class="p">[]</span>
     <span class="p">{</span>
       <span class="n">f</span><span class="p">();</span>
@@ -3691,6 +3766,7 @@ See also <a href="#tutorial-async">Transporting Error Objects Between Threads</a
 <div class="title">Example:</div>
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">auto</span> <span class="n">error_handlers</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_tuple</span><span class="p">(</span>
+
   <span class="p">[](</span><span class="n">e_this</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">a</span><span class="p">,</span> <span class="n">e_that</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">b</span><span class="p">)</span>
   <span class="p">{</span>
     <span class="p">....</span>
@@ -4314,7 +4390,7 @@ See <a href="#tutorial-on_error">Using <code>on_error</code></a> from the Tutori
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-See also Five Minute Introduction <a href="#introduction-eh">[introduction-eh]</a>.
+See also <a href="#tutorial-eh">Exception Handling</a> from the <a href="#tutorial">Tutorial</a> section.
 </td>
 </tr>
 </table>
@@ -4358,7 +4434,7 @@ See also Five Minute Introduction <a href="#introduction-eh">[introduction-eh]</
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-See also <a href="#introduction-result">Five Minute Introduction</a>.
+See also <a href="#tutorial-result">Error Handling</a> from the <a href="#tutorial">Tutorial</a> section.
 </td>
 </tr>
 </table>
@@ -4498,6 +4574,7 @@ See also <a href="#introduction-result">Five Minute Introduction</a>.
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="p">....</span>
 <span class="k">auto</span> <span class="n">r</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_some</span><span class="p">(</span>
+
   <span class="p">[]()</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span>
@@ -4534,6 +4611,7 @@ See also <a href="#introduction-result">Five Minute Introduction</a>.
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="p">....</span>
 <span class="n">try_handle_some</span><span class="p">(</span>
+
   <span class="p">[]()</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span>
@@ -4600,6 +4678,7 @@ See also: <a href="#predicates">Predicates</a>.
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="p">....</span>
 <span class="n">try_handle_some</span><span class="p">(</span>
+
   <span class="p">[]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// returns leaf::result&lt;T&gt;</span>
@@ -4639,6 +4718,7 @@ See also: <a href="#predicates">Predicates</a>.
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="p">....</span>
 <span class="n">try_handle_some</span><span class="p">(</span>
+
   <span class="p">[]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// throws</span>
@@ -4678,6 +4758,7 @@ See also: <a href="#predicates">Predicates</a>.
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="p">....</span>
 <span class="n">try_handle_some</span><span class="p">(</span>
+
   <span class="p">[]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// throws</span>
@@ -6608,6 +6689,7 @@ While <code>catch_</code> requires that the caught exception object is of type t
 <span class="k">struct</span> <span class="nc">ex2</span><span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="p">{</span> <span class="p">};</span>
 
 <span class="n">leaf</span><span class="o">::</span><span class="n">try_catch</span><span class="p">(</span>
+
   <span class="p">[]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// throws</span>
@@ -6634,6 +6716,7 @@ While <code>catch_</code> requires that the caught exception object is of type t
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">struct</span> <span class="nc">ex1</span><span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="p">{</span> <span class="p">};</span>
 
 <span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_some</span><span class="p">(</span>
+
   <span class="p">[]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// returns leaf::result&lt;T&gt;</span>
@@ -6705,6 +6788,7 @@ See also <a href="#tutorial-predicates">Using Predicates to Handle Errors</a>.
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">enum</span> <span class="k">class</span> <span class="nc">my_enum</span> <span class="p">{</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">e3</span> <span class="p">};</span>
 
 <span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_some</span><span class="p">(</span>
+
   <span class="p">[]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// returns leaf::result&lt;T&gt;</span>
@@ -6806,6 +6890,7 @@ See also <a href="#tutorial-predicates">Using Predicates to Handle Errors</a>.
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">enum</span> <span class="k">class</span> <span class="nc">my_enum</span> <span class="p">{</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">e3</span> <span class="p">};</span>
 
 <span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_some</span><span class="p">(</span>
+
   <span class="p">[]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// returns leaf::result&lt;T&gt;</span>
@@ -6838,6 +6923,7 @@ See also <a href="#tutorial-predicates">Using Predicates to Handle Errors</a>.
 <span class="p">}</span>
 
 <span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_some</span><span class="p">(</span>
+
   <span class="p">[]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// returns leaf::result&lt;T&gt;</span>
@@ -6872,6 +6958,7 @@ See also <a href="#tutorial-predicates">Using Predicates to Handle Errors</a>.
 <span class="p">}</span>
 
 <span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_some</span><span class="p">(</span>
+
   <span class="p">[]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// returns leaf::result&lt;T&gt;</span>
@@ -6907,6 +6994,7 @@ See also <a href="#tutorial-predicates">Using Predicates to Handle Errors</a>.
 <span class="p">}</span>
 
 <span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_some</span><span class="p">(</span>
+
   <span class="p">[]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// returns leaf::result&lt;T&gt;</span>
@@ -6935,6 +7023,7 @@ See also <a href="#tutorial-predicates">Using Predicates to Handle Errors</a>.
 <span class="p">}</span>
 
 <span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_some</span><span class="p">(</span>
+
   <span class="p">[]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// returns leaf::result&lt;T&gt;</span>
@@ -7055,6 +7144,7 @@ See also <a href="#tutorial-predicates">Using Predicates to Handle Errors</a>.
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">struct</span> <span class="nc">e_errno</span> <span class="p">{</span> <span class="kt">int</span> <span class="n">value</span><span class="p">;</span> <span class="p">}</span>
 
 <span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_some</span><span class="p">(</span>
+
   <span class="p">[]</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">f</span><span class="p">();</span> <span class="c1">// returns leaf::result&lt;T&gt;</span>
