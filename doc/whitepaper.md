@@ -36,7 +36,7 @@ In fact there is one subtle but critical difference: (A) encodes explicitly in t
 
 Therefore it is not true that any algorithm working with the result from (A) can be transformed to handle a call to (B): the exception is algorithms that respond generically to any error, based solely on observing the *failure flag* being set. The ability to implement such algorithms is the reason why explicitly encoding this extra bit of information in (A) is not pure overhead, compared to (B).
 
-Of course, this reasoning applies in general: if a function reports a failure, it is important for the caller to be able to react to it without further semantic understanding of each possible error condition; that is, it is a good idea to optimize error handlig for this relatively common use case.
+Of course, this reasoning applies in general: if a function reports a failure, it is important for the caller to be able to react to it without further semantic understanding of each possible error condition; that is, it is a good idea to optimize error handling for this relatively common use case.
 
 ## 2. Classification of functions based on their affinity to errors
 
