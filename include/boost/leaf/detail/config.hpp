@@ -194,6 +194,12 @@
 
 ////////////////////////////////////////
 
+#ifdef BOOST_LEAF_NO_THREADS
+#	define BOOST_LEAF_DISABLE_CAPTURE
+#endif
+
+////////////////////////////////////////
+
 #if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///
 #pragma warning(pop) ///
 #endif ///

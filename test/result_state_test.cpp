@@ -177,6 +177,7 @@ int main()
 
     using context_type = leaf::leaf_detail::polymorphic_context_impl<leaf::context<e_err>>;
 
+#ifndef BOOST_LEAF_DISABLE_CAPTURE
     { // value default -> capture -> move
         leaf::result<val> r1 = leaf::capture( std::make_shared<context_type>(), []{ return leaf::result<val>(); } );
         BOOST_TEST(r1);
@@ -250,6 +251,7 @@ int main()
         }
     BOOST_TEST_EQ(err::count, 0);
     BOOST_TEST_EQ(val::count, 0);
+#endif
 
     // ^^ value ^^
     // vv error vv
@@ -325,6 +327,7 @@ int main()
     BOOST_TEST_EQ(err::count, 0);
     BOOST_TEST_EQ(val::count, 0);
 
+#ifndef BOOST_LEAF_DISABLE_CAPTURE
     { // error move -> capture -> move
         leaf::result<val> r1 = leaf::capture( std::make_shared<context_type>(), []{ return leaf::result<val>( leaf::new_error( e_err { } ) ); } );
         BOOST_TEST(!r1);
@@ -382,6 +385,7 @@ int main()
     }
     BOOST_TEST_EQ(err::count, 0);
     BOOST_TEST_EQ(val::count, 0);
+#endif
 
     // ^^ result<T> ^^
 
@@ -403,19 +407,20 @@ int main()
         BOOST_TEST(r2);
     }
 
+#ifndef BOOST_LEAF_DISABLE_CAPTURE
     { // void default -> capture -> move
         leaf::result<void> r1 = leaf::capture( std::make_shared<context_type>(), []{ return leaf::result<void>(); } );
         BOOST_TEST(r1);
         leaf::result<void> r2 = std::move(r1);
         BOOST_TEST(r2);
     }
-
     { // void default -> capture -> assign-move
         leaf::result<void> r1 = leaf::capture( std::make_shared<context_type>(), []{ return leaf::result<void>(); } );
         BOOST_TEST(r1);
         leaf::result<void> r2; r2=std::move(r1);
         BOOST_TEST(r2);
     }
+#endif
 
     // ^^ void default ^^
     // vv void error vv
@@ -479,6 +484,7 @@ int main()
     }
     BOOST_TEST_EQ(err::count, 0);
 
+#ifndef BOOST_LEAF_DISABLE_CAPTURE
     { // void error move -> capture -> move
         leaf::result<void> r1 = leaf::capture( std::make_shared<context_type>(), []{ return leaf::result<void>( leaf::new_error( e_err { } ) ); } );
         BOOST_TEST(!r1);
@@ -524,6 +530,7 @@ int main()
         BOOST_TEST(!r2);
     }
     BOOST_TEST_EQ(err::count, 0);
+#endif
 
     {
         leaf::result<int> r = leaf::error_id();

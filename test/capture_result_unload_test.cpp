@@ -11,6 +11,18 @@
 #   include <boost/leaf/handle_errors.hpp>
 #endif
 
+#ifdef BOOST_LEAF_DISABLE_CAPTURE
+
+#include <iostream>
+
+int main()
+{
+    std::cout << "Unit test not applicable." << std::endl;
+    return 0;
+}
+
+#else
+
 #include "_test_ec.hpp"
 #include "lightweight_test.hpp"
 
@@ -132,3 +144,5 @@ int main()
 
     return boost::report_errors();
 }
+
+#endif
