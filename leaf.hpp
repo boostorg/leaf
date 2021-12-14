@@ -4,7 +4,7 @@
 // LEAF single header distribution. Do not edit.
 
 // Generated from https://github.com/boostorg/leaf on December 14, 2021,
-// Git hash e4e922255770004f3fd6e3489bedda2380556f89.
+// Git hash 4d620f3ae89e30d27d5be628c06714c7016dcd9b.
 
 // Latest version: https://boostorg.github.io/leaf/leaf.hpp
 
@@ -615,6 +615,10 @@ namespace leaf_detail
 #	define BOOST_LEAF_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
 #else
 #	define BOOST_LEAF_SYMBOL_VISIBLE
+#endif
+
+#ifdef BOOST_LEAF_NO_THREADS
+#	define BOOST_LEAF_DISABLE_CAPTURE
 #endif
 
 #endif
@@ -4237,6 +4241,9 @@ namespace leaf_detail
         explicit result_discriminant( kind_ctx_ptr ) noexcept:
             state_(ctx_ptr)
         {
+#ifdef BOOST_LEAF_DISABLE_CAPTURE
+        std::abort(); // Attempted capture but capture support is disabled
+#endif
         }
 
         kind_t kind() const noexcept
@@ -4281,7 +4288,11 @@ class result
             case result_discriminant::val:
                 return result<U>(error_id());
             case result_discriminant::ctx_ptr:
+#ifdef BOOST_LEAF_DISABLE_CAPTURE
+                BOOST_LEAF_ASSERT(false); // Possible ODR violation.
+#else
                 return result<U>(std::move(r_.ctx_));
+#endif
             default:
                 return result<U>(std::move(r_.what_));
             }
@@ -4294,11 +4305,15 @@ class result
             case result_discriminant::val:
                 return error_id();
             case result_discriminant::ctx_ptr:
+#ifdef BOOST_LEAF_DISABLE_CAPTURE
+                BOOST_LEAF_ASSERT(false); // Possible ODR violation.
+#else
             {
                 error_id captured_id = r_.ctx_->propagate_captured_errors();
                 leaf_detail::id_factory<>::current_id = captured_id.value();
                 return captured_id;
             }
+#endif
             default:
                 return r_.what_.get_error_id();
             }
@@ -4316,7 +4331,9 @@ class result
     union
     {
         stored_type stored_;
+#ifndef BOOST_LEAF_DISABLE_CAPTURE
         context_ptr ctx_;
+#endif
     };
 
     result_discriminant what_;
@@ -4329,8 +4346,12 @@ class result
             stored_.~stored_type();
             break;
         case result_discriminant::ctx_ptr:
+#ifdef BOOST_LEAF_DISABLE_CAPTURE
+            BOOST_LEAF_ASSERT(false); // Possible ODR violation.
+#else
             BOOST_LEAF_ASSERT(!ctx_ || ctx_->captured_id_);
             ctx_.~context_ptr();
+#endif
         default:
             break;
         }
@@ -4346,8 +4367,12 @@ class result
             (void) new(&stored_) stored_type(std::move(x.stored_));
             break;
         case result_discriminant::ctx_ptr:
+#ifdef BOOST_LEAF_DISABLE_CAPTURE
+            BOOST_LEAF_ASSERT(false); // Possible ODR violation.
+#else
             BOOST_LEAF_ASSERT(!x.ctx_ || x.ctx_->captured_id_);
             (void) new(&ctx_) context_ptr(std::move(x.ctx_));
+#endif
         default:
             break;
         }
@@ -4363,7 +4388,12 @@ class result
     error_id get_error_id() const noexcept
     {
         BOOST_LEAF_ASSERT(what_.kind()!=result_discriminant::val);
+#ifdef BOOST_LEAF_DISABLE_CAPTURE
+        BOOST_LEAF_ASSERT(what_.kind()!=result_discriminant::ctx_ptr); // Possible ODR violation.
+        return what_.get_error_id();
+#else
         return what_.kind()==result_discriminant::ctx_ptr ? ctx_->captured_id_ : what_.get_error_id();
+#endif
     }
 
 protected:
@@ -4452,11 +4482,18 @@ public:
     {
     }
 
+#ifdef BOOST_LEAF_DISABLE_CAPTURE
+    result( context_ptr && ) noexcept:
+        what_(result_discriminant::kind_ctx_ptr{})
+    {
+    }
+#else
     result( context_ptr && ctx ) noexcept:
         ctx_(std::move(ctx)),
         what_(result_discriminant::kind_ctx_ptr{})
     {
     }
+#endif
 
     ~result() noexcept
     {
