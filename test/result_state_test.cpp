@@ -84,17 +84,17 @@ struct err
 int err::count = 0;
 struct e_err { err value; };
 
-bool eq_value( leaf::result<val> & r1, leaf::result<val> & r2 )
+bool eq_value( leaf::result<val> & r, val v )
 {
-    leaf::result<val> const & cr1 = r1;
-    leaf::result<val> const & cr2 = r2;
+    leaf::result<val> const & cr = r;
+    val const & cv = v;
     return
-        r1.value()==r2.value() &&
-        cr1.value()==cr2.value() &&
-        *r1==*r2 &&
-        *cr1==*cr2 &&
-        r1->id==r2->id &&
-        cr1->id==cr2->id;
+        r.value()==v &&
+        cr.value()==cv &&
+        *r.operator->()==v &&
+        *cr.operator->()==cv &&
+        *r==v &&
+        *cr==cv;
 }
 
 int main()
@@ -129,10 +129,12 @@ int main()
         BOOST_TEST(r1);
         BOOST_TEST_EQ(err::count, 0);
         BOOST_TEST_EQ(val::count, 2);
+        BOOST_TEST(eq_value(r1, v));
         leaf::result<val> r2 = std::move(r1);
         BOOST_TEST(r2);
         BOOST_TEST_EQ(err::count, 0);
         BOOST_TEST_EQ(val::count, 3);
+        BOOST_TEST(eq_value(r2, v));
     }
     BOOST_TEST_EQ(err::count, 0);
     BOOST_TEST_EQ(val::count, 0);
@@ -167,10 +169,12 @@ int main()
         BOOST_TEST(r1);
         BOOST_TEST_EQ(err::count, 0);
         BOOST_TEST_EQ(val::count, 2);
+        BOOST_TEST(eq_value(r1, v));
         leaf::result<val> r2; r2=std::move(r1);
         BOOST_TEST(r2);
         BOOST_TEST_EQ(err::count, 0);
         BOOST_TEST_EQ(val::count, 3);
+        BOOST_TEST(eq_value(r2, v));
     }
     BOOST_TEST_EQ(err::count, 0);
     BOOST_TEST_EQ(val::count, 0);
@@ -396,29 +400,37 @@ int main()
     { // void default -> move
         leaf::result<void> r1;
         BOOST_TEST(r1);
+        r1.value();
         leaf::result<void> r2 = std::move(r1);
         BOOST_TEST(r2);
+        r2.value();
     }
 
     { // void default -> assign-move
         leaf::result<void> r1;
         BOOST_TEST(r1);
+        r1.value();
         leaf::result<void> r2; r2=std::move(r1);
         BOOST_TEST(r2);
+        r2.value();
     }
 
 #ifndef BOOST_LEAF_DISABLE_CAPTURE
     { // void default -> capture -> move
         leaf::result<void> r1 = leaf::capture( std::make_shared<context_type>(), []{ return leaf::result<void>(); } );
         BOOST_TEST(r1);
+        r1.value();
         leaf::result<void> r2 = std::move(r1);
         BOOST_TEST(r2);
+        r2.value();
     }
     { // void default -> capture -> assign-move
         leaf::result<void> r1 = leaf::capture( std::make_shared<context_type>(), []{ return leaf::result<void>(); } );
         BOOST_TEST(r1);
+        r1.value();
         leaf::result<void> r2; r2=std::move(r1);
         BOOST_TEST(r2);
+        r2.value();
     }
 #endif
 

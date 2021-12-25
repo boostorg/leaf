@@ -2367,16 +2367,18 @@ namespace boost { namespace leaf {
     template <class U>
     result & operator=( result<U> && r ) noexcept;
 
+    bool has_value() const noexcept;
+    bool has_error() const noexcept;
     explicit operator bool() const noexcept;
 
     T const & value() const;
     T & value();
 
-    T const & operator*() const;
-    T & operator*();
+    T const * operator->() const noexcept;
+    T * operator->() noexcept;
 
-    T const * operator->() const;
-    T * operator->();
+    T const & operator*() const noexcept;
+    T & operator*() noexcept;
 
     <<unspecified-type>> error() noexcept;
 
@@ -4244,16 +4246,18 @@ namespace boost { namespace leaf {
     template <class U>
     result & operator=( result<U> && r ) noexcept;
 
+    bool has_value() const noexcept;
+    bool has_error() const noexcept;
     explicit operator bool() const noexcept;
 
     T const & value() const;
     T & value();
 
-    T const & operator*() const;
-    T & operator*();
+    T const * operator->() const noexcept;
+    T * operator->() noexcept;
 
-    T const * operator->() const;
-    T * operator->();
+    T const & operator*() const noexcept;
+    T & operator*() noexcept;
 
     <<unspecified-type>> error() noexcept;
 
@@ -4286,6 +4290,8 @@ namespace boost { namespace leaf {
     template <class U>
     result & operator=( result<U> && r ) noexcept;
 
+    bool has_value() const noexcept;
+    bool has_error() const noexcept;
     explicit operator bool() const noexcept;
 
     void value() const;
@@ -4301,7 +4307,7 @@ namespace boost { namespace leaf {
 } }
 ----
 [.text-right]
-<<result::result>> | <<result::operator_eq>> | <<result::operator_bool>> | <<result::value>> | <<result::error>> | <<result::load>>
+<<result::result>> | <<result::operator_eq>> | <<result::has_value>> | <<result::has_error>> | <<result::operator_bool>> | <<result::operator_ptr>> | <<result::operator_deref>> | <<result::value>> | <<result::error>> | <<result::load>>
 
 The `result<T>` type can be returned by functions which produce a value of type `T` but may fail doing so.
 
@@ -4467,6 +4473,42 @@ Effects: :: Destroys `*this`, then re-initializes it as if using the appropriate
 
 '''
 
+[[result::has_value]]
+==== `has_value`
+
+.#include <boost/leaf/result.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class T>
+  bool result<T>::has_value() const noexcept;
+
+} }
+----
+
+Returns: :: If `*this` is in <<result,value state>>, returns `true`, otherwise returns `false`.
+
+'''
+
+[[result::has_error]]
+==== `has_error`
+
+.#include <boost/leaf/result.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class T>
+  bool result<T>::has_error() const noexcept;
+
+} }
+----
+
+Returns: :: If `*this` is in <<result,value state>>, returns `false`, otherwise returns `true`.
+
+'''
+
 [[result::operator_bool]]
 ==== `operator bool`
 
@@ -4485,43 +4527,73 @@ Returns: :: If `*this` is in <<result,value state>>, returns `true`, otherwise r
 
 '''
 
-[[result::value]]
-==== `value`, `operator*`, `pass:[->]`
+[[result::operator_ptr]]
+==== `operator pass:[->]`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
 
-  void result<void>::value() const; <1>
+  template <class T>
+  T const * result<T>::operator->() const noexcept;
 
   template <class T>
-  T const & result<T>::value() const; <2>
+  T * result<T>::operator->() noexcept;
+
+} }
+----
+
+Returns :: If `*this` is in <<result,value state>>, returns a pointer to the stored value; otherwise returns 0.
+
+'''
+
+[[result::operator_deref]]
+==== `operator *`
+
+.#include <boost/leaf/result.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class T>
+  T const & result<T>::operator*() const noexcept;
+
+  template <class T>
+  T & result<T>::operator*() noexcept;
+
+} }
+----
+
+Requires: :: `*this` must be in <<result,value state>>.
+
+Returns :: a reference to the stored value.
+
+'''
+
+[[result::value]]
+==== `value``
+
+.#include <boost/leaf/result.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  void result<void>::value() const;
+
+  template <class T>
+  T const & result<T>::value() const;
 
   template <class T>
   T & result<T>::value();
-
-  template <class T>
-  T const & result<T>::operator*() const; <2>
-
-  template <class T>
-  T & result<T>::operator*();
-
-  template <class T>
-  T const * result<T>::operator->() const; <2>
-
-  template <class T>
-  T * result<T>::operator->(); <2>
 
   struct bad_result: std::exception { };
 
 } }
 ----
-<1> Only when `T` is `void`.
-<2> Only when `T` is not `void`.
 
 [[result::bad_result]]
-Effects: :: If `*this` is in <<result,value state>>, returns a reference (or pointer) to the stored value, otherwise throws `bad_result`.
+Effects: :: If `*this` is in <<result,value state>>, returns a reference to the stored value, otherwise throws `bad_result`.
 
 '''
 
