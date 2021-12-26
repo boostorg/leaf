@@ -3,8 +3,8 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated from https://github.com/boostorg/leaf on December 14, 2021,
-// Git hash 4d620f3ae89e30d27d5be628c06714c7016dcd9b.
+// Generated from https://github.com/boostorg/leaf on December 26, 2021,
+// Git hash d2ce5a7829fc06f17ea64f6300e98b06dfa18b2c.
 
 // Latest version: https://boostorg.github.io/leaf/leaf.hpp
 
@@ -4197,6 +4197,16 @@ namespace leaf_detail
         using value_ref = T &;
         using value_rv_cref = T const &&;
         using value_rv_ref = T &&;
+
+        static value_type_const * cptr( type const & v ) noexcept
+        {
+            return &v;
+        }
+
+        static value_type * ptr( type & v ) noexcept
+        {
+            return &v;
+        }
     };
 
     template <class T>
@@ -4209,6 +4219,16 @@ namespace leaf_detail
         using value_cref = T &;
         using value_rv_ref = T &;
         using value_rv_cref = T &;
+
+        static value_type_const * cptr( type const & v ) noexcept
+        {
+            return &v.get();
+        }
+
+        static value_type * ptr( type const & v ) noexcept
+        {
+            return &v.get();
+        }
     };
 
     class result_discriminant
@@ -4400,7 +4420,7 @@ protected:
 
     void enforce_value_state() const
     {
-        if( what_.kind() != result_discriminant::val )
+        if( !has_value() )
             ::boost::leaf::throw_exception(bad_result(get_error_id()));
     }
 
@@ -4515,9 +4535,19 @@ public:
         return *this;
     }
 
-    explicit operator bool() const noexcept
+    bool has_value() const noexcept
     {
         return what_.kind() == result_discriminant::val;
+    }
+
+    bool has_error() const noexcept
+    {
+        return !has_value();
+    }
+
+    explicit operator bool() const noexcept
+    {
+        return has_value();
     }
 
     value_cref value() const &
@@ -4544,34 +4574,34 @@ public:
         return std::move(stored_);
     }
 
-    value_cref operator*() const &
+    value_type_const * operator->() const noexcept
     {
-        return value();
+        return has_value() ? leaf_detail::stored<T>::cptr(stored_) : 0;
     }
 
-    value_ref operator*() &
+    value_type * operator->() noexcept
     {
-        return value();
+        return has_value() ? leaf_detail::stored<T>::ptr(stored_) : 0;
     }
 
-    value_rv_cref operator*() const &&
+    value_cref operator*() const & noexcept
     {
-        return std::move(*this).value();
+        return *operator->();
     }
 
-    value_rv_ref operator*() &&
+    value_ref operator*() & noexcept
     {
-        return std::move(*this).value();
+        return *operator->();
     }
 
-    value_type_const * operator->() const
+    value_rv_cref operator*() const && noexcept
     {
-        return &value();
+        return std::move(*operator->());
     }
 
-    value_type * operator->()
+    value_rv_ref operator*() && noexcept
     {
-        return &value();
+        return std::move(*operator->());
     }
 
     error_result error() noexcept
