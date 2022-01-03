@@ -16,8 +16,11 @@
 #   endif ///
 #endif ///
 
-#include <boost/leaf/detail/print.hpp>
-#include <string>
+#include <boost/leaf/detail/demangle.hpp>
+#include <iosfwd>
+#ifndef BOOST_LEAF_DISABLE_STD_STRING
+#   include <string>
+#endif
 #include <cerrno>
 #ifdef _WIN32
 #   include <Windows.h>
@@ -34,7 +37,22 @@ namespace boost { namespace leaf {
 
 struct BOOST_LEAF_SYMBOL_VISIBLE e_api_function { char const * value; };
 
-struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name { std::string value; };
+#ifdef BOOST_LEAF_DISABLE_STD_STRING
+
+struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name
+{
+    constexpr static char const * const value = "<unavailable>";
+    BOOST_LEAF_CONSTEXPR explicit e_file_name( char const * ) { }
+};
+
+#else
+
+struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name
+{
+    std::string value;
+};
+
+#endif
 
 struct BOOST_LEAF_SYMBOL_VISIBLE e_errno
 {

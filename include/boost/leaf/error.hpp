@@ -16,16 +16,22 @@
 #   endif ///
 #endif ///
 
+#include <boost/leaf/detail/optional.hpp>
+#include <boost/leaf/detail/demangle.hpp>
 #include <boost/leaf/detail/function_traits.hpp>
-#include <boost/leaf/detail/print.hpp>
-#include <system_error>
 #include <type_traits>
 #include <memory>
-#include <string>
+#include <iosfwd>
 
 #if BOOST_LEAF_DIAGNOSTICS
+#   include <boost/leaf/detail/print.hpp>
+#   include <string>
 #   include <sstream>
 #   include <set>
+#endif
+
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#   include <system_error>
 #endif
 
 #define BOOST_LEAF_TOKEN_PASTE(x, y) x ## y
@@ -173,7 +179,9 @@ namespace leaf_detail
     struct diagnostic<e_unexpected_count, false, false>
     {
         static constexpr bool is_invisible = true;
-        BOOST_LEAF_CONSTEXPR static void print(std::ostream &, e_unexpected_count const &) noexcept { }
+
+        template <class CharT, class Traits>
+        BOOST_LEAF_CONSTEXPR static void print( std::basic_ostream<CharT, Traits> &, e_unexpected_count const &) noexcept { }
     };
 
     class BOOST_LEAF_SYMBOL_VISIBLE e_unexpected_info
@@ -210,7 +218,9 @@ namespace leaf_detail
     struct diagnostic<e_unexpected_info, false, false>
     {
         static constexpr bool is_invisible = true;
-        BOOST_LEAF_CONSTEXPR static void print(std::ostream &, e_unexpected_info const &) noexcept { }
+
+        template <class CharT, class Traits>
+        BOOST_LEAF_CONSTEXPR static void print( std::basic_ostream<CharT, Traits> &, e_unexpected_info const &) noexcept { }
     };
 
     template <class=void>
@@ -231,7 +241,7 @@ namespace leaf_detail
 
 namespace boost { namespace leaf {
 
-struct e_source_location
+struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
 {
     char const * file;
     int line;
@@ -304,6 +314,7 @@ namespace leaf_detail
         template <class CharT, class Traits>
         void print( std::basic_ostream<CharT, Traits> & os, int key_to_print ) const
         {
+#if BOOST_LEAF_DIAGNOSTICS
             if( !diagnostic<E>::is_invisible )
                 if( int k = this->key() )
                 {
@@ -317,6 +328,7 @@ namespace leaf_detail
                     diagnostic<E>::print(os, value(k));
                     (os << '\n').flush();
                 }
+#endif
         }
 
         using impl::put;
@@ -495,6 +507,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
 namespace leaf_detail
 {
     class leaf_category final: public std::error_category
@@ -544,6 +557,7 @@ inline bool is_error_id( std::error_code const & ec ) noexcept
     BOOST_LEAF_ASSERT(!res || !ec.value() || ((ec.value()&3)==1));
     return res;
 }
+#endif
 
 ////////////////////////////////////////
 
@@ -571,6 +585,7 @@ public:
     {
     }
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     error_id( std::error_code const & ec ) noexcept:
         value_(leaf_detail::import_error_code(ec))
     {
@@ -582,6 +597,12 @@ public:
         value_(leaf_detail::import_error_code(e))
     {
     }
+
+    std::error_code to_error_code() const noexcept
+    {
+        return std::error_code(value_, leaf_detail::get_error_category<>::cat);
+    }
+#endif
 
     BOOST_LEAF_CONSTEXPR error_id load() const noexcept
     {
@@ -597,11 +618,6 @@ public:
             (void) unused;
         }
         return *this;
-    }
-
-    std::error_code to_error_code() const noexcept
-    {
-        return std::error_code(value_, leaf_detail::get_error_category<>::cat);
     }
 
     BOOST_LEAF_CONSTEXPR int value() const noexcept
@@ -692,7 +708,7 @@ public:
     virtual void deactivate() noexcept = 0;
     virtual void propagate() noexcept = 0;
     virtual bool is_active() const noexcept = 0;
-    virtual void print( std::ostream & ) const = 0;
+    inline virtual void print( std::ostream & ) const { };
     error_id captured_id_;
 };
 

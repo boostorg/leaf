@@ -595,17 +595,21 @@ int main()
     }
     BOOST_TEST_EQ(val::count, 0);
 
+#ifndef BOOST_LEAF_DISABLE_STD_STRING
     { // Initialization forwarding constructor
         leaf::result<std::string> r = "hello";
         BOOST_TEST(r);
         BOOST_TEST_EQ(r.value(), "hello");
     }
+#endif
 
+#ifndef BOOST_LEAF_DISABLE_STD_STRING
     { // Initialization forwarding constructor
         leaf::result<std::string> r; r = "hello";
         BOOST_TEST(r);
         BOOST_TEST_EQ(r.value(), "hello");
     }
+#endif
 
     return boost::report_errors();
 }

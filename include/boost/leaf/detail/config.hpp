@@ -24,6 +24,19 @@
 
 ////////////////////////////////////////
 
+#ifdef BOOST_LEAF_EMBEDDED
+#	define BOOST_LEAF_NO_EXCEPTIONS
+#	define BOOST_LEAF_DIAGNOSTICS 0
+#	define BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#	define BOOST_LEAF_DISABLE_STD_STRING
+#endif
+
+#if BOOST_LEAF_DIAGNOSTICS && defined(BOOST_LEAF_DISABLE_STD_STRING)
+#	error BOOST_LEAF_DIAGNOSTICS requires the use of std::string
+#endif
+
+////////////////////////////////////////
+
 // Configure BOOST_LEAF_NO_EXCEPTIONS, unless already #defined
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 

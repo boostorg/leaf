@@ -15,8 +15,6 @@
 // See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt
 
-#include <string>
-
 #ifndef BOOST_LEAF_ENABLE_WARNINGS ///
 #   if defined(_MSC_VER) ///
 #       pragma warning(push,1) ///
@@ -26,6 +24,66 @@
 #       pragma GCC system_header ///
 #   endif ///
 #endif ///
+
+#include <boost/leaf/detail/config.hpp>
+#include <cstring>
+
+namespace boost { namespace leaf {
+
+namespace leaf_detail
+{
+    template <int N>
+    BOOST_LEAF_CONSTEXPR inline char const * check_prefix( char const * t, char const (&prefix)[N] )
+    {
+        return std::strncmp(t,prefix,sizeof(prefix)-1)==0 ? t+sizeof(prefix)-1 : t;
+    }
+}
+
+template <class Name>
+inline char const * type()
+{
+    using leaf_detail::check_prefix;
+char const * t =
+#ifdef __FUNCSIG__
+    __FUNCSIG__;
+#else
+    __PRETTY_FUNCTION__;
+#endif
+#if defined(__clang__)
+    BOOST_LEAF_ASSERT(check_prefix(t,"const char *boost::leaf::type() ")==t+32);
+    return t+32;
+#elif defined(__GNUC__)
+    BOOST_LEAF_ASSERT(check_prefix(t,"const char* boost::leaf::type() ")==t+32);
+    return t+32;
+#else
+    char const * clang_style = check_prefix(t,"const char *boost::leaf::type() ");
+    if( clang_style!=t )
+        return clang_style;
+    char const * gcc_style = check_prefix(t,"const char* boost::leaf::type() ");
+    if( gcc_style!=t )
+        return gcc_style;
+#endif
+    return t;
+}
+
+} }
+
+////////////////////////////////////////
+
+#ifdef BOOST_LEAF_DISABLE_STD_STRING
+
+namespace boost { namespace leaf {
+
+    inline char const * demangle( char const * name )
+    {
+        return name;
+    }
+
+} }
+
+#else
+
+#include <string>
 
 #if defined(__has_include) && ((__GNUC__ + 0) >= 5)
 #   if __has_include(<cxxabi.h>)
@@ -81,7 +139,7 @@ namespace leaf_detail
         scoped_demangled_name& operator= ( scoped_demangled_name const& ) = delete;
     };
 
-#if defined( BOOST_LEAF_HAS_CXXABI_H )
+#if defined(BOOST_LEAF_HAS_CXXABI_H) and !defined(BOOST_LEAF_DISABLE_STD_STRING)
 
     inline char const * demangle_alloc( char const * name ) noexcept
     {
@@ -127,6 +185,8 @@ namespace leaf_detail
 
 #ifdef BOOST_LEAF_HAS_CXXABI_H
 #   undef BOOST_LEAF_HAS_CXXABI_H
+#endif
+
 #endif
 
 #if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///

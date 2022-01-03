@@ -60,6 +60,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
 template <class E, class Enum = E>
 struct condition
 {
@@ -80,6 +81,7 @@ BOOST_LEAF_CONSTEXPR inline bool category( std::error_code const & ec )
     return &ec.category() == &std::error_code(ErrorCodeEnum{}).category();
 }
 #endif
+#endif
 
 ////////////////////////////////////////
 
@@ -91,6 +93,7 @@ namespace leaf_detail
         using type = T;
     };
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     template <class Enum>
     struct match_enum_type<condition<Enum, Enum>>
     {
@@ -102,6 +105,7 @@ namespace leaf_detail
     {
         static_assert(sizeof(Enum) == 0, "leaf::condition<E, Enum> should be used with leaf::match_value<>, not with leaf::match<>");
     };
+#endif
 }
 
 template <class E, BOOST_LEAF_MATCH_ARGS(match_enum_type<E>, V1, V)>
@@ -117,6 +121,7 @@ struct match
     }
 };
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
 template <class Enum, BOOST_LEAF_MATCH_ARGS(BOOST_LEAF_ESC(match_enum_type<condition<Enum, Enum>>), V1, V)>
 struct match<condition<Enum, Enum>, V1, V...>
 {
@@ -128,6 +133,7 @@ struct match<condition<Enum, Enum>, V1, V...>
         return leaf_detail::cmp_value_pack(e, V1, V...);
     }
 };
+#endif
 
 template <class E, BOOST_LEAF_MATCH_ARGS(match_enum_type<E>, V1, V)>
 struct is_predicate<match<E, V1, V...>>: std::true_type
@@ -144,6 +150,7 @@ namespace leaf_detail
         using type = typename std::remove_reference<decltype(std::declval<E>().value)>::type;
     };
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     template <class E, class Enum>
     struct match_value_enum_type<condition<E, Enum>>
     {
@@ -155,6 +162,7 @@ namespace leaf_detail
     {
         static_assert(sizeof(Enum)==0, "leaf::condition<Enum> should be used with leaf::match<>, not with leaf::match_value<>");
     };
+#endif
 }
 
 template <class E, BOOST_LEAF_MATCH_ARGS(match_value_enum_type<E>, V1, V)>
@@ -169,6 +177,7 @@ struct match_value
     }
 };
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
 template <class E, class Enum, BOOST_LEAF_MATCH_ARGS(BOOST_LEAF_ESC(match_value_enum_type<condition<E, Enum>>), V1, V)>
 struct match_value<condition<E, Enum>, V1, V...>
 {
@@ -180,6 +189,7 @@ struct match_value<condition<E, Enum>, V1, V...>
         return leaf_detail::cmp_value_pack(e.value, V1, V...);
     }
 };
+#endif
 
 template <class E, BOOST_LEAF_MATCH_ARGS(match_value_enum_type<E>, V1, V)>
 struct is_predicate<match_value<E, V1, V...>>: std::true_type

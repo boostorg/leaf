@@ -116,14 +116,18 @@ void not_called_on_purpose()
     test< std::tuple<info<1>,info<2>,info<3>> >( expd([]( info<1> ){ }, []( info<2>, info<3> ){ }, []( info<3> ){ }) );
 
     test< std::tuple<my_error_code> >( expd([]( leaf::match<my_error_code, my_error_code::error1> ){ }) );
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     test< std::tuple<std::error_code> >( expd([]( leaf::match<leaf::condition<cond_x>, cond_x::x00> ){ }) );
+#endif
 
     test< std::tuple<info<1>> >( expd([]( leaf::match_value<info<1>,42> ){ }) );
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     test< std::tuple<std::error_code> >( expd([]( leaf::match<leaf::condition<my_error_condition>, my_error_condition::cond1> ){ }) );
 #if __cplusplus >= 201703L
     test< std::tuple<std::error_code> >( expd([]( leaf::match<std::error_code, my_error_code::error1> ){ }) );
     test< std::tuple<std::error_code> >( expd([]( leaf::match<std::error_code, my_error_condition::cond1> ){ }) );
+#endif
 #endif
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS

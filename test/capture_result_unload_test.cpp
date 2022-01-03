@@ -125,7 +125,7 @@ int main()
     test( []
     {
         return leaf::capture(
-            std::make_shared<leaf::leaf_detail::polymorphic_context_impl<leaf::context<std::error_code, info<1>, info<2>, info<3>>>>(),
+            std::make_shared<leaf::leaf_detail::polymorphic_context_impl<leaf::context<info<1>, info<2>, info<3>>>>(),
             []() -> leaf::result<int>
             {
                 return leaf::new_error(errc_a::a0, info<1>{1}, info<3>{3});
@@ -135,7 +135,7 @@ int main()
     test( []
     {
         return leaf::capture(
-            std::make_shared<leaf::leaf_detail::polymorphic_context_impl<leaf::context<std::error_code, info<1>, info<2>, info<3>>>>(),
+            std::make_shared<leaf::leaf_detail::polymorphic_context_impl<leaf::context<info<1>, info<2>, info<3>>>>(),
             []() -> leaf::result<void>
             {
                 return leaf::new_error(errc_a::a0, info<1>{1}, info<3>{3});

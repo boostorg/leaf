@@ -166,6 +166,66 @@ inline leaf_detail::exception<std::exception> exception() noexcept
     return leaf_detail::exception<std::exception>(leaf::new_error());
 }
 
+////////////////////////////////////////
+
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
+template <class T>
+class result;
+
+namespace leaf_detail
+{
+    inline error_id catch_exceptions_helper( std::exception const & ex, leaf_detail_mp11::mp_list<> )
+    {
+        return leaf::new_error(std::current_exception());
+    }
+
+    template <class Ex1, class... Ex>
+    inline error_id catch_exceptions_helper( std::exception const & ex, leaf_detail_mp11::mp_list<Ex1,Ex...> )
+    {
+        if( Ex1 const * p = dynamic_cast<Ex1 const *>(&ex) )
+            return catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>{ }).load(*p);
+        else
+            return catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>{ });
+    }
+
+    template <class T>
+    struct deduce_exception_to_result_return_type_impl
+    {
+        using type = result<T>;
+    };
+
+    template <class T>
+    struct deduce_exception_to_result_return_type_impl<result<T>>
+    {
+        using type = result<T>;
+    };
+
+    template <class T>
+    using deduce_exception_to_result_return_type = typename deduce_exception_to_result_return_type_impl<T>::type;
+}
+
+template <class... Ex, class F>
+inline
+leaf_detail::deduce_exception_to_result_return_type<leaf_detail::fn_return_type<F>>
+exception_to_result( F && f ) noexcept
+{
+    try
+    {
+        return std::forward<F>(f)();
+    }
+    catch( std::exception const & ex )
+    {
+        return leaf_detail::catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>());
+    }
+    catch(...)
+    {
+        return leaf::new_error(std::current_exception());
+    }
+}
+
+#endif
+
 } }
 
 #if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///

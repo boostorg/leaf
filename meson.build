@@ -14,6 +14,7 @@ option_exceptions = (get_option('cpp_eh')!='none')
 option_enable_unit_tests = get_option('leaf_enable_unit_tests')
 option_enable_examples = get_option('leaf_enable_examples')
 option_enable_benchmarks = get_option('leaf_enable_benchmarks')
+option_embedded = get_option('leaf_embedded')
 
 if not option_enable_examples
 	if option_boost
@@ -86,6 +87,10 @@ if option_lua
 endif
 
 defines = [ '-DBOOST_LEAF_DIAGNOSTICS=' + option_diagnostics.to_string() ]
+
+if option_embedded
+	defines += '-DBOOST_LEAF_EMBEDDED'
+endif
 
 if not option_suppress_warnings
 	defines += '-DBOOST_LEAF_ENABLE_WARNINGS'

@@ -12,7 +12,6 @@
 
 namespace leaf = boost::leaf;
 
-
 class error_base: public virtual std::exception { };
 class error_a: public virtual error_base { };
 class error_b: public virtual error_base { };

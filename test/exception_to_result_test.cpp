@@ -19,7 +19,7 @@ int main()
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
 #   include "leaf.hpp"
 #else
-#   include <boost/leaf/capture.hpp>
+#   include <boost/leaf/exception.hpp>
 #   include <boost/leaf/result.hpp>
 #   include <boost/leaf/handle_errors.hpp>
 #endif

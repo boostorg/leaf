@@ -25,19 +25,21 @@
 
 namespace boost { namespace leaf {
 
-class error_info
+class BOOST_LEAF_SYMBOL_VISIBLE error_info
 {
     error_info & operator=( error_info const & ) = delete;
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
     static error_id unpack_error_id( std::exception const * ex ) noexcept
     {
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
         if( std::system_error const * se = dynamic_cast<std::system_error const *>(ex) )
             if( is_error_id(se->code()) )
                 return leaf_detail::make_error_id(se->code().value());
         if( std::error_code const * ec = dynamic_cast<std::error_code const *>(ex) )
             if( is_error_id(*ec) )
                 return leaf_detail::make_error_id(ec->value());
+#endif
         if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
             return *err_id;
         return current_error();
@@ -111,7 +113,7 @@ public:
 
 #if BOOST_LEAF_DIAGNOSTICS
 
-class diagnostic_info: public error_info
+class BOOST_LEAF_SYMBOL_VISIBLE diagnostic_info: public error_info
 {
     leaf_detail::e_unexpected_count const * e_uc_;
     void const * tup_;
@@ -169,7 +171,7 @@ namespace leaf_detail
 
 #else
 
-class diagnostic_info: public error_info
+class BOOST_LEAF_SYMBOL_VISIBLE diagnostic_info: public error_info
 {
 protected:
 
@@ -220,7 +222,7 @@ namespace leaf_detail
 
 #if BOOST_LEAF_DIAGNOSTICS
 
-class verbose_diagnostic_info: public error_info
+class BOOST_LEAF_SYMBOL_VISIBLE verbose_diagnostic_info: public error_info
 {
     leaf_detail::e_unexpected_info const * e_ui_;
     void const * tup_;
@@ -278,7 +280,7 @@ namespace leaf_detail
 
 #else
 
-class verbose_diagnostic_info: public error_info
+class BOOST_LEAF_SYMBOL_VISIBLE verbose_diagnostic_info: public error_info
 {
 protected:
 
@@ -377,6 +379,7 @@ namespace leaf_detail
         }
     };
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     template <>
     struct peek_exception<std::error_code const, true>
     {
@@ -406,6 +409,7 @@ namespace leaf_detail
                 return 0;
         }
     };
+#endif
 
     template <class E>
     struct peek_exception<E, true>

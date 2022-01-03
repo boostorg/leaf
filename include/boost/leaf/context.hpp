@@ -185,7 +185,8 @@ namespace leaf_detail
             tuple_for_each<I-1,Tuple>::propagate_captured(tup, err_id);
         }
 
-        static void print( std::ostream & os, void const * tup, int key_to_print )
+        template <class CharT, class Traits>
+        static void print( std::basic_ostream<CharT, Traits> & os, void const * tup, int key_to_print )
         {
             BOOST_LEAF_ASSERT(tup != 0);
             tuple_for_each<I-1,Tuple>::print(os, tup, key_to_print);
@@ -200,7 +201,8 @@ namespace leaf_detail
         BOOST_LEAF_CONSTEXPR static void deactivate( Tuple & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void propagate( Tuple & tup ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void propagate_captured( Tuple & tup, int ) noexcept { }
-        static void print( std::ostream &, void const *, int ) { }
+        template <class CharT, class Traits>
+        BOOST_LEAF_CONSTEXPR static void print( std::basic_ostream<CharT, Traits> &, void const *, int ) { }
     };
 }
 
@@ -365,7 +367,8 @@ public:
         return is_active_;
     }
 
-    void print( std::ostream & os ) const
+    template <class CharT, class Traits>
+    void print( std::basic_ostream<CharT, Traits> & os ) const
     {
         leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, &tup_, 0);
     }
@@ -425,7 +428,9 @@ namespace leaf_detail
         void deactivate() noexcept final override { Ctx::deactivate(); }
         void propagate() noexcept final override { Ctx::propagate(); }
         bool is_active() const noexcept final override { return Ctx::is_active(); }
+#if BOOST_LEAF_DIAGNOSTICS
         void print( std::ostream & os ) const final override { return Ctx::print(os); }
+#endif
     };
 }
 

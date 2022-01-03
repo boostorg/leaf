@@ -52,6 +52,7 @@ int main()
         []( info<42> const & i42, leaf::diagnostic_info const & di )
         {
             BOOST_TEST_EQ(i42.value, 42);
+#ifndef BOOST_LEAF_DISABLE_STD_STRING
             std::stringstream ss; ss << di;
             std::string s = ss.str();
             std::cout << s;
@@ -59,6 +60,7 @@ int main()
             BOOST_TEST(s.find("info<-42>")!=s.npos);
 #else
             BOOST_TEST(s.find("BOOST_LEAF_DIAGNOSTICS")!=s.npos);
+#endif
 #endif
             return 1;
         },

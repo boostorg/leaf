@@ -18,6 +18,9 @@
 
 #include <boost/leaf/error.hpp>
 #include <climits>
+#ifdef BOOST_LEAF_DISABLE_CAPTURE
+#   include <cstdlib>
+#endif
 
 namespace boost { namespace leaf {
 
@@ -349,6 +352,7 @@ public:
 
 #endif
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     result( std::error_code const & ec ) noexcept:
         what_(error_id(ec))
     {
@@ -359,6 +363,7 @@ public:
         what_(error_id(e))
     {
     }
+#endif
 
 #ifdef BOOST_LEAF_DISABLE_CAPTURE
     result( context_ptr && ) noexcept:
@@ -515,6 +520,7 @@ public:
     {
     }
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     result( std::error_code const & ec ) noexcept:
         base(ec)
     {
@@ -525,6 +531,7 @@ public:
         base(e)
     {
     }
+#endif
 
     result( context_ptr && ctx ) noexcept:
         base(std::move(ctx))

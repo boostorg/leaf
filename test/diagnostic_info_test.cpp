@@ -104,11 +104,13 @@ int main()
             leaf::e_errno,
             leaf::error_info const & unmatched )
         {
+#ifndef BOOST_LEAF_DISABLE_STD_STRING
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
             BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
             std::cout << s;
+#endif
         },
         []()
         {
@@ -140,6 +142,7 @@ int main()
             leaf::e_errno,
             leaf::diagnostic_info const & unmatched )
         {
+#ifndef BOOST_LEAF_DISABLE_STD_STRING
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
@@ -159,6 +162,7 @@ int main()
             BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
 #endif
             std::cout << s;
+#endif
         },
         []()
         {
@@ -190,6 +194,7 @@ int main()
             leaf::e_errno,
             leaf::verbose_diagnostic_info const & di )
         {
+#ifndef BOOST_LEAF_DISABLE_STD_STRING
             std::ostringstream st;
             st << di;
             std::string s = st.str();
@@ -211,6 +216,7 @@ int main()
             BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
 #endif
             std::cout << s;
+#endif
         },
         []()
         {
@@ -246,6 +252,7 @@ int main()
             leaf::e_errno,
             leaf::error_info const & unmatched )
         {
+#ifndef BOOST_LEAF_DISABLE_STD_STRING
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
@@ -253,6 +260,7 @@ int main()
             BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
             BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
             std::cout << s;
+#endif
         } );
 
     std::cout << __LINE__  << " ----\n";
@@ -280,6 +288,7 @@ int main()
             leaf::e_errno,
             leaf::diagnostic_info const & unmatched )
         {
+#ifndef BOOST_LEAF_DISABLE_STD_STRING
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
@@ -303,6 +312,7 @@ int main()
             BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
 #endif
             std::cout << s;
+#endif
         } );
 
     std::cout << __LINE__  << " ----\n";
@@ -330,6 +340,7 @@ int main()
             leaf::e_errno,
             leaf::verbose_diagnostic_info const & di )
         {
+#ifndef BOOST_LEAF_DISABLE_STD_STRING
             std::ostringstream st;
             st << di;
             std::string s = st.str();
@@ -355,6 +366,7 @@ int main()
             BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
 #endif
             std::cout << s;
+#endif
         } );
 
 #endif

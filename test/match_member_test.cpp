@@ -33,7 +33,9 @@ enum class my_error { e1=1, e2, e3 };
 
 struct e_my_error { my_error value; };
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
 struct e_error_code { std::error_code value; };
+#endif
 
 struct my_exception: std::exception
 {
@@ -63,6 +65,7 @@ int main()
         BOOST_TEST(( test<leaf::match_member<&e_my_error::value, my_error::e2, my_error::e1>>(e) ));
     }
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     {
         e_error_code e = { errc_a::a0 };
 
@@ -70,6 +73,7 @@ int main()
         BOOST_TEST(( !test<leaf::match_member<&e_error_code::value, errc_a::a2>>(e) ));
         BOOST_TEST(( test<leaf::match_member<&e_error_code::value, errc_a::a2, errc_a::a0>>(e) ));
     }
+#endif
 
     {
         int r = leaf::try_handle_all(

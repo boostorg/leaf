@@ -19,9 +19,11 @@ namespace leaf = boost::leaf;
 int main()
 {
     errno = ENOENT;
+#ifndef BOOST_LEAF_DISABLE_STD_STRING
     std::stringstream ss;
     ss << leaf::e_errno{};
     BOOST_TEST(ss.str().find(std::strerror(ENOENT)) != std::string::npos);
+#endif
 
     int r = leaf::try_handle_all(
         []() -> leaf::result<int>

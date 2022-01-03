@@ -2489,6 +2489,9 @@ namespace boost { namespace leaf {
 
   <<unspecified-exception-type>> exception( error_id id ) noexcept;
 
+  template <class... Ex, class F>
+  <<result<T>-deduced>> exception_to_result( F && f ) noexcept;
+
 } }
 
 #define BOOST_LEAF_EXCEPTION <<inject e_source_location voodoo>> ::boost::leaf::exception
@@ -2507,16 +2510,13 @@ Reference: <<exception>> | <<BOOST_LEAF_EXCEPTION>> | <<BOOST_LEAF_THROW_EXCEPTI
 
 ====
 [source,c++]
-.#include <boost/leaf/capture_exception.hpp>
+.#include <boost/leaf/capture.hpp>
 ----
 namespace boost { namespace leaf {
 
   template <class F, class... A>
   decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))
   capture(std::shared_ptr<polymorphic_context> && ctx, F && f, A... a);
-
-  template <class... Ex, class F>
-  <<result<T>-deduced>> exception_to_result( F && f ) noexcept;
 
 } }
 ----
@@ -2967,7 +2967,7 @@ NOTE: To automatically capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[_
 === `exception_to_result`
 
 [source,c++]
-.#include <boost/leaf/capture.hpp>
+.#include <boost/leaf/exception.hpp>
 ----
 namespace boost { namespace leaf {
 
@@ -5934,7 +5934,19 @@ The following configuration macros are recognized:
 
 * `BOOST_LEAF_DIAGNOSTICS`: Defining this macro to `0` stubs out both <<diagnostic_info>> and <<verbose_diagnostic_info>>, which could improve the performance of the error path in some programs (if the macro is left undefined, LEAF defines it as `1`).
 * `BOOST_LEAF_NO_EXCEPTIONS`: Disables all exception handling support. If left undefined, LEAF defines it based on the compiler configuration (e.g. `-fno-exceptions`).
-* `BOOST_LEAF_NO_THREADS`: Disable all multi-thread support.
+* `BOOST_LEAF_NO_THREADS`: Disables all multi-thread support.
+* `BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR`: Disables the `std::error_code` / `std::error_condition` integration. In this case LEAF does not `#include <system_error>`, which is considered too heavy for embedded platforms.
+* `BOOST_LEAF_DISABLE_STD_STRING`: Disables all use of `std::string` (available only under `BOOST_LEAF_DIAGNOSTICS=0`). In this case LEAF does not `#include <string>` which is considered too heavy for embedded platforms.
+
+In addition, defining `BOOST_LEAF_EMBEDDED` is equivalent to the following:
+
+[source,c++]
+----
+#define BOOST_LEAF_NO_EXCEPTIONS
+#define BOOST_LEAF_DIAGNOSTICS 0
+#define BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#define BOOST_LEAF_DISABLE_STD_STRING
+----
 
 == Limitations
 

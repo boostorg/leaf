@@ -28,7 +28,9 @@ enum class my_error_code
 
 struct e_my_error_code { my_error_code value; };
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
 struct e_std_error_code { std::error_code value; };
+#endif
 
 template <class R>
 leaf::result<R> f( my_error_code ec )
@@ -39,6 +41,7 @@ leaf::result<R> f( my_error_code ec )
         return leaf::new_error(ec, e_my_error_code{ec}, info<1>{1}, info<2>{2}, info<3>{3});
 }
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
 template <class R, class Errc>
 leaf::result<R> f_errc( Errc ec )
 {
@@ -50,6 +53,7 @@ leaf::result<R> f_errc_wrapped( Errc ec )
 {
     return leaf::new_error(e_std_error_code{make_error_code(ec)}, info<1>{1}, info<2>{2}, info<3>{3});
 }
+#endif
 
 int main()
 {
@@ -95,6 +99,7 @@ int main()
         BOOST_TEST(r);
     }
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     // void, try_handle_some (failure, matched), match cond_x (single enum value)
     {
         int c=0;
@@ -116,7 +121,9 @@ int main()
         BOOST_TEST_EQ(c, 1);
         BOOST_TEST(r);
     }
+#endif
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     // void, try_handle_some (failure, matched), match cond_x (wrapped std::error_code)
     {
         int c=0;
@@ -138,6 +145,7 @@ int main()
         BOOST_TEST_EQ(c, 1);
         BOOST_TEST(r);
     }
+#endif
 
     // void, try_handle_some (failure, matched), match enum (single enum value)
     {
@@ -285,6 +293,7 @@ int main()
         BOOST_TEST_EQ(c, 2);
     }
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     // void, try_handle_some (failure, initially not matched), match cond_x (single enum value)
     {
         int c=0;
@@ -322,7 +331,9 @@ int main()
             } );
         BOOST_TEST_EQ(c, 2);
     }
+#endif
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     // void, try_handle_some (failure, initially not matched), match cond_x (wrapped std::error_code)
     {
         int c=0;
@@ -360,6 +371,7 @@ int main()
             } );
         BOOST_TEST_EQ(c, 2);
     }
+#endif
 
     // void, try_handle_some (failure, initially not matched), match enum (single enum value)
     {
@@ -551,6 +563,7 @@ int main()
         BOOST_TEST_EQ(c, 1);
     }
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     // void, try_handle_some (failure, initially matched), match cond_x (single enum value)
     {
         int c=0;
@@ -588,7 +601,9 @@ int main()
             } );
         BOOST_TEST_EQ(c, 1);
     }
+#endif
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     // void, try_handle_some (failure, initially matched), match cond_x (wrapped std::error_code)
     {
         int c=0;
@@ -626,6 +641,8 @@ int main()
             } );
         BOOST_TEST_EQ(c, 1);
     }
+#endif
+
     // void, try_handle_some (failure, initially matched), match enum (single enum value)
     {
         int c=0;
@@ -814,6 +831,7 @@ int main()
         BOOST_TEST_EQ(*r, 1);
     }
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     // int, try_handle_some (failure, matched), match cond_x (single enum value)
     {
         leaf::result<int> r = leaf::try_handle_some(
@@ -836,6 +854,7 @@ int main()
         BOOST_TEST(r);
         BOOST_TEST_EQ(*r, 2);
     }
+#endif
 
     // int, try_handle_some (failure, matched), match enum (single enum value)
     {
@@ -961,6 +980,7 @@ int main()
         BOOST_TEST_EQ(r, 2);
     }
 
+#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
     // int, try_handle_some (failure, initially not matched), match cond_x (single enum value)
     {
         int r = leaf::try_handle_all(
@@ -992,6 +1012,7 @@ int main()
             } );
         BOOST_TEST_EQ(r, 2);
     }
+#endif
 
     // int, try_handle_some (failure, initially not matched), match enum (single enum value)
     {
