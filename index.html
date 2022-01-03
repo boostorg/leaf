@@ -3330,6 +3330,9 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
 
   <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">-</span><span class="n">exception</span><span class="o">-</span><span class="n">type</span><span class="o">&gt;&gt;</span> <span class="n">exception</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Ex</span><span class="p">,</span> <span class="k">class</span> <span class="nc">F</span><span class="p">&gt;</span>
+  <span class="o">&lt;&lt;</span><span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;-</span><span class="n">deduced</span><span class="o">&gt;&gt;</span> <span class="n">exception_to_result</span><span class="p">(</span> <span class="n">F</span> <span class="o">&amp;&amp;</span> <span class="n">f</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+
 <span class="p">}</span> <span class="p">}</span>
 
 <span class="cp">#define BOOST_LEAF_EXCEPTION &lt;&lt;inject e_source_location voodoo&gt;&gt; ::boost::leaf::exception
@@ -3360,16 +3363,13 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
 <div class="exampleblock">
 <div class="content">
 <div class="listingblock">
-<div class="title">#include &lt;boost/leaf/capture_exception.hpp&gt;</div>
+<div class="title">#include &lt;boost/leaf/capture.hpp&gt;</div>
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">F</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">A</span><span class="p">&gt;</span>
   <span class="k">decltype</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">declval</span><span class="o">&lt;</span><span class="n">F</span><span class="o">&gt;</span><span class="p">()(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">declval</span><span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span><span class="p">())...))</span>
   <span class="n">capture</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">polymorphic_context</span><span class="o">&gt;</span> <span class="o">&amp;&amp;</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">F</span> <span class="o">&amp;&amp;</span> <span class="n">f</span><span class="p">,</span> <span class="n">A</span><span class="p">...</span> <span class="n">a</span><span class="p">);</span>
-
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Ex</span><span class="p">,</span> <span class="k">class</span> <span class="nc">F</span><span class="p">&gt;</span>
-  <span class="o">&lt;&lt;</span><span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;-</span><span class="n">deduced</span><span class="o">&gt;&gt;</span> <span class="n">exception_to_result</span><span class="p">(</span> <span class="n">F</span> <span class="o">&amp;&amp;</span> <span class="n">f</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
@@ -4021,7 +4021,7 @@ To automatically capture <code>__FILE__</code>, <code>__LINE__</code> and <code>
 <div class="sect2">
 <h3 id="exception_to_result"><code>exception_to_result</code></h3>
 <div class="listingblock">
-<div class="title">#include &lt;boost/leaf/capture.hpp&gt;</div>
+<div class="title">#include &lt;boost/leaf/exception.hpp&gt;</div>
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
@@ -5806,9 +5806,9 @@ It is probably better to define your own file name wrappers to avoid clashes if 
 
   <span class="k">struct</span> <span class="nc">e_source_location</span>
   <span class="p">{</span>
-    <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span> <span class="k">const</span> <span class="n">file</span><span class="p">;</span>
-    <span class="kt">int</span> <span class="k">const</span> <span class="n">line</span><span class="p">;</span>
-    <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span> <span class="k">const</span> <span class="n">function</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span> <span class="n">file</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">line</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span> <span class="n">function</span><span class="p">;</span>
 
     <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="n">os</span><span class="p">,</span> <span class="n">e_source_location</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">x</span> <span class="p">);</span>
   <span class="p">};</span>
@@ -8556,9 +8556,26 @@ meson <span class="nb">test</span></code></pre>
 <p><code>BOOST_LEAF_NO_EXCEPTIONS</code>: Disables all exception handling support. If left undefined, LEAF defines it based on the compiler configuration (e.g. <code>-fno-exceptions</code>).</p>
 </li>
 <li>
-<p><code>BOOST_LEAF_NO_THREADS</code>: Disable all multi-thread support.</p>
+<p><code>BOOST_LEAF_NO_THREADS</code>: Disables all multi-thread support.</p>
+</li>
+<li>
+<p><code>BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR</code>: Disables the <code>std::error_code</code> / <code>std::error_condition</code> integration. In this case LEAF does not <code>#include &lt;system_error&gt;</code>, which is considered too heavy for embedded platforms.</p>
+</li>
+<li>
+<p><code>BOOST_LEAF_DISABLE_STD_STRING</code>: Disables all use of <code>std::string</code> (available only under <code>BOOST_LEAF_DIAGNOSTICS=0</code>). In this case LEAF does not <code>#include &lt;string&gt;</code> which is considered too heavy for embedded platforms.</p>
 </li>
 </ul>
+</div>
+<div class="paragraph">
+<p>In addition, defining <code>BOOST_LEAF_EMBEDDED</code> is equivalent to the following:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#define BOOST_LEAF_NO_EXCEPTIONS
+#define BOOST_LEAF_DIAGNOSTICS 0
+#define BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#define BOOST_LEAF_DISABLE_STD_STRING</span></code></pre>
+</div>
 </div>
 </div>
 </div>
