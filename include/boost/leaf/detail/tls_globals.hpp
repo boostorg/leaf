@@ -35,11 +35,11 @@ namespace tls
     template <class T>
     struct BOOST_LEAF_SYMBOL_VISIBLE ptr
     {
-        static BOOST_LEAF_SYMBOL_VISIBLE T * p;
+        static T * p;
     };
 
     template <class T>
-    BOOST_LEAF_SYMBOL_VISIBLE T * ptr<T>::p;
+    T * ptr<T>::p;
 
     template <class T>
     T * ptr_read() noexcept
@@ -58,11 +58,11 @@ namespace tls
     template <class Tag>
     struct BOOST_LEAF_SYMBOL_VISIBLE tagged_uint32
     {
-        static BOOST_LEAF_SYMBOL_VISIBLE std::uint32_t x;
+        static std::uint32_t x;
     };
 
     template <class Tag>
-    BOOST_LEAF_SYMBOL_VISIBLE std::uint32_t tagged_uint32<Tag>::x;
+    std::uint32_t tagged_uint32<Tag>::x;
 
     template <class Tag>
     std::uint32_t uint32_read() noexcept

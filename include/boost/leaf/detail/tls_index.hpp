@@ -30,7 +30,7 @@ namespace boost { namespace leaf {
         BOOST_LEAF_TLS_INDEX_TYPE index_counter<T>::c;
 
         template <class T>
-        struct index
+        struct BOOST_LEAF_SYMBOL_VISIBLE index
         {
              static BOOST_LEAF_TLS_INDEX_TYPE const idx = index_counter<>::c++;
         };
