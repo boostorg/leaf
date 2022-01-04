@@ -64,8 +64,8 @@ class error_id;
 
 namespace leaf_detail
 {
-    struct tls_tag_unexpected_enabled_counter;
-    struct tls_tag_id_factory_current_id;
+    struct BOOST_LEAF_SYMBOL_VISIBLE tls_tag_unexpected_enabled_counter;
+    struct BOOST_LEAF_SYMBOL_VISIBLE tls_tag_id_factory_current_id;
 
     struct inject_loc
     {
@@ -228,10 +228,7 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
 namespace leaf_detail
 {
     template <class E>
-    class slot;
-
-    template <class E>
-    class slot:
+    class BOOST_LEAF_SYMBOL_VISIBLE slot:
         optional<E>
     {
         slot( slot const & ) = delete;
