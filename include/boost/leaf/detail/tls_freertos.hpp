@@ -25,7 +25,7 @@
 #endif ///
 
 #include <task.h> // From FreeRTOS
-#define BOOST_LEAF_TLS_INDEX_TYPE BaseType_t;
+#define BOOST_LEAF_TLS_INDEX_TYPE BaseType_t
 #include <boost/leaf/detail/tls_index.hpp>
 #undef BOOST_LEAF_TLS_INDEX_TYPE
 #include <atomic>
@@ -43,7 +43,7 @@ namespace tls
     template <class T>
     T * ptr_read() noexcept
     {
-        return reinterpret_cast<T *>(vTaskGetThreadLocalStoragePointer(0, index<T>::idx));
+        return reinterpret_cast<T *>(pvTaskGetThreadLocalStoragePointer(0, index<T>::idx));
     }
 
     template <class T>
