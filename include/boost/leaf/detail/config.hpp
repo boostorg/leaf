@@ -213,12 +213,13 @@
 
 ////////////////////////////////////////
 
-#if defined(BOOST_LEAF_NO_THREADS)
+#if defined(BOOST_LEAF_TLS_FREERTOS)
+#   define BOOST_LEAF_NO_THREADS
+#   include <boost/leaf/detail/tls_freertos.hpp>
+#elif defined(BOOST_LEAF_NO_THREADS)
 #   include <boost/leaf/detail/tls_globals.hpp>
-#elif defined(BOOST_LEAF_TLS_FREERTOS)
-#	include <boost/leaf/detail/tls_freertos.hpp>
 #else
-#	include <boost/leaf/detail/tls_cpp11.hpp>
+#	  include <boost/leaf/detail/tls_cpp11.hpp>
 #endif
 
 #if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///

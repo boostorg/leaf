@@ -32,11 +32,8 @@ namespace boost { namespace leaf {
         template <class T>
         struct BOOST_LEAF_SYMBOL_VISIBLE index
         {
-             static BOOST_LEAF_TLS_INDEX_TYPE const idx = index_counter<>::c++;
+            inline static BOOST_LEAF_TLS_INDEX_TYPE const idx = index_counter<>::c++;
         };
-
-        template <class T>
-        static BOOST_LEAF_TLS_INDEX_TYPE const index<T>::idx;
     }
 
 } }
