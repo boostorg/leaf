@@ -73,7 +73,7 @@ namespace tls
     template <class Tag>
     void uint32_write( std::uint32_t x ) noexcept
     {
-        return tagged_uint32<Tag>::x = x;
+        tagged_uint32<Tag>::x = x;
     }
 
     template <class Tag>
