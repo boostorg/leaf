@@ -110,7 +110,7 @@ namespace leaf_detail
         {
             BOOST_LEAF_ASSERT(ctx_->captured_id_);
             auto active_context = activate_context(*ctx_);
-            id_factory<>::current_id = ctx_->captured_id_.value();
+            tls::uint32_write<tls_tag_id_factory_current_id>(ctx_->captured_id_.value());
             std::rethrow_exception(ex_);
         }
 

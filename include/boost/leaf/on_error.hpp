@@ -107,7 +107,7 @@ namespace leaf_detail
     public:
 
         BOOST_LEAF_CONSTEXPR preloaded_item( E && e ):
-            s_(tl_slot_ptr<decay_E>::p),
+            s_(tls::ptr_read<slot<decay_E>>()),
             e_(std::forward<E>(e))
         {
         }
@@ -123,7 +123,7 @@ namespace leaf_detail
 #if BOOST_LEAF_DIAGNOSTICS
             else
             {
-                int c = tl_unexpected_enabled<>::counter;
+                int c = tls::uint32_read<tls_tag_unexpected_enabled_counter>();
                 BOOST_LEAF_ASSERT(c>=0);
                 if( c )
                     load_unexpected(err_id, std::move(e_));
@@ -142,7 +142,7 @@ namespace leaf_detail
     public:
 
         BOOST_LEAF_CONSTEXPR deferred_item( F && f ) noexcept:
-            s_(tl_slot_ptr<E>::p),
+            s_(tls::ptr_read<slot<E>>()),
             f_(std::forward<F>(f))
         {
         }
@@ -158,7 +158,7 @@ namespace leaf_detail
 #if BOOST_LEAF_DIAGNOSTICS
             else
             {
-                int c = tl_unexpected_enabled<>::counter;
+                int c = tls::uint32_read<tls_tag_unexpected_enabled_counter>();
                 BOOST_LEAF_ASSERT(c>=0);
                 if( c )
                     load_unexpected(err_id, std::forward<E>(f_()));
@@ -180,7 +180,7 @@ namespace leaf_detail
     public:
 
         BOOST_LEAF_CONSTEXPR accumulating_item( F && f ) noexcept:
-            s_(tl_slot_ptr<E>::p),
+            s_(tls::ptr_read<slot<E>>()),
             f_(std::forward<F>(f))
         {
         }

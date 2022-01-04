@@ -64,6 +64,9 @@ class error_id;
 
 namespace leaf_detail
 {
+    struct tls_tag_unexpected_enabled_counter;
+    struct tls_tag_id_factory_current_id;
+
     struct inject_loc
     {
         char const * const file;
@@ -110,32 +113,6 @@ BOOST_LEAF_NORETURN void throw_exception( T const & e )
     throw e;
 }
 
-} }
-
-#endif
-
-////////////////////////////////////////
-
-#ifdef BOOST_LEAF_NO_THREADS
-
-#   define BOOST_LEAF_THREAD_LOCAL
-namespace boost { namespace leaf {
-    namespace leaf_detail
-    {
-        using atomic_unsigned_int = unsigned int;
-    }
-} }
-
-#else
-
-#   include <atomic>
-#   include <thread>
-#   define BOOST_LEAF_THREAD_LOCAL BOOST_LEAF_SYMBOL_VISIBLE thread_local
-namespace boost { namespace leaf {
-    namespace leaf_detail
-    {
-        using atomic_unsigned_int = std::atomic<unsigned int>;
-    }
 } }
 
 #endif
@@ -223,14 +200,6 @@ namespace leaf_detail
         BOOST_LEAF_CONSTEXPR static void print( std::basic_ostream<CharT, Traits> &, e_unexpected_info const &) noexcept { }
     };
 
-    template <class=void>
-    struct BOOST_LEAF_SYMBOL_VISIBLE tl_unexpected_enabled
-    {
-        static BOOST_LEAF_THREAD_LOCAL int counter;
-    };
-
-    template <class T>
-    BOOST_LEAF_THREAD_LOCAL int tl_unexpected_enabled<T>::counter;
 }
 
 #endif
@@ -262,15 +231,6 @@ namespace leaf_detail
     class slot;
 
     template <class E>
-    struct BOOST_LEAF_SYMBOL_VISIBLE tl_slot_ptr
-    {
-        static BOOST_LEAF_THREAD_LOCAL slot<E> * p;
-    };
-
-    template <class E>
-    BOOST_LEAF_THREAD_LOCAL slot<E> * tl_slot_ptr<E>::p;
-
-    template <class E>
     class slot:
         optional<E>
     {
@@ -278,35 +238,31 @@ namespace leaf_detail
         slot & operator=( slot const & ) = delete;
 
         using impl = optional<E>;
-        slot<E> * * top_;
         slot<E> * prev_;
 
     public:
 
         BOOST_LEAF_CONSTEXPR slot() noexcept:
-            top_(0)
+            prev_(0)
         {
         }
 
         BOOST_LEAF_CONSTEXPR slot( slot && x ) noexcept:
             optional<E>(std::move(x)),
-            top_(0)
+            prev_(0)
         {
-            BOOST_LEAF_ASSERT(x.top_==0);
+            BOOST_LEAF_ASSERT(x.prev_==0);
         }
 
         BOOST_LEAF_CONSTEXPR void activate() noexcept
         {
-            BOOST_LEAF_ASSERT(top_==0 || *top_!=this);
-            top_ = &tl_slot_ptr<E>::p;
-            prev_ = *top_;
-            *top_ = this;
+            prev_ = tls::ptr_read<slot<E>>();
+            tls::ptr_write<slot<E>>(this);
         }
 
         BOOST_LEAF_CONSTEXPR void deactivate() noexcept
         {
-            BOOST_LEAF_ASSERT(top_!=0 && *top_==this);
-            *top_ = prev_;
+            tls::ptr_write<slot<E>>(prev_);
         }
 
         BOOST_LEAF_CONSTEXPR void propagate() noexcept;
@@ -341,7 +297,7 @@ namespace leaf_detail
     template <class E>
     BOOST_LEAF_CONSTEXPR inline void load_unexpected_count( int err_id ) noexcept
     {
-        if( slot<e_unexpected_count> * sl = tl_slot_ptr<e_unexpected_count>::p )
+        if( slot<e_unexpected_count> * sl = tls::ptr_read<slot<e_unexpected_count>>() )
             if( e_unexpected_count * unx = sl->has_value(err_id) )
                 ++unx->count;
             else
@@ -351,7 +307,7 @@ namespace leaf_detail
     template <class E>
     BOOST_LEAF_CONSTEXPR inline void load_unexpected_info( int err_id, E && e ) noexcept
     {
-        if( slot<e_unexpected_info> * sl = tl_slot_ptr<e_unexpected_info>::p )
+        if( slot<e_unexpected_info> * sl = tls::ptr_read<slot<e_unexpected_info>>() )
             if( e_unexpected_info * unx = sl->has_value(err_id) )
                 unx->add(std::forward<E>(e));
             else
@@ -370,7 +326,6 @@ namespace leaf_detail
     template <class E>
     BOOST_LEAF_CONSTEXPR inline void slot<E>::propagate() noexcept
     {
-        BOOST_LEAF_ASSERT(top_!=0 && (*top_==prev_ || *top_==this));
         if( prev_ )
         {
             impl & that_ = *prev_;
@@ -383,7 +338,7 @@ namespace leaf_detail
 #if BOOST_LEAF_DIAGNOSTICS
         else
         {
-            int c = tl_unexpected_enabled<>::counter;
+            int c = tls::uint32_read<tls_tag_unexpected_enabled_counter>();
             BOOST_LEAF_ASSERT(c>=0);
             if( c )
                 if( int err_id = impl::key() )
@@ -399,12 +354,12 @@ namespace leaf_detail
         static_assert(!std::is_same<typename std::decay<E>::type, error_id>::value, "Error objects of type error_id are not allowed");
         using T = typename std::decay<E>::type;
         BOOST_LEAF_ASSERT((err_id&3)==1);
-        if( slot<T> * p = tl_slot_ptr<T>::p )
+        if( slot<T> * p = tls::ptr_read<slot<T>>() )
             (void) p->put(err_id, std::forward<E>(e));
 #if BOOST_LEAF_DIAGNOSTICS
         else
         {
-            int c = tl_unexpected_enabled<>::counter;
+            int c = tls::uint32_read<tls_tag_unexpected_enabled_counter>();
             BOOST_LEAF_ASSERT(c>=0);
             if( c )
                 load_unexpected(err_id, std::forward<E>(e));
@@ -420,7 +375,7 @@ namespace leaf_detail
         using E = typename std::decay<fn_arg_type<F,0>>::type;
         static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
         BOOST_LEAF_ASSERT((err_id&3)==1);
-        if( auto sl = tl_slot_ptr<E>::p )
+        if( auto sl = tls::ptr_read<slot<E>>() )
             if( auto v = sl->has_value(err_id) )
                 (void) std::forward<F>(f)(*v);
             else
@@ -437,7 +392,6 @@ namespace leaf_detail
     struct BOOST_LEAF_SYMBOL_VISIBLE id_factory
     {
         static atomic_unsigned_int counter;
-        static BOOST_LEAF_THREAD_LOCAL unsigned current_id;
 
         BOOST_LEAF_CONSTEXPR static unsigned generate_next_id() noexcept
         {
@@ -450,12 +404,9 @@ namespace leaf_detail
     template <class T>
     atomic_unsigned_int id_factory<T>::counter(-3);
 
-    template <class T>
-    BOOST_LEAF_THREAD_LOCAL unsigned id_factory<T>::current_id(0);
-
     inline int current_id() noexcept
     {
-        auto id = id_factory<>::current_id;
+        auto id = tls::uint32_read<tls_tag_id_factory_current_id>();
         BOOST_LEAF_ASSERT(id==0 || (id&3)==1);
         return id;
     }
@@ -463,7 +414,8 @@ namespace leaf_detail
     inline int new_id() noexcept
     {
         auto id = id_factory<>::generate_next_id();
-        return id_factory<>::current_id = id;
+        tls::uint32_write<tls_tag_id_factory_current_id>(id);
+        return id;
     }
 }
 
@@ -784,8 +736,6 @@ struct is_result_type<R const>: is_result_type<R>
 };
 
 } }
-
-#undef BOOST_LEAF_THREAD_LOCAL
 
 #if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///
 #pragma warning(pop) ///
