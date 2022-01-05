@@ -6,7 +6,7 @@
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
 #   include "leaf.hpp"
 #else
-#   include <boost/leaf/detail/config.hpp>
+#   include <boost/leaf/config.hpp>
 #   include <boost/leaf/handle_errors.hpp>
 #   include <boost/leaf/result.hpp>
 #   include <boost/leaf/common.hpp>
@@ -104,7 +104,7 @@ int main()
             leaf::e_errno,
             leaf::error_info const & unmatched )
         {
-#ifndef BOOST_LEAF_DISABLE_STD_STRING
+#if BOOST_LEAF_USE_STD_STRING
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
@@ -142,7 +142,7 @@ int main()
             leaf::e_errno,
             leaf::diagnostic_info const & unmatched )
         {
-#ifndef BOOST_LEAF_DISABLE_STD_STRING
+#if BOOST_LEAF_USE_STD_STRING
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
@@ -194,7 +194,7 @@ int main()
             leaf::e_errno,
             leaf::verbose_diagnostic_info const & di )
         {
-#ifndef BOOST_LEAF_DISABLE_STD_STRING
+#if BOOST_LEAF_USE_STD_STRING
             std::ostringstream st;
             st << di;
             std::string s = st.str();
@@ -252,7 +252,7 @@ int main()
             leaf::e_errno,
             leaf::error_info const & unmatched )
         {
-#ifndef BOOST_LEAF_DISABLE_STD_STRING
+#if BOOST_LEAF_USE_STD_STRING
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
@@ -288,7 +288,7 @@ int main()
             leaf::e_errno,
             leaf::diagnostic_info const & unmatched )
         {
-#ifndef BOOST_LEAF_DISABLE_STD_STRING
+#if BOOST_LEAF_USE_STD_STRING
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
@@ -340,7 +340,7 @@ int main()
             leaf::e_errno,
             leaf::verbose_diagnostic_info const & di )
         {
-#ifndef BOOST_LEAF_DISABLE_STD_STRING
+#if BOOST_LEAF_USE_STD_STRING
             std::ostringstream st;
             st << di;
             std::string s = st.str();

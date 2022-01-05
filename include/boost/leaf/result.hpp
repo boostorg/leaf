@@ -191,7 +191,7 @@ class result
 #else
             {
                 error_id captured_id = r_.ctx_->propagate_captured_errors();
-                tls::uint32_write<leaf_detail::tls_tag_id_factory_current_id>(captured_id.value());
+                tls::write_uint32<leaf_detail::tls_tag_id_factory_current_id>(captured_id.value());
                 return captured_id;
             }
 #endif
@@ -352,7 +352,7 @@ public:
 
 #endif
 
-#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
     result( std::error_code const & ec ) noexcept:
         what_(error_id(ec))
     {
@@ -520,7 +520,7 @@ public:
     {
     }
 
-#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
     result( std::error_code const & ec ) noexcept:
         base(ec)
     {

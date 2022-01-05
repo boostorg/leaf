@@ -44,7 +44,7 @@
 			"dependsOn": [
 				"Generate leaf.hpp"
 			],
-			"command": "cd ${workspaceRoot}/bld/debug && meson test && cd ${workspaceRoot}/bld/debug_leaf_hpp && meson test",
+			"command": "cd ${workspaceRoot}/bld/debug && ninja && meson test && cd ${workspaceRoot}/bld/debug_leaf_hpp && ninja && meson test",
 			"problemMatcher": {
 				"base": "$gcc",
 				"fileLocation": [
@@ -60,7 +60,7 @@
 			"dependsOn": [
 				"Generate leaf.hpp"
 			],
-			"command": "cd ${workspaceRoot}/bld/release && meson test && cd ${workspaceRoot}/bld/release_leaf_hpp && meson test",
+			"command": "cd ${workspaceRoot}/bld/release && ninja && meson test && cd ${workspaceRoot}/bld/release_leaf_hpp && ninja && meson test",
 			"problemMatcher": {
 				"base": "$gcc",
 				"fileLocation": [
@@ -95,7 +95,7 @@
 			},
 			"label": "Test current editor file",
 			"type": "shell",
-			"command": "cd ${workspaceRoot}/bld/debug && { meson test ${fileBasenameNoExtension} || cat ./meson-logs/testlog.txt }",
+			"command": "cd ${workspaceRoot}/bld/debug && { ninja && meson test ${fileBasenameNoExtension} || cat ./meson-logs/testlog.txt }",
 			"problemMatcher": {
 				"base": "$gcc",
 				"fileLocation": [

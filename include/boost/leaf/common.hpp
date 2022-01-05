@@ -18,7 +18,7 @@
 
 #include <boost/leaf/detail/demangle.hpp>
 #include <iosfwd>
-#ifndef BOOST_LEAF_DISABLE_STD_STRING
+#if BOOST_LEAF_USE_STD_STRING
 #   include <string>
 #endif
 #include <cerrno>
@@ -37,19 +37,19 @@ namespace boost { namespace leaf {
 
 struct BOOST_LEAF_SYMBOL_VISIBLE e_api_function { char const * value; };
 
-#ifdef BOOST_LEAF_DISABLE_STD_STRING
+#if BOOST_LEAF_USE_STD_STRING
 
 struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name
 {
-    constexpr static char const * const value = "<unavailable>";
-    BOOST_LEAF_CONSTEXPR explicit e_file_name( char const * ) { }
+    std::string value;
 };
 
 #else
 
 struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name
 {
-    std::string value;
+    constexpr static char const * const value = "<unavailable>";
+    BOOST_LEAF_CONSTEXPR explicit e_file_name( char const * ) { }
 };
 
 #endif

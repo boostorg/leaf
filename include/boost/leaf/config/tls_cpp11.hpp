@@ -1,5 +1,5 @@
-#ifndef BOOST_LEAF_TLS_CPP11_HPP_INCLUDED
-#define BOOST_LEAF_TLS_CPP11_HPP_INCLUDED
+#ifndef BOOST_LEAF_CONFIG_TLS_CPP11_HPP_INCLUDED
+#define BOOST_LEAF_CONFIG_TLS_CPP11_HPP_INCLUDED
 
 /// Copyright (c) 2018-2021 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -8,8 +8,8 @@
 
 // LEAF requires thread local storage support for pointers and for uin32_t values.
 
-// This header implements "thread local" storage for pointers and for uint32_t
-// values using globals, which is suitable for single thread environments.
+// This header implements thread local storage for pointers and for uint32_t
+// values using the C++11 built-in thread_local storage class specifier.
 
 #ifndef BOOST_LEAF_ENABLE_WARNINGS ///
 #   if defined(_MSC_VER) ///
@@ -22,12 +22,13 @@
 #endif ///
 
 #include <cstdint>
+#include <atomic>
 
 namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
-    using atomic_unsigned_int = unsigned int;
+    using atomic_unsigned_int = std::atomic<unsigned int>;
 }
 
 namespace tls
@@ -35,20 +36,20 @@ namespace tls
     template <class T>
     struct BOOST_LEAF_SYMBOL_VISIBLE ptr
     {
-        static T * p;
+        static thread_local T * p;
     };
 
     template <class T>
-    T * ptr<T>::p;
+    thread_local T * ptr<T>::p;
 
     template <class T>
-    T * ptr_read() noexcept
+    T * read_ptr() noexcept
     {
         return ptr<T>::p;
     }
 
     template <class T>
-    void ptr_write( T * p ) noexcept
+    void write_ptr( T * p ) noexcept
     {
         ptr<T>::p = p;
     }
@@ -58,20 +59,20 @@ namespace tls
     template <class Tag>
     struct BOOST_LEAF_SYMBOL_VISIBLE tagged_uint32
     {
-        static std::uint32_t x;
+        static thread_local std::uint32_t x;
     };
 
     template <class Tag>
-    std::uint32_t tagged_uint32<Tag>::x;
+    thread_local std::uint32_t tagged_uint32<Tag>::x;
 
     template <class Tag>
-    std::uint32_t uint32_read() noexcept
+    std::uint32_t read_uint32() noexcept
     {
         return tagged_uint32<Tag>::x;
     }
 
     template <class Tag>
-    void uint32_write( std::uint32_t x ) noexcept
+    void write_uint32( std::uint32_t x ) noexcept
     {
         tagged_uint32<Tag>::x = x;
     }

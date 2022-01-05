@@ -3,8 +3,9 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/detail/config.hpp>
-#ifdef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#include <boost/leaf/config.hpp>
+
+#if !BOOST_LEAF_USE_STD_SYSTEM_ERROR
 
 #include <iostream>
 

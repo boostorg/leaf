@@ -30,7 +30,7 @@
 #   include <set>
 #endif
 
-#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
 #   include <system_error>
 #endif
 
@@ -253,13 +253,13 @@ namespace leaf_detail
 
         BOOST_LEAF_CONSTEXPR void activate() noexcept
         {
-            prev_ = tls::ptr_read<slot<E>>();
-            tls::ptr_write<slot<E>>(this);
+            prev_ = tls::read_ptr<slot<E>>();
+            tls::write_ptr<slot<E>>(this);
         }
 
         BOOST_LEAF_CONSTEXPR void deactivate() noexcept
         {
-            tls::ptr_write<slot<E>>(prev_);
+            tls::write_ptr<slot<E>>(prev_);
         }
 
         BOOST_LEAF_CONSTEXPR void propagate() noexcept;
@@ -294,7 +294,7 @@ namespace leaf_detail
     template <class E>
     BOOST_LEAF_CONSTEXPR inline void load_unexpected_count( int err_id ) noexcept
     {
-        if( slot<e_unexpected_count> * sl = tls::ptr_read<slot<e_unexpected_count>>() )
+        if( slot<e_unexpected_count> * sl = tls::read_ptr<slot<e_unexpected_count>>() )
             if( e_unexpected_count * unx = sl->has_value(err_id) )
                 ++unx->count;
             else
@@ -304,7 +304,7 @@ namespace leaf_detail
     template <class E>
     BOOST_LEAF_CONSTEXPR inline void load_unexpected_info( int err_id, E && e ) noexcept
     {
-        if( slot<e_unexpected_info> * sl = tls::ptr_read<slot<e_unexpected_info>>() )
+        if( slot<e_unexpected_info> * sl = tls::read_ptr<slot<e_unexpected_info>>() )
             if( e_unexpected_info * unx = sl->has_value(err_id) )
                 unx->add(std::forward<E>(e));
             else
@@ -335,7 +335,7 @@ namespace leaf_detail
 #if BOOST_LEAF_DIAGNOSTICS
         else
         {
-            int c = tls::uint32_read<tls_tag_unexpected_enabled_counter>();
+            int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
             BOOST_LEAF_ASSERT(c>=0);
             if( c )
                 if( int err_id = impl::key() )
@@ -351,12 +351,12 @@ namespace leaf_detail
         static_assert(!std::is_same<typename std::decay<E>::type, error_id>::value, "Error objects of type error_id are not allowed");
         using T = typename std::decay<E>::type;
         BOOST_LEAF_ASSERT((err_id&3)==1);
-        if( slot<T> * p = tls::ptr_read<slot<T>>() )
+        if( slot<T> * p = tls::read_ptr<slot<T>>() )
             (void) p->put(err_id, std::forward<E>(e));
 #if BOOST_LEAF_DIAGNOSTICS
         else
         {
-            int c = tls::uint32_read<tls_tag_unexpected_enabled_counter>();
+            int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
             BOOST_LEAF_ASSERT(c>=0);
             if( c )
                 load_unexpected(err_id, std::forward<E>(e));
@@ -372,7 +372,7 @@ namespace leaf_detail
         using E = typename std::decay<fn_arg_type<F,0>>::type;
         static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
         BOOST_LEAF_ASSERT((err_id&3)==1);
-        if( auto sl = tls::ptr_read<slot<E>>() )
+        if( auto sl = tls::read_ptr<slot<E>>() )
             if( auto v = sl->has_value(err_id) )
                 (void) std::forward<F>(f)(*v);
             else
@@ -403,7 +403,7 @@ namespace leaf_detail
 
     inline int current_id() noexcept
     {
-        auto id = tls::uint32_read<tls_tag_id_factory_current_id>();
+        auto id = tls::read_uint32<tls_tag_id_factory_current_id>();
         BOOST_LEAF_ASSERT(id==0 || (id&3)==1);
         return id;
     }
@@ -411,7 +411,7 @@ namespace leaf_detail
     inline int new_id() noexcept
     {
         auto id = id_factory<>::generate_next_id();
-        tls::uint32_write<tls_tag_id_factory_current_id>(id);
+        tls::write_uint32<tls_tag_id_factory_current_id>(id);
         return id;
     }
 }
@@ -456,7 +456,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
 namespace leaf_detail
 {
     class leaf_category final: public std::error_category
@@ -534,7 +534,7 @@ public:
     {
     }
 
-#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
     error_id( std::error_code const & ec ) noexcept:
         value_(leaf_detail::import_error_code(ec))
     {

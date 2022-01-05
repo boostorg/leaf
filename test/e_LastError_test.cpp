@@ -31,7 +31,7 @@ namespace leaf = boost::leaf;
 int main()
 {
     SetLastError(ERROR_FILE_NOT_FOUND);
-#ifndef BOOST_LEAF_DISABLE_STD_STRING
+#if BOOST_LEAF_USE_STD_STRING
     std::stringstream ss;
     ss << leaf::windows::e_LastError{};
     BOOST_TEST(ss.str().find("The system cannot find the file specified") != std::string::npos);

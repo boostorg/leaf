@@ -62,7 +62,7 @@ LEAF is designed with a strong bias towards the common use case where callers of
 
 LEAF requires only {CPP}11, but is tested on many compiler versions and C++ standards.
 
-The library uses thread-local storage, except when multi-threading is disabled (e.g. on some embedded platforms). See <<configuration>>.
+The library uses thread-local storage for pointers only. By default, this is implemented via the {CPP}11 `thread_local` storage class specifier, however it is easy to use a platform-specific TLS API instead; for example LEAF ships with built-in support for FreeRTOS. See <<configuration>>.
 
 [[distribution]]
 == Distribution
@@ -5928,29 +5928,67 @@ Assuming the current working directory is `<boostroot>/libs/leaf`:
 ----
 
 [[configuration]]
-== Configuration Macros
+== Configuration
 
 The following configuration macros are recognized:
 
-* `BOOST_LEAF_DIAGNOSTICS`: Defining this macro to `0` stubs out both <<diagnostic_info>> and <<verbose_diagnostic_info>>, which could improve the performance of the error path in some programs (if the macro is left undefined, LEAF defines it as `1`).
-* `BOOST_LEAF_NO_EXCEPTIONS`: Disables all exception handling support. If left undefined, LEAF defines it based on the compiler configuration (e.g. `-fno-exceptions`).
-* `BOOST_LEAF_NO_THREADS`: Disables all multi-thread support.
-* `BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR`: Disables the `std::error_code` / `std::error_condition` integration. In this case LEAF does not `#include <system_error>`, which is considered too heavy for embedded platforms.
-* `BOOST_LEAF_DISABLE_STD_STRING`: Disables all use of `std::string` (available only under `BOOST_LEAF_DIAGNOSTICS=0`). In this case LEAF does not `#include <string>` which is considered too heavy for embedded platforms.
+* `BOOST_LEAF_DIAGNOSTICS`: Defining this macro as `0` stubs out both <<diagnostic_info>> and <<verbose_diagnostic_info>> (if the macro is left undefined, LEAF defines it as `1`).
+* `BOOST_LEAF_USE_STD_SYSTEM_ERROR`: Defining this macro as `0` disables the `std::error_code` / `std::error_condition` integration. In this case LEAF does not `#include <system_error>`, which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as `1`).
+* `BOOST_LEAF_USE_STD_STRING`: Defining this macro as `0` disables all use of `std::string` (this requires `BOOST_LEAF_DIAGNOSTICS=0` as well). In this case LEAF does not `#include <string>` which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as `1`).
+* `BOOST_LEAF_NO_EXCEPTIONS`: Disables all exception handling support. If left undefined, LEAF defines it automatically based on the compiler configuration (e.g. `-fno-exceptions`).
+* `BOOST_LEAF_NO_THREADS`: Disables all thread safety in LEAF.
 
-In addition, defining `BOOST_LEAF_EMBEDDED` is equivalent to the following:
+=== Embedded Platforms
+
+Defining `BOOST_LEAF_EMBEDDED` is equivalent to the following:
 
 [source,c++]
 ----
-#define BOOST_LEAF_NO_EXCEPTIONS
-#define BOOST_LEAF_DIAGNOSTICS 0
-#define BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
-#define BOOST_LEAF_DISABLE_STD_STRING
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+# define BOOST_LEAF_NO_EXCEPTIONS
+#endif
+
+#ifndef BOOST_LEAF_DIAGNOSTICS
+# define BOOST_LEAF_DIAGNOSTICS 0
+#endif
+
+#ifndef BOOST_LEAF_USE_STD_SYSTEM_ERROR
+# define BOOST_LEAF_USE_STD_SYSTEM_ERROR 0
+#endif
+
+#ifndef BOOST_LEAF_USE_STD_STRING
+# define BOOST_LEAF_USE_STD_STRING 0
+#endif
 ----
 
-== Limitations
+LEAF supports FreeRTOS out of the box, please define `BOOST_LEAF_TLS_FREERTOS` (in which case LEAF automatically defines `BOOST_LEAF_EMBEDDED` if it is not defined already).
 
-LEAF requires {CPP}11, including `thread_local` support, except when compiled with `BOOST_LEAF_NO_THREADS` (which can be useful on some embedded platforms).
+For other embedded platforms, please define `BOOST_LEAF_TLS_ARRAY` and make sure your project defines the following two functions to implement TLS pointer access:
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+namespace tls
+{
+    void * read_void_ptr( int tls_index ) noexcept;
+    void write_void_ptr( int tls_index, void * p ) noexcept;
+}
+
+} }
+----
+
+TIP: For efficiency, `read_void_ptr` and `write_void_ptr` should be defined `inline`.
+
+Under `BOOST_LEAF_TLS_ARRAY` (which includes `BOOST_LEAF_TLS_FREERTOS`):
+
+* Each error type is assigned a unique index in the TLS pointer array. By default, assigned TLS indices start from `0`; this can be changed by defining `BOOST_LEAF_TLS_ARRAY_START_INDEX`.
+* If `BOOST_LEAF_TLS_ARRAY_SIZE` is defined, LEAF will use it to `BOOST_LEAF_ASSERT` that TLS indices are within bounds (which is of course deactivated under `NDEBUG`).
+* Under `BOOST_LEAF_TLS_FREERTOS`, `BOOST_LEAF_TLS_ARRAY_SIZE` defaults to https://www.freertos.org/a00110.html#configNUM_THREAD_LOCAL_STORAGE_POINTERS[`configNUM_THREAD_LOCAL_STORAGE_POINTERS`].
+
+If your program does not use concurrency at all, simply define `BOOST_LEAF_NO_THREADS`, which requires no TLS support at all (but is NOT thread-safe).
+
+== Limitations
 
 When using dynamic linking, it is required that error types are declared with `default` visibility, e.g.:
 
