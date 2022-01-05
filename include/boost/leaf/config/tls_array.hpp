@@ -22,6 +22,8 @@
 #   endif ///
 #endif ///
 
+////////////////////////////////////////
+
 #ifndef BOOST_LEAF_TLS_INDEX_TYPE
 #   define BOOST_LEAF_TLS_INDEX_TYPE int
 #endif
@@ -30,14 +32,26 @@
 #   define BOOST_LEAF_TLS_ARRAY_START_INDEX 0
 #endif
 
+static_assert(BOOST_LEAF_TLS_ARRAY_START_INDEX >= 0,
+    "Bad BOOST_LEAF_TLS_ARRAY_START_INDEX");
+
+#ifdef BOOST_LEAF_TLS_ARRAY_SIZE
+static_assert(BOOST_LEAF_TLS_ARRAY_SIZE > 0,
+    "Bad BOOST_LEAF_TLS_ARRAY_SIZE");
+static_assert(BOOST_LEAF_TLS_ARRAY_START_INDEX < BOOST_LEAF_TLS_ARRAY_SIZE,
+    "Bad BOOST_LEAF_TLS_ARRAY_START_INDEX");
+#endif
+
 #include <atomic>
 #include <cstdint>
+
+////////////////////////////////////////
 
 namespace boost { namespace leaf {
 
 namespace tls
 {
-    // The TLS implementation defined in this header requires the following two
+    // The TLS support defined in this header requires the following two
     // functions to be defined elsewhere:
     void * read_void_ptr( int tls_index ) noexcept;
     void write_void_ptr( int tls_index, void * ) noexcept;
@@ -57,28 +71,35 @@ namespace leaf_detail
 namespace tls
 {
     template <class=void>
-    struct BOOST_LEAF_SYMBOL_VISIBLE index_counter
+    class BOOST_LEAF_SYMBOL_VISIBLE index_counter
     {
         static BOOST_LEAF_TLS_INDEX_TYPE c;
+
+    public:
+
+        template <class T>
+        static BOOST_LEAF_TLS_INDEX_TYPE get_index() noexcept
+        {
+            BOOST_LEAF_TLS_INDEX_TYPE idx = c++;
+#ifdef BOOST_LEAF_TLS_ARRAY_SIZE
+            BOOST_LEAF_ASSERT(idx < BOOST_LEAF_TLS_ARRAY_SIZE);
+#endif
+            // Set breakpoint here to inspect TLS index assignment.
+            return idx; 
+        }
     };
 
     template <class T>
     BOOST_LEAF_TLS_INDEX_TYPE index_counter<T>::c = BOOST_LEAF_TLS_ARRAY_START_INDEX;
 
-#if 0
-    template <class T>
-    int get_counter()
-    {
-        int c = index_counter<>::c++;
-        return c;
-    }
-#endif
-
     template <class T>
     struct BOOST_LEAF_SYMBOL_VISIBLE index
     {
-        inline static BOOST_LEAF_TLS_INDEX_TYPE const idx = index_counter<>::c++; // get_counter<T>();
+        static BOOST_LEAF_TLS_INDEX_TYPE const idx;
     };
+
+    template <class T>
+    BOOST_LEAF_TLS_INDEX_TYPE const index<T>::idx = index_counter<>::get_index<T>();
 
     ////////////////////////////////////////
 

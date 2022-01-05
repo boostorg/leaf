@@ -39,6 +39,10 @@
 #   define BOOST_LEAF_TLS_ARRAY_SIZE configNUM_THREAD_LOCAL_STORAGE_POINTERS
 #endif
 
+static_assert(
+    BOOST_LEAF_TLS_ARRAY_SIZE <= configNUM_THREAD_LOCAL_STORAGE_POINTERS,
+        "Bad BOOST_LEAF_TLS_ARRAY_SIZE");
+
 namespace boost { namespace leaf {
 
 namespace tls
