@@ -49,7 +49,7 @@ namespace tls
 {
     inline void * read_void_ptr( int tls_index ) noexcept
     {
-        return pvTaskGetThreadLocalStoragePointer(0, tls_index));
+        return pvTaskGetThreadLocalStoragePointer(0, tls_index);
     }
 
     inline void write_void_ptr( int tls_index, void * p ) noexcept
