@@ -25,7 +25,7 @@
 #   endif ///
 #endif ///
 
-#include <boost/leaf/detail/config.hpp>
+#include <boost/leaf/config.hpp>
 #include <cstring>
 
 namespace boost { namespace leaf {
@@ -70,21 +70,6 @@ char const * t =
 
 ////////////////////////////////////////
 
-#ifdef BOOST_LEAF_DISABLE_STD_STRING
-
-namespace boost { namespace leaf {
-
-    inline char const * demangle( char const * name )
-    {
-        return name;
-    }
-
-} }
-
-#else
-
-#include <string>
-
 #if defined(__has_include) && ((__GNUC__ + 0) >= 5)
 #   if __has_include(<cxxabi.h>)
 #       define BOOST_LEAF_HAS_CXXABI_H
@@ -104,6 +89,10 @@ namespace boost { namespace leaf {
 #       include <cstddef>
 #   endif
 #endif
+
+#if BOOST_LEAF_USE_STD_STRING
+
+#include <string>
 
 namespace boost { namespace leaf {
 
@@ -139,7 +128,7 @@ namespace leaf_detail
         scoped_demangled_name& operator= ( scoped_demangled_name const& ) = delete;
     };
 
-#if defined(BOOST_LEAF_HAS_CXXABI_H) and !defined(BOOST_LEAF_DISABLE_STD_STRING)
+#ifdef BOOST_LEAF_HAS_CXXABI_H
 
     inline char const * demangle_alloc( char const * name ) noexcept
     {
@@ -183,10 +172,24 @@ namespace leaf_detail
 
 } }
 
-#ifdef BOOST_LEAF_HAS_CXXABI_H
-#   undef BOOST_LEAF_HAS_CXXABI_H
+#else
+
+namespace boost { namespace leaf {
+
+namespace leaf_detail
+{
+    inline char const * demangle( char const * name )
+    {
+        return name;
+    }
+}
+
+} }
+
 #endif
 
+#ifdef BOOST_LEAF_HAS_CXXABI_H
+#   undef BOOST_LEAF_HAS_CXXABI_H
 #endif
 
 #if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///

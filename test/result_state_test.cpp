@@ -595,7 +595,7 @@ int main()
     }
     BOOST_TEST_EQ(val::count, 0);
 
-#ifndef BOOST_LEAF_DISABLE_STD_STRING
+#if BOOST_LEAF_USE_STD_STRING
     { // Initialization forwarding constructor
         leaf::result<std::string> r = "hello";
         BOOST_TEST(r);
@@ -603,7 +603,7 @@ int main()
     }
 #endif
 
-#ifndef BOOST_LEAF_DISABLE_STD_STRING
+#if BOOST_LEAF_USE_STD_STRING
     { // Initialization forwarding constructor
         leaf::result<std::string> r; r = "hello";
         BOOST_TEST(r);

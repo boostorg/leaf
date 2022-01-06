@@ -52,7 +52,7 @@ int main()
         []( info<42> const & i42, leaf::diagnostic_info const & di )
         {
             BOOST_TEST_EQ(i42.value, 42);
-#ifndef BOOST_LEAF_DISABLE_STD_STRING
+#if BOOST_LEAF_USE_STD_STRING
             std::stringstream ss; ss << di;
             std::string s = ss.str();
             std::cout << s;

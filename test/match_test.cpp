@@ -80,7 +80,7 @@ int main()
         BOOST_TEST(( !test<leaf::if_not<leaf::match<my_error, my_error::e2, my_error::e1>>>(e) ));
     }
 
-#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
     {
         std::error_code e = errc_a::a0;
 

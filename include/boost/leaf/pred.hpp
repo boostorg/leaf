@@ -60,7 +60,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
 template <class E, class Enum = E>
 struct condition
 {
@@ -93,7 +93,7 @@ namespace leaf_detail
         using type = T;
     };
 
-#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
     template <class Enum>
     struct match_enum_type<condition<Enum, Enum>>
     {
@@ -121,7 +121,7 @@ struct match
     }
 };
 
-#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
 template <class Enum, BOOST_LEAF_MATCH_ARGS(BOOST_LEAF_ESC(match_enum_type<condition<Enum, Enum>>), V1, V)>
 struct match<condition<Enum, Enum>, V1, V...>
 {
@@ -150,7 +150,7 @@ namespace leaf_detail
         using type = typename std::remove_reference<decltype(std::declval<E>().value)>::type;
     };
 
-#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
     template <class E, class Enum>
     struct match_value_enum_type<condition<E, Enum>>
     {
@@ -177,7 +177,7 @@ struct match_value
     }
 };
 
-#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
 template <class E, class Enum, BOOST_LEAF_MATCH_ARGS(BOOST_LEAF_ESC(match_value_enum_type<condition<E, Enum>>), V1, V)>
 struct match_value<condition<E, Enum>, V1, V...>
 {

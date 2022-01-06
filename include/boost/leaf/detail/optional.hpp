@@ -16,7 +16,7 @@
 #   endif ///
 #endif ///
 
-#include <boost/leaf/detail/config.hpp>
+#include <boost/leaf/config.hpp>
 #include <utility>
 #include <new>
 

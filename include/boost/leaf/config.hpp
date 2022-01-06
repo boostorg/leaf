@@ -24,14 +24,63 @@
 
 ////////////////////////////////////////
 
-#ifdef BOOST_LEAF_EMBEDDED
-#	define BOOST_LEAF_NO_EXCEPTIONS
-#	define BOOST_LEAF_DIAGNOSTICS 0
-#	define BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
-#	define BOOST_LEAF_DISABLE_STD_STRING
+#ifdef BOOST_LEAF_TLS_FREERTOS
+
+#	ifndef BOOST_LEAF_EMBEDDED
+#		define BOOST_LEAF_EMBEDDED
+#	endif
+
 #endif
 
-#if BOOST_LEAF_DIAGNOSTICS && defined(BOOST_LEAF_DISABLE_STD_STRING)
+////////////////////////////////////////
+
+#ifdef BOOST_LEAF_EMBEDDED
+
+#	ifndef BOOST_LEAF_NO_EXCEPTIONS
+#		define BOOST_LEAF_NO_EXCEPTIONS
+#	endif
+
+#	ifndef BOOST_LEAF_DIAGNOSTICS
+#		define BOOST_LEAF_DIAGNOSTICS 0
+#	endif
+
+#	ifndef BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#		define BOOST_LEAF_USE_STD_SYSTEM_ERROR 0
+#	endif
+
+#	ifndef BOOST_LEAF_USE_STD_STRING
+#		define BOOST_LEAF_USE_STD_STRING 0
+#	endif
+
+#endif
+
+////////////////////////////////////////
+
+#ifndef BOOST_LEAF_DIAGNOSTICS
+#   define BOOST_LEAF_DIAGNOSTICS 1
+#endif
+
+#ifndef BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#	define BOOST_LEAF_USE_STD_SYSTEM_ERROR 1
+#endif
+
+#ifndef BOOST_LEAF_USE_STD_STRING
+#	define BOOST_LEAF_USE_STD_STRING 1
+#endif
+
+#if BOOST_LEAF_DIAGNOSTICS!=0 && BOOST_LEAF_DIAGNOSTICS!=1
+#   error BOOST_LEAF_DIAGNOSTICS must be 0 or 1.
+#endif
+
+#if BOOST_LEAF_USE_STD_SYSTEM_ERROR!=0 && BOOST_LEAF_USE_STD_SYSTEM_ERROR!=1
+#   error BOOST_LEAF_USE_STD_SYSTEM_ERROR must be 0 or 1.
+#endif
+
+#if BOOST_LEAF_USE_STD_STRING!=0 && BOOST_LEAF_USE_STD_STRING!=1
+#   error BOOST_LEAF_USE_STD_STRING must be 0 or 1.
+#endif
+
+#if BOOST_LEAF_DIAGNOSTICS && !BOOST_LEAF_USE_STD_STRING
 #	error BOOST_LEAF_DIAGNOSTICS requires the use of std::string
 #endif
 
@@ -139,16 +188,6 @@
 
 ////////////////////////////////////////
 
-#ifndef BOOST_LEAF_DIAGNOSTICS
-#   define BOOST_LEAF_DIAGNOSTICS 1
-#endif
-
-#if BOOST_LEAF_DIAGNOSTICS!=0 && BOOST_LEAF_DIAGNOSTICS!=1
-#   error BOOST_LEAF_DIAGNOSTICS must be 0 or 1.
-#endif
-
-////////////////////////////////////////
-
 #ifdef _MSC_VER
 #   define BOOST_LEAF_ALWAYS_INLINE __forceinline
 #else
@@ -207,9 +246,8 @@
 
 ////////////////////////////////////////
 
-#ifdef BOOST_LEAF_NO_THREADS
-#	define BOOST_LEAF_DISABLE_CAPTURE
-#endif
+// Configure TLS access
+#include <boost/leaf/config/tls.hpp>
 
 ////////////////////////////////////////
 

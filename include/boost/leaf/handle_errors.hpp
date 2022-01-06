@@ -32,7 +32,7 @@ class BOOST_LEAF_SYMBOL_VISIBLE error_info
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
     static error_id unpack_error_id( std::exception const * ex ) noexcept
     {
-#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
         if( std::system_error const * se = dynamic_cast<std::system_error const *>(ex) )
             if( is_error_id(se->code()) )
                 return leaf_detail::make_error_id(se->code().value());
@@ -379,7 +379,7 @@ namespace leaf_detail
         }
     };
 
-#ifndef BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
     template <>
     struct peek_exception<std::error_code const, true>
     {

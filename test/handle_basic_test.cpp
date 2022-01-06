@@ -6,7 +6,7 @@
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
 #   include "leaf.hpp"
 #else
-#   include <boost/leaf/detail/config.hpp>
+#   include <boost/leaf/config.hpp>
 #   include <boost/leaf/handle_errors.hpp>
 #   include <boost/leaf/pred.hpp>
 #   include <boost/leaf/result.hpp>

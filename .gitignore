@@ -16,3 +16,4 @@ subprojects/*/
 .vscode/c_cpp_properties.json
 benchmark/tl/*
 test/leaf.hpp
+doc/leaf.html
