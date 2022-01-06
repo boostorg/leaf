@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.16">
+<meta name="generator" content="Asciidoctor 2.0.17">
 <meta name="author" content="Lightweight Error Augmentation Framework written in C&#43;&#43;11 | Emil Dotchevski">
 <title>LEAF</title>
 <link rel="stylesheet" href="./zajo-dark.css">
@@ -218,7 +218,11 @@ function switch_style()
 <li><a href="#_boost_build">Boost Build</a></li>
 </ul>
 </li>
-<li><a href="#configuration">Configuration Macros</a></li>
+<li><a href="#configuration">Configuration</a>
+<ul class="sectlevel2">
+<li><a href="#_embedded_platforms">Embedded Platforms</a></li>
+</ul>
+</li>
 <li><a href="#_limitations">Limitations</a></li>
 <li><a href="#_acknowledgements">Acknowledgements</a></li>
 </ul>
@@ -309,7 +313,7 @@ function switch_style()
 <p>LEAF requires only C&#43;&#43;11, but is tested on many compiler versions and C++ standards.</p>
 </div>
 <div class="paragraph">
-<p>The library uses thread-local storage, except when multi-threading is disabled (e.g. on some embedded platforms). See <a href="#configuration">Configuration Macros</a>.</p>
+<p>The library uses thread-local storage for pointers only. By default, this is implemented via the C&#43;&#43;11 <code>thread_local</code> storage class specifier, however it is easy to use a platform-specific TLS API instead; for example LEAF ships with built-in support for FreeRTOS. See <a href="#configuration">Configuration</a>.</p>
 </div>
 </div>
 </div>
@@ -8542,7 +8546,7 @@ meson <span class="nb">test</span></code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="configuration">Configuration Macros</h2>
+<h2 id="configuration">Configuration</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The following configuration macros are recognized:</p>
@@ -8550,31 +8554,95 @@ meson <span class="nb">test</span></code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p><code>BOOST_LEAF_DIAGNOSTICS</code>: Defining this macro to <code>0</code> stubs out both <a href="#diagnostic_info"><code>diagnostic_info</code></a> and <a href="#verbose_diagnostic_info"><code>verbose_diagnostic_info</code></a>, which could improve the performance of the error path in some programs (if the macro is left undefined, LEAF defines it as <code>1</code>).</p>
+<p><code>BOOST_LEAF_DIAGNOSTICS</code>: Defining this macro as <code>0</code> stubs out both <a href="#diagnostic_info"><code>diagnostic_info</code></a> and <a href="#verbose_diagnostic_info"><code>verbose_diagnostic_info</code></a> (if the macro is left undefined, LEAF defines it as <code>1</code>).</p>
 </li>
 <li>
-<p><code>BOOST_LEAF_NO_EXCEPTIONS</code>: Disables all exception handling support. If left undefined, LEAF defines it based on the compiler configuration (e.g. <code>-fno-exceptions</code>).</p>
+<p><code>BOOST_LEAF_USE_STD_SYSTEM_ERROR</code>: Defining this macro as <code>0</code> disables the <code>std::error_code</code> / <code>std::error_condition</code> integration. In this case LEAF does not <code>#include &lt;system_error&gt;</code>, which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as <code>1</code>).</p>
 </li>
 <li>
-<p><code>BOOST_LEAF_NO_THREADS</code>: Disables all multi-thread support.</p>
+<p><code>BOOST_LEAF_USE_STD_STRING</code>: Defining this macro as <code>0</code> disables all use of <code>std::string</code> (this requires <code>BOOST_LEAF_DIAGNOSTICS=0</code> as well). In this case LEAF does not <code>#include &lt;string&gt;</code> which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as <code>1</code>).</p>
 </li>
 <li>
-<p><code>BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR</code>: Disables the <code>std::error_code</code> / <code>std::error_condition</code> integration. In this case LEAF does not <code>#include &lt;system_error&gt;</code>, which is considered too heavy for embedded platforms.</p>
+<p><code>BOOST_LEAF_NO_EXCEPTIONS</code>: Disables all exception handling support. If left undefined, LEAF defines it automatically based on the compiler configuration (e.g. <code>-fno-exceptions</code>).</p>
 </li>
 <li>
-<p><code>BOOST_LEAF_DISABLE_STD_STRING</code>: Disables all use of <code>std::string</code> (available only under <code>BOOST_LEAF_DIAGNOSTICS=0</code>). In this case LEAF does not <code>#include &lt;string&gt;</code> which is considered too heavy for embedded platforms.</p>
+<p><code>BOOST_LEAF_NO_THREADS</code>: Disables all thread safety in LEAF.</p>
+</li>
+</ul>
+</div>
+<div class="sect2">
+<h3 id="_embedded_platforms">Embedded Platforms</h3>
+<div class="paragraph">
+<p>Defining <code>BOOST_LEAF_EMBEDDED</code> is equivalent to the following:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#ifndef BOOST_LEAF_NO_EXCEPTIONS
+# define BOOST_LEAF_NO_EXCEPTIONS
+#endif
+</span>
+<span class="cp">#ifndef BOOST_LEAF_DIAGNOSTICS
+# define BOOST_LEAF_DIAGNOSTICS 0
+#endif
+</span>
+<span class="cp">#ifndef BOOST_LEAF_USE_STD_SYSTEM_ERROR
+# define BOOST_LEAF_USE_STD_SYSTEM_ERROR 0
+#endif
+</span>
+<span class="cp">#ifndef BOOST_LEAF_USE_STD_STRING
+# define BOOST_LEAF_USE_STD_STRING 0
+#endif</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>LEAF supports FreeRTOS out of the box, please define <code>BOOST_LEAF_TLS_FREERTOS</code> (in which case LEAF automatically defines <code>BOOST_LEAF_EMBEDDED</code> if it is not defined already).</p>
+</div>
+<div class="paragraph">
+<p>For other embedded platforms, please define <code>BOOST_LEAF_TLS_ARRAY</code> and make sure your project defines the following two functions to implement TLS pointer access:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+<span class="k">namespace</span> <span class="n">tls</span>
+<span class="p">{</span>
+    <span class="kt">void</span> <span class="o">*</span> <span class="n">read_void_ptr</span><span class="p">(</span> <span class="kt">int</span> <span class="n">tls_index</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="kt">void</span> <span class="n">write_void_ptr</span><span class="p">(</span> <span class="kt">int</span> <span class="n">tls_index</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span> <span class="n">p</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+For efficiency, <code>read_void_ptr</code> and <code>write_void_ptr</code> should be defined <code>inline</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Under <code>BOOST_LEAF_TLS_ARRAY</code> (which includes <code>BOOST_LEAF_TLS_FREERTOS</code>):</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Each error type is assigned a unique index in the TLS pointer array. By default, assigned TLS indices start from <code>0</code>; this can be changed by defining <code>BOOST_LEAF_TLS_ARRAY_START_INDEX</code>.</p>
+</li>
+<li>
+<p>If <code>BOOST_LEAF_TLS_ARRAY_SIZE</code> is defined, LEAF will use it to <code>BOOST_LEAF_ASSERT</code> that TLS indices are within bounds (which is of course deactivated under <code>NDEBUG</code>).</p>
+</li>
+<li>
+<p>Under <code>BOOST_LEAF_TLS_FREERTOS</code>, <code>BOOST_LEAF_TLS_ARRAY_SIZE</code> defaults to <a href="https://www.freertos.org/a00110.html#configNUM_THREAD_LOCAL_STORAGE_POINTERS"><code>configNUM_THREAD_LOCAL_STORAGE_POINTERS</code></a>.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>In addition, defining <code>BOOST_LEAF_EMBEDDED</code> is equivalent to the following:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#define BOOST_LEAF_NO_EXCEPTIONS
-#define BOOST_LEAF_DIAGNOSTICS 0
-#define BOOST_LEAF_DISABLE_STD_SYSTEM_ERROR
-#define BOOST_LEAF_DISABLE_STD_STRING</span></code></pre>
+<p>If your program does not use concurrency at all, simply define <code>BOOST_LEAF_NO_THREADS</code>, which requires no TLS support at all (but is NOT thread-safe).</p>
 </div>
 </div>
 </div>
@@ -8582,9 +8650,6 @@ meson <span class="nb">test</span></code></pre>
 <div class="sect1">
 <h2 id="_limitations">Limitations</h2>
 <div class="sectionbody">
-<div class="paragraph">
-<p>LEAF requires C&#43;&#43;11, including <code>thread_local</code> support, except when compiled with <code>BOOST_LEAF_NO_THREADS</code> (which can be useful on some embedded platforms).</p>
-</div>
 <div class="paragraph">
 <p>When using dynamic linking, it is required that error types are declared with <code>default</code> visibility, e.g.:</p>
 </div>
