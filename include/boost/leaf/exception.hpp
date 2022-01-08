@@ -16,7 +16,11 @@
 #   endif ///
 #endif ///
 
+#include <boost/leaf/config.hpp>
 #include <boost/leaf/error.hpp>
+
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
 #include <exception>
 
 #define BOOST_LEAF_EXCEPTION ::boost::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
@@ -227,6 +231,8 @@ exception_to_result( F && f ) noexcept
 #endif
 
 } }
+
+#endif
 
 #if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///
 #pragma warning(pop) ///

@@ -16,6 +16,7 @@
 #   endif ///
 #endif ///
 
+#include <boost/leaf/config.hpp>
 #include <boost/leaf/error.hpp>
 
 namespace boost { namespace leaf {
@@ -120,7 +121,7 @@ namespace leaf_detail
                 if( !s_->has_value(err_id) )
                     s_->put(err_id, std::move(e_));
             }
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
             else
             {
                 int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
@@ -155,7 +156,7 @@ namespace leaf_detail
                 if( !s_->has_value(err_id) )
                     s_->put(err_id, f_());
             }
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
             else
             {
                 int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();

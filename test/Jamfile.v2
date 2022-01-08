@@ -5,8 +5,8 @@
 
 import testing ;
 
-variant leaf_debug_diag0 : debug : <define>BOOST_LEAF_DIAGNOSTICS=0 ;
-variant leaf_release_diag0 : release : <define>BOOST_LEAF_DIAGNOSTICS=0 ;
+variant leaf_debug_diag0 : debug : <define>BOOST_LEAF_CFG_DIAGNOSTICS=0 ;
+variant leaf_release_diag0 : release : <define>BOOST_LEAF_CFG_DIAGNOSTICS=0 ;
 
 variant leaf_debug_embedded : debug : <define>BOOST_LEAF_EMBEDDED <rtti>off <exception-handling>off ;
 variant leaf_release_embedded : release : <define>BOOST_LEAF_EMBEDDED <rtti>off <exception-handling>off ;

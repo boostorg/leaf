@@ -16,12 +16,10 @@
 #   endif ///
 #endif ///
 
+#include <boost/leaf/config.hpp>
 #include <boost/leaf/context.hpp>
+#include <boost/leaf/capture.hpp>
 #include <boost/leaf/detail/demangle.hpp>
-
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-#   include <boost/leaf/capture.hpp>
-#endif
 
 namespace boost { namespace leaf {
 
@@ -32,7 +30,7 @@ class BOOST_LEAF_SYMBOL_VISIBLE error_info
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
     static error_id unpack_error_id( std::exception const * ex ) noexcept
     {
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
         if( std::system_error const * se = dynamic_cast<std::system_error const *>(ex) )
             if( is_error_id(se->code()) )
                 return leaf_detail::make_error_id(se->code().value());
@@ -111,7 +109,7 @@ public:
 
 ////////////////////////////////////////
 
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
 
 class BOOST_LEAF_SYMBOL_VISIBLE diagnostic_info: public error_info
 {
@@ -188,7 +186,7 @@ public:
     friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
     {
         os <<
-            "leaf::diagnostic_info requires #define BOOST_LEAF_DIAGNOSTICS 1\n"
+            "leaf::diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1\n"
             "leaf::error_info: ";
         x.print(os);
         return os << '\n';
@@ -220,7 +218,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
 
 class BOOST_LEAF_SYMBOL_VISIBLE verbose_diagnostic_info: public error_info
 {
@@ -297,7 +295,7 @@ public:
     friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, verbose_diagnostic_info const & x )
     {
         os <<
-            "leaf::verbose_diagnostic_info requires #define BOOST_LEAF_DIAGNOSTICS 1\n"
+            "leaf::verbose_diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1\n"
             "leaf::error_info: ";
         x.print(os);
         return os << '\n';
@@ -379,7 +377,7 @@ namespace leaf_detail
         }
     };
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     template <>
     struct peek_exception<std::error_code const, true>
     {

@@ -104,7 +104,7 @@ int main()
             leaf::e_errno,
             leaf::error_info const & unmatched )
         {
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
@@ -142,11 +142,11 @@ int main()
             leaf::e_errno,
             leaf::diagnostic_info const & unmatched )
         {
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
             BOOST_TEST_NE(s.find("leaf::diagnostic_info for Error ID = "), s.npos);
             BOOST_TEST_NE(s.find("e_source_location"), s.npos);
             BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
@@ -158,7 +158,7 @@ int main()
             BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
             BOOST_TEST_EQ(s.find("unexpected_test<2>"), s.npos);
 #else
-            BOOST_TEST_NE(s.find("leaf::diagnostic_info requires #define BOOST_LEAF_DIAGNOSTICS 1"), s.npos);
+            BOOST_TEST_NE(s.find("leaf::diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1"), s.npos);
             BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
 #endif
             std::cout << s;
@@ -194,11 +194,11 @@ int main()
             leaf::e_errno,
             leaf::verbose_diagnostic_info const & di )
         {
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
             std::ostringstream st;
             st << di;
             std::string s = st.str();
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
             BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info for Error ID = "), s.npos);
             BOOST_TEST_NE(s.find("e_source_location"), s.npos);
             BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
@@ -212,7 +212,7 @@ int main()
             BOOST_TEST_NE(s.find(": 1"), s.npos);
             BOOST_TEST_NE(s.find(": 2"), s.npos);
 #else
-            BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info requires #define BOOST_LEAF_DIAGNOSTICS 1"), s.npos);
+            BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1"), s.npos);
             BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
 #endif
             std::cout << s;
@@ -252,7 +252,7 @@ int main()
             leaf::e_errno,
             leaf::error_info const & unmatched )
         {
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
@@ -288,11 +288,11 @@ int main()
             leaf::e_errno,
             leaf::diagnostic_info const & unmatched )
         {
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
             BOOST_TEST_NE(s.find("leaf::diagnostic_info for Error ID = "), s.npos);
             BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
             BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
@@ -306,7 +306,7 @@ int main()
             BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
             BOOST_TEST_EQ(s.find("unexpected_test<2>"), s.npos);
 #else
-            BOOST_TEST_NE(s.find("leaf::diagnostic_info requires #define BOOST_LEAF_DIAGNOSTICS 1"), s.npos);
+            BOOST_TEST_NE(s.find("leaf::diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1"), s.npos);
             BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
             BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
             BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
@@ -340,11 +340,11 @@ int main()
             leaf::e_errno,
             leaf::verbose_diagnostic_info const & di )
         {
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
             std::ostringstream st;
             st << di;
             std::string s = st.str();
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
             BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info for Error ID = "), s.npos);
             BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
             BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
@@ -360,7 +360,7 @@ int main()
             BOOST_TEST_NE(s.find(": 1"), s.npos);
             BOOST_TEST_NE(s.find(": 2"), s.npos);
 #else
-            BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info requires #define BOOST_LEAF_DIAGNOSTICS 1"), s.npos);
+            BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1"), s.npos);
             BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
             BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
             BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);

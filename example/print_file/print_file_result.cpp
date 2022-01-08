@@ -12,7 +12,6 @@
 
 #include <boost/leaf.hpp>
 #include <iostream>
-#include <memory>
 #include <stdio.h>
 
 namespace leaf = boost::leaf;

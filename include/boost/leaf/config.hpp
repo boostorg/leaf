@@ -24,6 +24,13 @@
 
 ////////////////////////////////////////
 
+#ifdef BOOST_LEAF_DIAGNOSTICS
+#	warning BOOST_LEAF_DIAGNOSTICS has been renamed to BOOST_LEAF_CFG_DIAGNOSTICS.
+#	define BOOST_LEAF_CFG_DIAGNOSTICS BOOST_LEAF_DIAGNOSTICS
+#endif
+
+////////////////////////////////////////
+
 #ifdef BOOST_LEAF_TLS_FREERTOS
 
 #	ifndef BOOST_LEAF_EMBEDDED
@@ -36,52 +43,60 @@
 
 #ifdef BOOST_LEAF_EMBEDDED
 
-#	ifndef BOOST_LEAF_NO_EXCEPTIONS
-#		define BOOST_LEAF_NO_EXCEPTIONS
+#	ifndef BOOST_LEAF_CFG_DIAGNOSTICS
+#		define BOOST_LEAF_CFG_DIAGNOSTICS 0
 #	endif
 
-#	ifndef BOOST_LEAF_DIAGNOSTICS
-#		define BOOST_LEAF_DIAGNOSTICS 0
+#	ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+#		define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 0
 #	endif
 
-#	ifndef BOOST_LEAF_USE_STD_SYSTEM_ERROR
-#		define BOOST_LEAF_USE_STD_SYSTEM_ERROR 0
+#	ifndef BOOST_LEAF_CFG_STD_STRING
+#		define BOOST_LEAF_CFG_STD_STRING 0
 #	endif
 
-#	ifndef BOOST_LEAF_USE_STD_STRING
-#		define BOOST_LEAF_USE_STD_STRING 0
+#	ifndef BOOST_LEAF_CFG_CAPTURE
+#		define BOOST_LEAF_CFG_CAPTURE 0
 #	endif
 
 #endif
 
 ////////////////////////////////////////
 
-#ifndef BOOST_LEAF_DIAGNOSTICS
-#   define BOOST_LEAF_DIAGNOSTICS 1
+#ifndef BOOST_LEAF_CFG_DIAGNOSTICS
+#   define BOOST_LEAF_CFG_DIAGNOSTICS 1
 #endif
 
-#ifndef BOOST_LEAF_USE_STD_SYSTEM_ERROR
-#	define BOOST_LEAF_USE_STD_SYSTEM_ERROR 1
+#ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+#	define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 1
 #endif
 
-#ifndef BOOST_LEAF_USE_STD_STRING
-#	define BOOST_LEAF_USE_STD_STRING 1
+#ifndef BOOST_LEAF_CFG_STD_STRING
+#	define BOOST_LEAF_CFG_STD_STRING 1
 #endif
 
-#if BOOST_LEAF_DIAGNOSTICS!=0 && BOOST_LEAF_DIAGNOSTICS!=1
-#   error BOOST_LEAF_DIAGNOSTICS must be 0 or 1.
+#ifndef BOOST_LEAF_CFG_CAPTURE
+#   define BOOST_LEAF_CFG_CAPTURE 1
 #endif
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR!=0 && BOOST_LEAF_USE_STD_SYSTEM_ERROR!=1
-#   error BOOST_LEAF_USE_STD_SYSTEM_ERROR must be 0 or 1.
+#if BOOST_LEAF_CFG_DIAGNOSTICS!=0 && BOOST_LEAF_CFG_DIAGNOSTICS!=1
+#   error BOOST_LEAF_CFG_DIAGNOSTICS must be 0 or 1.
 #endif
 
-#if BOOST_LEAF_USE_STD_STRING!=0 && BOOST_LEAF_USE_STD_STRING!=1
-#   error BOOST_LEAF_USE_STD_STRING must be 0 or 1.
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR!=0 && BOOST_LEAF_CFG_STD_SYSTEM_ERROR!=1
+#   error BOOST_LEAF_CFG_STD_SYSTEM_ERROR must be 0 or 1.
 #endif
 
-#if BOOST_LEAF_DIAGNOSTICS && !BOOST_LEAF_USE_STD_STRING
-#	error BOOST_LEAF_DIAGNOSTICS requires the use of std::string
+#if BOOST_LEAF_CFG_STD_STRING!=0 && BOOST_LEAF_CFG_STD_STRING!=1
+#   error BOOST_LEAF_CFG_STD_STRING must be 0 or 1.
+#endif
+
+#if BOOST_LEAF_CFG_CAPTURE!=0 && BOOST_LEAF_CFG_CAPTURE!=1
+#   error BOOST_LEAF_CFG_CAPTURE must be 0 or 1.
+#endif
+
+#if BOOST_LEAF_CFG_DIAGNOSTICS && !BOOST_LEAF_CFG_STD_STRING
+#	error BOOST_LEAF_CFG_DIAGNOSTICS requires the use of std::string
 #endif
 
 ////////////////////////////////////////
@@ -158,7 +173,7 @@
 //  Must remain the last #elif since some other vendors (Metrowerks, for
 //  example) also #define _MSC_VER
 
-#       if !defined(_CPPUNWIND)
+#       if !_CPPUNWIND
 #           define BOOST_LEAF_NO_EXCEPTIONS
 #       endif
 #   endif

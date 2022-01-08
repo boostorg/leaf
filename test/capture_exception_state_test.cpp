@@ -5,7 +5,7 @@
 
 #include <boost/leaf/config.hpp>
 
-#ifdef BOOST_LEAF_NO_EXCEPTIONS
+#ifdef BOOST_LEAF_NO_EXCEPTIONS || !BOOST_LEAF_CFG_CAPTURE
 
 #include <iostream>
 

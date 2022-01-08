@@ -16,8 +16,11 @@
 #   endif ///
 #endif ///
 
+#include <boost/leaf/config.hpp>
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/on_error.hpp>
+
+#if BOOST_LEAF_CFG_CAPTURE
 
 namespace boost { namespace leaf {
 
@@ -236,6 +239,8 @@ future_get( Future & fut )
 }
 
 } }
+
+#endif
 
 #if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///
 #pragma warning(pop) ///

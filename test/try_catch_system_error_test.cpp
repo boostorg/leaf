@@ -5,7 +5,7 @@
 
 #include <boost/leaf/config.hpp>
 
-#if defined(BOOST_LEAF_NO_EXCEPTIONS) || !BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if defined(BOOST_LEAF_NO_EXCEPTIONS) || !BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
 #include <iostream>
 

@@ -11,7 +11,7 @@
 #   error Please disable exception handling.
 #endif
 
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
 #   error Please disable diagnostics.
 #endif
 

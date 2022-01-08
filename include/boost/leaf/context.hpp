@@ -16,7 +16,9 @@
 #   endif ///
 #endif ///
 
+#include <boost/leaf/config.hpp>
 #include <boost/leaf/error.hpp>
+
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
 # include <thread>
 #endif
@@ -211,7 +213,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////////
 
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
 
 namespace leaf_detail
 {
@@ -334,7 +336,7 @@ public:
         using namespace leaf_detail;
         BOOST_LEAF_ASSERT(!is_active());
         tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
         if( unexpected_requested<Tup>::value )
             tls::uint32_increment<tls_tag_unexpected_enabled_counter>();
 #endif
@@ -353,7 +355,7 @@ public:
         BOOST_LEAF_ASSERT(std::this_thread::get_id() == thread_id_);
         thread_id_ = std::thread::id();
 #endif
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
         if( unexpected_requested<Tup>::value )
             tls::uint32_decrement<tls_tag_unexpected_enabled_counter>();
 #endif
@@ -431,7 +433,7 @@ namespace leaf_detail
         void deactivate() noexcept final override { Ctx::deactivate(); }
         void propagate() noexcept final override { Ctx::propagate(); }
         bool is_active() const noexcept final override { return Ctx::is_active(); }
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
         void print( std::ostream & os ) const final override { return Ctx::print(os); }
 #endif
     };
@@ -456,6 +458,8 @@ BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && 
 
 ////////////////////////////////////////////
 
+#if BOOST_LEAF_CFG_CAPTURE
+
 template <class...  H>
 inline context_ptr make_shared_context() noexcept
 {
@@ -467,6 +471,8 @@ inline context_ptr make_shared_context( H && ... ) noexcept
 {
     return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_handlers<H...>>>();
 }
+
+#endif
 
 } }
 

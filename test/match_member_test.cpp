@@ -33,7 +33,7 @@ enum class my_error { e1=1, e2, e3 };
 
 struct e_my_error { my_error value; };
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 struct e_error_code { std::error_code value; };
 #endif
 
@@ -65,7 +65,7 @@ int main()
         BOOST_TEST(( test<leaf::match_member<&e_my_error::value, my_error::e2, my_error::e1>>(e) ));
     }
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     {
         e_error_code e = { errc_a::a0 };
 

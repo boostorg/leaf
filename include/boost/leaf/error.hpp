@@ -16,22 +16,27 @@
 #   endif ///
 #endif ///
 
+#include <boost/leaf/config.hpp>
 #include <boost/leaf/detail/optional.hpp>
 #include <boost/leaf/detail/demangle.hpp>
 #include <boost/leaf/detail/function_traits.hpp>
+#include <boost/leaf/detail/print.hpp>
+
 #include <type_traits>
-#include <memory>
 #include <iosfwd>
 
-#if BOOST_LEAF_DIAGNOSTICS
-#   include <boost/leaf/detail/print.hpp>
-#   include <string>
+#if BOOST_LEAF_CFG_DIAGNOSTICS
 #   include <sstream>
+#   include <string>
 #   include <set>
 #endif
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 #   include <system_error>
+#endif
+
+#if BOOST_LEAF_CFG_CAPTURE
+#   include <memory>
 #endif
 
 #define BOOST_LEAF_TOKEN_PASTE(x, y) x ## y
@@ -121,7 +126,7 @@ BOOST_LEAF_NORETURN void throw_exception( T const & e )
 
 namespace boost { namespace leaf {
 
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
 
 namespace leaf_detail
 {
@@ -267,7 +272,7 @@ namespace leaf_detail
         template <class CharT, class Traits>
         void print( std::basic_ostream<CharT, Traits> & os, int key_to_print ) const
         {
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
             if( !diagnostic<E>::is_invisible )
                 if( int k = this->key() )
                 {
@@ -289,7 +294,7 @@ namespace leaf_detail
         using impl::value;
     };
 
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
 
     template <class E>
     BOOST_LEAF_CONSTEXPR inline void load_unexpected_count( int err_id ) noexcept
@@ -332,7 +337,7 @@ namespace leaf_detail
                 that_ = std::move(this_);
             }
         }
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
         else
         {
             int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
@@ -353,7 +358,7 @@ namespace leaf_detail
         BOOST_LEAF_ASSERT((err_id&3)==1);
         if( slot<T> * p = tls::read_ptr<slot<T>>() )
             (void) p->put(err_id, std::forward<E>(e));
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
         else
         {
             int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
@@ -456,7 +461,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 namespace leaf_detail
 {
     class leaf_category final: public std::error_category
@@ -534,7 +539,7 @@ public:
     {
     }
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     error_id( std::error_code const & ec ) noexcept:
         value_(leaf_detail::import_error_code(ec))
     {
@@ -661,7 +666,9 @@ public:
     error_id captured_id_;
 };
 
+#if BOOST_LEAF_CFG_CAPTURE
 using context_ptr = std::shared_ptr<polymorphic_context>;
+#endif
 
 ////////////////////////////////////////////
 

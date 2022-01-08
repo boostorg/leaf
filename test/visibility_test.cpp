@@ -32,16 +32,16 @@ int main()
             {
                 BOOST_TEST_EQ(x1.value, 1);
                 BOOST_TEST_EQ(x2.value, 2);
-                if( BOOST_LEAF_DIAGNOSTICS )
+                if( BOOST_LEAF_CFG_DIAGNOSTICS )
                 {
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
                     std::stringstream ss; ss << info;
                     BOOST_TEST_NE(ss.str().find("1 attempt to communicate an unexpected error object"), std::string::npos);
 #endif
                 }
-                if( BOOST_LEAF_DIAGNOSTICS )
+                if( BOOST_LEAF_CFG_DIAGNOSTICS )
                 {
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
                     std::stringstream ss; ss << vinfo;
                     BOOST_TEST_NE(ss.str().find("Test my_info<3>::value = 3"), std::string::npos);
 #endif
@@ -67,16 +67,16 @@ int main()
             {
                 BOOST_TEST_EQ(x1.value, 1);
                 BOOST_TEST_EQ(x2.value, 2);
-                if( BOOST_LEAF_DIAGNOSTICS )
+                if( BOOST_LEAF_CFG_DIAGNOSTICS )
                 {
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
                     std::stringstream ss; ss << info;
                     BOOST_TEST_NE(ss.str().find("1 attempt to communicate an unexpected error object"), std::string::npos);
 #endif
                 }
-                if( BOOST_LEAF_DIAGNOSTICS )
+                if( BOOST_LEAF_CFG_DIAGNOSTICS )
                 {
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
                     std::stringstream ss; ss << vinfo;
                     BOOST_TEST_NE(ss.str().find("Test my_info<3>::value = 3"), std::string::npos);
 #endif

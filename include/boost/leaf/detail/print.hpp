@@ -16,7 +16,11 @@
 #   endif ///
 #endif ///
 
+#include <boost/leaf/config.hpp>
 #include <boost/leaf/detail/demangle.hpp>
+
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+
 #include <type_traits>
 #include <exception>
 #include <iosfwd>
@@ -131,6 +135,8 @@ namespace leaf_detail
 }
 
 } }
+
+#endif
 
 #if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///
 #pragma warning(pop) ///

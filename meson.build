@@ -86,7 +86,7 @@ if option_lua
 	dep_lua = subproject('lua').get_variable('all')
 endif
 
-defines = [ '-DBOOST_LEAF_DIAGNOSTICS=' + option_diagnostics.to_string() ]
+defines = [ '-DBOOST_LEAF_CFG_DIAGNOSTICS=' + option_diagnostics.to_string() ]
 
 if option_embedded
 	defines += '-DBOOST_LEAF_EMBEDDED'
@@ -281,7 +281,7 @@ if option_enable_benchmarks
 
 	dep_tl_expected = subproject('tl_expected').get_variable('headers')
 	executable('deep_stack_tl', 'benchmark/deep_stack_other.cpp', override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=0', dependencies: [dep_tl_expected] )
-	executable('deep_stack_leaf', 'benchmark/deep_stack_leaf.cpp', dependencies: [leaf], override_options: ['cpp_std=c++17'], cpp_args: '-DBOOST_LEAF_DIAGNOSTICS=0')
+	executable('deep_stack_leaf', 'benchmark/deep_stack_leaf.cpp', dependencies: [leaf], override_options: ['cpp_std=c++17'], cpp_args: '-DBOOST_LEAF_CFG_DIAGNOSTICS=0')
 	if option_boost
 		executable('deep_stack_result', 'benchmark/deep_stack_other.cpp', dependencies: [dep_boost], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=1' )
 		executable('deep_stack_outcome', 'benchmark/deep_stack_other.cpp', dependencies: [dep_boost], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=2' )

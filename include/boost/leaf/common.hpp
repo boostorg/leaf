@@ -16,9 +16,11 @@
 #   endif ///
 #endif ///
 
+#include <boost/leaf/config.hpp>
 #include <boost/leaf/detail/demangle.hpp>
+
 #include <iosfwd>
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
 #   include <string>
 #endif
 #include <cerrno>
@@ -37,7 +39,7 @@ namespace boost { namespace leaf {
 
 struct BOOST_LEAF_SYMBOL_VISIBLE e_api_function { char const * value; };
 
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
 
 struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name
 {

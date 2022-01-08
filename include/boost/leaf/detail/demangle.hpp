@@ -26,6 +26,7 @@
 #endif ///
 
 #include <boost/leaf/config.hpp>
+
 #include <cstring>
 
 namespace boost { namespace leaf {
@@ -90,7 +91,7 @@ char const * t =
 #   endif
 #endif
 
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
 
 #include <string>
 
