@@ -442,7 +442,7 @@ namespace leaf_detail
         {
             return 0;
         }
-        
+
         template <class SlotsTuple>
         BOOST_LEAF_CONSTEXPR static E * peek( SlotsTuple &, error_id const & ) noexcept
         {
@@ -583,6 +583,17 @@ namespace leaf_detail
         return check_arguments<Tup, A...>::check(tup, ei);
     }
 
+    // Return type of leaf::handle_more
+    template <class... Hs>
+    struct more_handlers
+    {
+        std::tuple<Hs...> hs;
+
+        template <typename R, typename Tup>
+        BOOST_LEAF_CONSTEXPR
+        R handle(Tup & tup, error_info const& ei);
+    };
+
     template <class R, class F, bool IsResult = is_result_type<R>::value, class FReturnType = fn_return_type<F>>
     struct handler_caller
     {
@@ -603,6 +614,17 @@ namespace leaf_detail
         {
             std::forward<F>(f)( handler_argument_traits<A>::get(tup, ei)... );
             return { };
+        }
+    };
+
+    template <class R, class F, bool IsResult, class... More>
+    struct handler_caller<R, F, IsResult, more_handlers<More...>>
+    {
+        template <class Tup, class... A>
+        BOOST_LEAF_CONSTEXPR static R call(Tup & tup, error_info const& ei, F && fn, leaf_detail_mp11::mp_list<A...> a)
+        {
+            auto more = std::forward<F>(fn)( handler_argument_traits<A>::get(tup, ei)... );
+            return more.template handle<R>(tup, ei);
         }
     };
 
@@ -675,6 +697,14 @@ namespace leaf_detail
             std::forward<Car>(car),
             std::forward<Cdr>(cdr)...);
     }
+
+    template <typename... H>
+    template <typename R, typename Tup>
+    BOOST_LEAF_CONSTEXPR inline
+    R more_handlers<H...>::handle(Tup& tup, error_info const& ei)
+    {
+        return handle_error_<R>(tup, ei, hs);
+    }
 }
 
 ////////////////////////////////////////
@@ -699,6 +729,14 @@ handle_error( error_id id, H && ... h )
 {
     BOOST_LEAF_ASSERT(!is_active());
     return leaf_detail::handle_error_<R>(tup(), error_info(id), std::forward<H>(h)...);
+}
+
+template <class... H>
+BOOST_LEAF_CONSTEXPR inline
+leaf_detail::more_handlers<H...>
+handle_more(H&&... hs) noexcept
+{
+    return leaf_detail::more_handlers<H...>{std::tuple<H...>(std::forward<H>(hs)...)};
 }
 
 ////////////////////////////////////////

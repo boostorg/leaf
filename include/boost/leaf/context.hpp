@@ -148,6 +148,9 @@ namespace leaf_detail
     {
         static_assert(sizeof(E) == 0, "Error handlers must take this type by value");
     };
+
+    template <class... Hs>
+    struct more_handlers;
 }
 
 ////////////////////////////////////////
@@ -399,28 +402,47 @@ namespace leaf_detail
     template <class TypeList>
     using deduce_context = typename deduce_context_impl<TypeList>::type;
 
+    // Get the types that are handled by the given handler
     template <class H>
-    struct fn_mp_args_fwd
-    {
-        using type = fn_mp_args<H>;
+    struct handled_types;
+
+    template <class R>
+    struct types_from_more_handlers {
+        using types = leaf_detail_mp11::mp_list<>;
     };
 
     template <class... H>
-    struct fn_mp_args_fwd<std::tuple<H...> &>: fn_mp_args_fwd<std::tuple<H...>> { };
+    struct types_from_more_handlers<more_handlers<H...>> {
+        using types = leaf_detail_mp11::mp_append<typename handled_types<H>::types...>;
+    };
 
-    template <class... H>
-    struct fn_mp_args_fwd<std::tuple<H...> const &>: fn_mp_args_fwd<std::tuple<H...>> { };
+    template <class H>
+    struct handled_types {
+        // Types from the handler's arguments
+        using from_args = fn_mp_args<H>;
 
-    template <class... H>
-    struct fn_mp_args_fwd<std::tuple<H...>>
-    {
-        using type = leaf_detail_mp11::mp_append<typename fn_mp_args_fwd<H>::type...>;
+        // If the handler returns more_handlers, get those too:
+        using rtype = fn_return_type<H>;
+        using from_rtype = typename types_from_more_handlers<rtype>::types;
+
+        using types = leaf_detail_mp11::mp_append<from_args, from_rtype>;
     };
 
     template <class... H>
-    struct context_type_from_handlers_impl
-    {
-        using type = deduce_context<leaf_detail_mp11::mp_append<typename fn_mp_args_fwd<H>::type...>>;
+    struct handled_types<std::tuple<H...>&> : handled_types<std::tuple<H...>> {};
+
+    template <class... H>
+    struct handled_types<std::tuple<H...> const&> : handled_types<std::tuple<H...>> {};
+
+    template <class... H>
+    struct handled_types<std::tuple<H...>> {
+        using types = leaf_detail_mp11::mp_append<typename handled_types<H>::types...>;
+    };
+
+    template <class... H>
+    struct context_type_from_handlers_impl {
+        using hs = leaf_detail_mp11::mp_append<typename handled_types<H>::types...>;
+        using type = deduce_context<hs>;
     };
 
     template <class Ctx>

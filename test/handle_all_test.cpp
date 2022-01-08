@@ -697,5 +697,87 @@ int main()
         BOOST_TEST_EQ(r.value, 2);
     }
 
+    {
+        int r = leaf::try_handle_all(
+            []() -> leaf::result<int>
+            {
+                return leaf::new_error(info<1>{}, info<2>{});
+            },
+            [](info<1>) {
+                return leaf::handle_more(
+                    [](info<2>) { return 2; },
+                    [] { return -2 ;}
+                );
+            },
+            [] { return -1; }
+        );
+        BOOST_TEST_EQ(r, 2);
+    }
+
+    {
+        int r = 0;
+        leaf::try_handle_all(
+            []() -> leaf::result<void>
+            {
+                return leaf::new_error(info<1>{}, info<2>{});
+            },
+            [&r](info<1>) {
+                return leaf::handle_more(
+                    [&r](info<2>) { r = 2; },
+                    [&r] { r = -2; }
+                );
+            },
+            [&r] { r = -1; }
+        );
+        BOOST_TEST_EQ(r, 2);
+    }
+
+    {
+        int r = leaf::try_handle_all(
+            []() -> leaf::result<int>
+            {
+                return leaf::new_error(info<1>{}, info<2>{}, info<3>{});
+            },
+            [](info<1>) {
+                return leaf::handle_more(
+                    [](info<2>)
+                    {
+                        return leaf::handle_more(
+                            [](info<3>) { return 3; },
+                            [] { return -3; }
+                        );
+                    },
+                    [] { return -2; }
+                );
+            },
+            [] { return -1; }
+        );
+        BOOST_TEST_EQ(r, 3);
+    }
+
+    {
+        int r = 0;
+        leaf::try_handle_all(
+            []() -> leaf::result<void>
+            {
+                return leaf::new_error(info<1>{}, info<2>{}, info<3>{});
+            },
+            [&r](info<1>) {
+                return leaf::handle_more(
+                    [&r](info<2>)
+                    {
+                        return leaf::handle_more(
+                            [&r](info<3>) { r = 3; },
+                            [&r] { r = -3; }
+                        );
+                    },
+                    [&r] { r = -2; }
+                );
+            },
+            [&r] { r = -1; }
+        );
+        BOOST_TEST_EQ(r, 3);
+    }
+
     return boost::report_errors();
 }
