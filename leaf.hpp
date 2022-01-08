@@ -3,8 +3,8 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated from https://github.com/boostorg/leaf on January 06, 2022,
-// Git hash 8563ed0874acfa965e3dad203d92fb7708eb762b.
+// Generated from https://github.com/boostorg/leaf on January 08, 2022,
+// Git hash 8850db32731caaf7886f9ebbc46fd42c0d4e34c6.
 
 // Latest version: https://boostorg.github.io/leaf/leaf.hpp
 
@@ -23,26 +23,6 @@
 #   endif
 #endif
 
-// >>> #include <boost/leaf/capture.hpp>
-#line 1 "boost/leaf/capture.hpp"
-#ifndef BOOST_LEAF_CAPTURE_HPP_INCLUDED
-#define BOOST_LEAF_CAPTURE_HPP_INCLUDED
-
-// >>> #include <boost/leaf/exception.hpp>
-#line 1 "boost/leaf/exception.hpp"
-#ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
-#define BOOST_LEAF_EXCEPTION_HPP_INCLUDED
-
-// >>> #include <boost/leaf/error.hpp>
-#line 1 "boost/leaf/error.hpp"
-#ifndef BOOST_LEAF_ERROR_HPP_INCLUDED
-#define BOOST_LEAF_ERROR_HPP_INCLUDED
-
-// >>> #include <boost/leaf/detail/optional.hpp>
-#line 1 "boost/leaf/detail/optional.hpp"
-#ifndef BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
-#define BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
-
 // >>> #include <boost/leaf/config.hpp>
 #line 1 "boost/leaf/config.hpp"
 #ifndef BOOST_LEAF_CONFIG_HPP_INCLUDED
@@ -54,6 +34,11 @@
 // (C) Copyright Martin Wille 2003.
 // (C) Copyright Guillaume Melquiond 2003.
 
+#ifdef BOOST_LEAF_DIAGNOSTICS
+#	warning BOOST_LEAF_DIAGNOSTICS has been renamed to BOOST_LEAF_CFG_DIAGNOSTICS.
+#	define BOOST_LEAF_CFG_DIAGNOSTICS BOOST_LEAF_DIAGNOSTICS
+#endif
+
 #ifdef BOOST_LEAF_TLS_FREERTOS
 
 #	ifndef BOOST_LEAF_EMBEDDED
@@ -64,50 +49,58 @@
 
 #ifdef BOOST_LEAF_EMBEDDED
 
-#	ifndef BOOST_LEAF_NO_EXCEPTIONS
-#		define BOOST_LEAF_NO_EXCEPTIONS
+#	ifndef BOOST_LEAF_CFG_DIAGNOSTICS
+#		define BOOST_LEAF_CFG_DIAGNOSTICS 0
 #	endif
 
-#	ifndef BOOST_LEAF_DIAGNOSTICS
-#		define BOOST_LEAF_DIAGNOSTICS 0
+#	ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+#		define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 0
 #	endif
 
-#	ifndef BOOST_LEAF_USE_STD_SYSTEM_ERROR
-#		define BOOST_LEAF_USE_STD_SYSTEM_ERROR 0
+#	ifndef BOOST_LEAF_CFG_STD_STRING
+#		define BOOST_LEAF_CFG_STD_STRING 0
 #	endif
 
-#	ifndef BOOST_LEAF_USE_STD_STRING
-#		define BOOST_LEAF_USE_STD_STRING 0
+#	ifndef BOOST_LEAF_CFG_CAPTURE
+#		define BOOST_LEAF_CFG_CAPTURE 0
 #	endif
 
 #endif
 
-#ifndef BOOST_LEAF_DIAGNOSTICS
-#   define BOOST_LEAF_DIAGNOSTICS 1
+#ifndef BOOST_LEAF_CFG_DIAGNOSTICS
+#   define BOOST_LEAF_CFG_DIAGNOSTICS 1
 #endif
 
-#ifndef BOOST_LEAF_USE_STD_SYSTEM_ERROR
-#	define BOOST_LEAF_USE_STD_SYSTEM_ERROR 1
+#ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+#	define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 1
 #endif
 
-#ifndef BOOST_LEAF_USE_STD_STRING
-#	define BOOST_LEAF_USE_STD_STRING 1
+#ifndef BOOST_LEAF_CFG_STD_STRING
+#	define BOOST_LEAF_CFG_STD_STRING 1
 #endif
 
-#if BOOST_LEAF_DIAGNOSTICS!=0 && BOOST_LEAF_DIAGNOSTICS!=1
-#   error BOOST_LEAF_DIAGNOSTICS must be 0 or 1.
+#ifndef BOOST_LEAF_CFG_CAPTURE
+#   define BOOST_LEAF_CFG_CAPTURE 1
 #endif
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR!=0 && BOOST_LEAF_USE_STD_SYSTEM_ERROR!=1
-#   error BOOST_LEAF_USE_STD_SYSTEM_ERROR must be 0 or 1.
+#if BOOST_LEAF_CFG_DIAGNOSTICS!=0 && BOOST_LEAF_CFG_DIAGNOSTICS!=1
+#   error BOOST_LEAF_CFG_DIAGNOSTICS must be 0 or 1.
 #endif
 
-#if BOOST_LEAF_USE_STD_STRING!=0 && BOOST_LEAF_USE_STD_STRING!=1
-#   error BOOST_LEAF_USE_STD_STRING must be 0 or 1.
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR!=0 && BOOST_LEAF_CFG_STD_SYSTEM_ERROR!=1
+#   error BOOST_LEAF_CFG_STD_SYSTEM_ERROR must be 0 or 1.
 #endif
 
-#if BOOST_LEAF_DIAGNOSTICS && !BOOST_LEAF_USE_STD_STRING
-#	error BOOST_LEAF_DIAGNOSTICS requires the use of std::string
+#if BOOST_LEAF_CFG_STD_STRING!=0 && BOOST_LEAF_CFG_STD_STRING!=1
+#   error BOOST_LEAF_CFG_STD_STRING must be 0 or 1.
+#endif
+
+#if BOOST_LEAF_CFG_CAPTURE!=0 && BOOST_LEAF_CFG_CAPTURE!=1
+#   error BOOST_LEAF_CFG_CAPTURE must be 0 or 1.
+#endif
+
+#if BOOST_LEAF_CFG_DIAGNOSTICS && !BOOST_LEAF_CFG_STD_STRING
+#	error BOOST_LEAF_CFG_DIAGNOSTICS requires the use of std::string
 #endif
 
 // Configure BOOST_LEAF_NO_EXCEPTIONS, unless already #defined
@@ -182,7 +175,7 @@
 //  Must remain the last #elif since some other vendors (Metrowerks, for
 //  example) also #define _MSC_VER
 
-#       if !defined(_CPPUNWIND)
+#       if !_CPPUNWIND
 #           define BOOST_LEAF_NO_EXCEPTIONS
 #       endif
 #   endif
@@ -623,11 +616,30 @@ namespace tls
 
 #endif
 // <<< #include <boost/leaf/config/tls.hpp>
-#line 251 "boost/leaf/config.hpp"
+#line 266 "boost/leaf/config.hpp"
 
 #endif
-// <<< #include <boost/leaf/config.hpp>
-#line 20 "boost/leaf/detail/optional.hpp"
+// >>> #include <boost/leaf/capture.hpp>
+#line 1 "boost/leaf/capture.hpp"
+#ifndef BOOST_LEAF_CAPTURE_HPP_INCLUDED
+#define BOOST_LEAF_CAPTURE_HPP_INCLUDED
+
+// >>> #include <boost/leaf/exception.hpp>
+#line 1 "boost/leaf/exception.hpp"
+#ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
+#define BOOST_LEAF_EXCEPTION_HPP_INCLUDED
+
+// >>> #include <boost/leaf/error.hpp>
+#line 1 "boost/leaf/error.hpp"
+#ifndef BOOST_LEAF_ERROR_HPP_INCLUDED
+#define BOOST_LEAF_ERROR_HPP_INCLUDED
+
+// >>> #include <boost/leaf/detail/optional.hpp>
+#line 1 "boost/leaf/detail/optional.hpp"
+#ifndef BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
+#define BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
+
+
 #include <utility>
 #include <new>
 
@@ -790,7 +802,7 @@ namespace leaf_detail
 
 #endif
 // <<< #include <boost/leaf/detail/optional.hpp>
-#line 20 "boost/leaf/error.hpp"
+#line 21 "boost/leaf/error.hpp"
 // >>> #include <boost/leaf/detail/demangle.hpp>
 #line 1 "boost/leaf/detail/demangle.hpp"
 #ifndef BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
@@ -804,6 +816,7 @@ namespace leaf_detail
 // Distributed under the Boost Software License, Version 1.0.
 // See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt
+
 
 #include <cstring>
 
@@ -867,7 +880,7 @@ char const * t =
 #   endif
 #endif
 
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
 
 #include <string>
 
@@ -971,7 +984,7 @@ namespace leaf_detail
 
 #endif
 // <<< #include <boost/leaf/detail/demangle.hpp>
-#line 21 "boost/leaf/error.hpp"
+#line 22 "boost/leaf/error.hpp"
 // >>> #include <boost/leaf/detail/function_traits.hpp>
 #line 1 "boost/leaf/detail/function_traits.hpp"
 #ifndef BOOST_LEAF_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED
@@ -1284,6 +1297,7 @@ template<template<class...> class F, class... T> using mp_valid = typename detai
 #endif
 // <<< #include <boost/leaf/detail/mp11.hpp>
 #line 20 "boost/leaf/detail/function_traits.hpp"
+
 #include <tuple>
 
 namespace boost { namespace leaf {
@@ -1375,16 +1389,14 @@ namespace leaf_detail
 
 #endif
 // <<< #include <boost/leaf/detail/function_traits.hpp>
-#line 22 "boost/leaf/error.hpp"
-#include <type_traits>
-#include <memory>
-#include <iosfwd>
-
-#if BOOST_LEAF_DIAGNOSTICS
-// >>> #   include <boost/leaf/detail/print.hpp>
+#line 23 "boost/leaf/error.hpp"
+// >>> #include <boost/leaf/detail/print.hpp>
 #line 1 "boost/leaf/detail/print.hpp"
 #ifndef BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
+
+
+#if BOOST_LEAF_CFG_DIAGNOSTICS
 
 #include <type_traits>
 #include <exception>
@@ -1498,15 +1510,26 @@ namespace leaf_detail
 } }
 
 #endif
-// <<< #   include <boost/leaf/detail/print.hpp>
-#line 28 "boost/leaf/error.hpp"
-#   include <string>
+
+#endif
+// <<< #include <boost/leaf/detail/print.hpp>
+#line 24 "boost/leaf/error.hpp"
+
+#include <type_traits>
+#include <iosfwd>
+
+#if BOOST_LEAF_CFG_DIAGNOSTICS
 #   include <sstream>
+#   include <string>
 #   include <set>
 #endif
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 #   include <system_error>
+#endif
+
+#if BOOST_LEAF_CFG_CAPTURE
+#   include <memory>
 #endif
 
 #define BOOST_LEAF_TOKEN_PASTE(x, y) x ## y
@@ -1592,7 +1615,7 @@ BOOST_LEAF_NORETURN void throw_exception( T const & e )
 
 namespace boost { namespace leaf {
 
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
 
 namespace leaf_detail
 {
@@ -1734,7 +1757,7 @@ namespace leaf_detail
         template <class CharT, class Traits>
         void print( std::basic_ostream<CharT, Traits> & os, int key_to_print ) const
         {
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
             if( !diagnostic<E>::is_invisible )
                 if( int k = this->key() )
                 {
@@ -1756,7 +1779,7 @@ namespace leaf_detail
         using impl::value;
     };
 
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
 
     template <class E>
     BOOST_LEAF_CONSTEXPR inline void load_unexpected_count( int err_id ) noexcept
@@ -1799,7 +1822,7 @@ namespace leaf_detail
                 that_ = std::move(this_);
             }
         }
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
         else
         {
             int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
@@ -1820,7 +1843,7 @@ namespace leaf_detail
         BOOST_LEAF_ASSERT((err_id&3)==1);
         if( slot<T> * p = tls::read_ptr<slot<T>>() )
             (void) p->put(err_id, std::forward<E>(e));
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
         else
         {
             int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
@@ -1917,7 +1940,7 @@ namespace leaf_detail
     };
 }
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 namespace leaf_detail
 {
     class leaf_category final: public std::error_category
@@ -1993,7 +2016,7 @@ public:
     {
     }
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     error_id( std::error_code const & ec ) noexcept:
         value_(leaf_detail::import_error_code(ec))
     {
@@ -2118,7 +2141,9 @@ public:
     error_id captured_id_;
 };
 
+#if BOOST_LEAF_CFG_CAPTURE
 using context_ptr = std::shared_ptr<polymorphic_context>;
+#endif
 
 template <class Ctx>
 class context_activator
@@ -2189,7 +2214,10 @@ struct is_result_type<R const>: is_result_type<R>
 
 #endif
 // <<< #include <boost/leaf/error.hpp>
-#line 20 "boost/leaf/exception.hpp"
+#line 21 "boost/leaf/exception.hpp"
+
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
 #include <exception>
 
 #define BOOST_LEAF_EXCEPTION ::boost::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
@@ -2396,8 +2424,10 @@ exception_to_result( F && f ) noexcept
 } }
 
 #endif
+
+#endif
 // <<< #include <boost/leaf/exception.hpp>
-#line 20 "boost/leaf/capture.hpp"
+#line 21 "boost/leaf/capture.hpp"
 // >>> #include <boost/leaf/on_error.hpp>
 #line 1 "boost/leaf/on_error.hpp"
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
@@ -2504,7 +2534,7 @@ namespace leaf_detail
                 if( !s_->has_value(err_id) )
                     s_->put(err_id, std::move(e_));
             }
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
             else
             {
                 int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
@@ -2539,7 +2569,7 @@ namespace leaf_detail
                 if( !s_->has_value(err_id) )
                     s_->put(err_id, f_());
             }
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
             else
             {
                 int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
@@ -2648,7 +2678,9 @@ on_error( Item && ... i )
 
 #endif
 // <<< #include <boost/leaf/on_error.hpp>
-#line 21 "boost/leaf/capture.hpp"
+#line 22 "boost/leaf/capture.hpp"
+
+#if BOOST_LEAF_CFG_CAPTURE
 
 namespace boost { namespace leaf {
 
@@ -2869,13 +2901,16 @@ future_get( Future & fut )
 } }
 
 #endif
+
+#endif
 // >>> #include <boost/leaf/common.hpp>
 #line 1 "boost/leaf/common.hpp"
 #ifndef BOOST_LEAF_COMMON_HPP_INCLUDED
 #define BOOST_LEAF_COMMON_HPP_INCLUDED
 
+
 #include <iosfwd>
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
 #   include <string>
 #endif
 #include <cerrno>
@@ -2894,7 +2929,7 @@ namespace boost { namespace leaf {
 
 struct BOOST_LEAF_SYMBOL_VISIBLE e_api_function { char const * value; };
 
-#if BOOST_LEAF_USE_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING
 
 struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name
 {
@@ -2981,6 +3016,7 @@ namespace windows
 #line 1 "boost/leaf/context.hpp"
 #ifndef BOOST_LEAF_CONTEXT_HPP_INCLUDED
 #define BOOST_LEAF_CONTEXT_HPP_INCLUDED
+
 
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
 # include <thread>
@@ -3172,7 +3208,7 @@ namespace leaf_detail
     };
 }
 
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
 
 namespace leaf_detail
 {
@@ -3291,7 +3327,7 @@ public:
         using namespace leaf_detail;
         BOOST_LEAF_ASSERT(!is_active());
         tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
         if( unexpected_requested<Tup>::value )
             tls::uint32_increment<tls_tag_unexpected_enabled_counter>();
 #endif
@@ -3310,7 +3346,7 @@ public:
         BOOST_LEAF_ASSERT(std::this_thread::get_id() == thread_id_);
         thread_id_ = std::thread::id();
 #endif
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
         if( unexpected_requested<Tup>::value )
             tls::uint32_decrement<tls_tag_unexpected_enabled_counter>();
 #endif
@@ -3386,7 +3422,7 @@ namespace leaf_detail
         void deactivate() noexcept final override { Ctx::deactivate(); }
         void propagate() noexcept final override { Ctx::propagate(); }
         bool is_active() const noexcept final override { return Ctx::is_active(); }
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
         void print( std::ostream & os ) const final override { return Ctx::print(os); }
 #endif
     };
@@ -3407,6 +3443,8 @@ BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && 
     return { };
 }
 
+#if BOOST_LEAF_CFG_CAPTURE
+
 template <class...  H>
 inline context_ptr make_shared_context() noexcept
 {
@@ -3419,6 +3457,8 @@ inline context_ptr make_shared_context( H && ... ) noexcept
     return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_handlers<H...>>>();
 }
 
+#endif
+
 } }
 
 #endif
@@ -3427,9 +3467,6 @@ inline context_ptr make_shared_context( H && ... ) noexcept
 #ifndef BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
 #define BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
 
-
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-#endif
 
 namespace boost { namespace leaf {
 
@@ -3440,7 +3477,7 @@ class BOOST_LEAF_SYMBOL_VISIBLE error_info
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
     static error_id unpack_error_id( std::exception const * ex ) noexcept
     {
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
         if( std::system_error const * se = dynamic_cast<std::system_error const *>(ex) )
             if( is_error_id(se->code()) )
                 return leaf_detail::make_error_id(se->code().value());
@@ -3517,7 +3554,7 @@ public:
     }
 };
 
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
 
 class BOOST_LEAF_SYMBOL_VISIBLE diagnostic_info: public error_info
 {
@@ -3594,7 +3631,7 @@ public:
     friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
     {
         os <<
-            "leaf::diagnostic_info requires #define BOOST_LEAF_DIAGNOSTICS 1\n"
+            "leaf::diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1\n"
             "leaf::error_info: ";
         x.print(os);
         return os << '\n';
@@ -3624,7 +3661,7 @@ namespace leaf_detail
 
 #endif
 
-#if BOOST_LEAF_DIAGNOSTICS
+#if BOOST_LEAF_CFG_DIAGNOSTICS
 
 class BOOST_LEAF_SYMBOL_VISIBLE verbose_diagnostic_info: public error_info
 {
@@ -3701,7 +3738,7 @@ public:
     friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, verbose_diagnostic_info const & x )
     {
         os <<
-            "leaf::verbose_diagnostic_info requires #define BOOST_LEAF_DIAGNOSTICS 1\n"
+            "leaf::verbose_diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1\n"
             "leaf::error_info: ";
         x.print(os);
         return os << '\n';
@@ -3780,7 +3817,7 @@ namespace leaf_detail
         }
     };
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     template <>
     struct peek_exception<std::error_code const, true>
     {
@@ -4380,7 +4417,7 @@ namespace leaf_detail
     }
 }
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 template <class E, class Enum = E>
 struct condition
 {
@@ -4411,7 +4448,7 @@ namespace leaf_detail
         using type = T;
     };
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     template <class Enum>
     struct match_enum_type<condition<Enum, Enum>>
     {
@@ -4439,7 +4476,7 @@ struct match
     }
 };
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 template <class Enum, BOOST_LEAF_MATCH_ARGS(BOOST_LEAF_ESC(match_enum_type<condition<Enum, Enum>>), V1, V)>
 struct match<condition<Enum, Enum>, V1, V...>
 {
@@ -4466,7 +4503,7 @@ namespace leaf_detail
         using type = typename std::remove_reference<decltype(std::declval<E>().value)>::type;
     };
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     template <class E, class Enum>
     struct match_value_enum_type<condition<E, Enum>>
     {
@@ -4493,7 +4530,7 @@ struct match_value
     }
 };
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 template <class E, class Enum, BOOST_LEAF_MATCH_ARGS(BOOST_LEAF_ESC(match_value_enum_type<condition<E, Enum>>), V1, V)>
 struct match_value<condition<E, Enum>, V1, V...>
 {
@@ -4618,10 +4655,9 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 #ifndef BOOST_LEAF_RESULT_HPP_INCLUDED
 #define BOOST_LEAF_RESULT_HPP_INCLUDED
 
+
 #include <climits>
-#ifdef BOOST_LEAF_DISABLE_CAPTURE
-#   include <cstdlib>
-#endif
+#include <functional>
 
 namespace boost { namespace leaf {
 
@@ -4715,14 +4751,13 @@ namespace leaf_detail
         {
         }
 
+#if BOOST_LEAF_CFG_CAPTURE
         struct kind_ctx_ptr { };
         explicit result_discriminant( kind_ctx_ptr ) noexcept:
             state_(ctx_ptr)
         {
-#ifdef BOOST_LEAF_DISABLE_CAPTURE
-        std::abort(); // Attempted capture but capture support is disabled
-#endif
         }
+#endif
 
         kind_t kind() const noexcept
         {
@@ -4766,10 +4801,10 @@ class result
             case result_discriminant::val:
                 return result<U>(error_id());
             case result_discriminant::ctx_ptr:
-#ifdef BOOST_LEAF_DISABLE_CAPTURE
-                BOOST_LEAF_ASSERT(false); // Possible ODR violation.
-#else
+#if BOOST_LEAF_CFG_CAPTURE
                 return result<U>(std::move(r_.ctx_));
+#else
+                BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
             default:
                 return result<U>(std::move(r_.what_));
@@ -4783,14 +4818,14 @@ class result
             case result_discriminant::val:
                 return error_id();
             case result_discriminant::ctx_ptr:
-#ifdef BOOST_LEAF_DISABLE_CAPTURE
-                BOOST_LEAF_ASSERT(false); // Possible ODR violation.
+#if BOOST_LEAF_CFG_CAPTURE
+                {
+                    error_id captured_id = r_.ctx_->propagate_captured_errors();
+                    tls::write_uint32<leaf_detail::tls_tag_id_factory_current_id>(captured_id.value());
+                    return captured_id;
+                }
 #else
-            {
-                error_id captured_id = r_.ctx_->propagate_captured_errors();
-                tls::write_uint32<leaf_detail::tls_tag_id_factory_current_id>(captured_id.value());
-                return captured_id;
-            }
+                BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
             default:
                 return r_.what_.get_error_id();
@@ -4809,7 +4844,7 @@ class result
     union
     {
         stored_type stored_;
-#ifndef BOOST_LEAF_DISABLE_CAPTURE
+#if BOOST_LEAF_CFG_CAPTURE
         context_ptr ctx_;
 #endif
     };
@@ -4824,11 +4859,11 @@ class result
             stored_.~stored_type();
             break;
         case result_discriminant::ctx_ptr:
-#ifdef BOOST_LEAF_DISABLE_CAPTURE
-            BOOST_LEAF_ASSERT(false); // Possible ODR violation.
-#else
+#if BOOST_LEAF_CFG_CAPTURE
             BOOST_LEAF_ASSERT(!ctx_ || ctx_->captured_id_);
             ctx_.~context_ptr();
+#else
+            BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
         default:
             break;
@@ -4845,11 +4880,11 @@ class result
             (void) new(&stored_) stored_type(std::move(x.stored_));
             break;
         case result_discriminant::ctx_ptr:
-#ifdef BOOST_LEAF_DISABLE_CAPTURE
-            BOOST_LEAF_ASSERT(false); // Possible ODR violation.
-#else
+#if BOOST_LEAF_CFG_CAPTURE
             BOOST_LEAF_ASSERT(!x.ctx_ || x.ctx_->captured_id_);
             (void) new(&ctx_) context_ptr(std::move(x.ctx_));
+#else
+            BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
         default:
             break;
@@ -4866,11 +4901,11 @@ class result
     error_id get_error_id() const noexcept
     {
         BOOST_LEAF_ASSERT(what_.kind()!=result_discriminant::val);
-#ifdef BOOST_LEAF_DISABLE_CAPTURE
+#if BOOST_LEAF_CFG_CAPTURE
+        return what_.kind()==result_discriminant::ctx_ptr ? ctx_->captured_id_ : what_.get_error_id();
+#else
         BOOST_LEAF_ASSERT(what_.kind()!=result_discriminant::ctx_ptr); // Possible ODR violation.
         return what_.get_error_id();
-#else
-        return what_.kind()==result_discriminant::ctx_ptr ? ctx_->captured_id_ : what_.get_error_id();
 #endif
     }
 
@@ -4949,7 +4984,7 @@ public:
 
 #endif
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     result( std::error_code const & ec ) noexcept:
         what_(error_id(ec))
     {
@@ -4962,12 +4997,7 @@ public:
     }
 #endif
 
-#ifdef BOOST_LEAF_DISABLE_CAPTURE
-    result( context_ptr && ) noexcept:
-        what_(result_discriminant::kind_ctx_ptr{})
-    {
-    }
-#else
+#if BOOST_LEAF_CFG_CAPTURE
     result( context_ptr && ctx ) noexcept:
         ctx_(std::move(ctx)),
         what_(result_discriminant::kind_ctx_ptr{})
@@ -5115,7 +5145,7 @@ public:
     {
     }
 
-#if BOOST_LEAF_USE_STD_SYSTEM_ERROR
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     result( std::error_code const & ec ) noexcept:
         base(ec)
     {
@@ -5128,10 +5158,12 @@ public:
     }
 #endif
 
+#if BOOST_LEAF_CFG_CAPTURE
     result( context_ptr && ctx ) noexcept:
         base(std::move(ctx))
     {
     }
+#endif
 
     ~result() noexcept
     {

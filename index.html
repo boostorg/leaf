@@ -5218,7 +5218,7 @@ The caller is required to specify the return type <code>R</code>. This is becaus
 </td>
 <td class="content">
 <div class="paragraph">
-<p>The behavior of <code>diagnostic_info</code> (and <a href="#verbose_diagnostic_info"><code>verbose_diagnostic_info</code></a>) is affected by the value of the macro <code>BOOST_LEAF_DIAGNOSTICS</code>:</p>
+<p>The behavior of <code>diagnostic_info</code> (and <a href="#verbose_diagnostic_info"><code>verbose_diagnostic_info</code></a>) is affected by the value of the macro <code>BOOST_LEAF_CFG_DIAGNOSTICS</code>:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -6529,7 +6529,7 @@ The returned proxy object refers to <code>*this</code>; avoid holding on to it.
 </td>
 <td class="content">
 <div class="paragraph">
-<p>The behavior of <code>verbose_diagnostic_info</code> (and <a href="#diagnostic_info"><code>diagnostic_info</code></a>) is affected by the value of the macro <code>BOOST_LEAF_DIAGNOSTICS</code>:</p>
+<p>The behavior of <code>verbose_diagnostic_info</code> (and <a href="#diagnostic_info"><code>diagnostic_info</code></a>) is affected by the value of the macro <code>BOOST_LEAF_CFG_DIAGNOSTICS</code>:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -8554,13 +8554,16 @@ meson <span class="nb">test</span></code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p><code>BOOST_LEAF_DIAGNOSTICS</code>: Defining this macro as <code>0</code> stubs out both <a href="#diagnostic_info"><code>diagnostic_info</code></a> and <a href="#verbose_diagnostic_info"><code>verbose_diagnostic_info</code></a> (if the macro is left undefined, LEAF defines it as <code>1</code>).</p>
+<p><code>BOOST_LEAF_CFG_DIAGNOSTICS</code>: Defining this macro as <code>0</code> stubs out both <a href="#diagnostic_info"><code>diagnostic_info</code></a> and <a href="#verbose_diagnostic_info"><code>verbose_diagnostic_info</code></a> (if the macro is left undefined, LEAF defines it as <code>1</code>).</p>
 </li>
 <li>
-<p><code>BOOST_LEAF_USE_STD_SYSTEM_ERROR</code>: Defining this macro as <code>0</code> disables the <code>std::error_code</code> / <code>std::error_condition</code> integration. In this case LEAF does not <code>#include &lt;system_error&gt;</code>, which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as <code>1</code>).</p>
+<p><code>BOOST_LEAF_CFG_STD_SYSTEM_ERROR</code>: Defining this macro as <code>0</code> disables the <code>std::error_code</code> / <code>std::error_condition</code> integration. In this case LEAF does not <code>#include &lt;system_error&gt;</code>, which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as <code>1</code>).</p>
 </li>
 <li>
-<p><code>BOOST_LEAF_USE_STD_STRING</code>: Defining this macro as <code>0</code> disables all use of <code>std::string</code> (this requires <code>BOOST_LEAF_DIAGNOSTICS=0</code> as well). In this case LEAF does not <code>#include &lt;string&gt;</code> which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as <code>1</code>).</p>
+<p><code>BOOST_LEAF_CFG_STD_STRING</code>: Defining this macro as <code>0</code> disables all use of <code>std::string</code> (this requires <code>BOOST_LEAF_CFG_DIAGNOSTICS=0</code> as well). In this case LEAF does not <code>#include &lt;string&gt;</code> which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as <code>1</code>).</p>
+</li>
+<li>
+<p><code>BOOST_LEAF_CFG_CAPTURE</code>: Defining this macro as <code>0</code> disables the ability of <code>leaf::result</code> to transport errors between threads. In this case LEAF does not <code>#include &lt;memory&gt;</code>, which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as <code>1</code>).</p>
 </li>
 <li>
 <p><code>BOOST_LEAF_NO_EXCEPTIONS</code>: Disables all exception handling support. If left undefined, LEAF defines it automatically based on the compiler configuration (e.g. <code>-fno-exceptions</code>).</p>
@@ -8577,20 +8580,20 @@ meson <span class="nb">test</span></code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#ifndef BOOST_LEAF_NO_EXCEPTIONS
-# define BOOST_LEAF_NO_EXCEPTIONS
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#ifndef BOOST_LEAF_CFG_DIAGNOSTICS
+# define BOOST_LEAF_CFG_DIAGNOSTICS 0
 #endif
 </span>
-<span class="cp">#ifndef BOOST_LEAF_DIAGNOSTICS
-# define BOOST_LEAF_DIAGNOSTICS 0
+<span class="cp">#ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+# define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 0
 #endif
 </span>
-<span class="cp">#ifndef BOOST_LEAF_USE_STD_SYSTEM_ERROR
-# define BOOST_LEAF_USE_STD_SYSTEM_ERROR 0
+<span class="cp">#ifndef BOOST_LEAF_CFG_STD_STRING
+# define BOOST_LEAF_CFG_STD_STRING 0
 #endif
 </span>
-<span class="cp">#ifndef BOOST_LEAF_USE_STD_STRING
-# define BOOST_LEAF_USE_STD_STRING 0
+<span class="cp">#ifndef BOOST_LEAF_CFG_CAPTURE
+# define BOOST_LEAF_CFG_CAPTURE 0
 #endif</span></code></pre>
 </div>
 </div>
@@ -8634,12 +8637,24 @@ For efficiency, <code>read_void_ptr</code> and <code>write_void_ptr</code> shoul
 <p>Each error type is assigned a unique index in the TLS pointer array. By default, assigned TLS indices start from <code>0</code>; this can be changed by defining <code>BOOST_LEAF_TLS_ARRAY_START_INDEX</code>.</p>
 </li>
 <li>
-<p>If <code>BOOST_LEAF_TLS_ARRAY_SIZE</code> is defined, LEAF will use it to <code>BOOST_LEAF_ASSERT</code> that TLS indices are within bounds (which is of course deactivated under <code>NDEBUG</code>).</p>
+<p>If <code>BOOST_LEAF_TLS_ARRAY_SIZE</code> is defined, it is used to <code>BOOST_LEAF_ASSERT</code> that TLS indices are within bounds (which is of course deactivated under <code>NDEBUG</code>).</p>
 </li>
 <li>
 <p>Under <code>BOOST_LEAF_TLS_FREERTOS</code>, <code>BOOST_LEAF_TLS_ARRAY_SIZE</code> defaults to <a href="https://www.freertos.org/a00110.html#configNUM_THREAD_LOCAL_STORAGE_POINTERS"><code>configNUM_THREAD_LOCAL_STORAGE_POINTERS</code></a>.</p>
 </li>
 </ul>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+On embedded platforms, beware of <code>read_void_ptr</code>/<code>write_void_ptr</code> accessing thread local pointers beyond the static size of the thread local pointer array; this will likely result in undefined behavior.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>If your program does not use concurrency at all, simply define <code>BOOST_LEAF_NO_THREADS</code>, which requires no TLS support at all (but is NOT thread-safe).</p>
