@@ -706,7 +706,7 @@ int main()
             [](info<1>) {
                 return leaf::handle_more(
                     [](info<2>) { return 2; },
-                    [] { return -2 ;}
+                    [] { return -2; }
                 );
             },
             [] { return -1; }

@@ -583,15 +583,52 @@ namespace leaf_detail
         return check_arguments<Tup, A...>::check(tup, ei);
     }
 
-    // Return type of leaf::handle_more
-    template <class... Hs>
-    struct more_handlers
-    {
-        std::tuple<Hs...> hs;
+    template <class Ret, class... Hs>
+    struct more_handlers_invoker_base {
+        virtual Ret invoke(Hs&&...) = 0;
+    };
 
-        template <typename R, typename Tup>
-        BOOST_LEAF_CONSTEXPR
-        R handle(Tup & tup, error_info const& ei);
+    // Return type of leaf::handle_more
+    template <class Ret, class... Hs>
+    struct more_handlers_result
+    {
+        Ret r;
+
+        static more_handlers_result handle(Hs&&... hs) {
+            Ret result = tls::read_ptr<leaf_detail::more_handlers_invoker_base<Ret, Hs...>>()->invoke(std::forward<Hs>(hs)...);
+            return more_handlers_result{std::forward<Ret>(result)};
+        }
+
+        Ret result() noexcept { return std::forward<Ret>(r); }
+    };
+
+    template <class... Hs>
+    struct more_handlers_result<void, Hs...>
+    {
+        static more_handlers_result handle(Hs&&... hs) {
+            tls::read_ptr<leaf_detail::more_handlers_invoker_base<void, Hs...>>()->invoke(std::forward<Hs>(hs)...);
+            return {};
+        }
+
+        void result() noexcept { }
+    };
+
+    template <class R>
+    struct more_handlers_return_type { using type = R; };
+
+    template <class R, class... Hs>
+    struct more_handlers_return_type<more_handlers_result<R, Hs...>>
+        : more_handlers_return_type<R> {};
+
+    template <class Slots, class Ret, class... Hs>
+    struct more_handlers_invoker : more_handlers_invoker_base<Ret, Hs...> {
+        Slots& tup;
+        error_info const& ei;
+
+        explicit more_handlers_invoker(Slots& t, error_info const& e)
+            : tup(t), ei(e) {}
+
+        Ret invoke(Hs&&... hs) override;
     };
 
     template <class R, class F, bool IsResult = is_result_type<R>::value, class FReturnType = fn_return_type<F>>
@@ -617,14 +654,30 @@ namespace leaf_detail
         }
     };
 
-    template <class R, class F, bool IsResult, class... More>
-    struct handler_caller<R, F, IsResult, more_handlers<More...>>
+    template <class R, class F, bool IsResult, class Ret, class... More>
+    struct handler_caller<R, F, IsResult, more_handlers_result<Ret, More...>>
     {
+        template <class Tup, class... A>
+        BOOST_LEAF_CONSTEXPR static R call_(Tup & tup, error_info const & ei, F&& fn, leaf_detail_mp11::mp_list<A...> a, std::false_type /* Not result<void> */)
+        {
+            auto r = std::forward<F>(fn)(handler_argument_traits<A>::get(tup, ei)...);
+            return r.result();
+        }
+
+        template <class Tup, class... A>
+        BOOST_LEAF_CONSTEXPR static R call_(Tup & tup, error_info const & ei, F&& fn, leaf_detail_mp11::mp_list<A...> a, std::true_type /* void -> result<void> */)
+        {
+            std::forward<F>(fn)(handler_argument_traits<A>::get(tup, ei)...);
+            return {};
+        }
+
         template <class Tup, class... A>
         BOOST_LEAF_CONSTEXPR static R call(Tup & tup, error_info const& ei, F && fn, leaf_detail_mp11::mp_list<A...> a)
         {
-            auto more = std::forward<F>(fn)( handler_argument_traits<A>::get(tup, ei)... );
-            return more.template handle<R>(tup, ei);
+            more_handlers_invoker<Tup, Ret, More...> inv{tup, ei};
+            tls::write_ptr<more_handlers_invoker_base<Ret, More...>>(&inv);
+            using is_res_void = std::integral_constant<bool, IsResult && std::is_void<Ret>::value>;
+            return call_(tup, ei, std::forward<F>(fn), a, is_res_void{});
         }
     };
 
@@ -697,14 +750,6 @@ namespace leaf_detail
             std::forward<Car>(car),
             std::forward<Cdr>(cdr)...);
     }
-
-    template <typename... H>
-    template <typename R, typename Tup>
-    BOOST_LEAF_CONSTEXPR inline
-    R more_handlers<H...>::handle(Tup& tup, error_info const& ei)
-    {
-        return handle_error_<R>(tup, ei, hs);
-    }
 }
 
 ////////////////////////////////////////
@@ -731,12 +776,33 @@ handle_error( error_id id, H && ... h )
     return leaf_detail::handle_error_<R>(tup(), error_info(id), std::forward<H>(h)...);
 }
 
-template <class... H>
+template <
+    class... H,
+    class R = typename std::common_type<
+        typename leaf_detail::more_handlers_return_type<
+            leaf_detail::fn_return_type<H>>::type...>::type
+    >
 BOOST_LEAF_CONSTEXPR inline
-leaf_detail::more_handlers<H...>
+leaf_detail::more_handlers_result<R, H...>
 handle_more(H&&... hs) noexcept
 {
-    return leaf_detail::more_handlers<H...>{std::tuple<H...>(std::forward<H>(hs)...)};
+    return leaf_detail::more_handlers_result<R, H...>::handle(std::forward<H>(hs)...);
+}
+
+template <class R, class... H>
+BOOST_LEAF_CONSTEXPR inline
+leaf_detail::more_handlers_result<R, H...>
+handle_more(H&&... hs) noexcept
+{
+    return leaf_detail::more_handlers_result<R, H...>::handle(std::forward<H>(hs)...);
+}
+
+template <class Slots, class Ret, class... Hs>
+Ret
+leaf_detail::more_handlers_invoker<Slots, Ret, Hs...>::
+invoke(Hs&&... hs)
+{
+    return leaf_detail::handle_error_<Ret>(this->tup, this->ei, std::forward<Hs>(hs)...);
 }
 
 ////////////////////////////////////////

@@ -149,8 +149,8 @@ namespace leaf_detail
         static_assert(sizeof(E) == 0, "Error handlers must take this type by value");
     };
 
-    template <class... Hs>
-    struct more_handlers;
+    template <class Ret, class... Hs>
+    struct more_handlers_result;
 }
 
 ////////////////////////////////////////
@@ -411,8 +411,8 @@ namespace leaf_detail
         using types = leaf_detail_mp11::mp_list<>;
     };
 
-    template <class... H>
-    struct types_from_more_handlers<more_handlers<H...>> {
+    template <class R, class... H>
+    struct types_from_more_handlers<more_handlers_result<R, H...>> {
         using types = leaf_detail_mp11::mp_append<typename handled_types<H>::types...>;
     };
 
@@ -421,7 +421,7 @@ namespace leaf_detail
         // Types from the handler's arguments
         using from_args = fn_mp_args<H>;
 
-        // If the handler returns more_handlers, get those too:
+        // If the handler returns more_handlers_result, get those too:
         using rtype = fn_return_type<H>;
         using from_rtype = typename types_from_more_handlers<rtype>::types;
 
