@@ -3,12 +3,12 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated from https://github.com/boostorg/leaf on January 08, 2022,
-// Git hash 8850db32731caaf7886f9ebbc46fd42c0d4e34c6.
+// Generated from https://github.com/boostorg/leaf on January 09, 2022,
+// Git hash 745a75ac99fa5bfd26e0b1f8671fb2bbd4ea0129.
 
 // Latest version: https://boostorg.github.io/leaf/leaf.hpp
 
-// Copyright (c) 2018-2021 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -261,14 +261,6 @@
 #ifndef BOOST_LEAF_CONFIG_TLS_FREERTOS_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_TLS_FREERTOS_HPP_INCLUDED
 
-// LEAF requires thread local storage support for pointers and for uin32_t values.
-
-// This header implements thread local storage for pointers and for uint32_t
-// values via the FreeRTOS API, as an alternative to the default implementation
-// (found in tls_cpp11.hpp) which relies on C++11 thread_local support.
-
-// See https://www.freertos.org/thread-local-storage-pointers.html.
-
 #include <task.h>
 
 #ifndef BOOST_LEAF_TLS_ARRAY
@@ -283,14 +275,14 @@
 #   define BOOST_LEAF_TLS_ARRAY_SIZE configNUM_THREAD_LOCAL_STORAGE_POINTERS
 #endif
 
-static_assert(
-    BOOST_LEAF_TLS_ARRAY_SIZE <= configNUM_THREAD_LOCAL_STORAGE_POINTERS,
-        "Bad BOOST_LEAF_TLS_ARRAY_SIZE");
+static_assert(BOOST_LEAF_TLS_ARRAY_SIZE <= configNUM_THREAD_LOCAL_STORAGE_POINTERS, "Invalid BOOST_LEAF_TLS_ARRAY_SIZE");
 
 namespace boost { namespace leaf {
 
 namespace tls
 {
+    // See https://www.freertos.org/thread-local-storage-pointers.html.
+
     inline void * read_void_ptr( int tls_index ) noexcept
     {
         return pvTaskGetThreadLocalStoragePointer(0, tls_index);
@@ -996,7 +988,7 @@ namespace leaf_detail
 #define BOOST_LEAF_DETAIL_MP11_HPP_INCLUDED
 
 //  Copyright 2015-2017 Peter Dimov.
-//  Copyright 2019 Emil Dotchevski.
+//  Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
 //
 //  Distributed under the Boost Software License, Version 1.0.
 //
