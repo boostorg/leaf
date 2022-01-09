@@ -7,14 +7,6 @@
 /// Distributed under the Boost Software License, Version 1.0. (See accompanying
 /// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// LEAF requires thread local storage support for pointers and for uin32_t values.
-
-// This header implements thread local storage for pointers and for uint32_t
-// values via the FreeRTOS API, as an alternative to the default implementation
-// (found in tls_cpp11.hpp) which relies on C++11 thread_local support.
-
-// See https://www.freertos.org/thread-local-storage-pointers.html.
-
 #ifndef BOOST_LEAF_ENABLE_WARNINGS ///
 #   if defined(_MSC_VER) ///
 #       pragma warning(push,1) ///
@@ -39,14 +31,14 @@
 #   define BOOST_LEAF_TLS_ARRAY_SIZE configNUM_THREAD_LOCAL_STORAGE_POINTERS
 #endif
 
-static_assert(
-    BOOST_LEAF_TLS_ARRAY_SIZE <= configNUM_THREAD_LOCAL_STORAGE_POINTERS,
-        "Bad BOOST_LEAF_TLS_ARRAY_SIZE");
+static_assert(BOOST_LEAF_TLS_ARRAY_SIZE <= configNUM_THREAD_LOCAL_STORAGE_POINTERS, "Invalid BOOST_LEAF_TLS_ARRAY_SIZE");
 
 namespace boost { namespace leaf {
 
 namespace tls
 {
+    // See https://www.freertos.org/thread-local-storage-pointers.html.
+
     inline void * read_void_ptr( int tls_index ) noexcept
     {
         return pvTaskGetThreadLocalStoragePointer(0, tls_index);
