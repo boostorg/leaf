@@ -67,7 +67,7 @@ The library uses thread-local storage for pointers only. By default, this is imp
 [[distribution]]
 == Distribution
 
-Copyright (C) 2018-2021 Emil Dotchevski. Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
+Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc. Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
 
 There are three distribution channels:
 

@@ -2,7 +2,7 @@
 #define BOOST_LEAF_DETAIL_MP11_HPP_INCLUDED
 
 //  Copyright 2015-2017 Peter Dimov.
-//  Copyright 2019 Emil Dotchevski.
+//  Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
 //
 //  Distributed under the Boost Software License, Version 1.0.
 //

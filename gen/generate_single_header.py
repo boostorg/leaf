@@ -1,6 +1,6 @@
 """
 
-	Copyright (c) 2018-2021 Emil Dotchevski and Reverge Studios, Inc.
+	Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
 	Copyright (c) Sorin Fetche
 
 	Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -76,7 +76,7 @@ def _main():
 			'\n'
 			'// Latest version: https://boostorg.github.io/leaf/leaf.hpp\n'
 			'\n'
-			'// Copyright (c) 2018-2021 Emil Dotchevski and Reverge Studios, Inc.\n'
+			'// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.\n'
 			'\n'
 			'// Distributed under the Boost Software License, Version 1.0. (See accompanying\n'
 			'// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)\n'
