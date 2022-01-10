@@ -4307,15 +4307,15 @@ namespace boost { namespace leaf {
 } }
 ----
 [.text-right]
-<<result::result>> | <<result::operator_eq>> | <<result::has_value>> | <<result::has_error>> | <<result::operator_bool>> | <<result::operator_ptr>> | <<result::operator_deref>> | <<result::value>> | <<result::error>> | <<result::load>>
+<<result::result>> | <<result::operator_eq>> | <<result::has_value>> | <<result::has_error>> | <<result::operator_bool>> | <<result::value>> | <<result::operator_ptr>> | <<result::operator_deref>> | <<result::error>> | <<result::load>>
 
 The `result<T>` type can be returned by functions which produce a value of type `T` but may fail doing so.
 
 Requires: :: `T` must be movable, and its move constructor may not throw.
 
 Invariant: :: A `result<T>` object is in one of three states:
-* Value state, in which case it contains an object of type `T`, and `<<result::value,value>>`/`<<result::value,operator*>>`/`<<result::value,operatorpass:[->]>>` can be used to access the contained value.
-* Error state, in which case it contains an error ID, and calling `<<result::value,value>>`/`<<result::value,operator*>>`/`<<result::value,operatorpass:[->]>>` throws `leaf::bad_result`.
+* Value state, in which case it contains an object of type `T`, and <<result::value>>/<<result::operator_deref>>/<<result::operator_ptr>> can be used to access the contained value.
+* Error state, in which case it contains an error ID, and calling <<result::value>> throws `leaf::bad_result`.
 * Error capture state, which is the same as the Error state, but in addition to the error ID, it holds a `std::shared_ptr<<<polymorphic_context,polymorphic_context>>>`.
 
 `result<T>` objects are nothrow-moveable but are not copyable.
@@ -4527,52 +4527,8 @@ Returns: :: If `*this` is in <<result,value state>>, returns `true`, otherwise r
 
 '''
 
-[[result::operator_ptr]]
-==== `operator pass:[->]`
-
-.#include <boost/leaf/result.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class T>
-  T const * result<T>::operator->() const noexcept;
-
-  template <class T>
-  T * result<T>::operator->() noexcept;
-
-} }
-----
-
-Returns :: If `*this` is in <<result,value state>>, returns a pointer to the stored value; otherwise returns 0.
-
-'''
-
-[[result::operator_deref]]
-==== `operator *`
-
-.#include <boost/leaf/result.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class T>
-  T const & result<T>::operator*() const noexcept;
-
-  template <class T>
-  T & result<T>::operator*() noexcept;
-
-} }
-----
-
-Requires: :: `*this` must be in <<result,value state>>.
-
-Returns :: a reference to the stored value.
-
-'''
-
 [[result::value]]
-==== `value``
+==== `value`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
@@ -4594,6 +4550,50 @@ namespace boost { namespace leaf {
 
 [[result::bad_result]]
 Effects: :: If `*this` is in <<result,value state>>, returns a reference to the stored value, otherwise throws `bad_result`.
+
+'''
+
+[[result::operator_ptr]]
+==== `operatorpass:[->]`
+
+.#include <boost/leaf/result.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class T>
+  T const * result<T>::operator->() const noexcept;
+
+  template <class T>
+  T * result<T>::operator->() noexcept;
+
+} }
+----
+
+Returns :: If `*this` is in <<result,value state>>, returns a pointer to the stored value; otherwise returns 0.
+
+'''
+
+[[result::operator_deref]]
+==== `operator*`
+
+.#include <boost/leaf/result.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class T>
+  T const & result<T>::operator*() const noexcept;
+
+  template <class T>
+  T & result<T>::operator*() noexcept;
+
+} }
+----
+
+Requires: :: `*this` must be in <<result,value state>>.
+
+Returns :: a reference to the stored value.
 
 '''
 
@@ -4629,7 +4629,7 @@ The behavior of `verbose_diagnostic_info` (and <<diagnostic_info>>) is affected 
 * If it is 0, the `verbose_diagnostic_info` functionality is stubbed out even for error handling contexts that take an argument of type `verbose_diagnostic_info`. This could save some cycles on the error path in some programs (but is probably not worth it).
 --
 
-WARNING: Using `verbose_diagnostic_info` will likely allocate memory dynamically.
+WARNING: Using `verbose_diagnostic_info` may allocate memory dynamically, but only if an active error handler takes an argument of type `verbose_diagnostic_info`.
 
 [[predicates]]
 == Reference: Predicates
@@ -4884,12 +4884,12 @@ When an error handler takes an argument of type `match<E, V...>`, the <<handler_
 [.text-center]
 `p~1~ || p~2~ || ... p~n~`.
 
-Generally, `p~i~` is equivalent to `e == V~i~`, except if `V~i~` is pointer to a function
+Where `p~i~` is equivalent to `e == V~i~`, except if `V~i~` is pointer to a function
 
 [.text-center]
 `bool (*V~i~)(T x)`.
 
-In this case it is required that `V~i~ != 0` and that `x` can be initialized with `E const &`, and `p~i~` is equivalent to:
+In this case it is required that `V~i~ != 0` and that `x` can be initialized with `E const &`, and then `p~i~` is equivalent to:
 
 [.text-center]
 `V~i~(e)`.
