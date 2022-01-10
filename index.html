@@ -159,9 +159,9 @@ function switch_style()
 <li><a href="#result::has_value"><code>has_value</code></a></li>
 <li><a href="#result::has_error"><code>has_error</code></a></li>
 <li><a href="#result::operator_bool"><code>operator bool</code></a></li>
-<li><a href="#result::operator_ptr"><code>operator -></code></a></li>
-<li><a href="#result::operator_deref"><code>operator *</code></a></li>
-<li><a href="#result::value"><code>value`</code></a></li>
+<li><a href="#result::value"><code>value</code></a></li>
+<li><a href="#result::operator_ptr"><code>operator-></code></a></li>
+<li><a href="#result::operator_deref"><code>operator*</code></a></li>
 </ul>
 </li>
 <li><a href="#verbose_diagnostic_info"><code>verbose_diagnostic_info</code></a></li>
@@ -6027,7 +6027,7 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
 </div>
 </div>
 <div class="paragraph text-right">
-<p><a href="#result::result">Constructors</a> | <a href="#result::operator_eq"><code>operator=</code></a> | <a href="#result::has_value"><code>has_value</code></a> | <a href="#result::has_error"><code>has_error</code></a> | <a href="#result::operator_bool"><code>operator bool</code></a> | <a href="#result::operator_ptr"><code>operator -></code></a> | <a href="#result::operator_deref"><code>operator *</code></a> | <a href="#result::value"><code>value`</code></a> | <a href="#result::error"><code>error</code></a> | <a href="#result::load"><code>load</code></a></p>
+<p><a href="#result::result">Constructors</a> | <a href="#result::operator_eq"><code>operator=</code></a> | <a href="#result::has_value"><code>has_value</code></a> | <a href="#result::has_error"><code>has_error</code></a> | <a href="#result::operator_bool"><code>operator bool</code></a> | <a href="#result::value"><code>value</code></a> | <a href="#result::operator_ptr"><code>operator-></code></a> | <a href="#result::operator_deref"><code>operator*</code></a> | <a href="#result::error"><code>error</code></a> | <a href="#result::load"><code>load</code></a></p>
 </div>
 <div class="paragraph">
 <p>The <code>result&lt;T&gt;</code> type can be returned by functions which produce a value of type <code>T</code> but may fail doing so.</p>
@@ -6044,10 +6044,10 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
 <div class="ulist">
 <ul>
 <li>
-<p>Value state, in which case it contains an object of type <code>T</code>, and <code><a href="#result::value">value</a></code>/<code><a href="#result::value">operator*</a></code>/<code><a href="#result::value">operator-></a></code> can be used to access the contained value.</p>
+<p>Value state, in which case it contains an object of type <code>T</code>, and <a href="#result::value"><code>value</code></a>/<a href="#result::operator_deref"><code>operator*</code></a>/<a href="#result::operator_ptr"><code>operator-></code></a> can be used to access the contained value.</p>
 </li>
 <li>
-<p>Error state, in which case it contains an error ID, and calling <code><a href="#result::value">value</a></code>/<code><a href="#result::value">operator*</a></code>/<code><a href="#result::value">operator-></a></code> throws <code>leaf::bad_result</code>.</p>
+<p>Error state, in which case it contains an error ID, and calling <a href="#result::value"><code>value</code></a> throws <code>leaf::bad_result</code>.</p>
 </li>
 <li>
 <p>Error capture state, which is the same as the Error state, but in addition to the error ID, it holds a <code>std::shared_ptr&lt;<a href="#polymorphic_context">polymorphic_context</a>&gt;</code>.</p>
@@ -6409,7 +6409,37 @@ The returned proxy object refers to <code>*this</code>; avoid holding on to it.
 <hr>
 </div>
 <div class="sect3">
-<h4 id="result::operator_ptr"><code>operator -></code></h4>
+<h4 id="result::value"><code>value</code></h4>
+<div class="listingblock">
+<div class="title">#include &lt;boost/leaf/result.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+  <span class="kt">void</span> <span class="n">result</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="n">T</span> <span class="o">&amp;</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">();</span>
+
+  <span class="k">struct</span> <span class="nc">bad_result</span><span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="p">{</span> <span class="p">};</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div id="result::bad_result" class="dlist">
+<dl>
+<dt class="hdlist1">Effects: </dt>
+<dd>
+<p>If <code>*this</code> is in <a href="#result">value state</a>, returns a reference to the stored value, otherwise throws <code>bad_result</code>.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="result::operator_ptr"><code>operator-></code></h4>
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/result.hpp&gt;</div>
 <div class="content">
@@ -6435,7 +6465,7 @@ The returned proxy object refers to <code>*this</code>; avoid holding on to it.
 <hr>
 </div>
 <div class="sect3">
-<h4 id="result::operator_deref"><code>operator *</code></h4>
+<h4 id="result::operator_deref"><code>operator*</code></h4>
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/result.hpp&gt;</div>
 <div class="content">
@@ -6459,36 +6489,6 @@ The returned proxy object refers to <code>*this</code>; avoid holding on to it.
 <dt class="hdlist1">Returns </dt>
 <dd>
 <p>a reference to the stored value.</p>
-</dd>
-</dl>
-</div>
-<hr>
-</div>
-<div class="sect3">
-<h4 id="result::value"><code>value`</code></h4>
-<div class="listingblock">
-<div class="title">#include &lt;boost/leaf/result.hpp&gt;</div>
-<div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
-
-  <span class="kt">void</span> <span class="n">result</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
-
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
-  <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
-
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
-  <span class="n">T</span> <span class="o">&amp;</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">();</span>
-
-  <span class="k">struct</span> <span class="nc">bad_result</span><span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="p">{</span> <span class="p">};</span>
-
-<span class="p">}</span> <span class="p">}</span></code></pre>
-</div>
-</div>
-<div id="result::bad_result" class="dlist">
-<dl>
-<dt class="hdlist1">Effects: </dt>
-<dd>
-<p>If <code>*this</code> is in <a href="#result">value state</a>, returns a reference to the stored value, otherwise throws <code>bad_result</code>.</p>
 </dd>
 </dl>
 </div>
@@ -6552,7 +6552,7 @@ The returned proxy object refers to <code>*this</code>; avoid holding on to it.
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-Using <code>verbose_diagnostic_info</code> will likely allocate memory dynamically.
+Using <code>verbose_diagnostic_info</code> may allocate memory dynamically, but only if an active error handler takes an argument of type <code>verbose_diagnostic_info</code>.
 </td>
 </tr>
 </table>
@@ -6938,13 +6938,13 @@ See also <a href="#tutorial-predicates">Using Predicates to Handle Errors</a>.
 <p><code>p<sub>1</sub> || p<sub>2</sub> || &#8230;&#8203; p<sub>n</sub></code>.</p>
 </div>
 <div class="paragraph">
-<p>Generally, <code>p<sub>i</sub></code> is equivalent to <code>e == V<sub>i</sub></code>, except if <code>V<sub>i</sub></code> is pointer to a function</p>
+<p>Where <code>p<sub>i</sub></code> is equivalent to <code>e == V<sub>i</sub></code>, except if <code>V<sub>i</sub></code> is pointer to a function</p>
 </div>
 <div class="paragraph text-center">
 <p><code>bool (*V<sub>i</sub>)(T x)</code>.</p>
 </div>
 <div class="paragraph">
-<p>In this case it is required that <code>V<sub>i</sub> != 0</code> and that <code>x</code> can be initialized with <code>E const &amp;</code>, and <code>p<sub>i</sub></code> is equivalent to:</p>
+<p>In this case it is required that <code>V<sub>i</sub> != 0</code> and that <code>x</code> can be initialized with <code>E const &amp;</code>, and then <code>p<sub>i</sub></code> is equivalent to:</p>
 </div>
 <div class="paragraph text-center">
 <p><code>V<sub>i</sub>(e)</code>.</p>
