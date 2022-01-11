@@ -26,10 +26,8 @@ included = []
 
 def append(input_file_name, input_file, output_file, regex_includes, include_folder):
 	line_count = 1
-	last_line_was_empty = False
 	for line in input_file:
 		line_count += 1
-		this_line_is_empty = (line=='\n')
 		result = regex_includes.search(line)
 		if result:
 			next_input_file_name = result.group("include")
@@ -42,12 +40,7 @@ def append(input_file_name, input_file, output_file, regex_includes, include_fol
 					if not ('include/boost/leaf/detail/all.hpp' in input_file_name):
 						output_file.write('// <<< %s#line %d "%s"\n' % (line, line_count, input_file_name))
 		else:
-			if '///' in line:
-				continue
-			if this_line_is_empty and last_line_was_empty:
-				continue
 			output_file.write(line)
-		last_line_was_empty = this_line_is_empty
 
 def _main():
 	parser = argparse.ArgumentParser(
@@ -75,27 +68,9 @@ def _main():
 			'// Git hash ' + subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().rstrip() + '.\n'
 			'\n'
 			'// Latest version: https://boostorg.github.io/leaf/leaf.hpp\n'
-			'\n'
-			'// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.\n'
-			'\n'
-			'// Distributed under the Boost Software License, Version 1.0. (See accompanying\n'
-			'// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)\n'
-			'\n'
-			'#ifndef BOOST_LEAF_ENABLE_WARNINGS\n'
-			'#   if defined(_MSC_VER)\n'
-			'#       pragma warning(push,1)\n'
-			'#   elif defined(__clang__)\n'
-			'#       pragma clang system_header\n'
-			'#   elif (__GNUC__*100+__GNUC_MINOR__>301)\n'
-			'#       pragma GCC system_header\n'
-			'#   endif\n'
-			'#endif\n' )
+			'\n')
 		append(args.input, input_file, output_file, regex_includes, args.path)
 		output_file.write(
-			'\n'
-			'#if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)\n'
-			'#pragma warning(pop)\n'
-			'#endif\n'
 			'\n'
 			'#endif\n' )
 
