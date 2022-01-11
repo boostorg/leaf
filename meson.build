@@ -9,7 +9,6 @@ option_leaf_hpp = get_option('leaf_hpp')
 option_boost = get_option('leaf_boost_examples')
 option_lua = get_option('leaf_lua_examples')
 option_diagnostics = get_option('leaf_diagnostics')
-option_suppress_warnings = get_option('leaf_suppress_warnings')
 option_exceptions = (get_option('cpp_eh')!='none')
 option_enable_unit_tests = get_option('leaf_enable_unit_tests')
 option_enable_examples = get_option('leaf_enable_examples')
@@ -90,10 +89,6 @@ defines = [ '-DBOOST_LEAF_CFG_DIAGNOSTICS=' + option_diagnostics.to_string() ]
 
 if option_embedded
 	defines += '-DBOOST_LEAF_EMBEDDED'
-endif
-
-if not option_suppress_warnings
-	defines += '-DBOOST_LEAF_ENABLE_WARNINGS'
 endif
 
 dep_thread = dependency('threads')

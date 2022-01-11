@@ -1,26 +1,16 @@
 #ifndef BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED
 
-/// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
-/// Copyright (c) 2022 Khalil Estell
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2022 Khalil Estell
 
-/// Distributed under the Boost Software License, Version 1.0. (See accompanying
-/// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // LEAF requires thread local storage support for pointers and for uin32_t values.
 
 // This header implements thread local storage for pointers and for uint32_t
 // values for platforms that support thread local pointers by index.
-
-#ifndef BOOST_LEAF_ENABLE_WARNINGS ///
-#   if defined(_MSC_VER) ///
-#       pragma warning(push,1) ///
-#   elif defined(__clang__) ///
-#       pragma clang system_header ///
-#   elif (__GNUC__*100+__GNUC_MINOR__>301) ///
-#       pragma GCC system_header ///
-#   endif ///
-#endif ///
 
 ////////////////////////////////////////
 
@@ -131,14 +121,15 @@ namespace tls
     template <class Tag>
     std::uint32_t read_uint32() noexcept
     {
-        Tag * p = read_ptr<Tag>();
-        return (std::intptr_t)(void *)p;
+        static_assert(sizeof(std::intptr_t) >= sizeof(std::uint32_t), "Incompatible tls_array implementation");
+        return (std::uint32_t) (std::intptr_t) (void *) read_ptr<Tag>();
     }
 
     template <class Tag>
     void write_uint32( std::uint32_t x ) noexcept
     {
-        write_ptr<Tag>((Tag *)x);
+        static_assert(sizeof(std::intptr_t) >= sizeof(std::uint32_t), "Incompatible tls_array implementation");
+        write_ptr<Tag>((Tag *) (void *) (std::intptr_t) x);
     }
 
     template <class Tag>
@@ -155,9 +146,5 @@ namespace tls
 }
 
 } }
-
-#if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///
-#pragma warning(pop) ///
-#endif ///
 
 #endif

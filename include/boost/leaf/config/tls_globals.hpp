@@ -1,25 +1,15 @@
 #ifndef BOOST_LEAF_CONFIG_TLS_GLOBALS_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_TLS_GLOBALS_HPP_INCLUDED
 
-/// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
 
-/// Distributed under the Boost Software License, Version 1.0. (See accompanying
-/// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // LEAF requires thread local storage support for pointers and for uin32_t values.
 
 // This header implements "thread local" storage for pointers and for uint32_t
 // values using globals, which is suitable for single thread environments.
-
-#ifndef BOOST_LEAF_ENABLE_WARNINGS ///
-#   if defined(_MSC_VER) ///
-#       pragma warning(push,1) ///
-#   elif defined(__clang__) ///
-#       pragma clang system_header ///
-#   elif (__GNUC__*100+__GNUC_MINOR__>301) ///
-#       pragma GCC system_header ///
-#   endif ///
-#endif ///
 
 #include <cstdint>
 
@@ -90,9 +80,5 @@ namespace tls
 }
 
 } }
-
-#if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///
-#pragma warning(pop) ///
-#endif ///
 
 #endif

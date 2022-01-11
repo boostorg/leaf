@@ -1,20 +1,10 @@
 #ifndef BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
 
-/// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
 
-/// Distributed under the Boost Software License, Version 1.0. (See accompanying
-/// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-#ifndef BOOST_LEAF_ENABLE_WARNINGS ///
-#   if defined(_MSC_VER) ///
-#       pragma warning(push,1) ///
-#   elif defined(__clang__) ///
-#       pragma clang system_header ///
-#   elif (__GNUC__*100+__GNUC_MINOR__>301) ///
-#       pragma GCC system_header ///
-#   endif ///
-#endif ///
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/detail/demangle.hpp>
@@ -137,9 +127,5 @@ namespace leaf_detail
 } }
 
 #endif
-
-#if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS) ///
-#pragma warning(pop) ///
-#endif ///
 
 #endif
