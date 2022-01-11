@@ -3,8 +3,8 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated from https://github.com/boostorg/leaf on January 10, 2022,
-// Git hash a02292ec262d74f3832fc99ed1a025e006910117.
+// Generated from https://github.com/boostorg/leaf on January 11, 2022,
+// Git hash 8b0eca9870028bd3c262bff41b06ab142cf3a759.
 
 // Latest version: https://boostorg.github.io/leaf/leaf.hpp
 
@@ -13,20 +13,15 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef BOOST_LEAF_ENABLE_WARNINGS
-#   if defined(_MSC_VER)
-#       pragma warning(push,1)
-#   elif defined(__clang__)
-#       pragma clang system_header
-#   elif (__GNUC__*100+__GNUC_MINOR__>301)
-#       pragma GCC system_header
-#   endif
-#endif
-
 // >>> #include <boost/leaf/config.hpp>
 #line 1 "boost/leaf/config.hpp"
 #ifndef BOOST_LEAF_CONFIG_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_HPP_INCLUDED
+
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // The following is based on Boost Config.
 
@@ -34,10 +29,14 @@
 // (C) Copyright Martin Wille 2003.
 // (C) Copyright Guillaume Melquiond 2003.
 
+////////////////////////////////////////
+
 #ifdef BOOST_LEAF_DIAGNOSTICS
 #	warning BOOST_LEAF_DIAGNOSTICS has been renamed to BOOST_LEAF_CFG_DIAGNOSTICS.
 #	define BOOST_LEAF_CFG_DIAGNOSTICS BOOST_LEAF_DIAGNOSTICS
 #endif
+
+////////////////////////////////////////
 
 #ifdef BOOST_LEAF_TLS_FREERTOS
 
@@ -46,6 +45,8 @@
 #	endif
 
 #endif
+
+////////////////////////////////////////
 
 #ifdef BOOST_LEAF_EMBEDDED
 
@@ -66,6 +67,8 @@
 #	endif
 
 #endif
+
+////////////////////////////////////////
 
 #ifndef BOOST_LEAF_CFG_DIAGNOSTICS
 #   define BOOST_LEAF_CFG_DIAGNOSTICS 1
@@ -102,6 +105,8 @@
 #if BOOST_LEAF_CFG_DIAGNOSTICS && !BOOST_LEAF_CFG_STD_STRING
 #	error BOOST_LEAF_CFG_DIAGNOSTICS requires the use of std::string
 #endif
+
+////////////////////////////////////////
 
 // Configure BOOST_LEAF_NO_EXCEPTIONS, unless already #defined
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
@@ -203,11 +208,15 @@
 #  define BOOST_LEAF_NORETURN
 #endif
 
+////////////////////////////////////////
+
 #ifdef _MSC_VER
 #   define BOOST_LEAF_ALWAYS_INLINE __forceinline
 #else
 #   define BOOST_LEAF_ALWAYS_INLINE __attribute__((always_inline)) inline
 #endif
+
+////////////////////////////////////////
 
 #ifndef BOOST_LEAF_NODISCARD
 #   if __cplusplus >= 201703L
@@ -217,6 +226,8 @@
 #   endif
 #endif
 
+////////////////////////////////////////
+
 #ifndef BOOST_LEAF_CONSTEXPR
 #   if __cplusplus > 201402L
 #       define BOOST_LEAF_CONSTEXPR constexpr
@@ -224,6 +235,8 @@
 #       define BOOST_LEAF_CONSTEXPR
 #   endif
 #endif
+
+////////////////////////////////////////
 
 #ifndef BOOST_LEAF_ASSERT
 #   ifdef BOOST_ASSERT
@@ -234,6 +247,8 @@
 #   endif
 #endif
 
+////////////////////////////////////////
+
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 #   include <exception>
 #   if (defined(__cpp_lib_uncaught_exceptions) && __cpp_lib_uncaught_exceptions >= 201411L) || (defined(_MSC_VER) && _MSC_VER >= 1900)
@@ -243,11 +258,15 @@
 #   endif
 #endif
 
+////////////////////////////////////////
+
 #ifdef __GNUC__
 #	define BOOST_LEAF_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
 #else
 #	define BOOST_LEAF_SYMBOL_VISIBLE
 #endif
+
+////////////////////////////////////////
 
 // Configure TLS access
 // >>> #include <boost/leaf/config/tls.hpp>
@@ -255,11 +274,22 @@
 #ifndef BOOST_LEAF_CONFIG_TLS_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_TLS_HPP_INCLUDED
 
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
 #if defined(BOOST_LEAF_TLS_FREERTOS)
 // >>> #   include <boost/leaf/config/tls_freertos.hpp>
 #line 1 "boost/leaf/config/tls_freertos.hpp"
 #ifndef BOOST_LEAF_CONFIG_TLS_FREERTOS_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_TLS_FREERTOS_HPP_INCLUDED
+
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2022 Khalil Estell
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <task.h>
 
@@ -307,10 +337,18 @@ namespace tls
 #ifndef BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED
 
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright (c) 2022 Khalil Estell
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
 // LEAF requires thread local storage support for pointers and for uin32_t values.
 
 // This header implements thread local storage for pointers and for uint32_t
 // values for platforms that support thread local pointers by index.
+
+////////////////////////////////////////
 
 #ifndef BOOST_LEAF_TLS_INDEX_TYPE
 #   define BOOST_LEAF_TLS_INDEX_TYPE int
@@ -333,6 +371,8 @@ static_assert(BOOST_LEAF_TLS_ARRAY_START_INDEX < BOOST_LEAF_TLS_ARRAY_SIZE,
 #include <atomic>
 #include <cstdint>
 
+////////////////////////////////////////
+
 namespace boost { namespace leaf {
 
 namespace tls
@@ -344,6 +384,8 @@ namespace tls
 }
 
 } }
+
+////////////////////////////////////////
 
 namespace boost { namespace leaf {
 
@@ -385,6 +427,8 @@ namespace tls
     template <class T>
     BOOST_LEAF_TLS_INDEX_TYPE const index<T>::idx = index_counter<>::get_index<T>();
 
+    ////////////////////////////////////////
+
     template <class T>
     T * read_ptr() noexcept
     {
@@ -408,17 +452,20 @@ namespace tls
         BOOST_LEAF_ASSERT(read_void_ptr(tls_index) == p);
     }
 
+    ////////////////////////////////////////
+
     template <class Tag>
     std::uint32_t read_uint32() noexcept
     {
-        Tag * p = read_ptr<Tag>();
-        return (std::intptr_t)(void *)p;
+        static_assert(sizeof(std::intptr_t) >= sizeof(std::uint32_t), "Incompatible tls_array implementation");
+        return (std::uint32_t) (std::intptr_t) (void *) read_ptr<Tag>();
     }
 
     template <class Tag>
     void write_uint32( std::uint32_t x ) noexcept
     {
-        write_ptr<Tag>((Tag *)x);
+        static_assert(sizeof(std::intptr_t) >= sizeof(std::uint32_t), "Incompatible tls_array implementation");
+        write_ptr<Tag>((Tag *) (void *) (std::intptr_t) x);
     }
 
     template <class Tag>
@@ -444,6 +491,11 @@ namespace tls
 #line 1 "boost/leaf/config/tls_globals.hpp"
 #ifndef BOOST_LEAF_CONFIG_TLS_GLOBALS_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_TLS_GLOBALS_HPP_INCLUDED
+
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // LEAF requires thread local storage support for pointers and for uin32_t values.
 
@@ -481,6 +533,8 @@ namespace tls
     {
         ptr<T>::p = p;
     }
+
+    ////////////////////////////////////////
 
     template <class Tag>
     struct BOOST_LEAF_SYMBOL_VISIBLE tagged_uint32
@@ -527,6 +581,11 @@ namespace tls
 #ifndef BOOST_LEAF_CONFIG_TLS_CPP11_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_TLS_CPP11_HPP_INCLUDED
 
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
 // LEAF requires thread local storage support for pointers and for uin32_t values.
 
 // This header implements thread local storage for pointers and for uint32_t
@@ -564,6 +623,8 @@ namespace tls
     {
         ptr<T>::p = p;
     }
+
+    ////////////////////////////////////////
 
     template <class Tag>
     struct BOOST_LEAF_SYMBOL_VISIBLE tagged_uint32
@@ -608,7 +669,9 @@ namespace tls
 
 #endif
 // <<< #include <boost/leaf/config/tls.hpp>
-#line 266 "boost/leaf/config.hpp"
+#line 256 "boost/leaf/config.hpp"
+
+////////////////////////////////////////
 
 #endif
 // >>> #include <boost/leaf/capture.hpp>
@@ -616,20 +679,40 @@ namespace tls
 #ifndef BOOST_LEAF_CAPTURE_HPP_INCLUDED
 #define BOOST_LEAF_CAPTURE_HPP_INCLUDED
 
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
 // >>> #include <boost/leaf/exception.hpp>
 #line 1 "boost/leaf/exception.hpp"
 #ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
 #define BOOST_LEAF_EXCEPTION_HPP_INCLUDED
+
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // >>> #include <boost/leaf/error.hpp>
 #line 1 "boost/leaf/error.hpp"
 #ifndef BOOST_LEAF_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ERROR_HPP_INCLUDED
 
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
 // >>> #include <boost/leaf/detail/optional.hpp>
 #line 1 "boost/leaf/detail/optional.hpp"
 #ifndef BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
+
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 
 #include <utility>
@@ -794,11 +877,16 @@ namespace leaf_detail
 
 #endif
 // <<< #include <boost/leaf/detail/optional.hpp>
-#line 21 "boost/leaf/error.hpp"
+#line 11 "boost/leaf/error.hpp"
 // >>> #include <boost/leaf/detail/demangle.hpp>
 #line 1 "boost/leaf/detail/demangle.hpp"
 #ifndef BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
+
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // core::demangle
 //
@@ -851,6 +939,8 @@ char const * t =
 }
 
 } }
+
+////////////////////////////////////////
 
 #if defined(__has_include) && ((__GNUC__ + 0) >= 5)
 #   if __has_include(<cxxabi.h>)
@@ -976,11 +1066,16 @@ namespace leaf_detail
 
 #endif
 // <<< #include <boost/leaf/detail/demangle.hpp>
-#line 22 "boost/leaf/error.hpp"
+#line 12 "boost/leaf/error.hpp"
 // >>> #include <boost/leaf/detail/function_traits.hpp>
 #line 1 "boost/leaf/detail/function_traits.hpp"
 #ifndef BOOST_LEAF_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED
+
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // >>> #include <boost/leaf/detail/mp11.hpp>
 #line 1 "boost/leaf/detail/mp11.hpp"
@@ -1288,7 +1383,7 @@ template<template<class...> class F, class... T> using mp_valid = typename detai
 
 #endif
 // <<< #include <boost/leaf/detail/mp11.hpp>
-#line 20 "boost/leaf/detail/function_traits.hpp"
+#line 10 "boost/leaf/detail/function_traits.hpp"
 
 #include <tuple>
 
@@ -1381,11 +1476,16 @@ namespace leaf_detail
 
 #endif
 // <<< #include <boost/leaf/detail/function_traits.hpp>
-#line 23 "boost/leaf/error.hpp"
+#line 13 "boost/leaf/error.hpp"
 // >>> #include <boost/leaf/detail/print.hpp>
 #line 1 "boost/leaf/detail/print.hpp"
 #ifndef BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
+
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
@@ -1409,6 +1509,8 @@ namespace leaf_detail
     {
     };
 
+    ////////////////////////////////////////
+
     template <class T, class E = void>
     struct has_printable_member_value: std::false_type
     {
@@ -1418,6 +1520,8 @@ namespace leaf_detail
     struct has_printable_member_value<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>().value, void())>: std::true_type
     {
     };
+
+    ////////////////////////////////////////
 
     template <
         class Wrapper,
@@ -1505,7 +1609,7 @@ namespace leaf_detail
 
 #endif
 // <<< #include <boost/leaf/detail/print.hpp>
-#line 24 "boost/leaf/error.hpp"
+#line 14 "boost/leaf/error.hpp"
 
 #include <type_traits>
 #include <iosfwd>
@@ -1574,6 +1678,8 @@ namespace leaf_detail
 
 } }
 
+////////////////////////////////////////
+
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
 
 namespace boost
@@ -1604,6 +1710,8 @@ BOOST_LEAF_NORETURN void throw_exception( T const & e )
 } }
 
 #endif
+
+////////////////////////////////////////
 
 namespace boost { namespace leaf {
 
@@ -1692,6 +1800,8 @@ namespace leaf_detail
 
 } }
 
+////////////////////////////////////////
+
 namespace boost { namespace leaf {
 
 struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
@@ -1706,6 +1816,8 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
         return os << leaf::type<e_source_location>() << ": " << x.file << '(' << x.line << ") in function " << x.function;
     }
 };
+
+////////////////////////////////////////
 
 namespace leaf_detail
 {
@@ -1863,6 +1975,8 @@ namespace leaf_detail
     }
 }
 
+////////////////////////////////////////
+
 namespace leaf_detail
 {
     template <class=void>
@@ -1895,6 +2009,8 @@ namespace leaf_detail
         return id;
     }
 }
+
+////////////////////////////////////////
 
 namespace leaf_detail
 {
@@ -1931,6 +2047,8 @@ namespace leaf_detail
         }
     };
 }
+
+////////////////////////////////////////
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 namespace leaf_detail
@@ -1983,6 +2101,8 @@ inline bool is_error_id( std::error_code const & ec ) noexcept
     return res;
 }
 #endif
+
+////////////////////////////////////////
 
 namespace leaf_detail
 {
@@ -2115,6 +2235,8 @@ inline error_id current_error() noexcept
     return leaf_detail::make_error_id(leaf_detail::current_id());
 }
 
+////////////////////////////////////////////
+
 class polymorphic_context
 {
 protected:
@@ -2136,6 +2258,8 @@ public:
 #if BOOST_LEAF_CFG_CAPTURE
 using context_ptr = std::shared_ptr<polymorphic_context>;
 #endif
+
+////////////////////////////////////////////
 
 template <class Ctx>
 class context_activator
@@ -2192,6 +2316,8 @@ BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE context_activator<Ctx> activate_co
     return context_activator<Ctx>(ctx);
 }
 
+////////////////////////////////////////////
+
 template <class R>
 struct is_result_type: std::false_type
 {
@@ -2206,7 +2332,7 @@ struct is_result_type<R const>: is_result_type<R>
 
 #endif
 // <<< #include <boost/leaf/error.hpp>
-#line 21 "boost/leaf/exception.hpp"
+#line 11 "boost/leaf/exception.hpp"
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
@@ -2214,6 +2340,8 @@ struct is_result_type<R const>: is_result_type<R>
 
 #define BOOST_LEAF_EXCEPTION ::boost::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
 #define BOOST_LEAF_THROW_EXCEPTION ::boost::leaf::leaf_detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
+
+////////////////////////////////////////
 
 namespace boost { namespace leaf {
 
@@ -2235,6 +2363,8 @@ namespace leaf_detail
 }
 
 } }
+
+////////////////////////////////////////
 
 namespace boost { namespace leaf {
 
@@ -2355,6 +2485,8 @@ inline leaf_detail::exception<std::exception> exception() noexcept
     return leaf_detail::exception<std::exception>(leaf::new_error());
 }
 
+////////////////////////////////////////
+
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
 template <class T>
@@ -2419,11 +2551,16 @@ exception_to_result( F && f ) noexcept
 
 #endif
 // <<< #include <boost/leaf/exception.hpp>
-#line 21 "boost/leaf/capture.hpp"
+#line 11 "boost/leaf/capture.hpp"
 // >>> #include <boost/leaf/on_error.hpp>
 #line 1 "boost/leaf/on_error.hpp"
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
+
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 
 namespace boost { namespace leaf {
@@ -2483,6 +2620,8 @@ public:
         return leaf_detail::make_error_id(get_id());
     }
 };
+
+////////////////////////////////////////////
 
 namespace leaf_detail
 {
@@ -2670,7 +2809,7 @@ on_error( Item && ... i )
 
 #endif
 // <<< #include <boost/leaf/on_error.hpp>
-#line 22 "boost/leaf/capture.hpp"
+#line 12 "boost/leaf/capture.hpp"
 
 #if BOOST_LEAF_CFG_CAPTURE
 
@@ -2900,6 +3039,11 @@ future_get( Future & fut )
 #ifndef BOOST_LEAF_COMMON_HPP_INCLUDED
 #define BOOST_LEAF_COMMON_HPP_INCLUDED
 
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
 
 #include <iosfwd>
 #if BOOST_LEAF_CFG_STD_STRING
@@ -3008,6 +3152,11 @@ namespace windows
 #line 1 "boost/leaf/context.hpp"
 #ifndef BOOST_LEAF_CONTEXT_HPP_INCLUDED
 #define BOOST_LEAF_CONTEXT_HPP_INCLUDED
+
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
@@ -3143,6 +3292,8 @@ namespace leaf_detail
     };
 }
 
+////////////////////////////////////////
+
 namespace leaf_detail
 {
     template <int I, class Tuple>
@@ -3200,6 +3351,8 @@ namespace leaf_detail
     };
 }
 
+////////////////////////////////////////////
+
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 
 namespace leaf_detail
@@ -3228,6 +3381,8 @@ namespace leaf_detail
 }
 
 #endif
+
+////////////////////////////////////////////
 
 namespace leaf_detail
 {
@@ -3262,6 +3417,8 @@ namespace leaf_detail
     template <class... E>
     using deduce_e_tuple = typename deduce_e_tuple_impl<typename deduce_e_type_list<leaf_detail_mp11::mp_list<E...>>::type>::type;
 }
+
+////////////////////////////////////////////
 
 template <class... E>
 class context
@@ -3368,6 +3525,8 @@ public:
     BOOST_LEAF_CONSTEXPR R handle_error( error_id, H && ... );
 };
 
+////////////////////////////////////////
+
 namespace leaf_detail
 {
     template <class TypeList>
@@ -3423,6 +3582,8 @@ namespace leaf_detail
 template <class... H>
 using context_type_from_handlers = typename leaf_detail::context_type_from_handlers_impl<H...>::type;
 
+////////////////////////////////////////////
+
 template <class...  H>
 BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context() noexcept
 {
@@ -3434,6 +3595,8 @@ BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && 
 {
     return { };
 }
+
+////////////////////////////////////////////
 
 #if BOOST_LEAF_CFG_CAPTURE
 
@@ -3458,6 +3621,11 @@ inline context_ptr make_shared_context( H && ... ) noexcept
 #line 1 "boost/leaf/handle_errors.hpp"
 #ifndef BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
 #define BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
+
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 
 namespace boost { namespace leaf {
@@ -3545,6 +3713,8 @@ public:
         return os << '\n';
     }
 };
+
+////////////////////////////////////////
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 
@@ -3653,6 +3823,8 @@ namespace leaf_detail
 
 #endif
 
+////////////////////////////////////////
+
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 
 class BOOST_LEAF_SYMBOL_VISIBLE verbose_diagnostic_info: public error_info
@@ -3747,6 +3919,7 @@ namespace leaf_detail
         }
     };
 
+
     template <>
     struct handler_argument_traits<verbose_diagnostic_info const &>: handler_argument_always_available<void>
     {
@@ -3759,6 +3932,8 @@ namespace leaf_detail
 }
 
 #endif
+
+////////////////////////////////////////
 
 namespace leaf_detail
 {
@@ -3927,6 +4102,8 @@ namespace leaf_detail
     }
 }
 
+////////////////////////////////////////
+
 namespace leaf_detail
 {
     template <class A>
@@ -3980,6 +4157,8 @@ namespace leaf_detail
     };
 }
 
+////////////////////////////////////////
+
 namespace leaf_detail
 {
     template <class>
@@ -3998,6 +4177,8 @@ namespace leaf_detail
         constexpr static bool value = handler_argument_traits<Car>::always_available && handler_matches_any_error<L<Cdr...>>::value;
     };
 }
+
+////////////////////////////////////////
 
 namespace leaf_detail
 {
@@ -4101,6 +4282,8 @@ namespace leaf_detail
     }
 }
 
+////////////////////////////////////////
+
 template <class... E>
 template <class R, class... H>
 BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE
@@ -4122,6 +4305,8 @@ handle_error( error_id id, H && ... h )
     BOOST_LEAF_ASSERT(!is_active());
     return leaf_detail::handle_error_<R>(tup(), error_info(id), std::forward<H>(h)...);
 }
+
+////////////////////////////////////////
 
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
 
@@ -4368,6 +4553,11 @@ namespace leaf_detail
 #ifndef BOOST_LEAF_PRED_HPP_INCLUDED
 #define BOOST_LEAF_PRED_HPP_INCLUDED
 
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -4409,6 +4599,8 @@ namespace leaf_detail
     }
 }
 
+////////////////////////////////////////
+
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 template <class E, class Enum = E>
 struct condition
@@ -4431,6 +4623,8 @@ BOOST_LEAF_CONSTEXPR inline bool category( std::error_code const & ec )
 }
 #endif
 #endif
+
+////////////////////////////////////////
 
 namespace leaf_detail
 {
@@ -4487,6 +4681,8 @@ struct is_predicate<match<E, V1, V...>>: std::true_type
 {
 };
 
+////////////////////////////////////////
+
 namespace leaf_detail
 {
     template <class E>
@@ -4541,6 +4737,8 @@ struct is_predicate<match_value<E, V1, V...>>: std::true_type
 {
 };
 
+////////////////////////////////////////
+
 #if __cplusplus >= 201703L
 template <auto, auto, auto...>
 struct match_member;
@@ -4563,6 +4761,8 @@ struct is_predicate<match_member<P, V1, V...>>: std::true_type
 };
 #endif
 
+////////////////////////////////////////
+
 template <class P>
 struct if_not
 {
@@ -4580,6 +4780,9 @@ template <class P>
 struct is_predicate<if_not<P>>: std::true_type
 {
 };
+
+////////////////////////////////////////
+
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
@@ -4647,6 +4850,11 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 #ifndef BOOST_LEAF_RESULT_HPP_INCLUDED
 #define BOOST_LEAF_RESULT_HPP_INCLUDED
 
+// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
 
 #include <climits>
 #include <functional>
@@ -4670,6 +4878,8 @@ public:
         BOOST_LEAF_ASSERT(value());
     }
 };
+
+////////////////////////////////////////
 
 namespace leaf_detail
 {
@@ -4763,6 +4973,8 @@ namespace leaf_detail
         }
     };
 }
+
+////////////////////////////////////////
 
 template <class T>
 class result
@@ -5098,6 +5310,8 @@ public:
     }
 };
 
+////////////////////////////////////////
+
 namespace leaf_detail
 {
     struct void_ { };
@@ -5173,6 +5387,8 @@ public:
     using base::load;
 };
 
+////////////////////////////////////////
+
 template <class R>
 struct is_result_type;
 
@@ -5183,10 +5399,6 @@ struct is_result_type<result<T>>: std::true_type
 
 } }
 
-#endif
-
-#if defined(_MSC_VER) && !defined(BOOST_LEAF_ENABLE_WARNINGS)
-#pragma warning(pop)
 #endif
 
 #endif
