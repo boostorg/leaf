@@ -22,25 +22,33 @@ import re
 from datetime import date
 import subprocess
 
-included = []
+included = {}
+total_line_count = 13
 
 def append(input_file_name, input_file, output_file, regex_includes, include_folder):
+	global total_line_count
 	line_count = 1
 	for line in input_file:
 		line_count += 1
 		result = regex_includes.search(line)
 		if result:
 			next_input_file_name = result.group("include")
-			if next_input_file_name not in included:
-				included.append(next_input_file_name)
-				print("%s" % next_input_file_name)
+			if next_input_file_name in included:
+				output_file.write("// Expanded at line %d: %s" % (included[next_input_file_name], line));
+				total_line_count += 1
+			else:
+				included[next_input_file_name] = total_line_count;
+				print("%s (%d)" % (next_input_file_name, total_line_count))
 				with open(os.path.join(include_folder, next_input_file_name), "r") as next_input_file:
 					output_file.write('// >>> %s#line 1 "%s"\n' % (line, next_input_file_name))
+					total_line_count += 2
 					append(next_input_file_name, next_input_file, output_file, regex_includes, include_folder)
 					if not ('include/boost/leaf/detail/all.hpp' in input_file_name):
 						output_file.write('// <<< %s#line %d "%s"\n' % (line, line_count, input_file_name))
+						total_line_count += 2
 		else:
 			output_file.write(line)
+			total_line_count += 1
 
 def _main():
 	parser = argparse.ArgumentParser(
@@ -73,6 +81,8 @@ def _main():
 		output_file.write(
 			'\n'
 			'#endif\n' )
+		global total_line_count
+#		print("%d" % total_line_count)
 
 if __name__ == "__main__":
 	_main()
