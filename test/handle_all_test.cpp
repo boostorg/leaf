@@ -705,8 +705,7 @@ int main()
             },
             [](info<1>) {
                 return leaf::handle_more(
-                    [](info<2>) { return 2; },
-                    [] { return -2; }
+                    [](info<2>) { return 2; }
                 );
             },
             [] { return -1; }
@@ -722,10 +721,7 @@ int main()
                 return leaf::new_error(info<1>{}, info<2>{});
             },
             [&r](info<1>) {
-                return leaf::handle_more(
-                    [&r](info<2>) { r = 2; },
-                    [&r] { r = -2; }
-                );
+                return leaf::handle_more([&r](info<2>) { r = 2; });
             },
             [&r] { r = -1; }
         );
@@ -742,12 +738,8 @@ int main()
                 return leaf::handle_more(
                     [](info<2>)
                     {
-                        return leaf::handle_more(
-                            [](info<3>) { return 3; },
-                            [] { return -3; }
-                        );
-                    },
-                    [] { return -2; }
+                        return leaf::handle_more([](info<3>) { return 3; });
+                    }
                 );
             },
             [] { return -1; }
@@ -767,16 +759,66 @@ int main()
                     [&r](info<2>)
                     {
                         return leaf::handle_more(
-                            [&r](info<3>) { r = 3; },
-                            [&r] { r = -3; }
+                            [&r](info<3>) { r = 3; }
                         );
-                    },
-                    [&r] { r = -2; }
+                    }
                 );
             },
             [&r] { r = -1; }
         );
         BOOST_TEST_EQ(r, 3);
+    }
+
+    {
+        int r = leaf::try_handle_all(
+            []() -> leaf::result<int>
+            {
+                return leaf::new_error(info<1>{}, info<3>{});
+            },
+            [](info<1>) {
+                return leaf::handle_more([](info<2>) { return 2; });
+            },
+            [](info<1>) {
+                return leaf::handle_more([](info<3>) { return 3; });
+            },
+            [] { return -1; }
+        );
+        BOOST_TEST_EQ(r, 3);
+    }
+
+    {
+        int r = leaf::try_handle_all(
+            []() -> leaf::result<int>
+            {
+                return leaf::new_error(info<1>{}, info<2>{}, info<4>{});
+            },
+            [](info<1>) {
+                return leaf::handle_more([](info<2>) {
+                    return leaf::handle_more([](info<3>){ return 2; }); });
+            },
+            [](info<1>) {
+                return leaf::handle_more([](info<4>) { return 3; });
+            },
+            [] { return -1; }
+        );
+        BOOST_TEST_EQ(r, 3);
+    }
+
+    {
+        int r = leaf::try_handle_all(
+            []() -> leaf::result<int>
+            {
+                return leaf::new_error(info<1>{}, info<4>{});
+            },
+            [] {
+                return leaf::handle_more([](info<2>) { return 1; });
+            },
+            [](info<1>) {
+                return leaf::handle_more([](info<4>) { return 2; });
+            },
+            [] { return -1; }
+        );
+        BOOST_TEST_EQ(r, 2);
     }
 
     return boost::report_errors();

@@ -501,6 +501,39 @@ namespace leaf_detail
 
 namespace leaf_detail
 {
+    template <class Ret, class>
+    struct handler_matches_any_error: std::false_type
+    {
+    };
+
+    template <class Ret, template<class...> class L>
+    struct handler_matches_any_error<Ret, L<>>: std::true_type
+    {
+    };
+
+    template <class R, template<class...> class L>
+    struct handler_matches_any_error<more_handlers_result<R>, L<>>: std::false_type
+    {
+    };
+
+    template <class R, class Car, class... Cdr, template<class...> class L>
+    struct handler_matches_any_error<more_handlers_result<R, Car, Cdr...>, L<>>
+    {
+        constexpr static bool value = handler_matches_any_error<fn_return_type<Car>, fn_mp_args<Car>>::value
+            || handler_matches_any_error<more_handlers_result<R, Cdr...>, L<>>::value;
+    };
+
+    template <class R, template<class...> class L, class Car, class... Cdr>
+    struct handler_matches_any_error<R, L<Car, Cdr...>>
+    {
+        constexpr static bool value = handler_argument_traits<Car>::always_available && handler_matches_any_error<R, L<Cdr...>>::value;
+    };
+}
+
+////////////////////////////////////////
+
+namespace leaf_detail
+{
     template <class A>
     template <class Tup>
     BOOST_LEAF_CONSTEXPR inline
@@ -550,37 +583,51 @@ namespace leaf_detail
             return handler_argument_traits<Car>::check(tup, ei) && check_arguments<Tup, Cdr...>::check(tup, ei);
         }
     };
+
+    template <class R>
+    struct check_more_handlers
+    {
+        template <class Tup>
+        BOOST_LEAF_CONSTEXPR static bool check(Tup&, error_info const & ) noexcept
+        {
+            return true;
+        }
+    };
+
+    template <class R>
+    struct check_more_handlers<more_handlers_result<R>>
+    {
+        template <class Tup>
+        BOOST_LEAF_CONSTEXPR static bool check(Tup&, error_info const&) noexcept
+        {
+            return false;
+        }
+    };
+
+    template <class R, class Car, class... Cdr>
+    struct check_more_handlers<more_handlers_result<R, Car, Cdr...>>
+    {
+        template <class Tup>
+        BOOST_LEAF_CONSTEXPR static bool check(Tup & tup, error_info const& ei) noexcept
+        {
+            if ( handler_matches_any_error<fn_return_type<Car>, fn_mp_args<Car>>::value
+                    || check_handler_<fn_return_type<Car>>( tup, ei, fn_mp_args<Car>{ } ) )
+                return true;
+            else
+                return check_more_handlers<more_handlers_result<R, Cdr...>>::check(tup, ei);
+        }
+    };
 }
 
 ////////////////////////////////////////
 
 namespace leaf_detail
 {
-    template <class>
-    struct handler_matches_any_error: std::false_type
+    template <class Ret, class Tup, class... A>
+    BOOST_LEAF_CONSTEXPR inline bool check_handler_( Tup & tup, error_info const & ei, leaf_detail_mp11::mp_list<A...>) noexcept
     {
-    };
-
-    template <template<class...> class L>
-    struct handler_matches_any_error<L<>>: std::true_type
-    {
-    };
-
-    template <template<class...> class L, class Car, class... Cdr>
-    struct handler_matches_any_error<L<Car, Cdr...>>
-    {
-        constexpr static bool value = handler_argument_traits<Car>::always_available && handler_matches_any_error<L<Cdr...>>::value;
-    };
-}
-
-////////////////////////////////////////
-
-namespace leaf_detail
-{
-    template <class Tup, class... A>
-    BOOST_LEAF_CONSTEXPR inline bool check_handler_( Tup & tup, error_info const & ei, leaf_detail_mp11::mp_list<A...> ) noexcept
-    {
-        return check_arguments<Tup, A...>::check(tup, ei);
+        return check_arguments<Tup, A...>::check(tup, ei)
+            && check_more_handlers<Ret>::check(tup, ei);
     }
 
     template <class Ret, class... Hs>
@@ -695,7 +742,7 @@ namespace leaf_detail
     typename std::enable_if<!is_tuple<typename std::decay<H>::type>::value, R>::type
     handle_error_( Tup & tup, error_info const & ei, H && h )
     {
-        static_assert( handler_matches_any_error<fn_mp_args<H>>::value, "The last handler passed to handle_all must match any error." );
+        static_assert( handler_matches_any_error<fn_return_type<H>, fn_mp_args<H>>::value, "The last handler passed to handle_all must match any error." );
         return handler_caller<R, H>::call( tup, ei, std::forward<H>(h), fn_mp_args<H>{ } );
     }
 
@@ -704,7 +751,8 @@ namespace leaf_detail
     typename std::enable_if<!is_tuple<typename std::decay<Car>::type>::value, R>::type
     handle_error_( Tup & tup, error_info const & ei, Car && car, Cdr && ... cdr )
     {
-        if( handler_matches_any_error<fn_mp_args<Car>>::value || check_handler_( tup, ei, fn_mp_args<Car>{ } ) )
+        if( handler_matches_any_error<fn_return_type<Car>, fn_mp_args<Car>>::value
+                || check_handler_<fn_return_type<Car>>( tup, ei, fn_mp_args<Car>{ } ) )
             return handler_caller<R, Car>::call( tup, ei, std::forward<Car>(car), fn_mp_args<Car>{ } );
         else
             return handle_error_<R>( tup, ei, std::forward<Cdr>(cdr)...);
@@ -802,7 +850,7 @@ Ret
 leaf_detail::more_handlers_invoker<Slots, Ret, Hs...>::
 invoke(Hs&&... hs)
 {
-    return leaf_detail::handle_error_<Ret>(this->tup, this->ei, std::forward<Hs>(hs)...);
+    return leaf_detail::handle_error_<Ret>(this->tup, this->ei, std::forward<Hs>(hs)..., []() -> Ret { std::terminate(); });
 }
 
 ////////////////////////////////////////
