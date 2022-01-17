@@ -584,6 +584,10 @@ namespace leaf_detail
         }
     };
 
+    /// forward-decl for use in check_more_handlers
+    template <class Ret, class Tup, class... A>
+    BOOST_LEAF_CONSTEXPR inline bool check_handler_( Tup & tup, error_info const & ei, leaf_detail_mp11::mp_list<A...>) noexcept;
+
     template <class R>
     struct check_more_handlers
     {
