@@ -38,8 +38,9 @@ jobs:
 
       - name: Generate single header
         run: |
+          REF=$(git show-ref $GITHUB_REF --hash)
           cd ../boost-root/libs/leaf
-          python gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o doc/html/leaf.hpp boost/leaf
+          python gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o doc/html/leaf.hpp boost/leaf --hash "$REF"
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@3.7.1

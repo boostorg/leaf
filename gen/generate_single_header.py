@@ -23,7 +23,7 @@ from datetime import date
 import subprocess
 
 included = {}
-total_line_count = 13
+total_line_count = 11
 
 def append(input_file_name, input_file, output_file, regex_includes, include_folder):
 	global total_line_count
@@ -34,10 +34,10 @@ def append(input_file_name, input_file, output_file, regex_includes, include_fol
 		if result:
 			next_input_file_name = result.group("include")
 			if next_input_file_name in included:
-				output_file.write("// Expanded at line %d: %s" % (included[next_input_file_name], line));
+				output_file.write("// Expanded at line %d: %s" % (included[next_input_file_name], line))
 				total_line_count += 1
 			else:
-				included[next_input_file_name] = total_line_count;
+				included[next_input_file_name] = total_line_count
 				print("%s (%d)" % (next_input_file_name, total_line_count))
 				with open(os.path.join(include_folder, next_input_file_name), "r") as next_input_file:
 					output_file.write('// >>> %s#line 1 "%s"\n' % (line, next_input_file_name))
@@ -59,6 +59,8 @@ def _main():
 		help="Output file. NOTE: It will be overwritten!")
 	parser.add_argument("-p", "--path", action="store", type=str, default=".",
 		help="Include path")
+	parser.add_argument("--hash", action="store", type=str,
+		help="The git hash to print in the output file, e.g. the output of \"git rev-parse HEAD\"")
 	parser.add_argument("prefix", action="store", type=str,
 		help="Non-empty include file prefix (e.g. a/b)")
 	args = parser.parse_args()
@@ -72,16 +74,18 @@ def _main():
 			'\n'
 			'// LEAF single header distribution. Do not edit.\n'
 			'\n'
-			'// Generated from https://github.com/boostorg/leaf on ' + date.today().strftime("%B %d, %Y") + ',\n'
-			'// Git hash ' + subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().rstrip() + '.\n'
-			'\n'
-			'// Latest version: https://boostorg.github.io/leaf/leaf.hpp\n'
+			'// Generated on ' + date.today().strftime("%m/%d/%Y"))
+		if args.hash:
+			output_file.write(
+				' from https://github.com/boostorg/leaf/tree/' + args.hash[0:7])
+		output_file.write(
+			'.\n'
+			'// Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.\n'
 			'\n')
 		append(args.input, input_file, output_file, regex_includes, args.path)
 		output_file.write(
 			'\n'
 			'#endif\n' )
-		global total_line_count
 #		print("%d" % total_line_count)
 
 if __name__ == "__main__":
