@@ -12,7 +12,7 @@
 template <int Tag>
 struct BOOST_SYMBOL_VISIBLE my_info
 {
-	int value;
+    int value;
 
     template <class CharT, class Traits>
     friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, my_info const & x )

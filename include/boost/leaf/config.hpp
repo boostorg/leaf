@@ -15,17 +15,17 @@
 ////////////////////////////////////////
 
 #ifdef BOOST_LEAF_DIAGNOSTICS
-#	warning BOOST_LEAF_DIAGNOSTICS has been renamed to BOOST_LEAF_CFG_DIAGNOSTICS.
-#	define BOOST_LEAF_CFG_DIAGNOSTICS BOOST_LEAF_DIAGNOSTICS
+#   warning BOOST_LEAF_DIAGNOSTICS has been renamed to BOOST_LEAF_CFG_DIAGNOSTICS.
+#   define BOOST_LEAF_CFG_DIAGNOSTICS BOOST_LEAF_DIAGNOSTICS
 #endif
 
 ////////////////////////////////////////
 
 #ifdef BOOST_LEAF_TLS_FREERTOS
 
-#	ifndef BOOST_LEAF_EMBEDDED
-#		define BOOST_LEAF_EMBEDDED
-#	endif
+#   ifndef BOOST_LEAF_EMBEDDED
+#       define BOOST_LEAF_EMBEDDED
+#   endif
 
 #endif
 
@@ -33,21 +33,21 @@
 
 #ifdef BOOST_LEAF_EMBEDDED
 
-#	ifndef BOOST_LEAF_CFG_DIAGNOSTICS
-#		define BOOST_LEAF_CFG_DIAGNOSTICS 0
-#	endif
+#   ifndef BOOST_LEAF_CFG_DIAGNOSTICS
+#       define BOOST_LEAF_CFG_DIAGNOSTICS 0
+#   endif
 
-#	ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-#		define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 0
-#	endif
+#   ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+#       define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 0
+#   endif
 
-#	ifndef BOOST_LEAF_CFG_STD_STRING
-#		define BOOST_LEAF_CFG_STD_STRING 0
-#	endif
+#   ifndef BOOST_LEAF_CFG_STD_STRING
+#       define BOOST_LEAF_CFG_STD_STRING 0
+#   endif
 
-#	ifndef BOOST_LEAF_CFG_CAPTURE
-#		define BOOST_LEAF_CFG_CAPTURE 0
-#	endif
+#   ifndef BOOST_LEAF_CFG_CAPTURE
+#       define BOOST_LEAF_CFG_CAPTURE 0
+#   endif
 
 #endif
 
@@ -58,11 +58,11 @@
 #endif
 
 #ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-#	define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 1
+#   define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 1
 #endif
 
 #ifndef BOOST_LEAF_CFG_STD_STRING
-#	define BOOST_LEAF_CFG_STD_STRING 1
+#   define BOOST_LEAF_CFG_STD_STRING 1
 #endif
 
 #ifndef BOOST_LEAF_CFG_CAPTURE
@@ -70,7 +70,7 @@
 #endif
 
 #ifndef BOOST_LEAF_CFG_WIN32
-#	define BOOST_LEAF_CFG_WIN32 0
+#   define BOOST_LEAF_CFG_WIN32 0
 #endif
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS!=0 && BOOST_LEAF_CFG_DIAGNOSTICS!=1
@@ -90,7 +90,7 @@
 #endif
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS && !BOOST_LEAF_CFG_STD_STRING
-#	error BOOST_LEAF_CFG_DIAGNOSTICS requires the use of std::string
+#   error BOOST_LEAF_CFG_DIAGNOSTICS requires the use of std::string
 #endif
 
 #if BOOST_LEAF_CFG_WIN32!=0 && BOOST_LEAF_CFG_WIN32!=1
@@ -252,9 +252,9 @@
 ////////////////////////////////////////
 
 #ifdef __GNUC__
-#	define BOOST_LEAF_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
+#   define BOOST_LEAF_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
 #else
-#	define BOOST_LEAF_SYMBOL_VISIBLE
+#   define BOOST_LEAF_SYMBOL_VISIBLE
 #endif
 
 ////////////////////////////////////////

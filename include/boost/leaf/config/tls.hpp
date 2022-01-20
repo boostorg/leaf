@@ -11,7 +11,7 @@
 #endif
 
 #if defined BOOST_LEAF_TLS_ARRAY
-#	include <boost/leaf/config/tls_array.hpp>
+#   include <boost/leaf/config/tls_array.hpp>
 #elif defined(BOOST_LEAF_NO_THREADS)
 #   include <boost/leaf/config/tls_globals.hpp>
 #else

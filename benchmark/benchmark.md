@@ -123,7 +123,7 @@ Which on clang 9 outputs:
 ```x86asm
 val():
         mov     eax, 42
-	      ret
+          ret
 main:
         mov     eax, 42
         ret
@@ -212,10 +212,10 @@ We get:
 
 ```x86asm
 g():                                  # @g()
-	      mov     rax, rdi
-	      mov     dword ptr [rdi], 43
-	      mov     dword ptr [rdi + 16], 3
-	      ret
+          mov     rax, rdi
+          mov     dword ptr [rdi], 43
+          mov     dword ptr [rdi + 16], 3
+          ret
 ```
 
 With a less trivial definition of `f`:

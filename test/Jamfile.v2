@@ -23,8 +23,8 @@ project
         <toolset>gcc:<cxxflags>"-Wno-delete-non-virtual-dtor -Wno-parentheses"
         <toolset>clang:<cxxflags>"-Wno-dangling-else"
         <toolset>darwin:<cxxflags>"-Wno-unused-variable -Wno-delete-non-virtual-dtor -Wno-non-virtual-dtor -Wno-dangling-else"
-		<toolset>msvc:<cxxflags>"-wd 4267 -wd 4996 -wd 4244"
-		<include>../../..
+        <toolset>msvc:<cxxflags>"-wd 4267 -wd 4996 -wd 4244"
+        <include>../../..
     ;
 
 compile _hpp_capture_test.cpp ;

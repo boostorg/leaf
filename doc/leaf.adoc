@@ -2276,11 +2276,11 @@ namespace boost { namespace leaf {
   BOOST_LEAF_ASSIGN(auto v, r)
 
 #define BOOST_LEAF_CHECK(r)\
-		auto && <<temp>> = r;\
-		if( <<temp>> )\
-      ;\
-    else\
-			return <<temp>>.error()
+  auto && <<temp>> = r;\
+  if( <<temp>> )\
+    ;\
+  else\
+    return <<temp>>.error()
 
 #define BOOST_LEAF_NEW_ERROR <<inject e_source_location voodoo>> ::boost::leaf::new_error
 ----
