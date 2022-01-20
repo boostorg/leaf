@@ -16,10 +16,10 @@
 <script>
 function switch_style()
 {
-	var i, tag;
-	for( i=0, tag=document.getElementsByTagName("link"); i<tag.length; i++ )
-		if( tag[i].rel.indexOf("stylesheet")!=-1 && tag[i].href.includes("zajo-") )
-			tag[i].disabled = !tag[i].disabled;
+    var i, tag;
+    for( i=0, tag=document.getElementsByTagName("link"); i<tag.length; i++ )
+        if( tag[i].rel.indexOf("stylesheet")!=-1 && tag[i].href.includes("zajo-") )
+            tag[i].disabled = !tag[i].disabled;
 }
 </script>
 </head>
@@ -3113,11 +3113,11 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
   BOOST_LEAF_ASSIGN(auto v, r)
 </span>
 <span class="cp">#define BOOST_LEAF_CHECK(r)\
-		auto &amp;&amp; &lt;&lt;temp&gt;&gt; = r;\
-		if( &lt;&lt;temp&gt;&gt; )\
-      ;\
-    else\
-			return &lt;&lt;temp&gt;&gt;.error()
+  auto &amp;&amp; &lt;&lt;temp&gt;&gt; = r;\
+  if( &lt;&lt;temp&gt;&gt; )\
+    ;\
+  else\
+    return &lt;&lt;temp&gt;&gt;.error()
 </span>
 <span class="cp">#define BOOST_LEAF_NEW_ERROR &lt;&lt;inject e_source_location voodoo&gt;&gt; ::boost::leaf::new_error</span></code></pre>
 </div>
@@ -3148,7 +3148,8 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
   <span class="k">struct</span> <span class="nc">e_errno</span>
   <span class="p">{</span>
     <span class="kt">int</span> <span class="n">value</span><span class="p">;</span>
-    <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">e_errno</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="p">);</span>
+    <span class="k">explicit</span> <span class="n">e_errno</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="o">=</span><span class="n">errno</span><span class="p">);</span>
+    <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">e_errno</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">);</span>
   <span class="p">};</span>
 
   <span class="k">namespace</span> <span class="n">windows</span>
@@ -3156,8 +3157,14 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
     <span class="k">struct</span> <span class="nc">e_LastError</span>
     <span class="p">{</span>
       <span class="kt">unsigned</span> <span class="n">value</span><span class="p">;</span>
-      <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">e_LastError</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="p">);</span>
-    <span class="p">};</span>
+
+      <span class="k">explicit</span> <span class="n">e_LastError</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">value</span><span class="p">);</span>
+
+<span class="cp">#if BOOST_LEAF_CFG_WIN32
+</span>      <span class="n">e_LastError</span><span class="p">();</span>
+      <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">e_LastError</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">);</span>
+<span class="cp">#endif
+</span>    <span class="p">};</span>
   <span class="p">}</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
@@ -5737,6 +5744,7 @@ The passed value is stored as a C string (<code>char const *</code>), so <code>v
   <span class="k">struct</span> <span class="nc">e_errno</span>
   <span class="p">{</span>
     <span class="kt">int</span> <span class="n">value</span><span class="p">;</span>
+    <span class="k">explicit</span> <span class="n">e_errno</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="o">=</span><span class="n">errno</span><span class="p">);</span>
     <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="n">os</span><span class="p">,</span> <span class="n">e_errno</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">err</span> <span class="p">);</span>
   <span class="p">};</span>
 
@@ -5744,7 +5752,7 @@ The passed value is stored as a C string (<code>char const *</code>), so <code>v
 </div>
 </div>
 <div class="paragraph">
-<p>To capture <code>errno</code>, use <code>e_errno</code>. When printed in automatically-generated diagnostic messages, <code>e_errno</code> objects use <code>strerror</code> to convert the <code>errno</code> code to string.</p>
+<p>By default, the constructor initializes <code>value</code> with <code>errno</code>, but the caller can pass a specific error code instead. When printed in automatically-generated diagnostic messages, <code>e_errno</code> objects use <code>strerror</code> to convert the error code to string.</p>
 </div>
 <hr>
 </div>
@@ -5789,15 +5797,21 @@ It is probably better to define your own file name wrappers to avoid clashes if 
     <span class="k">struct</span> <span class="nc">e_LastError</span>
     <span class="p">{</span>
       <span class="kt">unsigned</span> <span class="n">value</span><span class="p">;</span>
-      <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="n">os</span><span class="p">,</span> <span class="n">e_LastError</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">err</span> <span class="p">);</span>
-    <span class="p">};</span>
+
+      <span class="k">explicit</span> <span class="n">e_LastError</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">value</span><span class="p">);</span>
+
+<span class="cp">#if BOOST_LEAF_CFG_WIN32
+</span>      <span class="n">e_LastError</span><span class="p">();</span>
+      <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">e_LastError</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">);</span>
+<span class="cp">#endif
+</span>    <span class="p">};</span>
   <span class="p">}</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p><code>e_LastError</code> is designed to communicate <code>GetLastError()</code> values on Windows.</p>
+<p><code>e_LastError</code> is designed to communicate <code>GetLastError()</code> values on Windows. The default constructor initializes <code>value</code> via <code>GetLastError()</code>. See <a href="#configuration">Configuration</a>.</p>
 </div>
 <hr>
 </div>
@@ -8564,6 +8578,9 @@ meson <span class="nb">test</span></code></pre>
 </li>
 <li>
 <p><code>BOOST_LEAF_CFG_CAPTURE</code>: Defining this macro as <code>0</code> disables the ability of <code>leaf::result</code> to transport errors between threads. In this case LEAF does not <code>#include &lt;memory&gt;</code>, which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as <code>1</code>).</p>
+</li>
+<li>
+<p><code>BOOST_LEAF_CFG_WIN32</code>: Defining this macro as 1 enables the default constructor in <a href="#e_LastError"><code>e_LastError</code></a>, and the automatic conversion to string (via <code>FormatMessageA</code>) when <a href="#verbose_diagnostic_info"><code>verbose_diagnostic_info</code></a> is printed. If the macro is left undefined, LEAF defines it as <code>0</code> (even on windows, since including <code>windows.h</code> is generally not desirable). Note that the <code>e_LastError</code> type itself is available on all platforms, there is no need for conditional compilation in error handlers that use it.</p>
 </li>
 <li>
 <p><code>BOOST_LEAF_NO_EXCEPTIONS</code>: Disables all exception handling support. If left undefined, LEAF defines it automatically based on the compiler configuration (e.g. <code>-fno-exceptions</code>).</p>

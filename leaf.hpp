@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 01/18/2022 from https://github.com/boostorg/leaf/tree/da900bc.
+// Generated on 01/20/2022 from https://github.com/boostorg/leaf/tree/ae9aae2.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
@@ -30,17 +30,17 @@
 ////////////////////////////////////////
 
 #ifdef BOOST_LEAF_DIAGNOSTICS
-#	warning BOOST_LEAF_DIAGNOSTICS has been renamed to BOOST_LEAF_CFG_DIAGNOSTICS.
-#	define BOOST_LEAF_CFG_DIAGNOSTICS BOOST_LEAF_DIAGNOSTICS
+#   warning BOOST_LEAF_DIAGNOSTICS has been renamed to BOOST_LEAF_CFG_DIAGNOSTICS.
+#   define BOOST_LEAF_CFG_DIAGNOSTICS BOOST_LEAF_DIAGNOSTICS
 #endif
 
 ////////////////////////////////////////
 
 #ifdef BOOST_LEAF_TLS_FREERTOS
 
-#	ifndef BOOST_LEAF_EMBEDDED
-#		define BOOST_LEAF_EMBEDDED
-#	endif
+#   ifndef BOOST_LEAF_EMBEDDED
+#       define BOOST_LEAF_EMBEDDED
+#   endif
 
 #endif
 
@@ -48,21 +48,21 @@
 
 #ifdef BOOST_LEAF_EMBEDDED
 
-#	ifndef BOOST_LEAF_CFG_DIAGNOSTICS
-#		define BOOST_LEAF_CFG_DIAGNOSTICS 0
-#	endif
+#   ifndef BOOST_LEAF_CFG_DIAGNOSTICS
+#       define BOOST_LEAF_CFG_DIAGNOSTICS 0
+#   endif
 
-#	ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-#		define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 0
-#	endif
+#   ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+#       define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 0
+#   endif
 
-#	ifndef BOOST_LEAF_CFG_STD_STRING
-#		define BOOST_LEAF_CFG_STD_STRING 0
-#	endif
+#   ifndef BOOST_LEAF_CFG_STD_STRING
+#       define BOOST_LEAF_CFG_STD_STRING 0
+#   endif
 
-#	ifndef BOOST_LEAF_CFG_CAPTURE
-#		define BOOST_LEAF_CFG_CAPTURE 0
-#	endif
+#   ifndef BOOST_LEAF_CFG_CAPTURE
+#       define BOOST_LEAF_CFG_CAPTURE 0
+#   endif
 
 #endif
 
@@ -73,15 +73,19 @@
 #endif
 
 #ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-#	define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 1
+#   define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 1
 #endif
 
 #ifndef BOOST_LEAF_CFG_STD_STRING
-#	define BOOST_LEAF_CFG_STD_STRING 1
+#   define BOOST_LEAF_CFG_STD_STRING 1
 #endif
 
 #ifndef BOOST_LEAF_CFG_CAPTURE
 #   define BOOST_LEAF_CFG_CAPTURE 1
+#endif
+
+#ifndef BOOST_LEAF_CFG_WIN32
+#   define BOOST_LEAF_CFG_WIN32 0
 #endif
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS!=0 && BOOST_LEAF_CFG_DIAGNOSTICS!=1
@@ -101,7 +105,11 @@
 #endif
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS && !BOOST_LEAF_CFG_STD_STRING
-#	error BOOST_LEAF_CFG_DIAGNOSTICS requires the use of std::string
+#   error BOOST_LEAF_CFG_DIAGNOSTICS requires the use of std::string
+#endif
+
+#if BOOST_LEAF_CFG_WIN32!=0 && BOOST_LEAF_CFG_WIN32!=1
+#   error BOOST_LEAF_CFG_WIN32 must be 0 or 1.
 #endif
 
 ////////////////////////////////////////
@@ -259,9 +267,9 @@
 ////////////////////////////////////////
 
 #ifdef __GNUC__
-#	define BOOST_LEAF_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
+#   define BOOST_LEAF_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
 #else
-#	define BOOST_LEAF_SYMBOL_VISIBLE
+#   define BOOST_LEAF_SYMBOL_VISIBLE
 #endif
 
 ////////////////////////////////////////
@@ -330,7 +338,7 @@ namespace tls
 #endif
 
 #if defined BOOST_LEAF_TLS_ARRAY
-// >>> #	include <boost/leaf/config/tls_array.hpp>
+// >>> #   include <boost/leaf/config/tls_array.hpp>
 #line 1 "boost/leaf/config/tls_array.hpp"
 #ifndef BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED
@@ -482,7 +490,7 @@ namespace tls
 } }
 
 #endif
-// <<< #	include <boost/leaf/config/tls_array.hpp>
+// <<< #   include <boost/leaf/config/tls_array.hpp>
 #line 15 "boost/leaf/config/tls.hpp"
 #elif defined(BOOST_LEAF_NO_THREADS)
 // >>> #   include <boost/leaf/config/tls_globals.hpp>
@@ -667,7 +675,7 @@ namespace tls
 
 #endif
 // <<< #include <boost/leaf/config/tls.hpp>
-#line 256 "boost/leaf/config.hpp"
+#line 264 "boost/leaf/config.hpp"
 
 ////////////////////////////////////////
 
@@ -1491,7 +1499,7 @@ namespace leaf_detail
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 885: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 893: #include <boost/leaf/detail/demangle.hpp>
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 
@@ -2568,7 +2576,7 @@ exception_to_result( F && f ) noexcept
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 699: #include <boost/leaf/error.hpp>
+// Expanded at line 707: #include <boost/leaf/error.hpp>
 
 namespace boost { namespace leaf {
 
@@ -3052,22 +3060,22 @@ future_get( Future & fut )
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 885: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 893: #include <boost/leaf/detail/demangle.hpp>
 
 #include <iosfwd>
 #if BOOST_LEAF_CFG_STD_STRING
 #   include <string>
 #endif
 #include <cerrno>
-#ifdef _WIN32
-#   include <Windows.h>
+#if BOOST_LEAF_CFG_WIN32
+#   include <windows.h>
 #   include <cstring>
-#ifdef min
-#   undef min
-#endif
-#ifdef max
-#   undef max
-#endif
+#   ifdef min
+#       undef min
+#   endif
+#   ifdef max
+#       undef max
+#   endif
 #endif
 
 namespace boost { namespace leaf {
@@ -3098,7 +3106,7 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_errno
     explicit e_errno(int value=errno): value(value) { }
 
     template <class CharT, class Traits>
-    friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, e_errno const & err )
+    friend std::basic_ostream<CharT, Traits> & operator<<(std::basic_ostream<CharT, Traits> & os, e_errno const & err)
     {
         return os << type<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
     }
@@ -3116,11 +3124,11 @@ namespace windows
 
         explicit e_LastError(unsigned value): value(value) { }
 
-#ifdef _WIN32
+#if BOOST_LEAF_CFG_WIN32
         e_LastError(): value(GetLastError()) { }
 
         template <class CharT, class Traits>
-        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, e_LastError const & err )
+        friend std::basic_ostream<CharT, Traits> & operator<<(std::basic_ostream<CharT, Traits> & os, e_LastError const & err)
         {
             struct msg_buf
             {
@@ -3148,8 +3156,6 @@ namespace windows
             }
             return os;
         }
-#else
-        // TODO : Other platforms
 #endif
     };
 }
@@ -3168,7 +3174,7 @@ namespace windows
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 699: #include <boost/leaf/error.hpp>
+// Expanded at line 707: #include <boost/leaf/error.hpp>
 
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
 # include <thread>
@@ -3628,8 +3634,8 @@ inline context_ptr make_shared_context( H && ... ) noexcept
 } }
 
 #endif
-// Expanded at line 699: #include <boost/leaf/error.hpp>
-// Expanded at line 688: #include <boost/leaf/exception.hpp>
+// Expanded at line 707: #include <boost/leaf/error.hpp>
+// Expanded at line 696: #include <boost/leaf/exception.hpp>
 // >>> #include <boost/leaf/handle_errors.hpp>
 #line 1 "boost/leaf/handle_errors.hpp"
 #ifndef BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
@@ -3641,9 +3647,9 @@ inline context_ptr make_shared_context( H && ... ) noexcept
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3162: #include <boost/leaf/context.hpp>
-// Expanded at line 677: #include <boost/leaf/capture.hpp>
-// Expanded at line 885: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 3168: #include <boost/leaf/context.hpp>
+// Expanded at line 685: #include <boost/leaf/capture.hpp>
+// Expanded at line 893: #include <boost/leaf/detail/demangle.hpp>
 
 namespace boost { namespace leaf {
 
@@ -4565,7 +4571,7 @@ namespace leaf_detail
 } }
 
 #endif
-// Expanded at line 2562: #include <boost/leaf/on_error.hpp>
+// Expanded at line 2570: #include <boost/leaf/on_error.hpp>
 // >>> #include <boost/leaf/pred.hpp>
 #line 1 "boost/leaf/pred.hpp"
 #ifndef BOOST_LEAF_PRED_HPP_INCLUDED
@@ -4577,7 +4583,7 @@ namespace leaf_detail
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3635: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 3641: #include <boost/leaf/handle_errors.hpp>
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -4876,7 +4882,7 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 699: #include <boost/leaf/error.hpp>
+// Expanded at line 707: #include <boost/leaf/error.hpp>
 
 #include <climits>
 #include <functional>
