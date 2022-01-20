@@ -69,6 +69,10 @@
 #   define BOOST_LEAF_CFG_CAPTURE 1
 #endif
 
+#ifndef BOOST_LEAF_CFG_WIN32
+#	define BOOST_LEAF_CFG_WIN32 0
+#endif
+
 #if BOOST_LEAF_CFG_DIAGNOSTICS!=0 && BOOST_LEAF_CFG_DIAGNOSTICS!=1
 #   error BOOST_LEAF_CFG_DIAGNOSTICS must be 0 or 1.
 #endif
@@ -87,6 +91,10 @@
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS && !BOOST_LEAF_CFG_STD_STRING
 #	error BOOST_LEAF_CFG_DIAGNOSTICS requires the use of std::string
+#endif
+
+#if BOOST_LEAF_CFG_WIN32!=0 && BOOST_LEAF_CFG_WIN32!=1
+#   error BOOST_LEAF_CFG_WIN32 must be 0 or 1.
 #endif
 
 ////////////////////////////////////////

@@ -15,6 +15,8 @@ int main()
 
 #else
 
+#define BOOST_LEAF_CFG_WIN32 1
+
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
 #   include "leaf.hpp"
 #else

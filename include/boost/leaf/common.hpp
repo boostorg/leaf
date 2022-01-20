@@ -14,15 +14,15 @@
 #   include <string>
 #endif
 #include <cerrno>
-#ifdef _WIN32
-#   include <Windows.h>
+#if BOOST_LEAF_CFG_WIN32
+#   include <windows.h>
 #   include <cstring>
-#ifdef min
-#   undef min
-#endif
-#ifdef max
-#   undef max
-#endif
+#   ifdef min
+#       undef min
+#   endif
+#   ifdef max
+#       undef max
+#   endif
 #endif
 
 namespace boost { namespace leaf {
@@ -53,7 +53,7 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_errno
     explicit e_errno(int value=errno): value(value) { }
 
     template <class CharT, class Traits>
-    friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, e_errno const & err )
+    friend std::basic_ostream<CharT, Traits> & operator<<(std::basic_ostream<CharT, Traits> & os, e_errno const & err)
     {
         return os << type<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
     }
@@ -71,11 +71,11 @@ namespace windows
 
         explicit e_LastError(unsigned value): value(value) { }
 
-#ifdef _WIN32
+#if BOOST_LEAF_CFG_WIN32
         e_LastError(): value(GetLastError()) { }
 
         template <class CharT, class Traits>
-        friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, e_LastError const & err )
+        friend std::basic_ostream<CharT, Traits> & operator<<(std::basic_ostream<CharT, Traits> & os, e_LastError const & err)
         {
             struct msg_buf
             {
@@ -103,8 +103,6 @@ namespace windows
             }
             return os;
         }
-#else
-        // TODO : Other platforms
 #endif
     };
 }

@@ -2309,7 +2309,8 @@ namespace boost { namespace leaf {
   struct e_errno
   {
     int value;
-    friend std::ostream & operator<<( std::ostream &, e_errno const & );
+    explicit e_errno(int value=errno);
+    friend std::ostream & operator<<(std::ostream &, e_errno const &);
   };
 
   namespace windows
@@ -2317,7 +2318,13 @@ namespace boost { namespace leaf {
     struct e_LastError
     {
       unsigned value;
-      friend std::ostream & operator<<( std::ostream &, e_LastError const & );
+
+      explicit e_LastError(unsigned value);
+
+#if BOOST_LEAF_CFG_WIN32
+      e_LastError();
+      friend std::ostream & operator<<(std::ostream &, e_LastError const &);
+#endif
     };
   }
 
@@ -4042,13 +4049,14 @@ namespace boost { namespace leaf {
   struct e_errno
   {
     int value;
+    explicit e_errno(int value=errno);
     friend std::ostream & operator<<( std::ostream & os, e_errno const & err );
   };
 
 } }
 ----
 
-To capture `errno`, use `e_errno`. When printed in automatically-generated diagnostic messages, `e_errno` objects use `strerror` to convert the `errno` code to string.
+By default, the constructor initializes `value` with `errno`, but the caller can pass a specific error code instead. When printed in automatically-generated diagnostic messages, `e_errno` objects use `strerror` to convert the error code to string.
 
 '''
 
@@ -4084,14 +4092,20 @@ namespace boost { namespace leaf {
     struct e_LastError
     {
       unsigned value;
-      friend std::ostream & operator<<( std::ostream & os, e_LastError const & err );
+
+      explicit e_LastError(unsigned value);
+
+#if BOOST_LEAF_CFG_WIN32
+      e_LastError();
+      friend std::ostream & operator<<(std::ostream &, e_LastError const &);
+#endif
     };
   }
 
 } }
 ----
 
-`e_LastError` is designed to communicate `GetLastError()` values on Windows.
+`e_LastError` is designed to communicate `GetLastError()` values on Windows. The default constructor initializes `value` via `GetLastError()`. See <<configuration>>.
 
 '''
 
@@ -5936,6 +5950,7 @@ The following configuration macros are recognized:
 * `BOOST_LEAF_CFG_STD_SYSTEM_ERROR`: Defining this macro as `0` disables the `std::error_code` / `std::error_condition` integration. In this case LEAF does not `#include <system_error>`, which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as `1`).
 * `BOOST_LEAF_CFG_STD_STRING`: Defining this macro as `0` disables all use of `std::string` (this requires `BOOST_LEAF_CFG_DIAGNOSTICS=0` as well). In this case LEAF does not `#include <string>` which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as `1`).
 * `BOOST_LEAF_CFG_CAPTURE`: Defining this macro as `0` disables the ability of `leaf::result` to transport errors between threads. In this case LEAF does not `#include <memory>`, which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as `1`).
+* `BOOST_LEAF_CFG_WIN32`: Defining this macro as 1 enables the default constructor in <<e_LastError>>, and the automatic conversion to string (via `FormatMessageA`) when <<verbose_diagnostic_info>> is printed. If the macro is left undefined, LEAF defines it as `0` (even on windows, since including `windows.h` is generally not desirable). Note that the `e_LastError` type itself is available on all platforms, there is no need for conditional compilation in error handlers that use it.
 * `BOOST_LEAF_NO_EXCEPTIONS`: Disables all exception handling support. If left undefined, LEAF defines it automatically based on the compiler configuration (e.g. `-fno-exceptions`).
 * `BOOST_LEAF_NO_THREADS`: Disables all thread safety in LEAF.
 
