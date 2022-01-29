@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 01/20/2022 from https://github.com/boostorg/leaf/tree/ae9aae2.
+// Generated on 01/29/2022 from https://github.com/boostorg/leaf/tree/59adc58.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
@@ -898,7 +898,7 @@ namespace leaf_detail
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// core::demangle
+// This file is based on boost::core::demangle
 //
 // Copyright 2014 Peter Dimov
 // Copyright 2014 Andrey Semashev
@@ -953,22 +953,26 @@ char const * t =
 
 ////////////////////////////////////////
 
-#if defined(__has_include) && ((__GNUC__ + 0) >= 5)
+// __has_include is currently supported by GCC and Clang. However GCC 4.9 may have issues and
+// returns 1 for 'defined( __has_include )', while '__has_include' is actually not supported:
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63662
+#if defined(__has_include) && (!defined(__GNUC__) || defined(__clang__) || (__GNUC__ + 0) >= 5)
 #   if __has_include(<cxxabi.h>)
 #       define BOOST_LEAF_HAS_CXXABI_H
 #   endif
-#elif defined(__GLIBCXX__) || defined(__GLIBCPP__)
+#elif defined( __GLIBCXX__ ) || defined( __GLIBCPP__ )
 #   define BOOST_LEAF_HAS_CXXABI_H
 #endif
 
 #if defined( BOOST_LEAF_HAS_CXXABI_H )
 #   include <cxxabi.h>
-// For some architectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
-// (https://android.googlesource.com/platform/ndk/+/master/sources/cxx-stl/gabi++/), which does not implement
-// abi::__cxa_demangle(). We detect this implementation by checking the include guard here.
+//  For some archtectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
+//  (https://android.googlesource.com/platform/ndk/+/master/sources/cxx-stl/gabi++/), which does not implement
+//  abi::__cxa_demangle(). We detect this implementation by checking the include guard here.
 #   if defined( __GABIXX_CXXABI_H__ )
 #       undef BOOST_LEAF_HAS_CXXABI_H
 #   else
+#       include <cstdlib>
 #       include <cstddef>
 #   endif
 #endif
@@ -1869,7 +1873,7 @@ namespace leaf_detail
             tls::write_ptr<slot<E>>(prev_);
         }
 
-        BOOST_LEAF_CONSTEXPR void propagate() noexcept;
+        BOOST_LEAF_CONSTEXPR void propagate( int err_id ) noexcept;
 
         template <class CharT, class Traits>
         void print( std::basic_ostream<CharT, Traits> & os, int key_to_print ) const
@@ -1928,25 +1932,19 @@ namespace leaf_detail
 #endif
 
     template <class E>
-    BOOST_LEAF_CONSTEXPR inline void slot<E>::propagate() noexcept
+    BOOST_LEAF_CONSTEXPR inline void slot<E>::propagate( int err_id ) noexcept
     {
-        if( prev_ )
-        {
-            impl & that_ = *prev_;
-            if( that_.empty() )
-            {
-                impl & this_ = *this;
-                that_ = std::move(this_);
-            }
-        }
+        if( this->key()!=err_id && err_id!=0 )
+            return;
+        if( impl * p = tls::read_ptr<slot<E>>() )
+            *p = std::move(*this);
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         else
         {
             int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
             BOOST_LEAF_ASSERT(c>=0);
             if( c )
-                if( int err_id = impl::key() )
-                    load_unexpected(err_id, std::move(*this).value(err_id));
+                load_unexpected(err_id, std::move(*this).value(err_id));
         }
 #endif
     }
@@ -2262,7 +2260,7 @@ public:
     virtual error_id propagate_captured_errors() noexcept = 0;
     virtual void activate() noexcept = 0;
     virtual void deactivate() noexcept = 0;
-    virtual void propagate() noexcept = 0;
+    virtual void propagate( error_id ) noexcept = 0;
     virtual bool is_active() const noexcept = 0;
     inline virtual void print( std::ostream & ) const { };
     error_id captured_id_;
@@ -2308,18 +2306,8 @@ public:
 
     BOOST_LEAF_ALWAYS_INLINE ~context_activator() noexcept
     {
-        if( !ctx_ )
-            return;
-        if( ctx_->is_active() )
+        if( ctx_ && ctx_->is_active() )
             ctx_->deactivate();
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-#   if BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
-        if( std::uncaught_exceptions() > uncaught_exceptions_ )
-#   else
-        if( std::uncaught_exception() )
-#   endif
-            ctx_->propagate();
-#endif
     }
 };
 
@@ -2918,8 +2906,8 @@ namespace leaf_detail
         [[noreturn]] void unload_and_rethrow_original_exception() const
         {
             BOOST_LEAF_ASSERT(ctx_->captured_id_);
-            auto active_context = activate_context(*ctx_);
             tls::write_uint32<tls_tag_id_factory_current_id>(ctx_->captured_id_.value());
+            ctx_->propagate(ctx_->captured_id_);
             std::rethrow_exception(ex_);
         }
 
@@ -3330,17 +3318,18 @@ namespace leaf_detail
             tuple_for_each<I-1,Tuple>::deactivate(tup);
         }
 
-        BOOST_LEAF_CONSTEXPR static void propagate( Tuple & tup ) noexcept
+        BOOST_LEAF_CONSTEXPR static void propagate( Tuple & tup, int err_id ) noexcept
         {
             static_assert(!std::is_same<error_info, typename std::decay<decltype(std::get<I-1>(tup))>::type>::value, "Bug in LEAF: context type deduction");
             auto & sl = std::get<I-1>(tup);
-            sl.propagate();
-            tuple_for_each<I-1,Tuple>::propagate(tup);
+            sl.propagate(err_id);
+            tuple_for_each<I-1,Tuple>::propagate(tup, err_id);
         }
 
         BOOST_LEAF_CONSTEXPR static void propagate_captured( Tuple & tup, int err_id ) noexcept
         {
             static_assert(!std::is_same<error_info, typename std::decay<decltype(std::get<I-1>(tup))>::type>::value, "Bug in LEAF: context type deduction");
+            BOOST_LEAF_ASSERT(err_id != 0);
             auto & sl = std::get<I-1>(tup);
             if( sl.has_value(err_id) )
                 load_slot(err_id, std::move(sl).value(err_id));
@@ -3361,8 +3350,8 @@ namespace leaf_detail
     {
         BOOST_LEAF_CONSTEXPR static void activate( Tuple & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void deactivate( Tuple & ) noexcept { }
-        BOOST_LEAF_CONSTEXPR static void propagate( Tuple & tup ) noexcept { }
-        BOOST_LEAF_CONSTEXPR static void propagate_captured( Tuple & tup, int ) noexcept { }
+        BOOST_LEAF_CONSTEXPR static void propagate( Tuple &, int ) noexcept { }
+        BOOST_LEAF_CONSTEXPR static void propagate_captured( Tuple &, int ) noexcept { }
         template <class CharT, class Traits>
         BOOST_LEAF_CONSTEXPR static void print( std::basic_ostream<CharT, Traits> &, void const *, int ) { }
     };
@@ -3445,11 +3434,11 @@ class context
 
     using Tup = leaf_detail::deduce_e_tuple<E...>;
     Tup tup_;
+    bool is_active_;
 
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
     std::thread::id thread_id_;
 #endif
-    bool is_active_;
 
 protected:
 
@@ -3519,9 +3508,10 @@ public:
         tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_);
     }
 
-    BOOST_LEAF_CONSTEXPR void propagate() noexcept
+    BOOST_LEAF_CONSTEXPR void propagate(error_id id) noexcept
     {
-        leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_);
+        BOOST_LEAF_ASSERT(!is_active());
+        leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_, id.value());
     }
 
     BOOST_LEAF_CONSTEXPR bool is_active() const noexcept
@@ -3588,7 +3578,7 @@ namespace leaf_detail
         error_id propagate_captured_errors() noexcept final override { return Ctx::propagate_captured_errors(captured_id_); }
         void activate() noexcept final override { Ctx::activate(); }
         void deactivate() noexcept final override { Ctx::deactivate(); }
-        void propagate() noexcept final override { Ctx::propagate(); }
+        void propagate(error_id id) noexcept final override { Ctx::propagate(id); }
         bool is_active() const noexcept final override { return Ctx::is_active(); }
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         void print( std::ostream & os ) const final override { return Ctx::print(os); }
@@ -3647,7 +3637,7 @@ inline context_ptr make_shared_context( H && ... ) noexcept
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3168: #include <boost/leaf/context.hpp>
+// Expanded at line 3156: #include <boost/leaf/context.hpp>
 // Expanded at line 685: #include <boost/leaf/capture.hpp>
 // Expanded at line 893: #include <boost/leaf/detail/demangle.hpp>
 
@@ -4348,7 +4338,7 @@ try_handle_all( TryBlock && try_block, H && ... h ) noexcept
         error_id id = r.error();
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
-        return ctx.template handle_error<R>(std::move(id), std::forward<H>(h)...);
+        return ctx.template handle_error<R>(id, std::forward<H>(h)...);
     }
 }
 
@@ -4367,9 +4357,9 @@ try_handle_some( TryBlock && try_block, H && ... h ) noexcept
         error_id id = r.error();
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
-        auto rr = ctx.template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
+        auto rr = ctx.template handle_error<R>(id, std::forward<H>(h)..., [&r]()->R { return std::move(r); });
         if( !rr )
-            ctx.propagate();
+            ctx.propagate(id);
         return rr;
     }
 }
@@ -4408,27 +4398,47 @@ namespace leaf_detail
             catch( std::exception & ex )
             {
                 ctx.deactivate();
-                return handle_error_<R>(ctx.tup(), error_info(&ex), std::forward<H>(h)...,
-                    []() -> R { throw; } );
+                error_info e(&ex);
+                return handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
+                    [&]() -> R
+                    {
+                        ctx.propagate(e.error());
+                        throw;
+                    } );
             }
             catch(...)
             {
                 ctx.deactivate();
-                return handle_error_<R>(ctx.tup(), error_info(nullptr), std::forward<H>(h)...,
-                    []() -> R { throw; } );
+                error_info e(nullptr);
+                return handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
+                    [&]() -> R
+                    {
+                        ctx.propagate(e.error());
+                        throw;
+                    } );
             }
         }
         catch( std::exception & ex )
         {
             ctx.deactivate();
-            return handle_error_<R>(ctx.tup(), error_info(&ex), std::forward<H>(h)...,
-                []() -> R { throw; } );
+            error_info e(&ex);
+            return handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
+                [&]() -> R
+                {
+                    ctx.propagate(e.error());
+                    throw;
+                } );
         }
         catch(...)
         {
             ctx.deactivate();
-            return handle_error_<R>(ctx.tup(), error_info(nullptr), std::forward<H>(h)...,
-                []() -> R { throw; } );
+            error_info e(nullptr);
+            return handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
+                [&]() -> R
+                {
+                    ctx.propagate(e.error());
+                    throw;
+                } );
         }
     }
 }
@@ -4481,9 +4491,9 @@ try_handle_some( TryBlock && try_block, H && ... h )
         if( ctx.is_active() )
             ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
-        auto rr = ctx.template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
+        auto rr = ctx.template handle_error<R>(id, std::forward<H>(h)..., [&r]()->R { return std::move(r); });
         if( !rr )
-            ctx.propagate();
+            ctx.propagate(id);
         return rr;
     }
 }
@@ -4571,7 +4581,7 @@ namespace leaf_detail
 } }
 
 #endif
-// Expanded at line 2570: #include <boost/leaf/on_error.hpp>
+// Expanded at line 2558: #include <boost/leaf/on_error.hpp>
 // >>> #include <boost/leaf/pred.hpp>
 #line 1 "boost/leaf/pred.hpp"
 #ifndef BOOST_LEAF_PRED_HPP_INCLUDED
@@ -4583,7 +4593,7 @@ namespace leaf_detail
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3641: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 3631: #include <boost/leaf/handle_errors.hpp>
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
