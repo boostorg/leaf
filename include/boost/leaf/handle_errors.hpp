@@ -708,7 +708,7 @@ try_handle_all( TryBlock && try_block, H && ... h ) noexcept
         error_id id = r.error();
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
-        return ctx.template handle_error<R>(std::move(id), std::forward<H>(h)...);
+        return ctx.template handle_error<R>(id, std::forward<H>(h)...);
     }
 }
 
@@ -727,9 +727,9 @@ try_handle_some( TryBlock && try_block, H && ... h ) noexcept
         error_id id = r.error();
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
-        auto rr = ctx.template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
+        auto rr = ctx.template handle_error<R>(id, std::forward<H>(h)..., [&r]()->R { return std::move(r); });
         if( !rr )
-            ctx.propagate();
+            ctx.propagate(id);
         return rr;
     }
 }
@@ -768,27 +768,47 @@ namespace leaf_detail
             catch( std::exception & ex )
             {
                 ctx.deactivate();
-                return handle_error_<R>(ctx.tup(), error_info(&ex), std::forward<H>(h)...,
-                    []() -> R { throw; } );
+                error_info e(&ex);
+                return handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
+                    [&]() -> R
+                    {
+                        ctx.propagate(e.error());
+                        throw;
+                    } );
             }
             catch(...)
             {
                 ctx.deactivate();
-                return handle_error_<R>(ctx.tup(), error_info(nullptr), std::forward<H>(h)...,
-                    []() -> R { throw; } );
+                error_info e(nullptr);
+                return handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
+                    [&]() -> R
+                    {
+                        ctx.propagate(e.error());
+                        throw;
+                    } );
             }
         }
         catch( std::exception & ex )
         {
             ctx.deactivate();
-            return handle_error_<R>(ctx.tup(), error_info(&ex), std::forward<H>(h)...,
-                []() -> R { throw; } );
+            error_info e(&ex);
+            return handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
+                [&]() -> R
+                {
+                    ctx.propagate(e.error());
+                    throw;
+                } );
         }
         catch(...)
         {
             ctx.deactivate();
-            return handle_error_<R>(ctx.tup(), error_info(nullptr), std::forward<H>(h)...,
-                []() -> R { throw; } );
+            error_info e(nullptr);
+            return handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
+                [&]() -> R
+                {
+                    ctx.propagate(e.error());
+                    throw;
+                } );
         }
     }
 }
@@ -841,9 +861,9 @@ try_handle_some( TryBlock && try_block, H && ... h )
         if( ctx.is_active() )
             ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
-        auto rr = ctx.template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
+        auto rr = ctx.template handle_error<R>(id, std::forward<H>(h)..., [&r]()->R { return std::move(r); });
         if( !rr )
-            ctx.propagate();
+            ctx.propagate(id);
         return rr;
     }
 }

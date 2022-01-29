@@ -45,9 +45,12 @@ int main()
         [&]
         {
             auto ctx = leaf::make_context(error_handlers);
-            auto active_context = activate_context(ctx);
-            auto r = f(ctx);
-            ctx.propagate();
+            leaf::result<int> r;
+            {
+                auto active_context = activate_context(ctx);
+                r = f(ctx);
+            }
+            ctx.propagate(r.error());
             return r;
         },
         error_handlers );

@@ -163,17 +163,18 @@ namespace leaf_detail
             tuple_for_each<I-1,Tuple>::deactivate(tup);
         }
 
-        BOOST_LEAF_CONSTEXPR static void propagate( Tuple & tup ) noexcept
+        BOOST_LEAF_CONSTEXPR static void propagate( Tuple & tup, int err_id ) noexcept
         {
             static_assert(!std::is_same<error_info, typename std::decay<decltype(std::get<I-1>(tup))>::type>::value, "Bug in LEAF: context type deduction");
             auto & sl = std::get<I-1>(tup);
-            sl.propagate();
-            tuple_for_each<I-1,Tuple>::propagate(tup);
+            sl.propagate(err_id);
+            tuple_for_each<I-1,Tuple>::propagate(tup, err_id);
         }
 
         BOOST_LEAF_CONSTEXPR static void propagate_captured( Tuple & tup, int err_id ) noexcept
         {
             static_assert(!std::is_same<error_info, typename std::decay<decltype(std::get<I-1>(tup))>::type>::value, "Bug in LEAF: context type deduction");
+            BOOST_LEAF_ASSERT(err_id != 0);
             auto & sl = std::get<I-1>(tup);
             if( sl.has_value(err_id) )
                 load_slot(err_id, std::move(sl).value(err_id));
@@ -194,8 +195,8 @@ namespace leaf_detail
     {
         BOOST_LEAF_CONSTEXPR static void activate( Tuple & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void deactivate( Tuple & ) noexcept { }
-        BOOST_LEAF_CONSTEXPR static void propagate( Tuple & tup ) noexcept { }
-        BOOST_LEAF_CONSTEXPR static void propagate_captured( Tuple & tup, int ) noexcept { }
+        BOOST_LEAF_CONSTEXPR static void propagate( Tuple &, int ) noexcept { }
+        BOOST_LEAF_CONSTEXPR static void propagate_captured( Tuple &, int ) noexcept { }
         template <class CharT, class Traits>
         BOOST_LEAF_CONSTEXPR static void print( std::basic_ostream<CharT, Traits> &, void const *, int ) { }
     };
@@ -278,11 +279,11 @@ class context
 
     using Tup = leaf_detail::deduce_e_tuple<E...>;
     Tup tup_;
+    bool is_active_;
 
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
     std::thread::id thread_id_;
 #endif
-    bool is_active_;
 
 protected:
 
@@ -352,9 +353,10 @@ public:
         tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_);
     }
 
-    BOOST_LEAF_CONSTEXPR void propagate() noexcept
+    BOOST_LEAF_CONSTEXPR void propagate(error_id id) noexcept
     {
-        leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_);
+        BOOST_LEAF_ASSERT(!is_active());
+        leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_, id.value());
     }
 
     BOOST_LEAF_CONSTEXPR bool is_active() const noexcept
@@ -421,7 +423,7 @@ namespace leaf_detail
         error_id propagate_captured_errors() noexcept final override { return Ctx::propagate_captured_errors(captured_id_); }
         void activate() noexcept final override { Ctx::activate(); }
         void deactivate() noexcept final override { Ctx::deactivate(); }
-        void propagate() noexcept final override { Ctx::propagate(); }
+        void propagate(error_id id) noexcept final override { Ctx::propagate(id); }
         bool is_active() const noexcept final override { return Ctx::is_active(); }
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         void print( std::ostream & os ) const final override { return Ctx::print(os); }

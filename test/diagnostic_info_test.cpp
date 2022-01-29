@@ -223,11 +223,11 @@ int main()
             BOOST_ERROR("Bad error dispatch");
         } );
 
-    std::cout << __LINE__  << " ----\n";
-
     ///////////////////////////////////
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
+
+    std::cout << __LINE__  << " ----\n";
 
     leaf::try_catch(
         []

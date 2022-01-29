@@ -374,11 +374,12 @@ int main()
                     {
                         return leaf::new_error( info<1>{1}, info<2>{-2} );
                     },
-                    []( leaf::error_info const & err, info<1> const & i1, info<2> const & i2 )
+                    []( leaf::error_info const & err, info<1> const & i1, info<2> & i2 )
                     {
                         BOOST_TEST_EQ(i1.value, 1);
                         BOOST_TEST_EQ(i2.value, -2);
-                        return err.error().load(info<2>{2});
+                        i2 = info<2>{2};
+                        return err.error();
                     } );
             },
             []( info<1> const & i1, info<2> const & i2 )

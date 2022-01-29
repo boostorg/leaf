@@ -257,7 +257,7 @@ namespace leaf_detail
             tls::write_ptr<slot<E>>(prev_);
         }
 
-        BOOST_LEAF_CONSTEXPR void propagate() noexcept;
+        BOOST_LEAF_CONSTEXPR void propagate( int err_id ) noexcept;
 
         template <class CharT, class Traits>
         void print( std::basic_ostream<CharT, Traits> & os, int key_to_print ) const
@@ -316,25 +316,19 @@ namespace leaf_detail
 #endif
 
     template <class E>
-    BOOST_LEAF_CONSTEXPR inline void slot<E>::propagate() noexcept
+    BOOST_LEAF_CONSTEXPR inline void slot<E>::propagate( int err_id ) noexcept
     {
-        if( prev_ )
-        {
-            impl & that_ = *prev_;
-            if( that_.empty() )
-            {
-                impl & this_ = *this;
-                that_ = std::move(this_);
-            }
-        }
+        if( this->key()!=err_id && err_id!=0 )
+            return;
+        if( impl * p = tls::read_ptr<slot<E>>() )
+            *p = std::move(*this);
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         else
         {
             int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
             BOOST_LEAF_ASSERT(c>=0);
             if( c )
-                if( int err_id = impl::key() )
-                    load_unexpected(err_id, std::move(*this).value(err_id));
+                load_unexpected(err_id, std::move(*this).value(err_id));
         }
 #endif
     }
@@ -650,7 +644,7 @@ public:
     virtual error_id propagate_captured_errors() noexcept = 0;
     virtual void activate() noexcept = 0;
     virtual void deactivate() noexcept = 0;
-    virtual void propagate() noexcept = 0;
+    virtual void propagate( error_id ) noexcept = 0;
     virtual bool is_active() const noexcept = 0;
     inline virtual void print( std::ostream & ) const { };
     error_id captured_id_;
@@ -696,18 +690,8 @@ public:
 
     BOOST_LEAF_ALWAYS_INLINE ~context_activator() noexcept
     {
-        if( !ctx_ )
-            return;
-        if( ctx_->is_active() )
+        if( ctx_ && ctx_->is_active() )
             ctx_->deactivate();
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-#   if BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
-        if( std::uncaught_exceptions() > uncaught_exceptions_ )
-#   else
-        if( std::uncaught_exception() )
-#   endif
-            ctx_->propagate();
-#endif
     }
 };
 
