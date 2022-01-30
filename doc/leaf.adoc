@@ -2231,7 +2231,7 @@ namespace boost { namespace leaf {
     virtual void deactivate() noexcept = 0;
     virtual bool is_active() const noexcept = 0;
 
-    virtual void propagate() noexcept = 0;
+    virtual void propagate( error_id ) noexcept = 0;
 
     virtual void print( std::ostream & ) const = 0;
   };
@@ -2563,7 +2563,7 @@ namespace boost { namespace leaf {
     void deactivate() noexcept;
     bool is_active() const noexcept;
 
-    void propagate () noexcept;
+    void propagate( error_id ) noexcept;
 
     void print( std::ostream & os ) const;
 
@@ -3470,7 +3470,7 @@ namespace boost { namespace leaf {
     void deactivate() noexcept;
     bool is_active() const noexcept;
 
-    void propagate() noexcept;
+    void propagate( error_id ) noexcept;
 
     void print( std::ostream & os ) const;
 
@@ -3648,7 +3648,7 @@ Effects: :: Prints all error objects currently stored in `*this`, together with 
 namespace boost { namespace leaf {
 
   template <class... E>
-  void context<E...>::propagate() noexcept;
+  void context<E...>::propagate( error_id id ) noexcept;
 
 } }
 ----
@@ -3658,7 +3658,7 @@ Requires: ::
 
 Effects: ::
 
-Each stored error object of some type `E` is moved into another `context` object active in the call stack that provides storage for objects of type `E`, if any, or discarded.
+Each stored error object of some type `E` is moved into another `context` object active in the call stack that provides storage for objects of type `E`, if any, or discarded. Target objects are not overwritten if they are associated with the specified `id`, except if `id.value() == 0`.
 
 '''
 
@@ -3692,7 +3692,7 @@ If `<<context::is_active,ctx.is_active>>`() is `true` at the time the `context_a
 * The constructor stores a reference to `ctx` in `*this` and calls `<<context::activate,ctx.activate>>`().
 * The destructor:
 ** Has no effects if `ctx.is_active()` is `false` (that is, it is valid to call <<context::deactivate>> manually, before the `context_activator` object expires);
-** Otherwise, calls `<<context::deactivate,ctx.deactivate>>`() and, if there are new uncaught exceptions since the constructor was called, the destructor calls `<<context::propagate,ctx.propagate>>`().
+** Otherwise, calls `<<context::deactivate,ctx.deactivate>>`().
 
 For automatic deduction of `Ctx`, use <<activate_context>>.
 
@@ -4210,7 +4210,7 @@ namespace boost { namespace leaf {
     virtual void deactivate() noexcept = 0;
     virtual bool is_active() const noexcept = 0;
 
-    virtual void propagate() noexcept = 0;
+    virtual void propagate( error_id ) noexcept = 0;
 
     virtual void print( std::ostream & ) const = 0;
   };
