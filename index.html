@@ -3068,7 +3068,7 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">deactivate</span><span class="p">()</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
     <span class="k">virtual</span> <span class="kt">bool</span> <span class="n">is_active</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 
-    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">propagate</span><span class="p">()</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">propagate</span><span class="p">(</span> <span class="n">error_id</span> <span class="p">)</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 
     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">print</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="p">)</span> <span class="k">const</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
   <span class="p">};</span>
@@ -3420,7 +3420,7 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
     <span class="kt">void</span> <span class="n">deactivate</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="kt">bool</span> <span class="n">is_active</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
 
-    <span class="kt">void</span> <span class="n">propagate</span> <span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="kt">void</span> <span class="n">propagate</span><span class="p">(</span> <span class="n">error_id</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="kt">void</span> <span class="n">print</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="n">os</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
 
@@ -4855,7 +4855,7 @@ The contents of each Reference section are organized alphabetically.
     <span class="kt">void</span> <span class="n">deactivate</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="kt">bool</span> <span class="n">is_active</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
 
-    <span class="kt">void</span> <span class="n">propagate</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="kt">void</span> <span class="n">propagate</span><span class="p">(</span> <span class="n">error_id</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="kt">void</span> <span class="n">print</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="n">os</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
 
@@ -5117,7 +5117,7 @@ The caller is required to specify the return type <code>R</code>. This is becaus
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span>
-  <span class="kt">void</span> <span class="n">context</span><span class="o">&lt;</span><span class="n">E</span><span class="p">...</span><span class="o">&gt;::</span><span class="n">propagate</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="kt">void</span> <span class="n">context</span><span class="o">&lt;</span><span class="n">E</span><span class="p">...</span><span class="o">&gt;::</span><span class="n">propagate</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
@@ -5130,7 +5130,7 @@ The caller is required to specify the return type <code>R</code>. This is becaus
 </dd>
 <dt class="hdlist1">Effects: </dt>
 <dd>
-<p>Each stored error object of some type <code>E</code> is moved into another <code>context</code> object active in the call stack that provides storage for objects of type <code>E</code>, if any, or discarded.</p>
+<p>Each stored error object of some type <code>E</code> is moved into another <code>context</code> object active in the call stack that provides storage for objects of type <code>E</code>, if any, or discarded. Target objects are not overwritten if they are associated with the specified <code>id</code>, except if <code>id.value() == 0</code>.</p>
 </dd>
 </dl>
 </div>
@@ -5179,7 +5179,7 @@ The caller is required to specify the return type <code>R</code>. This is becaus
 <p>Has no effects if <code>ctx.is_active()</code> is <code>false</code> (that is, it is valid to call <a href="#context::deactivate"><code>deactivate</code></a> manually, before the <code>context_activator</code> object expires);</p>
 </li>
 <li>
-<p>Otherwise, calls <code><a href="#context::deactivate">ctx.deactivate</a></code>() and, if there are new uncaught exceptions since the constructor was called, the destructor calls <code><a href="#context::propagate">ctx.propagate</a></code>().</p>
+<p>Otherwise, calls <code><a href="#context::deactivate">ctx.deactivate</a></code>().</p>
 </li>
 </ul>
 </div>
@@ -5929,7 +5929,7 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">deactivate</span><span class="p">()</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
     <span class="k">virtual</span> <span class="kt">bool</span> <span class="n">is_active</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 
-    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">propagate</span><span class="p">()</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">virtual</span> <span class="kt">void</span> <span class="n">propagate</span><span class="p">(</span> <span class="n">error_id</span> <span class="p">)</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 
     <span class="k">virtual</span> <span class="kt">void</span> <span class="n">print</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="p">)</span> <span class="k">const</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
   <span class="p">};</span>
