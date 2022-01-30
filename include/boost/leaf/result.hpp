@@ -266,6 +266,16 @@ class result
 #endif
     }
 
+    stored_type const * get() const noexcept
+    {
+        return has_value() ? &stored_ : 0;
+    }
+
+    stored_type * get() noexcept
+    {
+        return has_value() ? &stored_ : 0;
+    }
+
 protected:
 
     void enforce_value_state() const
@@ -397,6 +407,22 @@ public:
         return has_value();
     }
 
+#ifdef BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
+
+    value_cref value() const
+    {
+        enforce_value_state();
+        return stored_;
+    }
+
+    value_ref value()
+    {
+        enforce_value_state();
+        return stored_;
+    }
+
+#else
+
     value_cref value() const &
     {
         enforce_value_state();
@@ -421,6 +447,8 @@ public:
         return std::move(stored_);
     }
 
+#endif
+
     value_type_const * operator->() const noexcept
     {
         return has_value() ? leaf_detail::stored<T>::cptr(stored_) : 0;
@@ -431,25 +459,53 @@ public:
         return has_value() ? leaf_detail::stored<T>::ptr(stored_) : 0;
     }
 
+#ifdef BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
+
+    value_cref operator*() const noexcept
+    {
+        auto p = get();
+        BOOST_LEAF_ASSERT(p != 0);
+        return *p;
+    }
+
+    value_ref operator*() noexcept
+    {
+        auto p = get();
+        BOOST_LEAF_ASSERT(p != 0);
+        return *p;
+    }
+
+#else
+
     value_cref operator*() const & noexcept
     {
-        return *operator->();
+        auto p = get();
+        BOOST_LEAF_ASSERT(p != 0);
+        return *p;
     }
 
     value_ref operator*() & noexcept
     {
-        return *operator->();
+        auto p = get();
+        BOOST_LEAF_ASSERT(p != 0);
+        return *p;
     }
 
     value_rv_cref operator*() const && noexcept
     {
-        return std::move(*operator->());
+        auto p = get();
+        BOOST_LEAF_ASSERT(p != 0);
+        return std::move(*p);
     }
 
     value_rv_ref operator*() && noexcept
     {
-        return std::move(*operator->());
+        auto p = get();
+        BOOST_LEAF_ASSERT(p != 0);
+        return std::move(*p);
     }
+
+#endif
 
     error_result error() noexcept
     {
@@ -531,6 +587,21 @@ public:
     void value() const
     {
         base::enforce_value_state();
+    }
+
+    void const * operator->() const noexcept
+    {
+        return base::operator->();
+    }
+
+    void * operator->() noexcept
+    {
+        return base::operator->();
+    }
+
+    void operator*() const noexcept
+    {
+        BOOST_LEAF_ASSERT(has_value());
     }
 
     using base::operator=;

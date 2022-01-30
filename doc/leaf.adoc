@@ -112,6 +112,7 @@ leaf::result<T> f()
 
 '''
 
+[[checking_for_errors]]
 === Checking for Errors
 
 Checking for errors communicated by a `leaf::result<T>` works as expected:
@@ -143,7 +144,47 @@ leaf::result<U> g()
 }
 ----
 [.text-right]
-<<BOOST_LEAF_AUTO>> | <<BOOST_LEAF_CHECK>>
+<<BOOST_LEAF_AUTO>>
+
+Naturally, `BOOST_LEAF_AUTO` can not be used with `void` results; in that case, to avoid the boilerplate if statement, use `BOOST_LEAF_CHECK`:
+
+[source,c++]
+----
+leaf::result<void> f();
+
+leaf::result<int> g()
+{
+  BOOST_LEAF_CHECK(f()); // Bail out on error
+  return 42;
+}
+----
+[.text-right]
+<<BOOST_LEAF_CHECK>>
+
+On implementations that define `pass:[__GNUC__]` (e.g. GCC/clang), the `BOOST_LEAF_CHECK` macro definition takes advantage of https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html[GNU C statement expressions]. In this case, in addition to its portable usage with `result<void>`, `BOOST_LEAF_CHECK` can be used in expressions with non-`void` result types:
+
+[source,c++]
+----
+leaf::result<int> f();
+
+float g(int x);
+
+leaf::result<float> t()
+{
+  return g( BOOST_LEAF_CHECK(f()) );
+}
+----
+
+The following is the portable alternative:
+
+[source,c++]
+----
+leaf::result<float> t()
+{
+  BOOST_LEAF_AUTO(x, f());
+  return g(x);
+}
+----
 
 '''
 
@@ -5281,12 +5322,26 @@ NOTE: See also <<BOOST_LEAF_ASSIGN>>.
 .#include <boost/leaf/error.hpp>
 [source,c++]
 ----
+#ifdef BOOST_LEAF_GNUC_STMTEXPR
+
 #define BOOST_LEAF_CHECK(r)\
-    auto && <<temp>> = r;\
-    if( <<temp>> )\
-      ;\
-    else\
-      return <<temp>>.error()
+  ({\
+    auto && <<temp>> = (r);\
+    if( !<<temp>> )\
+      return <<temp>>.error();\
+    std::move(<<temp>>);\
+  }).value()
+
+#else
+
+#define BOOST_LEAF_CHECK(r)\
+  {\
+    auto && <<temp>> = (r);\
+    if( !<<temp>> )\
+      return <<temp>>.error();\
+  }
+
+#endif
 ----
 
 `BOOST_LEAF_CHECK` is useful when calling a function that returns `result<void>`, if the desired behavior is to forward any errors to the caller verbatim.
@@ -5319,6 +5374,8 @@ leaf::result<float> add_values()
   return compute_value();
 }
 ----
+
+If `BOOST_LEAF_GNUC_STMTEXPR` is defined (which is the default under `pass:[__GNUC__]`), `BOOST_LEAF_CHECK` expands to a https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html[GNU C statement expression], which allows its use with non-`void` result types in any expression; see <<checking_for_errors>>.
 
 '''
 

@@ -35,7 +35,8 @@
 
 #define BOOST_LEAF_ASSIGN(v,r)\
     auto && BOOST_LEAF_TMP = r;\
-    static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value, "BOOST_LEAF_ASSIGN and BOOST_LEAF_AUTO require a result object as the second argument (see is_result_type)");\
+    static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
+        "BOOST_LEAF_ASSIGN/BOOST_LEAF_AUTO requires a result object as the second argument (see is_result_type)");\
     if( !BOOST_LEAF_TMP )\
         return BOOST_LEAF_TMP.error();\
     v = std::forward<decltype(BOOST_LEAF_TMP)>(BOOST_LEAF_TMP).value()
@@ -43,13 +44,30 @@
 #define BOOST_LEAF_AUTO(v, r)\
     BOOST_LEAF_ASSIGN(auto v, r)
 
+#ifdef BOOST_LEAF_GNUC_STMTEXPR
+
 #define BOOST_LEAF_CHECK(r)\
-    auto && BOOST_LEAF_TMP = r;\
-    static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value, "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
-    if( BOOST_LEAF_TMP )\
-        ;\
-    else\
-        return BOOST_LEAF_TMP.error()
+    ({\
+        auto && BOOST_LEAF_TMP = (r);\
+        static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
+            "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
+        if( !BOOST_LEAF_TMP )\
+            return BOOST_LEAF_TMP.error();\
+        std::move(BOOST_LEAF_TMP);\
+    }).value()
+
+#else
+
+#define BOOST_LEAF_CHECK(r)\
+    {\
+        auto && BOOST_LEAF_TMP = (r);\
+        static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
+            "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
+        if( !BOOST_LEAF_TMP )\
+            return BOOST_LEAF_TMP.error();\
+    }
+
+#endif
 
 #define BOOST_LEAF_NEW_ERROR ::boost::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
 

@@ -253,8 +253,19 @@
 
 #ifdef __GNUC__
 #   define BOOST_LEAF_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
+#   ifndef BOOST_LEAF_GNUC_STMTEXPR
+#   	define BOOST_LEAF_GNUC_STMTEXPR
+#   endif
 #else
 #   define BOOST_LEAF_SYMBOL_VISIBLE
+#endif
+
+////////////////////////////////////////
+
+#if defined(__GNUC__) && !(defined(__clang__) || defined(__INTEL_COMPILER) || defined(__ICL) || defined(__ICC) || defined(__ECC)) && (__GNUC__ * 100 + __GNUC_MINOR__) < 409
+#   ifndef BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
+#       define BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
+#   endif
 #endif
 
 ////////////////////////////////////////

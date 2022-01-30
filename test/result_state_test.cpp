@@ -401,18 +401,26 @@ int main()
         leaf::result<void> r1;
         BOOST_TEST(r1);
         r1.value();
+        BOOST_TEST(r1.operator->() != 0);
+        *r1;
         leaf::result<void> r2 = std::move(r1);
         BOOST_TEST(r2);
         r2.value();
+        BOOST_TEST(r2.operator->() != 0);
+        *r2;
     }
 
     { // void default -> assign-move
         leaf::result<void> r1;
         BOOST_TEST(r1);
         r1.value();
+        BOOST_TEST(r1.operator->() != 0);
+        *r1;
         leaf::result<void> r2; r2=std::move(r1);
         BOOST_TEST(r2);
         r2.value();
+        BOOST_TEST(r2.operator->() != 0);
+        *r2;
     }
 
 #if BOOST_LEAF_CFG_CAPTURE
@@ -420,17 +428,25 @@ int main()
         leaf::result<void> r1 = leaf::capture( std::make_shared<context_type>(), []{ return leaf::result<void>(); } );
         BOOST_TEST(r1);
         r1.value();
+        BOOST_TEST(r1.operator->() != 0);
+        *r1;
         leaf::result<void> r2 = std::move(r1);
         BOOST_TEST(r2);
         r2.value();
+        BOOST_TEST(r2.operator->() != 0);
+        *r2;
     }
     { // void default -> capture -> assign-move
         leaf::result<void> r1 = leaf::capture( std::make_shared<context_type>(), []{ return leaf::result<void>(); } );
         BOOST_TEST(r1);
         r1.value();
+        BOOST_TEST(r1.operator->() != 0);
+        *r1;
         leaf::result<void> r2; r2=std::move(r1);
         BOOST_TEST(r2);
         r2.value();
+        BOOST_TEST(r2.operator->() != 0);
+        *r2;
     }
 #endif
 
@@ -442,12 +458,14 @@ int main()
         auto active_context = activate_context(ctx);
         leaf::result<void> r1 = leaf::new_error( e_err { } );
         BOOST_TEST(!r1);
+        BOOST_TEST(r1.operator->() == 0);
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
         leaf::result<void> r2 = std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
         BOOST_TEST(!r2);
+        BOOST_TEST(r2.operator->() == 0);
     }
     BOOST_TEST_EQ(err::count, 0);
     { // void error copy -> move
@@ -456,12 +474,14 @@ int main()
         leaf::error_id err = leaf::new_error( e_err{ } );
         leaf::result<void> r1 = err;
         BOOST_TEST(!r1);
+        BOOST_TEST(r1.operator->() == 0);
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
         leaf::result<void> r2 = std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
         BOOST_TEST(!r2);
+        BOOST_TEST(r2.operator->() == 0);
     }
     BOOST_TEST_EQ(err::count, 0);
 
@@ -471,12 +491,14 @@ int main()
         leaf::result<void> r1 = leaf::new_error( e_err { } );
         ctx.deactivate();
         BOOST_TEST(!r1);
+        BOOST_TEST(r1.operator->() == 0);
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
         leaf::result<void> r2; r2=std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
         BOOST_TEST(!r2);
+        BOOST_TEST(r2.operator->() == 0);
         ctx.handle_error<void>(r2.error(), []{ });
         BOOST_TEST_EQ(err::count, 1);
     }
@@ -487,12 +509,14 @@ int main()
         leaf::error_id err = leaf::new_error( e_err{ } );
         leaf::result<void> r1 = err;
         BOOST_TEST(!r1);
+        BOOST_TEST(r1.operator->() == 0);
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
         leaf::result<void> r2; r2=std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
         BOOST_TEST(!r2);
+        BOOST_TEST(r2.operator->() == 0);
     }
     BOOST_TEST_EQ(err::count, 0);
 
@@ -500,46 +524,54 @@ int main()
     { // void error move -> capture -> move
         leaf::result<void> r1 = leaf::capture( std::make_shared<context_type>(), []{ return leaf::result<void>( leaf::new_error( e_err { } ) ); } );
         BOOST_TEST(!r1);
+        BOOST_TEST(r1.operator->() == 0);
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
         leaf::result<void> r2 = std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
         BOOST_TEST(!r2);
+        BOOST_TEST(r2.operator->() == 0);
     }
     BOOST_TEST_EQ(err::count, 0);
     { // void error copy -> capture -> move
         leaf::result<void> r1 = leaf::capture( std::make_shared<context_type>(), []{ leaf::error_id err = leaf::new_error( e_err{ } ); return leaf::result<void>(err); } );
         BOOST_TEST(!r1);
+        BOOST_TEST(r1.operator->() == 0);
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
         leaf::result<void> r2 = std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
         BOOST_TEST(!r2);
+        BOOST_TEST(r2.operator->() == 0);
     }
     BOOST_TEST_EQ(err::count, 0);
 
     { // void error move -> capture -> assign-move
         leaf::result<void> r1 = leaf::capture( std::make_shared<context_type>(), []{ return leaf::result<void>( leaf::new_error( e_err { } ) ); } );
         BOOST_TEST(!r1);
+        BOOST_TEST(r1.operator->() == 0);
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
         leaf::result<void> r2; r2=std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
         BOOST_TEST(!r2);
+        BOOST_TEST(r2.operator->() == 0);
     }
     BOOST_TEST_EQ(err::count, 0);
     { // void error copy -> capture -> assign-move
         leaf::result<void> r1 = leaf::capture( std::make_shared<context_type>(), []{ leaf::error_id err = leaf::new_error( e_err{ } ); return leaf::result<void>(err); } );
         BOOST_TEST(!r1);
+        BOOST_TEST(r1.operator->() == 0);
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
         leaf::result<void> r2; r2=std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
         BOOST_TEST(!r2);
+        BOOST_TEST(r2.operator->() == 0);
     }
     BOOST_TEST_EQ(err::count, 0);
 #endif

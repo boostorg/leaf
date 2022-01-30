@@ -109,6 +109,7 @@ if option_enable_unit_tests
         'accumulate_nested_success_result_test',
         'BOOST_LEAF_AUTO_test',
         'BOOST_LEAF_ASSIGN_test',
+        'BOOST_LEAF_CHECK_test',
         'capture_exception_async_test',
         'capture_exception_result_async_test',
         'capture_exception_state_test',

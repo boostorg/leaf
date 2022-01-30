@@ -38,6 +38,89 @@ struct derived: base
 {
 };
 
+template <class T, class R, class RetType>
+void test_case_lvref()
+{
+    val x = { 42 };
+    R r(x);
+    static_assert(std::is_same<RetType &, decltype(r.value())>::value,
+            "Bad return type for .value()" );
+    static_assert(std::is_same<RetType &, decltype(*r)>::value,
+            "Bad return type for operator*()" );
+    static_assert(std::is_same<typename std::remove_reference<RetType>::type *, decltype(r.operator->())>::value,
+            "Bad return type for operator->()" );
+    BOOST_TEST(r);
+    BOOST_TEST_EQ(&r->id, &r.value().id);
+    T a = r.value();
+    BOOST_TEST_EQ(a, x);
+    T b = *r;
+    BOOST_TEST_EQ(b, x);
+}
+
+void test_lvref_access()
+{
+    test_case_lvref<val, leaf::result<val>, val &>();
+    test_case_lvref<val &, leaf::result<val>, val &>();
+    test_case_lvref<val const &, leaf::result<val>, val &>();
+    test_case_lvref<val, leaf::result<val &>, val &>();
+    test_case_lvref<val &, leaf::result<val &>, val &>();
+    test_case_lvref<val const &, leaf::result<val &>, val &>();
+    test_case_lvref<val, leaf::result<val const &>, val const &>();
+    test_case_lvref<val const &, leaf::result<val const &>, val const &>();
+
+    test_case_lvref<val, leaf::result<val> const, val const &>();
+    test_case_lvref<val const &, leaf::result<val> const, val const &>();
+    test_case_lvref<val, leaf::result<val &> const, val &>();
+    test_case_lvref<val &, leaf::result<val &> const, val &>();
+    test_case_lvref<val const &, leaf::result<val &> const, val &>();
+    test_case_lvref<val, leaf::result<val const &> const, val const &>();
+    test_case_lvref<val const &, leaf::result<val const &> const, val const &>();
+}
+
+#ifndef BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
+
+template <class T, class R, class RetType>
+void test_case_rvref()
+{
+    val x = { 42 };
+    R r1(x);
+    static_assert(std::is_same<RetType, decltype(std::move(r1).value())>::value,
+            "Bad return type for .value()" );
+    static_assert(std::is_same<RetType, decltype(*std::move(r1))>::value,
+            "Bad return type for operator*()" );
+    static_assert(std::is_same<typename std::remove_reference<RetType>::type *, decltype(std::move(r1).operator->())>::value,
+            "Bad return type for operator->()" );
+    BOOST_TEST(r1);
+    BOOST_TEST_EQ(&r1->id, &r1.value().id);
+    T a = std::move(r1).value();
+    BOOST_TEST_EQ(a, x);
+    R r2(x);
+    T b = *std::move(r2);
+    BOOST_TEST_EQ(b, x);
+}
+
+void test_rvref_access()
+{
+    test_case_rvref<val, leaf::result<val>, val &&>();
+    test_case_rvref<val &&, leaf::result<val>, val &&>();
+    test_case_rvref<val const &, leaf::result<val>, val &&>();
+    test_case_rvref<val, leaf::result<val &>, val &>();
+    test_case_rvref<val &, leaf::result<val &>, val &>();
+    test_case_rvref<val const &, leaf::result<val &>, val &>();
+    test_case_rvref<val, leaf::result<val const &>, val const &>();
+    test_case_rvref<val const &, leaf::result<val const &>, val const &>();
+
+    test_case_rvref<val, leaf::result<val> const, val const &&>();
+    test_case_rvref<val const &, leaf::result<val> const, val const &&>();
+    test_case_rvref<val, leaf::result<val &> const, val &>();
+    test_case_rvref<val &, leaf::result<val &> const, val &>();
+    test_case_rvref<val const &, leaf::result<val &> const, val &>();
+    test_case_rvref<val, leaf::result<val const &> const, val const &>();
+    test_case_rvref<val const &, leaf::result<val const &> const, val const &>();
+}
+
+#endif
+
 int main()
 {
     {
@@ -134,131 +217,10 @@ int main()
         auto & rvcref_id = rvcref->id; static_assert(std::is_same<decltype(rvcref_id), int &>::value, "result type deduction bug");
     }
 
-    // Mutable:
-
-    {
-        val x = { 42 };
-        leaf::result<val const &> r(x);
-        BOOST_TEST(r);
-        val a = r.value();
-        BOOST_TEST_EQ(a, x);
-        val b = *r;
-        BOOST_TEST_EQ(b, x);
-    }
-    {
-        val x = { 42 };
-        leaf::result<val const &> r(x);
-        BOOST_TEST(r);
-        val const & a = r.value();
-        BOOST_TEST_EQ(&a, &x);
-        val const & b = *r;
-        BOOST_TEST_EQ(&b, &x);
-    }
-    {
-        val x = { 42 };
-        leaf::result<val const &> r(x);
-        BOOST_TEST(r);
-        auto & a = r.value();
-        BOOST_TEST_EQ(&a, &x);
-        auto & b = *r;
-        BOOST_TEST_EQ(&b, &x);
-    }
-
-    {
-        val x = { 42 };
-        leaf::result<val &> r(x);
-        BOOST_TEST(r);
-        val a = r.value();
-        BOOST_TEST_EQ(a, x);
-        val b = *r;
-        BOOST_TEST_EQ(b, x);
-        int id = x.id;
-        BOOST_TEST_EQ(id+1, ++r->id);
-    }
-    {
-        val x = { 42 };
-        leaf::result<val &> r(x);
-        BOOST_TEST(r);
-        val & a = r.value();
-        BOOST_TEST_EQ(&a, &x);
-        val & b = *r;
-        BOOST_TEST_EQ(&b, &x);
-        int id = x.id;
-        BOOST_TEST_EQ(id+1, ++r->id);
-    }
-    {
-        val x = { 42 };
-        leaf::result<val &> r(x);
-        BOOST_TEST(r);
-        auto & a = r.value();
-        BOOST_TEST_EQ(&a, &x);
-        auto & b = *r;
-        BOOST_TEST_EQ(&b, &x);
-        int id = x.id;
-        BOOST_TEST_EQ(id+1, ++r->id);
-    }
-
-    // Const:
-
-    {
-        val x = { 42 };
-        leaf::result<val const &> const r(x);
-        BOOST_TEST(r);
-        val a = r.value();
-        BOOST_TEST_EQ(a, x);
-        val b = *r;
-        BOOST_TEST_EQ(b, x);
-    }
-    {
-        val x = { 42 };
-        leaf::result<val const &> const r(x);
-        BOOST_TEST(r);
-        val const & a = r.value();
-        BOOST_TEST_EQ(&a, &x);
-        val const & b = *r;
-        BOOST_TEST_EQ(&b, &x);
-    }
-    {
-        val x = { 42 };
-        leaf::result<val const &> const r(x);
-        BOOST_TEST(r);
-        auto & a = r.value();
-        BOOST_TEST_EQ(&a, &x);
-        auto & b = *r;
-        BOOST_TEST_EQ(&b, &x);
-    }
-
-    {
-        val x = { 42 };
-        leaf::result<val &> const r(x);
-        BOOST_TEST(r);
-        val a = r.value();
-        BOOST_TEST_EQ(a, x);
-        val b = *r;
-        BOOST_TEST_EQ(b, x);
-        int id = x.id;
-        BOOST_TEST_EQ(id+1, ++r->id);
-    }
-    {
-        val x = { 42 };
-        leaf::result<val &> const r(x);
-        BOOST_TEST(r);
-        val & a = r.value();
-        BOOST_TEST_EQ(&a, &x);
-        val & b = *r;
-        BOOST_TEST_EQ(&b, &x);
-    }
-    {
-        val x = { 42 };
-        leaf::result<val &> const r(x);
-        BOOST_TEST(r);
-        auto & a = r.value();
-        BOOST_TEST_EQ(&a, &x);
-        auto & b = *r;
-        BOOST_TEST_EQ(&b, &x);
-        int id = x.id;
-        BOOST_TEST_EQ(id+1, ++r->id);
-    }
+    test_lvref_access();
+#ifndef BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
+    test_rvref_access();
+#endif
 
     // Hierarchy
 

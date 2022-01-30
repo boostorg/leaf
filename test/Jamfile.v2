@@ -47,6 +47,7 @@ run accumulate_nested_success_exception_test.cpp ;
 run accumulate_nested_success_result_test.cpp ;
 run BOOST_LEAF_AUTO_test.cpp ;
 run BOOST_LEAF_ASSIGN_test.cpp ;
+run BOOST_LEAF_CHECK_test.cpp ;
 run boost_exception_test.cpp ;
 run capture_exception_async_test.cpp ;
 run capture_exception_result_async_test.cpp ;

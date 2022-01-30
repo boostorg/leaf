@@ -57,10 +57,13 @@ leaf::result<R> f_errc_wrapped( Errc ec )
 
 struct move_only
 {
-    move_only( move_only const & ) = delete;
-    move_only( move_only && ) = default;
     explicit move_only( int value ): value(value) { }
     int value;
+
+#ifndef BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
+    move_only( move_only const & ) = delete;
+    move_only( move_only && ) = default;
+#endif
 };
 
 int main()
