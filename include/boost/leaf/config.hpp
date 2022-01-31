@@ -6,11 +6,16 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// The following is based on Boost Config.
+// The following is based in part on Boost Config.
 
 // (C) Copyright John Maddock 2001 - 2003.
 // (C) Copyright Martin Wille 2003.
 // (C) Copyright Guillaume Melquiond 2003.
+
+#ifndef BOOST_LEAF_ASSERT
+#   include <cassert>
+#   define BOOST_LEAF_ASSERT assert
+#endif
 
 ////////////////////////////////////////
 
@@ -236,17 +241,6 @@
 #       define BOOST_LEAF_CONSTEXPR constexpr
 #   else
 #       define BOOST_LEAF_CONSTEXPR
-#   endif
-#endif
-
-////////////////////////////////////////
-
-#ifndef BOOST_LEAF_ASSERT
-#   ifdef BOOST_ASSERT
-#       define BOOST_LEAF_ASSERT BOOST_ASSERT
-#   else
-#       include <cassert>
-#       define BOOST_LEAF_ASSERT assert
 #   endif
 #endif
 
