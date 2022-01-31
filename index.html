@@ -7517,7 +7517,7 @@ See also <a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a>.
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/error.hpp&gt;</div>
 <div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#ifdef BOOST_LEAF_GNUC_STMTEXPR
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#if BOOST_LEAF_CFG_GNUC_STMTEXPR
 </span>
 <span class="cp">#define BOOST_LEAF_CHECK(r)\
   ({\
@@ -7580,7 +7580,7 @@ See also <a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a>.
 </div>
 </div>
 <div class="paragraph">
-<p>If <code>BOOST_LEAF_GNUC_STMTEXPR</code> is defined (which is the default under <code>__GNUC__</code>), <code>BOOST_LEAF_CHECK</code> expands to a <a href="https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html">GNU C statement expression</a>, which allows its use with non-<code>void</code> result types in any expression; see <a href="#checking_for_errors">Checking for Errors</a>.</p>
+<p>If <code>BOOST_LEAF_CFG_GNUC_STMTEXPR</code> is <code>1</code> (which is the default under <code>__GNUC__</code>), <code>BOOST_LEAF_CHECK</code> expands to a <a href="https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html">GNU C statement expression</a>, which allows its use with non-<code>void</code> result types in any expression; see <a href="#checking_for_errors">Checking for Errors</a>.</p>
 </div>
 <hr>
 </div>
@@ -8639,6 +8639,9 @@ meson <span class="nb">test</span></code></pre>
 </li>
 <li>
 <p><code>BOOST_LEAF_CFG_CAPTURE</code>: Defining this macro as <code>0</code> disables the ability of <code>leaf::result</code> to transport errors between threads. In this case LEAF does not <code>#include &lt;memory&gt;</code>, which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as <code>1</code>).</p>
+</li>
+<li>
+<p><code>BOOST_LEAF_CFG_GNUC_STMTEXPR</code>: This macro controls whether or not <a href="#BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></a> is defined in terms of a <a href="https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html">GNU C statement expression</a>, which enables its use to check for errors similarly to how the questionmark operator works in some languages (see <a href="#checking_for_errors">Checking for Errors</a>). By default the macro is defined as <code>1</code> under <code>__GNUC__</code>, otherwise as <code>0</code>.</p>
 </li>
 <li>
 <p><code>BOOST_LEAF_CFG_WIN32</code>: Defining this macro as 1 enables the default constructor in <a href="#e_LastError"><code>e_LastError</code></a>, and the automatic conversion to string (via <code>FormatMessageA</code>) when <a href="#verbose_diagnostic_info"><code>verbose_diagnostic_info</code></a> is printed. If the macro is left undefined, LEAF defines it as <code>0</code> (even on windows, since including <code>windows.h</code> is generally not desirable). Note that the <code>e_LastError</code> type itself is available on all platforms, there is no need for conditional compilation in error handlers that use it.</p>
