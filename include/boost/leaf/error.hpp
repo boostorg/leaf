@@ -44,7 +44,7 @@
 #define BOOST_LEAF_AUTO(v, r)\
     BOOST_LEAF_ASSIGN(auto v, r)
 
-#ifdef BOOST_LEAF_GNUC_STMTEXPR
+#if BOOST_LEAF_CFG_GNUC_STMTEXPR
 
 #define BOOST_LEAF_CHECK(r)\
     ({\

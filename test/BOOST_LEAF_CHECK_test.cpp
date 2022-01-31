@@ -40,7 +40,7 @@ leaf::result<value> f1( bool success )
         return leaf::new_error();
 }
 
-#ifdef BOOST_LEAF_GNUC_STMTEXPR
+#if BOOST_LEAF_GNUC_STMTEXPR
 
 leaf::result<value> f2( bool success )
 {

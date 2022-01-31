@@ -5322,7 +5322,7 @@ NOTE: See also <<BOOST_LEAF_ASSIGN>>.
 .#include <boost/leaf/error.hpp>
 [source,c++]
 ----
-#ifdef BOOST_LEAF_GNUC_STMTEXPR
+#if BOOST_LEAF_CFG_GNUC_STMTEXPR
 
 #define BOOST_LEAF_CHECK(r)\
   ({\
@@ -5375,7 +5375,7 @@ leaf::result<float> add_values()
 }
 ----
 
-If `BOOST_LEAF_GNUC_STMTEXPR` is defined (which is the default under `pass:[__GNUC__]`), `BOOST_LEAF_CHECK` expands to a https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html[GNU C statement expression], which allows its use with non-`void` result types in any expression; see <<checking_for_errors>>.
+If `BOOST_LEAF_CFG_GNUC_STMTEXPR` is `1` (which is the default under `pass:[__GNUC__]`), `BOOST_LEAF_CHECK` expands to a https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html[GNU C statement expression], which allows its use with non-`void` result types in any expression; see <<checking_for_errors>>.
 
 '''
 
@@ -6007,6 +6007,7 @@ The following configuration macros are recognized:
 * `BOOST_LEAF_CFG_STD_SYSTEM_ERROR`: Defining this macro as `0` disables the `std::error_code` / `std::error_condition` integration. In this case LEAF does not `#include <system_error>`, which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as `1`).
 * `BOOST_LEAF_CFG_STD_STRING`: Defining this macro as `0` disables all use of `std::string` (this requires `BOOST_LEAF_CFG_DIAGNOSTICS=0` as well). In this case LEAF does not `#include <string>` which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as `1`).
 * `BOOST_LEAF_CFG_CAPTURE`: Defining this macro as `0` disables the ability of `leaf::result` to transport errors between threads. In this case LEAF does not `#include <memory>`, which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as `1`).
+* `BOOST_LEAF_CFG_GNUC_STMTEXPR`: This macro controls whether or not <<BOOST_LEAF_CHECK>> is defined in terms of a https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html[GNU C statement expression], which enables its use to check for errors similarly to how the questionmark operator works in some languages (see <<checking_for_errors>>). By default the macro is defined as `1` under `pass:[__GNUC__]`, otherwise as `0`.
 * `BOOST_LEAF_CFG_WIN32`: Defining this macro as 1 enables the default constructor in <<e_LastError>>, and the automatic conversion to string (via `FormatMessageA`) when <<verbose_diagnostic_info>> is printed. If the macro is left undefined, LEAF defines it as `0` (even on windows, since including `windows.h` is generally not desirable). Note that the `e_LastError` type itself is available on all platforms, there is no need for conditional compilation in error handlers that use it.
 * `BOOST_LEAF_NO_EXCEPTIONS`: Disables all exception handling support. If left undefined, LEAF defines it automatically based on the compiler configuration (e.g. `-fno-exceptions`).
 * `BOOST_LEAF_NO_THREADS`: Disables all thread safety in LEAF.
