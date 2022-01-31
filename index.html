@@ -39,7 +39,7 @@ function switch_style()
 <li><a href="#tutorial">Tutorial</a>
 <ul class="sectlevel2">
 <li><a href="#_reporting_errors">Reporting Errors</a></li>
-<li><a href="#_checking_for_errors">Checking for Errors</a></li>
+<li><a href="#checking_for_errors">Checking for Errors</a></li>
 <li><a href="#tutorial-result">Error Handling</a></li>
 <li><a href="#_working_with_different_error_types">Working with Different Error Types</a></li>
 <li><a href="#_working_with_multiple_error_objects">Working with Multiple Error Objects</a></li>
@@ -396,7 +396,7 @@ LEAF does not depend on Boost or other libraries.
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_checking_for_errors">Checking for Errors</h3>
+<h3 id="checking_for_errors">Checking for Errors</h3>
 <div class="paragraph">
 <p>Checking for errors communicated by a <code>leaf::result&lt;T&gt;</code> works as expected:</p>
 </div>
@@ -430,7 +430,51 @@ LEAF does not depend on Boost or other libraries.
 </div>
 </div>
 <div class="paragraph text-right">
-<p><a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a> | <a href="#BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></a></p>
+<p><a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a></p>
+</div>
+<div class="paragraph">
+<p>Naturally, <code>BOOST_LEAF_AUTO</code> can not be used with <code>void</code> results; in that case, to avoid the boilerplate if statement, use <code>BOOST_LEAF_CHECK</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">f</span><span class="p">();</span>
+
+<span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">g</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">BOOST_LEAF_CHECK</span><span class="p">(</span><span class="n">f</span><span class="p">());</span> <span class="c1">// Bail out on error</span>
+  <span class="k">return</span> <span class="mi">42</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></a></p>
+</div>
+<div class="paragraph">
+<p>On implementations that define <code>__GNUC__</code> (e.g. GCC/clang), the <code>BOOST_LEAF_CHECK</code> macro definition takes advantage of <a href="https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html">GNU C statement expressions</a>. In this case, in addition to its portable usage with <code>result&lt;void&gt;</code>, <code>BOOST_LEAF_CHECK</code> can be used in expressions with non-<code>void</code> result types:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">f</span><span class="p">();</span>
+
+<span class="kt">float</span> <span class="nf">g</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">);</span>
+
+<span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;</span> <span class="n">t</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">return</span> <span class="n">g</span><span class="p">(</span> <span class="n">BOOST_LEAF_CHECK</span><span class="p">(</span><span class="n">f</span><span class="p">())</span> <span class="p">);</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The following is the portable alternative:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;</span> <span class="n">t</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">BOOST_LEAF_AUTO</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">());</span>
+  <span class="k">return</span> <span class="n">g</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="p">}</span></code></pre>
+</div>
 </div>
 <hr>
 </div>
@@ -7473,12 +7517,26 @@ See also <a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a>.
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/error.hpp&gt;</div>
 <div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#define BOOST_LEAF_CHECK(r)\
-    auto &amp;&amp; &lt;&lt;temp&gt;&gt; = r;\
-    if( &lt;&lt;temp&gt;&gt; )\
-      ;\
-    else\
-      return &lt;&lt;temp&gt;&gt;.error()</span></code></pre>
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#ifdef BOOST_LEAF_GNUC_STMTEXPR
+</span>
+<span class="cp">#define BOOST_LEAF_CHECK(r)\
+  ({\
+    auto &amp;&amp; &lt;&lt;temp&gt;&gt; = (r);\
+    if( !&lt;&lt;temp&gt;&gt; )\
+      return &lt;&lt;temp&gt;&gt;.error();\
+    std::move(&lt;&lt;temp&gt;&gt;);\
+  }).value()
+</span>
+<span class="cp">#else
+</span>
+<span class="cp">#define BOOST_LEAF_CHECK(r)\
+  {\
+    auto &amp;&amp; &lt;&lt;temp&gt;&gt; = (r);\
+    if( !&lt;&lt;temp&gt;&gt; )\
+      return &lt;&lt;temp&gt;&gt;.error();\
+  }
+</span>
+<span class="cp">#endif</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7520,6 +7578,9 @@ See also <a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a>.
   return compute_value();
 }</pre>
 </div>
+</div>
+<div class="paragraph">
+<p>If <code>BOOST_LEAF_GNUC_STMTEXPR</code> is defined (which is the default under <code>__GNUC__</code>), <code>BOOST_LEAF_CHECK</code> expands to a <a href="https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html">GNU C statement expression</a>, which allows its use with non-<code>void</code> result types in any expression; see <a href="#checking_for_errors">Checking for Errors</a>.</p>
 </div>
 <hr>
 </div>

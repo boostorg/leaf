@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 01/30/2022 from https://github.com/boostorg/leaf/tree/bc45d25.
+// Generated on 01/31/2022 from https://github.com/boostorg/leaf/tree/0867862.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
@@ -268,8 +268,19 @@
 
 #ifdef __GNUC__
 #   define BOOST_LEAF_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
+#   ifndef BOOST_LEAF_GNUC_STMTEXPR
+#   	define BOOST_LEAF_GNUC_STMTEXPR
+#   endif
 #else
 #   define BOOST_LEAF_SYMBOL_VISIBLE
+#endif
+
+////////////////////////////////////////
+
+#if defined(__GNUC__) && !(defined(__clang__) || defined(__INTEL_COMPILER) || defined(__ICL) || defined(__ICC) || defined(__ECC)) && (__GNUC__ * 100 + __GNUC_MINOR__) < 409
+#   ifndef BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
+#       define BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
+#   endif
 #endif
 
 ////////////////////////////////////////
@@ -675,7 +686,7 @@ namespace tls
 
 #endif
 // <<< #include <boost/leaf/config/tls.hpp>
-#line 264 "boost/leaf/config.hpp"
+#line 275 "boost/leaf/config.hpp"
 
 ////////////////////////////////////////
 
@@ -1503,7 +1514,7 @@ namespace leaf_detail
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 893: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 904: #include <boost/leaf/detail/demangle.hpp>
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 
@@ -1651,7 +1662,8 @@ namespace leaf_detail
 
 #define BOOST_LEAF_ASSIGN(v,r)\
     auto && BOOST_LEAF_TMP = r;\
-    static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value, "BOOST_LEAF_ASSIGN and BOOST_LEAF_AUTO require a result object as the second argument (see is_result_type)");\
+    static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
+        "BOOST_LEAF_ASSIGN/BOOST_LEAF_AUTO requires a result object as the second argument (see is_result_type)");\
     if( !BOOST_LEAF_TMP )\
         return BOOST_LEAF_TMP.error();\
     v = std::forward<decltype(BOOST_LEAF_TMP)>(BOOST_LEAF_TMP).value()
@@ -1659,13 +1671,30 @@ namespace leaf_detail
 #define BOOST_LEAF_AUTO(v, r)\
     BOOST_LEAF_ASSIGN(auto v, r)
 
+#ifdef BOOST_LEAF_GNUC_STMTEXPR
+
 #define BOOST_LEAF_CHECK(r)\
-    auto && BOOST_LEAF_TMP = r;\
-    static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value, "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
-    if( BOOST_LEAF_TMP )\
-        ;\
-    else\
-        return BOOST_LEAF_TMP.error()
+    ({\
+        auto && BOOST_LEAF_TMP = (r);\
+        static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
+            "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
+        if( !BOOST_LEAF_TMP )\
+            return BOOST_LEAF_TMP.error();\
+        std::move(BOOST_LEAF_TMP);\
+    }).value()
+
+#else
+
+#define BOOST_LEAF_CHECK(r)\
+    {\
+        auto && BOOST_LEAF_TMP = (r);\
+        static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
+            "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
+        if( !BOOST_LEAF_TMP )\
+            return BOOST_LEAF_TMP.error();\
+    }
+
+#endif
 
 #define BOOST_LEAF_NEW_ERROR ::boost::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
 
@@ -2564,7 +2593,7 @@ exception_to_result( F && f ) noexcept
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 707: #include <boost/leaf/error.hpp>
+// Expanded at line 718: #include <boost/leaf/error.hpp>
 
 namespace boost { namespace leaf {
 
@@ -3048,7 +3077,7 @@ future_get( Future & fut )
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 893: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 904: #include <boost/leaf/detail/demangle.hpp>
 
 #include <iosfwd>
 #if BOOST_LEAF_CFG_STD_STRING
@@ -3162,7 +3191,7 @@ namespace windows
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 707: #include <boost/leaf/error.hpp>
+// Expanded at line 718: #include <boost/leaf/error.hpp>
 
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
 # include <thread>
@@ -3624,8 +3653,8 @@ inline context_ptr make_shared_context( H && ... ) noexcept
 } }
 
 #endif
-// Expanded at line 707: #include <boost/leaf/error.hpp>
-// Expanded at line 696: #include <boost/leaf/exception.hpp>
+// Expanded at line 718: #include <boost/leaf/error.hpp>
+// Expanded at line 707: #include <boost/leaf/exception.hpp>
 // >>> #include <boost/leaf/handle_errors.hpp>
 #line 1 "boost/leaf/handle_errors.hpp"
 #ifndef BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
@@ -3637,9 +3666,9 @@ inline context_ptr make_shared_context( H && ... ) noexcept
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3156: #include <boost/leaf/context.hpp>
-// Expanded at line 685: #include <boost/leaf/capture.hpp>
-// Expanded at line 893: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 3185: #include <boost/leaf/context.hpp>
+// Expanded at line 696: #include <boost/leaf/capture.hpp>
+// Expanded at line 904: #include <boost/leaf/detail/demangle.hpp>
 
 namespace boost { namespace leaf {
 
@@ -4581,7 +4610,7 @@ namespace leaf_detail
 } }
 
 #endif
-// Expanded at line 2558: #include <boost/leaf/on_error.hpp>
+// Expanded at line 2587: #include <boost/leaf/on_error.hpp>
 // >>> #include <boost/leaf/pred.hpp>
 #line 1 "boost/leaf/pred.hpp"
 #ifndef BOOST_LEAF_PRED_HPP_INCLUDED
@@ -4593,7 +4622,7 @@ namespace leaf_detail
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3631: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 3660: #include <boost/leaf/handle_errors.hpp>
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -4892,7 +4921,7 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 707: #include <boost/leaf/error.hpp>
+// Expanded at line 718: #include <boost/leaf/error.hpp>
 
 #include <climits>
 #include <functional>
@@ -5151,6 +5180,16 @@ class result
 #endif
     }
 
+    stored_type const * get() const noexcept
+    {
+        return has_value() ? &stored_ : 0;
+    }
+
+    stored_type * get() noexcept
+    {
+        return has_value() ? &stored_ : 0;
+    }
+
 protected:
 
     void enforce_value_state() const
@@ -5282,6 +5321,22 @@ public:
         return has_value();
     }
 
+#ifdef BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
+
+    value_cref value() const
+    {
+        enforce_value_state();
+        return stored_;
+    }
+
+    value_ref value()
+    {
+        enforce_value_state();
+        return stored_;
+    }
+
+#else
+
     value_cref value() const &
     {
         enforce_value_state();
@@ -5306,6 +5361,8 @@ public:
         return std::move(stored_);
     }
 
+#endif
+
     value_type_const * operator->() const noexcept
     {
         return has_value() ? leaf_detail::stored<T>::cptr(stored_) : 0;
@@ -5316,25 +5373,53 @@ public:
         return has_value() ? leaf_detail::stored<T>::ptr(stored_) : 0;
     }
 
+#ifdef BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
+
+    value_cref operator*() const noexcept
+    {
+        auto p = get();
+        BOOST_LEAF_ASSERT(p != 0);
+        return *p;
+    }
+
+    value_ref operator*() noexcept
+    {
+        auto p = get();
+        BOOST_LEAF_ASSERT(p != 0);
+        return *p;
+    }
+
+#else
+
     value_cref operator*() const & noexcept
     {
-        return *operator->();
+        auto p = get();
+        BOOST_LEAF_ASSERT(p != 0);
+        return *p;
     }
 
     value_ref operator*() & noexcept
     {
-        return *operator->();
+        auto p = get();
+        BOOST_LEAF_ASSERT(p != 0);
+        return *p;
     }
 
     value_rv_cref operator*() const && noexcept
     {
-        return std::move(*operator->());
+        auto p = get();
+        BOOST_LEAF_ASSERT(p != 0);
+        return std::move(*p);
     }
 
     value_rv_ref operator*() && noexcept
     {
-        return std::move(*operator->());
+        auto p = get();
+        BOOST_LEAF_ASSERT(p != 0);
+        return std::move(*p);
     }
+
+#endif
 
     error_result error() noexcept
     {
@@ -5416,6 +5501,21 @@ public:
     void value() const
     {
         base::enforce_value_state();
+    }
+
+    void const * operator->() const noexcept
+    {
+        return base::operator->();
+    }
+
+    void * operator->() noexcept
+    {
+        return base::operator->();
+    }
+
+    void operator*() const noexcept
+    {
+        BOOST_LEAF_ASSERT(has_value());
     }
 
     using base::operator=;
