@@ -132,6 +132,8 @@ leaf::result<U> g()
 [.text-right]
 <<result>>
 
+TIP: The the result of `r.error()` is compatible with any instance of the `leaf::result` template; in other words, any error type can be reported from any function that returns a `leaf::result`. In the example above, note that `g` returns a `leaf::result<U>`, while `r` is of type `leaf::result<T>`.
+
 The boilerplate `if` statement can be avoided using `BOOST_LEAF_AUTO`:
 
 [source,c++]
