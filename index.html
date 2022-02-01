@@ -416,6 +416,18 @@ LEAF does not depend on Boost or other libraries.
 <div class="paragraph text-right">
 <p><a href="#result"><code>result</code></a></p>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The the result of <code>r.error()</code> is compatible with any instance of the <code>leaf::result</code> template; in other words, any error type can be reported from any function that returns a <code>leaf::result</code>. In the example above, note that <code>g</code> returns a <code>leaf::result&lt;U&gt;</code>, while <code>r</code> is of type <code>leaf::result&lt;T&gt;</code>.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>The boilerplate <code>if</code> statement can be avoided using <code>BOOST_LEAF_AUTO</code>:</p>
 </div>
