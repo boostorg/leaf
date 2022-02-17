@@ -13,3 +13,4 @@
 #include <boost/leaf/on_error.hpp>
 #include <boost/leaf/pred.hpp>
 #include <boost/leaf/result.hpp>
+#include <boost/leaf/to_variant.hpp>

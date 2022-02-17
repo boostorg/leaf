@@ -164,6 +164,7 @@ if option_enable_unit_tests
         'result_ref_test',
         'result_state_test',
         'tls_array_test',
+        'to_variant_test',
         'try_catch_error_id_test',
         'try_catch_system_error_test',
         'try_catch_test',

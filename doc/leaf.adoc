@@ -2696,6 +2696,30 @@ namespace boost { namespace leaf {
 Reference: <<try_handle_all>> | <<try_handle_some>> | <<try_catch>> | <<error_info>> | <<diagnostic_info>> | <<verbose_diagnostic_info>>
 ====
 
+[[handle_errors.hpp]]
+==== `to_variant.hpp`
+
+====
+.#include <boost/leaf/to_variant.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  // Requires at least C++17
+  template <class... E, class TryBlock>
+  std::variant<
+    typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+    std::tuple<
+      std::optional<E>...>>
+  to_variant( TryBlock && try_block );
+
+} }
+----
+
+[.text-right]
+Reference: <<to_variant>>
+====
+
 [[pred.hpp]]
 ==== `pred.hpp`
 
@@ -3232,6 +3256,61 @@ err.load(std::forward<Item>(item)...);
 The difference is that unlike <<error_id::load>>, `on_error` will not overwrite any error objects already associated with `err`.
 
 TIP: See <<tutorial-on_error>> from the Tutorial.
+
+'''
+
+[[to_variant]]
+=== `to_variant`
+
+.#include <boost/leaf/to_variant.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class... E, class TryBlock>
+  std::variant<
+    typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+    std::tuple<
+      std::optional<E>...>>
+  to_variant( TryBlock && try_block );
+
+} }
+----
+
+Requires: ::
+
+* This function is only available under {CPP}-17 or newer.
+* The `try_block` function may not take any arguments.
+* The type returned by the `try_block` function must be a `result<T>` type (see <<is_result_type>>). It is valid for the `try_block` to return `leaf::<<result,result>><T>`, however this is not a requirement.
+
+The `to_variant` function uses <<try_handle_all>> internally to invoke the `try_block` and capture the result in a `std::variant`. On success, the variant contains the `T` object from the produced `result<T>`. Otherwise, the variant contains a `std::tuple` where each `std::optional` element contains an object of type `E~i~` from the user-supplied sequence `E...`, or is empty if the failure did not produce an error object of that type.
+
+.Example:
+[source,c++]
+----
+enum class E1 { e11, e12, e13 };
+enum class E2 { e21, e22, e23 };
+enum class E3 { e31, e32, e33 };
+
+....
+
+auto v = leaf::to_variant<E1, E2, E3>(
+  []() -> leaf::result<int>
+  {
+    return leaf::new_error( E1::e12, E3::e33 );
+  } );
+
+assert(v.index() == 1); <1>
+auto t = std::get<1>(v); <2>
+
+assert(std::get<0>(t).value() == E1::e12); <3>
+assert(!std::get<1>(t).has_value()); <4>
+assert(std::get<2>(t).value() == E3::e33); <3>
+----
+<1> We report a failure, so the variant must contain the error object tuple, rather than an `int`.
+<2> Grab the error tuple.
+<3> We communicated an `E1` and an `E3` error object...
+<4> ...but not an `E2` error object.
 
 '''
 
