@@ -92,6 +92,7 @@ function switch_style()
 <ul class="sectlevel3">
 <li><a href="#context.hpp"><code>context.hpp</code></a></li>
 <li><a href="#handle_errors.hpp"><code>handle_errors.hpp</code></a></li>
+<li><a href="#handle_errors.hpp"><code>to_variant.hpp</code></a></li>
 <li><a href="#pred.hpp"><code>pred.hpp</code></a></li>
 </ul>
 </li>
@@ -109,6 +110,7 @@ function switch_style()
 <li><a href="#make_shared_context"><code>make_shared_context</code></a></li>
 <li><a href="#new_error"><code>new_error</code></a></li>
 <li><a href="#on_error"><code>on_error</code></a></li>
+<li><a href="#to_variant"><code>to_variant</code></a></li>
 <li><a href="#try_catch"><code>try_catch</code></a></li>
 <li><a href="#try_handle_all"><code>try_handle_all</code></a></li>
 <li><a href="#try_handle_some"><code>try_handle_some</code></a></li>
@@ -2983,7 +2985,7 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#include &lt;boost/leaf/handle_errors.hpp&gt;
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#include</span> <span class="cpf">&lt;boost/leaf/handle_errors.hpp&gt;</span><span class="cp">
 </span>
 <span class="kt">void</span> <span class="nf">g</span><span class="p">()</span>
 <span class="p">{</span>
@@ -3566,6 +3568,32 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
 </div>
 <div class="paragraph text-right">
 <p>Reference: <a href="#try_handle_all"><code>try_handle_all</code></a> | <a href="#try_handle_some"><code>try_handle_some</code></a> | <a href="#try_catch"><code>try_catch</code></a> | <a href="#error_info"><code>error_info</code></a> | <a href="#diagnostic_info"><code>diagnostic_info</code></a> | <a href="#verbose_diagnostic_info"><code>verbose_diagnostic_info</code></a></p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="handle_errors.hpp"><code>to_variant.hpp</code></h4>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="title">#include &lt;boost/leaf/to_variant.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+  <span class="c1">// Requires at least C++17</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">,</span> <span class="k">class</span> <span class="nc">TryBlock</span><span class="p">&gt;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">variant</span><span class="o">&lt;</span>
+    <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">decay</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">declval</span><span class="o">&lt;</span><span class="n">TryBlock</span><span class="o">&gt;</span><span class="p">()().</span><span class="n">value</span><span class="p">())</span><span class="o">&gt;::</span><span class="n">type</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">tuple</span><span class="o">&lt;</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span><span class="p">...</span><span class="o">&gt;&gt;</span>
+  <span class="n">to_variant</span><span class="p">(</span> <span class="n">TryBlock</span> <span class="o">&amp;&amp;</span> <span class="n">try_block</span> <span class="p">);</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p>Reference: <a href="#to_variant"><code>to_variant</code></a></p>
 </div>
 </div>
 </div>
@@ -4424,6 +4452,91 @@ When loaded into a <code>context</code>, an error object of a type <code>E</code
 <td class="content">
 See <a href="#tutorial-on_error">Using <code>on_error</code></a> from the Tutorial.
 </td>
+</tr>
+</table>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="to_variant"><code>to_variant</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/leaf/to_variant.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">,</span> <span class="k">class</span> <span class="nc">TryBlock</span><span class="p">&gt;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">variant</span><span class="o">&lt;</span>
+    <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">decay</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">declval</span><span class="o">&lt;</span><span class="n">TryBlock</span><span class="o">&gt;</span><span class="p">()().</span><span class="n">value</span><span class="p">())</span><span class="o">&gt;::</span><span class="n">type</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">tuple</span><span class="o">&lt;</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span><span class="p">...</span><span class="o">&gt;&gt;</span>
+  <span class="n">to_variant</span><span class="p">(</span> <span class="n">TryBlock</span> <span class="o">&amp;&amp;</span> <span class="n">try_block</span> <span class="p">);</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Requires: </dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p>This function is only available under C&#43;&#43;-17 or newer.</p>
+</li>
+<li>
+<p>The <code>try_block</code> function may not take any arguments.</p>
+</li>
+<li>
+<p>The type returned by the <code>try_block</code> function must be a <code>result&lt;T&gt;</code> type (see <a href="#is_result_type"><code>is_result_type</code></a>). It is valid for the <code>try_block</code> to return <code>leaf::<a href="#result">result</a>&lt;T&gt;</code>, however this is not a requirement.</p>
+</li>
+</ul>
+</div>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>The <code>to_variant</code> function uses <a href="#try_handle_all"><code>try_handle_all</code></a> internally to invoke the <code>try_block</code> and capture the result in a <code>std::variant</code>. On success, the variant contains the <code>T</code> object from the produced <code>result&lt;T&gt;</code>. Otherwise, the variant contains a <code>std::tuple</code> where each <code>std::optional</code> element contains an object of type <code>E<sub>i</sub></code> from the user-supplied sequence <code>E&#8230;&#8203;</code>, or is empty if the failure did not produce an error object of that type.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example:</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">enum</span> <span class="k">class</span> <span class="nc">E1</span> <span class="p">{</span> <span class="n">e11</span><span class="p">,</span> <span class="n">e12</span><span class="p">,</span> <span class="n">e13</span> <span class="p">};</span>
+<span class="k">enum</span> <span class="k">class</span> <span class="nc">E2</span> <span class="p">{</span> <span class="n">e21</span><span class="p">,</span> <span class="n">e22</span><span class="p">,</span> <span class="n">e23</span> <span class="p">};</span>
+<span class="k">enum</span> <span class="k">class</span> <span class="nc">E3</span> <span class="p">{</span> <span class="n">e31</span><span class="p">,</span> <span class="n">e32</span><span class="p">,</span> <span class="n">e33</span> <span class="p">};</span>
+
+<span class="p">....</span>
+
+<span class="k">auto</span> <span class="n">v</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">::</span><span class="n">to_variant</span><span class="o">&lt;</span><span class="n">E1</span><span class="p">,</span> <span class="n">E2</span><span class="p">,</span> <span class="n">E3</span><span class="o">&gt;</span><span class="p">(</span>
+  <span class="p">[]()</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>
+  <span class="p">{</span>
+    <span class="k">return</span> <span class="n">leaf</span><span class="o">::</span><span class="n">new_error</span><span class="p">(</span> <span class="n">E1</span><span class="o">::</span><span class="n">e12</span><span class="p">,</span> <span class="n">E3</span><span class="o">::</span><span class="n">e33</span> <span class="p">);</span>
+  <span class="p">}</span> <span class="p">);</span>
+
+<span class="n">assert</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">index</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">);</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="k">auto</span> <span class="n">t</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span><span class="n">v</span><span class="p">);</span> <i class="conum" data-value="2"></i><b>(2)</b>
+
+<span class="n">assert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="mi">0</span><span class="o">&gt;</span><span class="p">(</span><span class="n">t</span><span class="p">).</span><span class="n">value</span><span class="p">()</span> <span class="o">==</span> <span class="n">E1</span><span class="o">::</span><span class="n">e12</span><span class="p">);</span> <i class="conum" data-value="3"></i><b>(3)</b>
+<span class="n">assert</span><span class="p">(</span><span class="o">!</span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span><span class="n">t</span><span class="p">).</span><span class="n">has_value</span><span class="p">());</span> <i class="conum" data-value="4"></i><b>(4)</b>
+<span class="n">assert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">(</span><span class="n">t</span><span class="p">).</span><span class="n">value</span><span class="p">()</span> <span class="o">==</span> <span class="n">E3</span><span class="o">::</span><span class="n">e33</span><span class="p">);</span> <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We report a failure, so the variant must contain the error object tuple, rather than an <code>int</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Grab the error tuple.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>We communicated an <code>E1</code> and an <code>E3</code> error object&#8230;&#8203;</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>&#8230;&#8203;but not an <code>E2</code> error object.</td>
 </tr>
 </table>
 </div>
