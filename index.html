@@ -8787,19 +8787,19 @@ meson <span class="nb">test</span></code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#ifndef BOOST_LEAF_CFG_DIAGNOSTICS
-# define BOOST_LEAF_CFG_DIAGNOSTICS 0
+#   define BOOST_LEAF_CFG_DIAGNOSTICS 0
 #endif
 </span>
 <span class="cp">#ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-# define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 0
+#   define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 0
 #endif
 </span>
 <span class="cp">#ifndef BOOST_LEAF_CFG_STD_STRING
-# define BOOST_LEAF_CFG_STD_STRING 0
+#   define BOOST_LEAF_CFG_STD_STRING 0
 #endif
 </span>
 <span class="cp">#ifndef BOOST_LEAF_CFG_CAPTURE
-# define BOOST_LEAF_CFG_CAPTURE 0
+#   define BOOST_LEAF_CFG_CAPTURE 0
 #endif</span></code></pre>
 </div>
 </div>
@@ -8850,6 +8850,18 @@ For efficiency, <code>read_void_ptr</code> and <code>write_void_ptr</code> shoul
 </li>
 </ul>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Reporting error objects of types that are not used to handle failures does not consume TLS pointers. The minimum size of the TLS pointer array required by LEAF is the total number of different types used as arguments to error handlers (in the entire program), plus one.
+</td>
+</tr>
+</table>
+</div>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -8857,7 +8869,7 @@ For efficiency, <code>read_void_ptr</code> and <code>write_void_ptr</code> shoul
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-On embedded platforms, beware of <code>read_void_ptr</code>/<code>write_void_ptr</code> accessing thread local pointers beyond the static size of the thread local pointer array; this will likely result in undefined behavior.
+Beware of <code>read_void_ptr</code>/<code>write_void_ptr</code> accessing thread local pointers beyond the static size of the thread local pointer array; this will likely result in undefined behavior.
 </td>
 </tr>
 </table>

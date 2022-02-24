@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 02/17/2022 from https://github.com/boostorg/leaf/tree/b2f95dd.
+// Generated on 02/24/2022 from https://github.com/boostorg/leaf/tree/14aa923.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
@@ -424,7 +424,7 @@ namespace tls
     public:
 
         template <class T>
-        static BOOST_LEAF_TLS_INDEX_TYPE get_index() noexcept
+        static BOOST_LEAF_TLS_INDEX_TYPE next() noexcept
         {
             BOOST_LEAF_TLS_INDEX_TYPE idx = c++;
 #ifdef BOOST_LEAF_TLS_ARRAY_SIZE
@@ -439,20 +439,31 @@ namespace tls
     BOOST_LEAF_TLS_INDEX_TYPE index_counter<T>::c = BOOST_LEAF_TLS_ARRAY_START_INDEX;
 
     template <class T>
-    struct BOOST_LEAF_SYMBOL_VISIBLE index
+    struct BOOST_LEAF_SYMBOL_VISIBLE get_tls_index
+    {
+        static BOOST_LEAF_TLS_INDEX_TYPE idx;
+    };
+
+    template <class T>
+    BOOST_LEAF_TLS_INDEX_TYPE get_tls_index<T>::idx = -1;
+
+    template <class T>
+    struct BOOST_LEAF_SYMBOL_VISIBLE alloc_tls_index
     {
         static BOOST_LEAF_TLS_INDEX_TYPE const idx;
     };
 
     template <class T>
-    BOOST_LEAF_TLS_INDEX_TYPE const index<T>::idx = index_counter<>::get_index<T>();
+    BOOST_LEAF_TLS_INDEX_TYPE const alloc_tls_index<T>::idx = get_tls_index<T>::idx = index_counter<>::next<T>();
 
     ////////////////////////////////////////
 
     template <class T>
     T * read_ptr() noexcept
     {
-        int const tls_index = index<T>::idx;
+        int const tls_index = get_tls_index<T>::idx;
+        if( tls_index == -1 )
+            return 0;
         BOOST_LEAF_ASSERT(tls_index >= BOOST_LEAF_TLS_ARRAY_START_INDEX);
 #ifdef BOOST_LEAF_TLS_ARRAY_SIZE
         BOOST_LEAF_ASSERT(tls_index < BOOST_LEAF_TLS_ARRAY_SIZE);
@@ -463,7 +474,7 @@ namespace tls
     template <class T>
     void write_ptr( T * p ) noexcept
     {
-        int const tls_index = index<T>::idx;
+        int const tls_index = alloc_tls_index<T>::idx;
         BOOST_LEAF_ASSERT(tls_index >= BOOST_LEAF_TLS_ARRAY_START_INDEX);
 #ifdef BOOST_LEAF_TLS_ARRAY_SIZE
         BOOST_LEAF_ASSERT(tls_index < BOOST_LEAF_TLS_ARRAY_SIZE);
@@ -1517,7 +1528,7 @@ namespace leaf_detail
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 907: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 918: #include <boost/leaf/detail/demangle.hpp>
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 
@@ -2596,7 +2607,7 @@ exception_to_result( F && f ) noexcept
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 721: #include <boost/leaf/error.hpp>
+// Expanded at line 732: #include <boost/leaf/error.hpp>
 
 namespace boost { namespace leaf {
 
@@ -3080,7 +3091,7 @@ future_get( Future & fut )
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 907: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 918: #include <boost/leaf/detail/demangle.hpp>
 
 #include <iosfwd>
 #if BOOST_LEAF_CFG_STD_STRING
@@ -3194,7 +3205,7 @@ namespace windows
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 721: #include <boost/leaf/error.hpp>
+// Expanded at line 732: #include <boost/leaf/error.hpp>
 
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
 # include <thread>
@@ -3656,8 +3667,8 @@ inline context_ptr make_shared_context( H && ... ) noexcept
 } }
 
 #endif
-// Expanded at line 721: #include <boost/leaf/error.hpp>
-// Expanded at line 710: #include <boost/leaf/exception.hpp>
+// Expanded at line 732: #include <boost/leaf/error.hpp>
+// Expanded at line 721: #include <boost/leaf/exception.hpp>
 // >>> #include <boost/leaf/handle_errors.hpp>
 #line 1 "boost/leaf/handle_errors.hpp"
 #ifndef BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
@@ -3669,9 +3680,9 @@ inline context_ptr make_shared_context( H && ... ) noexcept
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3188: #include <boost/leaf/context.hpp>
-// Expanded at line 699: #include <boost/leaf/capture.hpp>
-// Expanded at line 907: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 3199: #include <boost/leaf/context.hpp>
+// Expanded at line 710: #include <boost/leaf/capture.hpp>
+// Expanded at line 918: #include <boost/leaf/detail/demangle.hpp>
 
 namespace boost { namespace leaf {
 
@@ -4613,7 +4624,7 @@ namespace leaf_detail
 } }
 
 #endif
-// Expanded at line 2590: #include <boost/leaf/on_error.hpp>
+// Expanded at line 2601: #include <boost/leaf/on_error.hpp>
 // >>> #include <boost/leaf/pred.hpp>
 #line 1 "boost/leaf/pred.hpp"
 #ifndef BOOST_LEAF_PRED_HPP_INCLUDED
@@ -4625,7 +4636,7 @@ namespace leaf_detail
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3663: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 3674: #include <boost/leaf/handle_errors.hpp>
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -4924,7 +4935,7 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 721: #include <boost/leaf/error.hpp>
+// Expanded at line 732: #include <boost/leaf/error.hpp>
 
 #include <climits>
 #include <functional>
@@ -5554,8 +5565,8 @@ struct is_result_type<result<T>>: std::true_type
 #if __cplusplus >= 201703L
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3663: #include <boost/leaf/handle_errors.hpp>
-// Expanded at line 4918: #include <boost/leaf/result.hpp>
+// Expanded at line 3674: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 4929: #include <boost/leaf/result.hpp>
 #include <variant>
 #include <optional>
 #include <tuple>
