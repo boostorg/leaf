@@ -6100,19 +6100,19 @@ Defining `BOOST_LEAF_EMBEDDED` is equivalent to the following:
 [source,c++]
 ----
 #ifndef BOOST_LEAF_CFG_DIAGNOSTICS
-# define BOOST_LEAF_CFG_DIAGNOSTICS 0
+#   define BOOST_LEAF_CFG_DIAGNOSTICS 0
 #endif
 
 #ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-# define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 0
+#   define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 0
 #endif
 
 #ifndef BOOST_LEAF_CFG_STD_STRING
-# define BOOST_LEAF_CFG_STD_STRING 0
+#   define BOOST_LEAF_CFG_STD_STRING 0
 #endif
 
 #ifndef BOOST_LEAF_CFG_CAPTURE
-# define BOOST_LEAF_CFG_CAPTURE 0
+#   define BOOST_LEAF_CFG_CAPTURE 0
 #endif
 ----
 
@@ -6141,7 +6141,9 @@ Under `BOOST_LEAF_TLS_ARRAY` (which includes `BOOST_LEAF_TLS_FREERTOS`):
 * If `BOOST_LEAF_TLS_ARRAY_SIZE` is defined, it is used to `BOOST_LEAF_ASSERT` that TLS indices are within bounds (which is of course deactivated under `NDEBUG`).
 * Under `BOOST_LEAF_TLS_FREERTOS`, `BOOST_LEAF_TLS_ARRAY_SIZE` defaults to https://www.freertos.org/a00110.html#configNUM_THREAD_LOCAL_STORAGE_POINTERS[`configNUM_THREAD_LOCAL_STORAGE_POINTERS`].
 
-WARNING: On embedded platforms, beware of `read_void_ptr`/`write_void_ptr` accessing thread local pointers beyond the static size of the thread local pointer array; this will likely result in undefined behavior.
+TIP: Reporting error objects of types that are not used to handle failures does not consume TLS pointers. The minimum size of the TLS pointer array required by LEAF is the total number of different types used as arguments to error handlers (in the entire program), plus one.
+
+WARNING: Beware of `read_void_ptr`/`write_void_ptr` accessing thread local pointers beyond the static size of the thread local pointer array; this will likely result in undefined behavior.
 
 If your program does not use concurrency at all, simply define `BOOST_LEAF_NO_THREADS`, which requires no TLS support at all (but is NOT thread-safe).
 

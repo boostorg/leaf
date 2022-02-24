@@ -68,7 +68,7 @@ namespace tls
     public:
 
         template <class T>
-        static BOOST_LEAF_TLS_INDEX_TYPE get_index() noexcept
+        static BOOST_LEAF_TLS_INDEX_TYPE next() noexcept
         {
             BOOST_LEAF_TLS_INDEX_TYPE idx = c++;
 #ifdef BOOST_LEAF_TLS_ARRAY_SIZE
@@ -83,20 +83,31 @@ namespace tls
     BOOST_LEAF_TLS_INDEX_TYPE index_counter<T>::c = BOOST_LEAF_TLS_ARRAY_START_INDEX;
 
     template <class T>
-    struct BOOST_LEAF_SYMBOL_VISIBLE index
+    struct BOOST_LEAF_SYMBOL_VISIBLE get_tls_index
+    {
+        static BOOST_LEAF_TLS_INDEX_TYPE idx;
+    };
+
+    template <class T>
+    BOOST_LEAF_TLS_INDEX_TYPE get_tls_index<T>::idx = -1;
+
+    template <class T>
+    struct BOOST_LEAF_SYMBOL_VISIBLE alloc_tls_index
     {
         static BOOST_LEAF_TLS_INDEX_TYPE const idx;
     };
 
     template <class T>
-    BOOST_LEAF_TLS_INDEX_TYPE const index<T>::idx = index_counter<>::get_index<T>();
+    BOOST_LEAF_TLS_INDEX_TYPE const alloc_tls_index<T>::idx = get_tls_index<T>::idx = index_counter<>::next<T>();
 
     ////////////////////////////////////////
 
     template <class T>
     T * read_ptr() noexcept
     {
-        int const tls_index = index<T>::idx;
+        int const tls_index = get_tls_index<T>::idx;
+        if( tls_index == -1 )
+            return 0;
         BOOST_LEAF_ASSERT(tls_index >= BOOST_LEAF_TLS_ARRAY_START_INDEX);
 #ifdef BOOST_LEAF_TLS_ARRAY_SIZE
         BOOST_LEAF_ASSERT(tls_index < BOOST_LEAF_TLS_ARRAY_SIZE);
@@ -107,7 +118,7 @@ namespace tls
     template <class T>
     void write_ptr( T * p ) noexcept
     {
-        int const tls_index = index<T>::idx;
+        int const tls_index = alloc_tls_index<T>::idx;
         BOOST_LEAF_ASSERT(tls_index >= BOOST_LEAF_TLS_ARRAY_START_INDEX);
 #ifdef BOOST_LEAF_TLS_ARRAY_SIZE
         BOOST_LEAF_ASSERT(tls_index < BOOST_LEAF_TLS_ARRAY_SIZE);
