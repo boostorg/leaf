@@ -222,6 +222,7 @@ function switch_style()
 </li>
 <li><a href="#configuration">Configuration</a>
 <ul class="sectlevel2">
+<li><a href="#configuring_tls_access">Configuring TLS Access</a></li>
 <li><a href="#_embedded_platforms">Embedded Platforms</a></li>
 </ul>
 </li>
@@ -8780,34 +8781,9 @@ meson <span class="nb">test</span></code></pre>
 </ul>
 </div>
 <div class="sect2">
-<h3 id="_embedded_platforms">Embedded Platforms</h3>
+<h3 id="configuring_tls_access">Configuring TLS Access</h3>
 <div class="paragraph">
-<p>Defining <code>BOOST_LEAF_EMBEDDED</code> is equivalent to the following:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#ifndef BOOST_LEAF_CFG_DIAGNOSTICS
-#   define BOOST_LEAF_CFG_DIAGNOSTICS 0
-#endif
-</span>
-<span class="cp">#ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-#   define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 0
-#endif
-</span>
-<span class="cp">#ifndef BOOST_LEAF_CFG_STD_STRING
-#   define BOOST_LEAF_CFG_STD_STRING 0
-#endif
-</span>
-<span class="cp">#ifndef BOOST_LEAF_CFG_CAPTURE
-#   define BOOST_LEAF_CFG_CAPTURE 0
-#endif</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>LEAF supports FreeRTOS out of the box, please define <code>BOOST_LEAF_TLS_FREERTOS</code> (in which case LEAF automatically defines <code>BOOST_LEAF_EMBEDDED</code> if it is not defined already).</p>
-</div>
-<div class="paragraph">
-<p>For other embedded platforms, please define <code>BOOST_LEAF_TLS_ARRAY</code> and make sure your project defines the following two functions to implement TLS pointer access:</p>
+<p>LEAF requires support for thread-local <code>void</code> pointers. By default, this is implemented using the C&#43;&#43;11 <code>thread_local</code> keyword, but it is possible to configure LEAF to use an array of thread local pointers instead, by defining <code>BOOST_LEAF_USE_TLS_ARRAY</code>. In this case, the user is required to define the following two functions to implement the required TLS access:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -8835,18 +8811,18 @@ For efficiency, <code>read_void_ptr</code> and <code>write_void_ptr</code> shoul
 </table>
 </div>
 <div class="paragraph">
-<p>Under <code>BOOST_LEAF_TLS_ARRAY</code> (which includes <code>BOOST_LEAF_TLS_FREERTOS</code>):</p>
+<p>Under <code>BOOST_LEAF_USE_TLS_ARRAY</code> the following additional configuration macros are recognized:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Each error type is assigned a unique index in the TLS pointer array. By default, assigned TLS indices start from <code>0</code>; this can be changed by defining <code>BOOST_LEAF_TLS_ARRAY_START_INDEX</code>.</p>
+<p><code>BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX</code> specifies the start TLS array index available to LEAF (if the macro is left undefined, LEAF defines it as <code>0</code>).</p>
 </li>
 <li>
-<p>If <code>BOOST_LEAF_TLS_ARRAY_SIZE</code> is defined, it is used to <code>BOOST_LEAF_ASSERT</code> that TLS indices are within bounds (which is of course deactivated under <code>NDEBUG</code>).</p>
+<p><code>BOOST_LEAF_CFG_TLS_ARRAY_SIZE</code> may be defined to specify the size of the TLS array. In this case TLS indices are validated via <code>BOOST_LEAF_ASSERT</code> before being passed to <code>read_void_ptr</code> / <code>write_void_ptr</code>.</p>
 </li>
 <li>
-<p>Under <code>BOOST_LEAF_TLS_FREERTOS</code>, <code>BOOST_LEAF_TLS_ARRAY_SIZE</code> defaults to <a href="https://www.freertos.org/a00110.html#configNUM_THREAD_LOCAL_STORAGE_POINTERS"><code>configNUM_THREAD_LOCAL_STORAGE_POINTERS</code></a>.</p>
+<p><code>BOOST_LEAF_CFG_TLS_INDEX_TYPE</code> may be defined to specify the integral type used to store assigned TLS indices (if the macro is left undefined, LEAF defines it as <code>unsigned char</code>).</p>
 </li>
 </ul>
 </div>
@@ -8873,6 +8849,37 @@ Beware of <code>read_void_ptr</code>/<code>write_void_ptr</code> accessing threa
 </td>
 </tr>
 </table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_embedded_platforms">Embedded Platforms</h3>
+<div class="paragraph">
+<p>Defining <code>BOOST_LEAF_EMBEDDED</code> is equivalent to the following:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#ifndef BOOST_LEAF_CFG_DIAGNOSTICS
+#   define BOOST_LEAF_CFG_DIAGNOSTICS 0
+#endif
+</span>
+<span class="cp">#ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+#   define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 0
+#endif
+</span>
+<span class="cp">#ifndef BOOST_LEAF_CFG_STD_STRING
+#   define BOOST_LEAF_CFG_STD_STRING 0
+#endif
+</span>
+<span class="cp">#ifndef BOOST_LEAF_CFG_CAPTURE
+#   define BOOST_LEAF_CFG_CAPTURE 0
+#endif</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>LEAF supports FreeRTOS out of the box, please define <code>BOOST_LEAF_TLS_FREERTOS</code> (in which case LEAF automatically defines <code>BOOST_LEAF_EMBEDDED</code>, if it is not defined already).</p>
+</div>
+<div class="paragraph">
+<p>For other embedded platforms, please define <code>BOOST_LEAF_USE_TLS_ARRAY</code>, see <a href="#configuring_tls_access">Configuring TLS Access</a>.</p>
 </div>
 <div class="paragraph">
 <p>If your program does not use concurrency at all, simply define <code>BOOST_LEAF_NO_THREADS</code>, which requires no TLS support at all (but is NOT thread-safe).</p>

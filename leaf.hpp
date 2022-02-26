@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 02/24/2022 from https://github.com/boostorg/leaf/tree/14aa923.
+// Generated on 02/26/2022 from https://github.com/boostorg/leaf/tree/b13c169.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
@@ -313,19 +313,16 @@
 
 #include <task.h>
 
-#ifndef BOOST_LEAF_TLS_ARRAY
-#   define BOOST_LEAF_TLS_ARRAY
+#ifndef BOOST_LEAF_USE_TLS_ARRAY
+#   define BOOST_LEAF_USE_TLS_ARRAY
 #endif
 
-#ifndef BOOST_LEAF_TLS_INDEX_TYPE
-#   define BOOST_LEAF_TLS_INDEX_TYPE BaseType_t
+#ifndef BOOST_LEAF_CFG_TLS_ARRAY_SIZE
+#   define BOOST_LEAF_CFG_TLS_ARRAY_SIZE configNUM_THREAD_LOCAL_STORAGE_POINTERS
 #endif
 
-#ifndef BOOST_LEAF_TLS_ARRAY_SIZE
-#   define BOOST_LEAF_TLS_ARRAY_SIZE configNUM_THREAD_LOCAL_STORAGE_POINTERS
-#endif
-
-static_assert(BOOST_LEAF_TLS_ARRAY_SIZE <= configNUM_THREAD_LOCAL_STORAGE_POINTERS, "Invalid BOOST_LEAF_TLS_ARRAY_SIZE");
+static_assert((BOOST_LEAF_CFG_TLS_ARRAY_SIZE) <= configNUM_THREAD_LOCAL_STORAGE_POINTERS,
+    "Bad BOOST_LEAF_CFG_TLS_ARRAY_SIZE");
 
 namespace boost { namespace leaf {
 
@@ -351,7 +348,19 @@ namespace tls
 #line 11 "boost/leaf/config/tls.hpp"
 #endif
 
-#if defined BOOST_LEAF_TLS_ARRAY
+#ifndef BOOST_LEAF_USE_TLS_ARRAY
+#	ifdef BOOST_LEAF_CFG_TLS_INDEX_TYPE
+#		warning "BOOST_LEAF_CFG_TLS_INDEX_TYPE" is ignored if BOOST_LEAF_USE_TLS_ARRAY is not defined.
+#	endif
+#	ifdef BOOST_LEAF_CFG_TLS_ARRAY_SIZE
+#		warning "BOOST_LEAF_CFG_TLS_ARRAY_SIZE" is ignored if BOOST_LEAF_USE_TLS_ARRAY is not defined.
+#	endif
+#	ifdef BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX
+#		warning "BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX" is ignored if BOOST_LEAF_USE_TLS_ARRAY is not defined.
+#	endif
+#endif
+
+#if defined BOOST_LEAF_USE_TLS_ARRAY
 // >>> #   include <boost/leaf/config/tls_array.hpp>
 #line 1 "boost/leaf/config/tls_array.hpp"
 #ifndef BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED
@@ -368,31 +377,6 @@ namespace tls
 // This header implements thread local storage for pointers and for uint32_t
 // values for platforms that support thread local pointers by index.
 
-////////////////////////////////////////
-
-#ifndef BOOST_LEAF_TLS_INDEX_TYPE
-#   define BOOST_LEAF_TLS_INDEX_TYPE int
-#endif
-
-#ifndef BOOST_LEAF_TLS_ARRAY_START_INDEX
-#   define BOOST_LEAF_TLS_ARRAY_START_INDEX 0
-#endif
-
-static_assert(BOOST_LEAF_TLS_ARRAY_START_INDEX >= 0,
-    "Bad BOOST_LEAF_TLS_ARRAY_START_INDEX");
-
-#ifdef BOOST_LEAF_TLS_ARRAY_SIZE
-static_assert(BOOST_LEAF_TLS_ARRAY_SIZE > 0,
-    "Bad BOOST_LEAF_TLS_ARRAY_SIZE");
-static_assert(BOOST_LEAF_TLS_ARRAY_START_INDEX < BOOST_LEAF_TLS_ARRAY_SIZE,
-    "Bad BOOST_LEAF_TLS_ARRAY_START_INDEX");
-#endif
-
-#include <atomic>
-#include <cstdint>
-
-////////////////////////////////////////
-
 namespace boost { namespace leaf {
 
 namespace tls
@@ -404,6 +388,31 @@ namespace tls
 }
 
 } }
+
+////////////////////////////////////////
+
+#include <limits>
+#include <atomic>
+#include <cstdint>
+#include <type_traits>
+
+#ifndef BOOST_LEAF_CFG_TLS_INDEX_TYPE
+#   define BOOST_LEAF_CFG_TLS_INDEX_TYPE unsigned char
+#endif
+
+#ifndef BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX
+#   define BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX 0
+#endif
+
+static_assert((BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX) >= 0,
+    "Bad BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX");
+
+#ifdef BOOST_LEAF_CFG_TLS_ARRAY_SIZE
+    static_assert((BOOST_LEAF_CFG_TLS_ARRAY_SIZE) > (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX),
+        "Bad BOOST_LEAF_CFG_TLS_ARRAY_SIZE");
+    static_assert((BOOST_LEAF_CFG_TLS_ARRAY_SIZE) - 1 <= std::numeric_limits<BOOST_LEAF_CFG_TLS_INDEX_TYPE>::max(),
+        "Bad BOOST_LEAF_CFG_TLS_ARRAY_SIZE");
+#endif
 
 ////////////////////////////////////////
 
@@ -419,68 +428,59 @@ namespace tls
     template <class=void>
     class BOOST_LEAF_SYMBOL_VISIBLE index_counter
     {
-        static BOOST_LEAF_TLS_INDEX_TYPE c;
+        static int c_;
 
     public:
 
-        template <class T>
-        static BOOST_LEAF_TLS_INDEX_TYPE next() noexcept
+        static BOOST_LEAF_CFG_TLS_INDEX_TYPE next()
         {
-            BOOST_LEAF_TLS_INDEX_TYPE idx = c++;
-#ifdef BOOST_LEAF_TLS_ARRAY_SIZE
-            BOOST_LEAF_ASSERT(idx < BOOST_LEAF_TLS_ARRAY_SIZE);
-#endif
-            // Set breakpoint here to inspect TLS index assignment.
-            return idx; 
+            int idx = ++c_;
+            BOOST_LEAF_ASSERT(idx > (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX));
+            BOOST_LEAF_ASSERT(idx < (BOOST_LEAF_CFG_TLS_ARRAY_SIZE));
+            return idx;
         }
     };
 
     template <class T>
-    BOOST_LEAF_TLS_INDEX_TYPE index_counter<T>::c = BOOST_LEAF_TLS_ARRAY_START_INDEX;
-
-    template <class T>
-    struct BOOST_LEAF_SYMBOL_VISIBLE get_tls_index
+    struct BOOST_LEAF_SYMBOL_VISIBLE tls_index
     {
-        static BOOST_LEAF_TLS_INDEX_TYPE idx;
+        static BOOST_LEAF_CFG_TLS_INDEX_TYPE idx;
     };
-
-    template <class T>
-    BOOST_LEAF_TLS_INDEX_TYPE get_tls_index<T>::idx = -1;
 
     template <class T>
     struct BOOST_LEAF_SYMBOL_VISIBLE alloc_tls_index
     {
-        static BOOST_LEAF_TLS_INDEX_TYPE const idx;
+        static BOOST_LEAF_CFG_TLS_INDEX_TYPE const idx;
     };
 
     template <class T>
-    BOOST_LEAF_TLS_INDEX_TYPE const alloc_tls_index<T>::idx = get_tls_index<T>::idx = index_counter<>::next<T>();
+    int index_counter<T>::c_ = BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX;
+
+    template <class T>
+    BOOST_LEAF_CFG_TLS_INDEX_TYPE tls_index<T>::idx = BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX;
+
+    template <class T>
+    BOOST_LEAF_CFG_TLS_INDEX_TYPE const alloc_tls_index<T>::idx = tls_index<T>::idx = index_counter<>::next();
 
     ////////////////////////////////////////
 
     template <class T>
     T * read_ptr() noexcept
     {
-        int const tls_index = get_tls_index<T>::idx;
-        if( tls_index == -1 )
+        int tls_idx = tls_index<T>::idx;
+        if( tls_idx == (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX) )
             return 0;
-        BOOST_LEAF_ASSERT(tls_index >= BOOST_LEAF_TLS_ARRAY_START_INDEX);
-#ifdef BOOST_LEAF_TLS_ARRAY_SIZE
-        BOOST_LEAF_ASSERT(tls_index < BOOST_LEAF_TLS_ARRAY_SIZE);
-#endif
-        return reinterpret_cast<T *>(read_void_ptr(tls_index));
+        --tls_idx;
+        return reinterpret_cast<T *>(read_void_ptr(tls_idx));
     }
 
     template <class T>
     void write_ptr( T * p ) noexcept
     {
-        int const tls_index = alloc_tls_index<T>::idx;
-        BOOST_LEAF_ASSERT(tls_index >= BOOST_LEAF_TLS_ARRAY_START_INDEX);
-#ifdef BOOST_LEAF_TLS_ARRAY_SIZE
-        BOOST_LEAF_ASSERT(tls_index < BOOST_LEAF_TLS_ARRAY_SIZE);
-#endif
-        write_void_ptr(tls_index, p);
-        BOOST_LEAF_ASSERT(read_void_ptr(tls_index) == p);
+        int tls_idx = alloc_tls_index<T>::idx;
+        --tls_idx;
+        write_void_ptr(tls_idx, p);
+        BOOST_LEAF_ASSERT(read_void_ptr(tls_idx) == p);
     }
 
     ////////////////////////////////////////
@@ -516,7 +516,7 @@ namespace tls
 
 #endif
 // <<< #   include <boost/leaf/config/tls_array.hpp>
-#line 15 "boost/leaf/config/tls.hpp"
+#line 27 "boost/leaf/config/tls.hpp"
 #elif defined(BOOST_LEAF_NO_THREADS)
 // >>> #   include <boost/leaf/config/tls_globals.hpp>
 #line 1 "boost/leaf/config/tls_globals.hpp"
@@ -605,7 +605,7 @@ namespace tls
 
 #endif
 // <<< #   include <boost/leaf/config/tls_globals.hpp>
-#line 17 "boost/leaf/config/tls.hpp"
+#line 29 "boost/leaf/config/tls.hpp"
 #else
 // >>> #   include <boost/leaf/config/tls_cpp11.hpp>
 #line 1 "boost/leaf/config/tls_cpp11.hpp"
@@ -695,7 +695,7 @@ namespace tls
 
 #endif
 // <<< #   include <boost/leaf/config/tls_cpp11.hpp>
-#line 19 "boost/leaf/config/tls.hpp"
+#line 31 "boost/leaf/config/tls.hpp"
 #endif
 
 #endif
