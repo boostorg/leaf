@@ -10,9 +10,9 @@
 #   undef BOOST_LEAF_CFG_DIAGNOSTICS
 #endif
 #define BOOST_LEAF_CFG_DIAGNOSTICS 0
-#define BOOST_LEAF_TLS_ARRAY
-#define BOOST_LEAF_TLS_ARRAY_SIZE 64
-#define BOOST_LEAF_TLS_ARRAY_START_INDEX 10
+#define BOOST_LEAF_USE_TLS_ARRAY
+#define BOOST_LEAF_CFG_TLS_ARRAY_SIZE 64
+#define BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX 10
 
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
 #   include "leaf.hpp"
@@ -28,7 +28,7 @@
 
 namespace leaf = boost::leaf;
 
-static void * tls_storage[BOOST_LEAF_TLS_ARRAY_SIZE];
+static void * tls_storage[BOOST_LEAF_CFG_TLS_ARRAY_SIZE];
 static int min_tls_index = std::numeric_limits<int>::max();
 static int max_tls_index = std::numeric_limits<int>::min();
 
@@ -38,8 +38,8 @@ namespace tls
 {
     void * read_void_ptr( int tls_index ) noexcept
     {
-        BOOST_TEST(tls_index>=BOOST_LEAF_TLS_ARRAY_START_INDEX);
-        BOOST_TEST(tls_index<BOOST_LEAF_TLS_ARRAY_SIZE);
+        BOOST_TEST_GE(tls_index, (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX));
+        BOOST_TEST_LT(tls_index, (BOOST_LEAF_CFG_TLS_ARRAY_SIZE));
         min_tls_index = std::min(min_tls_index, tls_index);
         max_tls_index = std::max(max_tls_index, tls_index);
         return tls_storage[tls_index];
@@ -47,8 +47,8 @@ namespace tls
 
     void write_void_ptr( int tls_index, void * p ) noexcept
     {
-        BOOST_TEST(tls_index>=BOOST_LEAF_TLS_ARRAY_START_INDEX);
-        BOOST_TEST(tls_index<BOOST_LEAF_TLS_ARRAY_SIZE);
+        BOOST_TEST_GE(tls_index, (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX));
+        BOOST_TEST_LT(tls_index, (BOOST_LEAF_CFG_TLS_ARRAY_SIZE));
         min_tls_index = std::min(min_tls_index, tls_index);
         max_tls_index = std::max(max_tls_index, tls_index);
         tls_storage[tls_index] = p;
@@ -83,7 +83,7 @@ int main()
             return 3;
         } );
     BOOST_TEST_EQ(r, 1);
-    BOOST_TEST_EQ(min_tls_index, BOOST_LEAF_TLS_ARRAY_START_INDEX);
-    BOOST_TEST_EQ(max_tls_index, BOOST_LEAF_TLS_ARRAY_START_INDEX+2);
+    BOOST_TEST_EQ(min_tls_index, (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX));
+    BOOST_TEST_EQ(max_tls_index, (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX)+2);
     return boost::report_errors();
 }

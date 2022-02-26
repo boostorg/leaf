@@ -6085,13 +6085,52 @@ Assuming the current working directory is `<boostroot>/libs/leaf`:
 The following configuration macros are recognized:
 
 * `BOOST_LEAF_CFG_DIAGNOSTICS`: Defining this macro as `0` stubs out both <<diagnostic_info>> and <<verbose_diagnostic_info>> (if the macro is left undefined, LEAF defines it as `1`).
+
 * `BOOST_LEAF_CFG_STD_SYSTEM_ERROR`: Defining this macro as `0` disables the `std::error_code` / `std::error_condition` integration. In this case LEAF does not `#include <system_error>`, which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as `1`).
+
 * `BOOST_LEAF_CFG_STD_STRING`: Defining this macro as `0` disables all use of `std::string` (this requires `BOOST_LEAF_CFG_DIAGNOSTICS=0` as well). In this case LEAF does not `#include <string>` which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as `1`).
+
 * `BOOST_LEAF_CFG_CAPTURE`: Defining this macro as `0` disables the ability of `leaf::result` to transport errors between threads. In this case LEAF does not `#include <memory>`, which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as `1`).
+
 * `BOOST_LEAF_CFG_GNUC_STMTEXPR`: This macro controls whether or not <<BOOST_LEAF_CHECK>> is defined in terms of a https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html[GNU C statement expression], which enables its use to check for errors similarly to how the questionmark operator works in some languages (see <<checking_for_errors>>). By default the macro is defined as `1` under `pass:[__GNUC__]`, otherwise as `0`.
+
 * `BOOST_LEAF_CFG_WIN32`: Defining this macro as 1 enables the default constructor in <<e_LastError>>, and the automatic conversion to string (via `FormatMessageA`) when <<verbose_diagnostic_info>> is printed. If the macro is left undefined, LEAF defines it as `0` (even on windows, since including `windows.h` is generally not desirable). Note that the `e_LastError` type itself is available on all platforms, there is no need for conditional compilation in error handlers that use it.
+
 * `BOOST_LEAF_NO_EXCEPTIONS`: Disables all exception handling support. If left undefined, LEAF defines it automatically based on the compiler configuration (e.g. `-fno-exceptions`).
+
 * `BOOST_LEAF_NO_THREADS`: Disables all thread safety in LEAF.
+
+[[configuring_tls_access]]
+=== Configuring TLS Access
+
+LEAF requires support for thread-local `void` pointers. By default, this is implemented using the {CPP}11 `thread_local` keyword, but it is possible to configure LEAF to use an array of thread local pointers instead, by defining `BOOST_LEAF_USE_TLS_ARRAY`. In this case, the user is required to define the following two functions to implement the required TLS access:
+
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+namespace tls
+{
+    void * read_void_ptr( int tls_index ) noexcept;
+    void write_void_ptr( int tls_index, void * p ) noexcept;
+}
+
+} }
+----
+
+TIP: For efficiency, `read_void_ptr` and `write_void_ptr` should be defined `inline`.
+
+Under `BOOST_LEAF_USE_TLS_ARRAY` the following additional configuration macros are recognized:
+
+* `BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX` specifies the start TLS array index available to LEAF (if the macro is left undefined, LEAF defines it as `0`).
+
+* `BOOST_LEAF_CFG_TLS_ARRAY_SIZE` may be defined to specify the size of the TLS array. In this case TLS indices are validated via `BOOST_LEAF_ASSERT` before being passed to `read_void_ptr` / `write_void_ptr`.
+
+* `BOOST_LEAF_CFG_TLS_INDEX_TYPE` may be defined to specify the integral type used to store assigned TLS indices (if the macro is left undefined, LEAF defines it as `unsigned char`).
+
+TIP: Reporting error objects of types that are not used to handle failures does not consume TLS pointers. The minimum size of the TLS pointer array required by LEAF is the total number of different types used as arguments to error handlers (in the entire program), plus one.
+
+WARNING: Beware of `read_void_ptr`/`write_void_ptr` accessing thread local pointers beyond the static size of the thread local pointer array; this will likely result in undefined behavior.
 
 === Embedded Platforms
 
@@ -6116,34 +6155,9 @@ Defining `BOOST_LEAF_EMBEDDED` is equivalent to the following:
 #endif
 ----
 
-LEAF supports FreeRTOS out of the box, please define `BOOST_LEAF_TLS_FREERTOS` (in which case LEAF automatically defines `BOOST_LEAF_EMBEDDED` if it is not defined already).
+LEAF supports FreeRTOS out of the box, please define `BOOST_LEAF_TLS_FREERTOS` (in which case LEAF automatically defines `BOOST_LEAF_EMBEDDED`, if it is not defined already).
 
-For other embedded platforms, please define `BOOST_LEAF_TLS_ARRAY` and make sure your project defines the following two functions to implement TLS pointer access:
-
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-namespace tls
-{
-    void * read_void_ptr( int tls_index ) noexcept;
-    void write_void_ptr( int tls_index, void * p ) noexcept;
-}
-
-} }
-----
-
-TIP: For efficiency, `read_void_ptr` and `write_void_ptr` should be defined `inline`.
-
-Under `BOOST_LEAF_TLS_ARRAY` (which includes `BOOST_LEAF_TLS_FREERTOS`):
-
-* Each error type is assigned a unique index in the TLS pointer array. By default, assigned TLS indices start from `0`; this can be changed by defining `BOOST_LEAF_TLS_ARRAY_START_INDEX`.
-* If `BOOST_LEAF_TLS_ARRAY_SIZE` is defined, it is used to `BOOST_LEAF_ASSERT` that TLS indices are within bounds (which is of course deactivated under `NDEBUG`).
-* Under `BOOST_LEAF_TLS_FREERTOS`, `BOOST_LEAF_TLS_ARRAY_SIZE` defaults to https://www.freertos.org/a00110.html#configNUM_THREAD_LOCAL_STORAGE_POINTERS[`configNUM_THREAD_LOCAL_STORAGE_POINTERS`].
-
-TIP: Reporting error objects of types that are not used to handle failures does not consume TLS pointers. The minimum size of the TLS pointer array required by LEAF is the total number of different types used as arguments to error handlers (in the entire program), plus one.
-
-WARNING: Beware of `read_void_ptr`/`write_void_ptr` accessing thread local pointers beyond the static size of the thread local pointer array; this will likely result in undefined behavior.
+For other embedded platforms, please define `BOOST_LEAF_USE_TLS_ARRAY`, see <<configuring_tls_access>>.
 
 If your program does not use concurrency at all, simply define `BOOST_LEAF_NO_THREADS`, which requires no TLS support at all (but is NOT thread-safe).
 

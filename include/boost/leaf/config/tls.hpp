@@ -10,7 +10,19 @@
 #   include <boost/leaf/config/tls_freertos.hpp>
 #endif
 
-#if defined BOOST_LEAF_TLS_ARRAY
+#ifndef BOOST_LEAF_USE_TLS_ARRAY
+#	ifdef BOOST_LEAF_CFG_TLS_INDEX_TYPE
+#		warning "BOOST_LEAF_CFG_TLS_INDEX_TYPE" is ignored if BOOST_LEAF_USE_TLS_ARRAY is not defined.
+#	endif
+#	ifdef BOOST_LEAF_CFG_TLS_ARRAY_SIZE
+#		warning "BOOST_LEAF_CFG_TLS_ARRAY_SIZE" is ignored if BOOST_LEAF_USE_TLS_ARRAY is not defined.
+#	endif
+#	ifdef BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX
+#		warning "BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX" is ignored if BOOST_LEAF_USE_TLS_ARRAY is not defined.
+#	endif
+#endif
+
+#if defined BOOST_LEAF_USE_TLS_ARRAY
 #   include <boost/leaf/config/tls_array.hpp>
 #elif defined(BOOST_LEAF_NO_THREADS)
 #   include <boost/leaf/config/tls_globals.hpp>

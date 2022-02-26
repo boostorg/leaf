@@ -191,14 +191,16 @@ if option_enable_unit_tests
     header_tests = [
         '_hpp_capture_test',
         '_hpp_common_test',
+        '_hpp_config_test',
         '_hpp_context_test',
         '_hpp_error_test',
         '_hpp_exception_test',
         '_hpp_handle_errors_test',
-        '_hpp_leaf_test',
         '_hpp_on_error_test',
         '_hpp_pred_test',
         '_hpp_result_test',
+        '_hpp_to_variant_test',
+        '_hpp_leaf_test',
     ]
     foreach t : header_tests
         test(t, executable(t, 'test/'+t+'.cpp', dependencies: [leaf, dep_thread, dep_boost]) )
