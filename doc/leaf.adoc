@@ -6103,7 +6103,7 @@ The following configuration macros are recognized:
 [[configuring_tls_access]]
 === Configuring TLS Access
 
-LEAF requires support for thread-local `void` pointers. By default, this is implemented using the {CPP}11 `thread_local` keyword, but it is possible to configure LEAF to use an array of thread local pointers instead, by defining `BOOST_LEAF_USE_TLS_ARRAY`. In this case, the user is required to define the following two functions to implement the required TLS access:
+LEAF requires support for thread-local `void` pointers. By default, this is implemented by means of the {CPP}11 `thread_local` keyword, but in order to support <<embedded_platforms,embedded platforms>>, it is possible to configure LEAF to use an array of thread local pointers instead, by defining `BOOST_LEAF_USE_TLS_ARRAY`. In this case, the user is required to define the following two functions to implement the required TLS access:
 
 [source,c++]
 ----
@@ -6130,8 +6130,9 @@ Under `BOOST_LEAF_USE_TLS_ARRAY` the following additional configuration macros a
 
 TIP: Reporting error objects of types that are not used to handle failures does not consume TLS pointers. The minimum size of the TLS pointer array required by LEAF is the total number of different types used as arguments to error handlers (in the entire program), plus one.
 
-WARNING: Beware of `read_void_ptr`/`write_void_ptr` accessing thread local pointers beyond the static size of the thread local pointer array; this will likely result in undefined behavior.
+WARNING: Beware of `read_void_ptr`/`write_void_ptr` accessing thread local pointers beyond the static boundaries of the thread local pointer array; this will likely result in undefined behavior.
 
+[[embedded_platforms]]
 === Embedded Platforms
 
 Defining `BOOST_LEAF_EMBEDDED` is equivalent to the following:
