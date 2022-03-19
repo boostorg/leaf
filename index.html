@@ -516,7 +516,7 @@ The the result of <code>r.error()</code> is compatible with any instance of the 
 <p>The second lambda is an error handler: it will be called iff the first lambda fails and an error object of type <code>err1</code> was communicated to LEAF. That object is stored on the stack, local to the <code>try_handle_some</code> function (LEAF knows to allocate this storage because we gave it an error handler that takes an <code>err1</code>). Error handlers passed to <code>leaf::try_handle_some</code> can return a valid <code>leaf::result&lt;U&gt;</code> but are allowed to fail.</p>
 </div>
 <div class="paragraph">
-<p>It is possible for an error handler to specify that it can only deal with a particular value of a given error type:</p>
+<p>It is possible for an error handler to specify that it can only deal with some values of a given error type:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -530,7 +530,7 @@ The the result of <code>r.error()</code> is compatible with any instance of the 
     <span class="k">return</span> <span class="n">g</span><span class="p">(</span><span class="n">v1</span><span class="p">.</span> <span class="n">v2</span><span class="p">);</span>
   <span class="p">},</span>
 
-  <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">match</span><span class="o">&lt;</span><span class="n">err1</span><span class="p">,</span> <span class="n">err1</span><span class="o">::</span><span class="n">e1</span><span class="o">&gt;</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span>
+  <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">match</span><span class="o">&lt;</span><span class="n">err1</span><span class="p">,</span> <span class="n">err1</span><span class="o">::</span><span class="n">e1</span><span class="p">,</span> <span class="n">err1</span><span class="o">::</span><span class="n">e3</span><span class="o">&gt;</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span>
   <span class="p">{</span>
     <span class="c1">// Handle err::e1</span>
   <span class="p">},</span>
@@ -541,13 +541,16 @@ The the result of <code>r.error()</code> is compatible with any instance of the 
   <span class="p">}</span> <span class="p">);</span></code></pre>
 </div>
 </div>
+<div class="paragraph text-right">
+<p><a href="#try_handle_some"><code>try_handle_some</code></a> | <a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a> | <a href="#match"><code>match</code></a></p>
+</div>
 <div class="paragraph">
 <p>LEAF considers the provided error handlers in order, and calls the first one for which it can supply arguments, based on the error objects currently being communicated. Above:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>The first error handler uses the predicate <code>leaf::match</code> to specify that it should only be considered if an error object of type <code>err1</code> is available, and its value is <code>err1::e1</code>.</p>
+<p>The first error handler uses the predicate <code>leaf::match</code> to specify that it should only be considered if an error object of type <code>err1</code> is available, and its value is either <code>err1::e1</code> or <code>err1::e3</code>.</p>
 </li>
 <li>
 <p>Otherwise the second error handler will be called if an error object of type <code>err1</code> is available, regardless of its value.</p>
@@ -556,6 +559,48 @@ The the result of <code>r.error()</code> is compatible with any instance of the 
 <p>Otherwise <code>leaf::try_handle_some</code> fails.</p>
 </li>
 </ul>
+</div>
+<div class="paragraph">
+<p>It is possible for an error handler to conditionally leave the current failure unhandled:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span> <span class="n">r</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_some</span><span class="p">(</span>
+
+  <span class="p">[]()</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span>
+  <span class="p">{</span>
+    <span class="n">BOOST_LEAF_AUTO</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">f1</span><span class="p">());</span>
+    <span class="n">BOOST_LEAF_AUTO</span><span class="p">(</span><span class="n">v2</span><span class="p">,</span> <span class="n">f2</span><span class="p">());</span>
+
+    <span class="k">return</span> <span class="n">g</span><span class="p">(</span><span class="n">v1</span><span class="p">.</span> <span class="n">v2</span><span class="p">);</span>
+  <span class="p">},</span>
+
+  <span class="p">[](</span> <span class="n">err1</span> <span class="n">e</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">error_info</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ei</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span>
+  <span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span> <span class="o">&lt;&lt;</span><span class="n">condition</span><span class="o">&gt;&gt;</span> <span class="p">)</span>
+      <span class="k">return</span> <span class="n">valid_U</span><span class="p">;</span>
+    <span class="k">else</span>
+      <span class="k">return</span> <span class="n">ei</span><span class="p">.</span><span class="n">error</span><span class="p">();</span>
+  <span class="p">}</span> <span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#try_handle_some"><code>try_handle_some</code></a> | <a href="#result"><code>result</code></a> | <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a> | <a href="#error_info"><code>error_info</code></a></p>
+</div>
+<div class="paragraph">
+<p>Any error handler can take an argument of type <code>leaf::error_info const &amp;</code> to get access to generic information about the error being handled; in this case we use the <code>error</code> member function, which returns the unique <a href="#error_id"><code>error_id</code></a> of the current error; we use it to initialize the returned <code>leaf::result</code>, effectively propagating the current error out of <code>try_handle_some</code>.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+If we wanted to signal a new error (rather than propagating the current error), in the <code>return</code> statement we would invoke the <code>leaf::new_error</code> function.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>If we want to ensure that all possible failures are handled, we use <code>leaf::try_handle_all</code> instead of <code>leaf::try_handle_some</code>:</p>
