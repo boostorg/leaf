@@ -213,7 +213,7 @@ The first lambda passed to `try_handle_some` is executed first; it attempts to p
 
 The second lambda is an error handler: it will be called iff the first lambda fails and an error object of type `err1` was communicated to LEAF. That object is stored on the stack, local to the `try_handle_some` function (LEAF knows to allocate this storage because we gave it an error handler that takes an `err1`). Error handlers passed to `leaf::try_handle_some` can return a valid `leaf::result<U>` but are allowed to fail.
 
-It is possible for an error handler to specify that it can only deal with a particular value of a given error type:
+It is possible for an error handler to specify that it can only deal with some values of a given error type:
 
 [source,c++]
 ----
@@ -227,7 +227,7 @@ leaf::result<U> r = leaf::try_handle_some(
     return g(v1. v2);
   },
 
-  []( leaf::match<err1, err1::e1> ) -> leaf::result<U>
+  []( leaf::match<err1, err1::e1, err1::e3> ) -> leaf::result<U>
   {
     // Handle err::e1
   },
@@ -237,14 +237,45 @@ leaf::result<U> r = leaf::try_handle_some(
     // Handle any other err1 value
   } );
 ----
+[.text-right]
+<<try_handle_some>> | <<result>> | <<BOOST_LEAF_AUTO>> | <<match>>
 
 LEAF considers the provided error handlers in order, and calls the first one for which it can supply arguments, based on the error objects currently being communicated. Above:
 
-* The first error handler uses the predicate `leaf::match` to specify that it should only be considered if an error object of type `err1` is available, and its value is `err1::e1`.
+* The first error handler uses the predicate `leaf::match` to specify that it should only be considered if an error object of type `err1` is available, and its value is either `err1::e1` or `err1::e3`.
 
 * Otherwise the second error handler will be called if an error object of type `err1` is available, regardless of its value.
 
 * Otherwise `leaf::try_handle_some` fails.
+
+It is possible for an error handler to conditionally leave the current failure unhandled:
+
+[source,c++]
+----
+leaf::result<U> r = leaf::try_handle_some(
+
+  []() -> leaf::result<U>
+  {
+    BOOST_LEAF_AUTO(v1, f1());
+    BOOST_LEAF_AUTO(v2, f2());
+
+    return g(v1. v2);
+  },
+
+  []( err1 e, leaf::error_info const & ei ) -> leaf::result<U>
+  {
+    if( <<condition>> )
+      return valid_U;
+    else
+      return ei.error();
+  } );
+----
+[.text-right]
+<<try_handle_some>> | <<result>> | <<BOOST_LEAF_AUTO>> | <<error_info>>
+
+Any error handler can take an argument of type `leaf::error_info const &` to get access to generic information about the error being handled; in this case we use the `error` member function, which returns the unique <<error_id>> of the current error; we use it to initialize the returned `leaf::result`, effectively propagating the current error out of `try_handle_some`.
+
+TIP: If we wanted to signal a new error (rather than propagating the current error), in the `return` statement we would invoke the `leaf::new_error` function.
 
 If we want to ensure that all possible failures are handled, we use `leaf::try_handle_all` instead of `leaf::try_handle_some`:
 
