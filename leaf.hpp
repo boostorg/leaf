@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 03/19/2022 from https://github.com/boostorg/leaf/tree/ecf1f13.
+// Generated on 05/27/2022 from https://github.com/boostorg/leaf/tree/5e9a5b9.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
@@ -469,7 +469,7 @@ namespace tls
     {
         int tls_idx = tls_index<T>::idx;
         if( tls_idx == (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX) )
-            return 0;
+            return nullptr;
         --tls_idx;
         return reinterpret_cast<T *>(read_void_ptr(tls_idx));
     }
@@ -870,13 +870,13 @@ namespace leaf_detail
         BOOST_LEAF_CONSTEXPR T const * has_value(int key) const noexcept
         {
             BOOST_LEAF_ASSERT(key);
-            return key_==key ? &value_ : 0;
+            return key_==key ? &value_ : nullptr;
         }
 
         BOOST_LEAF_CONSTEXPR T * has_value(int key) noexcept
         {
             BOOST_LEAF_ASSERT(key);
-            return key_==key ? &value_ : 0;
+            return key_==key ? &value_ : nullptr;
         }
 
         BOOST_LEAF_CONSTEXPR T const & value(int key) const & noexcept
@@ -1795,7 +1795,7 @@ namespace leaf_detail
         template <class CharT, class Traits>
         void print( std::basic_ostream<CharT, Traits> & os ) const
         {
-            BOOST_LEAF_ASSERT(first_type != 0);
+            BOOST_LEAF_ASSERT(first_type != nullptr);
             BOOST_LEAF_ASSERT(count>0);
             os << "Detected ";
             if( count==1 )
@@ -1894,15 +1894,15 @@ namespace leaf_detail
     public:
 
         BOOST_LEAF_CONSTEXPR slot() noexcept:
-            prev_(0)
+            prev_(nullptr)
         {
         }
 
         BOOST_LEAF_CONSTEXPR slot( slot && x ) noexcept:
             optional<E>(std::move(x)),
-            prev_(0)
+            prev_(nullptr)
         {
-            BOOST_LEAF_ASSERT(x.prev_==0);
+            BOOST_LEAF_ASSERT(x.prev_==nullptr);
         }
 
         BOOST_LEAF_CONSTEXPR void activate() noexcept
@@ -2332,7 +2332,7 @@ public:
 #if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
         uncaught_exceptions_(std::uncaught_exceptions()),
 #endif
-        ctx_(ctx.is_active() ? 0 : &ctx)
+        ctx_(ctx.is_active() ? nullptr : &ctx)
     {
         if( ctx_ )
             ctx_->activate();
@@ -2344,7 +2344,7 @@ public:
 #endif
         ctx_(x.ctx_)
     {
-        x.ctx_ = 0;
+        x.ctx_ = nullptr;
     }
 
     BOOST_LEAF_ALWAYS_INLINE ~context_activator() noexcept
@@ -2426,7 +2426,7 @@ namespace leaf_detail
     protected:
 
         exception_base():
-            auto_id_bump_(0, [](void const *) { (void) new_id(); })
+            auto_id_bump_(nullptr, [](void const *) { (void) new_id(); })
         {
         }
 
@@ -3164,20 +3164,20 @@ namespace windows
             struct msg_buf
             {
                 LPVOID * p;
-                msg_buf(): p(0) { }
+                msg_buf(): p(nullptr) { }
                 ~msg_buf() noexcept { if(p) LocalFree(p); }
             };
             msg_buf mb;
             if( FormatMessageA(
                 FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS,
-                0,
+                nullptr,
                 err.value,
                 MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
                 (LPSTR)&mb.p,
                 0,
-                0) )
+                nullptr) )
             {
-                BOOST_LEAF_ASSERT(mb.p != 0);
+                BOOST_LEAF_ASSERT(mb.p != nullptr);
                 char * z = std::strchr((LPSTR)mb.p,0);
                 if( z[-1] == '\n' )
                     *--z = 0;
@@ -3382,7 +3382,7 @@ namespace leaf_detail
         template <class CharT, class Traits>
         static void print( std::basic_ostream<CharT, Traits> & os, void const * tup, int key_to_print )
         {
-            BOOST_LEAF_ASSERT(tup != 0);
+            BOOST_LEAF_ASSERT(tup != nullptr);
             tuple_for_each<I-1,Tuple>::print(os, tup, key_to_print);
             std::get<I-1>(*static_cast<Tuple const *>(tup)).print(os, key_to_print);
         }
@@ -3733,7 +3733,7 @@ public:
 
     BOOST_LEAF_CONSTEXPR explicit error_info( error_id id ) noexcept:
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
-        ex_(0),
+        ex_(nullptr),
 #endif
         err_id_(id)
     {
@@ -4052,7 +4052,7 @@ namespace leaf_detail
             else if( std::error_code * ec = dynamic_cast<std::error_code *>(ex) )
                 return ec;
             else
-                return 0;
+                return nullptr;
         }
     };
 
@@ -4067,7 +4067,7 @@ namespace leaf_detail
             else if( std::error_code * ec = dynamic_cast<std::error_code *>(ex) )
                 return ec;
             else
-                return 0;
+                return nullptr;
         }
     };
 #endif
@@ -4086,7 +4086,7 @@ namespace leaf_detail
     {
         BOOST_LEAF_CONSTEXPR static E * peek( error_info const & ) noexcept
         {
-            return 0;
+            return nullptr;
         }
     };
 
@@ -4101,13 +4101,13 @@ namespace leaf_detail
         template <class SlotsTuple>
         BOOST_LEAF_CONSTEXPR static E const * peek( SlotsTuple const &, error_id const & ) noexcept
         {
-            return 0;
+            return nullptr;
         }
         
         template <class SlotsTuple>
         BOOST_LEAF_CONSTEXPR static E * peek( SlotsTuple &, error_id const & ) noexcept
         {
-            return 0;
+            return nullptr;
         }
     };
 
@@ -4139,7 +4139,7 @@ namespace leaf_detail
             else
                 return peek_exception<E const>::peek(ei);
 #endif
-        return 0;
+        return nullptr;
     }
 
     template <class E, class SlotsTuple>
@@ -4154,7 +4154,7 @@ namespace leaf_detail
             else
                 return peek_exception<E>::peek(ei);
 #endif
-        return 0;
+        return nullptr;
     }
 }
 
@@ -4605,7 +4605,7 @@ namespace leaf_detail
             if( auto * be = get_exception<boost_exception>(ei) )
                 return exception_detail::get_info<boost::error_info<Tag, T>>::get(*be);
             else
-                return 0;
+                return nullptr;
         }
 
         template <class Tup>
@@ -4653,14 +4653,14 @@ namespace leaf_detail
     template <class MatchType, class T>
     BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & e, bool (*P)(T) noexcept ) noexcept
     {
-        BOOST_LEAF_ASSERT(P != 0);
+        BOOST_LEAF_ASSERT(P != nullptr);
         return P(e);
     }
 
     template <class MatchType, class T>
     BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE bool cmp_value_pack( MatchType const & e, bool (*P)(T) )
     {
-        BOOST_LEAF_ASSERT(P != 0);
+        BOOST_LEAF_ASSERT(P != nullptr);
         return P(e);
     }
 #endif
@@ -4870,13 +4870,13 @@ namespace leaf_detail
     template <class Ex>
     BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const * ) noexcept
     {
-        return dynamic_cast<Ex const *>(&ex)!=0;
+        return dynamic_cast<Ex const *>(&ex)!=nullptr;
     }
 
     template <class Ex, class... ExRest>
     BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const *, ExRest const * ... ex_rest ) noexcept
     {
-        return dynamic_cast<Ex const *>(&ex)!=0 || check_exception_pack(ex, ex_rest...);
+        return dynamic_cast<Ex const *>(&ex)!=nullptr || check_exception_pack(ex, ex_rest...);
     }
 
     BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ) noexcept
@@ -4893,7 +4893,7 @@ struct catch_
 
     BOOST_LEAF_CONSTEXPR static bool evaluate(std::exception const & ex) noexcept
     {
-        return leaf_detail::check_exception_pack(ex, static_cast<Ex const *>(0)...);
+        return leaf_detail::check_exception_pack(ex, static_cast<Ex const *>(nullptr)...);
     }
 };
 
@@ -5196,12 +5196,12 @@ class result
 
     stored_type const * get() const noexcept
     {
-        return has_value() ? &stored_ : 0;
+        return has_value() ? &stored_ : nullptr;
     }
 
     stored_type * get() noexcept
     {
-        return has_value() ? &stored_ : 0;
+        return has_value() ? &stored_ : nullptr;
     }
 
 protected:
@@ -5271,7 +5271,7 @@ public:
 
     // SFINAE: T can be initialized with a U, e.g. result<std::string>("literal").
     template <class U>
-    result( U && u, decltype(init_T_with_U(std::forward<U>(u))) * = 0 ):
+    result( U && u, decltype(init_T_with_U(std::forward<U>(u))) * = nullptr ):
         stored_(std::forward<U>(u)),
         what_(result_discriminant::kind_val{})
     {
@@ -5286,7 +5286,7 @@ public:
     }
 
     template <class Enum>
-    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type * = 0 ) noexcept:
+    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type * = nullptr ) noexcept:
         what_(error_id(e))
     {
     }
@@ -5379,12 +5379,12 @@ public:
 
     value_type_const * operator->() const noexcept
     {
-        return has_value() ? leaf_detail::stored<T>::cptr(stored_) : 0;
+        return has_value() ? leaf_detail::stored<T>::cptr(stored_) : nullptr;
     }
 
     value_type * operator->() noexcept
     {
-        return has_value() ? leaf_detail::stored<T>::ptr(stored_) : 0;
+        return has_value() ? leaf_detail::stored<T>::ptr(stored_) : nullptr;
     }
 
 #ifdef BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
@@ -5392,14 +5392,14 @@ public:
     value_cref operator*() const noexcept
     {
         auto p = get();
-        BOOST_LEAF_ASSERT(p != 0);
+        BOOST_LEAF_ASSERT(p != nullptr);
         return *p;
     }
 
     value_ref operator*() noexcept
     {
         auto p = get();
-        BOOST_LEAF_ASSERT(p != 0);
+        BOOST_LEAF_ASSERT(p != nullptr);
         return *p;
     }
 
@@ -5408,28 +5408,28 @@ public:
     value_cref operator*() const & noexcept
     {
         auto p = get();
-        BOOST_LEAF_ASSERT(p != 0);
+        BOOST_LEAF_ASSERT(p != nullptr);
         return *p;
     }
 
     value_ref operator*() & noexcept
     {
         auto p = get();
-        BOOST_LEAF_ASSERT(p != 0);
+        BOOST_LEAF_ASSERT(p != nullptr);
         return *p;
     }
 
     value_rv_cref operator*() const && noexcept
     {
         auto p = get();
-        BOOST_LEAF_ASSERT(p != 0);
+        BOOST_LEAF_ASSERT(p != nullptr);
         return std::move(*p);
     }
 
     value_rv_ref operator*() && noexcept
     {
         auto p = get();
-        BOOST_LEAF_ASSERT(p != 0);
+        BOOST_LEAF_ASSERT(p != nullptr);
         return std::move(*p);
     }
 
@@ -5495,7 +5495,7 @@ public:
     }
 
     template <class Enum>
-    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept:
+    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = nullptr ) noexcept:
         base(e)
     {
     }
