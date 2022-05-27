@@ -60,7 +60,7 @@ public:
 
     BOOST_LEAF_CONSTEXPR explicit error_info( error_id id ) noexcept:
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
-        ex_(0),
+        ex_(nullptr),
 #endif
         err_id_(id)
     {
@@ -379,7 +379,7 @@ namespace leaf_detail
             else if( std::error_code * ec = dynamic_cast<std::error_code *>(ex) )
                 return ec;
             else
-                return 0;
+                return nullptr;
         }
     };
 
@@ -394,7 +394,7 @@ namespace leaf_detail
             else if( std::error_code * ec = dynamic_cast<std::error_code *>(ex) )
                 return ec;
             else
-                return 0;
+                return nullptr;
         }
     };
 #endif
@@ -413,7 +413,7 @@ namespace leaf_detail
     {
         BOOST_LEAF_CONSTEXPR static E * peek( error_info const & ) noexcept
         {
-            return 0;
+            return nullptr;
         }
     };
 
@@ -428,13 +428,13 @@ namespace leaf_detail
         template <class SlotsTuple>
         BOOST_LEAF_CONSTEXPR static E const * peek( SlotsTuple const &, error_id const & ) noexcept
         {
-            return 0;
+            return nullptr;
         }
         
         template <class SlotsTuple>
         BOOST_LEAF_CONSTEXPR static E * peek( SlotsTuple &, error_id const & ) noexcept
         {
-            return 0;
+            return nullptr;
         }
     };
 
@@ -466,7 +466,7 @@ namespace leaf_detail
             else
                 return peek_exception<E const>::peek(ei);
 #endif
-        return 0;
+        return nullptr;
     }
 
     template <class E, class SlotsTuple>
@@ -481,7 +481,7 @@ namespace leaf_detail
             else
                 return peek_exception<E>::peek(ei);
 #endif
-        return 0;
+        return nullptr;
     }
 }
 
@@ -932,7 +932,7 @@ namespace leaf_detail
             if( auto * be = get_exception<boost_exception>(ei) )
                 return exception_detail::get_info<boost::error_info<Tag, T>>::get(*be);
             else
-                return 0;
+                return nullptr;
         }
 
         template <class Tup>

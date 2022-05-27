@@ -154,7 +154,7 @@ namespace leaf_detail
         template <class CharT, class Traits>
         void print( std::basic_ostream<CharT, Traits> & os ) const
         {
-            BOOST_LEAF_ASSERT(first_type != 0);
+            BOOST_LEAF_ASSERT(first_type != nullptr);
             BOOST_LEAF_ASSERT(count>0);
             os << "Detected ";
             if( count==1 )
@@ -253,15 +253,15 @@ namespace leaf_detail
     public:
 
         BOOST_LEAF_CONSTEXPR slot() noexcept:
-            prev_(0)
+            prev_(nullptr)
         {
         }
 
         BOOST_LEAF_CONSTEXPR slot( slot && x ) noexcept:
             optional<E>(std::move(x)),
-            prev_(0)
+            prev_(nullptr)
         {
-            BOOST_LEAF_ASSERT(x.prev_==0);
+            BOOST_LEAF_ASSERT(x.prev_==nullptr);
         }
 
         BOOST_LEAF_CONSTEXPR void activate() noexcept
@@ -691,7 +691,7 @@ public:
 #if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
         uncaught_exceptions_(std::uncaught_exceptions()),
 #endif
-        ctx_(ctx.is_active() ? 0 : &ctx)
+        ctx_(ctx.is_active() ? nullptr : &ctx)
     {
         if( ctx_ )
             ctx_->activate();
@@ -703,7 +703,7 @@ public:
 #endif
         ctx_(x.ctx_)
     {
-        x.ctx_ = 0;
+        x.ctx_ = nullptr;
     }
 
     BOOST_LEAF_ALWAYS_INLINE ~context_activator() noexcept

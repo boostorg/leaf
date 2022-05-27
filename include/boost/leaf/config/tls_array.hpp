@@ -104,7 +104,7 @@ namespace tls
     {
         int tls_idx = tls_index<T>::idx;
         if( tls_idx == (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX) )
-            return 0;
+            return nullptr;
         --tls_idx;
         return reinterpret_cast<T *>(read_void_ptr(tls_idx));
     }
