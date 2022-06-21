@@ -180,10 +180,12 @@ namespace leaf_detail
         {
             BOOST_LEAF_ASSERT((err_id&3)==1);
             if( s_ )
+            {
                 if( E * e = s_->has_value(err_id) )
                     (void) f_(*e);
                 else
                     (void) f_(s_->put(err_id, E()));
+            }
         }
     };
 

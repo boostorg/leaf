@@ -216,7 +216,7 @@ struct is_predicate<match_member<P, V1, V...>>: std::true_type
 template <class P>
 struct if_not
 {
-    using error_type = typename P::error_type;;
+    using error_type = typename P::error_type;
     decltype(std::declval<P>().matched) matched;
 
     template <class E>
