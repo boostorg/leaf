@@ -72,7 +72,7 @@ namespace leaf_detail
         {
             auto e = base::check(tup, ei);
             return e && Pred::evaluate(*e);
-        };
+        }
 
         template <class Tup>
         BOOST_LEAF_CONSTEXPR static Pred get( Tup const & tup, error_info const & ei ) noexcept
@@ -91,7 +91,7 @@ namespace leaf_detail
         BOOST_LEAF_CONSTEXPR static bool check( Tup &, error_info const & ) noexcept
         {
             return true;
-        };
+        }
     };
 
     template <class E>

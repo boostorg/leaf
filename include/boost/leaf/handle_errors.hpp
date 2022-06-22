@@ -460,12 +460,14 @@ namespace leaf_detail
     peek( SlotsTuple const & tup, error_info const & ei ) noexcept
     {
         if( error_id err = ei.error() )
+        {
             if( E const * e = peek_tuple<E>::peek(tup, err) )
                 return e;
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             else
                 return peek_exception<E const>::peek(ei);
 #endif
+        }
         return nullptr;
     }
 
@@ -475,12 +477,14 @@ namespace leaf_detail
     peek( SlotsTuple & tup, error_info const & ei ) noexcept
     {
         if( error_id err = ei.error() )
+        {
             if( E * e = peek_tuple<E>::peek(tup, err) )
                 return e;
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             else
                 return peek_exception<E>::peek(ei);
 #endif
+        }
         return nullptr;
     }
 }
