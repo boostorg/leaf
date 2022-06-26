@@ -103,13 +103,13 @@ namespace leaf_detail
 
 namespace boost
 {
-BOOST_LEAF_NORETURN void throw_exception( std::exception const & ); // user defined
+[[noreturn]] void throw_exception( std::exception const & ); // user defined
 }
 
 namespace boost { namespace leaf {
 
 template <class T>
-BOOST_LEAF_NORETURN void throw_exception( T const & e )
+[[noreturn]] void throw_exception( T const & e )
 {
     ::boost::throw_exception(e);
 }
@@ -121,7 +121,7 @@ BOOST_LEAF_NORETURN void throw_exception( T const & e )
 namespace boost { namespace leaf {
 
 template <class T>
-BOOST_LEAF_NORETURN void throw_exception( T const & e )
+[[noreturn]] void throw_exception( T const & e )
 {
     throw e;
 }

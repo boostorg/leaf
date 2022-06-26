@@ -10,7 +10,7 @@
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
 namespace boost
 {
-    BOOST_LEAF_NORETURN void throw_exception( std::exception const & e )
+    [[noreturn]] void throw_exception( std::exception const & e )
     {
         std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
         std::terminate();

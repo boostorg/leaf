@@ -158,14 +158,14 @@ int main()
 
 namespace boost
 {
-    BOOST_LEAF_NORETURN void throw_exception( std::exception const & e )
+    [[noreturn]] void throw_exception( std::exception const & e )
     {
         std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
         std::terminate();
     }
 
     struct source_location;
-    BOOST_LEAF_NORETURN void throw_exception( std::exception const & e, boost::source_location const & )
+    [[noreturn]] void throw_exception( std::exception const & e, boost::source_location const & )
     {
         throw_exception(e);
     }
