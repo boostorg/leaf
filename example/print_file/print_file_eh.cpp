@@ -67,7 +67,7 @@ int main( int argc, char const * argv[] )
             std::cout << buffer;
             std::cout.flush();
             if( std::cout.fail() )
-                throw leaf::exception(output_error, leaf::e_errno{errno});
+                leaf::throw_exception(output_error, leaf::e_errno{errno});
 
             return 0;
         },
@@ -152,7 +152,7 @@ char const * parse_command_line( int argc, char const * argv[] )
     if( argc==2 )
         return argv[1];
     else
-        throw leaf::exception(bad_command_line);
+        leaf::throw_exception(bad_command_line);
 }
 
 
@@ -162,7 +162,7 @@ std::shared_ptr<FILE> file_open( char const * file_name )
     if( FILE * f = fopen(file_name, "rb") )
         return std::shared_ptr<FILE>(f, &fclose);
     else
-        throw leaf::exception(open_error, leaf::e_errno{errno});
+        leaf::throw_exception(open_error, leaf::e_errno{errno});
 }
 
 
@@ -172,14 +172,14 @@ int file_size( FILE & f )
     auto load = leaf::on_error([] { return leaf::e_errno{errno}; });
 
     if( fseek(&f, 0, SEEK_END) )
-        throw leaf::exception(size_error);
+        leaf::throw_exception(size_error);
 
     int s = ftell(&f);
     if( s==-1L )
-        throw leaf::exception(size_error);
+        leaf::throw_exception(size_error);
 
     if( fseek(&f,0,SEEK_SET) )
-        throw leaf::exception(size_error);
+        leaf::throw_exception(size_error);
 
     return s;
 }
@@ -191,8 +191,8 @@ void file_read( FILE & f, void * buf, int size )
     int n = fread(buf, 1, size, &f);
 
     if( ferror(&f) )
-        throw leaf::exception(read_error, leaf::e_errno{errno});
+        leaf::throw_exception(read_error, leaf::e_errno{errno});
 
     if( n!=size )
-        throw leaf::exception(eof_error);
+        leaf::throw_exception(eof_error);
 }

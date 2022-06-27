@@ -7,7 +7,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/error.hpp>
+#include <boost/leaf/exception.hpp>
 
 #include <climits>
 #include <functional>
@@ -281,7 +281,7 @@ protected:
     void enforce_value_state() const
     {
         if( !has_value() )
-            ::boost::leaf::throw_exception(bad_result(get_error_id()));
+            ::boost::leaf::leaf_detail::throw_exception_impl(bad_result(get_error_id()));
     }
 
 public:

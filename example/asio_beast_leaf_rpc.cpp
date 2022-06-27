@@ -376,7 +376,7 @@ leaf::result<std::string> execute_command(std::string_view line) {
         if (i2 == 0) {
             // In some cases this command execution function might throw, not
             // just return an error.
-            throw leaf::exception(std::runtime_error{"division by zero"});
+            leaf::throw_exception(std::runtime_error{"division by zero"});
         }
         response = std::to_string(i1 % i2);
     } else {

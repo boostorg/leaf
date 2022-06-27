@@ -45,7 +45,7 @@ struct exc_val: std::exception { int value; explicit exc_val(int v): value(v) { 
 template <class R,class Ex>
 R failing( Ex && ex )
 {
-    throw leaf::exception(std::move(ex), info<1>{1}, info<2>{2}, info<3>{3});
+    leaf::throw_exception(std::move(ex), info<1>{1}, info<2>{2}, info<3>{3});
 }
 
 template <class R>
@@ -549,7 +549,7 @@ int main()
         int r = leaf::try_catch(
             []
             {
-                throw leaf::exception(exc_val{42});
+                leaf::throw_exception(exc_val{42});
                 return 0;
             },
             []( leaf::match_value<exc_val, 42> )
@@ -566,7 +566,7 @@ int main()
         int r = leaf::try_catch(
             []
             {
-                throw leaf::exception(exc_val{42});
+                leaf::throw_exception(exc_val{42});
                 return 0;
             },
             []( leaf::match_value<exc_val, 41> )

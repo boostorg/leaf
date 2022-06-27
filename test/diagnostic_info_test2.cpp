@@ -73,12 +73,12 @@ int main()
                     leaf::try_catch(
                         []
                         {
-                            throw leaf::exception(info<1>{});
+                            leaf::throw_exception(info<1>{});
                         },
                         []
                         {
                         } );
-                    throw leaf::exception(info<2>{});
+                    leaf::throw_exception(info<2>{});
                 },
                 []( info<1> )
                 {

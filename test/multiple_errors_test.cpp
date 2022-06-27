@@ -68,7 +68,7 @@ int main()
             {
                 try
                 {
-                    throw leaf::exception(info<4>{4});
+                    leaf::throw_exception(info<4>{4});
                 }
                 catch(...)
                 {

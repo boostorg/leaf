@@ -38,7 +38,7 @@ int main()
         int r = leaf::try_catch(
             []() -> int
             {
-                throw leaf::exception( std::system_error(make_error_code(errc_a::a0)), info{42} );
+                leaf::throw_exception( std::system_error(make_error_code(errc_a::a0)), info{42} );
             },
             []( std::system_error const & se, leaf::match_value<info, 42> )
             {
@@ -74,7 +74,7 @@ int main()
         int r = leaf::try_catch(
             []() -> int
             {
-                throw leaf::exception( std::system_error(make_error_code(errc_a::a0)), info{42} );
+                leaf::throw_exception( std::system_error(make_error_code(errc_a::a0)), info{42} );
             },
             []( leaf::match<leaf::condition<errc_a>, errc_a::a0> code, leaf::match_value<info, 42> )
             {
@@ -112,7 +112,7 @@ int main()
         int r = leaf::try_catch(
             []() -> int
             {
-                throw leaf::exception( std::system_error(make_error_code(errc_a::a0)), info{42} );
+                leaf::throw_exception( std::system_error(make_error_code(errc_a::a0)), info{42} );
             },
             []( std::error_code const & ec, leaf::match_value<info, 42> )
             {

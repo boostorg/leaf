@@ -38,7 +38,7 @@ int main()
     int r = leaf::try_catch(
         []() -> int
         {
-            throw leaf::exception( my_error(), info{42} );
+            leaf::throw_exception( my_error(), info{42} );
         },
         []( my_error const & x, leaf::catch_<leaf::error_id> id )
         {

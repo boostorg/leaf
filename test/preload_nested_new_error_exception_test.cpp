@@ -38,14 +38,14 @@ struct info
 void f0()
 {
     auto load = leaf::on_error( info<0>{-1} );
-    throw leaf::exception(info<1>{-1});
+    leaf::throw_exception(info<1>{-1});
 }
 
 void f1()
 {
     auto load = leaf::on_error( info<0>{}, info<1>{1}, info<2>{2} );
     try { f0(); } catch(...) { }
-    throw leaf::exception();
+    leaf::throw_exception();
 }
 
 leaf::error_id f2()

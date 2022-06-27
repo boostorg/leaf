@@ -65,7 +65,7 @@ int main()
         leaf::result<int> r = leaf::try_handle_some(
             []() -> leaf::result<int>
             {
-                throw leaf::exception( my_exception(), info<1>{1} );
+                leaf::throw_exception( my_exception(), info<1>{1} );
             },
             []( my_exception const &, info<1> const & x )
             {
@@ -79,7 +79,7 @@ int main()
         leaf::result<int> r = leaf::try_handle_some(
             []() -> leaf::result<int>
             {
-                throw leaf::exception( info<1>{1} );
+                leaf::throw_exception( info<1>{1} );
             },
             []( info<1> const & x )
             {
@@ -132,7 +132,7 @@ int main()
             leaf::result<int> r = leaf::try_handle_some(
                 []() -> leaf::result<int>
                 {
-                    throw leaf::exception( my_exception(), info<1>{1} );
+                    leaf::throw_exception( my_exception(), info<1>{1} );
                 },
                 error_handlers );
             BOOST_TEST(r);
@@ -142,7 +142,7 @@ int main()
             leaf::result<int> r = leaf::try_handle_some(
                 []() -> leaf::result<int>
                 {
-                    throw leaf::exception( info<1>{1} );
+                    leaf::throw_exception( info<1>{1} );
                 },
                 error_handlers );
             BOOST_TEST(r);
@@ -178,7 +178,7 @@ int main()
         int r = leaf::try_handle_all(
             []() -> leaf::result<int>
             {
-                throw leaf::exception( my_exception(), info<1>{1} );
+                leaf::throw_exception( my_exception(), info<1>{1} );
             },
             []( my_exception const &, info<1> const & x )
             {
@@ -195,7 +195,7 @@ int main()
         int r = leaf::try_handle_all(
             []() -> leaf::result<int>
             {
-                throw leaf::exception( info<1>{1} );
+                leaf::throw_exception( info<1>{1} );
             },
             []( info<1> const & x )
             {
@@ -257,7 +257,7 @@ int main()
             int r = leaf::try_handle_all(
                 []() -> leaf::result<int>
                 {
-                    throw leaf::exception( my_exception(), info<1>{1} );
+                    leaf::throw_exception( my_exception(), info<1>{1} );
                 },
                 error_handlers );
             BOOST_TEST_EQ(r, 1);
@@ -266,7 +266,7 @@ int main()
             int r = leaf::try_handle_all(
                 []() -> leaf::result<int>
                 {
-                    throw leaf::exception( info<1>{1} );
+                    leaf::throw_exception( info<1>{1} );
                 },
                 error_handlers );
             BOOST_TEST_EQ(r, 2);
@@ -580,7 +580,7 @@ int main()
         leaf::result<int> r = leaf::try_handle_some(
             []() -> leaf::result<int>
             {
-                throw leaf::exception( my_exception(42) );
+                leaf::throw_exception( my_exception(42) );
             },
             []( leaf::match_value<my_exception, 42> m )
             {
@@ -606,7 +606,7 @@ int main()
         leaf::result<int> r = leaf::try_handle_some(
             []() -> leaf::result<int>
             {
-                throw leaf::exception( my_exception(42) );
+                leaf::throw_exception( my_exception(42) );
             },
             []( leaf::match_value<my_exception, 41> m )
             {
@@ -642,7 +642,7 @@ int main()
         int r = leaf::try_handle_all(
             []() -> leaf::result<int>
             {
-                throw leaf::exception( my_exception(42) );
+                leaf::throw_exception( my_exception(42) );
             },
             []( leaf::match_value<my_exception, 42> m )
             {
@@ -674,7 +674,7 @@ int main()
         int r = leaf::try_handle_all(
             []() -> leaf::result<int>
             {
-                throw leaf::exception( my_exception(42) );
+                leaf::throw_exception( my_exception(42) );
             },
             []( leaf::match_value<my_exception, 41> m )
             {

@@ -67,7 +67,7 @@ int main()
         leaf::try_catch(
             []
             {
-                f1( [] { throw leaf::exception(); } );
+                f1( [] { leaf::throw_exception(); } );
                 return 0;
             },
             []( leaf::error_info const & err, info<1> )
@@ -88,7 +88,7 @@ int main()
         leaf::try_catch(
             []
             {
-                f2( [] { throw leaf::exception(); } );
+                f2( [] { leaf::throw_exception(); } );
                 return 0;
             },
             []( info<1> )

@@ -629,21 +629,21 @@ enum class err2 { e1, e2 };
 T f()
 {
   if( error_detected )
-    throw leaf::exception(err1::e1, err2::e2);
+    leaf::throw_exception(err1::e1, err2::e2);
 
   // Produce and return a T.
 }
 ----
 [.text-right]
-<<exception>>
+<<throw_exception>>
 
-The `leaf::exception` function handles the passed error objects just like `leaf::new_error` does, and then returns an object of a type that derives from `std::exception` (which the caller throws). Using this technique, the exception type is not important: `leaf::try_catch` catches all exceptions, then goes through the usual LEAF error handler selection procedure.
+The `leaf::throw_exception` function handles the passed error objects just like `leaf::new_error` does, and then throws an object of a type that derives from `std::exception`. Using this technique, the exception type is not important: `leaf::try_catch` catches all exceptions, then goes through the usual LEAF error handler selection procedure.
 
-If instead we want to use the legacy convention of throwing different types to indicate different failures, we simply pass an exception object (that is, an object of a type that derives from `std::exception`) as the first argument to `leaf::exception`:
+If instead we want to use the legacy convention of throwing different types to indicate different failures, we simply pass an exception object (that is, an object of a type that derives from `std::exception`) as the first argument to `leaf::throw_exception`:
 
 [source,c++]
 ----
-throw leaf::exception(std::runtime_error("Error!"), err1::e1, err2::e2);
+leaf::throw_exception(std::runtime_error("Error!"), err1::e1, err2::e2);
 ----
 
 In this case the returned object will be of type that derives from `std::runtime_error`, rather than from `std::exception`.
@@ -828,7 +828,7 @@ The following figure illustrates the slightly different error communication mode
 .LEAF Error Communication Model Using Exception Handling
 image::LEAF-2.png[]
 
-The main difference is that the call to `new_error` is implicit in the call to the function template `leaf::exception`, which in this case takes an exception object of type `Ex`, and returns an exception object of unspecified type that derives publicly from `Ex`.
+The main difference is that the call to `new_error` is implicit in the call to the function template `leaf::throw_exception`, which in this case takes an exception object of type `Ex`, and throws an exception object of unspecified type that derives publicly from `Ex`.
 
 [[tutorial-interoperability]]
 ==== Interoperability
@@ -852,7 +852,7 @@ Note that if the above logic is nested (e.g. one function calling another), `new
 
 For a detailed tutorial see <<tutorial-on_error_in_c_callbacks>>.
 
-TIP: To avoid ambiguities, whenever possible, use the <<exception>> function template when throwing exceptions to ensure that the exception object transports a unique `error_id`; better yet, use the <<BOOST_LEAF_THROW_EXCEPTION>> macro, which in addition will capture `pass:[__FILE__]` and `pass:[__LINE__]`.
+TIP: To avoid ambiguities, whenever possible, use the <<throw_exception>> function template to throw exceptions, to ensure that the exception object transports a unique `error_id`; better yet, use the <<BOOST_LEAF_THROW_EXCEPTION>> macro, which in addition will capture `pass:[__FILE__]` and `pass:[__LINE__]`.
 
 '''
 
@@ -1015,20 +1015,20 @@ void read_file(FILE * f) {
   ....
   size_t nr1=fread(buf1,1,count1,f);
   if( ferror(f) )
-    throw leaf::exception();
+    leaf::throw_exception();
 
   size_t nr2=fread(buf2,1,count2,f);
   if( ferror(f) )
-    throw leaf::exception();
+    leaf::throw_exception();
 
   size_t nr3=fread(buf3,1,count3,f);
   if( ferror(f) )
-    throw leaf::exception();
+    leaf::throw_exception();
   ....
 }
 ----
 
-Above, if a `throw` statement is reached, LEAF will invoke the function passed to `on_error` and associate the returned `e_errno` object with the exception.
+Above, if `throw_exception` is called, LEAF will invoke the function passed to `on_error` and associate the returned `e_errno` object with the exception.
 
 The final argument type that can be passed to `on_error` is a function that takes a single mutable error object reference. In this case, `on_error` uses it similarly to how such functions are used by `load`; see <<tutorial-loading>>.
 
@@ -1564,7 +1564,7 @@ leaf::result<void> file_read( FILE & f, void * buf, int size )
 <2> In addition, this error is classified as `read_error`.
 <3> In addition, this error is classified as `eof_error`.
 
-This technique works just as well if we choose to use exception handling, we just call `leaf::exception` instead of `leaf::new_error`:
+This technique works just as well if we choose to use exception handling, we just call `leaf::throw_exception` instead of `leaf::new_error`:
 
 [source,c++]
 ----
@@ -1575,16 +1575,16 @@ void file_read( FILE & f, void * buf, int size )
   int n = fread(buf, 1, size, &f);
 
   if( ferror(&f) )
-    throw leaf::exception(read_error{}, leaf::e_errno{errno});
+    leaf::throw_exception(read_error{}, leaf::e_errno{errno});
 
   if( n!=size )
-    throw leaf::exception(eof_error{});
+    leaf::throw_exception(eof_error{});
 }
 ----
 [.text-right]
-<<on_error>> | <<exception>> | <<e_errno>>
+<<on_error>> | <<throw_exception>> | <<e_errno>>
 
-NOTE: If the type of the first argument passed to `leaf::exception` derives from `std::exception`, it will be used to initialize the returned exception object taken by `throw`. Here this is not the case, so the function returns a default-initialized `std::exception` object, while the first (and any other) argument is associated with the failure.
+NOTE: If the type of the first argument passed to `leaf::throw_exception` derives from `std::exception`, it will be used to initialize the thrown exception object. Here this is not the case, so the function returns a default-initialized `std::exception` object, while the first (and any other) argument is associated with the failure.
 
 Now we can write a future-proof handler for any `input_error`:
 
@@ -2389,7 +2389,7 @@ namespace boost { namespace leaf {
   else\
     return <<temp>>.error()
 
-#define BOOST_LEAF_NEW_ERROR <<inject e_source_location voodoo>> ::boost::leaf::new_error
+#define BOOST_LEAF_NEW_ERROR <<exact-definition-unspecified>>
 ----
 
 [.text-right]
@@ -2588,33 +2588,31 @@ Reference: <<on_error>> | <<error_monitor>>
 namespace boost { namespace leaf {
 
   template <class Ex, class... E> <1>
-  <<unspecified-exception-type>> exception( Ex &&, E && ... ) noexcept;
+  [[noreturn]] void throw_exception( Ex &&, E && ... );
 
   template <class E1, class... E> <2>
-  <<unspecified-exception-type>> exception( E1 &&, E && ... ) noexcept;
+  [[noreturn]] void throw_exception( E1 &&, E && ... );
 
-  <<unspecified-exception-type>> exception() noexcept;
+  [[noreturn]] void throw_exception();
 
   template <class Ex, class... E> <1>
-  <<unspecified-exception-type>> exception( error_id id, Ex &&, E && ... ) noexcept;
+  [[noreturn]] void throw_exception( error_id id, Ex &&, E && ... );
 
   template <class E1, class... E> <2>
-  <<unspecified-exception-type>> exception( error_id id, E1 &&, E && ... ) noexcept;
+  [[noreturn]] void throw_exception( error_id id, E1 &&, E && ... );
 
-  <<unspecified-exception-type>> exception( error_id id ) noexcept;
+  [[noreturn]] void throw_exception( error_id id );
 
   template <class... Ex, class F>
   <<result<T>-deduced>> exception_to_result( F && f ) noexcept;
 
 } }
 
-#define BOOST_LEAF_EXCEPTION <<inject e_source_location voodoo>> ::boost::leaf::exception
-
-#define BOOST_LEAF_THROW_EXCEPTION <<inject e_source_location + invoke boost::throw_exception voodoo>> ::boost::leaf::exception
+#define BOOST_LEAF_THROW_EXCEPTION <<exact-definition-unspecified>>
 ----
 
 [.text-right]
-Reference: <<exception>> | <<BOOST_LEAF_EXCEPTION>> | <<BOOST_LEAF_THROW_EXCEPTION>>
+Reference: <<throw_exception>> | <<BOOST_LEAF_THROW_EXCEPTION>>
 
 <1> Only enabled if std::is_base_of<std::exception, Ex>::value.
 <2> Only enabled if !std::is_base_of<std::exception, E1>::value.
@@ -3025,8 +3023,8 @@ TIP: See also <<on_error>>.
 
 '''
 
-[[exception]]
-=== `exception`
+[[throw_exception]]
+=== `throw_exception`
 
 [source,c++]
 .#include <boost/leaf/exception.hpp>
@@ -3034,57 +3032,57 @@ TIP: See also <<on_error>>.
 namespace boost { namespace leaf {
 
   template <class Ex, class... E> <1>
-  <<unspecified>> exception( Ex && ex, E && ... e ) noexcept;
+  [[noreturn]] void throw_exception( Ex && ex, E && ... e );
 
   template <class E1, class... E> <2>
-  <<unspecified>> exception( E1 && e1, E && ... e ) noexcept;
+  [[noreturn]] void throw_exception( E1 && e1, E && ... e );
 
-  <<unspecified>> exception() noexcept; <3>
+  [[noreturn]] void throw_exception(); <3>
 
   template <class Ex, class... E> <4>
-  <<unspecified>> exception( error_id id, Ex && ex, E && ... e ) noexcept;
+  [[noreturn]] void throw_exception( error_id id, Ex && ex, E && ... e );
 
   template <class E1, class... E> <5>
-  <<unspecified>> exception( error_id id, E1 && e1, E && ... e ) noexcept;
+  [[noreturn]] void throw_exception( error_id id, E1 && e1, E && ... e );
 
-  <<unspecified>> exception( error_id id ) noexcept; <6>
+  [[noreturn]] void throw_exception( error_id id ); <6>
 
 } }
 ----
-The `exception` function is overloaded: it can be invoked with no arguments, or else there are several alternatives, selected using `std::enable_if` based on the type of the passed arguments:
+The `throw_exception` function is overloaded: it can be invoked with no arguments, or else there are several alternatives, selected using `std::enable_if` based on the type of the passed arguments. All overloads throw an exception:
 
-<1> Selected if the first argument is not of type `error_id` and is an exception object, that is, iff `Ex` derives publicly from `std::exception`. In this case the return value is of unspecified type which derives publicly from `Ex` *and* from class <<error_id>>, such that:
+<1> Selected if the first argument is not of type `error_id` and is an exception object, that is, iff `Ex` derives publicly from `std::exception`. In this case the thrown exception is of unspecified type which derives publicly from `Ex` *and* from class <<error_id>>, such that:
 * its `Ex` subobject is initialized by `std::forward<Ex>(ex)`;
 * its `error_id` subobject is initialized by `<<new_error,new_error>>(std::forward<E>(e)...`).
 
-<2> Selected if the first argument is not of type `error_id` and is not an exception object. In this case the return value is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
+<2> Selected if the first argument is not of type `error_id` and is not an exception object. In this case the thrown exception is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
 ** its `std::exception` subobject is default-initialized;
 ** its `error_id` subobject is initialized by `<<new_error,new_error>>(std::forward<E1>(e1), std::forward<E>(e)...`).
 
-<3> If the fuction is invoked without arguments, the return value is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
+<3> If the fuction is invoked without arguments, the thrown exception is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
 ** its `std::exception` subobject is default-initialized;
 ** its `error_id` subobject is initialized by `<<new_error,new_error>>()`.
 
-<4> Selected if the first argument is of type `error_id` and the second argument is an exception object, that is, iff `Ex` derives publicly from `std::exception`. In this case the return value is of unspecified type which derives publicly from `Ex` *and* from class <<error_id>>, such that:
+<4> Selected if the first argument is of type `error_id` and the second argument is an exception object, that is, iff `Ex` derives publicly from `std::exception`. In this case the thrown exception is of unspecified type which derives publicly from `Ex` *and* from class <<error_id>>, such that:
 ** its `Ex` subobject is initialized by `std::forward<Ex>(ex)`;
 ** its `error_id` subobject is initialized by `id.<<error_id::load>>(std::forward<E>(e)...)`.
 
-<5> Selected if the first argument is of type `error_id` and the second argument is not an exception object. In this case the return value is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
+<5> Selected if the first argument is of type `error_id` and the second argument is not an exception object. In this case the thrown exception is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
 ** its `std::exception` subobject is default-initialized;
 ** its `error_id` subobject is initialized by `id.<<error_id::load>>(std::forward<E1>(e1), std::forward<E>(e)...`).
 
-<6> If `exception` is invoked with just an `error_id` object, the return value is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
+<6> If `exception` is invoked with just an `error_id` object, the thrown exception is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
 ** its `std::exception` subobject is default-initialized;
 ** its `error_id` subobject is initialized by copying from `id`.
 
-NOTE: The first three overloads return an exception object that is associated with a new `error_id`. The second three overloads return an exception object that is associated with the specified `error_id`.
+NOTE: The first three overloads throw an exception object that is associated with a new `error_id`. The second three overloads throw an exception object that is associated with the specified `error_id`.
 
 .Example 1:
 [source,c++]
 ----
 struct my_exception: std::exception { };
 
-throw leaf::exception(my_exception{}); <1>
+leaf::throw_exception(my_exception{}); <1>
 ----
 <1> Throws an exception of a type that derives from `error_id` and from `my_exception` (because `my_exception` derives from `std::exception`).
 
@@ -3093,11 +3091,11 @@ throw leaf::exception(my_exception{}); <1>
 ----
 enum class my_error { e1=1, e2, e3 }; <1>
 
-throw leaf::exception(my_error::e1);
+leaf::throw_exception(my_error::e1);
 ----
 <1> Throws an exception of a type that derives from `error_id` and from `std::exception` (because `my_error` does not derive from `std::exception`).
 
-NOTE: To automatically capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` with the returned object, use <<BOOST_LEAF_EXCEPTION>> instead of `leaf::exception`.
+NOTE: To automatically capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` with the returned object, use <<BOOST_LEAF_THROW_EXCEPTION>> instead of `leaf::throw_exception`.
 
 '''
 
@@ -4315,7 +4313,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-The <<BOOST_LEAF_NEW_ERROR>>, <<BOOST_LEAF_EXCEPTION>> and <<BOOST_LEAF_THROW_EXCEPTION>> macros capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `e_source_location` object.
+The <<BOOST_LEAF_NEW_ERROR>> and <<BOOST_LEAF_THROW_EXCEPTION>> macros capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `e_source_location` object.
 
 '''
 
@@ -5524,16 +5522,16 @@ If `BOOST_LEAF_CFG_GNUC_STMTEXPR` is `1` (which is the default under `pass:[__GN
 
 '''
 
-[[BOOST_LEAF_EXCEPTION]]
-=== `BOOST_LEAF_EXCEPTION`
+[[BOOST_LEAF_THROW_EXCEPTION]]
+=== `BOOST_LEAF_THROW_EXCEPTION`
 
 [source,c++]
 .#include <boost/leaf/exception.hpp>
 ----
-#define BOOST_LEAF_EXCEPTION <<voodoo>>
+#define BOOST_LEAF_THROW_EXCEPTION <<exact-dedfinition-unspecified>>
 ----
 
-Effects: :: `BOOST_LEAF_EXCEPTION(e...)` is equivalent to `leaf::<<exception,exception>>(e...)`, except the current source location is automatically passed, in a `<<e_source_location>>` object (in addition to all `e...` objects).
+Effects: :: `BOOST_LEAF_THROW_EXCEPTION(e...)` is equivalent to `leaf::<<throw_exception,throw_exception>>(e...)`, except the current source location is automatically communicated with the thrown exception, in a `<<e_source_location>>` object (in addition to all `e...` objects).
 
 '''
 
@@ -5543,23 +5541,10 @@ Effects: :: `BOOST_LEAF_EXCEPTION(e...)` is equivalent to `leaf::<<exception,exc
 .#include <boost/leaf/error.hpp>
 [source,c++]
 ----
-#define BOOST_LEAF_NEW_ERROR <<voodoo>>
+#define BOOST_LEAF_NEW_ERROR <<exact-definition-unspecified>>
 ----
 
 Effects: :: `BOOST_LEAF_NEW_ERROR(e...)` is equivalent to `leaf::<<new_error,new_error>>(e...)`, except the current source location is automatically passed, in a `<<e_source_location>>` object (in addition to all `e...` objects).
-
-'''
-
-[[BOOST_LEAF_THROW_EXCEPTION]]
-=== `BOOST_LEAF_THROW_EXCEPTION`
-
-[source,c++]
-.#include <boost/leaf/exception.hpp>
-----
-#define BOOST_LEAF_THROW_EXCEPTION throw BOOST_LEAF_EXCEPTION
-----
-
-Effects: :: Throws the exception object returned by <<BOOST_LEAF_EXCEPTION>>.
 
 [[rationale]]
 == Design
@@ -5943,12 +5928,12 @@ https://www.boost.org/doc/libs/release/libs/exception/doc/exception_operator_shl
 |
 [source,c++,options="nowrap"]
 ----
-throw leaf::exception( my_exception(),
+leaf::throw_exception( my_exception(),
   my_info{x},
   my_info{y} );
 ----
 [.text-right]
-<<exception>>
+<<throw_exception>>
 |====
 
 .Augmenting exceptions in error neutral contexts

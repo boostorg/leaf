@@ -132,12 +132,12 @@ namespace leaf_detail
         catch( exception_base const & e )
         {
             ctx->captured_id_ = e.get_error_id();
-            throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
+            leaf_detail::throw_exception_impl( capturing_exception(std::current_exception(), std::move(ctx)) );
         }
         catch(...)
         {
             ctx->captured_id_ = cur_err.assigned_error_id();
-            throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
+            leaf_detail::throw_exception_impl( capturing_exception(std::current_exception(), std::move(ctx)) );
         }
     }
 
@@ -165,12 +165,12 @@ namespace leaf_detail
         catch( exception_base const & e )
         {
             ctx->captured_id_ = e.get_error_id();
-            throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
+            leaf_detail::throw_exception_impl( capturing_exception(std::current_exception(), std::move(ctx)) );
         }
         catch(...)
         {
             ctx->captured_id_ = cur_err.assigned_error_id();
-            throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
+            leaf_detail::throw_exception_impl( capturing_exception(std::current_exception(), std::move(ctx)) );
         }
     }
 

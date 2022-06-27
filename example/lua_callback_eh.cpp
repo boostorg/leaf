@@ -75,7 +75,7 @@ int do_work( lua_State * L )
     }
     else
     {
-        throw leaf::exception(ec1);
+        leaf::throw_exception(ec1);
     }
 }
 
@@ -127,7 +127,7 @@ int call_lua( lua_State * L )
                 // cur_err.assigned_error_id() will return a new leaf::error_id,
                 // otherwise we'll be working with the original error reported
                 // by a C++ exception out of do_work.
-                throw leaf::exception( cur_err.assigned_error_id().load( e_lua_pcall_error{err}, e_lua_error_message{std::move(msg)} ) );
+                leaf::throw_exception( cur_err.assigned_error_id().load( e_lua_pcall_error{err}, e_lua_error_message{std::move(msg)} ) );
             }
             else
             {
