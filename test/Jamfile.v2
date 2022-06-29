@@ -5,6 +5,9 @@
 
 import testing ;
 
+variant leaf_debug_capture0 : debug : <define>BOOST_LEAF_CFG_CAPTURE=0 ;
+variant leaf_release_capture0 : release : <define>BOOST_LEAF_CFG_CAPTURE=0 ;
+
 variant leaf_debug_diag0 : debug : <define>BOOST_LEAF_CFG_DIAGNOSTICS=0 ;
 variant leaf_release_diag0 : release : <define>BOOST_LEAF_CFG_DIAGNOSTICS=0 ;
 
@@ -17,6 +20,7 @@ variant leaf_release_leaf_hpp : release : <define>BOOST_LEAF_TEST_SINGLE_HEADER 
 project
     : default-build
         <cxxstd>11
+        <threading>multi
     : requirements
         <define>BOOST_LEAF_BOOST_AVAILABLE
         <threading>single:<define>BOOST_LEAF_NO_THREADS
@@ -136,14 +140,14 @@ compile-fail _compile-fail-result_3.cpp ;
 compile-fail _compile-fail-result_4.cpp ;
 compile-fail _compile-fail-verbose_diagnostic_info.cpp ;
 
-exe capture_in_exception : ../example/capture_in_exception.cpp : <threading>single:<build>no <exception-handling>off:<build>no ;
-exe capture_in_result : ../example/capture_in_result.cpp : <threading>single:<build>no <exception-handling>off:<build>no ;
+exe capture_in_exception : ../example/capture_in_exception.cpp : <threading>single:<build>no <exception-handling>off:<build>no <variant>leaf_debug_capture0:<build>no <variant>leaf_release_capture0:<build>no ;
+exe capture_in_result : ../example/capture_in_result.cpp : <threading>single:<build>no <variant>leaf_debug_capture0:<build>no <variant>leaf_release_capture0:<build>no <variant>leaf_debug_embedded:<build>no <variant>leaf_release_embedded:<build>no ;
 exe error_log : ../example/error_log.cpp : <exception-handling>off:<build>no ;
 exe error_trace : ../example/error_trace.cpp : <exception-handling>off:<build>no ;
 exe exception_to_result : ../example/exception_to_result.cpp : <exception-handling>off:<build>no ;
 # exe lua_callback_result : ../example/lua_callback_result.cpp : <exception-handling>off:<build>no ;
 # exe lua_callback_eh : ../example/lua_callback_eh.cpp : <exception-handling>off:<build>no ;
 exe print_file_eh : ../example/print_file/print_file_eh.cpp : <exception-handling>off:<build>no ;
-# exe print_file_outcome_result : ../example/print_file/print_file_outcome_result.cpp : <exception-handling>off:<build>no ;
+# exe print_file_outcome_result : ../example/print_file/print_file_outcome_result.cpp : <exception-handling>off:<build>no <cxxstd>11:<build>no ;
 exe print_file_result : ../example/print_file/print_file_result.cpp : <exception-handling>off:<build>no ;
 exe print_half : ../example/print_half.cpp : <exception-handling>off:<build>no ;

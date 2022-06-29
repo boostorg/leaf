@@ -763,6 +763,7 @@ namespace leaf_detail
         {
             return std::forward<TryBlock>(try_block)();
         }
+#if BOOST_LEAF_CFG_CAPTURE
         catch( capturing_exception const & cap )
         {
             try
@@ -792,6 +793,7 @@ namespace leaf_detail
                     } );
             }
         }
+#endif
         catch( std::exception & ex )
         {
             ctx.deactivate();
