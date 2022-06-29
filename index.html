@@ -104,12 +104,12 @@ function switch_style()
 <li><a href="#capture"><code>capture</code></a></li>
 <li><a href="#context_type_from_handlers"><code>context_type_from_handlers</code></a></li>
 <li><a href="#current_error"><code>current_error</code></a></li>
-<li><a href="#exception"><code>exception</code></a></li>
 <li><a href="#exception_to_result"><code>exception_to_result</code></a></li>
 <li><a href="#make_context"><code>make_context</code></a></li>
 <li><a href="#make_shared_context"><code>make_shared_context</code></a></li>
 <li><a href="#new_error"><code>new_error</code></a></li>
 <li><a href="#on_error"><code>on_error</code></a></li>
+<li><a href="#throw_exception"><code>throw_exception</code></a></li>
 <li><a href="#to_variant"><code>to_variant</code></a></li>
 <li><a href="#try_catch"><code>try_catch</code></a></li>
 <li><a href="#try_handle_all"><code>try_handle_all</code></a></li>
@@ -189,9 +189,8 @@ function switch_style()
 <li><a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a></li>
 <li><a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a></li>
 <li><a href="#BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></a></li>
-<li><a href="#BOOST_LEAF_EXCEPTION"><code>BOOST_LEAF_EXCEPTION</code></a></li>
-<li><a href="#BOOST_LEAF_NEW_ERROR"><code>BOOST_LEAF_NEW_ERROR</code></a></li>
 <li><a href="#BOOST_LEAF_THROW_EXCEPTION"><code>BOOST_LEAF_THROW_EXCEPTION</code></a></li>
+<li><a href="#BOOST_LEAF_NEW_ERROR"><code>BOOST_LEAF_NEW_ERROR</code></a></li>
 </ul>
 </li>
 <li><a href="#rationale">Design</a>
@@ -1011,24 +1010,24 @@ Error handlers can take arguments by value, by const reference or pointer, and b
 <span class="n">T</span> <span class="nf">f</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="k">if</span><span class="p">(</span> <span class="n">error_detected</span> <span class="p">)</span>
-    <span class="k">throw</span> <span class="n">leaf</span><span class="o">::</span><span class="n">exception</span><span class="p">(</span><span class="n">err1</span><span class="o">::</span><span class="n">e1</span><span class="p">,</span> <span class="n">err2</span><span class="o">::</span><span class="n">e2</span><span class="p">);</span>
+    <span class="n">leaf</span><span class="o">::</span><span class="n">throw_exception</span><span class="p">(</span><span class="n">err1</span><span class="o">::</span><span class="n">e1</span><span class="p">,</span> <span class="n">err2</span><span class="o">::</span><span class="n">e2</span><span class="p">);</span>
 
   <span class="c1">// Produce and return a T.</span>
 <span class="p">}</span></code></pre>
 </div>
 </div>
 <div class="paragraph text-right">
-<p><a href="#exception"><code>exception</code></a></p>
+<p><a href="#throw_exception"><code>throw_exception</code></a></p>
 </div>
 <div class="paragraph">
-<p>The <code>leaf::exception</code> function handles the passed error objects just like <code>leaf::new_error</code> does, and then returns an object of a type that derives from <code>std::exception</code> (which the caller throws). Using this technique, the exception type is not important: <code>leaf::try_catch</code> catches all exceptions, then goes through the usual LEAF error handler selection procedure.</p>
+<p>The <code>leaf::throw_exception</code> function handles the passed error objects just like <code>leaf::new_error</code> does, and then throws an object of a type that derives from <code>std::exception</code>. Using this technique, the exception type is not important: <code>leaf::try_catch</code> catches all exceptions, then goes through the usual LEAF error handler selection procedure.</p>
 </div>
 <div class="paragraph">
-<p>If instead we want to use the legacy convention of throwing different types to indicate different failures, we simply pass an exception object (that is, an object of a type that derives from <code>std::exception</code>) as the first argument to <code>leaf::exception</code>:</p>
+<p>If instead we want to use the legacy convention of throwing different types to indicate different failures, we simply pass an exception object (that is, an object of a type that derives from <code>std::exception</code>) as the first argument to <code>leaf::throw_exception</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">throw</span> <span class="n">leaf</span><span class="o">::</span><span class="n">exception</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span><span class="p">(</span><span class="s">"Error!"</span><span class="p">),</span> <span class="n">err1</span><span class="o">::</span><span class="n">e1</span><span class="p">,</span> <span class="n">err2</span><span class="o">::</span><span class="n">e2</span><span class="p">);</span></code></pre>
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">leaf</span><span class="o">::</span><span class="n">throw_exception</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span><span class="p">(</span><span class="s">"Error!"</span><span class="p">),</span> <span class="n">err1</span><span class="o">::</span><span class="n">e1</span><span class="p">,</span> <span class="n">err2</span><span class="o">::</span><span class="n">e2</span><span class="p">);</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1243,7 +1242,7 @@ Error handlers can take arguments by value, by const reference or pointer, and b
 <div class="title">Figure 2. LEAF Error Communication Model Using Exception Handling</div>
 </div>
 <div class="paragraph">
-<p>The main difference is that the call to <code>new_error</code> is implicit in the call to the function template <code>leaf::exception</code>, which in this case takes an exception object of type <code>Ex</code>, and returns an exception object of unspecified type that derives publicly from <code>Ex</code>.</p>
+<p>The main difference is that the call to <code>new_error</code> is implicit in the call to the function template <code>leaf::throw_exception</code>, which in this case takes an exception object of type <code>Ex</code>, and throws an exception object of unspecified type that derives publicly from <code>Ex</code>.</p>
 </div>
 </div>
 <div class="sect3">
@@ -1296,7 +1295,7 @@ Error handlers can take arguments by value, by const reference or pointer, and b
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-To avoid ambiguities, whenever possible, use the <a href="#exception"><code>exception</code></a> function template when throwing exceptions to ensure that the exception object transports a unique <code>error_id</code>; better yet, use the <a href="#BOOST_LEAF_THROW_EXCEPTION"><code>BOOST_LEAF_THROW_EXCEPTION</code></a> macro, which in addition will capture <code>__FILE__</code> and <code>__LINE__</code>.
+To avoid ambiguities, whenever possible, use the <a href="#throw_exception"><code>throw_exception</code></a> function template to throw exceptions, to ensure that the exception object transports a unique <code>error_id</code>; better yet, use the <a href="#BOOST_LEAF_THROW_EXCEPTION"><code>BOOST_LEAF_THROW_EXCEPTION</code></a> macro, which in addition will capture <code>__FILE__</code> and <code>__LINE__</code>.
 </td>
 </tr>
 </table>
@@ -1535,21 +1534,21 @@ To avoid ambiguities, whenever possible, use the <a href="#exception"><code>exce
   <span class="p">....</span>
   <span class="kt">size_t</span> <span class="n">nr1</span><span class="o">=</span><span class="n">fread</span><span class="p">(</span><span class="n">buf1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">count1</span><span class="p">,</span><span class="n">f</span><span class="p">);</span>
   <span class="k">if</span><span class="p">(</span> <span class="n">ferror</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="p">)</span>
-    <span class="k">throw</span> <span class="n">leaf</span><span class="o">::</span><span class="n">exception</span><span class="p">();</span>
+    <span class="n">leaf</span><span class="o">::</span><span class="n">throw_exception</span><span class="p">();</span>
 
   <span class="kt">size_t</span> <span class="n">nr2</span><span class="o">=</span><span class="n">fread</span><span class="p">(</span><span class="n">buf2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">count2</span><span class="p">,</span><span class="n">f</span><span class="p">);</span>
   <span class="k">if</span><span class="p">(</span> <span class="n">ferror</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="p">)</span>
-    <span class="k">throw</span> <span class="n">leaf</span><span class="o">::</span><span class="n">exception</span><span class="p">();</span>
+    <span class="n">leaf</span><span class="o">::</span><span class="n">throw_exception</span><span class="p">();</span>
 
   <span class="kt">size_t</span> <span class="n">nr3</span><span class="o">=</span><span class="n">fread</span><span class="p">(</span><span class="n">buf3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">count3</span><span class="p">,</span><span class="n">f</span><span class="p">);</span>
   <span class="k">if</span><span class="p">(</span> <span class="n">ferror</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="p">)</span>
-    <span class="k">throw</span> <span class="n">leaf</span><span class="o">::</span><span class="n">exception</span><span class="p">();</span>
+    <span class="n">leaf</span><span class="o">::</span><span class="n">throw_exception</span><span class="p">();</span>
   <span class="p">....</span>
 <span class="p">}</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Above, if a <code>throw</code> statement is reached, LEAF will invoke the function passed to <code>on_error</code> and associate the returned <code>e_errno</code> object with the exception.</p>
+<p>Above, if <code>throw_exception</code> is called, LEAF will invoke the function passed to <code>on_error</code> and associate the returned <code>e_errno</code> object with the exception.</p>
 </div>
 <div class="paragraph">
 <p>The final argument type that can be passed to <code>on_error</code> is a function that takes a single mutable error object reference. In this case, <code>on_error</code> uses it similarly to how such functions are used by <code>load</code>; see <a href="#tutorial-loading">Loading of Error Objects</a>.</p>
@@ -2242,7 +2241,7 @@ Follow this link to see a complete example program: <a href="https://github.com/
 </table>
 </div>
 <div class="paragraph">
-<p>This technique works just as well if we choose to use exception handling, we just call <code>leaf::exception</code> instead of <code>leaf::new_error</code>:</p>
+<p>This technique works just as well if we choose to use exception handling, we just call <code>leaf::throw_exception</code> instead of <code>leaf::new_error</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2253,15 +2252,15 @@ Follow this link to see a complete example program: <a href="https://github.com/
   <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">fread</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">f</span><span class="p">);</span>
 
   <span class="k">if</span><span class="p">(</span> <span class="n">ferror</span><span class="p">(</span><span class="o">&amp;</span><span class="n">f</span><span class="p">)</span> <span class="p">)</span>
-    <span class="k">throw</span> <span class="n">leaf</span><span class="o">::</span><span class="n">exception</span><span class="p">(</span><span class="n">read_error</span><span class="p">{},</span> <span class="n">leaf</span><span class="o">::</span><span class="n">e_errno</span><span class="p">{</span><span class="n">errno</span><span class="p">});</span>
+    <span class="n">leaf</span><span class="o">::</span><span class="n">throw_exception</span><span class="p">(</span><span class="n">read_error</span><span class="p">{},</span> <span class="n">leaf</span><span class="o">::</span><span class="n">e_errno</span><span class="p">{</span><span class="n">errno</span><span class="p">});</span>
 
   <span class="k">if</span><span class="p">(</span> <span class="n">n</span><span class="o">!=</span><span class="n">size</span> <span class="p">)</span>
-    <span class="k">throw</span> <span class="n">leaf</span><span class="o">::</span><span class="n">exception</span><span class="p">(</span><span class="n">eof_error</span><span class="p">{});</span>
+    <span class="n">leaf</span><span class="o">::</span><span class="n">throw_exception</span><span class="p">(</span><span class="n">eof_error</span><span class="p">{});</span>
 <span class="p">}</span></code></pre>
 </div>
 </div>
 <div class="paragraph text-right">
-<p><a href="#on_error"><code>on_error</code></a> | <a href="#exception"><code>exception</code></a> | <a href="#e_errno"><code>e_errno</code></a></p>
+<p><a href="#on_error"><code>on_error</code></a> | <a href="#throw_exception"><code>throw_exception</code></a> | <a href="#e_errno"><code>e_errno</code></a></p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -2270,7 +2269,7 @@ Follow this link to see a complete example program: <a href="https://github.com/
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-If the type of the first argument passed to <code>leaf::exception</code> derives from <code>std::exception</code>, it will be used to initialize the returned exception object taken by <code>throw</code>. Here this is not the case, so the function returns a default-initialized <code>std::exception</code> object, while the first (and any other) argument is associated with the failure.
+If the type of the first argument passed to <code>leaf::throw_exception</code> derives from <code>std::exception</code>, it will be used to initialize the thrown exception object. Here this is not the case, so the function returns a default-initialized <code>std::exception</code> object, while the first (and any other) argument is associated with the failure.
 </td>
 </tr>
 </table>
@@ -3284,7 +3283,7 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
   else\
     return &lt;&lt;temp&gt;&gt;.error()
 </span>
-<span class="cp">#define BOOST_LEAF_NEW_ERROR &lt;&lt;inject e_source_location voodoo&gt;&gt; ::boost::leaf::new_error</span></code></pre>
+<span class="cp">#define BOOST_LEAF_NEW_ERROR &lt;&lt;exact-definition-unspecified&gt;&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph text-right">
@@ -3491,33 +3490,31 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Ex</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
-  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">-</span><span class="n">exception</span><span class="o">-</span><span class="n">type</span><span class="o">&gt;&gt;</span> <span class="n">exception</span><span class="p">(</span> <span class="n">Ex</span> <span class="o">&amp;&amp;</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="p">[[</span><span class="n">noreturn</span><span class="p">]]</span> <span class="kt">void</span> <span class="n">throw_exception</span><span class="p">(</span> <span class="n">Ex</span> <span class="o">&amp;&amp;</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">);</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">E1</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
-  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">-</span><span class="n">exception</span><span class="o">-</span><span class="n">type</span><span class="o">&gt;&gt;</span> <span class="n">exception</span><span class="p">(</span> <span class="n">E1</span> <span class="o">&amp;&amp;</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="p">[[</span><span class="n">noreturn</span><span class="p">]]</span> <span class="kt">void</span> <span class="n">throw_exception</span><span class="p">(</span> <span class="n">E1</span> <span class="o">&amp;&amp;</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">);</span>
 
-  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">-</span><span class="n">exception</span><span class="o">-</span><span class="n">type</span><span class="o">&gt;&gt;</span> <span class="n">exception</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="p">[[</span><span class="n">noreturn</span><span class="p">]]</span> <span class="kt">void</span> <span class="n">throw_exception</span><span class="p">();</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Ex</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
-  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">-</span><span class="n">exception</span><span class="o">-</span><span class="n">type</span><span class="o">&gt;&gt;</span> <span class="n">exception</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span><span class="p">,</span> <span class="n">Ex</span> <span class="o">&amp;&amp;</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="p">[[</span><span class="n">noreturn</span><span class="p">]]</span> <span class="kt">void</span> <span class="n">throw_exception</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span><span class="p">,</span> <span class="n">Ex</span> <span class="o">&amp;&amp;</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">);</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">E1</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
-  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">-</span><span class="n">exception</span><span class="o">-</span><span class="n">type</span><span class="o">&gt;&gt;</span> <span class="n">exception</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span><span class="p">,</span> <span class="n">E1</span> <span class="o">&amp;&amp;</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="p">[[</span><span class="n">noreturn</span><span class="p">]]</span> <span class="kt">void</span> <span class="n">throw_exception</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span><span class="p">,</span> <span class="n">E1</span> <span class="o">&amp;&amp;</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">);</span>
 
-  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">-</span><span class="n">exception</span><span class="o">-</span><span class="n">type</span><span class="o">&gt;&gt;</span> <span class="n">exception</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="p">[[</span><span class="n">noreturn</span><span class="p">]]</span> <span class="kt">void</span> <span class="n">throw_exception</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span> <span class="p">);</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Ex</span><span class="p">,</span> <span class="k">class</span> <span class="nc">F</span><span class="p">&gt;</span>
   <span class="o">&lt;&lt;</span><span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;-</span><span class="n">deduced</span><span class="o">&gt;&gt;</span> <span class="n">exception_to_result</span><span class="p">(</span> <span class="n">F</span> <span class="o">&amp;&amp;</span> <span class="n">f</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
 <span class="p">}</span> <span class="p">}</span>
 
-<span class="cp">#define BOOST_LEAF_EXCEPTION &lt;&lt;inject e_source_location voodoo&gt;&gt; ::boost::leaf::exception
-</span>
-<span class="cp">#define BOOST_LEAF_THROW_EXCEPTION &lt;&lt;inject e_source_location + invoke boost::throw_exception voodoo&gt;&gt; ::boost::leaf::exception</span></code></pre>
+<span class="cp">#define BOOST_LEAF_THROW_EXCEPTION &lt;&lt;exact-definition-unspecified&gt;&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph text-right">
-<p>Reference: <a href="#exception"><code>exception</code></a> | <a href="#BOOST_LEAF_EXCEPTION"><code>BOOST_LEAF_EXCEPTION</code></a> | <a href="#BOOST_LEAF_THROW_EXCEPTION"><code>BOOST_LEAF_THROW_EXCEPTION</code></a></p>
+<p>Reference: <a href="#throw_exception"><code>throw_exception</code></a> | <a href="#BOOST_LEAF_THROW_EXCEPTION"><code>BOOST_LEAF_THROW_EXCEPTION</code></a></p>
 </div>
 <div class="colist arabic">
 <table>
@@ -4046,181 +4043,6 @@ See also <a href="#on_error"><code>on_error</code></a>.
 <hr>
 </div>
 <div class="sect2">
-<h3 id="exception"><code>exception</code></h3>
-<div class="listingblock">
-<div class="title">#include &lt;boost/leaf/exception.hpp&gt;</div>
-<div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
-
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Ex</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
-  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;</span> <span class="n">exception</span><span class="p">(</span> <span class="n">Ex</span> <span class="o">&amp;&amp;</span> <span class="n">ex</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">e</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
-
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">E1</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
-  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;</span> <span class="n">exception</span><span class="p">(</span> <span class="n">E1</span> <span class="o">&amp;&amp;</span> <span class="n">e1</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">e</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
-
-  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;</span> <span class="n">exception</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span> <i class="conum" data-value="3"></i><b>(3)</b>
-
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Ex</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
-  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;</span> <span class="n">exception</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span><span class="p">,</span> <span class="n">Ex</span> <span class="o">&amp;&amp;</span> <span class="n">ex</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">e</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
-
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">E1</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span> <i class="conum" data-value="5"></i><b>(5)</b>
-  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;</span> <span class="n">exception</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span><span class="p">,</span> <span class="n">E1</span> <span class="o">&amp;&amp;</span> <span class="n">e1</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">e</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
-
-  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;</span> <span class="n">exception</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span> <i class="conum" data-value="6"></i><b>(6)</b>
-
-<span class="p">}</span> <span class="p">}</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The <code>exception</code> function is overloaded: it can be invoked with no arguments, or else there are several alternatives, selected using <code>std::enable_if</code> based on the type of the passed arguments:</p>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Selected if the first argument is not of type <code>error_id</code> and is an exception object, that is, iff <code>Ex</code> derives publicly from <code>std::exception</code>. In this case the return value is of unspecified type which derives publicly from <code>Ex</code> <strong>and</strong> from class <a href="#error_id"><code>error_id</code></a>, such that:
-<div class="ulist">
-<ul>
-<li>
-<p>its <code>Ex</code> subobject is initialized by <code>std::forward&lt;Ex&gt;(ex)</code>;</p>
-</li>
-<li>
-<p>its <code>error_id</code> subobject is initialized by <code><a href="#new_error">new_error</a>(std::forward&lt;E&gt;(e)&#8230;&#8203;</code>).</p>
-</li>
-</ul>
-</div></td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Selected if the first argument is not of type <code>error_id</code> and is not an exception object. In this case the return value is of unspecified type which derives publicly from <code>std::exception</code> <strong>and</strong> from class <code>error_id</code>, such that:
-<div class="ulist">
-<ul>
-<li>
-<p>its <code>std::exception</code> subobject is default-initialized;</p>
-</li>
-<li>
-<p>its <code>error_id</code> subobject is initialized by <code><a href="#new_error">new_error</a>(std::forward&lt;E1&gt;(e1), std::forward&lt;E&gt;(e)&#8230;&#8203;</code>).</p>
-</li>
-</ul>
-</div></td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>If the fuction is invoked without arguments, the return value is of unspecified type which derives publicly from <code>std::exception</code> <strong>and</strong> from class <code>error_id</code>, such that:
-<div class="ulist">
-<ul>
-<li>
-<p>its <code>std::exception</code> subobject is default-initialized;</p>
-</li>
-<li>
-<p>its <code>error_id</code> subobject is initialized by <code><a href="#new_error">new_error</a>()</code>.</p>
-</li>
-</ul>
-</div></td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Selected if the first argument is of type <code>error_id</code> and the second argument is an exception object, that is, iff <code>Ex</code> derives publicly from <code>std::exception</code>. In this case the return value is of unspecified type which derives publicly from <code>Ex</code> <strong>and</strong> from class <a href="#error_id"><code>error_id</code></a>, such that:
-<div class="ulist">
-<ul>
-<li>
-<p>its <code>Ex</code> subobject is initialized by <code>std::forward&lt;Ex&gt;(ex)</code>;</p>
-</li>
-<li>
-<p>its <code>error_id</code> subobject is initialized by <code>id.<a href="#error_id::load"><code>load</code></a>(std::forward&lt;E&gt;(e)&#8230;&#8203;)</code>.</p>
-</li>
-</ul>
-</div></td>
-</tr>
-<tr>
-<td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>Selected if the first argument is of type <code>error_id</code> and the second argument is not an exception object. In this case the return value is of unspecified type which derives publicly from <code>std::exception</code> <strong>and</strong> from class <code>error_id</code>, such that:
-<div class="ulist">
-<ul>
-<li>
-<p>its <code>std::exception</code> subobject is default-initialized;</p>
-</li>
-<li>
-<p>its <code>error_id</code> subobject is initialized by <code>id.<a href="#error_id::load"><code>load</code></a>(std::forward&lt;E1&gt;(e1), std::forward&lt;E&gt;(e)&#8230;&#8203;</code>).</p>
-</li>
-</ul>
-</div></td>
-</tr>
-<tr>
-<td><i class="conum" data-value="6"></i><b>6</b></td>
-<td>If <code>exception</code> is invoked with just an <code>error_id</code> object, the return value is of unspecified type which derives publicly from <code>std::exception</code> <strong>and</strong> from class <code>error_id</code>, such that:
-<div class="ulist">
-<ul>
-<li>
-<p>its <code>std::exception</code> subobject is default-initialized;</p>
-</li>
-<li>
-<p>its <code>error_id</code> subobject is initialized by copying from <code>id</code>.</p>
-</li>
-</ul>
-</div></td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-The first three overloads return an exception object that is associated with a new <code>error_id</code>. The second three overloads return an exception object that is associated with the specified <code>error_id</code>.
-</td>
-</tr>
-</table>
-</div>
-<div class="listingblock">
-<div class="title">Example 1:</div>
-<div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">struct</span> <span class="nc">my_exception</span><span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="p">{</span> <span class="p">};</span>
-
-<span class="k">throw</span> <span class="n">leaf</span><span class="o">::</span><span class="n">exception</span><span class="p">(</span><span class="n">my_exception</span><span class="p">{});</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Throws an exception of a type that derives from <code>error_id</code> and from <code>my_exception</code> (because <code>my_exception</code> derives from <code>std::exception</code>).</td>
-</tr>
-</table>
-</div>
-<div class="listingblock">
-<div class="title">Example 2:</div>
-<div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">enum</span> <span class="k">class</span> <span class="nc">my_error</span> <span class="p">{</span> <span class="n">e1</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">e3</span> <span class="p">};</span> <i class="conum" data-value="1"></i><b>(1)</b>
-
-<span class="k">throw</span> <span class="n">leaf</span><span class="o">::</span><span class="n">exception</span><span class="p">(</span><span class="n">my_error</span><span class="o">::</span><span class="n">e1</span><span class="p">);</span></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Throws an exception of a type that derives from <code>error_id</code> and from <code>std::exception</code> (because <code>my_error</code> does not derive from <code>std::exception</code>).</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-To automatically capture <code>__FILE__</code>, <code>__LINE__</code> and <code>__FUNCTION__</code> with the returned object, use <a href="#BOOST_LEAF_EXCEPTION"><code>BOOST_LEAF_EXCEPTION</code></a> instead of <code>leaf::exception</code>.
-</td>
-</tr>
-</table>
-</div>
-<hr>
-</div>
-<div class="sect2">
 <h3 id="exception_to_result"><code>exception_to_result</code></h3>
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/exception.hpp&gt;</div>
@@ -4558,6 +4380,181 @@ When loaded into a <code>context</code>, an error object of a type <code>E</code
 </td>
 <td class="content">
 See <a href="#tutorial-on_error">Using <code>on_error</code></a> from the Tutorial.
+</td>
+</tr>
+</table>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="throw_exception"><code>throw_exception</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/leaf/exception.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Ex</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="p">[[</span><span class="n">noreturn</span><span class="p">]]</span> <span class="kt">void</span> <span class="n">throw_exception</span><span class="p">(</span> <span class="n">Ex</span> <span class="o">&amp;&amp;</span> <span class="n">ex</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">e</span> <span class="p">);</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">E1</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
+  <span class="p">[[</span><span class="n">noreturn</span><span class="p">]]</span> <span class="kt">void</span> <span class="n">throw_exception</span><span class="p">(</span> <span class="n">E1</span> <span class="o">&amp;&amp;</span> <span class="n">e1</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">e</span> <span class="p">);</span>
+
+  <span class="p">[[</span><span class="n">noreturn</span><span class="p">]]</span> <span class="kt">void</span> <span class="n">throw_exception</span><span class="p">();</span> <i class="conum" data-value="3"></i><b>(3)</b>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Ex</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
+  <span class="p">[[</span><span class="n">noreturn</span><span class="p">]]</span> <span class="kt">void</span> <span class="n">throw_exception</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span><span class="p">,</span> <span class="n">Ex</span> <span class="o">&amp;&amp;</span> <span class="n">ex</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">e</span> <span class="p">);</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">E1</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span> <i class="conum" data-value="5"></i><b>(5)</b>
+  <span class="p">[[</span><span class="n">noreturn</span><span class="p">]]</span> <span class="kt">void</span> <span class="n">throw_exception</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span><span class="p">,</span> <span class="n">E1</span> <span class="o">&amp;&amp;</span> <span class="n">e1</span><span class="p">,</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">e</span> <span class="p">);</span>
+
+  <span class="p">[[</span><span class="n">noreturn</span><span class="p">]]</span> <span class="kt">void</span> <span class="n">throw_exception</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span> <span class="p">);</span> <i class="conum" data-value="6"></i><b>(6)</b>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>throw_exception</code> function is overloaded: it can be invoked with no arguments, or else there are several alternatives, selected using <code>std::enable_if</code> based on the type of the passed arguments. All overloads throw an exception:</p>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Selected if the first argument is not of type <code>error_id</code> and is an exception object, that is, iff <code>Ex</code> derives publicly from <code>std::exception</code>. In this case the thrown exception is of unspecified type which derives publicly from <code>Ex</code> <strong>and</strong> from class <a href="#error_id"><code>error_id</code></a>, such that:
+<div class="ulist">
+<ul>
+<li>
+<p>its <code>Ex</code> subobject is initialized by <code>std::forward&lt;Ex&gt;(ex)</code>;</p>
+</li>
+<li>
+<p>its <code>error_id</code> subobject is initialized by <code><a href="#new_error">new_error</a>(std::forward&lt;E&gt;(e)&#8230;&#8203;</code>).</p>
+</li>
+</ul>
+</div></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Selected if the first argument is not of type <code>error_id</code> and is not an exception object. In this case the thrown exception is of unspecified type which derives publicly from <code>std::exception</code> <strong>and</strong> from class <code>error_id</code>, such that:
+<div class="ulist">
+<ul>
+<li>
+<p>its <code>std::exception</code> subobject is default-initialized;</p>
+</li>
+<li>
+<p>its <code>error_id</code> subobject is initialized by <code><a href="#new_error">new_error</a>(std::forward&lt;E1&gt;(e1), std::forward&lt;E&gt;(e)&#8230;&#8203;</code>).</p>
+</li>
+</ul>
+</div></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>If the fuction is invoked without arguments, the thrown exception is of unspecified type which derives publicly from <code>std::exception</code> <strong>and</strong> from class <code>error_id</code>, such that:
+<div class="ulist">
+<ul>
+<li>
+<p>its <code>std::exception</code> subobject is default-initialized;</p>
+</li>
+<li>
+<p>its <code>error_id</code> subobject is initialized by <code><a href="#new_error">new_error</a>()</code>.</p>
+</li>
+</ul>
+</div></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Selected if the first argument is of type <code>error_id</code> and the second argument is an exception object, that is, iff <code>Ex</code> derives publicly from <code>std::exception</code>. In this case the thrown exception is of unspecified type which derives publicly from <code>Ex</code> <strong>and</strong> from class <a href="#error_id"><code>error_id</code></a>, such that:
+<div class="ulist">
+<ul>
+<li>
+<p>its <code>Ex</code> subobject is initialized by <code>std::forward&lt;Ex&gt;(ex)</code>;</p>
+</li>
+<li>
+<p>its <code>error_id</code> subobject is initialized by <code>id.<a href="#error_id::load"><code>load</code></a>(std::forward&lt;E&gt;(e)&#8230;&#8203;)</code>.</p>
+</li>
+</ul>
+</div></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Selected if the first argument is of type <code>error_id</code> and the second argument is not an exception object. In this case the thrown exception is of unspecified type which derives publicly from <code>std::exception</code> <strong>and</strong> from class <code>error_id</code>, such that:
+<div class="ulist">
+<ul>
+<li>
+<p>its <code>std::exception</code> subobject is default-initialized;</p>
+</li>
+<li>
+<p>its <code>error_id</code> subobject is initialized by <code>id.<a href="#error_id::load"><code>load</code></a>(std::forward&lt;E1&gt;(e1), std::forward&lt;E&gt;(e)&#8230;&#8203;</code>).</p>
+</li>
+</ul>
+</div></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>If <code>exception</code> is invoked with just an <code>error_id</code> object, the thrown exception is of unspecified type which derives publicly from <code>std::exception</code> <strong>and</strong> from class <code>error_id</code>, such that:
+<div class="ulist">
+<ul>
+<li>
+<p>its <code>std::exception</code> subobject is default-initialized;</p>
+</li>
+<li>
+<p>its <code>error_id</code> subobject is initialized by copying from <code>id</code>.</p>
+</li>
+</ul>
+</div></td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The first three overloads throw an exception object that is associated with a new <code>error_id</code>. The second three overloads throw an exception object that is associated with the specified <code>error_id</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">Example 1:</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">struct</span> <span class="nc">my_exception</span><span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="p">{</span> <span class="p">};</span>
+
+<span class="n">leaf</span><span class="o">::</span><span class="n">throw_exception</span><span class="p">(</span><span class="n">my_exception</span><span class="p">{});</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Throws an exception of a type that derives from <code>error_id</code> and from <code>my_exception</code> (because <code>my_exception</code> derives from <code>std::exception</code>).</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">Example 2:</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">enum</span> <span class="k">class</span> <span class="nc">my_error</span> <span class="p">{</span> <span class="n">e1</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">e3</span> <span class="p">};</span> <i class="conum" data-value="1"></i><b>(1)</b>
+
+<span class="n">leaf</span><span class="o">::</span><span class="n">throw_exception</span><span class="p">(</span><span class="n">my_error</span><span class="o">::</span><span class="n">e1</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Throws an exception of a type that derives from <code>error_id</code> and from <code>std::exception</code> (because <code>my_error</code> does not derive from <code>std::exception</code>).</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+To automatically capture <code>__FILE__</code>, <code>__LINE__</code> and <code>__FUNCTION__</code> with the returned object, use <a href="#BOOST_LEAF_THROW_EXCEPTION"><code>BOOST_LEAF_THROW_EXCEPTION</code></a> instead of <code>leaf::throw_exception</code>.
 </td>
 </tr>
 </table>
@@ -6111,7 +6108,7 @@ It is probably better to define your own file name wrappers to avoid clashes if 
 </div>
 </div>
 <div class="paragraph">
-<p>The <a href="#BOOST_LEAF_NEW_ERROR"><code>BOOST_LEAF_NEW_ERROR</code></a>, <a href="#BOOST_LEAF_EXCEPTION"><code>BOOST_LEAF_EXCEPTION</code></a> and <a href="#BOOST_LEAF_THROW_EXCEPTION"><code>BOOST_LEAF_THROW_EXCEPTION</code></a> macros capture <code>__FILE__</code>, <code>__LINE__</code> and <code>__FUNCTION__</code> into a <code>e_source_location</code> object.</p>
+<p>The <a href="#BOOST_LEAF_NEW_ERROR"><code>BOOST_LEAF_NEW_ERROR</code></a> and <a href="#BOOST_LEAF_THROW_EXCEPTION"><code>BOOST_LEAF_THROW_EXCEPTION</code></a> macros capture <code>__FILE__</code>, <code>__LINE__</code> and <code>__FUNCTION__</code> into a <code>e_source_location</code> object.</p>
 </div>
 <hr>
 </div>
@@ -7817,18 +7814,18 @@ See also <a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a>.
 <hr>
 </div>
 <div class="sect2">
-<h3 id="BOOST_LEAF_EXCEPTION"><code>BOOST_LEAF_EXCEPTION</code></h3>
+<h3 id="BOOST_LEAF_THROW_EXCEPTION"><code>BOOST_LEAF_THROW_EXCEPTION</code></h3>
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/exception.hpp&gt;</div>
 <div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#define BOOST_LEAF_EXCEPTION &lt;&lt;voodoo&gt;&gt;</span></code></pre>
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#define BOOST_LEAF_THROW_EXCEPTION &lt;&lt;exact-dedfinition-unspecified&gt;&gt;</span></code></pre>
 </div>
 </div>
 <div class="dlist">
 <dl>
 <dt class="hdlist1">Effects: </dt>
 <dd>
-<p><code>BOOST_LEAF_EXCEPTION(e&#8230;&#8203;)</code> is equivalent to <code>leaf::<a href="#exception">exception</a>(e&#8230;&#8203;)</code>, except the current source location is automatically passed, in a <code><a href="#e_source_location"><code>e_source_location</code></a></code> object (in addition to all <code>e&#8230;&#8203;</code> objects).</p>
+<p><code>BOOST_LEAF_THROW_EXCEPTION(e&#8230;&#8203;)</code> is equivalent to <code>leaf::<a href="#throw_exception">throw_exception</a>(e&#8230;&#8203;)</code>, except the current source location is automatically communicated with the thrown exception, in a <code><a href="#e_source_location"><code>e_source_location</code></a></code> object (in addition to all <code>e&#8230;&#8203;</code> objects).</p>
 </dd>
 </dl>
 </div>
@@ -7839,7 +7836,7 @@ See also <a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a>.
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/error.hpp&gt;</div>
 <div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#define BOOST_LEAF_NEW_ERROR &lt;&lt;voodoo&gt;&gt;</span></code></pre>
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#define BOOST_LEAF_NEW_ERROR &lt;&lt;exact-definition-unspecified&gt;&gt;</span></code></pre>
 </div>
 </div>
 <div class="dlist">
@@ -7847,24 +7844,6 @@ See also <a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a>.
 <dt class="hdlist1">Effects: </dt>
 <dd>
 <p><code>BOOST_LEAF_NEW_ERROR(e&#8230;&#8203;)</code> is equivalent to <code>leaf::<a href="#new_error">new_error</a>(e&#8230;&#8203;)</code>, except the current source location is automatically passed, in a <code><a href="#e_source_location"><code>e_source_location</code></a></code> object (in addition to all <code>e&#8230;&#8203;</code> objects).</p>
-</dd>
-</dl>
-</div>
-<hr>
-</div>
-<div class="sect2">
-<h3 id="BOOST_LEAF_THROW_EXCEPTION"><code>BOOST_LEAF_THROW_EXCEPTION</code></h3>
-<div class="listingblock">
-<div class="title">#include &lt;boost/leaf/exception.hpp&gt;</div>
-<div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#define BOOST_LEAF_THROW_EXCEPTION throw BOOST_LEAF_EXCEPTION</span></code></pre>
-</div>
-</div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">Effects: </dt>
-<dd>
-<p>Throws the exception object returned by <a href="#BOOST_LEAF_EXCEPTION"><code>BOOST_LEAF_EXCEPTION</code></a>.</p>
 </dd>
 </dl>
 </div>
@@ -8469,13 +8448,13 @@ It is possible to access Boost Exception error information using the LEAF error 
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">throw</span> <span class="n">leaf</span><span class="o">::</span><span class="n">exception</span><span class="p">(</span> <span class="n">my_exception</span><span class="p">(),</span>
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">leaf</span><span class="o">::</span><span class="n">throw_exception</span><span class="p">(</span> <span class="n">my_exception</span><span class="p">(),</span>
   <span class="n">my_info</span><span class="p">{</span><span class="n">x</span><span class="p">},</span>
   <span class="n">my_info</span><span class="p">{</span><span class="n">y</span><span class="p">}</span> <span class="p">);</span></code></pre>
 </div>
 </div>
 <div class="paragraph text-right">
-<p><a href="#exception"><code>exception</code></a></p>
+<p><a href="#throw_exception"><code>throw_exception</code></a></p>
 </div></div></td>
 </tr>
 </tbody>

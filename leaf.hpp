@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 05/27/2022 from https://github.com/boostorg/leaf/tree/5e9a5b9.
+// Generated on 06/29/2022 from https://github.com/boostorg/leaf/tree/e16e0cf.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
@@ -208,27 +208,6 @@
 #       endif
 #   endif
 
-#endif
-
-#ifdef BOOST_NORETURN
-#   define BOOST_LEAF_NORETURN BOOST_NORETURN
-#else
-#   if defined(_MSC_VER)
-#       define BOOST_LEAF_NORETURN __declspec(noreturn)
-#   elif defined(__GNUC__)
-#       define BOOST_LEAF_NORETURN __attribute__ ((__noreturn__))
-#   elif defined(__has_attribute) && defined(__SUNPRO_CC) && (__SUNPRO_CC > 0x5130)
-#       if __has_attribute(noreturn)
-#           define BOOST_LEAF_NORETURN [[noreturn]]
-#       endif
-#   elif defined(__has_cpp_attribute)
-#       if __has_cpp_attribute(noreturn)
-#           define BOOST_LEAF_NORETURN [[noreturn]]
-#       endif
-#   endif
-#endif
-#if !defined(BOOST_LEAF_NORETURN)
-#  define BOOST_LEAF_NORETURN
 #endif
 
 ////////////////////////////////////////
@@ -700,7 +679,7 @@ namespace tls
 
 #endif
 // <<< #include <boost/leaf/config/tls.hpp>
-#line 278 "boost/leaf/config.hpp"
+#line 257 "boost/leaf/config.hpp"
 
 ////////////////////////////////////////
 
@@ -1528,7 +1507,7 @@ namespace leaf_detail
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 918: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 897: #include <boost/leaf/detail/demangle.hpp>
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 
@@ -1740,39 +1719,6 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-#ifdef BOOST_LEAF_NO_EXCEPTIONS
-
-namespace boost
-{
-BOOST_LEAF_NORETURN void throw_exception( std::exception const & ); // user defined
-}
-
-namespace boost { namespace leaf {
-
-template <class T>
-BOOST_LEAF_NORETURN void throw_exception( T const & e )
-{
-    ::boost::throw_exception(e);
-}
-
-} }
-
-#else
-
-namespace boost { namespace leaf {
-
-template <class T>
-BOOST_LEAF_NORETURN void throw_exception( T const & e )
-{
-    throw e;
-}
-
-} }
-
-#endif
-
-////////////////////////////////////////
-
 namespace boost { namespace leaf {
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
@@ -1949,20 +1895,24 @@ namespace leaf_detail
     BOOST_LEAF_CONSTEXPR inline void load_unexpected_count( int err_id ) noexcept
     {
         if( slot<e_unexpected_count> * sl = tls::read_ptr<slot<e_unexpected_count>>() )
+        {
             if( e_unexpected_count * unx = sl->has_value(err_id) )
                 ++unx->count;
             else
                 sl->put(err_id, e_unexpected_count(&type<E>));
+        }
     }
 
     template <class E>
     BOOST_LEAF_CONSTEXPR inline void load_unexpected_info( int err_id, E && e ) noexcept
     {
         if( slot<e_unexpected_info> * sl = tls::read_ptr<slot<e_unexpected_info>>() )
+        {
             if( e_unexpected_info * unx = sl->has_value(err_id) )
                 unx->add(std::forward<E>(e));
             else
                 sl->put(err_id, e_unexpected_info()).add(std::forward<E>(e));
+        }
     }
 
     template <class E>
@@ -2021,10 +1971,12 @@ namespace leaf_detail
         static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
         BOOST_LEAF_ASSERT((err_id&3)==1);
         if( auto sl = tls::read_ptr<slot<E>>() )
+        {
             if( auto v = sl->has_value(err_id) )
                 (void) std::forward<F>(f)(*v);
             else
                 (void) std::forward<F>(f)(sl->put(err_id,E()));
+        }
         return 0;
     }
 }
@@ -2377,48 +2329,58 @@ struct is_result_type<R const>: is_result_type<R>
 #endif
 // <<< #include <boost/leaf/error.hpp>
 #line 11 "boost/leaf/exception.hpp"
-
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-
 #include <exception>
 
-#define BOOST_LEAF_EXCEPTION ::boost::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
-#define BOOST_LEAF_THROW_EXCEPTION ::boost::leaf::leaf_detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::exception
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
 
-////////////////////////////////////////
+namespace boost
+{
+    [[noreturn]] void throw_exception( std::exception const & ); // user defined
+}
 
 namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
-    struct throw_with_loc
+    template <class T>
+    [[noreturn]] void throw_exception_impl( T && e )
     {
-        char const * const file;
-        int const line;
-        char const * const fn;
+        ::boost::throw_exception(std::move(e));
+    }
 
-        template <class Ex>
-        [[noreturn]] friend void operator+( throw_with_loc loc, Ex const & ex )
-        {
-            ex.load_source_location_(loc.file, loc.line, loc.fn);
-            ::boost::leaf::throw_exception(ex);
-        }
+    class BOOST_LEAF_SYMBOL_VISIBLE exception_base
+    {
+    public:
+
+        virtual error_id get_error_id() const noexcept = 0;
+
+    protected:
+
+        exception_base() noexcept { }
+        ~exception_base() noexcept { }
     };
 }
 
 } }
 
-////////////////////////////////////////
+#else
+
+#include <memory>
 
 namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
-    inline void enforce_std_exception( std::exception const & ) noexcept { }
+    template <class T>
+    [[noreturn]] void throw_exception_impl( T && e )
+    {
+        throw std::move(e);
+    }
 
     class BOOST_LEAF_SYMBOL_VISIBLE exception_base
     {
         std::shared_ptr<void const> auto_id_bump_;
+
     public:
 
         virtual error_id get_error_id() const noexcept = 0;
@@ -2432,6 +2394,44 @@ namespace leaf_detail
 
         ~exception_base() noexcept { }
     };
+}
+
+} }
+
+#endif
+
+////////////////////////////////////////
+
+#define BOOST_LEAF_THROW_EXCEPTION ::boost::leaf::leaf_detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::leaf_detail::make_exception
+
+namespace boost { namespace leaf {
+
+namespace leaf_detail
+{
+    struct throw_with_loc
+    {
+        char const * const file;
+        int const line;
+        char const * const fn;
+
+        template <class Ex>
+        [[noreturn]] friend void operator+( throw_with_loc loc, Ex && ex )
+        {
+            ex.load_source_location_(loc.file, loc.line, loc.fn);
+            ::boost::leaf::leaf_detail::throw_exception_impl(std::move(ex));
+        }
+    };
+}
+
+} }
+
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
+
+namespace leaf_detail
+{
+    inline void enforce_std_exception( std::exception const & ) noexcept { }
 
     template <class Ex>
     class BOOST_LEAF_SYMBOL_VISIBLE exception:
@@ -2481,52 +2481,62 @@ namespace leaf_detail
     {
         constexpr static const bool value = std::is_base_of<std::exception,typename std::remove_reference<T>::type>::value || at_least_one_derives_from_std_exception<Rest...>::value;
     };
+
+    template <class Ex, class... E>
+    inline
+    typename std::enable_if<std::is_base_of<std::exception,typename std::remove_reference<Ex>::type>::value, exception<typename std::remove_reference<Ex>::type>>::type
+    make_exception( error_id err, Ex && ex, E && ... e ) noexcept
+    {
+        static_assert(!at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
+        return exception<typename std::remove_reference<Ex>::type>( err.load(std::forward<E>(e)...), std::forward<Ex>(ex) );
+    }
+
+    template <class E1, class... E>
+    inline
+    typename std::enable_if<!std::is_base_of<std::exception,typename std::remove_reference<E1>::type>::value, exception<std::exception>>::type
+    make_exception( error_id err, E1 && car, E && ... cdr ) noexcept
+    {
+        static_assert(!at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
+        return exception<std::exception>( err.load(std::forward<E1>(car), std::forward<E>(cdr)...) );
+    }
+
+    inline exception<std::exception> make_exception( error_id err ) noexcept
+    {
+        return exception<std::exception>(err);
+    }
+
+    template <class Ex, class... E>
+    inline
+    typename std::enable_if<std::is_base_of<std::exception,typename std::remove_reference<Ex>::type>::value, exception<typename std::remove_reference<Ex>::type>>::type
+    make_exception( Ex && ex, E && ... e ) noexcept
+    {
+        static_assert(!at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
+        return exception<typename std::remove_reference<Ex>::type>( new_error().load(std::forward<E>(e)...), std::forward<Ex>(ex) );
+    }
+
+    template <class E1, class... E>
+    inline
+    typename std::enable_if<!std::is_base_of<std::exception,typename std::remove_reference<E1>::type>::value, exception<std::exception>>::type
+    make_exception( E1 && car, E && ... cdr ) noexcept
+    {
+        static_assert(!at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
+        return exception<std::exception>( new_error().load(std::forward<E1>(car), std::forward<E>(cdr)...) );
+    }
+
+    inline exception<std::exception> make_exception() noexcept
+    {
+        return exception<std::exception>(leaf::new_error());
+    }
 }
 
-template <class Ex, class... E>
-inline
-typename std::enable_if<std::is_base_of<std::exception,typename std::remove_reference<Ex>::type>::value, leaf_detail::exception<typename std::remove_reference<Ex>::type>>::type
-exception( error_id err, Ex && ex, E && ... e ) noexcept
+template <class... E>
+[[noreturn]] void throw_exception( E && ... e )
 {
-    static_assert(!leaf_detail::at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
-    return leaf_detail::exception<typename std::remove_reference<Ex>::type>( err.load(std::forward<E>(e)...), std::forward<Ex>(ex) );
-}
-
-template <class E1, class... E>
-inline
-typename std::enable_if<!std::is_base_of<std::exception,typename std::remove_reference<E1>::type>::value, leaf_detail::exception<std::exception>>::type
-exception( error_id err, E1 && car, E && ... cdr ) noexcept
-{
-    static_assert(!leaf_detail::at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
-    return leaf_detail::exception<std::exception>( err.load(std::forward<E1>(car), std::forward<E>(cdr)...) );
-}
-
-inline leaf_detail::exception<std::exception> exception( error_id err ) noexcept
-{
-    return leaf_detail::exception<std::exception>(err);
-}
-
-template <class Ex, class... E>
-inline
-typename std::enable_if<std::is_base_of<std::exception,typename std::remove_reference<Ex>::type>::value, leaf_detail::exception<typename std::remove_reference<Ex>::type>>::type
-exception( Ex && ex, E && ... e ) noexcept
-{
-    static_assert(!leaf_detail::at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
-    return leaf_detail::exception<typename std::remove_reference<Ex>::type>( new_error().load(std::forward<E>(e)...), std::forward<Ex>(ex) );
-}
-
-template <class E1, class... E>
-inline
-typename std::enable_if<!std::is_base_of<std::exception,typename std::remove_reference<E1>::type>::value, leaf_detail::exception<std::exception>>::type
-exception( E1 && car, E && ... cdr ) noexcept
-{
-    static_assert(!leaf_detail::at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
-    return leaf_detail::exception<std::exception>( new_error().load(std::forward<E1>(car), std::forward<E>(cdr)...) );
-}
-
-inline leaf_detail::exception<std::exception> exception() noexcept
-{
-    return leaf_detail::exception<std::exception>(leaf::new_error());
+    // Warning: setting a breakpoint here will not intercept exceptions thrown
+    // via BOOST_LEAF_THROW_EXCEPTION or originating in the few other throw
+    // points elsewhere in LEAF. To intercept all of those exceptions as well,
+    // set a breakpoint inside boost::leaf::leaf_detail::throw_exception_impl.
+    leaf_detail::throw_exception_impl(leaf_detail::make_exception(std::forward<E>(e)...));
 }
 
 ////////////////////////////////////////
@@ -2592,8 +2602,6 @@ exception_to_result( F && f ) noexcept
 } }
 
 #endif
-
-#endif
 // <<< #include <boost/leaf/exception.hpp>
 #line 11 "boost/leaf/capture.hpp"
 // >>> #include <boost/leaf/on_error.hpp>
@@ -2607,7 +2615,7 @@ exception_to_result( F && f ) noexcept
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 732: #include <boost/leaf/error.hpp>
+// Expanded at line 711: #include <boost/leaf/error.hpp>
 
 namespace boost { namespace leaf {
 
@@ -2780,10 +2788,12 @@ namespace leaf_detail
         {
             BOOST_LEAF_ASSERT((err_id&3)==1);
             if( s_ )
+            {
                 if( E * e = s_->has_value(err_id) )
                     (void) f_(*e);
                 else
                     (void) f_(s_->put(err_id, E()));
+            }
         }
     };
 
@@ -2979,12 +2989,12 @@ namespace leaf_detail
         catch( exception_base const & e )
         {
             ctx->captured_id_ = e.get_error_id();
-            throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
+            leaf_detail::throw_exception_impl( capturing_exception(std::current_exception(), std::move(ctx)) );
         }
         catch(...)
         {
             ctx->captured_id_ = cur_err.assigned_error_id();
-            throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
+            leaf_detail::throw_exception_impl( capturing_exception(std::current_exception(), std::move(ctx)) );
         }
     }
 
@@ -3012,12 +3022,12 @@ namespace leaf_detail
         catch( exception_base const & e )
         {
             ctx->captured_id_ = e.get_error_id();
-            throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
+            leaf_detail::throw_exception_impl( capturing_exception(std::current_exception(), std::move(ctx)) );
         }
         catch(...)
         {
             ctx->captured_id_ = cur_err.assigned_error_id();
-            throw_exception( capturing_exception(std::current_exception(), std::move(ctx)) );
+            leaf_detail::throw_exception_impl( capturing_exception(std::current_exception(), std::move(ctx)) );
         }
     }
 
@@ -3091,7 +3101,7 @@ future_get( Future & fut )
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 918: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 897: #include <boost/leaf/detail/demangle.hpp>
 
 #include <iosfwd>
 #if BOOST_LEAF_CFG_STD_STRING
@@ -3205,7 +3215,7 @@ namespace windows
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 732: #include <boost/leaf/error.hpp>
+// Expanded at line 711: #include <boost/leaf/error.hpp>
 
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
 # include <thread>
@@ -3270,7 +3280,7 @@ namespace leaf_detail
         {
             auto e = base::check(tup, ei);
             return e && Pred::evaluate(*e);
-        };
+        }
 
         template <class Tup>
         BOOST_LEAF_CONSTEXPR static Pred get( Tup const & tup, error_info const & ei ) noexcept
@@ -3289,7 +3299,7 @@ namespace leaf_detail
         BOOST_LEAF_CONSTEXPR static bool check( Tup &, error_info const & ) noexcept
         {
             return true;
-        };
+        }
     };
 
     template <class E>
@@ -3667,8 +3677,8 @@ inline context_ptr make_shared_context( H && ... ) noexcept
 } }
 
 #endif
-// Expanded at line 732: #include <boost/leaf/error.hpp>
-// Expanded at line 721: #include <boost/leaf/exception.hpp>
+// Expanded at line 711: #include <boost/leaf/error.hpp>
+// Expanded at line 700: #include <boost/leaf/exception.hpp>
 // >>> #include <boost/leaf/handle_errors.hpp>
 #line 1 "boost/leaf/handle_errors.hpp"
 #ifndef BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
@@ -3680,9 +3690,9 @@ inline context_ptr make_shared_context( H && ... ) noexcept
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3199: #include <boost/leaf/context.hpp>
-// Expanded at line 710: #include <boost/leaf/capture.hpp>
-// Expanded at line 918: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 3209: #include <boost/leaf/context.hpp>
+// Expanded at line 689: #include <boost/leaf/capture.hpp>
+// Expanded at line 897: #include <boost/leaf/detail/demangle.hpp>
 
 namespace boost { namespace leaf {
 
@@ -4133,12 +4143,14 @@ namespace leaf_detail
     peek( SlotsTuple const & tup, error_info const & ei ) noexcept
     {
         if( error_id err = ei.error() )
+        {
             if( E const * e = peek_tuple<E>::peek(tup, err) )
                 return e;
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             else
                 return peek_exception<E const>::peek(ei);
 #endif
+        }
         return nullptr;
     }
 
@@ -4148,12 +4160,14 @@ namespace leaf_detail
     peek( SlotsTuple & tup, error_info const & ei ) noexcept
     {
         if( error_id err = ei.error() )
+        {
             if( E * e = peek_tuple<E>::peek(tup, err) )
                 return e;
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             else
                 return peek_exception<E>::peek(ei);
 #endif
+        }
         return nullptr;
     }
 }
@@ -4432,6 +4446,7 @@ namespace leaf_detail
         {
             return std::forward<TryBlock>(try_block)();
         }
+#if BOOST_LEAF_CFG_CAPTURE
         catch( capturing_exception const & cap )
         {
             try
@@ -4461,6 +4476,7 @@ namespace leaf_detail
                     } );
             }
         }
+#endif
         catch( std::exception & ex )
         {
             ctx.deactivate();
@@ -4624,7 +4640,7 @@ namespace leaf_detail
 } }
 
 #endif
-// Expanded at line 2601: #include <boost/leaf/on_error.hpp>
+// Expanded at line 2609: #include <boost/leaf/on_error.hpp>
 // >>> #include <boost/leaf/pred.hpp>
 #line 1 "boost/leaf/pred.hpp"
 #ifndef BOOST_LEAF_PRED_HPP_INCLUDED
@@ -4636,7 +4652,7 @@ namespace leaf_detail
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3674: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 3684: #include <boost/leaf/handle_errors.hpp>
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -4845,7 +4861,7 @@ struct is_predicate<match_member<P, V1, V...>>: std::true_type
 template <class P>
 struct if_not
 {
-    using error_type = typename P::error_type;;
+    using error_type = typename P::error_type;
     decltype(std::declval<P>().matched) matched;
 
     template <class E>
@@ -4935,7 +4951,7 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 732: #include <boost/leaf/error.hpp>
+// Expanded at line 700: #include <boost/leaf/exception.hpp>
 
 #include <climits>
 #include <functional>
@@ -5209,7 +5225,7 @@ protected:
     void enforce_value_state() const
     {
         if( !has_value() )
-            ::boost::leaf::throw_exception(bad_result(get_error_id()));
+            ::boost::leaf::leaf_detail::throw_exception_impl(bad_result(get_error_id()));
     }
 
 public:
@@ -5565,8 +5581,8 @@ struct is_result_type<result<T>>: std::true_type
 #if __cplusplus >= 201703L
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3674: #include <boost/leaf/handle_errors.hpp>
-// Expanded at line 4929: #include <boost/leaf/result.hpp>
+// Expanded at line 3684: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 4945: #include <boost/leaf/result.hpp>
 #include <variant>
 #include <optional>
 #include <tuple>
