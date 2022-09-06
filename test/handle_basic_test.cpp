@@ -275,7 +275,7 @@ int main()
             []( info<1> const & i1 )
             {
                 BOOST_TEST_EQ(i1.value, 42);
-                int r = leaf::try_handle_all(
+                int r1 = leaf::try_handle_all(
                     []() -> leaf::result<int>
                     {
                         return leaf::new_error( info<1>{43} );
@@ -284,7 +284,7 @@ int main()
                     {
                         return -1;
                     } );
-                BOOST_TEST_EQ(r, -1);
+                BOOST_TEST_EQ(r1, -1);
                 BOOST_TEST_EQ(i1.value, 42);
                 return 0;
             },
@@ -306,21 +306,21 @@ int main()
             []( info<1> const & i1 )
             {
                 BOOST_TEST_EQ(i1.value, 42);
-                int r = leaf::try_handle_all(
+                int r1 = leaf::try_handle_all(
                     []() -> leaf::result<int>
                     {
                         return leaf::new_error( info<1>{43} );
                     },
-                    []( info<1> const & i1 )
+                    []( info<1> const & i1_ )
                     {
-                        BOOST_TEST_EQ(i1.value, 43);
+                        BOOST_TEST_EQ(i1_.value, 43);
                         return -1;
                     },
                     []()
                     {
                         return -2;
                     } );
-                BOOST_TEST_EQ(r, -1);
+                BOOST_TEST_EQ(r1, -1);
                 BOOST_TEST_EQ(i1.value, 42);
                 return 0;
             },

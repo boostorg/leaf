@@ -57,7 +57,7 @@ leaf::result<R> f_errc_wrapped( Errc ec )
 
 struct move_only
 {
-    explicit move_only( int value ): value(value) { }
+    explicit move_only( int val ): value(val) { }
     int value;
 
 #ifndef BOOST_LEAF_NO_CXX11_REF_QUALIFIERS

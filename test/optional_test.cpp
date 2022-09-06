@@ -24,8 +24,8 @@ public:
 
     int value;
 
-    explicit my_info( int value ):
-        value(value)
+    explicit my_info( int val ):
+        value(val)
     {
         BOOST_TEST(++object_count>0);
         BOOST_TEST(++value_count>0);

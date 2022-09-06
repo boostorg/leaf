@@ -140,24 +140,28 @@ namespace leaf_detail
         BOOST_LEAF_CONSTEXPR T const & value(int key) const & noexcept
         {
             BOOST_LEAF_ASSERT(has_value(key) != 0);
+            (void) key;
             return value_;
         }
 
         BOOST_LEAF_CONSTEXPR T & value(int key) & noexcept
         {
             BOOST_LEAF_ASSERT(has_value(key) != 0);
+            (void) key;
             return value_;
         }
 
         BOOST_LEAF_CONSTEXPR T const && value(int key) const && noexcept
         {
             BOOST_LEAF_ASSERT(has_value(key) != 0);
+            (void) key;
             return value_;
         }
 
         BOOST_LEAF_CONSTEXPR T value(int key) && noexcept
         {
             BOOST_LEAF_ASSERT(has_value(key) != 0);
+            (void) key;
             T tmp(std::move(value_));
             reset();
             return tmp;

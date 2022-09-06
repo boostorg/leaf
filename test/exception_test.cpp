@@ -43,7 +43,7 @@ struct my_exception:
     abstract_base_exception
 {
     int val;;
-    explicit my_exception(int val): val{val} { }
+    explicit my_exception(int v): val{v} { }
     int get_val() const { return val; }
 };
 
@@ -82,7 +82,7 @@ int test( F && f )
             BOOST_TEST_EQ(get_val(ex), 42);
             return 20;
         },
-        []( Ex ex, leaf::match_value<info,42>, info x )
+        []( Ex ex, leaf::match_value<info,42>, info )
         {
             BOOST_TEST_EQ(get_val(ex), 42);
             return 21;
@@ -101,7 +101,7 @@ int test( F && f )
         {
             return 40;
         },
-        []( leaf::match_value<info,42>, info x )
+        []( leaf::match_value<info,42>, info )
         {
             return 41;
         },
@@ -278,7 +278,7 @@ int main()
             {
                 throw std::exception();
             },
-            []( info x )
+            []( info )
             {
                 return -1;
             },

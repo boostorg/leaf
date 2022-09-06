@@ -50,7 +50,7 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_errno
 {
     int value;
 
-    explicit e_errno(int value=errno): value(value) { }
+    explicit e_errno(int val=errno): value(val) { }
 
     template <class CharT, class Traits>
     friend std::basic_ostream<CharT, Traits> & operator<<(std::basic_ostream<CharT, Traits> & os, e_errno const & err)
@@ -69,7 +69,7 @@ namespace windows
     {
         unsigned value;
 
-        explicit e_LastError(unsigned value): value(value) { }
+        explicit e_LastError(unsigned val): value(val) { }
 
 #if BOOST_LEAF_CFG_WIN32
         e_LastError(): value(GetLastError()) { }

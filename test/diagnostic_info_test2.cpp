@@ -19,7 +19,7 @@ namespace leaf = boost::leaf;
 template <int I>
 struct info
 {
-    friend std::ostream & operator<<( std::ostream & os, info const & x )
+    friend std::ostream & operator<<( std::ostream & os, info const & )
     {
         return os << "printed info<" << I << '>';
     }

@@ -68,12 +68,12 @@ int main()
                 return { };
             },
 
-            []( error_a const & e )
+            []( error_a const & )
             {
                 std::cerr << "Error A!" << std::endl;
             },
 
-            []( error_b const & e )
+            []( error_b const & )
             {
                 std::cerr << "Error B!" << std::endl;
             },

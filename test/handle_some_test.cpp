@@ -953,7 +953,7 @@ int main()
         int r = leaf::try_handle_all(
             []
             {
-                leaf::result<int> r = leaf::try_handle_some(
+                leaf::result<int> r1 = leaf::try_handle_some(
                     []() -> leaf::result<int>
                     {
                         BOOST_LEAF_AUTO(answer, f<int>(my_error_code::error1));
@@ -963,8 +963,8 @@ int main()
                     {
                         return 1;
                     } );
-                BOOST_TEST(!r);
-                return r;
+                BOOST_TEST(!r1);
+                return r1;
             },
             []( my_error_code ec, info<1> const & x, info<2> y )
             {
@@ -986,7 +986,7 @@ int main()
         int r = leaf::try_handle_all(
             []
             {
-                leaf::result<int> r = leaf::try_handle_some(
+                leaf::result<int> r1 = leaf::try_handle_some(
                     []() -> leaf::result<int>
                     {
                         BOOST_LEAF_AUTO(answer, f_errc<int>(errc_a::a0));
@@ -996,8 +996,8 @@ int main()
                     {
                         return 1;
                     } );
-                BOOST_TEST(!r);
-                return r;
+                BOOST_TEST(!r1);
+                return r1;
             },
             []( leaf::match<leaf::condition<cond_x>, cond_x::x00> ec, info<1> const & x, info<2> y )
             {
@@ -1019,7 +1019,7 @@ int main()
         int r = leaf::try_handle_all(
             []
             {
-                leaf::result<int> r = leaf::try_handle_some(
+                leaf::result<int> r1 = leaf::try_handle_some(
                     []() -> leaf::result<int>
                     {
                         BOOST_LEAF_AUTO(answer, f<int>(my_error_code::error1));
@@ -1029,8 +1029,8 @@ int main()
                     {
                         return 1;
                     } );
-                BOOST_TEST(!r);
-                return r;
+                BOOST_TEST(!r1);
+                return r1;
             },
             []( leaf::match<my_error_code,my_error_code::error1> ec, info<1> const & x, info<2> y )
             {
@@ -1051,7 +1051,7 @@ int main()
         int r = leaf::try_handle_all(
             []
             {
-                leaf::result<int> r = leaf::try_handle_some(
+                leaf::result<int> r1 = leaf::try_handle_some(
                     []() -> leaf::result<int>
                     {
                         BOOST_LEAF_AUTO(answer, f<int>(my_error_code::error1));
@@ -1061,8 +1061,8 @@ int main()
                     {
                         return 1;
                     } );
-                BOOST_TEST(!r);
-                return r;
+                BOOST_TEST(!r1);
+                return r1;
             },
             []( leaf::match<my_error_code,my_error_code::error2,my_error_code::error1> ec, info<1> const & x, info<2> y )
             {
@@ -1083,7 +1083,7 @@ int main()
         int r = leaf::try_handle_all(
             []
             {
-                leaf::result<int> r = leaf::try_handle_some(
+                leaf::result<int> r1 = leaf::try_handle_some(
                     []() -> leaf::result<int>
                     {
                         BOOST_LEAF_AUTO(answer, f<int>(my_error_code::error1));
@@ -1093,8 +1093,8 @@ int main()
                     {
                         return 1;
                     } );
-                BOOST_TEST(!r);
-                return r;
+                BOOST_TEST(!r1);
+                return r1;
             },
             []( leaf::match_value<e_my_error_code,my_error_code::error1> ec, info<1> const & x, info<2> y )
             {
@@ -1115,7 +1115,7 @@ int main()
         int r = leaf::try_handle_all(
             []
             {
-                leaf::result<int> r = leaf::try_handle_some(
+                leaf::result<int> r1 = leaf::try_handle_some(
                     []() -> leaf::result<int>
                     {
                         BOOST_LEAF_AUTO(answer, f<int>(my_error_code::error1));
@@ -1125,8 +1125,8 @@ int main()
                     {
                         return 1;
                     } );
-                BOOST_TEST(!r);
-                return r;
+                BOOST_TEST(!r1);
+                return r1;
             },
             []( leaf::match_value<e_my_error_code,my_error_code::error2,my_error_code::error1> ec, info<1> const & x, info<2> y )
             {
@@ -1147,7 +1147,7 @@ int main()
         int r = leaf::try_handle_all(
             []
             {
-                leaf::result<int> r = leaf::try_handle_some(
+                leaf::result<int> r1 = leaf::try_handle_some(
                     []() -> leaf::result<int>
                     {
                         BOOST_LEAF_AUTO(answer, f<int>(my_error_code::error1));
@@ -1160,8 +1160,8 @@ int main()
                         BOOST_TEST_EQ(y.value, 2);
                         return 1;
                     } );
-                BOOST_TEST(r);
-                return r;
+                BOOST_TEST(r1);
+                return r1;
             },
             []( info<4> )
             {
@@ -1179,7 +1179,7 @@ int main()
         int r = leaf::try_handle_all(
             []
             {
-                leaf::result<int> r = leaf::try_handle_some(
+                leaf::result<int> r1 = leaf::try_handle_some(
                     []() -> leaf::result<int>
                     {
                         BOOST_LEAF_AUTO(answer, f<int>(my_error_code::error1));
@@ -1192,8 +1192,8 @@ int main()
                         BOOST_TEST_EQ(y.value, 2);
                         return 1;
                     } );
-                BOOST_TEST(r);
-                return r;
+                BOOST_TEST(r1);
+                return r1;
             },
             []( leaf::match<my_error_code,my_error_code::error2> )
             {
@@ -1211,7 +1211,7 @@ int main()
         int r = leaf::try_handle_all(
             []
             {
-                leaf::result<int> r = leaf::try_handle_some(
+                leaf::result<int> r1 = leaf::try_handle_some(
                     []() -> leaf::result<int>
                     {
                         BOOST_LEAF_AUTO(answer, f<int>(my_error_code::error1));
@@ -1224,8 +1224,8 @@ int main()
                         BOOST_TEST_EQ(y.value, 2);
                         return 1;
                     } );
-                BOOST_TEST(r);
-                return r;
+                BOOST_TEST(r1);
+                return r1;
             },
             []( leaf::match<my_error_code,my_error_code::error2> )
             {
@@ -1243,7 +1243,7 @@ int main()
         int r = leaf::try_handle_all(
             []
             {
-                leaf::result<int> r = leaf::try_handle_some(
+                leaf::result<int> r1 = leaf::try_handle_some(
                     []() -> leaf::result<int>
                     {
                         BOOST_LEAF_AUTO(answer, f<int>(my_error_code::error1));
@@ -1256,8 +1256,8 @@ int main()
                         BOOST_TEST_EQ(y.value, 2);
                         return 1;
                     } );
-                BOOST_TEST(r);
-                return r;
+                BOOST_TEST(r1);
+                return r1;
             },
             []( leaf::match_value<e_my_error_code,my_error_code::error2> )
             {
@@ -1275,7 +1275,7 @@ int main()
         int r = leaf::try_handle_all(
             []
             {
-                leaf::result<int> r = leaf::try_handle_some(
+                leaf::result<int> r1 = leaf::try_handle_some(
                     []() -> leaf::result<int>
                     {
                         BOOST_LEAF_AUTO(answer, f<int>(my_error_code::error1));
@@ -1288,8 +1288,8 @@ int main()
                         BOOST_TEST_EQ(y.value, 2);
                         return 1;
                     } );
-                BOOST_TEST(r);
-                return r;
+                BOOST_TEST(r1);
+                return r1;
             },
             []( leaf::match_value<e_my_error_code,my_error_code::error2> )
             {

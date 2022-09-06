@@ -66,12 +66,12 @@ void test()
         ResType r = leaf::try_handle_some(
             [&]
             {
-                auto r = g<ResType>(false);
-                BOOST_TEST(!r);
-                auto ec = r.error();
+                auto r1 = g<ResType>(false);
+                BOOST_TEST(!r1);
+                auto ec = r1.error();
                 BOOST_TEST_EQ(ec.message(), "LEAF error");
                 BOOST_TEST(!std::strcmp(ec.category().name(),"LEAF error"));
-                return r;
+                return r1;
             },
             [&]( info<42> const & x, leaf::match<leaf::condition<cond_x>, cond_x::x00> ec )
             {

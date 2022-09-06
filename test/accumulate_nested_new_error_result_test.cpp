@@ -29,7 +29,7 @@ leaf::error_id f0()
 
 leaf::error_id f1()
 {
-    auto load = leaf::on_error( []( info<0> & x ) { }, []( info<1> & x ) { ++x.value; }, []( info<2> & x ) { ++x.value; } );
+    auto load = leaf::on_error( []( info<0> & ) { }, []( info<1> & x ) { ++x.value; }, []( info<2> & x ) { ++x.value; } );
     (void) f0();
     return leaf::new_error();
 }

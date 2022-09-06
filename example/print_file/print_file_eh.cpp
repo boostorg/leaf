@@ -40,10 +40,10 @@ char const * parse_command_line( int argc, char const * argv[] );
 std::shared_ptr<FILE> file_open( char const * file_name );
 
 // Return the size of the file.
-int file_size( FILE & f );
+std::size_t file_size( FILE & f );
 
 // Read size bytes from f into buf.
-void file_read( FILE & f, void * buf, int size );
+void file_read( FILE & f, void * buf, std::size_t size );
 
 
 // The main function, which handles all errors.
@@ -59,7 +59,7 @@ int main( int argc, char const * argv[] )
 
             std::shared_ptr<FILE> f = file_open(file_name);
 
-            int s = file_size(*f);
+            std::size_t s = file_size(*f);
 
             std::string buffer(1 + s, '\0');
             file_read(*f, &buffer[0], buffer.size()-1);
@@ -167,28 +167,28 @@ std::shared_ptr<FILE> file_open( char const * file_name )
 
 
 // Return the size of the file.
-int file_size( FILE & f )
+std::size_t file_size( FILE & f )
 {
     auto load = leaf::on_error([] { return leaf::e_errno{errno}; });
 
     if( fseek(&f, 0, SEEK_END) )
         leaf::throw_exception(size_error);
 
-    int s = ftell(&f);
+    long s = ftell(&f);
     if( s==-1L )
         leaf::throw_exception(size_error);
 
     if( fseek(&f,0,SEEK_SET) )
         leaf::throw_exception(size_error);
 
-    return s;
+    return std::size_t(s);
 }
 
 
 // Read size bytes from f into buf.
-void file_read( FILE & f, void * buf, int size )
+void file_read( FILE & f, void * buf, std::size_t size )
 {
-    int n = fread(buf, 1, size, &f);
+    std::size_t n = fread(buf, 1, size, &f);
 
     if( ferror(&f) )
         leaf::throw_exception(read_error, leaf::e_errno{errno});

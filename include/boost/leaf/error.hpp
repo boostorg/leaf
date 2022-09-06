@@ -112,8 +112,8 @@ namespace leaf_detail
         char const * (*first_type)();
         int count;
 
-        BOOST_LEAF_CONSTEXPR explicit e_unexpected_count(char const * (*first_type)()) noexcept:
-            first_type(first_type),
+        BOOST_LEAF_CONSTEXPR explicit e_unexpected_count(char const * (*ft)()) noexcept:
+            first_type(ft),
             count(1)
         {
         }
@@ -261,6 +261,9 @@ namespace leaf_detail
                     diagnostic<E>::print(os, value(k));
                     (os << '\n').flush();
                 }
+#else
+            (void) os;
+            (void) key_to_print;
 #endif
         }
 
@@ -314,7 +317,7 @@ namespace leaf_detail
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         else
         {
-            int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
+            int c = int(tls::read_uint<tls_tag_unexpected_enabled_counter>());
             BOOST_LEAF_ASSERT(c>=0);
             if( c )
                 load_unexpected(err_id, std::move(*this).value(err_id));
@@ -334,7 +337,7 @@ namespace leaf_detail
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         else
         {
-            int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
+            int c = int(tls::read_uint<tls_tag_unexpected_enabled_counter>());
             BOOST_LEAF_ASSERT(c>=0);
             if( c )
                 load_unexpected(err_id, std::forward<E>(e));
@@ -379,20 +382,20 @@ namespace leaf_detail
     };
 
     template <class T>
-    atomic_unsigned_int id_factory<T>::counter(-3);
+    atomic_unsigned_int id_factory<T>::counter(unsigned(-3));
 
     inline int current_id() noexcept
     {
-        auto id = tls::read_uint32<tls_tag_id_factory_current_id>();
+        unsigned id = tls::read_uint<tls_tag_id_factory_current_id>();
         BOOST_LEAF_ASSERT(id==0 || (id&3)==1);
-        return id;
+        return int(id);
     }
 
     inline int new_id() noexcept
     {
-        auto id = id_factory<>::generate_next_id();
-        tls::write_uint32<tls_tag_id_factory_current_id>(id);
-        return id;
+        unsigned id = id_factory<>::generate_next_id();
+        tls::write_uint<tls_tag_id_factory_current_id>(id);
+        return int(id);
     }
 }
 
@@ -444,7 +447,7 @@ namespace leaf_detail
         bool equivalent( int,  std::error_condition const & ) const noexcept final override { return false; }
         bool equivalent( std::error_code const &, int ) const noexcept final override { return false; }
         char const * name() const noexcept final override { return "LEAF error"; }
-        std::string message( int condition ) const final override { return name(); }
+        std::string message( int ) const final override { return name(); }
     public:
         ~leaf_category() noexcept final override { }
     };

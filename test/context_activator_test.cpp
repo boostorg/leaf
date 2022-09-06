@@ -45,13 +45,13 @@ int main()
         [&]
         {
             auto ctx = leaf::make_context(error_handlers);
-            leaf::result<int> r;
+            leaf::result<int> r1;
             {
                 auto active_context = activate_context(ctx);
-                r = f(ctx);
+                r1 = f(ctx);
             }
-            ctx.propagate(r.error());
-            return r;
+            ctx.propagate(r1.error());
+            return r1;
         },
         error_handlers );
     BOOST_TEST_EQ(r, 1);

@@ -95,7 +95,7 @@ namespace leaf_detail
         };
 
         explicit result_discriminant( error_id id ) noexcept:
-            state_(id.value())
+            state_(unsigned(id.value()))
         {
             BOOST_LEAF_ASSERT(state_==0 || (state_&3)==1);
         }
@@ -122,7 +122,7 @@ namespace leaf_detail
         error_id get_error_id() const noexcept
         {
             BOOST_LEAF_ASSERT(kind()==no_error || kind()==err_id);
-            return make_error_id(state_);
+            return make_error_id(int(state_));
         }
     };
 }
@@ -178,7 +178,7 @@ class result
 #if BOOST_LEAF_CFG_CAPTURE
                 {
                     error_id captured_id = r_.ctx_->propagate_captured_errors();
-                    tls::write_uint32<leaf_detail::tls_tag_id_factory_current_id>(captured_id.value());
+                    tls::write_uint<leaf_detail::tls_tag_id_factory_current_id>(unsigned(captured_id.value()));
                     return captured_id;
                 }
 #else

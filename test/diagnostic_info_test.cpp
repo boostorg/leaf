@@ -39,7 +39,7 @@ struct my_exception:
 
 struct printable_payload
 {
-    friend std::ostream & operator<<( std::ostream & os, printable_payload const & x )
+    friend std::ostream & operator<<( std::ostream & os, printable_payload const & )
     {
         return os << "printed printable_payload";
     }
@@ -63,7 +63,7 @@ struct printable_info_non_printable_payload
 {
     non_printable_payload value;
 
-    friend std::ostream & operator<<( std::ostream & os, printable_info_non_printable_payload const & x )
+    friend std::ostream & operator<<( std::ostream & os, printable_info_non_printable_payload const & )
     {
         return os << "*** printable_info_non_printable_payload ***";
     }

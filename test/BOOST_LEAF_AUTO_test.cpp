@@ -23,7 +23,7 @@ struct value
 {
     int x;
 
-    explicit value( int x ): x(x) { };
+    explicit value( int x_ ): x(x_) { };
 
 #ifndef BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
     value( value const & ) = delete;

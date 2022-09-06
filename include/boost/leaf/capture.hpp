@@ -102,7 +102,7 @@ namespace leaf_detail
         [[noreturn]] void unload_and_rethrow_original_exception() const
         {
             BOOST_LEAF_ASSERT(ctx_->captured_id_);
-            tls::write_uint32<tls_tag_id_factory_current_id>(ctx_->captured_id_.value());
+            tls::write_uint<tls_tag_id_factory_current_id>(unsigned(ctx_->captured_id_.value()));
             ctx_->propagate(ctx_->captured_id_);
             std::rethrow_exception(ex_);
         }

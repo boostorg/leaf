@@ -68,7 +68,7 @@ int main()
 {
     int received_a, received_b;
     auto error_handlers = std::make_tuple(
-        [&received_a, &received_b]( info<1> const & x1, info<2> const & x2, info<4> const & x4 )
+        [&received_a, &received_b]( info<1> const & x1, info<2> const & x2, info<4> const & )
         {
             received_a = x1.value;
             received_b = x2.value;

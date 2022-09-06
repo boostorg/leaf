@@ -164,7 +164,7 @@ int main()
                 return 1;
             },
 
-            []( my_error e )
+            []( my_error )
             {
                 return 2;
             },
@@ -188,7 +188,7 @@ int main()
                 return 1;
             },
 
-            []( my_error e )
+            []( my_error )
             {
                 return 2;
             },
@@ -246,7 +246,7 @@ int main()
                 return leaf::new_error(e_my_error{42});
             },
 
-            []( leaf::match<e_my_error, e_my_error_gt<41>> m )
+            []( leaf::match<e_my_error, e_my_error_gt<41>> )
             {
                 return 1;
             },
@@ -265,7 +265,7 @@ int main()
                 return leaf::new_error(e_my_error{42});
             },
 
-            []( leaf::match<e_my_error, e_my_error_gt<42>> m )
+            []( leaf::match<e_my_error, e_my_error_gt<42>> )
             {
                 return 1;
             },

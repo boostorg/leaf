@@ -49,8 +49,8 @@ int main()
         int r = leaf::try_catch(
             []
             {
-                leaf::result<int> r = leaf::new_error(e_test{42});
-                (void) r.value();
+                leaf::result<int> r1 = leaf::new_error(e_test{42});
+                (void) r1.value();
                 return 0;
             },
             check );
@@ -61,8 +61,8 @@ int main()
         int r = leaf::try_catch(
             []
             {
-                leaf::result<int> const r = leaf::new_error(e_test{42});
-                (void) r.value();
+                leaf::result<int> const r1 = leaf::new_error(e_test{42});
+                (void) r1.value();
                 return 0;
             },
             check );
@@ -70,21 +70,21 @@ int main()
     }
 #endif
     {
-        leaf::result<res> r = leaf::new_error(e_test{42});
-        BOOST_TEST(r.operator->()==0);
+        leaf::result<res> r1 = leaf::new_error(e_test{42});
+        BOOST_TEST(r1.operator->()==0);
     }
 #if !BOOST_WORKAROUND( BOOST_GCC, < 50000 )
     {
-        leaf::result<res> const r = leaf::new_error(e_test{42});
-        BOOST_TEST(r.operator->()==0);
+        leaf::result<res> const r1 = leaf::new_error(e_test{42});
+        BOOST_TEST(r1.operator->()==0);
     }
 #endif
     {
         int r = leaf::try_catch(
             []
             {
-                leaf::result<void> r = leaf::new_error(e_test{42});
-                (void) r.value();
+                leaf::result<void> r1 = leaf::new_error(e_test{42});
+                (void) r1.value();
                 return 0;
             },
             check );
@@ -95,8 +95,8 @@ int main()
         int r = leaf::try_catch(
             []
             {
-                leaf::result<void> const r = leaf::new_error(e_test{42});
-                (void) r.value();
+                leaf::result<void> const r1 = leaf::new_error(e_test{42});
+                (void) r1.value();
                 return 0;
             },
             check );

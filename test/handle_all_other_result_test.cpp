@@ -67,12 +67,12 @@ void test()
         int r = leaf::try_handle_all(
             [&]
             {
-                auto r = g<ResType>(false);
-                BOOST_TEST(!r);
-                auto ec = r.error();
+                auto r1 = g<ResType>(false);
+                BOOST_TEST(!r1);
+                auto ec = r1.error();
                 BOOST_TEST_EQ(ec.message(), "LEAF error");
                 BOOST_TEST(!std::strcmp(ec.category().name(),"LEAF error"));
-                return r;
+                return r1;
             },
             []( info<42> const & x, std::error_code const & ec )
             {

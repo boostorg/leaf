@@ -43,6 +43,10 @@ if not meson.is_subproject()
             '-Wno-dangling-else',
             '-Wno-non-virtual-dtor',
             '-Wno-delete-non-abstract-non-virtual-dtor',
+#            '-Wshadow-all',
+#            '-Wsign-conversion',
+#            '-Wextra',
+#            '-Werror',
             language:'cpp' )
     elif compiler_id=='gcc'
         if get_option('buildtype')!='debug'

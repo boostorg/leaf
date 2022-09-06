@@ -43,7 +43,7 @@ void f0()
 
 void f1()
 {
-    auto load = leaf::on_error( []( info<0> & x ) { }, []( info<1> & x ) { ++x.value; }, []( info<2> & x ) { ++x.value; } );
+    auto load = leaf::on_error( []( info<0> & ) { }, []( info<1> & x ) { ++x.value; }, []( info<2> & x ) { ++x.value; } );
     try { f0(); } catch(...) { }
     leaf::throw_exception();
 }

@@ -114,7 +114,7 @@ namespace leaf_detail
 #if BOOST_LEAF_CFG_DIAGNOSTICS
             else
             {
-                int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
+                int c = int(tls::read_uint<tls_tag_unexpected_enabled_counter>());
                 BOOST_LEAF_ASSERT(c>=0);
                 if( c )
                     load_unexpected(err_id, std::move(e_));
@@ -149,7 +149,7 @@ namespace leaf_detail
 #if BOOST_LEAF_CFG_DIAGNOSTICS
             else
             {
-                int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
+                int c = int(tls::read_uint<tls_tag_unexpected_enabled_counter>());
                 BOOST_LEAF_ASSERT(c>=0);
                 if( c )
                     load_unexpected(err_id, std::forward<E>(f_()));

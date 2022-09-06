@@ -21,8 +21,8 @@ struct A
     {
     }
 
-    A( int x ) noexcept:
-        x(x)
+    A( int x_ ) noexcept:
+        x(x_)
     {
     }
 };

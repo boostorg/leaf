@@ -427,7 +427,7 @@ int main()
         int r = leaf::try_catch(
             []
             {
-                int r = leaf::try_catch(
+                int r1 = leaf::try_catch(
                     []
                     {
                         return failing<int>(error1());
@@ -437,7 +437,7 @@ int main()
                         return 1;
                     } );
                 BOOST_TEST(false);
-                return r;
+                return r1;
             },
             []( error1 const &, info<1> const & x, info<2> y )
             {
@@ -457,7 +457,7 @@ int main()
         int r = leaf::try_catch(
             []
             {
-                int r = leaf::try_catch(
+                int r1 = leaf::try_catch(
                     []
                     {
                         return failing<int>(error1());
@@ -467,7 +467,7 @@ int main()
                         return 1;
                     } );
                 BOOST_TEST(false);
-                return r;
+                return r1;
             },
             []( leaf::catch_<error2,error1>, info<1> const & x, info<2> y )
             {
@@ -487,7 +487,7 @@ int main()
         int r = leaf::try_catch(
             []
             {
-                int r = leaf::try_catch(
+                int r1 = leaf::try_catch(
                     []
                     {
                         return failing<int>(error1());
@@ -498,8 +498,8 @@ int main()
                         BOOST_TEST_EQ(y.value, 2);
                         return 1;
                     } );
-                BOOST_TEST_EQ(r, 1);
-                return r;
+                BOOST_TEST_EQ(r1, 1);
+                return r1;
             },
             []( error1 const & )
             {
@@ -517,7 +517,7 @@ int main()
         int r = leaf::try_catch(
             []
             {
-                int r = leaf::try_catch(
+                int r1 = leaf::try_catch(
                     []
                     {
                         return failing<int>(error1());
@@ -528,8 +528,8 @@ int main()
                         BOOST_TEST_EQ(y.value, 2);
                         return 1;
                     } );
-                BOOST_TEST_EQ(r, 1);
-                return r;
+                BOOST_TEST_EQ(r1, 1);
+                return r1;
             },
             []( error1 const & )
             {
