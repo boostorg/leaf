@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 06/29/2022 from https://github.com/boostorg/leaf/tree/e16e0cf.
+// Generated on 09/07/2022 from https://github.com/boostorg/leaf/tree/b2090ac.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
@@ -353,7 +353,7 @@ namespace tls
 
 // LEAF requires thread local storage support for pointers and for uin32_t values.
 
-// This header implements thread local storage for pointers and for uint32_t
+// This header implements thread local storage for pointers and for unsigned int
 // values for platforms that support thread local pointers by index.
 
 namespace boost { namespace leaf {
@@ -465,29 +465,29 @@ namespace tls
     ////////////////////////////////////////
 
     template <class Tag>
-    std::uint32_t read_uint32() noexcept
+    unsigned read_uint() noexcept
     {
-        static_assert(sizeof(std::intptr_t) >= sizeof(std::uint32_t), "Incompatible tls_array implementation");
-        return (std::uint32_t) (std::intptr_t) (void *) read_ptr<Tag>();
+        static_assert(sizeof(std::intptr_t) >= sizeof(unsigned), "Incompatible tls_array implementation");
+        return (unsigned) (std::intptr_t) (void *) read_ptr<Tag>();
     }
 
     template <class Tag>
-    void write_uint32( std::uint32_t x ) noexcept
+    void write_uint( unsigned x ) noexcept
     {
-        static_assert(sizeof(std::intptr_t) >= sizeof(std::uint32_t), "Incompatible tls_array implementation");
+        static_assert(sizeof(std::intptr_t) >= sizeof(unsigned), "Incompatible tls_array implementation");
         write_ptr<Tag>((Tag *) (void *) (std::intptr_t) x);
     }
 
     template <class Tag>
-    void uint32_increment() noexcept
+    void uint_increment() noexcept
     {
-        write_uint32<Tag>(read_uint32<Tag>() + 1);
+        write_uint<Tag>(read_uint<Tag>() + 1);
     }
 
     template <class Tag>
-    void uint32_decrement() noexcept
+    void uint_decrement() noexcept
     {
-        write_uint32<Tag>(read_uint32<Tag>() - 1);
+        write_uint<Tag>(read_uint<Tag>() - 1);
     }
 }
 
@@ -509,7 +509,7 @@ namespace tls
 
 // LEAF requires thread local storage support for pointers and for uin32_t values.
 
-// This header implements "thread local" storage for pointers and for uint32_t
+// This header implements "thread local" storage for pointers and for unsigned int
 // values using globals, which is suitable for single thread environments.
 
 #include <cstdint>
@@ -547,36 +547,36 @@ namespace tls
     ////////////////////////////////////////
 
     template <class Tag>
-    struct BOOST_LEAF_SYMBOL_VISIBLE tagged_uint32
+    struct BOOST_LEAF_SYMBOL_VISIBLE tagged_uint
     {
-        static std::uint32_t x;
+        static unsigned x;
     };
 
     template <class Tag>
-    std::uint32_t tagged_uint32<Tag>::x;
+    unsigned tagged_uint<Tag>::x;
 
     template <class Tag>
-    std::uint32_t read_uint32() noexcept
+    unsigned read_uint() noexcept
     {
-        return tagged_uint32<Tag>::x;
+        return tagged_uint<Tag>::x;
     }
 
     template <class Tag>
-    void write_uint32( std::uint32_t x ) noexcept
+    void write_uint( unsigned x ) noexcept
     {
-        tagged_uint32<Tag>::x = x;
+        tagged_uint<Tag>::x = x;
     }
 
     template <class Tag>
-    void uint32_increment() noexcept
+    void uint_increment() noexcept
     {
-        ++tagged_uint32<Tag>::x;
+        ++tagged_uint<Tag>::x;
     }
 
     template <class Tag>
-    void uint32_decrement() noexcept
+    void uint_decrement() noexcept
     {
-        --tagged_uint32<Tag>::x;
+        --tagged_uint<Tag>::x;
     }
 }
 
@@ -598,7 +598,7 @@ namespace tls
 
 // LEAF requires thread local storage support for pointers and for uin32_t values.
 
-// This header implements thread local storage for pointers and for uint32_t
+// This header implements thread local storage for pointers and for unsigned int
 // values using the C++11 built-in thread_local storage class specifier.
 
 #include <cstdint>
@@ -637,36 +637,36 @@ namespace tls
     ////////////////////////////////////////
 
     template <class Tag>
-    struct BOOST_LEAF_SYMBOL_VISIBLE tagged_uint32
+    struct BOOST_LEAF_SYMBOL_VISIBLE tagged_uint
     {
-        static thread_local std::uint32_t x;
+        static thread_local unsigned x;
     };
 
     template <class Tag>
-    thread_local std::uint32_t tagged_uint32<Tag>::x;
+    thread_local unsigned tagged_uint<Tag>::x;
 
     template <class Tag>
-    std::uint32_t read_uint32() noexcept
+    unsigned read_uint() noexcept
     {
-        return tagged_uint32<Tag>::x;
+        return tagged_uint<Tag>::x;
     }
 
     template <class Tag>
-    void write_uint32( std::uint32_t x ) noexcept
+    void write_uint( unsigned x ) noexcept
     {
-        tagged_uint32<Tag>::x = x;
+        tagged_uint<Tag>::x = x;
     }
 
     template <class Tag>
-    void uint32_increment() noexcept
+    void uint_increment() noexcept
     {
-        ++tagged_uint32<Tag>::x;
+        ++tagged_uint<Tag>::x;
     }
 
     template <class Tag>
-    void uint32_decrement() noexcept
+    void uint_decrement() noexcept
     {
-        --tagged_uint32<Tag>::x;
+        --tagged_uint<Tag>::x;
     }
 }
 
@@ -861,24 +861,28 @@ namespace leaf_detail
         BOOST_LEAF_CONSTEXPR T const & value(int key) const & noexcept
         {
             BOOST_LEAF_ASSERT(has_value(key) != 0);
+            (void) key;
             return value_;
         }
 
         BOOST_LEAF_CONSTEXPR T & value(int key) & noexcept
         {
             BOOST_LEAF_ASSERT(has_value(key) != 0);
+            (void) key;
             return value_;
         }
 
         BOOST_LEAF_CONSTEXPR T const && value(int key) const && noexcept
         {
             BOOST_LEAF_ASSERT(has_value(key) != 0);
+            (void) key;
             return value_;
         }
 
         BOOST_LEAF_CONSTEXPR T value(int key) && noexcept
         {
             BOOST_LEAF_ASSERT(has_value(key) != 0);
+            (void) key;
             T tmp(std::move(value_));
             reset();
             return tmp;
@@ -1507,7 +1511,7 @@ namespace leaf_detail
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 897: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 901: #include <boost/leaf/detail/demangle.hpp>
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 
@@ -1732,8 +1736,8 @@ namespace leaf_detail
         char const * (*first_type)();
         int count;
 
-        BOOST_LEAF_CONSTEXPR explicit e_unexpected_count(char const * (*first_type)()) noexcept:
-            first_type(first_type),
+        BOOST_LEAF_CONSTEXPR explicit e_unexpected_count(char const * (*ft)()) noexcept:
+            first_type(ft),
             count(1)
         {
         }
@@ -1881,6 +1885,9 @@ namespace leaf_detail
                     diagnostic<E>::print(os, value(k));
                     (os << '\n').flush();
                 }
+#else
+            (void) os;
+            (void) key_to_print;
 #endif
         }
 
@@ -1934,7 +1941,7 @@ namespace leaf_detail
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         else
         {
-            int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
+            int c = int(tls::read_uint<tls_tag_unexpected_enabled_counter>());
             BOOST_LEAF_ASSERT(c>=0);
             if( c )
                 load_unexpected(err_id, std::move(*this).value(err_id));
@@ -1954,7 +1961,7 @@ namespace leaf_detail
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         else
         {
-            int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
+            int c = int(tls::read_uint<tls_tag_unexpected_enabled_counter>());
             BOOST_LEAF_ASSERT(c>=0);
             if( c )
                 load_unexpected(err_id, std::forward<E>(e));
@@ -1999,20 +2006,20 @@ namespace leaf_detail
     };
 
     template <class T>
-    atomic_unsigned_int id_factory<T>::counter(-3);
+    atomic_unsigned_int id_factory<T>::counter(unsigned(-3));
 
     inline int current_id() noexcept
     {
-        auto id = tls::read_uint32<tls_tag_id_factory_current_id>();
+        unsigned id = tls::read_uint<tls_tag_id_factory_current_id>();
         BOOST_LEAF_ASSERT(id==0 || (id&3)==1);
-        return id;
+        return int(id);
     }
 
     inline int new_id() noexcept
     {
-        auto id = id_factory<>::generate_next_id();
-        tls::write_uint32<tls_tag_id_factory_current_id>(id);
-        return id;
+        unsigned id = id_factory<>::generate_next_id();
+        tls::write_uint<tls_tag_id_factory_current_id>(id);
+        return int(id);
     }
 }
 
@@ -2064,7 +2071,7 @@ namespace leaf_detail
         bool equivalent( int,  std::error_condition const & ) const noexcept final override { return false; }
         bool equivalent( std::error_code const &, int ) const noexcept final override { return false; }
         char const * name() const noexcept final override { return "LEAF error"; }
-        std::string message( int condition ) const final override { return name(); }
+        std::string message( int ) const final override { return name(); }
     public:
         ~leaf_category() noexcept final override { }
     };
@@ -2548,7 +2555,7 @@ class result;
 
 namespace leaf_detail
 {
-    inline error_id catch_exceptions_helper( std::exception const & ex, leaf_detail_mp11::mp_list<> )
+    inline error_id catch_exceptions_helper( std::exception const &, leaf_detail_mp11::mp_list<> )
     {
         return leaf::new_error(std::current_exception());
     }
@@ -2722,7 +2729,7 @@ namespace leaf_detail
 #if BOOST_LEAF_CFG_DIAGNOSTICS
             else
             {
-                int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
+                int c = int(tls::read_uint<tls_tag_unexpected_enabled_counter>());
                 BOOST_LEAF_ASSERT(c>=0);
                 if( c )
                     load_unexpected(err_id, std::move(e_));
@@ -2757,7 +2764,7 @@ namespace leaf_detail
 #if BOOST_LEAF_CFG_DIAGNOSTICS
             else
             {
-                int c = tls::read_uint32<tls_tag_unexpected_enabled_counter>();
+                int c = int(tls::read_uint<tls_tag_unexpected_enabled_counter>());
                 BOOST_LEAF_ASSERT(c>=0);
                 if( c )
                     load_unexpected(err_id, std::forward<E>(f_()));
@@ -2959,7 +2966,7 @@ namespace leaf_detail
         [[noreturn]] void unload_and_rethrow_original_exception() const
         {
             BOOST_LEAF_ASSERT(ctx_->captured_id_);
-            tls::write_uint32<tls_tag_id_factory_current_id>(ctx_->captured_id_.value());
+            tls::write_uint<tls_tag_id_factory_current_id>(unsigned(ctx_->captured_id_.value()));
             ctx_->propagate(ctx_->captured_id_);
             std::rethrow_exception(ex_);
         }
@@ -3101,7 +3108,7 @@ future_get( Future & fut )
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 897: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 901: #include <boost/leaf/detail/demangle.hpp>
 
 #include <iosfwd>
 #if BOOST_LEAF_CFG_STD_STRING
@@ -3144,7 +3151,7 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_errno
 {
     int value;
 
-    explicit e_errno(int value=errno): value(value) { }
+    explicit e_errno(int val=errno): value(val) { }
 
     template <class CharT, class Traits>
     friend std::basic_ostream<CharT, Traits> & operator<<(std::basic_ostream<CharT, Traits> & os, e_errno const & err)
@@ -3163,7 +3170,7 @@ namespace windows
     {
         unsigned value;
 
-        explicit e_LastError(unsigned value): value(value) { }
+        explicit e_LastError(unsigned val): value(val) { }
 
 #if BOOST_LEAF_CFG_WIN32
         e_LastError(): value(GetLastError()) { }
@@ -3537,7 +3544,7 @@ public:
         tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         if( unexpected_requested<Tup>::value )
-            tls::uint32_increment<tls_tag_unexpected_enabled_counter>();
+            tls::uint_increment<tls_tag_unexpected_enabled_counter>();
 #endif
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
         thread_id_ = std::this_thread::get_id();
@@ -3556,7 +3563,7 @@ public:
 #endif
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         if( unexpected_requested<Tup>::value )
-            tls::uint32_decrement<tls_tag_unexpected_enabled_counter>();
+            tls::uint_decrement<tls_tag_unexpected_enabled_counter>();
 #endif
         tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_);
     }
@@ -3690,9 +3697,9 @@ inline context_ptr make_shared_context( H && ... ) noexcept
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3209: #include <boost/leaf/context.hpp>
+// Expanded at line 3216: #include <boost/leaf/context.hpp>
 // Expanded at line 689: #include <boost/leaf/capture.hpp>
-// Expanded at line 897: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 901: #include <boost/leaf/detail/demangle.hpp>
 
 namespace boost { namespace leaf {
 
@@ -3880,7 +3887,7 @@ namespace leaf_detail
     struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<void>
     {
         template <class Tup>
-        BOOST_LEAF_CONSTEXPR static diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept
+        BOOST_LEAF_CONSTEXPR static diagnostic_info_ get( Tup const &, error_info const & ei ) noexcept
         {
             return diagnostic_info_(ei);
         }
@@ -3990,7 +3997,7 @@ namespace leaf_detail
     struct handler_argument_traits<verbose_diagnostic_info const &>: handler_argument_always_available<void>
     {
         template <class Tup>
-        BOOST_LEAF_CONSTEXPR static verbose_diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept
+        BOOST_LEAF_CONSTEXPR static verbose_diagnostic_info_ get( Tup const &, error_info const & ei ) noexcept
         {
             return verbose_diagnostic_info_(ei);
         }
@@ -4615,7 +4622,7 @@ namespace leaf_detail
         constexpr static bool always_available = false;
 
         template <class Tup>
-        BOOST_LEAF_CONSTEXPR static T * check( Tup & tup, error_info const & ei ) noexcept
+        BOOST_LEAF_CONSTEXPR static T * check( Tup &, error_info const & ei ) noexcept
         {
             using boost_exception = dependent_type_t<T, boost::exception>;
             if( auto * be = get_exception<boost_exception>(ei) )
@@ -4640,7 +4647,7 @@ namespace leaf_detail
 } }
 
 #endif
-// Expanded at line 2609: #include <boost/leaf/on_error.hpp>
+// Expanded at line 2616: #include <boost/leaf/on_error.hpp>
 // >>> #include <boost/leaf/pred.hpp>
 #line 1 "boost/leaf/pred.hpp"
 #ifndef BOOST_LEAF_PRED_HPP_INCLUDED
@@ -4652,7 +4659,7 @@ namespace leaf_detail
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3684: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 3691: #include <boost/leaf/handle_errors.hpp>
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -5039,7 +5046,7 @@ namespace leaf_detail
         };
 
         explicit result_discriminant( error_id id ) noexcept:
-            state_(id.value())
+            state_(unsigned(id.value()))
         {
             BOOST_LEAF_ASSERT(state_==0 || (state_&3)==1);
         }
@@ -5066,7 +5073,7 @@ namespace leaf_detail
         error_id get_error_id() const noexcept
         {
             BOOST_LEAF_ASSERT(kind()==no_error || kind()==err_id);
-            return make_error_id(state_);
+            return make_error_id(int(state_));
         }
     };
 }
@@ -5122,7 +5129,7 @@ class result
 #if BOOST_LEAF_CFG_CAPTURE
                 {
                     error_id captured_id = r_.ctx_->propagate_captured_errors();
-                    tls::write_uint32<leaf_detail::tls_tag_id_factory_current_id>(captured_id.value());
+                    tls::write_uint<leaf_detail::tls_tag_id_factory_current_id>(unsigned(captured_id.value()));
                     return captured_id;
                 }
 #else
@@ -5581,8 +5588,8 @@ struct is_result_type<result<T>>: std::true_type
 #if __cplusplus >= 201703L
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3684: #include <boost/leaf/handle_errors.hpp>
-// Expanded at line 4945: #include <boost/leaf/result.hpp>
+// Expanded at line 3691: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 4952: #include <boost/leaf/result.hpp>
 #include <variant>
 #include <optional>
 #include <tuple>
