@@ -11,7 +11,7 @@ required_conan_version = ">=1.50.0"
 
 class BoostLEAFConan(ConanFile):
     name = "boost-leaf"
-    version = "0.4.0"
+    version = "1.81.0-prerelease"
     license = "BSL-1.0"
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://github.com/boostorg/leaf"
