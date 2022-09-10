@@ -1,5 +1,5 @@
 from conan import ConanFile
-from conan.tools.files import get, copy
+from conan.tools.files import copy
 from conan.tools.layout import basic_layout
 from conan.tools.build import check_min_cppstd
 from conan.errors import ConanInvalidConfiguration
@@ -11,7 +11,7 @@ required_conan_version = ">=1.50.0"
 
 class BoostLEAFConan(ConanFile):
     name = "boost-leaf"
-    version = "1.81.0-prerelease"
+    version = "1.81.0"
     license = "BSL-1.0"
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://github.com/boostorg/leaf"
@@ -64,7 +64,7 @@ class BoostLEAFConan(ConanFile):
         basic_layout(self)
 
     def package(self):
-        copy(self, "LICENSE", dst=os.path.join(
+        copy(self, "LICENSE_1_0.txt", dst=os.path.join(
             self.package_folder, "licenses"),  src=self.source_folder)
         copy(self, "*.h", dst=os.path.join(self.package_folder, "include"),
              src=os.path.join(self.source_folder, "include"))
