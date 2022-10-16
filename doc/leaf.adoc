@@ -229,7 +229,7 @@ leaf::result<U> r = leaf::try_handle_some(
 
   []( leaf::match<err1, err1::e1, err1::e3> ) -> leaf::result<U>
   {
-    // Handle err::e1
+    // Handle err::e1 or err1::e3
   },
 
   []( err1 e ) -> leaf::result<U>
@@ -432,7 +432,7 @@ leaf::result<U> r = leaf::try_handle_some(
 
 An error handler is never dropped for lack of error objects of types which the handler takes as pointers; in this case LEAF simply passes `0` for these arguments.
 
-TIP: Error handlers can take arguments by value, by const reference or pointer, and by mutable reference or pointer. It the latter case, changes to the error object state will be propagated up the call stack if the failure is not handled.
+TIP: Error handlers can take arguments by value, by (`const`) reference or as a (`const`) pointer. It the latter case, changes to the error object state will be propagated up the call stack if the failure is not handled.
 
 [[tutorial-augmenting_errors]]
 === Augmenting Errors
