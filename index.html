@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.17">
+<meta name="generator" content="Asciidoctor 2.0.18">
 <meta name="author" content="Lightweight Error Augmentation Framework written in C&#43;&#43;11 | Emil Dotchevski">
 <title>LEAF</title>
 <link rel="stylesheet" href="./zajo-dark.css">
@@ -531,7 +531,7 @@ The the result of <code>r.error()</code> is compatible with any instance of the 
 
   <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">match</span><span class="o">&lt;</span><span class="n">err1</span><span class="p">,</span> <span class="n">err1</span><span class="o">::</span><span class="n">e1</span><span class="p">,</span> <span class="n">err1</span><span class="o">::</span><span class="n">e3</span><span class="o">&gt;</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span>
   <span class="p">{</span>
-    <span class="c1">// Handle err::e1</span>
+    <span class="c1">// Handle err::e1 or err1::e3</span>
   <span class="p">},</span>
 
   <span class="p">[](</span> <span class="n">err1</span> <span class="n">e</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span>
@@ -795,7 +795,7 @@ If we wanted to signal a new error (rather than propagating the current error), 
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-Error handlers can take arguments by value, by const reference or pointer, and by mutable reference or pointer. It the latter case, changes to the error object state will be propagated up the call stack if the failure is not handled.
+Error handlers can take arguments by value, by (<code>const</code>) reference or as a (<code>const</code>) pointer. It the latter case, changes to the error object state will be propagated up the call stack if the failure is not handled.
 </td>
 </tr>
 </table>
