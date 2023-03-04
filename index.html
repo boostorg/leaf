@@ -1007,7 +1007,7 @@ Error handlers can take arguments by value, by (<code>const</code>) reference or
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">enum</span> <span class="k">class</span> <span class="nc">err1</span> <span class="p">{</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">e3</span> <span class="p">};</span>
 <span class="k">enum</span> <span class="k">class</span> <span class="nc">err2</span> <span class="p">{</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span> <span class="p">};</span>
 
-<span class="n">T</span> <span class="n">f</span><span class="p">()</span>
+<span class="n">T</span> <span class="nf">f</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="k">if</span><span class="p">(</span> <span class="n">error_detected</span> <span class="p">)</span>
     <span class="n">leaf</span><span class="o">::</span><span class="n">throw_exception</span><span class="p">(</span><span class="n">err1</span><span class="o">::</span><span class="n">e1</span><span class="p">,</span> <span class="n">err2</span><span class="o">::</span><span class="n">e2</span><span class="p">);</span>
@@ -1042,7 +1042,7 @@ Error handlers can take arguments by value, by (<code>const</code>) reference or
 
 <span class="k">struct</span> <span class="nc">e_line</span> <span class="p">{</span> <span class="kt">int</span> <span class="n">value</span><span class="p">;</span> <span class="p">};</span>
 
-<span class="kt">void</span> <span class="n">process_file</span><span class="p">(</span> <span class="kt">FILE</span> <span class="o">*</span> <span class="n">f</span> <span class="p">)</span>
+<span class="kt">void</span> <span class="nf">process_file</span><span class="p">(</span> <span class="kt">FILE</span> <span class="o">*</span> <span class="n">f</span> <span class="p">)</span>
 <span class="p">{</span>
   <span class="k">for</span><span class="p">(</span> <span class="kt">int</span> <span class="n">current_line</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">current_line</span> <span class="o">!=</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">current_line</span> <span class="p">)</span>
   <span class="p">{</span>
@@ -2319,7 +2319,7 @@ Error handlers that take arguments of types that derive from <code>std::exceptio
 <span class="k">class</span> <span class="nc">error_b</span><span class="o">:</span> <span class="k">public</span> <span class="n">error_base</span> <span class="p">{</span> <span class="p">};</span>
 <span class="k">class</span> <span class="nc">error_c</span><span class="o">:</span> <span class="k">public</span> <span class="n">error_base</span> <span class="p">{</span> <span class="p">};</span>
 
-<span class="kt">int</span> <span class="n">compute_answer_throws</span><span class="p">()</span>
+<span class="kt">int</span> <span class="nf">compute_answer_throws</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="k">switch</span><span class="p">(</span> <span class="n">rand</span><span class="p">()</span><span class="o">%</span><span class="mi">4</span> <span class="p">)</span>
   <span class="p">{</span>
@@ -2838,7 +2838,7 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
       <span class="k">return</span> <span class="s">"libfoo"</span><span class="p">;</span>
     <span class="p">}</span>
 
-    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">message</span><span class="p">(</span><span class="kt">int</span> <span class="n">code</span><span class="p">)</span> <span class="k">const</span> <span class="k">override</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="nf">message</span><span class="p">(</span><span class="kt">int</span> <span class="n">code</span><span class="p">)</span> <span class="k">const</span> <span class="k">override</span>
     <span class="p">{</span>
       <span class="k">switch</span><span class="p">(</span> <span class="n">libfoo_error</span><span class="p">(</span><span class="n">code</span><span class="p">)</span> <span class="p">)</span>
       <span class="p">{</span>
@@ -2868,7 +2868,7 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
   <span class="p">};</span>
 <span class="p">}</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="n">make_error_code</span><span class="p">(</span><span class="n">libfoo_error</span> <span class="n">e</span><span class="p">)</span>
+<span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="nf">make_error_code</span><span class="p">(</span><span class="n">libfoo_error</span> <span class="n">e</span><span class="p">)</span>
 <span class="p">{</span>
   <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span><span class="p">(</span><span class="kt">int</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">libfoo_error_category</span><span class="p">());</span>
 <span class="p">}</span></code></pre>
@@ -2940,7 +2940,7 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
       <span class="k">return</span> <span class="s">"my_error_condition"</span><span class="p">;</span>
     <span class="p">}</span>
 
-    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">message</span><span class="p">(</span><span class="kt">int</span> <span class="n">cond</span><span class="p">)</span> <span class="k">const</span> <span class="k">override</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="nf">message</span><span class="p">(</span><span class="kt">int</span> <span class="n">cond</span><span class="p">)</span> <span class="k">const</span> <span class="k">override</span>
     <span class="p">{</span>
       <span class="k">switch</span><span class="p">(</span> <span class="n">my_error_condition</span><span class="p">(</span><span class="n">code</span><span class="p">)</span> <span class="p">)</span>
       <span class="p">{</span>
@@ -2950,7 +2950,7 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
       <span class="p">}</span>
     <span class="p">}</span>
 
-    <span class="kt">bool</span> <span class="n">equivalent</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">code</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cond</span><span class="p">)</span> <span class="k">const</span> <span class="k">noexcept</span>
+    <span class="kt">bool</span> <span class="nf">equivalent</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">code</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cond</span><span class="p">)</span> <span class="k">const</span> <span class="k">noexcept</span>
     <span class="p">{</span>
       <span class="k">switch</span><span class="p">(</span> <span class="n">my_error_condition</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span> <span class="p">)</span>
       <span class="p">{</span>
@@ -2982,7 +2982,7 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
   <span class="p">};</span>
 <span class="p">}</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">error_condition</span> <span class="n">make_error_condition</span><span class="p">(</span><span class="n">my_error_condition</span> <span class="n">e</span><span class="p">)</span> <i class="conum" data-value="6"></i><b>(6)</b>
+<span class="n">std</span><span class="o">::</span><span class="n">error_condition</span> <span class="nf">make_error_condition</span><span class="p">(</span><span class="n">my_error_condition</span> <span class="n">e</span><span class="p">)</span> <i class="conum" data-value="6"></i><b>(6)</b>
 <span class="p">{</span>
   <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">error_condition</span><span class="p">(</span><span class="kt">int</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">my_error_condition_error_category</span><span class="p">());</span>
 <span class="p">}</span></code></pre>
@@ -4226,7 +4226,7 @@ See also <a href="#tutorial-exception_to_result">Converting Exceptions to <code>
   <span class="p">}</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span>  <span class="nc">H</span><span class="p">&gt;</span>
-  <span class="n">context_ptr</span> <span class="n">make_shared_context</span><span class="p">(</span> <span class="n">H</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">)</span> <span class="k">noexcept</span>
+  <span class="n">context_ptr</span> <span class="nf">make_shared_context</span><span class="p">(</span> <span class="n">H</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">)</span> <span class="k">noexcept</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">leaf_detail</span><span class="o">::</span><span class="n">polymorphic_context_impl</span><span class="o">&lt;</span><span class="n">context_type_from_handlers</span><span class="o">&lt;</span><span class="n">H</span><span class="p">...</span><span class="o">&gt;&gt;&gt;</span><span class="p">();</span>
   <span class="p">}</span>

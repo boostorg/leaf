@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 10/17/2022 from https://github.com/boostorg/leaf/tree/2163938.
+// Generated on 03/04/2023 from https://github.com/boostorg/leaf/tree/2e72c5c.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
@@ -2036,7 +2036,7 @@ namespace leaf_detail
     template <class E>
     struct load_item<E, -1>
     {
-        BOOST_LEAF_CONSTEXPR static int load( int err_id, E && e ) noexcept
+        BOOST_LEAF_CONSTEXPR static int load_( int err_id, E && e ) noexcept
         {
             return load_slot(err_id, std::forward<E>(e));
         }
@@ -2045,7 +2045,7 @@ namespace leaf_detail
     template <class F>
     struct load_item<F, 0>
     {
-        BOOST_LEAF_CONSTEXPR static int load( int err_id, F && f ) noexcept
+        BOOST_LEAF_CONSTEXPR static int load_( int err_id, F && f ) noexcept
         {
             return load_slot(err_id, std::forward<F>(f)());
         }
@@ -2054,7 +2054,7 @@ namespace leaf_detail
     template <class F>
     struct load_item<F, 1>
     {
-        BOOST_LEAF_CONSTEXPR static int load( int err_id, F && f ) noexcept
+        BOOST_LEAF_CONSTEXPR static int load_( int err_id, F && f ) noexcept
         {
             return accumulate_slot(err_id, std::forward<F>(f));
         }
@@ -2170,7 +2170,7 @@ public:
     {
         if( int err_id = value() )
         {
-            int const unused[ ] = { 42, leaf_detail::load_item<Item>::load(err_id, std::forward<Item>(item))... };
+            int const unused[ ] = { 42, leaf_detail::load_item<Item>::load_(err_id, std::forward<Item>(item))... };
             (void) unused;
         }
         return *this;
