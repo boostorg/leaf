@@ -211,7 +211,7 @@ leaf::result<U> r = leaf::try_handle_some(
 
 The first lambda passed to `try_handle_some` is executed first; it attempts to produce a `result<U>`, but it may fail.
 
-The second lambda is an error handler: it will be called iff the first lambda fails and an error object of type `err1` was communicated to LEAF. That object is stored on the stack, local to the `try_handle_some` function (LEAF knows to allocate this storage because we gave it an error handler that takes an `err1`). Error handlers passed to `leaf::try_handle_some` can return a valid `leaf::result<U>` but are allowed to fail.
+The second lambda is an error handler: it will be called if the first lambda fails and an error object of type `err1` was communicated to LEAF. That object is stored on the stack, local to the `try_handle_some` function (LEAF knows to allocate this storage because we gave it an error handler that takes an `err1`). Error handlers passed to `leaf::try_handle_some` can return a valid `leaf::result<U>` but are allowed to fail.
 
 It is possible for an error handler to specify that it can only deal with some values of a given error type:
 
@@ -406,7 +406,7 @@ Once again, error handlers are considered in order:
 * The first error handler will be used if an error object of type `io_error` _and_ and error_object of type `e_file_name` are available;
 * otherwise, the second error handler will be used if an error object of type `io_error` is avaliable;
 * otherwise, `leaf_try_handle_some` fails.
- 
+
 An alternative way to write the above is to provide a single error handler that takes the `e_file_name` argument as a pointer:
 
 [source,c++]
