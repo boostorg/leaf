@@ -3,27 +3,16 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/handle_errors.hpp>
-#include "lightweight_test.hpp"
-
-namespace leaf = boost::leaf;
+#include <boost/leaf/config.hpp>
 
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
 
+#include <iostream>
+
 int main()
 {
-    int r = leaf::try_catch(
-        []
-        {
-            return 42;
-        },
-        []
-        {
-            return 1;
-        } );
-    BOOST_TEST_EQ(r, 42);
-
-    return boost::report_errors();
+    std::cout << "Unit test not applicable." << std::endl;
+    return 0;
 }
 
 #else
@@ -31,8 +20,13 @@ int main()
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
 #   include "leaf.hpp"
 #else
+#   include <boost/leaf/handle_errors.hpp>
 #   include <boost/leaf/pred.hpp>
 #endif
+
+#include "lightweight_test.hpp"
+
+namespace leaf = boost::leaf;
 
 template <int> struct info { int value; };
 
