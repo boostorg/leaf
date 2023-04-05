@@ -143,6 +143,8 @@ if option_enable_unit_tests
         'exception_test',
         'exception_to_result_test',
         'function_traits_test',
+        'github_issue53_test',
+        'github_issue53x_test',
         'handle_all_other_result_test',
         'handle_all_test',
         'handle_basic_test',

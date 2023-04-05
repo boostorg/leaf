@@ -82,6 +82,8 @@ run error_id_test.cpp ;
 run exception_test.cpp ;
 run exception_to_result_test.cpp ;
 run function_traits_test.cpp ;
+run github_issue53_test.cpp ;
+run github_issue53x_test.cpp ;
 run handle_all_other_result_test.cpp ;
 run handle_all_test.cpp ;
 run handle_basic_test.cpp ;
