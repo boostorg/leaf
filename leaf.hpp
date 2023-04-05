@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 03/04/2023 from https://github.com/boostorg/leaf/tree/2e72c5c.
+// Generated on 04/05/2023 from https://github.com/boostorg/leaf/tree/801e5e8.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
@@ -4423,7 +4423,7 @@ try_handle_some( TryBlock && try_block, H && ... h ) noexcept
         using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
         auto rr = ctx.template handle_error<R>(id, std::forward<H>(h)..., [&r]()->R { return std::move(r); });
         if( !rr )
-            ctx.propagate(id);
+            ctx.propagate(rr.error());
         return rr;
     }
 }
@@ -4559,7 +4559,7 @@ try_handle_some( TryBlock && try_block, H && ... h )
         using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
         auto rr = ctx.template handle_error<R>(id, std::forward<H>(h)..., [&r]()->R { return std::move(r); });
         if( !rr )
-            ctx.propagate(id);
+            ctx.propagate(rr.error());
         return rr;
     }
 }
