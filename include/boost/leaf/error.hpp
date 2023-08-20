@@ -18,7 +18,7 @@
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 #   include <sstream>
 #   include <string>
-#   include <set>
+#   include <vector>
 #endif
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
@@ -143,8 +143,73 @@ namespace leaf_detail
 
     class BOOST_LEAF_SYMBOL_VISIBLE e_unexpected_info
     {
-        std::string s_;
-        std::set<char const *(*)()> already_;
+        class print_base
+        {
+        public:
+            virtual std::string print() const = 0;
+            virtual ~print_base() noexcept { };
+        };
+
+        class print_base_ptr
+        {
+            print_base_ptr( print_base_ptr const & ) = delete;
+            print_base_ptr & operator=( print_base_ptr const & ) = delete;
+            print_base * p_;
+        public:
+            explicit print_base_ptr( print_base * p ) noexcept:
+                p_(p)
+            {
+                BOOST_LEAF_ASSERT(p_ != nullptr);
+            }
+            print_base_ptr( print_base_ptr && x ) noexcept
+            {
+                p_ = x.p_;
+                x.p_ = nullptr;
+            }
+            ~print_base_ptr() noexcept
+            {
+                delete p_;
+            }
+            print_base * get() const noexcept
+            {
+                BOOST_LEAF_ASSERT(p_ != nullptr);
+                return p_;
+            }
+        };
+
+        template <class E>
+        class print_impl: public print_base
+        {
+            print_impl( print_impl const & ) = delete;
+            print_impl & operator=( print_impl const & ) = delete;
+            E e_;
+            std::string print() const final override
+            {
+                if( diagnostic<E>::is_invisible )
+                    return { };
+                else
+                {
+                    std::stringstream s;
+                    diagnostic<E>::print(s, e_);
+                    (void) (s << '\n').flush();
+                    return s.str();
+                }
+            }
+        public:
+            template <class T>
+            explicit print_impl( T && e ):
+                e_(std::forward<T>(e))
+            {
+            }
+            template <class T>
+            void set( T && e )
+            {
+                e_.~E();
+                (void) new (&e_) E(std::forward<T>(e));
+            }
+        };
+
+        std::vector<std::pair<char const *(*)(), print_base_ptr>> printers_;
 
     public:
 
@@ -155,19 +220,23 @@ namespace leaf_detail
         template <class E>
         void add(E && e)
         {
-            if( !diagnostic<E>::is_invisible && already_.insert(&type<E>).second  )
-            {
-                std::stringstream s;
-                diagnostic<E>::print(s,e);
-                (s << '\n').flush();
-                s_ += s.str();
-            }
+            using T = typename std::decay<E>::type;
+            for( auto & p : printers_ )
+                if( p.first == &type<T> )
+                {
+                    print_base * pb = p.second.get();
+                    static_cast<print_impl<T> *>(pb)->set(std::forward<E>(e));
+                    return;
+                }
+            printers_.emplace_back(&type<T>, print_base_ptr(new print_impl<T>(std::forward<E>(e))));
         }
 
         template <class CharT, class Traits>
         void print( std::basic_ostream<CharT, Traits> & os ) const
         {
-            os << "Unhandled error objects:\n" << s_;
+            os << "Unhandled error objects:\n";
+            for( auto const & p : printers_ )
+                os << p.second.get()->print();
         }
     };
 
