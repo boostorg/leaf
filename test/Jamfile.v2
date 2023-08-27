@@ -25,8 +25,8 @@ project
         <define>BOOST_LEAF_BOOST_AVAILABLE
         <threading>single:<define>BOOST_LEAF_NO_THREADS
         <toolset>gcc:<cxxflags>"-Wno-delete-non-virtual-dtor -Wno-parentheses"
-        <toolset>clang:<cxxflags>"-Wno-dangling-else"
-        <toolset>darwin:<cxxflags>"-Wno-unused-variable -Wno-delete-non-virtual-dtor -Wno-non-virtual-dtor -Wno-dangling-else"
+        <toolset>clang:<cxxflags>"-Wno-unused-variable -Wno-delete-non-virtual-dtor -Wno-non-virtual-dtor -Wno-delete-non-abstract-non-virtual-dtor -Wno-dangling-else"
+        <toolset>darwin:<cxxflags>"-Wno-unused-variable -Wno-delete-non-virtual-dtor -Wno-non-virtual-dtor -Wno-delete-non-abstract-non-virtual-dtor -Wno-dangling-else"
         <toolset>msvc:<cxxflags>"-wd 4267 -wd 4996 -wd 4244"
         <include>../../..
     ;
@@ -76,6 +76,8 @@ run defer_nested_success_result_test.cpp ;
 run diagnostic_info_test1.cpp ;
 run diagnostic_info_test2.cpp ;
 run diagnostic_info_test3.cpp ;
+run diagnostic_info_test4.cpp ;
+run diagnostic_info_test5.cpp ;
 run e_errno_test.cpp ;
 run e_LastError_test.cpp ;
 run error_code_test.cpp ;

@@ -141,102 +141,120 @@ namespace leaf_detail
         BOOST_LEAF_CONSTEXPR static void print( std::basic_ostream<CharT, Traits> &, e_unexpected_count const &) noexcept { }
     };
 
+    template <class E>
+    class BOOST_LEAF_SYMBOL_VISIBLE slot;
+
     class BOOST_LEAF_SYMBOL_VISIBLE e_unexpected_info
     {
-        class print_base
-        {
-        public:
-            virtual std::string print() const = 0;
-            virtual ~print_base() noexcept { };
-        };
+        e_unexpected_info( e_unexpected_info const & ) = delete;
+        e_unexpected_info & operator=( e_unexpected_info const & ) = delete;
 
-        class print_base_ptr
+        struct slot_base
         {
-            print_base_ptr( print_base_ptr const & ) = delete;
-            print_base_ptr & operator=( print_base_ptr const & ) = delete;
-            print_base * p_;
         public:
-            explicit print_base_ptr( print_base * p ) noexcept:
-                p_(p)
+            slot_base * next_;
+            virtual void deactivate() noexcept = 0;
+            virtual void propagate( int err_id ) noexcept = 0;
+            virtual std::string print( int key_to_print ) const = 0;
+            virtual ~slot_base() noexcept { };
+        protected:
+            BOOST_LEAF_CONSTEXPR slot_base():
+                next_(nullptr)
             {
-                BOOST_LEAF_ASSERT(p_ != nullptr);
-            }
-            print_base_ptr( print_base_ptr && x ) noexcept
-            {
-                p_ = x.p_;
-                x.p_ = nullptr;
-            }
-            ~print_base_ptr() noexcept
-            {
-                delete p_;
-            }
-            print_base * get() const noexcept
-            {
-                BOOST_LEAF_ASSERT(p_ != nullptr);
-                return p_;
             }
         };
 
         template <class E>
-        class print_impl: public print_base
+        class slot_store: public slot_base, public slot<E>
         {
-            print_impl( print_impl const & ) = delete;
-            print_impl & operator=( print_impl const & ) = delete;
-            E e_;
-            std::string print() const final override
+            slot_store( slot_store const & ) = delete;
+            slot_store & operator=( slot_store const & ) = delete;
+            using sl = slot<E>;
+            void deactivate() noexcept final override
             {
-                if( diagnostic<E>::is_invisible )
-                    return { };
-                else
-                {
-                    std::stringstream s;
-                    diagnostic<E>::print(s, e_);
-                    (void) (s << '\n').flush();
-                    return s.str();
-                }
+                sl::deactivate();
+            }
+            void propagate( int err_id ) noexcept final override
+            {
+                sl::propagate(err_id);
+            }
+            std::string print( int key_to_print ) const final override
+            {
+                std::stringstream st;
+                sl::print(st, key_to_print);
+                return st.str();
             }
         public:
             template <class T>
-            explicit print_impl( T && e ):
-                e_(std::forward<T>(e))
+            BOOST_LEAF_CONSTEXPR slot_store( int err_id, T && e )
             {
-            }
-            template <class T>
-            void set( T && e )
-            {
-                e_.~E();
-                (void) new (&e_) E(std::forward<T>(e));
+                sl::put(err_id, std::forward<T>(e));
             }
         };
 
-        std::vector<std::pair<char const *(*)(), print_base_ptr>> printers_;
+        slot_base * first_;
+        slot_base * * last_;
 
     public:
 
-        e_unexpected_info() noexcept
+        BOOST_LEAF_CONSTEXPR e_unexpected_info() noexcept:
+            first_(nullptr),
+            last_(&first_)
         {
+        }
+
+        BOOST_LEAF_CONSTEXPR e_unexpected_info( e_unexpected_info && other ) noexcept:
+            first_(other.first_),
+            last_(other.last_ == &other.first_? &first_ : other.last_)
+        {
+            BOOST_LEAF_ASSERT(last_ != nullptr);
+            BOOST_LEAF_ASSERT(*last_ == nullptr);
+            other.first_ = nullptr;
+            other.last_ = nullptr;
+        }
+
+        ~e_unexpected_info() noexcept
+        {
+            for( slot_base const * p = first_; p; )
+            {
+                slot_base const * n = p -> next_;
+                delete p;
+                p = n;
+            }
         }
 
         template <class E>
-        void add(E && e)
+        BOOST_LEAF_CONSTEXPR typename std::decay<E>::type & put(int err_id, E && e)
         {
             using T = typename std::decay<E>::type;
-            for( auto & p : printers_ )
-                if( p.first == &type<T> )
-                {
-                    print_base * pb = p.second.get();
-                    static_cast<print_impl<T> *>(pb)->set(std::forward<E>(e));
-                    return;
-                }
-            printers_.emplace_back(&type<T>, print_base_ptr(new print_impl<T>(std::forward<E>(e))));
+            BOOST_LEAF_ASSERT(last_ != nullptr);
+            BOOST_LEAF_ASSERT(*last_ == nullptr);
+            BOOST_LEAF_ASSERT(tls::read_ptr<slot<T>>() == nullptr);
+            slot_store<T> * ss = new slot_store<T>(err_id, std::forward<E>(e));
+            *last_ = ss;
+            last_ = &ss->next_;
+            ss->activate();
+            return ss->value(err_id);
+        }
+
+        void deactivate() noexcept
+        {
+            for( slot_base * p=first_; p; p=p->next_ )
+                p->deactivate();
+        }
+
+        void propagate( int err_id ) noexcept
+        {
+            for( slot_base * p=first_; p; p=p->next_ )
+                p->propagate(err_id);
         }
 
         template <class CharT, class Traits>
-        void print( std::basic_ostream<CharT, Traits> & os ) const
+        void print( std::basic_ostream<CharT, Traits> & os, int key_to_print ) const
         {
             os << "Unhandled error objects:\n";
-            for( auto const & p : printers_ )
-                os << p.second.get()->print();
+            for( slot_base const * p=first_; p; p=p->next_ )
+                os << p->print(key_to_print);
         }
     };
 
@@ -300,18 +318,18 @@ namespace leaf_detail
             BOOST_LEAF_ASSERT(x.prev_==nullptr);
         }
 
-        BOOST_LEAF_CONSTEXPR void activate() noexcept
+        void activate() noexcept
         {
             prev_ = tls::read_ptr<slot<E>>();
             tls::write_ptr<slot<E>>(this);
         }
 
-        BOOST_LEAF_CONSTEXPR void deactivate() noexcept
+        void deactivate() noexcept
         {
             tls::write_ptr<slot<E>>(prev_);
         }
 
-        BOOST_LEAF_CONSTEXPR void propagate( int err_id ) noexcept;
+        void propagate( int err_id ) noexcept;
 
         template <class CharT, class Traits>
         void print( std::basic_ostream<CharT, Traits> & os, int key_to_print ) const
@@ -343,6 +361,22 @@ namespace leaf_detail
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 
+    template <>
+    void slot<e_unexpected_info>::deactivate() noexcept
+    {
+        if( int const err_id = this->key() )
+            if( e_unexpected_info * info = this->has_value(err_id) )
+                info->deactivate();
+        tls::write_ptr<slot<e_unexpected_info>>(prev_);
+    }
+
+    template <>
+    void slot<e_unexpected_info>::propagate( int err_id ) noexcept
+    {
+        if( e_unexpected_info * info = this->has_value(err_id) )
+            info->propagate(err_id);
+    }
+
     template <class E>
     BOOST_LEAF_CONSTEXPR inline void load_unexpected_count( int err_id ) noexcept
     {
@@ -361,9 +395,21 @@ namespace leaf_detail
         if( slot<e_unexpected_info> * sl = tls::read_ptr<slot<e_unexpected_info>>() )
         {
             if( e_unexpected_info * unx = sl->has_value(err_id) )
-                unx->add(std::forward<E>(e));
+                (void) unx->put(err_id, std::forward<E>(e));
             else
-                sl->put(err_id, e_unexpected_info()).add(std::forward<E>(e));
+                (void) sl->put(err_id).put(err_id, std::forward<E>(e));
+        }
+    }
+
+    template <class E, class F>
+    BOOST_LEAF_CONSTEXPR inline void accumulate_unexpected_info( int err_id, F && f ) noexcept
+    {
+        if( slot<e_unexpected_info> * sl = tls::read_ptr<slot<e_unexpected_info>>() )
+        {
+            if( e_unexpected_info * unx = sl->has_value(err_id) )
+                (void) std::forward<F>(f)(unx->put(err_id, E{}));
+            else
+                (void) std::forward<F>(f)(sl->put(err_id).put(err_id, E{}));
         }
     }
 
@@ -374,10 +420,17 @@ namespace leaf_detail
         load_unexpected_info(err_id, std::forward<E>(e));
     }
 
+    template <class E, class F>
+    BOOST_LEAF_CONSTEXPR inline void accumulate_unexpected( int err_id, F && f  ) noexcept
+    {
+        load_unexpected_count<E>(err_id);
+        accumulate_unexpected_info<E>(err_id, std::forward<F>(f));
+    }
+
 #endif
 
     template <class E>
-    BOOST_LEAF_CONSTEXPR inline void slot<E>::propagate( int err_id ) noexcept
+    inline void slot<E>::propagate( int err_id ) noexcept
     {
         if( this->key()!=err_id && err_id!=0 )
             return;
@@ -394,7 +447,7 @@ namespace leaf_detail
 #endif
     }
 
-    template <class E>
+    template <bool OverwriteAllowed, class E>
     BOOST_LEAF_CONSTEXPR inline int load_slot( int err_id, E && e ) noexcept
     {
         static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
@@ -402,7 +455,10 @@ namespace leaf_detail
         using T = typename std::decay<E>::type;
         BOOST_LEAF_ASSERT((err_id&3)==1);
         if( slot<T> * p = tls::read_ptr<slot<T>>() )
-            (void) p->put(err_id, std::forward<E>(e));
+        {
+            if( OverwriteAllowed || !p->has_value(err_id) )
+                (void) p->put(err_id, std::forward<E>(e));
+        }
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         else
         {
@@ -429,6 +485,15 @@ namespace leaf_detail
             else
                 (void) std::forward<F>(f)(sl->put(err_id,E()));
         }
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+        else
+        {
+            int c = int(tls::read_uint<tls_tag_unexpected_enabled_counter>());
+            BOOST_LEAF_ASSERT(c>=0);
+            if( c )
+                accumulate_unexpected<E>(err_id, std::forward<F>(f));
+        }
+#endif
         return 0;
     }
 }
@@ -483,7 +548,7 @@ namespace leaf_detail
     {
         BOOST_LEAF_CONSTEXPR static int load_( int err_id, E && e ) noexcept
         {
-            return load_slot(err_id, std::forward<E>(e));
+            return load_slot<true>(err_id, std::forward<E>(e));
         }
     };
 
@@ -492,7 +557,7 @@ namespace leaf_detail
     {
         BOOST_LEAF_CONSTEXPR static int load_( int err_id, F && f ) noexcept
         {
-            return load_slot(err_id, std::forward<F>(f)());
+            return load_slot<true>(err_id, std::forward<F>(f)());
         }
     };
 
@@ -543,7 +608,7 @@ namespace leaf_detail
             else
             {
                 err_id = new_id();
-                (void) load_slot(err_id, ec);
+                (void) load_slot<true>(err_id, ec);
                 return (err_id&~3)|1;
             }
         }

@@ -15,27 +15,35 @@
 
 namespace leaf = boost::leaf;
 
-template <int>
+template <int A>
 struct info
 {
-    int value = 0;
+    int value;
+    info():
+        value(0)
+    {
+    }
+    explicit info(int value):
+        value(value)
+    {
+    }
 };
 
 leaf::error_id f0()
 {
     auto load = leaf::on_error( []( info<0> & ) { } );
-    return leaf::new_error( info<2>{2} );
+    return leaf::new_error( info<2>(2) );
 }
 
 leaf::error_id f1()
 {
-    auto load = leaf::on_error( info<0>{-1}, info<2>{-1}, []( info<1> & x ) {++x.value;} );
+    auto load = leaf::on_error( info<0>(-1), info<2>(-1), []( info<1> & x ) {++x.value;} );
     return f0();
 }
 
 leaf::error_id f2()
 {
-    return f1().load( info<3>{3} );
+    return f1().load( info<3>(3) );
 }
 
 int main()

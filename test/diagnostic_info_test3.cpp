@@ -11,8 +11,12 @@
 #   include <boost/leaf/result.hpp>
 #endif
 
+#if BOOST_LEAF_CFG_STD_STRING
+#   include <sstream>
+#endif
+#include <iostream>
+
 #include "lightweight_test.hpp"
-#include <sstream>
 
 namespace leaf = boost::leaf;
 
@@ -43,8 +47,8 @@ int main()
             st << di;
             std::string s = st.str();
 #if BOOST_LEAF_CFG_DIAGNOSTICS
-            BOOST_TEST_EQ(s.find("41"), s.npos);
-            BOOST_TEST_NE(s.find("42"), s.npos);
+            BOOST_TEST_NE(s.find("41"), s.npos);
+            BOOST_TEST_EQ(s.find("42"), s.npos);
 #endif
             std::cout << s;
 #endif

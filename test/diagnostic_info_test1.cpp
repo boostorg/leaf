@@ -12,8 +12,12 @@
 #   include <boost/leaf/common.hpp>
 #endif
 
+#if BOOST_LEAF_CFG_STD_STRING
+#   include <sstream>
+#endif
+#include <iostream>
+
 #include "lightweight_test.hpp"
-#include <sstream>
 
 namespace leaf = boost::leaf;
 
