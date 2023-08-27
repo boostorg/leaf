@@ -32,7 +32,7 @@ namespace leaf = boost::leaf;
 template <int A>
 struct info
 {
-    int value;
+    int value = 0;
 };
 
 void f0()

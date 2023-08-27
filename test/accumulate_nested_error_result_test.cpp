@@ -18,7 +18,7 @@ namespace leaf = boost::leaf;
 template <int>
 struct info
 {
-    int value;
+    int value = 0;
 };
 
 leaf::error_id f0()
