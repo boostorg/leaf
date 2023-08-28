@@ -7,6 +7,7 @@
 set -ex
 
 DRONE_BUILD_DIR=$(pwd)
+export PATH=~/.local/bin:/usr/local/bin:$PATH
 
 BOOST_BRANCH=develop
 if [ "$DRONE_BRANCH" = "master" ]; then BOOST_BRANCH=master; fi
