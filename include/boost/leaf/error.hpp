@@ -329,7 +329,7 @@ namespace leaf_detail
             tls::write_ptr<slot<E>>(prev_);
         }
 
-        void propagate( int err_id ) noexcept;
+        void propagate( int err_id ) noexcept(!BOOST_LEAF_CFG_DIAGNOSTICS);
 
         template <class CharT, class Traits>
         void print( std::basic_ostream<CharT, Traits> & os, int key_to_print ) const
@@ -362,7 +362,7 @@ namespace leaf_detail
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 
     template <>
-    void slot<e_unexpected_info>::deactivate() noexcept
+    inline void slot<e_unexpected_info>::deactivate() noexcept
     {
         if( int const err_id = this->key() )
             if( e_unexpected_info * info = this->has_value(err_id) )
@@ -371,7 +371,7 @@ namespace leaf_detail
     }
 
     template <>
-    void slot<e_unexpected_info>::propagate( int err_id ) noexcept
+    inline void slot<e_unexpected_info>::propagate( int err_id ) noexcept(!BOOST_LEAF_CFG_DIAGNOSTICS)
     {
         if( e_unexpected_info * info = this->has_value(err_id) )
             info->propagate(err_id);
@@ -414,14 +414,14 @@ namespace leaf_detail
     }
 
     template <class E>
-    BOOST_LEAF_CONSTEXPR inline void load_unexpected( int err_id, E && e  ) noexcept
+    BOOST_LEAF_CONSTEXPR inline void load_unexpected( int err_id, E && e  )
     {
         load_unexpected_count<E>(err_id);
         load_unexpected_info(err_id, std::forward<E>(e));
     }
 
     template <class E, class F>
-    BOOST_LEAF_CONSTEXPR inline void accumulate_unexpected( int err_id, F && f  ) noexcept
+    BOOST_LEAF_CONSTEXPR inline void accumulate_unexpected( int err_id, F && f  )
     {
         load_unexpected_count<E>(err_id);
         accumulate_unexpected_info<E>(err_id, std::forward<F>(f));
@@ -430,7 +430,7 @@ namespace leaf_detail
 #endif
 
     template <class E>
-    inline void slot<E>::propagate( int err_id ) noexcept
+    inline void slot<E>::propagate( int err_id ) noexcept(!BOOST_LEAF_CFG_DIAGNOSTICS)
     {
         if( this->key()!=err_id && err_id!=0 )
             return;
@@ -448,7 +448,7 @@ namespace leaf_detail
     }
 
     template <bool OverwriteAllowed, class E>
-    BOOST_LEAF_CONSTEXPR inline int load_slot( int err_id, E && e ) noexcept
+    BOOST_LEAF_CONSTEXPR inline int load_slot( int err_id, E && e ) noexcept(!BOOST_LEAF_CFG_DIAGNOSTICS)
     {
         static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
         static_assert(!std::is_same<typename std::decay<E>::type, error_id>::value, "Error objects of type error_id are not allowed");
@@ -472,7 +472,7 @@ namespace leaf_detail
     }
 
     template <class F>
-    BOOST_LEAF_CONSTEXPR inline int accumulate_slot( int err_id, F && f ) noexcept
+    BOOST_LEAF_CONSTEXPR inline int accumulate_slot( int err_id, F && f )
     {
         static_assert(function_traits<F>::arity==1, "Lambdas passed to accumulate must take a single e-type argument by reference");
         using E = typename std::decay<fn_arg_type<F,0>>::type;

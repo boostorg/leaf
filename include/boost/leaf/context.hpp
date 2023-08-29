@@ -177,7 +177,7 @@ namespace leaf_detail
             BOOST_LEAF_ASSERT(err_id != 0);
             auto & sl = std::get<I-1>(tup);
             if( sl.has_value(err_id) )
-                load_slot<true>(err_id, std::move(sl).value(err_id));
+                (void) load_slot<true>(err_id, std::move(sl).value(err_id));
             tuple_for_each<I-1,Tuple>::propagate_captured(tup, err_id);
         }
 
