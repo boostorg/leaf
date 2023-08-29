@@ -107,6 +107,15 @@ namespace leaf_detail
             }
         }
 
+        BOOST_LEAF_CONSTEXPR T & put( int key )
+        {
+            BOOST_LEAF_ASSERT(key);
+            reset();
+            (void) new(&value_) T;
+            key_=key;
+            return value_;
+        }
+
         BOOST_LEAF_CONSTEXPR T & put( int key, T const & v )
         {
             BOOST_LEAF_ASSERT(key);

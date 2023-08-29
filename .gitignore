@@ -7,7 +7,7 @@
 *.opensdf
 *.db
 *.opendb
-bld/*
+_bld/*
 doc/html/*
 snippets/*
 subprojects/*/

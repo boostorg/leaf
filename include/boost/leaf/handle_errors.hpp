@@ -235,11 +235,12 @@ public:
     friend std::basic_ostream<CharT, Traits> & operator<<( std::basic_ostream<CharT, Traits> & os, verbose_diagnostic_info const & x )
     {
         os << "leaf::verbose_diagnostic_info for ";
+        int const err_id = x.error().value();
         x.print(os);
         os << ":\n";
-        x.print_(os, x.tup_, x.error().value());
+        x.print_(os, x.tup_, err_id);
         if( x.e_ui_ )
-            x.e_ui_->print(os);
+            x.e_ui_->print(os, err_id);
         return os;
     }
 };

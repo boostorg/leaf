@@ -33,12 +33,20 @@ template <int A>
 struct info
 {
     int value;
+    info():
+        value(0)
+    {
+    }
+    explicit info(int value):
+        value(value)
+    {
+    }
 };
 
 void f0()
 {
-    auto load = leaf::on_error( info<0>{-1} );
-    leaf::throw_exception(info<1>{-1});
+    auto load = leaf::on_error( info<0>(-1) );
+    leaf::throw_exception(info<1>(-1));
 }
 
 void f1()
@@ -57,7 +65,7 @@ leaf::error_id f2()
     }
     catch( leaf::error_id const & err )
     {
-        err.load( info<3>{3} );
+        err.load( info<3>(3) );
         throw;
     }
     catch(...)

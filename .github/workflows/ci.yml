@@ -66,6 +66,12 @@ jobs:
             os: ubuntu-22.04
             install: g++-12-multilib
             address-model: 32,64
+          - toolset: gcc-13
+            cxxstd: "11,14,17,20,2b"
+            os: ubuntu-latest
+            container: ubuntu:23.04
+            install: g++-13-multilib
+            address-model: 32,64
           - toolset: clang
             compiler: clang++-3.9
             cxxstd: "11,14"
@@ -127,8 +133,25 @@ jobs:
             os: ubuntu-22.04
             install: clang-14
           - toolset: clang
+            compiler: clang++-15
+            cxxstd: "11,14,17,20,2b"
+            os: ubuntu-22.04
+            install: clang-15
+          - toolset: clang
+            compiler: clang++-16
+            cxxstd: "11,14,17,20,2b"
+            os: ubuntu-latest
+            container: ubuntu:23.04
+            install: clang-16
+          - toolset: clang
             cxxstd: "11,14,17,2a"
             os: macos-11
+          - toolset: clang
+            cxxstd: "11,14,17,20,2b"
+            os: macos-12
+          - toolset: clang
+            cxxstd: "11,14,17,20,2b"
+            os: macos-13
 
     runs-on: ${{matrix.os}}
     container: ${{matrix.container}}
@@ -144,11 +167,13 @@ jobs:
         if: matrix.container
         run: |
           apt-get update
-          apt-get -y install sudo python git g++
+          apt-get -y install sudo python3 git g++
 
       - name: Install packages
         if: matrix.install
-        run: sudo apt-get -y install ${{matrix.install}}
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install ${{matrix.install}}
 
       - name: Setup Boost
         run: |
@@ -168,7 +193,7 @@ jobs:
           cd boost-root
           cp -r $GITHUB_WORKSPACE/* libs/$LIBRARY
           git submodule update --init tools/boostdep
-          python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
+          python3 tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
           ./bootstrap.sh
           ./b2 -d0 headers
 
@@ -180,7 +205,7 @@ jobs:
       - name: Generate headers
         run: |
           cd ../boost-root/libs/leaf
-          python gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o test/leaf.hpp boost/leaf
+          python3 gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o test/leaf.hpp boost/leaf
 
       - name: Run tests
         run: |
@@ -204,7 +229,6 @@ jobs:
             cxxstd: "14,17,latest"
             addrmd: 64
             os: windows-2022
-            embedmanifest: embed-manifest-via=linker
           - toolset: gcc
             cxxstd: "11,14,17,2a"
             addrmd: 64
@@ -240,7 +264,7 @@ jobs:
       - name: Generate headers
         run: |
           cd ../boost-root/libs/leaf
-          python gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o test/leaf.hpp boost/leaf
+          python3 gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o test/leaf.hpp boost/leaf
 
       - name: Run tests
         shell: cmd
