@@ -1,4 +1,4 @@
-// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -13,8 +13,8 @@
 
 #if BOOST_LEAF_CFG_STD_STRING
 #   include <sstream>
+#   include <iostream>
 #endif
-#include <iostream>
 
 #include "lightweight_test.hpp"
 
@@ -92,7 +92,8 @@ int main()
             std::ostringstream st;
             st << di;
             std::string s = st.str();
-#   if BOOST_LEAF_CFG_DIAGNOSTICS
+            std::cout << s << std::endl;
+#if BOOST_LEAF_CFG_DIAGNOSTICS
             auto const n1 = s.find("info<1>: acc=0");
             auto const n2 = s.find("info<2>: acc=0");
             auto const n3 = s.find("info<3>: acc=0");
@@ -108,10 +109,9 @@ int main()
             BOOST_TEST_GT(n3, nd);
             BOOST_TEST_GT(n4, nd);
             BOOST_TEST_EQ(counter, 4);
-#   else
+#else
             BOOST_TEST_EQ(counter, 1);
-#   endif
-            std::cout << s;
+#endif
 #endif
         },
         []

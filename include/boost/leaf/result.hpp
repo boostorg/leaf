@@ -1,12 +1,13 @@
 #ifndef BOOST_LEAF_RESULT_HPP_INCLUDED
 #define BOOST_LEAF_RESULT_HPP_INCLUDED
 
-// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
+#include <boost/leaf/detail/print.hpp>
 #include <boost/leaf/exception.hpp>
 
 #include <climits>
@@ -31,6 +32,40 @@ public:
         BOOST_LEAF_ASSERT(value());
     }
 };
+
+////////////////////////////////////////
+
+namespace leaf_detail
+{
+    template <class T, bool Printable = is_printable<T>::value>
+    struct result_value_printer;
+
+    template <class T>
+    struct result_value_printer<T, true>
+    {
+        template <class CharT, class Traits>
+        static void print( std::basic_ostream<CharT, Traits> & s, T const & x )
+        {
+            (void) (s << x);
+        }
+    };
+
+    template <class T>
+    struct result_value_printer<T, false>
+    {
+        template <class CharT, class Traits>
+        static void print( std::basic_ostream<CharT, Traits> & s, T const & )
+        {
+            (void) (s << "{not printable}");
+        }
+    };
+
+    template <class CharT, class Traits, class T>
+    void print_result_value( std::basic_ostream<CharT, Traits> & s, T const & x )
+    {
+        result_value_printer<T>::print(s, x);
+    }
+}
 
 ////////////////////////////////////////
 
@@ -257,11 +292,20 @@ class result
 
     error_id get_error_id() const noexcept
     {
-        BOOST_LEAF_ASSERT(what_.kind()!=result_discriminant::val);
+        BOOST_LEAF_ASSERT(what_.kind() != result_discriminant::val);
 #if BOOST_LEAF_CFG_CAPTURE
-        return what_.kind()==result_discriminant::ctx_ptr ? ctx_->captured_id_ : what_.get_error_id();
+        if( what_.kind() == result_discriminant::ctx_ptr )
+        {
+            BOOST_LEAF_ASSERT(ctx_ && ctx_->captured_id_);
+            return ctx_->captured_id_;
+        }
+        else
+        {
+            BOOST_LEAF_ASSERT(what_.kind() == result_discriminant::err_id);
+            return what_.get_error_id();
+        }
 #else
-        BOOST_LEAF_ASSERT(what_.kind()!=result_discriminant::ctx_ptr); // Possible ODR violation.
+        BOOST_LEAF_ASSERT(what_.kind() != result_discriminant::ctx_ptr); // Possible ODR violation.
         return what_.get_error_id();
 #endif
     }
@@ -365,10 +409,18 @@ public:
 #endif
 
 #if BOOST_LEAF_CFG_CAPTURE
+    result( context_ptr const & ctx ) noexcept:
+        ctx_(ctx),
+        what_(result_discriminant::kind_ctx_ptr{})
+    {
+        BOOST_LEAF_ASSERT(ctx_ && ctx_->captured_id_);
+    }
+
     result( context_ptr && ctx ) noexcept:
         ctx_(std::move(ctx)),
         what_(result_discriminant::kind_ctx_ptr{})
     {
+        BOOST_LEAF_ASSERT(ctx_ && ctx_->captured_id_);
     }
 #endif
 
@@ -517,6 +569,35 @@ public:
     {
         return error_id(error()).load(std::forward<Item>(item)...);
     }
+
+    template <class CharT, class Traits>
+    void print( std::basic_ostream<CharT, Traits> & os ) const
+    {
+        switch(what_.kind())
+        {
+        case result_discriminant::val:
+            leaf_detail::print_result_value(os, value());
+            break;
+        case result_discriminant::ctx_ptr:
+#if BOOST_LEAF_CFG_CAPTURE
+            BOOST_LEAF_ASSERT(ctx_ && ctx_->captured_id_);
+            os << "Error ID " << ctx_->captured_id_ << ", captured error objects:\n" << *ctx_;
+            break;
+#else
+            BOOST_LEAF_ASSERT(0); // Possible ODR violation.
+#endif
+        default:
+            os << "Error ID " << what_.get_error_id();
+        }
+    }
+
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, result const & r )
+    {
+        r.print(os);
+        return os;
+    }
 };
 
 ////////////////////////////////////////
@@ -574,6 +655,11 @@ public:
 #endif
 
 #if BOOST_LEAF_CFG_CAPTURE
+    result( context_ptr const & ctx ) noexcept:
+        base(ctx)
+    {
+    }
+
     result( context_ptr && ctx ) noexcept:
         base(std::move(ctx))
     {
@@ -602,6 +688,22 @@ public:
     void operator*() const noexcept
     {
         BOOST_LEAF_ASSERT(has_value());
+    }
+
+    template <class CharT, class Traits>
+    void print( std::basic_ostream<CharT, Traits> & os ) const
+    {
+        if( what_.kind() == result_discriminant::val )
+            os << "No error";
+        else
+            os << *static_cast<base const *>(this);
+    }
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, result const & r )
+    {
+        r.print(os);
+        return os;
     }
 
     using base::operator=;

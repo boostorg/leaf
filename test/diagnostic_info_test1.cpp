@@ -1,4 +1,4 @@
-// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -14,8 +14,8 @@
 
 #if BOOST_LEAF_CFG_STD_STRING
 #   include <sstream>
+#   include <iostream>
 #endif
-#include <iostream>
 
 #include "lightweight_test.hpp"
 
@@ -112,8 +112,10 @@ int main()
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
+            std::cout << s << std::endl;
+#if BOOST_LEAF_CFG_DIAGNOSTICS
             BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
-            std::cout << s;
+#endif
 #endif
         },
         []()
@@ -150,13 +152,14 @@ int main()
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
+            std::cout << s << std::endl;
 #if BOOST_LEAF_CFG_DIAGNOSTICS
             BOOST_TEST_NE(s.find("leaf::diagnostic_info for Error ID = "), s.npos);
             BOOST_TEST_NE(s.find("e_source_location"), s.npos);
             BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
             BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
             BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
-            BOOST_TEST_NE(s.find(": {Non-Printable}"), s.npos);
+            BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
             BOOST_TEST_NE(s.find("enum_class_payload"), s.npos);
             BOOST_TEST_NE(s.find("Detected 2 attempts"), s.npos);
             BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
@@ -165,7 +168,6 @@ int main()
             BOOST_TEST_NE(s.find("leaf::diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1"), s.npos);
             BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
 #endif
-            std::cout << s;
 #endif
         },
         []()
@@ -202,13 +204,14 @@ int main()
             std::ostringstream st;
             st << di;
             std::string s = st.str();
+            std::cout << s << std::endl;
 #if BOOST_LEAF_CFG_DIAGNOSTICS
             BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info for Error ID = "), s.npos);
             BOOST_TEST_NE(s.find("e_source_location"), s.npos);
             BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
             BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
             BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
-            BOOST_TEST_NE(s.find(": {Non-Printable}"), s.npos);
+            BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
             BOOST_TEST_NE(s.find("enum_class"), s.npos);
             BOOST_TEST_NE(s.find("Unhandled error objects:"), s.npos);
             BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
@@ -219,7 +222,6 @@ int main()
             BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1"), s.npos);
             BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
 #endif
-            std::cout << s;
 #endif
         },
         []()
@@ -260,10 +262,12 @@ int main()
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
+            std::cout << s << std::endl;
+#if BOOST_LEAF_CFG_DIAGNOSTICS
             BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
             BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
             BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
-            std::cout << s;
+#endif
 #endif
         } );
 
@@ -296,6 +300,7 @@ int main()
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
+            std::cout << s << std::endl;
 #if BOOST_LEAF_CFG_DIAGNOSTICS
             BOOST_TEST_NE(s.find("leaf::diagnostic_info for Error ID = "), s.npos);
             BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
@@ -304,7 +309,7 @@ int main()
             BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
             BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
             BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
-            BOOST_TEST_NE(s.find(": {Non-Printable}"), s.npos);
+            BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
             BOOST_TEST_NE(s.find("enum_class_payload"), s.npos);
             BOOST_TEST_NE(s.find("Detected 2 attempts"), s.npos);
             BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
@@ -315,7 +320,6 @@ int main()
             BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
             BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
 #endif
-            std::cout << s;
 #endif
         } );
 
@@ -348,6 +352,7 @@ int main()
             std::ostringstream st;
             st << di;
             std::string s = st.str();
+            std::cout << s << std::endl;
 #if BOOST_LEAF_CFG_DIAGNOSTICS
             BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info for Error ID = "), s.npos);
             BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
@@ -356,7 +361,7 @@ int main()
             BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
             BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
             BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
-            BOOST_TEST_NE(s.find(": {Non-Printable}"), s.npos);
+            BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
             BOOST_TEST_NE(s.find("enum_class_payload"), s.npos);
             BOOST_TEST_NE(s.find("Unhandled error objects:"), s.npos);
             BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
@@ -369,7 +374,6 @@ int main()
             BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
             BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
 #endif
-            std::cout << s;
 #endif
         } );
 

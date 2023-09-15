@@ -1,7 +1,7 @@
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 
-// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -103,7 +103,7 @@ namespace leaf_detail
 
         BOOST_LEAF_CONSTEXPR void trigger( int err_id ) noexcept
         {
-            (void) load_slot<false>(err_id, std::move(e_));
+            (void) load_slot<true>(err_id, std::move(e_));
         }
     };
 
@@ -122,7 +122,7 @@ namespace leaf_detail
 
         BOOST_LEAF_CONSTEXPR void trigger( int err_id ) noexcept
         {
-            (void) load_slot<false>(err_id, f_());
+            (void) load_slot<true>(err_id, f_());
         }
     };
 
@@ -144,7 +144,7 @@ namespace leaf_detail
 
         BOOST_LEAF_CONSTEXPR void trigger( int err_id ) noexcept
         {
-            accumulate_slot(err_id, std::move(f_));
+            accumulate_slot<true>(err_id, std::move(f_));
         }
     };
 

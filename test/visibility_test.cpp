@@ -1,4 +1,4 @@
-// Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -11,8 +11,13 @@
 #endif
 
 #include "visibility_test_lib.hpp"
+
+#if BOOST_LEAF_CFG_STD_STRING
+#   include <sstream>
+#   include <iostream>
+#endif
+
 #include "lightweight_test.hpp"
-#include <sstream>
 
 namespace leaf = boost::leaf;
 
@@ -36,14 +41,22 @@ int main()
                 {
 #if BOOST_LEAF_CFG_STD_STRING
                     std::stringstream ss; ss << info;
-                    BOOST_TEST_NE(ss.str().find("1 attempt to communicate an unexpected error object"), std::string::npos);
+                    std::string s = ss.str();
+                    std::cout << s << std::endl;
+#if BOOST_LEAF_CFG_DIAGNOSTICS                    
+                    BOOST_TEST_NE(s.find("1 attempt to communicate an unexpected error object"), std::string::npos);
+#endif
 #endif
                 }
                 if( BOOST_LEAF_CFG_DIAGNOSTICS )
                 {
 #if BOOST_LEAF_CFG_STD_STRING
                     std::stringstream ss; ss << vinfo;
-                    BOOST_TEST_NE(ss.str().find("Test my_info<3>::value = 3"), std::string::npos);
+                    std::string s = ss.str();
+                    std::cout << s << std::endl;
+#if BOOST_LEAF_CFG_DIAGNOSTICS                    
+                    BOOST_TEST_NE(s.find("Test my_info<3>::value = 3"), std::string::npos);
+#endif
 #endif
                 }
                 return 1;
@@ -71,14 +84,22 @@ int main()
                 {
 #if BOOST_LEAF_CFG_STD_STRING
                     std::stringstream ss; ss << info;
-                    BOOST_TEST_NE(ss.str().find("1 attempt to communicate an unexpected error object"), std::string::npos);
+                    std::string s = ss.str();
+                    std::cout << s << std::endl;
+#if BOOST_LEAF_CFG_DIAGNOSTICS                    
+                    BOOST_TEST_NE(s.find("1 attempt to communicate an unexpected error object"), std::string::npos);
+#endif
 #endif
                 }
                 if( BOOST_LEAF_CFG_DIAGNOSTICS )
                 {
 #if BOOST_LEAF_CFG_STD_STRING
                     std::stringstream ss; ss << vinfo;
-                    BOOST_TEST_NE(ss.str().find("Test my_info<3>::value = 3"), std::string::npos);
+                    std::string s = ss.str();
+                    std::cout << s << std::endl;
+#if BOOST_LEAF_CFG_DIAGNOSTICS                    
+                    BOOST_TEST_NE(s.find("Test my_info<3>::value = 3"), std::string::npos);
+#endif
 #endif
                 }
                 return 1;
