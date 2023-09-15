@@ -1,6 +1,6 @@
 """
 
-    Copyright 2018-2022 Emil Dotchevski and Reverge Studios, Inc.
+    Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
     Copyright (c) Sorin Fetche
 
     Distributed under the Boost Software License, Version 1.0. (See accompanying
