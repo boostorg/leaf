@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 09/17/2023 from https://github.com/boostorg/leaf/tree/3199f47.
+// Generated on 09/22/2023 from https://github.com/boostorg/leaf/tree/f2ec744.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
@@ -5261,7 +5261,7 @@ namespace leaf_detail
 ////////////////////////////////////////
 
 template <class T>
-class result
+class BOOST_LEAF_NODISCARD result
 {
     template <class U>
     friend class result;
@@ -5704,7 +5704,7 @@ namespace leaf_detail
 }
 
 template <>
-class result<void>:
+class BOOST_LEAF_NODISCARD result<void>:
     result<leaf_detail::void_>
 {
     using result_discriminant = leaf_detail::result_discriminant;
