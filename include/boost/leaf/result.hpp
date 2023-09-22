@@ -165,7 +165,7 @@ namespace leaf_detail
 ////////////////////////////////////////
 
 template <class T>
-class result
+class BOOST_LEAF_NODISCARD result
 {
     template <class U>
     friend class result;
@@ -608,7 +608,7 @@ namespace leaf_detail
 }
 
 template <>
-class result<void>:
+class BOOST_LEAF_NODISCARD result<void>:
     result<leaf_detail::void_>
 {
     using result_discriminant = leaf_detail::result_discriminant;
