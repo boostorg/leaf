@@ -698,6 +698,17 @@ public:
         return *this;
     }
 
+    template <class Item>
+    BOOST_LEAF_CONSTEXPR error_id load(Item && item) const noexcept
+    {
+        if (int err_id = value())
+        {
+            int const unused[] = { 42, leaf_detail::load_item<Item>::load_(err_id, std::forward<Item>(item)) };
+            (void)unused;
+        }
+        return *this;
+    }
+
     template <class... Item>
     BOOST_LEAF_CONSTEXPR error_id load( Item && ... item ) const noexcept
     {
