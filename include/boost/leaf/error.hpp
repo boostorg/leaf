@@ -722,13 +722,8 @@ public:
 
     BOOST_LEAF_CONSTEXPR int value() const noexcept
     {
-        if( int v = value_ )
-        {
-            BOOST_LEAF_ASSERT((v&3)==1);
-            return (v&~3)|1;
-        }
-        else
-            return 0;
+        BOOST_LEAF_ASSERT(value_==0 || ((value_&3)==1));
+        return value_;
     }
 
     BOOST_LEAF_CONSTEXPR explicit operator bool() const noexcept
