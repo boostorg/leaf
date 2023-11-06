@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 09/22/2023 from https://github.com/boostorg/leaf/tree/f2ec744.
+// Generated on 11/06/2023 from https://github.com/boostorg/leaf/tree/d8aae79.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
@@ -2331,6 +2331,17 @@ public:
         return *this;
     }
 
+    template <class Item>
+    BOOST_LEAF_CONSTEXPR error_id load(Item && item) const noexcept
+    {
+        if (int err_id = value())
+        {
+            int const unused[] = { 42, leaf_detail::load_item<Item>::load_(err_id, std::forward<Item>(item)) };
+            (void)unused;
+        }
+        return *this;
+    }
+
     template <class... Item>
     BOOST_LEAF_CONSTEXPR error_id load( Item && ... item ) const noexcept
     {
@@ -2344,13 +2355,8 @@ public:
 
     BOOST_LEAF_CONSTEXPR int value() const noexcept
     {
-        if( int v = value_ )
-        {
-            BOOST_LEAF_ASSERT((v&3)==1);
-            return (v&~3)|1;
-        }
-        else
-            return 0;
+        BOOST_LEAF_ASSERT(value_==0 || ((value_&3)==1));
+        return value_;
     }
 
     BOOST_LEAF_CONSTEXPR explicit operator bool() const noexcept
@@ -3842,7 +3848,7 @@ inline context_ptr make_shared_context( H && ... ) noexcept
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3354: #include <boost/leaf/context.hpp>
+// Expanded at line 3360: #include <boost/leaf/context.hpp>
 // Expanded at line 693: #include <boost/leaf/capture.hpp>
 
 namespace boost { namespace leaf {
@@ -4792,7 +4798,7 @@ namespace leaf_detail
 } }
 
 #endif
-// Expanded at line 2789: #include <boost/leaf/on_error.hpp>
+// Expanded at line 2795: #include <boost/leaf/on_error.hpp>
 // >>> #include <boost/leaf/pred.hpp>
 #line 1 "boost/leaf/pred.hpp"
 #ifndef BOOST_LEAF_PRED_HPP_INCLUDED
@@ -4804,7 +4810,7 @@ namespace leaf_detail
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3836: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 3842: #include <boost/leaf/handle_errors.hpp>
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -5171,19 +5177,19 @@ namespace leaf_detail
     struct stored
     {
         using type = T;
-        using value_type = T;
-        using value_type_const = T const;
+        using value_no_ref = T;
+        using value_no_ref_const = T const;
         using value_cref = T const &;
         using value_ref = T &;
         using value_rv_cref = T const &&;
         using value_rv_ref = T &&;
 
-        static value_type_const * cptr( type const & v ) noexcept
+        static value_no_ref_const * cptr( type const & v ) noexcept
         {
             return &v;
         }
 
-        static value_type * ptr( type & v ) noexcept
+        static value_no_ref * ptr( type & v ) noexcept
         {
             return &v;
         }
@@ -5193,19 +5199,19 @@ namespace leaf_detail
     struct stored<T &>
     {
         using type = std::reference_wrapper<T>;
-        using value_type_const = T;
-        using value_type = T;
+        using value_no_ref = T;
+        using value_no_ref_const = T;
         using value_ref = T &;
         using value_cref = T &;
         using value_rv_ref = T &;
         using value_rv_cref = T &;
 
-        static value_type_const * cptr( type const & v ) noexcept
+        static value_no_ref_const * cptr( type const & v ) noexcept
         {
             return &v.get();
         }
 
-        static value_type * ptr( type const & v ) noexcept
+        static value_no_ref * ptr( type const & v ) noexcept
         {
             return &v.get();
         }
@@ -5322,8 +5328,8 @@ class BOOST_LEAF_NODISCARD result
     };
 
     using stored_type = typename leaf_detail::stored<T>::type;
-    using value_type = typename leaf_detail::stored<T>::value_type;
-    using value_type_const = typename leaf_detail::stored<T>::value_type_const;
+    using value_no_ref = typename leaf_detail::stored<T>::value_no_ref;
+    using value_no_ref_const = typename leaf_detail::stored<T>::value_no_ref_const;
     using value_ref = typename leaf_detail::stored<T>::value_ref;
     using value_cref = typename leaf_detail::stored<T>::value_cref;
     using value_rv_ref = typename leaf_detail::stored<T>::value_rv_ref;
@@ -5426,6 +5432,8 @@ protected:
 
 public:
 
+    using value_type = T;
+
     result( result && x ) noexcept:
         what_(move_from(std::move(x)))
     {
@@ -5443,13 +5451,13 @@ public:
     {
     }
 
-    result( value_type && v ) noexcept:
-        stored_(std::forward<value_type>(v)),
+    result( value_no_ref && v ) noexcept:
+        stored_(std::forward<value_no_ref>(v)),
         what_(result_discriminant::kind_val{})
     {
     }
 
-    result( value_type const & v ):
+    result( value_no_ref const & v ):
         stored_(v),
         what_(result_discriminant::kind_val{})
     {
@@ -5597,12 +5605,12 @@ public:
 
 #endif
 
-    value_type_const * operator->() const noexcept
+    value_no_ref_const * operator->() const noexcept
     {
         return has_value() ? leaf_detail::stored<T>::cptr(stored_) : nullptr;
     }
 
-    value_type * operator->() noexcept
+    value_no_ref * operator->() noexcept
     {
         return has_value() ? leaf_detail::stored<T>::ptr(stored_) : nullptr;
     }
@@ -5835,8 +5843,8 @@ struct is_result_type<result<T>>: std::true_type
 #if __cplusplus >= 201703L
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3836: #include <boost/leaf/handle_errors.hpp>
-// Expanded at line 5097: #include <boost/leaf/result.hpp>
+// Expanded at line 3842: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 5103: #include <boost/leaf/result.hpp>
 #include <variant>
 #include <optional>
 #include <tuple>

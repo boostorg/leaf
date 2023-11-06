@@ -156,6 +156,7 @@ function switch_style()
 <li><a href="#result::has_error"><code>has_error</code></a></li>
 <li><a href="#result::operator_bool"><code>operator bool</code></a></li>
 <li><a href="#result::value"><code>value</code></a></li>
+<li><a href="#result::value_type"><code>value_type</code></a></li>
 <li><a href="#result::operator_ptr"><code>operator-></code></a></li>
 <li><a href="#result::operator_deref"><code>operator*</code></a></li>
 </ul>
@@ -3285,6 +3286,8 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
   <span class="p">{</span>
   <span class="nl">public:</span>
 
+    <span class="k">using</span> <span class="n">value_type</span> <span class="o">=</span> <span class="n">T</span><span class="p">;</span>
+
     <span class="n">result</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="n">result</span><span class="p">(</span> <span class="n">T</span> <span class="o">&amp;&amp;</span> <span class="n">v</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="n">result</span><span class="p">(</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">v</span> <span class="p">);</span>
@@ -3336,6 +3339,8 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
   <span class="k">class</span> <span class="nc">result</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span>
   <span class="p">{</span>
   <span class="nl">public:</span>
+
+    <span class="k">using</span> <span class="n">value_type</span> <span class="o">=</span> <span class="kt">void</span><span class="p">;</span>
 
     <span class="n">result</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
 
@@ -6181,6 +6186,8 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
   <span class="p">{</span>
   <span class="nl">public:</span>
 
+    <span class="k">using</span> <span class="n">value_type</span> <span class="o">=</span> <span class="n">T</span><span class="p">;</span>
+
     <span class="n">result</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="n">result</span><span class="p">(</span> <span class="n">T</span> <span class="o">&amp;&amp;</span> <span class="n">v</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="n">result</span><span class="p">(</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">v</span> <span class="p">);</span>
@@ -6229,6 +6236,8 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
   <span class="k">class</span> <span class="nc">result</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span>
   <span class="p">{</span>
   <span class="nl">public:</span>
+
+    <span class="k">using</span> <span class="n">value_type</span> <span class="o">=</span> <span class="kt">void</span><span class="p">;</span>
 
     <span class="n">result</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
 
@@ -6669,6 +6678,14 @@ The returned proxy object refers to <code>*this</code>; avoid holding on to it.
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
 </div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="result::value_type"><code>value_type</code></h4>
+<div class="paragraph">
+<p>A member type of <code>result&lt;T&gt;</code>, defined as a synonim for <code>T</code>.</p>
+</div>
+<hr>
 <div id="result::bad_result" class="dlist">
 <dl>
 <dt class="hdlist1">Effects: </dt>
