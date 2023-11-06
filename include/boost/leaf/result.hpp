@@ -75,19 +75,19 @@ namespace leaf_detail
     struct stored
     {
         using type = T;
-        using value_type = T;
-        using value_type_const = T const;
+        using value_no_ref = T;
+        using value_no_ref_const = T const;
         using value_cref = T const &;
         using value_ref = T &;
         using value_rv_cref = T const &&;
         using value_rv_ref = T &&;
 
-        static value_type_const * cptr( type const & v ) noexcept
+        static value_no_ref_const * cptr( type const & v ) noexcept
         {
             return &v;
         }
 
-        static value_type * ptr( type & v ) noexcept
+        static value_no_ref * ptr( type & v ) noexcept
         {
             return &v;
         }
@@ -97,19 +97,19 @@ namespace leaf_detail
     struct stored<T &>
     {
         using type = std::reference_wrapper<T>;
-        using value_type_const = T;
-        using value_type = T;
+        using value_no_ref = T;
+        using value_no_ref_const = T;
         using value_ref = T &;
         using value_cref = T &;
         using value_rv_ref = T &;
         using value_rv_cref = T &;
 
-        static value_type_const * cptr( type const & v ) noexcept
+        static value_no_ref_const * cptr( type const & v ) noexcept
         {
             return &v.get();
         }
 
-        static value_type * ptr( type const & v ) noexcept
+        static value_no_ref * ptr( type const & v ) noexcept
         {
             return &v.get();
         }
@@ -226,8 +226,8 @@ class BOOST_LEAF_NODISCARD result
     };
 
     using stored_type = typename leaf_detail::stored<T>::type;
-    using value_type = typename leaf_detail::stored<T>::value_type;
-    using value_type_const = typename leaf_detail::stored<T>::value_type_const;
+    using value_no_ref = typename leaf_detail::stored<T>::value_no_ref;
+    using value_no_ref_const = typename leaf_detail::stored<T>::value_no_ref_const;
     using value_ref = typename leaf_detail::stored<T>::value_ref;
     using value_cref = typename leaf_detail::stored<T>::value_cref;
     using value_rv_ref = typename leaf_detail::stored<T>::value_rv_ref;
@@ -330,6 +330,8 @@ protected:
 
 public:
 
+    using value_type = T;
+
     result( result && x ) noexcept:
         what_(move_from(std::move(x)))
     {
@@ -347,13 +349,13 @@ public:
     {
     }
 
-    result( value_type && v ) noexcept:
-        stored_(std::forward<value_type>(v)),
+    result( value_no_ref && v ) noexcept:
+        stored_(std::forward<value_no_ref>(v)),
         what_(result_discriminant::kind_val{})
     {
     }
 
-    result( value_type const & v ):
+    result( value_no_ref const & v ):
         stored_(v),
         what_(result_discriminant::kind_val{})
     {
@@ -501,12 +503,12 @@ public:
 
 #endif
 
-    value_type_const * operator->() const noexcept
+    value_no_ref_const * operator->() const noexcept
     {
         return has_value() ? leaf_detail::stored<T>::cptr(stored_) : nullptr;
     }
 
-    value_type * operator->() noexcept
+    value_no_ref * operator->() noexcept
     {
         return has_value() ? leaf_detail::stored<T>::ptr(stored_) : nullptr;
     }

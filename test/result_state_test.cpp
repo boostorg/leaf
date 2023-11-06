@@ -15,6 +15,12 @@
 
 namespace leaf = boost::leaf;
 
+static_assert(std::is_same<void, leaf::result<void>::value_type>::value, "Bad value_type");
+static_assert(std::is_same<int, leaf::result<int>::value_type>::value, "Bad value_type");
+static_assert(std::is_same<int const, leaf::result<int const>::value_type>::value, "Bad value_type");
+static_assert(std::is_same<int &, leaf::result<int &>::value_type>::value, "Bad value_type");
+static_assert(std::is_same<int const &, leaf::result<int const &>::value_type>::value, "Bad value_type");
+
 struct val
 {
     static int id_count;
