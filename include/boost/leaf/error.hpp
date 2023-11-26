@@ -453,7 +453,8 @@ namespace leaf_detail
     template <class E>
     inline void slot<E>::propagate( int err_id ) noexcept(!BOOST_LEAF_CFG_DIAGNOSTICS)
     {
-        if( this->key()!=err_id && err_id!=0 )
+        BOOST_LEAF_ASSERT(err_id);
+        if( this->key()!=err_id )
             return;
         if( impl * p = tls::read_ptr<slot<E>>() )
             *p = std::move(*this);
