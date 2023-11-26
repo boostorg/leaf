@@ -274,14 +274,6 @@ class context
     std::thread::id thread_id_;
 #endif
 
-protected:
-
-    BOOST_LEAF_CONSTEXPR error_id propagate_captured_errors( error_id err_id ) noexcept
-    {
-        leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_, err_id.value());
-        return err_id;
-    }
-
 public:
 
     BOOST_LEAF_CONSTEXPR context( context && x ) noexcept:
@@ -416,7 +408,6 @@ namespace leaf_detail
     template <class Ctx>
     struct polymorphic_context_impl: polymorphic_context, Ctx
     {
-        error_id propagate_captured_errors() noexcept final override { return Ctx::propagate_captured_errors(captured_id_); }
         void activate() noexcept final override { Ctx::activate(); }
         void deactivate() noexcept final override { Ctx::deactivate(); }
         void propagate(error_id id) noexcept final override { Ctx::propagate(id); }

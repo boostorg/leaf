@@ -212,7 +212,8 @@ class BOOST_LEAF_NODISCARD result
             case result_discriminant::ctx_ptr:
 #if BOOST_LEAF_CFG_CAPTURE
                 {
-                    error_id captured_id = r_.ctx_->propagate_captured_errors();
+                    error_id captured_id = r_.ctx_->captured_id_;
+                    r_.ctx_->propagate(captured_id);
                     tls::write_uint<leaf_detail::tls_tag_id_factory_current_id>(unsigned(captured_id.value()));
                     return captured_id;
                 }

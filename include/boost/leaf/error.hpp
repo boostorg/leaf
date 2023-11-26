@@ -799,7 +799,6 @@ protected:
 
 public:
 
-    virtual error_id propagate_captured_errors() noexcept = 0;
     virtual void activate() noexcept = 0;
     virtual void deactivate() noexcept = 0;
     virtual void propagate( error_id ) noexcept = 0;
