@@ -66,7 +66,7 @@ namespace leaf_detail
             reset();
             if( int key = x.key() )
             {
-                put(key, x.value_);
+                load(key, x.value_);
                 key_ = key;
             }
             return *this;
@@ -77,7 +77,7 @@ namespace leaf_detail
             reset();
             if( int key = x.key() )
             {
-                put(key, std::move(x.value_));
+                load(key, std::move(x.value_));
                 x.reset();
             }
             return *this;
@@ -107,7 +107,7 @@ namespace leaf_detail
             }
         }
 
-        BOOST_LEAF_CONSTEXPR T & put( int key )
+        BOOST_LEAF_CONSTEXPR T & load( int key )
         {
             BOOST_LEAF_ASSERT(key);
             reset();
@@ -116,7 +116,7 @@ namespace leaf_detail
             return value_;
         }
 
-        BOOST_LEAF_CONSTEXPR T & put( int key, T const & v )
+        BOOST_LEAF_CONSTEXPR T & load( int key, T const & v )
         {
             BOOST_LEAF_ASSERT(key);
             reset();
@@ -125,7 +125,7 @@ namespace leaf_detail
             return value_;
         }
 
-        BOOST_LEAF_CONSTEXPR T & put( int key, T && v ) noexcept
+        BOOST_LEAF_CONSTEXPR T & load( int key, T && v ) noexcept
         {
             BOOST_LEAF_ASSERT(key);
             reset();

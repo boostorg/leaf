@@ -38,7 +38,7 @@ int main()
 {
     SetLastError(ERROR_FILE_NOT_FOUND);
 #if BOOST_LEAF_CFG_STD_STRING
-    std::stringstream ss;
+    std::ostringstream ss;
     ss << leaf::windows::e_LastError{};
     std::string s = ss.str();
     std::cout << s << std::endl;

@@ -50,7 +50,7 @@ int main()
                 auto active_context = activate_context(ctx);
                 r1 = f(ctx);
             }
-            ctx.propagate(r1.error());
+            ctx.unload(r1.error());
             return r1;
         },
         error_handlers );

@@ -79,7 +79,7 @@ int main( int argc, char const * argv[] )
             std::cout << buffer;
             std::cout.flush();
             if( std::cout.fail() )
-                return leaf::new_error(output_error, leaf::e_errno{errno}).to_error_code();
+                return leaf::new_error(output_error, leaf::e_errno{errno});
 
             return 0;
         },
@@ -164,7 +164,7 @@ result<char const *> parse_command_line( int argc, char const * argv[] )
     if( argc==2 )
         return argv[1];
     else
-        return leaf::new_error(bad_command_line).to_error_code();
+        return leaf::new_error(bad_command_line);
 }
 
 
@@ -174,7 +174,7 @@ result<std::shared_ptr<FILE>> file_open( char const * file_name )
     if( FILE * f = fopen(file_name, "rb") )
         return std::shared_ptr<FILE>(f, &fclose);
     else
-        return leaf::new_error(open_error, leaf::e_errno{errno}).to_error_code();
+        return leaf::new_error(open_error, leaf::e_errno{errno});
 }
 
 
@@ -184,14 +184,14 @@ result<std::size_t> file_size( FILE & f )
     auto load = leaf::on_error([] { return leaf::e_errno{errno}; });
 
     if( fseek(&f, 0, SEEK_END) )
-        return leaf::new_error(size_error).to_error_code();
+        return leaf::new_error(size_error);
 
     long s = ftell(&f);
     if( s==-1L )
-        return leaf::new_error(size_error).to_error_code();
+        return leaf::new_error(size_error);
 
     if( fseek(&f,0,SEEK_SET) )
-        return leaf::new_error(size_error).to_error_code();
+        return leaf::new_error(size_error);
 
     return std::size_t(s);
 }
@@ -203,10 +203,10 @@ result<void> file_read( FILE & f, void * buf, std::size_t size )
     std::size_t n = fread(buf, 1, size, &f);
 
     if( ferror(&f) )
-        return leaf::new_error(read_error, leaf::e_errno{errno}).to_error_code();
+        return leaf::new_error(read_error, leaf::e_errno{errno});
 
     if( n!=size )
-        return leaf::new_error(eof_error).to_error_code();
+        return leaf::new_error(eof_error);
 
     return outcome::success();
 }

@@ -7,6 +7,11 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+// LEAF requires thread local storage support for pointers and for uin32_t values.
+
+// This header implements "thread local" storage via FreeTOS functions
+// pvTaskGetThreadLocalStoragePointer / pvTaskSetThreadLocalStoragePointer
+
 #include <task.h>
 
 #ifndef BOOST_LEAF_USE_TLS_ARRAY

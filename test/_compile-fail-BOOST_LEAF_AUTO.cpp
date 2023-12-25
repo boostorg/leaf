@@ -17,15 +17,6 @@ struct my_result
     explicit operator bool() const;
 };
 
-#if 0
-namespace boost { namespace leaf {
-    template <class T>
-    struct is_result_type<my_result<T>>: std::true_type
-    {
-    };
-} }
-#endif
-
 my_result<int> f();
 
 my_result<int> g()

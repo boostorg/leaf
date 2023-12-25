@@ -39,10 +39,11 @@ void test( F f )
     {
         int c=0;
         auto r = f();
-        leaf::try_catch(
-            [&r]
+        leaf::try_handle_all(
+            [&r]() -> leaf::result<void>
             {
-                (void) r.value();
+                BOOST_LEAF_CHECK(std::move(r));
+                return { };
             },
             [&c]( info<1> const & x )
             {
@@ -61,10 +62,11 @@ void test( F f )
     {
         int c=0;
         auto r = f();
-        leaf::try_catch(
-            [&r]
+        leaf::try_handle_all(
+            [&r]() -> leaf::result<void>
             {
-                (void) r.value();
+                BOOST_LEAF_CHECK(std::move(r));
+                return { };
             },
             [&c]( info<2> const & x )
             {
@@ -82,10 +84,10 @@ void test( F f )
 
     {
         auto r = f();
-        int what = leaf::try_catch(
-            [&r]
+        int what = leaf::try_handle_all(
+            [&r]() -> leaf::result<int>
             {
-                (void) r.value();
+                BOOST_LEAF_CHECK(std::move(r));
                 return 0;
             },
             []( info<1> const & x )
@@ -102,10 +104,10 @@ void test( F f )
 
     {
         auto r = f();
-        int what = leaf::try_catch(
-            [&r]
+        int what = leaf::try_handle_all(
+            [&r]() -> leaf::result<int>
             {
-                (void) r.value();
+                BOOST_LEAF_CHECK(std::move(r));
                 return 0;
             },
             []( info<2> const & x )
@@ -125,7 +127,7 @@ int main()
 {
     test( []
     {
-        return leaf::try_handle_some(
+        return leaf::try_catch(
             []() -> leaf::result<int>
             {
                 leaf::throw_exception(errc_a::a0, info<1>{1}, info<3>{3});
@@ -138,7 +140,7 @@ int main()
 
     test( []
     {
-        return leaf::try_handle_some(
+        return leaf::try_catch(
             []() -> leaf::result<void>
             {
                 leaf::throw_exception(errc_a::a0, info<1>{1}, info<3>{3});
@@ -151,7 +153,7 @@ int main()
 
     test( []
     {
-        return leaf::try_handle_some(
+        return leaf::try_catch(
             []() -> leaf::result<int>
             {
                 auto load = leaf::on_error(errc_a::a0, info<1>{1}, info<3>{3});
@@ -165,7 +167,7 @@ int main()
 
     test( []
     {
-        return leaf::try_handle_some(
+        return leaf::try_catch(
             []() -> leaf::result<void>
             {
                 auto load = leaf::on_error(errc_a::a0, info<1>{1}, info<3>{3});
@@ -179,7 +181,7 @@ int main()
 
     test( []
     {
-        return leaf::try_handle_some(
+        return leaf::try_catch(
             []() -> leaf::result<int>
             {
                 auto load = leaf::on_error(errc_a::a0, info<1>{1}, info<3>{3});
@@ -193,7 +195,7 @@ int main()
 
     test( []
     {
-        return leaf::try_handle_some(
+        return leaf::try_catch(
             []() -> leaf::result<void>
             {
                 auto load = leaf::on_error(errc_a::a0, info<1>{1}, info<3>{3});

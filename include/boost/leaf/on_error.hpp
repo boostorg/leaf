@@ -205,7 +205,7 @@ namespace leaf_detail
 }
 
 template <class... Item>
-BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR inline
+BOOST_LEAF_ATTRIBUTE_NODISCARD BOOST_LEAF_CONSTEXPR inline
 leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...>
 on_error( Item && ... i )
 {

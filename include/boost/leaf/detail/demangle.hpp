@@ -34,11 +34,11 @@ template <class Name>
 inline char const * type()
 {
     using leaf_detail::check_prefix;
-char const * t =
+    char const * t =
 #ifdef __FUNCSIG__
-    __FUNCSIG__;
+        __FUNCSIG__;
 #else
-    __PRETTY_FUNCTION__;
+        __PRETTY_FUNCTION__;
 #endif
 #if defined(__clang__)
     BOOST_LEAF_ASSERT(check_prefix(t,"const char *boost::leaf::type() ")==t+32);

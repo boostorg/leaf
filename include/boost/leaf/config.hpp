@@ -102,10 +102,6 @@
 #   error BOOST_LEAF_CFG_CAPTURE must be 0 or 1.
 #endif
 
-#if BOOST_LEAF_CFG_DIAGNOSTICS && !BOOST_LEAF_CFG_STD_STRING
-#   error BOOST_LEAF_CFG_DIAGNOSTICS requires the use of std::string
-#endif
-
 #if BOOST_LEAF_CFG_WIN32!=0 && BOOST_LEAF_CFG_WIN32!=1
 #   error BOOST_LEAF_CFG_WIN32 must be 0 or 1.
 #endif
@@ -114,8 +110,12 @@
 #   error BOOST_LEAF_CFG_GNUC_STMTEXPR must be 0 or 1.
 #endif
 
+#if BOOST_LEAF_CFG_DIAGNOSTICS && !BOOST_LEAF_CFG_STD_STRING
+#   error BOOST_LEAF_CFG_DIAGNOSTICS requires BOOST_LEAF_CFG_STD_STRING, which has been disabled.
+#endif
+
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR && !BOOST_LEAF_CFG_STD_STRING
-#   error BOOST_LEAF_CFG_STD_SYSTEM_ERROR != 0 requires BOOST_LEAF_CFG_STD_STRING != 0
+#   error BOOST_LEAF_CFG_STD_SYSTEM_ERROR requires BOOST_LEAF_CFG_STD_STRING, which has been disabled.
 #endif
 
 ////////////////////////////////////////
@@ -209,12 +209,18 @@
 
 ////////////////////////////////////////
 
-#ifndef BOOST_LEAF_NODISCARD
-#   if __cplusplus >= 201703L
-#       define BOOST_LEAF_NODISCARD [[nodiscard]]
-#   else
-#       define BOOST_LEAF_NODISCARD
+#if defined(__has_attribute) && defined(__SUNPRO_CC) && (__SUNPRO_CC > 0x5130)
+#   if __has_attribute(nodiscard)
+#       define BOOST_LEAF_ATTRIBUTE_NODISCARD [[nodiscard]]
 #   endif
+#elif defined(__has_cpp_attribute)
+    //clang-6 accepts [[nodiscard]] with -std=c++14, but warns about it -pedantic
+#   if __has_cpp_attribute(nodiscard) && !(defined(__clang__) && (__cplusplus < 201703L)) && !(defined(__GNUC__) && (__cplusplus < 201100))
+#       define BOOST_LEAF_ATTRIBUTE_NODISCARD [[nodiscard]]
+#   endif
+#endif
+#ifndef BOOST_LEAF_ATTRIBUTE_NODISCARD
+#   define BOOST_LEAF_ATTRIBUTE_NODISCARD
 #endif
 
 ////////////////////////////////////////

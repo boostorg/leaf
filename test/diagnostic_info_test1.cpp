@@ -93,8 +93,6 @@ int main()
                 printable_info_non_printable_payload(),
                 non_printable_info_printable_payload(),
                 non_printable_info_non_printable_payload(),
-                unexpected_test<1>{1},
-                unexpected_test<2>{2},
                 enum_class_payload{},
                 leaf::e_errno{ENOENT} );
         },
@@ -108,14 +106,12 @@ int main()
             leaf::e_errno,
             leaf::error_info const & unmatched )
         {
-#if BOOST_LEAF_CFG_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRINfG
             std::ostringstream st;
             st << unmatched;
             std::string s = st.str();
             std::cout << s << std::endl;
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-            BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
-#endif
+            BOOST_TEST_NE(s.find("Error ID: "), s.npos);
 #endif
         },
         []()
@@ -123,8 +119,7 @@ int main()
             BOOST_ERROR("Bad error dispatch");
         } );
 
-    std::cout << __LINE__  << " ----\n";
-
+    std::cout << __LINE__  << " ---- diagnostic_info\n";
     leaf::try_handle_all(
         []() -> leaf::result<void>
         {
@@ -133,8 +128,6 @@ int main()
                 printable_info_non_printable_payload(),
                 non_printable_info_printable_payload(),
                 non_printable_info_non_printable_payload(),
-                unexpected_test<1>{1},
-                unexpected_test<2>{2},
                 enum_class_payload{},
                 leaf::e_errno{ENOENT} );
         },
@@ -153,21 +146,18 @@ int main()
             st << unmatched;
             std::string s = st.str();
             std::cout << s << std::endl;
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-            BOOST_TEST_NE(s.find("leaf::diagnostic_info for Error ID = "), s.npos);
-            BOOST_TEST_NE(s.find("e_source_location"), s.npos);
-            BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
-            BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
-            BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
-            BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
-            BOOST_TEST_NE(s.find("enum_class_payload"), s.npos);
-            BOOST_TEST_NE(s.find("Detected 2 attempts"), s.npos);
-            BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
-            BOOST_TEST_EQ(s.find("unexpected_test<2>"), s.npos);
-#else
-            BOOST_TEST_NE(s.find("leaf::diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1"), s.npos);
-            BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
-#endif
+            BOOST_TEST_NE(s.find("Error ID: "), s.npos);
+            if( BOOST_LEAF_CFG_DIAGNOSTICS )
+            {
+                BOOST_TEST_NE(s.find("e_source_location"), s.npos);
+                BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
+                BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
+                BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
+                BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
+                BOOST_TEST_NE(s.find("enum_class_payload"), s.npos);
+            }
+            else
+                BOOST_TEST_NE(s.find("diagnostic_info not available due to BOOST_LEAF_CFG_DIAGNOSTICS=0"), s.npos);
 #endif
         },
         []()
@@ -175,8 +165,7 @@ int main()
             BOOST_ERROR("Bad error dispatch");
         } );
 
-    std::cout << __LINE__  << " ----\n";
-
+    std::cout << __LINE__  << " ---- verbose_diagnostic_info\n";
     leaf::try_handle_all(
         []() -> leaf::result<void>
         {
@@ -205,23 +194,29 @@ int main()
             st << di;
             std::string s = st.str();
             std::cout << s << std::endl;
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-            BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info for Error ID = "), s.npos);
-            BOOST_TEST_NE(s.find("e_source_location"), s.npos);
-            BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
-            BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
-            BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
-            BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
-            BOOST_TEST_NE(s.find("enum_class"), s.npos);
-            BOOST_TEST_NE(s.find("Unhandled error objects:"), s.npos);
-            BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
-            BOOST_TEST_NE(s.find("unexpected_test<2>"), s.npos);
-            BOOST_TEST_NE(s.find(": 1"), s.npos);
-            BOOST_TEST_NE(s.find(": 2"), s.npos);
-#else
-            BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1"), s.npos);
-            BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
-#endif
+            BOOST_TEST_NE(s.find("Error ID: "), s.npos);
+            if( BOOST_LEAF_CFG_DIAGNOSTICS )
+            {
+                BOOST_TEST_NE(s.find("e_source_location"), s.npos);
+                BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
+                BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
+                BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
+                BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
+                BOOST_TEST_NE(s.find("enum_class"), s.npos);
+                BOOST_TEST_EQ(s.find("dynamic_allocator"), s.npos);
+                if( BOOST_LEAF_CFG_CAPTURE )
+                {
+                    BOOST_TEST_NE(s.find("Unhandled error objects:"), s.npos);
+                    BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
+                    BOOST_TEST_NE(s.find("unexpected_test<2>"), s.npos);
+                    BOOST_TEST_NE(s.find(": 1"), s.npos);
+                    BOOST_TEST_NE(s.find(": 2"), s.npos);
+                }
+                else
+                    BOOST_TEST_NE(s.find("verbose_diagnostic_info not available due to BOOST_LEAF_CFG_CAPTURE=0"), s.npos);
+            }
+            else
+                BOOST_TEST_NE(s.find("verbose_diagnostic_info not available due to BOOST_LEAF_CFG_DIAGNOSTICS=0"), s.npos);
 #endif
         },
         []()
@@ -233,8 +228,7 @@ int main()
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
-    std::cout << __LINE__  << " ----\n";
-
+    std::cout << __LINE__  << " ---- error_info\n";
     leaf::try_catch(
         []
         {
@@ -243,8 +237,6 @@ int main()
                 printable_info_non_printable_payload(),
                 non_printable_info_printable_payload(),
                 non_printable_info_non_printable_payload(),
-                unexpected_test<1>{1},
-                unexpected_test<2>{2},
                 enum_class_payload{},
                 leaf::e_errno{ENOENT} );
         },
@@ -263,16 +255,15 @@ int main()
             st << unmatched;
             std::string s = st.str();
             std::cout << s << std::endl;
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-            BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
-            BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
-            BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
-#endif
+            if( BOOST_LEAF_CFG_DIAGNOSTICS )
+            {
+                BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
+                BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
+            }
 #endif
         } );
 
-    std::cout << __LINE__  << " ----\n";
-
+    std::cout << __LINE__  << " ---- diagnostic_info\n";
     leaf::try_catch(
         []
         {
@@ -282,8 +273,6 @@ int main()
                 non_printable_info_printable_payload(),
                 non_printable_info_non_printable_payload(),
                 enum_class_payload{},
-                unexpected_test<1>{1},
-                unexpected_test<2>{2},
                 leaf::e_errno{ENOENT} );
         },
         [](
@@ -301,30 +290,24 @@ int main()
             st << unmatched;
             std::string s = st.str();
             std::cout << s << std::endl;
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-            BOOST_TEST_NE(s.find("leaf::diagnostic_info for Error ID = "), s.npos);
+            BOOST_TEST_NE(s.find("Error ID: "), s.npos);
             BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
             BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
-            BOOST_TEST_NE(s.find("e_source_location"), s.npos);
-            BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
-            BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
-            BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
-            BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
-            BOOST_TEST_NE(s.find("enum_class_payload"), s.npos);
-            BOOST_TEST_NE(s.find("Detected 2 attempts"), s.npos);
-            BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
-            BOOST_TEST_EQ(s.find("unexpected_test<2>"), s.npos);
-#else
-            BOOST_TEST_NE(s.find("leaf::diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1"), s.npos);
-            BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
-            BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
-            BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
-#endif
+            if( BOOST_LEAF_CFG_DIAGNOSTICS )
+            {
+                BOOST_TEST_NE(s.find("e_source_location"), s.npos);
+                BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
+                BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
+                BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
+                BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
+                BOOST_TEST_NE(s.find("enum_class_payload"), s.npos);
+            }
+            else
+                BOOST_TEST_NE(s.find("diagnostic_info not available"), s.npos);
 #endif
         } );
 
-    std::cout << __LINE__  << " ----\n";
-
+    std::cout << __LINE__  << " ---- verbose_diagnostic_info\n";
     leaf::try_catch(
         []
         {
@@ -353,27 +336,31 @@ int main()
             st << di;
             std::string s = st.str();
             std::cout << s << std::endl;
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-            BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info for Error ID = "), s.npos);
+            BOOST_TEST_NE(s.find("Error ID: "), s.npos);
             BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
             BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
-            BOOST_TEST_NE(s.find("e_source_location"), s.npos);
-            BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
-            BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
-            BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
-            BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
-            BOOST_TEST_NE(s.find("enum_class_payload"), s.npos);
-            BOOST_TEST_NE(s.find("Unhandled error objects:"), s.npos);
-            BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
-            BOOST_TEST_NE(s.find("unexpected_test<2>"), s.npos);
-            BOOST_TEST_NE(s.find(": 1"), s.npos);
-            BOOST_TEST_NE(s.find(": 2"), s.npos);
-#else
-            BOOST_TEST_NE(s.find("leaf::verbose_diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1"), s.npos);
-            BOOST_TEST_NE(s.find("leaf::error_info: Error ID = "), s.npos);
-            BOOST_TEST_NE(s.find("Exception dynamic type: "), s.npos);
-            BOOST_TEST_NE(s.find("std::exception::what(): my_exception"), s.npos);
-#endif
+            if( BOOST_LEAF_CFG_DIAGNOSTICS )
+            {
+                BOOST_TEST_NE(s.find("e_source_location"), s.npos);
+                BOOST_TEST_NE(s.find("*** printable_info_printable_payload printed printable_payload ***"), s.npos);
+                BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
+                BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
+                BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
+                BOOST_TEST_NE(s.find("enum_class_payload"), s.npos);
+                BOOST_TEST_EQ(s.find("dynamic_allocator"), s.npos);
+                if( BOOST_LEAF_CFG_CAPTURE )
+                {
+                    BOOST_TEST_NE(s.find("Unhandled error objects:"), s.npos);
+                    BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
+                    BOOST_TEST_NE(s.find("unexpected_test<2>"), s.npos);
+                    BOOST_TEST_NE(s.find(": 1"), s.npos);
+                    BOOST_TEST_NE(s.find(": 2"), s.npos);
+                }
+                else
+                    BOOST_TEST_NE(s.find("verbose_diagnostic_info not available due to BOOST_LEAF_CFG_CAPTURE=0"), s.npos);
+            }
+            else
+                BOOST_TEST_NE(s.find("verbose_diagnostic_info not available due to BOOST_LEAF_CFG_DIAGNOSTICS=0"), s.npos);
 #endif
         } );
 

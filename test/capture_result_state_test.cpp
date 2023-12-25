@@ -20,7 +20,6 @@ int main()
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
 #   include "leaf.hpp"
 #else
-#   include <boost/leaf/capture.hpp>
 #   include <boost/leaf/result.hpp>
 #   include <boost/leaf/handle_errors.hpp>
 #endif
@@ -63,46 +62,48 @@ struct info
 
 int main()
 {
-    auto error_handlers = std::make_tuple(
-        []( info<1>, info<3> )
-        {
-            return 42;
-        },
-        []
-        {
-            return -42;
-        } );
-
     {
-        leaf::context_ptr ctx = leaf::make_shared_context(error_handlers);
-        auto r = leaf::capture(
-            ctx,
+        leaf::result<int> r = leaf::try_handle_some(
             []() -> leaf::result<int>
             {
                 return leaf::new_error( info<1>{}, info<3>{} );
+            },
+            [](leaf::dynamic_capture const & cap) -> leaf::result<int>
+            {
+                BOOST_TEST(!cap.empty());
+                BOOST_TEST_EQ(cap.size(), 2);
+                return cap;
             } );
         BOOST_TEST_EQ(count, 2);
 
 #if BOOST_LEAF_CFG_STD_STRING
         {
             std::ostringstream st;
-            st << *ctx;
+            st << r;
             std::string s = st.str();
             std::cout << s << std::endl;
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-            BOOST_TEST_NE(s.find("info<1> instance"), s.npos);
-            BOOST_TEST_NE(s.find("info<3> instance"), s.npos);
-#endif
+            if( BOOST_LEAF_CFG_DIAGNOSTICS )
+            {
+                BOOST_TEST_NE(s.find("info<1> instance"), s.npos);
+                BOOST_TEST_NE(s.find("info<3> instance"), s.npos);
+            }
         }
 #endif
 
-        int answer = leaf::try_handle_all(
-            [&r]
+        int ret = leaf::try_handle_all(
+            [&]
             {
                 return std::move(r);
             },
-            error_handlers);
-        BOOST_TEST_EQ(answer, 42);
+            []( info<1>, info<3> )
+            {
+                return 42;
+            },
+            []
+            {
+                return -42;
+            } );
+        BOOST_TEST_EQ(ret, 42);
     }
     BOOST_TEST_EQ(count, 0);
 

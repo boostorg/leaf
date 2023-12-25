@@ -44,30 +44,12 @@ int main()
 {
     int const task_count = 42;
 
-    // The error_handlers are used in this thread (see leaf::try_catch below).
-    // The arguments passed to individual lambdas are transported from the
-    // worker thread to the main thread automatically.
-    auto error_handlers = std::make_tuple(
-        []( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
-        {
-            std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
-        },
-        []( leaf::diagnostic_info const & unmatched )
-        {
-            std::cerr <<
-                "Unknown failure detected" << std::endl <<
-                "Cryptic diagnostic information follows" << std::endl <<
-                unmatched;
-        } );
-
     // Container to collect the generated std::future objects.
-    std::vector<std::future<task_result>> fut;
+    std::vector<std::future<leaf::result<task_result>>> fut;
 
     // Launch the tasks, but rather than launching the task function directly,
-    // we launch a wrapper function which calls leaf::capture, passing a context
-    // object that will hold the error objects reported from the task in case it
-    // throws. The error types the context is able to hold statically are
-    // automatically deduced from the type of the error_handlers tuple.
+    // we use leaf::try_catch in compbination with leaf::dynamic_capture:
+    // in case of a failure, the returned leaf::result<> will capture all error objects.
     std::generate_n( std::back_inserter(fut), task_count,
         [&]
         {
@@ -75,7 +57,15 @@ int main()
                 std::launch::async,
                 [&]
                 {
-                    return leaf::capture(leaf::make_shared_context(error_handlers), &task);
+                    return leaf::try_catch(
+                        [&]() -> leaf::result<task_result>
+                        {
+                            return task();
+                        },
+                        []( leaf::dynamic_capture const & cap ) -> leaf::result<task_result>
+                        {
+                            return cap;
+                        } );
                 } );
         } );
 
@@ -87,12 +77,22 @@ int main()
         leaf::try_catch(
             [&]
             {
-                task_result r = f.get();
+                task_result r = f.get().value();
 
                 // Success! Use r to access task_result.
                 std::cout << "Success!" << std::endl;
                 (void) r; // Presumably we'll somehow use the task_result.
             },
-            error_handlers );
+            []( e_failure_info1 const & v1, e_failure_info2 const & v2, e_thread_id const & tid )
+            {
+                std::cerr << "Error in thread " << tid.value << "! failure_info1: " << v1.value << ", failure_info2: " << v2.value << std::endl;
+            },
+            []( leaf::diagnostic_info const & unmatched )
+            {
+                std::cerr <<
+                    "Unknown failure detected" << std::endl <<
+                    "Cryptic diagnostic information follows" << std::endl <<
+                    unmatched;
+            } );
     }
 }

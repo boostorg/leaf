@@ -5,7 +5,7 @@
 
 #include <boost/leaf/config.hpp>
 
-#if !BOOST_LEAF_CFG_DIAGNOSTICS && BOOST_LEAF_CFG_STD_STRING
+#if !BOOST_LEAF_CFG_DIAGNOSTICS || !BOOST_LEAF_CFG_STD_STRING
 
 #include <iostream>
 

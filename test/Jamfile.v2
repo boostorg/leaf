@@ -25,13 +25,12 @@ project
         <define>BOOST_LEAF_BOOST_AVAILABLE
         <threading>single:<define>BOOST_LEAF_NO_THREADS
         <toolset>gcc:<cxxflags>"-Wno-delete-non-virtual-dtor -Wno-parentheses"
-        <toolset>clang:<cxxflags>"-Wno-unused-variable -Wno-delete-non-virtual-dtor -Wno-non-virtual-dtor -Wno-delete-non-abstract-non-virtual-dtor -Wno-dangling-else"
+        <toolset>clang:<cxxflags>"-Wno-unused-variable -Wno-delete-non-virtual-dtor -Wno-non-virtual-dtor -Wno-dangling-else"
         <toolset>darwin:<cxxflags>"-Wno-unused-variable -Wno-delete-non-virtual-dtor -Wno-non-virtual-dtor -Wno-delete-non-abstract-non-virtual-dtor -Wno-dangling-else"
         <toolset>msvc:<cxxflags>"-wd 4267 -wd 4996 -wd 4244"
         <include>../../..
     ;
 
-compile _hpp_capture_test.cpp ;
 compile _hpp_common_test.cpp ;
 compile _hpp_config_test.cpp ;
 compile _hpp_context_test.cpp ;
@@ -57,10 +56,13 @@ run BOOST_LEAF_CHECK_test.cpp ;
 run boost_exception_test.cpp ;
 run capture_exception_async_test.cpp ;
 run capture_exception_result_async_test.cpp ;
+run capture_exception_result_unload_test.cpp ;
 run capture_exception_state_test.cpp ;
 run capture_exception_unload_test.cpp ;
 run capture_result_async_test.cpp ;
 run capture_result_state_test.cpp ;
+run context_activator_test.cpp ;
+run context_deduction_test.cpp ;
 run capture_result_unload_test.cpp ;
 run ctx_handle_all_test.cpp ;
 run ctx_handle_some_test.cpp ;
@@ -78,6 +80,8 @@ run diagnostic_info_test2.cpp ;
 run diagnostic_info_test3.cpp ;
 run diagnostic_info_test4.cpp ;
 run diagnostic_info_test5.cpp ;
+run dynamic_capture_print_test.cpp ;
+run dynamic_capture_test.cpp ;
 run e_errno_test.cpp ;
 run e_LastError_test.cpp ;
 run error_code_test.cpp ;
@@ -112,13 +116,13 @@ run result_load_test.cpp ;
 run result_print_test.cpp ;
 run result_ref_test.cpp ;
 run result_state_test.cpp ;
-run context_deduction_test.cpp ;
 run tls_array_alloc_test1.cpp ;
 run tls_array_alloc_test2.cpp ;
 run tls_array_alloc_test3.cpp ;
 run tls_array_test.cpp ;
 run to_variant_test.cpp ;
 run try_catch_error_id_test.cpp ;
+run try_catch_system_error_test.cpp ;
 run try_catch_test.cpp ;
 run try_exception_and_result_test.cpp ;
 
@@ -146,14 +150,11 @@ compile-fail _compile-fail-result_3.cpp ;
 compile-fail _compile-fail-result_4.cpp ;
 compile-fail _compile-fail-verbose_diagnostic_info.cpp ;
 
-exe capture_in_exception : ../example/capture_in_exception.cpp : <threading>single:<build>no <exception-handling>off:<build>no <variant>leaf_debug_capture0:<build>no <variant>leaf_release_capture0:<build>no ;
-exe capture_in_result : ../example/capture_in_result.cpp : <threading>single:<build>no <variant>leaf_debug_capture0:<build>no <variant>leaf_release_capture0:<build>no <variant>leaf_debug_embedded:<build>no <variant>leaf_release_embedded:<build>no ;
+exe dynamic_capture_eh : ../example/dynamic_capture_eh.cpp : <threading>single:<build>no <exception-handling>off:<build>no <variant>leaf_debug_capture0:<build>no <variant>leaf_release_capture0:<build>no ;
+exe dynamic_capture_result : ../example/dynamic_capture_result.cpp : <threading>single:<build>no <variant>leaf_debug_capture0:<build>no <variant>leaf_release_capture0:<build>no <variant>leaf_debug_embedded:<build>no <variant>leaf_release_embedded:<build>no ;
 exe error_log : ../example/error_log.cpp : <exception-handling>off:<build>no ;
 exe error_trace : ../example/error_trace.cpp : <exception-handling>off:<build>no ;
 exe exception_to_result : ../example/exception_to_result.cpp : <exception-handling>off:<build>no ;
-# exe lua_callback_result : ../example/lua_callback_result.cpp : <exception-handling>off:<build>no ;
-# exe lua_callback_eh : ../example/lua_callback_eh.cpp : <exception-handling>off:<build>no ;
 exe print_file_eh : ../example/print_file/print_file_eh.cpp : <exception-handling>off:<build>no ;
-# exe print_file_outcome_result : ../example/print_file/print_file_outcome_result.cpp : <exception-handling>off:<build>no <cxxstd>11:<build>no ;
 exe print_file_result : ../example/print_file/print_file_result.cpp : <exception-handling>off:<build>no ;
 exe print_half : ../example/print_half.cpp : <exception-handling>off:<build>no ;

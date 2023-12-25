@@ -24,7 +24,7 @@ int main()
 {
     errno = ENOENT;
 #if BOOST_LEAF_CFG_STD_STRING
-    std::stringstream ss;
+    std::ostringstream ss;
     ss << leaf::e_errno{};
     std::string s = ss.str();
     std::cout << s << std::endl;

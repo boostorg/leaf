@@ -2,8 +2,8 @@
 
 * [print_file](./print_file): The complete example from the [Five Minute Introduction](https://boostorg.github.io/leaf/#introduction). This directory contains several versions of the same program, each using a different error handling style.
 
-* [capture_in_result.cpp](https://github.com/boostorg/leaf/blob/master/example/capture_in_result.cpp?ts=4): Shows how to transport error objects between threads in a `leaf::result<T>` object.
-* [capture_in_exception.cpp](https://github.com/boostorg/leaf/blob/master/example/capture_in_exception.cpp?ts=4): Shows how to transport error objects between threads in an exception object.
+* [dynamic_capture_result.cpp](https://github.com/boostorg/leaf/blob/master/example/dynamic_capture_result.cpp?ts=4): Shows how to transport error objects between threads in a `leaf::result<T>` object without using exception handling.
+* [dynamic_capture_eh.cpp](https://github.com/boostorg/leaf/blob/master/example/dynamic_capture_eh.cpp?ts=4): Shows how to transport error objects between threads in an a `leaf::result<T>` object using exception handling.
 * [lua_callback_result.cpp](https://github.com/boostorg/leaf/blob/master/example/lua_callback_result.cpp?ts=4): Transporting arbitrary error objects through an uncooperative C API.
 * [lua_callback_eh.cpp](https://github.com/boostorg/leaf/blob/master/example/lua_callback_eh.cpp?ts=4): Transporting arbitrary error objects through an uncooperative exception-safe API.
 * [exception_to_result.cpp](https://github.com/boostorg/leaf/blob/master/example/exception_to_result.cpp?ts=4): Demonstrates how to transport exceptions through a `noexcept` layer in the program.

@@ -8,6 +8,7 @@
 #else
 #   include <boost/leaf/config.hpp>
 #   include <boost/leaf/handle_errors.hpp>
+#   include <boost/leaf/on_error.hpp>
 #   include <boost/leaf/result.hpp>
 #endif
 
@@ -62,11 +63,12 @@ int main()
         st << e;
         std::string s = st.str();
         std::cout << s << std::endl;
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-        BOOST_TEST_NE(s.find("new_error"), s.npos);
-        BOOST_TEST_NE(s.find("appended: 42"), s.npos);
-        BOOST_TEST_NE(s.find("appended: 43"), s.npos);
-#endif
+        if( BOOST_LEAF_CFG_DIAGNOSTICS && BOOST_LEAF_CFG_CAPTURE )
+        {
+            BOOST_TEST_NE(s.find("new_error"), s.npos);
+            BOOST_TEST_NE(s.find("appended: 42"), s.npos);
+            BOOST_TEST_NE(s.find("appended: 43"), s.npos);
+        }
 #endif
     } );
 

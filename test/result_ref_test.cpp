@@ -7,7 +7,6 @@
 #   include "leaf.hpp"
 #else
 #   include <boost/leaf/result.hpp>
-#   include <boost/leaf/capture.hpp>
 #   include <boost/leaf/handle_errors.hpp>
 #endif
 

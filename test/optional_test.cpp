@@ -300,7 +300,7 @@ void run_tests()
     {
         optional<my_info> x;
         my_info a(42);
-        x.put(10, a);
+        x.load(10, a);
         BOOST_TEST_EQ(object_count, 2);
         BOOST_TEST_EQ(value_count, 2);
         BOOST_TEST(!x.empty());
@@ -316,7 +316,7 @@ void run_tests()
         BOOST_TEST_EQ(object_count, 1);
         BOOST_TEST_EQ(value_count, 1);
         my_info a(42);
-        x.put(10, a);
+        x.load(10, a);
         BOOST_TEST_EQ(object_count, 2);
         BOOST_TEST_EQ(value_count, 2);
         BOOST_TEST(!x.empty());
@@ -329,7 +329,7 @@ void run_tests()
     {
         optional<my_info> x;
         BOOST_TEST(x.empty());
-        x.put(10, my_info(42));
+        x.load(10, my_info(42));
         BOOST_TEST_EQ(object_count, 1);
         BOOST_TEST_EQ(value_count, 1);
         BOOST_TEST(!x.empty());
@@ -344,7 +344,7 @@ void run_tests()
         BOOST_TEST(!x.empty());
         BOOST_TEST_EQ(object_count, 1);
         BOOST_TEST_EQ(value_count, 1);
-        x.put(10, my_info(42));
+        x.load(10, my_info(42));
         BOOST_TEST(!x.empty());
         BOOST_TEST_EQ(object_count, 1);
         BOOST_TEST_EQ(value_count, 1);

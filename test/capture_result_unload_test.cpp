@@ -20,9 +20,9 @@ int main()
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
 #   include "leaf.hpp"
 #else
-#   include <boost/leaf/capture.hpp>
 #   include <boost/leaf/result.hpp>
 #   include <boost/leaf/handle_errors.hpp>
+#   include <boost/leaf/on_error.hpp>
 #endif
 
 #include "_test_ec.hpp"
@@ -126,21 +126,55 @@ int main()
 {
     test( []
     {
-        return leaf::capture(
-            std::make_shared<leaf::leaf_detail::polymorphic_context_impl<leaf::context<info<1>, info<2>, info<3>>>>(),
+        return leaf::try_handle_some(
             []() -> leaf::result<int>
             {
                 return leaf::new_error(errc_a::a0, info<1>{1}, info<3>{3});
+            },
+            []( leaf::dynamic_capture const & cap ) -> leaf::result<int>
+            {
+                return cap;
             } );
      } );
 
     test( []
     {
-        return leaf::capture(
-            std::make_shared<leaf::leaf_detail::polymorphic_context_impl<leaf::context<info<1>, info<2>, info<3>>>>(),
+        return leaf::try_handle_some(
             []() -> leaf::result<void>
             {
                 return leaf::new_error(errc_a::a0, info<1>{1}, info<3>{3});
+            },
+            []( leaf::dynamic_capture const & cap ) -> leaf::result<void>
+            {
+                return cap;
+            } );
+     } );
+
+    test( []
+    {
+        return leaf::try_handle_some(
+            []() -> leaf::result<int>
+            {
+                auto load = leaf::on_error(errc_a::a0, info<1>{1}, info<3>{3});
+                return leaf::new_error();
+            },
+            []( leaf::dynamic_capture const & cap ) -> leaf::result<int>
+            {
+                return cap;
+            } );
+     } );
+
+    test( []
+    {
+        return leaf::try_handle_some(
+            []() -> leaf::result<void>
+            {
+                auto load = leaf::on_error(errc_a::a0, info<1>{1}, info<3>{3});
+                return leaf::new_error();
+            },
+            []( leaf::dynamic_capture const & cap ) -> leaf::result<void>
+            {
+                return cap;
             } );
      } );
 

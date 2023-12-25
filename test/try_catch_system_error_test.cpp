@@ -22,6 +22,7 @@ int main()
 #else
 #   include <boost/leaf/handle_errors.hpp>
 #   include <boost/leaf/exception.hpp>
+#   include <boost/leaf/on_error.hpp>
 #   include <boost/leaf/pred.hpp>
 #endif
 
