@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 11/06/2023 from https://github.com/boostorg/leaf/tree/d8aae79.
+// Generated on 01/07/2024 from https://github.com/boostorg/leaf/tree/b4093c5.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
@@ -117,10 +117,6 @@
 #   error BOOST_LEAF_CFG_CAPTURE must be 0 or 1.
 #endif
 
-#if BOOST_LEAF_CFG_DIAGNOSTICS && !BOOST_LEAF_CFG_STD_STRING
-#   error BOOST_LEAF_CFG_DIAGNOSTICS requires the use of std::string
-#endif
-
 #if BOOST_LEAF_CFG_WIN32!=0 && BOOST_LEAF_CFG_WIN32!=1
 #   error BOOST_LEAF_CFG_WIN32 must be 0 or 1.
 #endif
@@ -129,8 +125,12 @@
 #   error BOOST_LEAF_CFG_GNUC_STMTEXPR must be 0 or 1.
 #endif
 
+#if BOOST_LEAF_CFG_DIAGNOSTICS && !BOOST_LEAF_CFG_STD_STRING
+#   error BOOST_LEAF_CFG_DIAGNOSTICS requires BOOST_LEAF_CFG_STD_STRING, which has been disabled.
+#endif
+
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR && !BOOST_LEAF_CFG_STD_STRING
-#   error BOOST_LEAF_CFG_STD_SYSTEM_ERROR != 0 requires BOOST_LEAF_CFG_STD_STRING != 0
+#   error BOOST_LEAF_CFG_STD_SYSTEM_ERROR requires BOOST_LEAF_CFG_STD_STRING, which has been disabled.
 #endif
 
 ////////////////////////////////////////
@@ -224,12 +224,18 @@
 
 ////////////////////////////////////////
 
-#ifndef BOOST_LEAF_NODISCARD
-#   if __cplusplus >= 201703L
-#       define BOOST_LEAF_NODISCARD [[nodiscard]]
-#   else
-#       define BOOST_LEAF_NODISCARD
+#if defined(__has_attribute) && defined(__SUNPRO_CC) && (__SUNPRO_CC > 0x5130)
+#   if __has_attribute(nodiscard)
+#       define BOOST_LEAF_ATTRIBUTE_NODISCARD [[nodiscard]]
 #   endif
+#elif defined(__has_cpp_attribute)
+    //clang-6 accepts [[nodiscard]] with -std=c++14, but warns about it -pedantic
+#   if __has_cpp_attribute(nodiscard) && !(defined(__clang__) && (__cplusplus < 201703L)) && !(defined(__GNUC__) && (__cplusplus < 201100))
+#       define BOOST_LEAF_ATTRIBUTE_NODISCARD [[nodiscard]]
+#   endif
+#endif
+#ifndef BOOST_LEAF_ATTRIBUTE_NODISCARD
+#   define BOOST_LEAF_ATTRIBUTE_NODISCARD
 #endif
 
 ////////////////////////////////////////
@@ -239,6 +245,16 @@
 #       define BOOST_LEAF_CONSTEXPR constexpr
 #   else
 #       define BOOST_LEAF_CONSTEXPR
+#   endif
+#endif
+
+////////////////////////////////////////
+
+#ifndef BOOST_LEAF_DEPRECATED
+#   if __cplusplus > 201402L
+#       define BOOST_LEAF_DEPRECATED(msg) [[deprecated(msg)]]
+#   else
+#       define BOOST_LEAF_DEPRECATED(msg)
 #   endif
 #endif
 
@@ -293,6 +309,11 @@
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+// LEAF requires thread local storage support for pointers and for uin32_t values.
+
+// This header implements "thread local" storage via FreeTOS functions
+// pvTaskGetThreadLocalStoragePointer / pvTaskSetThreadLocalStoragePointer
 
 #include <task.h>
 
@@ -413,14 +434,20 @@ namespace tls
     {
         static int c_;
 
-    public:
-
-        static BOOST_LEAF_CFG_TLS_INDEX_TYPE next()
+        static BOOST_LEAF_CFG_TLS_INDEX_TYPE next_() noexcept
         {
             int idx = ++c_;
             BOOST_LEAF_ASSERT(idx > (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX));
             BOOST_LEAF_ASSERT(idx < (BOOST_LEAF_CFG_TLS_ARRAY_SIZE));
             return idx;
+        }
+
+    public:
+
+        template <class T>
+        static BOOST_LEAF_CFG_TLS_INDEX_TYPE next() noexcept
+        {
+            return next_(); // Set breakpoint here to monitor TLS index allocation for T.
         }
     };
 
@@ -443,7 +470,7 @@ namespace tls
     BOOST_LEAF_CFG_TLS_INDEX_TYPE tls_index<T>::idx = BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX;
 
     template <class T>
-    BOOST_LEAF_CFG_TLS_INDEX_TYPE const alloc_tls_index<T>::idx = tls_index<T>::idx = index_counter<>::next();
+    BOOST_LEAF_CFG_TLS_INDEX_TYPE const alloc_tls_index<T>::idx = tls_index<T>::idx = index_counter<>::next<T>();
 
     ////////////////////////////////////////
 
@@ -683,7 +710,7 @@ namespace tls
 
 #endif
 // <<< #include <boost/leaf/config/tls.hpp>
-#line 261 "boost/leaf/config.hpp"
+#line 277 "boost/leaf/config.hpp"
 
 ////////////////////////////////////////
 
@@ -699,10 +726,21 @@ namespace tls
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// >>> #include <boost/leaf/exception.hpp>
-#line 1 "boost/leaf/exception.hpp"
-#ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
-#define BOOST_LEAF_EXCEPTION_HPP_INCLUDED
+// >>> #include <boost/leaf/handle_errors.hpp>
+#line 1 "boost/leaf/handle_errors.hpp"
+#ifndef BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
+#define BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
+
+// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+// Expanded at line 16: #include <boost/leaf/config.hpp>
+// >>> #include <boost/leaf/context.hpp>
+#line 1 "boost/leaf/context.hpp"
+#ifndef BOOST_LEAF_CONTEXT_HPP_INCLUDED
+#define BOOST_LEAF_CONTEXT_HPP_INCLUDED
 
 // Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
 
@@ -791,7 +829,7 @@ namespace leaf_detail
             reset();
             if( int key = x.key() )
             {
-                put(key, x.value_);
+                load(key, x.value_);
                 key_ = key;
             }
             return *this;
@@ -802,7 +840,7 @@ namespace leaf_detail
             reset();
             if( int key = x.key() )
             {
-                put(key, std::move(x.value_));
+                load(key, std::move(x.value_));
                 x.reset();
             }
             return *this;
@@ -832,7 +870,7 @@ namespace leaf_detail
             }
         }
 
-        BOOST_LEAF_CONSTEXPR T & put( int key )
+        BOOST_LEAF_CONSTEXPR T & load( int key )
         {
             BOOST_LEAF_ASSERT(key);
             reset();
@@ -841,7 +879,7 @@ namespace leaf_detail
             return value_;
         }
 
-        BOOST_LEAF_CONSTEXPR T & put( int key, T const & v )
+        BOOST_LEAF_CONSTEXPR T & load( int key, T const & v )
         {
             BOOST_LEAF_ASSERT(key);
             reset();
@@ -850,7 +888,7 @@ namespace leaf_detail
             return value_;
         }
 
-        BOOST_LEAF_CONSTEXPR T & put( int key, T && v ) noexcept
+        BOOST_LEAF_CONSTEXPR T & load( int key, T && v ) noexcept
         {
             BOOST_LEAF_ASSERT(key);
             reset();
@@ -1319,6 +1357,134 @@ namespace leaf_detail
 #endif
 // <<< #include <boost/leaf/detail/function_traits.hpp>
 #line 12 "boost/leaf/error.hpp"
+// >>> #include <boost/leaf/detail/capture_list.hpp>
+#line 1 "boost/leaf/detail/capture_list.hpp"
+#ifndef BOOST_LEAF_DETAIL_CAPTURE_HPP_INCLUDED
+#define BOOST_LEAF_DETAIL_CAPTURE_HPP_INCLUDED
+
+// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+// Expanded at line 16: #include <boost/leaf/config.hpp>
+
+#if BOOST_LEAF_CFG_CAPTURE
+
+#include <iosfwd>
+
+namespace boost { namespace leaf {
+
+namespace leaf_detail
+{
+    struct BOOST_LEAF_SYMBOL_VISIBLE tls_tag_id_factory_current_id;
+
+    class capture_list
+    {
+        capture_list( capture_list const & ) = delete;
+        capture_list & operator=( capture_list const & ) = delete;
+
+    protected:
+
+        class node
+        {
+            friend class capture_list;
+
+            virtual void unload( int err_id ) = 0;
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+            virtual void print( std::ostream &, int err_id_to_print ) const = 0;
+#endif
+
+        protected:
+
+            virtual ~node() noexcept
+            {
+            };
+
+            node * next_;
+
+            BOOST_LEAF_CONSTEXPR explicit node( node * * & last ) noexcept:
+                next_(nullptr)
+            {
+                BOOST_LEAF_ASSERT(last != nullptr);
+                *last = this;
+                last = &next_;
+            }
+        } * first_;
+
+        template <class F>
+        BOOST_LEAF_CONSTEXPR void for_each( F f ) const
+        {
+            for( node * p=first_; p; p=p->next_ )
+                f(*p);
+        }
+
+    public:
+
+        BOOST_LEAF_CONSTEXPR explicit capture_list( node * first ) noexcept:
+            first_(first)
+        {
+        }
+
+        BOOST_LEAF_CONSTEXPR capture_list( capture_list && other ) noexcept:
+            first_(other.first_)
+        {
+            other.first_ = nullptr;
+        }
+
+        ~capture_list() noexcept
+        {
+            for( node const * p = first_; p; )
+            {
+                node const * n = p -> next_;
+                delete p;
+                p = n;
+            }
+        }
+
+        void unload( int const err_id )
+        {
+            capture_list moved(first_);
+            first_ = nullptr;
+            tls::write_uint<leaf_detail::tls_tag_id_factory_current_id>(unsigned(err_id));
+            moved.for_each(
+                [err_id]( node & n )
+                {
+                    n.unload(err_id); // last node may throw
+                } );
+        }
+
+        template <class CharT, class Traits>
+        void print( std::basic_ostream<CharT, Traits> & os, char const * title, int const err_id_to_print ) const
+        {
+            BOOST_LEAF_ASSERT(title != nullptr);
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+            if( first_ )
+            {
+                os << title;
+                for_each(
+                    [&os, err_id_to_print]( node const & n )
+                    {
+                        n.print(os, err_id_to_print);
+                    } );
+            }
+#else
+            (void) os;
+            (void) title;
+            (void) err_id_to_print;
+#endif
+        }
+    };
+
+}
+
+} }
+
+#endif
+
+#endif
+// <<< #include <boost/leaf/detail/capture_list.hpp>
+#line 13 "boost/leaf/error.hpp"
 // >>> #include <boost/leaf/detail/print.hpp>
 #line 1 "boost/leaf/detail/print.hpp"
 #ifndef BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
@@ -1368,11 +1534,11 @@ template <class Name>
 inline char const * type()
 {
     using leaf_detail::check_prefix;
-char const * t =
+    char const * t =
 #ifdef __FUNCSIG__
-    __FUNCSIG__;
+        __FUNCSIG__;
 #else
-    __PRETTY_FUNCTION__;
+        __PRETTY_FUNCTION__;
 #endif
 #if defined(__clang__)
     BOOST_LEAF_ASSERT(check_prefix(t,"const char *boost::leaf::type() ")==t+32);
@@ -1642,7 +1808,7 @@ namespace leaf_detail
 
 #endif
 // <<< #include <boost/leaf/detail/print.hpp>
-#line 13 "boost/leaf/error.hpp"
+#line 14 "boost/leaf/error.hpp"
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 #   include <ostream>
@@ -1700,12 +1866,41 @@ namespace leaf_detail
 
 namespace boost { namespace leaf {
 
-class error_id;
+class BOOST_LEAF_SYMBOL_VISIBLE error_id;
 
 namespace leaf_detail
 {
-    struct BOOST_LEAF_SYMBOL_VISIBLE tls_tag_unexpected_enabled_counter;
     struct BOOST_LEAF_SYMBOL_VISIBLE tls_tag_id_factory_current_id;
+
+    template <class=void>
+    struct BOOST_LEAF_SYMBOL_VISIBLE id_factory
+    {
+        static atomic_unsigned_int counter;
+
+        BOOST_LEAF_CONSTEXPR static unsigned generate_next_id() noexcept
+        {
+            auto id = (counter+=4);
+            BOOST_LEAF_ASSERT((id&3)==1);
+            return id;
+        }
+    };
+
+    template <class T>
+    atomic_unsigned_int id_factory<T>::counter(unsigned(-3));
+
+    inline int current_id() noexcept
+    {
+        unsigned id = tls::read_uint<tls_tag_id_factory_current_id>();
+        BOOST_LEAF_ASSERT(id==0 || (id&3)==1);
+        return int(id);
+    }
+
+    inline int new_id() noexcept
+    {
+        unsigned id = id_factory<>::generate_next_id();
+        tls::write_uint<tls_tag_id_factory_current_id>(id);
+        return int(id);
+    }
 
     struct inject_loc
     {
@@ -1728,179 +1923,6 @@ namespace leaf_detail
 
 namespace boost { namespace leaf {
 
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-
-namespace leaf_detail
-{
-    class BOOST_LEAF_SYMBOL_VISIBLE e_unexpected_count
-    {
-    public:
-
-        char const * (*first_type)();
-        int count;
-
-        BOOST_LEAF_CONSTEXPR explicit e_unexpected_count(char const * (*ft)()) noexcept:
-            first_type(ft),
-            count(1)
-        {
-        }
-
-        template <class CharT, class Traits>
-        void print( std::basic_ostream<CharT, Traits> & os ) const
-        {
-            BOOST_LEAF_ASSERT(first_type != nullptr);
-            BOOST_LEAF_ASSERT(count>0);
-            os << "Detected ";
-            if( count==1 )
-                os << "1 attempt to communicate an unexpected error object";
-            else
-                os << count << " attempts to communicate unexpected error objects, the first one";
-            (os << " of type " << first_type() << '\n').flush();
-        }
-    };
-
-    template <>
-    struct diagnostic<e_unexpected_count, false, false>
-    {
-        static constexpr bool is_invisible = true;
-
-        template <class CharT, class Traits>
-        BOOST_LEAF_CONSTEXPR static void print( std::basic_ostream<CharT, Traits> &, e_unexpected_count const &) noexcept { }
-    };
-
-    template <class E>
-    class BOOST_LEAF_SYMBOL_VISIBLE slot;
-
-    class BOOST_LEAF_SYMBOL_VISIBLE e_unexpected_info
-    {
-        e_unexpected_info( e_unexpected_info const & ) = delete;
-        e_unexpected_info & operator=( e_unexpected_info const & ) = delete;
-
-        struct slot_base
-        {
-        public:
-            slot_base * next_;
-            virtual void deactivate() noexcept = 0;
-            virtual void propagate( int err_id ) noexcept = 0;
-            virtual void print( std::ostream &, int key_to_print ) const = 0;
-            virtual ~slot_base() noexcept { };
-        protected:
-            BOOST_LEAF_CONSTEXPR slot_base():
-                next_(nullptr)
-            {
-            }
-        };
-
-        template <class E>
-        class slot_store: public slot_base, public slot<E>
-        {
-            slot_store( slot_store const & ) = delete;
-            slot_store & operator=( slot_store const & ) = delete;
-            void deactivate() noexcept final override
-            {
-                slot<E>::deactivate();
-            }
-            void propagate( int err_id ) noexcept final override
-            {
-                slot<E>::propagate(err_id);
-            }
-            void print( std::ostream & os, int key_to_print ) const final override
-            {
-                slot<E>::print(os, key_to_print);
-            }
-        public:
-            template <class T>
-            BOOST_LEAF_CONSTEXPR slot_store( int err_id, T && e )
-            {
-                slot<E>::put(err_id, std::forward<T>(e));
-            }
-        };
-
-        slot_base * first_;
-        slot_base * * last_;
-
-    public:
-
-        BOOST_LEAF_CONSTEXPR e_unexpected_info() noexcept:
-            first_(nullptr),
-            last_(&first_)
-        {
-        }
-
-        BOOST_LEAF_CONSTEXPR e_unexpected_info( e_unexpected_info && other ) noexcept:
-            first_(other.first_),
-            last_(other.last_ == &other.first_? &first_ : other.last_)
-        {
-            BOOST_LEAF_ASSERT(last_ != nullptr);
-            BOOST_LEAF_ASSERT(*last_ == nullptr);
-            other.first_ = nullptr;
-            other.last_ = nullptr;
-        }
-
-        ~e_unexpected_info() noexcept
-        {
-            for( slot_base const * p = first_; p; )
-            {
-                slot_base const * n = p -> next_;
-                delete p;
-                p = n;
-            }
-        }
-
-        template <class E>
-        BOOST_LEAF_CONSTEXPR typename std::decay<E>::type & put(int err_id, E && e)
-        {
-            using T = typename std::decay<E>::type;
-            BOOST_LEAF_ASSERT(last_ != nullptr);
-            BOOST_LEAF_ASSERT(*last_ == nullptr);
-            BOOST_LEAF_ASSERT(tls::read_ptr<slot<T>>() == nullptr);
-            slot_store<T> * ss = new slot_store<T>(err_id, std::forward<E>(e));
-            *last_ = ss;
-            last_ = &ss->next_;
-            ss->activate();
-            return ss->value(err_id);
-        }
-
-        void deactivate() noexcept
-        {
-            for( slot_base * p=first_; p; p=p->next_ )
-                p->deactivate();
-        }
-
-        void propagate( int err_id ) noexcept
-        {
-            for( slot_base * p=first_; p; p=p->next_ )
-                p->propagate(err_id);
-        }
-
-        template <class CharT, class Traits>
-        void print( std::basic_ostream<CharT, Traits> & os, int key_to_print ) const
-        {
-            os << "Unhandled error objects:\n";
-            for( slot_base const * p=first_; p; p=p->next_ )
-                p->print(os, key_to_print);
-        }
-    };
-
-    template <>
-    struct diagnostic<e_unexpected_info, false, false>
-    {
-        static constexpr bool is_invisible = true;
-
-        template <class CharT, class Traits>
-        BOOST_LEAF_CONSTEXPR static void print( std::basic_ostream<CharT, Traits> &, e_unexpected_info const &) noexcept { }
-    };
-
-}
-
-#endif
-
-} }
-
-////////////////////////////////////////
-
-namespace boost { namespace leaf {
-
 struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
 {
     char const * file;
@@ -1914,7 +1936,11 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
     }
 };
 
+} }
+
 ////////////////////////////////////////
+
+namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
@@ -1948,106 +1974,282 @@ namespace leaf_detail
             tls::write_ptr<slot<E>>(this);
         }
 
-        void deactivate() noexcept
+        void deactivate() const noexcept
         {
             tls::write_ptr<slot<E>>(prev_);
         }
 
-        void propagate( int err_id ) noexcept(!BOOST_LEAF_CFG_DIAGNOSTICS);
+        void unload( int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE);
 
         template <class CharT, class Traits>
-        void print( std::basic_ostream<CharT, Traits> & os, int key_to_print ) const
+        void print( std::basic_ostream<CharT, Traits> & os, int err_id_to_print ) const
         {
-#if BOOST_LEAF_CFG_DIAGNOSTICS
             if( !diagnostic<E>::is_invisible )
                 if( int k = this->key() )
                 {
-                    if( key_to_print )
+                    if( err_id_to_print )
                     {
-                        if( key_to_print!=k )
+                        if( err_id_to_print!=k )
                             return;
                     }
                     else
                         os << '[' << k << "] ";
                     diagnostic<E>::print(os, value(k));
-                    (os << '\n').flush();
+                    os << '\n';
                 }
-#else
-            (void) os;
-            (void) key_to_print;
-#endif
         }
 
-        using impl::put;
+        using impl::load;
         using impl::has_value;
         using impl::value;
     };
+}
+
+} }
+
+////////////////////////////////////////
+
+#if BOOST_LEAF_CFG_CAPTURE
+
+namespace boost { namespace leaf {
+
+namespace leaf_detail
+{
+    class BOOST_LEAF_SYMBOL_VISIBLE dynamic_allocator:
+        capture_list
+    {
+        dynamic_allocator( dynamic_allocator const & ) = delete;
+        dynamic_allocator & operator=( dynamic_allocator const & ) = delete;
+
+        class capturing_node:
+            public capture_list::node
+        {
+        protected:
+            BOOST_LEAF_CONSTEXPR explicit capturing_node( capture_list::node * * & last ) noexcept:
+                node(last)
+            {
+                BOOST_LEAF_ASSERT(last == &next_);
+                BOOST_LEAF_ASSERT(next_ == nullptr);
+            }
+        public:
+            virtual void deactivate() const noexcept = 0;
+        };
+
+        template <class E>
+        class capturing_slot_node:
+            public capturing_node,
+            public slot<E>
+        {
+            using impl = slot<E>;
+
+            capturing_slot_node( capturing_slot_node const & ) = delete;
+            capturing_slot_node & operator=( capturing_slot_node const & ) = delete;
+
+            void deactivate() const noexcept final override
+            {
+                impl::deactivate();
+            }
+
+            void unload( int err_id ) final override
+            {
+                impl::unload(err_id);
+            }
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
+            void print( std::ostream & os, int err_id_to_print ) const final override
+            {
+                impl::print(os, err_id_to_print);
+            }
+#endif
+
+        public:
+
+            template <class T>
+            BOOST_LEAF_CONSTEXPR capturing_slot_node( capture_list::node * * & last, int err_id, T && e ):
+                capturing_node(last)
+            {
+                BOOST_LEAF_ASSERT(last == &next_);
+                BOOST_LEAF_ASSERT(next_ == nullptr);
+                impl::load(err_id, std::forward<T>(e));
+            }
+        };
+
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+        class capturing_exception_node:
+            public capturing_node
+        {
+            capturing_exception_node( capturing_exception_node const & ) = delete;
+            capturing_exception_node & operator=( capturing_exception_node const & ) = delete;
+
+            void deactivate() const noexcept final override
+            {
+                BOOST_LEAF_ASSERT(0);
+            }
+
+            void unload( int ) final override
+            {
+                std::rethrow_exception(ex_);
+            }
+
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+            void print( std::ostream &, int err_id_to_print ) const final override
+            {
+            }
+#endif
+
+            std::exception_ptr const ex_;
+
+        public:
+
+            explicit capturing_exception_node( capture_list::node * * & last, std::exception_ptr && ex ) noexcept:
+                capturing_node(last),
+                ex_(std::move(ex))
+            {
+                BOOST_LEAF_ASSERT(last == &next_);
+                BOOST_LEAF_ASSERT(ex_);
+            }
+        };
+#endif
+
+        int err_id_;
+        node * * last_;
+
+    public:
+
+        dynamic_allocator() noexcept:
+            capture_list(nullptr),
+            err_id_(0),
+            last_(&first_)
+        {
+            BOOST_LEAF_ASSERT(first_ == nullptr);
+        }
+
+        dynamic_allocator( dynamic_allocator && other ) noexcept:
+            capture_list(std::move(other)),
+            err_id_(other.err_id_),
+            last_(other.last_ == &other.first_? &first_ : other.last_)
+        {
+            BOOST_LEAF_ASSERT(last_ != nullptr);
+            BOOST_LEAF_ASSERT(*last_ == nullptr);
+            BOOST_LEAF_ASSERT(other.first_ == nullptr);
+            other.last_ = &other.first_;
+        }
+
+        void append( dynamic_allocator && other ) noexcept
+        {
+            if( node * other_first = other.first_ )
+            {
+                *last_ = other_first;
+                last_ = other.last_;
+                other.first_ = nullptr;
+                other.last_ = &other.first_;
+            }
+        }
+
+        template <class E>
+        typename std::decay<E>::type & dynamic_load(int err_id, E && e)
+        {
+            using T = typename std::decay<E>::type;
+            BOOST_LEAF_ASSERT(last_ != nullptr);
+            BOOST_LEAF_ASSERT(*last_ == nullptr);
+            BOOST_LEAF_ASSERT(tls::read_ptr<slot<T>>() == nullptr);
+            capturing_slot_node<T> * csn = new capturing_slot_node<T>(last_, err_id, std::forward<E>(e));
+            csn->activate();
+            err_id_ = err_id;
+            return csn->value(err_id);
+        }
+
+        void deactivate() const noexcept
+        {
+            for_each(
+                []( capture_list::node const & n )
+                {
+                    static_cast<capturing_node const &>(n).deactivate();
+                } );
+        }
+
+        template <class LeafResult>
+        LeafResult extract_capture_list() noexcept
+        {
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+            if( std::exception_ptr ex = std::current_exception() )
+                (void) new capturing_exception_node(last_, std::move(ex));
+#endif
+            leaf_detail::capture_list::node * const f = first_;
+            first_ = nullptr;
+            last_ = &first_;
+            return { err_id_, capture_list(f) };
+        }
+
+        using capture_list::print;
+    };
 
     template <>
-    inline void slot<e_unexpected_info>::deactivate() noexcept
+    struct diagnostic<dynamic_allocator, false, false, false>
+    {
+        static constexpr bool is_invisible = true;
+
+        template <class CharT, class Traits>
+        BOOST_LEAF_CONSTEXPR static void print( std::basic_ostream<CharT, Traits> &, dynamic_allocator const & )
+        {
+        }
+    };
+
+    template <>
+    inline void slot<dynamic_allocator>::deactivate() const noexcept
     {
         if( int const err_id = this->key() )
-            if( e_unexpected_info * info = this->has_value(err_id) )
-                info->deactivate();
-        tls::write_ptr<slot<e_unexpected_info>>(prev_);
+            if( dynamic_allocator const * c = this->has_value(err_id) )
+                c->deactivate();
+        tls::write_ptr<slot<dynamic_allocator>>(prev_);
     }
 
     template <>
-    inline void slot<e_unexpected_info>::propagate( int err_id )
+    inline void slot<dynamic_allocator>::unload( int err_id ) noexcept(false)
     {
-        if( e_unexpected_info * info = this->has_value(err_id) )
-            info->propagate(err_id);
+        BOOST_LEAF_ASSERT(err_id);
+        if( dynamic_allocator * da1 = this->has_value(err_id) )
+            if( impl * p = tls::read_ptr<slot<dynamic_allocator>>() )
+                if( dynamic_allocator * da2 = p->has_value(err_id) )
+                    da2->append(std::move(*da1));
+                else
+                    *p = std::move(*this);
     }
 
     template <class E>
-    BOOST_LEAF_CONSTEXPR inline void load_unexpected_count( int err_id ) noexcept
+    inline void dynamic_load_( int err_id, E && e )
     {
-        if( slot<e_unexpected_count> * sl = tls::read_ptr<slot<e_unexpected_count>>() )
+        if( slot<dynamic_allocator> * sl = tls::read_ptr<slot<dynamic_allocator>>() )
         {
-            if( e_unexpected_count * unx = sl->has_value(err_id) )
-                ++unx->count;
+            if( dynamic_allocator * c = sl->has_value(err_id) )
+                c->dynamic_load(err_id, std::forward<E>(e));
             else
-                sl->put(err_id, e_unexpected_count(&type<E>));
-        }
-    }
-
-    template <class E>
-    BOOST_LEAF_CONSTEXPR inline void load_unexpected_info( int err_id, E && e )
-    {
-        if( slot<e_unexpected_info> * sl = tls::read_ptr<slot<e_unexpected_info>>() )
-        {
-            if( e_unexpected_info * unx = sl->has_value(err_id) )
-                (void) unx->put(err_id, std::forward<E>(e));
-            else
-                (void) sl->put(err_id).put(err_id, std::forward<E>(e));
+                sl->load(err_id).dynamic_load(err_id, std::forward<E>(e));
         }
     }
 
     template <class E, class F>
-    BOOST_LEAF_CONSTEXPR inline void accumulate_unexpected_info( int err_id, F && f )
+    inline void dynamic_accumulate_( int err_id, F && f )
     {
-        if( slot<e_unexpected_info> * sl = tls::read_ptr<slot<e_unexpected_info>>() )
+        if( slot<dynamic_allocator> * sl = tls::read_ptr<slot<dynamic_allocator>>() )
         {
-            if( e_unexpected_info * unx = sl->has_value(err_id) )
-                (void) std::forward<F>(f)(unx->put(err_id, E{}));
+            if( dynamic_allocator * c = sl->has_value(err_id) )
+                (void) std::forward<F>(f)(c->dynamic_load(err_id, E{}));
             else
-                (void) std::forward<F>(f)(sl->put(err_id).put(err_id, E{}));
+                (void) std::forward<F>(f)(sl->load(err_id).dynamic_load(err_id, E{}));
         }
     }
 
     template <bool OnError, class E>
-    inline void load_unexpected( int err_id, E && e  ) noexcept(OnError)
+    inline void dynamic_load( int err_id, E && e  ) noexcept(OnError)
     {
-        load_unexpected_count<E>(err_id);
         if( OnError )
         {
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             try
             {
 #endif
-                load_unexpected_info(err_id, std::forward<E>(e));
+                dynamic_load_(err_id, std::forward<E>(e));
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             }
             catch(...)
@@ -2056,20 +2258,19 @@ namespace leaf_detail
 #endif
         }
         else
-            load_unexpected_info(err_id, std::forward<E>(e));
+            dynamic_load_(err_id, std::forward<E>(e));
     }
 
     template <bool OnError, class E, class F>
-    inline void accumulate_unexpected( int err_id, F && f  ) noexcept(OnError)
+    inline void dynamic_accumulate( int err_id, F && f  ) noexcept(OnError)
     {
-        load_unexpected_count<E>(err_id);
         if( OnError )
         {
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             try
             {
 #endif
-                accumulate_unexpected_info<E>(err_id, std::forward<F>(f));
+                dynamic_accumulate_<E>(err_id, std::forward<F>(f));
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             }
             catch(...)
@@ -2078,26 +2279,31 @@ namespace leaf_detail
 #endif
         }
         else
-            accumulate_unexpected_info<E>(err_id, std::forward<F>(f));
+            dynamic_accumulate_<E>(err_id, std::forward<F>(f));
     }
+}
+
+} }
 
 #endif
 
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
+
+namespace leaf_detail
+{
     template <class E>
-    inline void slot<E>::propagate( int err_id ) noexcept(!BOOST_LEAF_CFG_DIAGNOSTICS)
+    inline void slot<E>::unload( int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE)
     {
-        if( this->key()!=err_id && err_id!=0 )
+        BOOST_LEAF_ASSERT(err_id);
+        if( this->key()!=err_id )
             return;
         if( impl * p = tls::read_ptr<slot<E>>() )
             *p = std::move(*this);
-#if BOOST_LEAF_CFG_DIAGNOSTICS
+#if BOOST_LEAF_CFG_CAPTURE
         else
-        {
-            int c = int(tls::read_uint<tls_tag_unexpected_enabled_counter>());
-            BOOST_LEAF_ASSERT(c>=0);
-            if( c )
-                load_unexpected<false>(err_id, std::move(*this).value(err_id));
-        }
+            dynamic_load<false>(err_id, std::move(*this).value(err_id));
 #endif
     }
 
@@ -2111,17 +2317,12 @@ namespace leaf_detail
         if( slot<T> * p = tls::read_ptr<slot<T>>() )
         {
             if( !OnError || !p->has_value(err_id) )
-                (void) p->put(err_id, std::forward<E>(e));
+                (void) p->load(err_id, std::forward<E>(e));
         }
-#if BOOST_LEAF_CFG_DIAGNOSTICS
+#if BOOST_LEAF_CFG_CAPTURE
         else
-        {
-            int c = int(tls::read_uint<tls_tag_unexpected_enabled_counter>());
-            BOOST_LEAF_ASSERT(c>=0);
-            if( c )
-                load_unexpected<OnError>(err_id, std::forward<E>(e));
-        }
-#endif
+            dynamic_load<OnError>(err_id, std::forward<E>(e));
+#endif        
         return 0;
     }
 
@@ -2137,57 +2338,21 @@ namespace leaf_detail
             if( auto v = sl->has_value(err_id) )
                 (void) std::forward<F>(f)(*v);
             else
-                (void) std::forward<F>(f)(sl->put(err_id,E()));
+                (void) std::forward<F>(f)(sl->load(err_id,E()));
         }
-#if BOOST_LEAF_CFG_DIAGNOSTICS
+#if BOOST_LEAF_CFG_CAPTURE
         else
-        {
-            int c = int(tls::read_uint<tls_tag_unexpected_enabled_counter>());
-            BOOST_LEAF_ASSERT(c>=0);
-            if( c )
-                accumulate_unexpected<OnError, E>(err_id, std::forward<F>(f));
-        }
+            dynamic_accumulate<OnError, E>(err_id, std::forward<F>(f));
 #endif
         return 0;
     }
 }
 
-////////////////////////////////////////
-
-namespace leaf_detail
-{
-    template <class=void>
-    struct BOOST_LEAF_SYMBOL_VISIBLE id_factory
-    {
-        static atomic_unsigned_int counter;
-
-        BOOST_LEAF_CONSTEXPR static unsigned generate_next_id() noexcept
-        {
-            auto id = (counter+=4);
-            BOOST_LEAF_ASSERT((id&3)==1);
-            return id;
-        }
-    };
-
-    template <class T>
-    atomic_unsigned_int id_factory<T>::counter(unsigned(-3));
-
-    inline int current_id() noexcept
-    {
-        unsigned id = tls::read_uint<tls_tag_id_factory_current_id>();
-        BOOST_LEAF_ASSERT(id==0 || (id&3)==1);
-        return int(id);
-    }
-
-    inline int new_id() noexcept
-    {
-        unsigned id = id_factory<>::generate_next_id();
-        tls::write_uint<tls_tag_id_factory_current_id>(id);
-        return int(id);
-    }
-}
+} }
 
 ////////////////////////////////////////
+
+namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
@@ -2225,9 +2390,13 @@ namespace leaf_detail
     };
 }
 
+} }
+
 ////////////////////////////////////////
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+
+namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
@@ -2255,7 +2424,7 @@ namespace leaf_detail
         if( int err_id = ec.value() )
         {
             std::error_category const & cat = get_error_category<>::cat;
-            if( &ec.category()==&cat )
+            if( &ec.category() == &cat )
             {
                 BOOST_LEAF_ASSERT((err_id&3)==1);
                 return (err_id&~3)|1;
@@ -2279,9 +2448,13 @@ inline bool is_error_id( std::error_code const & ec ) noexcept
     return res;
 }
 
+} }
+
 #endif
 
 ////////////////////////////////////////
+
+namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
@@ -2320,7 +2493,7 @@ public:
     {
     }
 
-    std::error_code to_error_code() const noexcept
+    operator std::error_code() const noexcept
     {
         return std::error_code(value_, leaf_detail::get_error_category<>::cat);
     }
@@ -2347,7 +2520,7 @@ public:
     {
         if( int err_id = value() )
         {
-            int const unused[ ] = { 42, leaf_detail::load_item<Item>::load_(err_id, std::forward<Item>(item))... };
+            int const unused[] = { 42, leaf_detail::load_item<Item>::load_(err_id, std::forward<Item>(item))... };
             (void) unused;
         }
         return *this;
@@ -2424,27 +2597,6 @@ inline error_id current_error() noexcept
 
 class polymorphic_context
 {
-protected:
-
-    polymorphic_context() noexcept = default;
-    ~polymorphic_context() noexcept = default;
-
-public:
-
-    virtual error_id propagate_captured_errors() noexcept = 0;
-    virtual void activate() noexcept = 0;
-    virtual void deactivate() noexcept = 0;
-    virtual void propagate( error_id ) noexcept = 0;
-    virtual bool is_active() const noexcept = 0;
-    virtual void print( std::ostream & ) const { };
-    error_id captured_id_;
-
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, polymorphic_context const & ctx )
-    {
-        ctx.print(os);
-        return os;
-    }
 };
 
 #if BOOST_LEAF_CFG_CAPTURE
@@ -2459,17 +2611,11 @@ class context_activator
     context_activator( context_activator const & ) = delete;
     context_activator & operator=( context_activator const & ) = delete;
 
-#if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
-    int const uncaught_exceptions_;
-#endif
     Ctx * ctx_;
 
 public:
 
     explicit BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE context_activator(Ctx & ctx) noexcept:
-#if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
-        uncaught_exceptions_(std::uncaught_exceptions()),
-#endif
         ctx_(ctx.is_active() ? nullptr : &ctx)
     {
         if( ctx_ )
@@ -2477,9 +2623,6 @@ public:
     }
 
     BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE context_activator( context_activator && x ) noexcept:
-#if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
-        uncaught_exceptions_(x.uncaught_exceptions_),
-#endif
         ctx_(x.ctx_)
     {
         x.ctx_ = nullptr;
@@ -2492,13 +2635,11 @@ public:
     }
 };
 
-template <class Ctx>
-BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE context_activator<Ctx> activate_context(Ctx & ctx) noexcept
-{
-    return context_activator<Ctx>(ctx);
-}
+} }
 
 ////////////////////////////////////////////
+
+namespace boost { namespace leaf {
 
 template <class R>
 struct is_result_type: std::false_type
@@ -2514,859 +2655,7 @@ struct is_result_type<R const>: is_result_type<R>
 
 #endif
 // <<< #include <boost/leaf/error.hpp>
-#line 11 "boost/leaf/exception.hpp"
-#include <exception>
-
-#ifdef BOOST_LEAF_NO_EXCEPTIONS
-
-namespace boost
-{
-    [[noreturn]] void throw_exception( std::exception const & ); // user defined
-}
-
-namespace boost { namespace leaf {
-
-namespace leaf_detail
-{
-    template <class T>
-    [[noreturn]] void throw_exception_impl( T && e )
-    {
-        ::boost::throw_exception(std::move(e));
-    }
-
-    class BOOST_LEAF_SYMBOL_VISIBLE exception_base
-    {
-    public:
-
-        virtual error_id get_error_id() const noexcept = 0;
-
-    protected:
-
-        exception_base() noexcept { }
-        ~exception_base() noexcept { }
-    };
-}
-
-} }
-
-#else
-
-#include <memory>
-
-namespace boost { namespace leaf {
-
-namespace leaf_detail
-{
-    template <class T>
-    [[noreturn]] void throw_exception_impl( T && e )
-    {
-        throw std::move(e);
-    }
-
-    class BOOST_LEAF_SYMBOL_VISIBLE exception_base
-    {
-        std::shared_ptr<void const> auto_id_bump_;
-
-    public:
-
-        virtual error_id get_error_id() const noexcept = 0;
-
-    protected:
-
-        exception_base():
-            auto_id_bump_(nullptr, [](void const *) { (void) new_id(); })
-        {
-        }
-
-        ~exception_base() noexcept { }
-    };
-}
-
-} }
-
-#endif
-
-////////////////////////////////////////
-
-#define BOOST_LEAF_THROW_EXCEPTION ::boost::leaf::leaf_detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::leaf_detail::make_exception
-
-namespace boost { namespace leaf {
-
-namespace leaf_detail
-{
-    struct throw_with_loc
-    {
-        char const * const file;
-        int const line;
-        char const * const fn;
-
-        template <class Ex>
-        [[noreturn]] friend void operator+( throw_with_loc loc, Ex && ex )
-        {
-            ex.load_source_location_(loc.file, loc.line, loc.fn);
-            ::boost::leaf::leaf_detail::throw_exception_impl(std::move(ex));
-        }
-    };
-}
-
-} }
-
-////////////////////////////////////////
-
-namespace boost { namespace leaf {
-
-namespace leaf_detail
-{
-    inline void enforce_std_exception( std::exception const & ) noexcept { }
-
-    template <class Ex>
-    class BOOST_LEAF_SYMBOL_VISIBLE exception:
-        public Ex,
-        public exception_base,
-        public error_id
-    {
-        error_id get_error_id() const noexcept final override
-        {
-            return *this;
-        }
-
-    public:
-
-        exception( exception const & ) = default;
-        exception( exception && ) = default;
-
-        BOOST_LEAF_CONSTEXPR exception( error_id id, Ex const & ex ) noexcept:
-            Ex(ex),
-            error_id(id)
-        {
-            enforce_std_exception(*this);
-        }
-
-        BOOST_LEAF_CONSTEXPR exception( error_id id, Ex && ex ) noexcept:
-            Ex(std::move(ex)),
-            error_id(id)
-        {
-            enforce_std_exception(*this);
-        }
-
-        explicit BOOST_LEAF_CONSTEXPR exception( error_id id ) noexcept:
-            error_id(id)
-        {
-            enforce_std_exception(*this);
-        }
-    };
-
-    template <class... T>
-    struct at_least_one_derives_from_std_exception;
-
-    template <>
-    struct at_least_one_derives_from_std_exception<>: std::false_type { };
-
-    template <class T, class... Rest>
-    struct at_least_one_derives_from_std_exception<T, Rest...>
-    {
-        constexpr static const bool value = std::is_base_of<std::exception,typename std::remove_reference<T>::type>::value || at_least_one_derives_from_std_exception<Rest...>::value;
-    };
-
-    template <class Ex, class... E>
-    inline
-    typename std::enable_if<std::is_base_of<std::exception,typename std::remove_reference<Ex>::type>::value, exception<typename std::remove_reference<Ex>::type>>::type
-    make_exception( error_id err, Ex && ex, E && ... e ) noexcept
-    {
-        static_assert(!at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
-        return exception<typename std::remove_reference<Ex>::type>( err.load(std::forward<E>(e)...), std::forward<Ex>(ex) );
-    }
-
-    template <class E1, class... E>
-    inline
-    typename std::enable_if<!std::is_base_of<std::exception,typename std::remove_reference<E1>::type>::value, exception<std::exception>>::type
-    make_exception( error_id err, E1 && car, E && ... cdr ) noexcept
-    {
-        static_assert(!at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
-        return exception<std::exception>( err.load(std::forward<E1>(car), std::forward<E>(cdr)...) );
-    }
-
-    inline exception<std::exception> make_exception( error_id err ) noexcept
-    {
-        return exception<std::exception>(err);
-    }
-
-    template <class Ex, class... E>
-    inline
-    typename std::enable_if<std::is_base_of<std::exception,typename std::remove_reference<Ex>::type>::value, exception<typename std::remove_reference<Ex>::type>>::type
-    make_exception( Ex && ex, E && ... e ) noexcept
-    {
-        static_assert(!at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
-        return exception<typename std::remove_reference<Ex>::type>( new_error().load(std::forward<E>(e)...), std::forward<Ex>(ex) );
-    }
-
-    template <class E1, class... E>
-    inline
-    typename std::enable_if<!std::is_base_of<std::exception,typename std::remove_reference<E1>::type>::value, exception<std::exception>>::type
-    make_exception( E1 && car, E && ... cdr ) noexcept
-    {
-        static_assert(!at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
-        return exception<std::exception>( new_error().load(std::forward<E1>(car), std::forward<E>(cdr)...) );
-    }
-
-    inline exception<std::exception> make_exception() noexcept
-    {
-        return exception<std::exception>(leaf::new_error());
-    }
-}
-
-template <class... E>
-[[noreturn]] void throw_exception( E && ... e )
-{
-    // Warning: setting a breakpoint here will not intercept exceptions thrown
-    // via BOOST_LEAF_THROW_EXCEPTION or originating in the few other throw
-    // points elsewhere in LEAF. To intercept all of those exceptions as well,
-    // set a breakpoint inside boost::leaf::leaf_detail::throw_exception_impl.
-    leaf_detail::throw_exception_impl(leaf_detail::make_exception(std::forward<E>(e)...));
-}
-
-////////////////////////////////////////
-
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-
-template <class T>
-class result;
-
-namespace leaf_detail
-{
-    inline error_id catch_exceptions_helper( std::exception const &, leaf_detail_mp11::mp_list<> )
-    {
-        return leaf::new_error(std::current_exception());
-    }
-
-    template <class Ex1, class... Ex>
-    inline error_id catch_exceptions_helper( std::exception const & ex, leaf_detail_mp11::mp_list<Ex1,Ex...> )
-    {
-        if( Ex1 const * p = dynamic_cast<Ex1 const *>(&ex) )
-            return catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>{ }).load(*p);
-        else
-            return catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>{ });
-    }
-
-    template <class T>
-    struct deduce_exception_to_result_return_type_impl
-    {
-        using type = result<T>;
-    };
-
-    template <class T>
-    struct deduce_exception_to_result_return_type_impl<result<T>>
-    {
-        using type = result<T>;
-    };
-
-    template <class T>
-    using deduce_exception_to_result_return_type = typename deduce_exception_to_result_return_type_impl<T>::type;
-}
-
-template <class... Ex, class F>
-inline
-leaf_detail::deduce_exception_to_result_return_type<leaf_detail::fn_return_type<F>>
-exception_to_result( F && f ) noexcept
-{
-    try
-    {
-        return std::forward<F>(f)();
-    }
-    catch( std::exception const & ex )
-    {
-        return leaf_detail::catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>());
-    }
-    catch(...)
-    {
-        return leaf::new_error(std::current_exception());
-    }
-}
-
-#endif
-
-} }
-
-#endif
-// <<< #include <boost/leaf/exception.hpp>
-#line 11 "boost/leaf/capture.hpp"
-// >>> #include <boost/leaf/on_error.hpp>
-#line 1 "boost/leaf/on_error.hpp"
-#ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
-#define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
-
-// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
-
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-// Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 715: #include <boost/leaf/error.hpp>
-
-namespace boost { namespace leaf {
-
-class error_monitor
-{
-#if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
-    int const uncaught_exceptions_;
-#endif
-    int const err_id_;
-
-public:
-
-    error_monitor() noexcept:
-#if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
-        uncaught_exceptions_(std::uncaught_exceptions()),
-#endif
-        err_id_(leaf_detail::current_id())
-    {
-    }
-
-    int check_id() const noexcept
-    {
-        int err_id = leaf_detail::current_id();
-        if( err_id != err_id_ )
-            return err_id;
-        else
-        {
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-#   if BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
-            if( std::uncaught_exceptions() > uncaught_exceptions_ )
-#   else
-            if( std::uncaught_exception() )
-#   endif
-                return leaf_detail::new_id();
-#endif
-            return 0;
-        }
-    }
-
-    int get_id() const noexcept
-    {
-        int err_id = leaf_detail::current_id();
-        if( err_id != err_id_ )
-            return err_id;
-        else
-            return leaf_detail::new_id();
-    }
-
-    error_id check() const noexcept
-    {
-        return leaf_detail::make_error_id(check_id());
-    }
-
-    error_id assigned_error_id() const noexcept
-    {
-        return leaf_detail::make_error_id(get_id());
-    }
-};
-
-////////////////////////////////////////////
-
-namespace leaf_detail
-{
-    template <int I, class Tuple>
-    struct tuple_for_each_preload
-    {
-        BOOST_LEAF_CONSTEXPR static void trigger( Tuple & tup, int err_id ) noexcept
-        {
-            BOOST_LEAF_ASSERT((err_id&3)==1);
-            tuple_for_each_preload<I-1,Tuple>::trigger(tup,err_id);
-            std::get<I-1>(tup).trigger(err_id);
-        }
-    };
-
-    template <class Tuple>
-    struct tuple_for_each_preload<0, Tuple>
-    {
-        BOOST_LEAF_CONSTEXPR static void trigger( Tuple const &, int ) noexcept { }
-    };
-
-    template <class E>
-    class preloaded_item
-    {
-        using decay_E = typename std::decay<E>::type;
-        decay_E e_;
-
-    public:
-
-        BOOST_LEAF_CONSTEXPR preloaded_item( E && e ):
-            e_(std::forward<E>(e))
-        {
-        }
-
-        BOOST_LEAF_CONSTEXPR void trigger( int err_id ) noexcept
-        {
-            (void) load_slot<true>(err_id, std::move(e_));
-        }
-    };
-
-    template <class F>
-    class deferred_item
-    {
-        using E = decltype(std::declval<F>()());
-        F f_;
-
-    public:
-
-        BOOST_LEAF_CONSTEXPR deferred_item( F && f ) noexcept:
-            f_(std::forward<F>(f))
-        {
-        }
-
-        BOOST_LEAF_CONSTEXPR void trigger( int err_id ) noexcept
-        {
-            (void) load_slot<true>(err_id, f_());
-        }
-    };
-
-    template <class F, class A0 = fn_arg_type<F,0>, int arity = function_traits<F>::arity>
-    class accumulating_item;
-
-    template <class F, class A0>
-    class accumulating_item<F, A0 &, 1>
-    {
-        using E = A0;
-        F f_;
-
-    public:
-
-        BOOST_LEAF_CONSTEXPR accumulating_item( F && f ) noexcept:
-            f_(std::forward<F>(f))
-        {
-        }
-
-        BOOST_LEAF_CONSTEXPR void trigger( int err_id ) noexcept
-        {
-            accumulate_slot<true>(err_id, std::move(f_));
-        }
-    };
-
-    template <class... Item>
-    class preloaded
-    {
-        preloaded & operator=( preloaded const & ) = delete;
-
-        std::tuple<Item...> p_;
-        bool moved_;
-        error_monitor id_;
-
-    public:
-
-        BOOST_LEAF_CONSTEXPR explicit preloaded( Item && ... i ):
-            p_(std::forward<Item>(i)...),
-            moved_(false)
-        {
-        }
-
-        BOOST_LEAF_CONSTEXPR preloaded( preloaded && x ) noexcept:
-            p_(std::move(x.p_)),
-            moved_(false),
-            id_(std::move(x.id_))
-        {
-            x.moved_ = true;
-        }
-
-        ~preloaded() noexcept
-        {
-            if( moved_ )
-                return;
-            if( auto id = id_.check_id() )
-                tuple_for_each_preload<sizeof...(Item),decltype(p_)>::trigger(p_,id);
-        }
-    };
-
-    template <class T, int arity = function_traits<T>::arity>
-    struct deduce_item_type;
-
-    template <class T>
-    struct deduce_item_type<T, -1>
-    {
-        using type = preloaded_item<T>;
-    };
-
-    template <class F>
-    struct deduce_item_type<F, 0>
-    {
-        using type = deferred_item<F>;
-    };
-
-    template <class F>
-    struct deduce_item_type<F, 1>
-    {
-        using type = accumulating_item<F>;
-    };
-}
-
-template <class... Item>
-BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR inline
-leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...>
-on_error( Item && ... i )
-{
-    return leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...>(std::forward<Item>(i)...);
-}
-
-} }
-
-#endif
-// <<< #include <boost/leaf/on_error.hpp>
-#line 12 "boost/leaf/capture.hpp"
-
-#if BOOST_LEAF_CFG_CAPTURE
-
-namespace boost { namespace leaf {
-
-namespace leaf_detail
-{
-    template <class R, bool IsResult = is_result_type<R>::value>
-    struct is_result_tag;
-
-    template <class R>
-    struct is_result_tag<R, false>
-    {
-    };
-
-    template <class R>
-    struct is_result_tag<R, true>
-    {
-    };
-}
-
-#ifdef BOOST_LEAF_NO_EXCEPTIONS
-
-namespace leaf_detail
-{
-    template <class R, class F, class... A, class ContextPtr>
-    inline
-    decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))
-    capture_impl(is_result_tag<R, false>, ContextPtr && ctx, F && f, A... a) noexcept
-    {
-        auto active_context = activate_context(*ctx);
-        return std::forward<F>(f)(std::forward<A>(a)...);
-    }
-
-    template <class R, class F, class... A, class ContextPtr>
-    inline
-    decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))
-    capture_impl(is_result_tag<R, true>, ContextPtr && ctx, F && f, A... a) noexcept
-    {
-        auto active_context = activate_context(*ctx);
-        if( auto r = std::forward<F>(f)(std::forward<A>(a)...) )
-            return r;
-        else
-        {
-            ctx->captured_id_ = r.error();
-            return std::forward<ContextPtr>(ctx);
-        }
-    }
-
-    template <class R, class Future>
-    inline
-    decltype(std::declval<Future>().get())
-    future_get_impl(is_result_tag<R, false>, Future & fut) noexcept
-    {
-        return fut.get();
-    }
-
-    template <class R, class Future>
-    inline
-    decltype(std::declval<Future>().get())
-    future_get_impl(is_result_tag<R, true>, Future & fut) noexcept
-    {
-        if( auto r = fut.get() )
-            return r;
-        else
-            return error_id(r.error()); // unloads
-    }
-}
-
-#else
-
-namespace leaf_detail
-{
-    class capturing_exception:
-        public std::exception
-    {
-        std::exception_ptr ex_;
-        context_ptr ctx_;
-
-    public:
-
-        template <class ContextPtr>
-        capturing_exception(std::exception_ptr && ex, ContextPtr && ctx) noexcept:
-            ex_(std::move(ex)),
-            ctx_(std::forward<ContextPtr>(ctx))
-        {
-            BOOST_LEAF_ASSERT(ex_);
-            BOOST_LEAF_ASSERT(ctx_);
-            BOOST_LEAF_ASSERT(ctx_->captured_id_);
-        }
-
-        [[noreturn]] void unload_and_rethrow_original_exception() const
-        {
-            BOOST_LEAF_ASSERT(ctx_->captured_id_);
-            tls::write_uint<tls_tag_id_factory_current_id>(unsigned(ctx_->captured_id_.value()));
-            ctx_->propagate(ctx_->captured_id_);
-            std::rethrow_exception(ex_);
-        }
-    };
-
-    template <class R, class F, class... A, class ContextPtr>
-    inline
-    decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))
-    capture_impl(is_result_tag<R, false>, ContextPtr && ctx, F && f, A... a)
-    {
-        auto active_context = activate_context(*ctx);
-        error_monitor cur_err;
-        try
-        {
-            return std::forward<F>(f)(std::forward<A>(a)...);
-        }
-        catch( capturing_exception const & )
-        {
-            throw;
-        }
-        catch( exception_base const & e )
-        {
-            ctx->captured_id_ = e.get_error_id();
-            leaf_detail::throw_exception_impl( capturing_exception(std::current_exception(), std::forward<ContextPtr>(ctx)) );
-        }
-        catch(...)
-        {
-            ctx->captured_id_ = cur_err.assigned_error_id();
-            leaf_detail::throw_exception_impl( capturing_exception(std::current_exception(), std::forward<ContextPtr>(ctx)) );
-        }
-    }
-
-    template <class R, class F, class... A, class ContextPtr>
-    inline
-    decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))
-    capture_impl(is_result_tag<R, true>, ContextPtr && ctx, F && f, A... a)
-    {
-        auto active_context = activate_context(*ctx);
-        error_monitor cur_err;
-        try
-        {
-            if( auto && r = std::forward<F>(f)(std::forward<A>(a)...) )
-                return std::move(r);
-            else
-            {
-                ctx->captured_id_ = r.error();
-                return std::forward<ContextPtr>(ctx);
-            }
-        }
-        catch( capturing_exception const & )
-        {
-            throw;
-        }
-        catch( exception_base const & e )
-        {
-            ctx->captured_id_ = e.get_error_id();
-            leaf_detail::throw_exception_impl( capturing_exception(std::current_exception(), std::forward<ContextPtr>(ctx)) );
-        }
-        catch(...)
-        {
-            ctx->captured_id_ = cur_err.assigned_error_id();
-            leaf_detail::throw_exception_impl( capturing_exception(std::current_exception(), std::forward<ContextPtr>(ctx)) );
-        }
-    }
-
-    template <class R, class Future>
-    inline
-    decltype(std::declval<Future>().get())
-    future_get_impl(is_result_tag<R, false>, Future & fut )
-    {
-        try
-        {
-            return fut.get();
-        }
-        catch( capturing_exception const & cap )
-        {
-            cap.unload_and_rethrow_original_exception();
-        }
-    }
-
-    template <class R, class Future>
-    inline
-    decltype(std::declval<Future>().get())
-    future_get_impl(is_result_tag<R, true>, Future & fut )
-    {
-        try
-        {
-            if( auto r = fut.get() )
-                return r;
-            else
-                return error_id(r.error()); // unloads
-        }
-        catch( capturing_exception const & cap )
-        {
-            cap.unload_and_rethrow_original_exception();
-        }
-    }
-}
-
-#endif
-
-template <class F, class... A>
-inline
-decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))
-capture(context_ptr const & ctx, F && f, A... a)
-{
-    using namespace leaf_detail;
-    return capture_impl(is_result_tag<decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))>(), ctx, std::forward<F>(f), std::forward<A>(a)...);
-}
-
-template <class F, class... A>
-inline
-decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))
-capture(context_ptr && ctx, F && f, A... a)
-{
-    using namespace leaf_detail;
-    return capture_impl(is_result_tag<decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))>(), std::move(ctx), std::forward<F>(f), std::forward<A>(a)...);
-}
-
-template <class Future>
-inline
-decltype(std::declval<Future>().get())
-future_get( Future & fut )
-{
-    using namespace leaf_detail;
-    return future_get_impl(is_result_tag<decltype(std::declval<Future>().get())>(), fut);
-}
-
-} }
-
-#endif
-
-#endif
-// >>> #include <boost/leaf/common.hpp>
-#line 1 "boost/leaf/common.hpp"
-#ifndef BOOST_LEAF_COMMON_HPP_INCLUDED
-#define BOOST_LEAF_COMMON_HPP_INCLUDED
-
-// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
-
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-// Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 1335: #include <boost/leaf/detail/demangle.hpp>
-
-#include <iosfwd>
-#include <cerrno>
-
-#if BOOST_LEAF_CFG_STD_STRING
-#   include <string>
-#endif
-
-#if BOOST_LEAF_CFG_WIN32
-#   include <windows.h>
-#   include <cstring>
-#   ifdef min
-#       undef min
-#   endif
-#   ifdef max
-#       undef max
-#   endif
-#endif
-
-namespace boost { namespace leaf {
-
-struct BOOST_LEAF_SYMBOL_VISIBLE e_api_function { char const * value; };
-
-#if BOOST_LEAF_CFG_STD_STRING
-
-struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name
-{
-    std::string value;
-};
-
-#else
-
-struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name
-{
-    constexpr static char const * const value = "<unavailable>";
-    BOOST_LEAF_CONSTEXPR explicit e_file_name( char const * ) { }
-};
-
-#endif
-
-struct BOOST_LEAF_SYMBOL_VISIBLE e_errno
-{
-    int value;
-
-    explicit e_errno(int val=errno): value(val) { }
-
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, e_errno const & err)
-    {
-        return os << type<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
-    }
-};
-
-struct BOOST_LEAF_SYMBOL_VISIBLE e_type_info_name { char const * value; };
-
-struct BOOST_LEAF_SYMBOL_VISIBLE e_at_line { int value; };
-
-namespace windows
-{
-    struct e_LastError
-    {
-        unsigned value;
-
-        explicit e_LastError(unsigned val): value(val) { }
-
-#if BOOST_LEAF_CFG_WIN32
-        e_LastError(): value(GetLastError()) { }
-
-        template <class CharT, class Traits>
-        friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, e_LastError const & err)
-        {
-            struct msg_buf
-            {
-                LPVOID * p;
-                msg_buf(): p(nullptr) { }
-                ~msg_buf() noexcept { if(p) LocalFree(p); }
-            };
-            msg_buf mb;
-            if( FormatMessageA(
-                FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS,
-                nullptr,
-                err.value,
-                MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
-                (LPSTR)&mb.p,
-                0,
-                nullptr) )
-            {
-                BOOST_LEAF_ASSERT(mb.p != nullptr);
-                char * z = std::strchr((LPSTR)mb.p,0);
-                if( z[-1] == '\n' )
-                    *--z = 0;
-                if( z[-1] == '\r' )
-                    *--z = 0;
-                return os << type<e_LastError>() << ": " << err.value << ", \"" << (LPCSTR)mb.p << '"';
-            }
-            return os;
-        }
-#endif
-    };
-}
-
-} }
-
-#endif
-// >>> #include <boost/leaf/context.hpp>
-#line 1 "boost/leaf/context.hpp"
-#ifndef BOOST_LEAF_CONTEXT_HPP_INCLUDED
-#define BOOST_LEAF_CONTEXT_HPP_INCLUDED
-
-// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
-
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-// Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 715: #include <boost/leaf/error.hpp>
+#line 11 "boost/leaf/context.hpp"
 
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
 #   include <thread>
@@ -3484,16 +2773,6 @@ namespace leaf_detail
         }
     };
 
-    template <>
-    struct handler_argument_traits<error_info const &>: handler_argument_always_available<void>
-    {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static error_info const & get( Tup const &, error_info const & ei ) noexcept
-        {
-            return ei;
-        }
-    };
-
     template <class E>
     struct handler_argument_traits_require_by_value
     {
@@ -3522,30 +2801,21 @@ namespace leaf_detail
             tuple_for_each<I-1,Tuple>::deactivate(tup);
         }
 
-        BOOST_LEAF_CONSTEXPR static void propagate( Tuple & tup, int err_id ) noexcept
-        {
-            static_assert(!std::is_same<error_info, typename std::decay<decltype(std::get<I-1>(tup))>::type>::value, "Bug in LEAF: context type deduction");
-            auto & sl = std::get<I-1>(tup);
-            sl.propagate(err_id);
-            tuple_for_each<I-1,Tuple>::propagate(tup, err_id);
-        }
-
-        BOOST_LEAF_CONSTEXPR static void propagate_captured( Tuple & tup, int err_id ) noexcept
+        BOOST_LEAF_CONSTEXPR static void unload( Tuple & tup, int err_id ) noexcept
         {
             static_assert(!std::is_same<error_info, typename std::decay<decltype(std::get<I-1>(tup))>::type>::value, "Bug in LEAF: context type deduction");
             BOOST_LEAF_ASSERT(err_id != 0);
             auto & sl = std::get<I-1>(tup);
-            if( sl.has_value(err_id) )
-                (void) load_slot<false>(err_id, std::move(sl).value(err_id));
-            tuple_for_each<I-1,Tuple>::propagate_captured(tup, err_id);
+            sl.unload(err_id);
+            tuple_for_each<I-1,Tuple>::unload(tup, err_id);
         }
 
         template <class CharT, class Traits>
-        static void print( std::basic_ostream<CharT, Traits> & os, void const * tup, int key_to_print )
+        static void print( std::basic_ostream<CharT, Traits> & os, void const * tup, int err_id_to_print )
         {
             BOOST_LEAF_ASSERT(tup != nullptr);
-            tuple_for_each<I-1,Tuple>::print(os, tup, key_to_print);
-            std::get<I-1>(*static_cast<Tuple const *>(tup)).print(os, key_to_print);
+            tuple_for_each<I-1,Tuple>::print(os, tup, err_id_to_print);
+            std::get<I-1>(*static_cast<Tuple const *>(tup)).print(os, err_id_to_print);
         }
     };
 
@@ -3554,43 +2824,11 @@ namespace leaf_detail
     {
         BOOST_LEAF_CONSTEXPR static void activate( Tuple & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void deactivate( Tuple & ) noexcept { }
-        BOOST_LEAF_CONSTEXPR static void propagate( Tuple &, int ) noexcept { }
-        BOOST_LEAF_CONSTEXPR static void propagate_captured( Tuple &, int ) noexcept { }
+        BOOST_LEAF_CONSTEXPR static void unload( Tuple &, int ) noexcept { }
         template <class CharT, class Traits>
         BOOST_LEAF_CONSTEXPR static void print( std::basic_ostream<CharT, Traits> &, void const *, int ) { }
     };
 }
-
-////////////////////////////////////////////
-
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-
-namespace leaf_detail
-{
-    template <class T> struct requires_unexpected { constexpr static bool value = false; };
-    template <class T> struct requires_unexpected<T const> { constexpr static bool value = requires_unexpected<T>::value; };
-    template <class T> struct requires_unexpected<T const &> { constexpr static bool value = requires_unexpected<T>::value; };
-    template <class T> struct requires_unexpected<T const *> { constexpr static bool value = requires_unexpected<T>::value; };
-    template <> struct requires_unexpected<e_unexpected_count> { constexpr static bool value = true; };
-    template <> struct requires_unexpected<e_unexpected_info> { constexpr static bool value = true; };
-
-    template <class L>
-    struct unexpected_requested;
-
-    template <template <class ...> class L>
-    struct unexpected_requested<L<>>
-    {
-        constexpr static bool value = false;
-    };
-
-    template <template <class...> class L, template <class> class S, class Car, class... Cdr>
-    struct unexpected_requested<L<S<Car>, S<Cdr>...>>
-    {
-        constexpr static bool value = requires_unexpected<Car>::value || unexpected_requested<L<S<Cdr>...>>::value;
-    };
-}
-
-#endif
 
 ////////////////////////////////////////////
 
@@ -3644,14 +2882,6 @@ class context
     std::thread::id thread_id_;
 #endif
 
-protected:
-
-    BOOST_LEAF_CONSTEXPR error_id propagate_captured_errors( error_id err_id ) noexcept
-    {
-        leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate_captured(tup_, err_id.value());
-        return err_id;
-    }
-
 public:
 
     BOOST_LEAF_CONSTEXPR context( context && x ) noexcept:
@@ -3686,10 +2916,6 @@ public:
         using namespace leaf_detail;
         BOOST_LEAF_ASSERT(!is_active());
         tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-        if( unexpected_requested<Tup>::value )
-            tls::uint_increment<tls_tag_unexpected_enabled_counter>();
-#endif
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
         thread_id_ = std::this_thread::get_id();
 #endif
@@ -3705,17 +2931,13 @@ public:
         BOOST_LEAF_ASSERT(std::this_thread::get_id() == thread_id_);
         thread_id_ = std::thread::id();
 #endif
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-        if( unexpected_requested<Tup>::value )
-            tls::uint_decrement<tls_tag_unexpected_enabled_counter>();
-#endif
         tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_);
     }
 
-    BOOST_LEAF_CONSTEXPR void propagate(error_id id) noexcept
+    BOOST_LEAF_CONSTEXPR void unload(error_id id) noexcept
     {
         BOOST_LEAF_ASSERT(!is_active());
-        leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::propagate(tup_, id.value());
+        leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::unload(tup_, id.value());
     }
 
     BOOST_LEAF_CONSTEXPR bool is_active() const noexcept
@@ -3742,6 +2964,12 @@ public:
     template <class R, class... H>
     BOOST_LEAF_CONSTEXPR R handle_error( error_id, H && ... );
 };
+
+template <class Ctx>
+BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE context_activator<Ctx> activate_context(Ctx & ctx) noexcept
+{
+    return context_activator<Ctx>(ctx);
+}
 
 ////////////////////////////////////////
 
@@ -3782,19 +3010,6 @@ namespace leaf_detail
     {
         using type = deduce_context<leaf_detail_mp11::mp_append<typename fn_mp_args_fwd<H>::type...>>;
     };
-
-    template <class Ctx>
-    struct polymorphic_context_impl: polymorphic_context, Ctx
-    {
-        error_id propagate_captured_errors() noexcept final override { return Ctx::propagate_captured_errors(captured_id_); }
-        void activate() noexcept final override { Ctx::activate(); }
-        void deactivate() noexcept final override { Ctx::deactivate(); }
-        void propagate(error_id id) noexcept final override { Ctx::propagate(id); }
-        bool is_active() const noexcept final override { return Ctx::is_active(); }
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-        void print( std::ostream & os ) const final override { return Ctx::print(os); }
-#endif
-    };
 }
 
 template <class... H>
@@ -3818,16 +3033,18 @@ BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && 
 
 #if BOOST_LEAF_CFG_CAPTURE
 
-template <class...  H>
+template <class...>
+BOOST_LEAF_DEPRECATED("Please use try_capture_all instead of make_shared_context/capture.")
 inline context_ptr make_shared_context() noexcept
 {
-    return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_handlers<H...>>>();
+    return std::make_shared<polymorphic_context>();
 }
 
-template <class...  H>
+template <class... H>
+BOOST_LEAF_DEPRECATED("Please use try_capture_all instead of make_shared_context/capture.")
 inline context_ptr make_shared_context( H && ... ) noexcept
 {
-    return std::make_shared<leaf_detail::polymorphic_context_impl<context_type_from_handlers<H...>>>();
+    return std::make_shared<polymorphic_context>();
 }
 
 #endif
@@ -3835,23 +3052,15 @@ inline context_ptr make_shared_context( H && ... ) noexcept
 } }
 
 #endif
-// Expanded at line 715: #include <boost/leaf/error.hpp>
-// Expanded at line 704: #include <boost/leaf/exception.hpp>
-// >>> #include <boost/leaf/handle_errors.hpp>
-#line 1 "boost/leaf/handle_errors.hpp"
-#ifndef BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
-#define BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
-
-// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
-
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-// Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3360: #include <boost/leaf/context.hpp>
-// Expanded at line 693: #include <boost/leaf/capture.hpp>
+// <<< #include <boost/leaf/context.hpp>
+#line 11 "boost/leaf/handle_errors.hpp"
 
 namespace boost { namespace leaf {
+
+template <class T>
+class BOOST_LEAF_SYMBOL_VISIBLE result;
+
+////////////////////////////////////////
 
 class BOOST_LEAF_SYMBOL_VISIBLE error_info
 {
@@ -3860,14 +3069,6 @@ class BOOST_LEAF_SYMBOL_VISIBLE error_info
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
     static error_id unpack_error_id( std::exception const * ex ) noexcept
     {
-#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-        if( std::system_error const * se = dynamic_cast<std::system_error const *>(ex) )
-            if( is_error_id(se->code()) )
-                return leaf_detail::make_error_id(se->code().value());
-        if( std::error_code const * ec = dynamic_cast<std::error_code const *>(ex) )
-            if( is_error_id(*ec) )
-                return leaf_detail::make_error_id(ec->value());
-#endif
         if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
             return *err_id;
         return current_error();
@@ -3881,20 +3082,6 @@ class BOOST_LEAF_SYMBOL_VISIBLE error_info
 protected:
 
     error_info( error_info const & ) noexcept = default;
-
-    template <class CharT, class Traits>
-    void print( std::basic_ostream<CharT, Traits> & os ) const
-    {
-        os << "Error ID = " << err_id_.value();
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-        if( ex_ )
-        {
-            os <<
-                "\nException dynamic type: " << leaf_detail::demangle(typeid(*ex_).name()) <<
-                "\nstd::exception::what(): " << ex_->what();
-        }
-#endif
-    }
 
 public:
 
@@ -3931,46 +3118,58 @@ public:
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, error_info const & x )
     {
-        os << "leaf::error_info: ";
-        x.print(os);
+        os << "Error ID: " << x.err_id_.value();
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+        if( x.ex_ )
+        {
+            os <<
+                "\nException dynamic type: " << leaf_detail::demangle(typeid(*x.ex_).name()) <<
+                "\nstd::exception::what(): " << x.ex_->what();
+        }
+#endif
         return os << '\n';
     }
 };
+
+namespace leaf_detail
+{
+    template <>
+    struct handler_argument_traits<error_info const &>: handler_argument_always_available<void>
+    {
+        template <class Tup>
+        BOOST_LEAF_CONSTEXPR static error_info const & get( Tup const &, error_info const & ei ) noexcept
+        {
+            return ei;
+        }
+    };
+}
 
 ////////////////////////////////////////
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 
-class BOOST_LEAF_SYMBOL_VISIBLE diagnostic_info: public error_info
+class diagnostic_info: public error_info
 {
-    leaf_detail::e_unexpected_count const * e_uc_;
     void const * tup_;
-    void (*print_)( std::ostream &, void const * tup, int key_to_print );
+    void (*print_context_content_)( std::ostream &, void const * tup, int err_id_to_print );
 
 protected:
 
     diagnostic_info( diagnostic_info const & ) noexcept = default;
 
     template <class Tup>
-    BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei, leaf_detail::e_unexpected_count const * e_uc, Tup const & tup ) noexcept:
+    BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei, Tup const & tup ) noexcept:
         error_info(ei),
-        e_uc_(e_uc),
         tup_(&tup),
-        print_(&leaf_detail::tuple_for_each<std::tuple_size<Tup>::value, Tup>::print)
+        print_context_content_(&leaf_detail::tuple_for_each<std::tuple_size<Tup>::value, Tup>::print)
     {
     }
-
-public:
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
     {
-        os << "leaf::diagnostic_info for ";
-        x.print(os);
-        os << ":\n";
-        x.print_(os, x.tup_, x.error().value());
-        if( x.e_uc_  )
-            x.e_uc_->print(os);
+        os << static_cast<error_info const &>(x);
+        x.print_context_content_(os, x.tup_, x.error().value());
         return os;
     }
 };
@@ -3980,26 +3179,26 @@ namespace leaf_detail
     struct diagnostic_info_: diagnostic_info
     {
         template <class Tup>
-        BOOST_LEAF_CONSTEXPR diagnostic_info_( error_info const & ei, leaf_detail::e_unexpected_count const * e_uc, Tup const & tup ) noexcept:
-            diagnostic_info(ei, e_uc, tup)
+        BOOST_LEAF_CONSTEXPR diagnostic_info_( error_info const & ei, Tup const & tup ) noexcept:
+            diagnostic_info(ei, tup)
         {
         }
     };
 
     template <>
-    struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<e_unexpected_count>
+    struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<void>
     {
         template <class Tup>
         BOOST_LEAF_CONSTEXPR static diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept
         {
-            return diagnostic_info_(ei, handler_argument_traits_defaults<e_unexpected_count>::check(tup, ei), tup);
+            return diagnostic_info_(ei, tup);
         }
     };
 }
 
 #else
 
-class BOOST_LEAF_SYMBOL_VISIBLE diagnostic_info: public error_info
+class diagnostic_info: public error_info
 {
 protected:
 
@@ -4010,16 +3209,10 @@ protected:
     {
     }
 
-public:
-
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
     {
-        os <<
-            "leaf::diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1\n"
-            "leaf::error_info: ";
-        x.print(os);
-        return os << '\n';
+        return os << "diagnostic_info not available due to BOOST_LEAF_CFG_DIAGNOSTICS=0. Basic error_info follows.\n" << static_cast<error_info const &>(x);
     }
 };
 
@@ -4050,37 +3243,29 @@ namespace leaf_detail
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 
-class BOOST_LEAF_SYMBOL_VISIBLE verbose_diagnostic_info: public error_info
+#if BOOST_LEAF_CFG_CAPTURE
+
+class verbose_diagnostic_info: public diagnostic_info
 {
-    leaf_detail::e_unexpected_info const * e_ui_;
-    void const * tup_;
-    void (*print_)( std::ostream &, void const * tup, int key_to_print );
+    leaf_detail::dynamic_allocator const * const da_;
 
 protected:
 
     verbose_diagnostic_info( verbose_diagnostic_info const & ) noexcept = default;
 
     template <class Tup>
-    BOOST_LEAF_CONSTEXPR verbose_diagnostic_info( error_info const & ei, leaf_detail::e_unexpected_info const * e_ui, Tup const & tup ) noexcept:
-        error_info(ei),
-        e_ui_(e_ui),
-        tup_(&tup),
-        print_(&leaf_detail::tuple_for_each<std::tuple_size<Tup>::value, Tup>::print)
+    BOOST_LEAF_CONSTEXPR verbose_diagnostic_info( error_info const & ei, Tup const & tup, leaf_detail::dynamic_allocator const * da ) noexcept:
+        diagnostic_info(ei, tup),
+        da_(da)
     {
     }
-
-public:
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, verbose_diagnostic_info const & x )
     {
-        os << "leaf::verbose_diagnostic_info for ";
-        int const err_id = x.error().value();
-        x.print(os);
-        os << ":\n";
-        x.print_(os, x.tup_, err_id);
-        if( x.e_ui_ )
-            x.e_ui_->print(os, err_id);
+        os << static_cast<diagnostic_info const &>(x);
+        if( x.da_ )
+            x.da_->print(os, "Unhandled error objects:\n", x.error().value());
         return os;
     }
 };
@@ -4090,46 +3275,85 @@ namespace leaf_detail
     struct verbose_diagnostic_info_: verbose_diagnostic_info
     {
         template <class Tup>
-        BOOST_LEAF_CONSTEXPR verbose_diagnostic_info_( error_info const & ei, leaf_detail::e_unexpected_info const * e_ui, Tup const & tup ) noexcept:
-            verbose_diagnostic_info(ei, e_ui, tup)
+        BOOST_LEAF_CONSTEXPR verbose_diagnostic_info_( error_info const & ei, Tup const & tup, dynamic_allocator const * da ) noexcept:
+            verbose_diagnostic_info(ei, tup, da)
         {
         }
     };
 
     template <>
-    struct handler_argument_traits<verbose_diagnostic_info const &>: handler_argument_always_available<e_unexpected_info>
+    struct handler_argument_traits<verbose_diagnostic_info const &>: handler_argument_always_available<dynamic_allocator>
     {
         template <class Tup>
         BOOST_LEAF_CONSTEXPR static verbose_diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept
         {
-            return verbose_diagnostic_info_(ei, handler_argument_traits_defaults<e_unexpected_info>::check(tup, ei), tup);
+            return verbose_diagnostic_info_(ei, tup, handler_argument_traits_defaults<dynamic_allocator>::check(tup, ei));
         }
     };
 }
 
 #else
 
-class BOOST_LEAF_SYMBOL_VISIBLE verbose_diagnostic_info: public error_info
+class verbose_diagnostic_info: public diagnostic_info
+{
+protected:
+
+    verbose_diagnostic_info( verbose_diagnostic_info const & ) noexcept = default;
+
+    template <class Tup>
+    BOOST_LEAF_CONSTEXPR verbose_diagnostic_info( error_info const & ei, Tup const & tup ) noexcept:
+        diagnostic_info(ei, tup)
+    {
+    }
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, verbose_diagnostic_info const & x )
+    {
+        return os << "verbose_diagnostic_info not available due to BOOST_LEAF_CFG_CAPTURE=0. Basic diagnostic_info follows.\n" << static_cast<diagnostic_info const &>(x);
+    }
+};
+
+namespace leaf_detail
+{
+    struct verbose_diagnostic_info_: verbose_diagnostic_info
+    {
+        template <class Tup>
+        BOOST_LEAF_CONSTEXPR verbose_diagnostic_info_( error_info const & ei, Tup const & tup ) noexcept:
+            verbose_diagnostic_info(ei, tup)
+        {
+        }
+    };
+
+    template <>
+    struct handler_argument_traits<verbose_diagnostic_info const &>: handler_argument_always_available<void>
+    {
+        template <class Tup>
+        BOOST_LEAF_CONSTEXPR static verbose_diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept
+        {
+            return verbose_diagnostic_info_(ei, tup);
+        }
+    };
+}
+
+#endif
+
+#else
+
+class verbose_diagnostic_info: public diagnostic_info
 {
 protected:
 
     verbose_diagnostic_info( verbose_diagnostic_info const & ) noexcept = default;
 
     BOOST_LEAF_CONSTEXPR verbose_diagnostic_info( error_info const & ei ) noexcept:
-        error_info(ei)
+        diagnostic_info(ei)
     {
     }
-
-public:
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, verbose_diagnostic_info const & x )
     {
-        os <<
-            "leaf::verbose_diagnostic_info requires #define BOOST_LEAF_CFG_DIAGNOSTICS 1\n"
-            "leaf::error_info: ";
-        x.print(os);
-        return os << '\n';
+        return os << "verbose_diagnostic_info not available due to BOOST_LEAF_CFG_DIAGNOSTICS=0. Basic error_info follows.\n" << static_cast<error_info const &>(x);
     }
 };
 
@@ -4142,7 +3366,6 @@ namespace leaf_detail
         {
         }
     };
-
 
     template <>
     struct handler_argument_traits<verbose_diagnostic_info const &>: handler_argument_always_available<void>
@@ -4536,6 +3759,21 @@ handle_error( error_id id, H && ... h )
 
 ////////////////////////////////////////
 
+namespace leaf_detail
+{
+    template <class T>
+    void unload_result( result<T> * r )
+    {
+        (void) r->unload();
+    }
+
+    void unload_result( void * )
+    {
+    }
+}
+
+////////////////////////////////////////
+
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
 
 template <class TryBlock, class... H>
@@ -4550,15 +3788,16 @@ try_handle_all( TryBlock && try_block, H && ... h ) noexcept
         return std::move(r).value();
     else
     {
+        leaf_detail::unload_result(&r);
         error_id id = r.error();
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
-        return ctx.template handle_error<R>(id, std::forward<H>(h)...);
+        return ctx.template handle_error<R>(std::move(id), std::forward<H>(h)...);
     }
 }
 
 template <class TryBlock, class... H>
-BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR inline
+BOOST_LEAF_ATTRIBUTE_NODISCARD BOOST_LEAF_CONSTEXPR inline
 typename std::decay<decltype(std::declval<TryBlock>()())>::type
 try_handle_some( TryBlock && try_block, H && ... h ) noexcept
 {
@@ -4569,12 +3808,13 @@ try_handle_some( TryBlock && try_block, H && ... h ) noexcept
         return r;
     else
     {
+        leaf_detail::unload_result(&r);
         error_id id = r.error();
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
-        auto rr = ctx.template handle_error<R>(id, std::forward<H>(h)..., [&r]()->R { return std::move(r); });
+        auto rr = ctx.template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
         if( !rr )
-            ctx.propagate(rr.error());
+            ctx.unload(rr.error());
         return rr;
     }
 }
@@ -4602,39 +3842,10 @@ namespace leaf_detail
         using R = decltype(std::declval<TryBlock>()());
         try
         {
-            return std::forward<TryBlock>(try_block)();
+            auto r = std::forward<TryBlock>(try_block)();
+            unload_result(&r);
+            return std::move(r);
         }
-#if BOOST_LEAF_CFG_CAPTURE
-        catch( capturing_exception const & cap )
-        {
-            try
-            {
-                cap.unload_and_rethrow_original_exception();
-            }
-            catch( std::exception & ex )
-            {
-                ctx.deactivate();
-                error_info e(&ex);
-                return handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
-                    [&]() -> R
-                    {
-                        ctx.propagate(e.error());
-                        throw;
-                    } );
-            }
-            catch(...)
-            {
-                ctx.deactivate();
-                error_info e(nullptr);
-                return handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
-                    [&]() -> R
-                    {
-                        ctx.propagate(e.error());
-                        throw;
-                    } );
-            }
-        }
-#endif
         catch( std::exception & ex )
         {
             ctx.deactivate();
@@ -4642,7 +3853,7 @@ namespace leaf_detail
             return handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
                 [&]() -> R
                 {
-                    ctx.propagate(e.error());
+                    ctx.unload(e.error());
                     throw;
                 } );
         }
@@ -4653,7 +3864,7 @@ namespace leaf_detail
             return handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
                 [&]() -> R
                 {
-                    ctx.propagate(e.error());
+                    ctx.unload(e.error());
                     throw;
                 } );
         }
@@ -4661,76 +3872,201 @@ namespace leaf_detail
 }
 
 template <class TryBlock, class... H>
-BOOST_LEAF_CONSTEXPR inline
+inline
 typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
 try_handle_all( TryBlock && try_block, H && ... h )
 {
-    static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_all function must be registered with leaf::is_result_type");
+    static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to try_handle_all must be registered with leaf::is_result_type");
     context_type_from_handlers<H...> ctx;
     auto active_context = activate_context(ctx);
-    if( auto r = leaf_detail::try_catch_(
-            ctx,
-            [&]
-            {
-                return std::forward<TryBlock>(try_block)();
-            },
-            std::forward<H>(h)...) )
+    if( auto r = leaf_detail::try_catch_(ctx, std::forward<TryBlock>(try_block), std::forward<H>(h)...) )
         return std::move(r).value();
     else
     {
+        BOOST_LEAF_ASSERT(ctx.is_active());
+        leaf_detail::unload_result(&r);
         error_id id = r.error();
-        if( ctx.is_active() )
-            ctx.deactivate();
+        ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
         return ctx.template handle_error<R>(std::move(id), std::forward<H>(h)...);
     }
 }
 
 template <class TryBlock, class... H>
-BOOST_LEAF_NODISCARD BOOST_LEAF_CONSTEXPR inline
+BOOST_LEAF_ATTRIBUTE_NODISCARD inline
 typename std::decay<decltype(std::declval<TryBlock>()())>::type
 try_handle_some( TryBlock && try_block, H && ... h )
 {
-    static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to a try_handle_some function must be registered with leaf::is_result_type");
+    static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to try_handle_some must be registered with leaf::is_result_type");
     context_type_from_handlers<H...> ctx;
     auto active_context = activate_context(ctx);
-    if( auto r = leaf_detail::try_catch_(
-            ctx,
-            [&]
-            {
-                return std::forward<TryBlock>(try_block)();
-            },
-            std::forward<H>(h)...) )
+    if( auto r = leaf_detail::try_catch_(ctx, std::forward<TryBlock>(try_block), std::forward<H>(h)...) )
         return r;
+    else if( ctx.is_active() )
+    {
+        leaf_detail::unload_result(&r);
+        error_id id = r.error();
+        ctx.deactivate();
+        using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
+        auto rr = ctx.template handle_error<R>(std::move(id), std::forward<H>(h)...,
+            [&r]()->R
+            {
+                return std::move(r);
+            });
+        if( !rr )
+            ctx.unload(rr.error());
+        return rr;
+    }
     else
     {
-        error_id id = r.error();
-        if( ctx.is_active() )
-            ctx.deactivate();
-        using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
-        auto rr = ctx.template handle_error<R>(id, std::forward<H>(h)..., [&r]()->R { return std::move(r); });
-        if( !rr )
-            ctx.propagate(rr.error());
-        return rr;
+        ctx.unload(r.error());
+        return r;
     }
 }
 
 template <class TryBlock, class... H>
-BOOST_LEAF_CONSTEXPR inline
+inline
 decltype(std::declval<TryBlock>()())
 try_catch( TryBlock && try_block, H && ... h )
 {
     context_type_from_handlers<H...> ctx;
     auto active_context = activate_context(ctx);
-    return leaf_detail::try_catch_(
-        ctx,
-        [&]
-        {
-            return std::forward<TryBlock>(try_block)();
-        },
-        std::forward<H>(h)...);
+    using R = decltype(std::declval<TryBlock>()());
+    try
+    {
+        return std::forward<TryBlock>(try_block)();
+    }
+    catch( std::exception & ex )
+    {
+        ctx.deactivate();
+        error_info e(&ex);
+        return leaf_detail::handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
+            [&]() -> R
+            {
+                ctx.unload(e.error());
+                throw;
+            } );
+    }
+    catch(...)
+    {
+        ctx.deactivate();
+        error_info e(nullptr);
+        return leaf_detail::handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
+            [&]() -> R
+            {
+                ctx.unload(e.error());
+                throw;
+            } );
+    }
 }
 
+#endif
+
+#if BOOST_LEAF_CFG_CAPTURE
+
+namespace leaf_detail
+{
+    template <class LeafResult>
+    struct try_capture_all_dispatch_non_void
+    {
+        using leaf_result = LeafResult;
+
+        template <class TryBlock>
+        inline
+        static
+        leaf_result
+        try_capture_all_( TryBlock && try_block ) noexcept
+        {
+            leaf_detail::slot<leaf_detail::dynamic_allocator> sl;
+            sl.activate();
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+            try
+#endif
+            {
+                if( leaf_result r = std::forward<TryBlock>(try_block)() )
+                {
+                    sl.deactivate();
+                    return r;
+                }
+                else
+                {
+                    sl.deactivate();
+                    return leaf_result(sl.value(error_id(r.error()).value()).template extract_capture_list<leaf_result>());
+                }
+            }
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+            catch( std::exception & ex )
+            {
+                sl.deactivate();
+                return sl.value(error_info(&ex).error().value()).template extract_capture_list<leaf_result>();
+            }
+            catch(...)
+            {
+                sl.deactivate();
+                return sl.value(error_info(nullptr).error().value()).template extract_capture_list<leaf_result>();
+            }
+#endif
+        }
+    };
+
+    template <class R, bool IsVoid = std::is_same<void, R>::value, bool IsResultType = is_result_type<R>::value>
+    struct try_capture_all_dispatch;
+
+    template <class R>
+    struct try_capture_all_dispatch<R, false, true>:
+        try_capture_all_dispatch_non_void<::boost::leaf::result<typename std::decay<decltype(std::declval<R>().value())>::type>>
+    {
+    };
+
+    template <class R>
+    struct try_capture_all_dispatch<R, false, false>:
+        try_capture_all_dispatch_non_void<::boost::leaf::result<typename std::remove_reference<R>::type>>
+    {
+    };
+
+    template <class R>
+    struct try_capture_all_dispatch<R, true, false>
+    {
+        using leaf_result = ::boost::leaf::result<R>;
+
+        template <class TryBlock>
+        inline
+        static
+        leaf_result
+        try_capture_all_( TryBlock && try_block ) noexcept
+        {
+            leaf_detail::slot<leaf_detail::dynamic_allocator> sl;
+            sl.activate();
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+            try
+#endif
+            {
+                std::forward<TryBlock>(try_block)();
+                return {};
+            }
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+            catch( std::exception & ex )
+            {
+                sl.deactivate();
+                return sl.value(error_info(&ex).error().value()).template extract_capture_list<leaf_result>();
+            }
+            catch(...)
+            {
+                sl.deactivate();
+                return sl.value(error_info(nullptr).error().value()).template extract_capture_list<leaf_result>();
+            }
+#endif
+        }
+    };
+}
+
+template <class TryBlock>
+inline
+typename leaf_detail::try_capture_all_dispatch<decltype(std::declval<TryBlock>()())>::leaf_result
+try_capture_all( TryBlock && try_block ) noexcept
+{
+    return leaf_detail::try_capture_all_dispatch<decltype(std::declval<TryBlock>()())>::try_capture_all_(std::forward<TryBlock>(try_block));
+}
 #endif
 
 } }
@@ -4798,7 +4134,742 @@ namespace leaf_detail
 } }
 
 #endif
-// Expanded at line 2795: #include <boost/leaf/on_error.hpp>
+// <<< #include <boost/leaf/handle_errors.hpp>
+#line 11 "boost/leaf/capture.hpp"
+
+#if BOOST_LEAF_CFG_CAPTURE
+
+namespace boost { namespace leaf {
+
+namespace leaf_detail
+{
+    template <class R, bool IsResult = is_result_type<R>::value>
+    struct is_result_tag;
+
+    template <class R>
+    struct is_result_tag<R, false>
+    {
+    };
+
+    template <class R>
+    struct is_result_tag<R, true>
+    {
+    };
+}
+
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace leaf_detail
+{
+    template <class R, class F, class... A>
+    inline
+    decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))
+    capture_impl(is_result_tag<R, false>, F && f, A... a) noexcept
+    {
+        return std::forward<F>(f)(std::forward<A>(a)...);
+    }
+
+    template <class R, class Future>
+    inline
+    decltype(std::declval<Future>().get())
+    future_get_impl(is_result_tag<R, false>, Future & fut) noexcept
+    {
+        return fut.get();
+    }
+}
+
+#else
+
+namespace leaf_detail
+{
+    // Not defined, no longer supported. Please use try_capture_all instead of make_shared_context/capture.
+    template <class R, class F, class... A>
+    decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))
+    capture_impl(is_result_tag<R, false>, F && f, A... a);
+
+    // Not defined, no longer supported. Please use try_capture_all instead of make_shared_context/capture.
+    template <class R, class Future>
+    decltype(std::declval<Future>().get())
+    future_get_impl(is_result_tag<R, false>, Future & fut );
+}
+
+#endif
+
+namespace leaf_detail
+{
+    template <class R, class F, class... A>
+    inline
+    decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))
+    capture_impl(is_result_tag<R, true>, F && f, A... a) noexcept
+    {
+        return try_capture_all(
+            [&]
+            {
+                return std::forward<F>(f)(std::forward<A>(a)...);
+            } );
+    }
+
+    template <class R, class Future>
+    inline
+    decltype(std::declval<Future>().get())
+    future_get_impl(is_result_tag<R, true>, Future & fut) noexcept
+    {
+        if( auto r = fut.get() )
+            return r;
+        else
+        {
+            r.unload();
+            return r;
+        }
+    }
+}
+
+template <class F, class... A>
+inline
+decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))
+capture(context_ptr &&, F && f, A... a)
+{
+    using namespace leaf_detail;
+    return capture_impl(is_result_tag<decltype(std::declval<F>()(std::forward<A>(std::declval<A>())...))>(), std::forward<F>(f), std::forward<A>(a)...);
+}
+
+template <class Future>
+inline
+decltype(std::declval<Future>().get())
+future_get( Future & fut )
+{
+    using namespace leaf_detail;
+    return future_get_impl(is_result_tag<decltype(std::declval<Future>().get())>(), fut);
+}
+
+} }
+
+#endif
+
+#endif
+// >>> #include <boost/leaf/common.hpp>
+#line 1 "boost/leaf/common.hpp"
+#ifndef BOOST_LEAF_COMMON_HPP_INCLUDED
+#define BOOST_LEAF_COMMON_HPP_INCLUDED
+
+// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+// Expanded at line 16: #include <boost/leaf/config.hpp>
+// Expanded at line 1501: #include <boost/leaf/detail/demangle.hpp>
+
+#include <iosfwd>
+#include <cerrno>
+
+#if BOOST_LEAF_CFG_STD_STRING
+#   include <string>
+#endif
+
+#if BOOST_LEAF_CFG_WIN32
+#   include <windows.h>
+#   include <cstring>
+#   ifdef min
+#       undef min
+#   endif
+#   ifdef max
+#       undef max
+#   endif
+#endif
+
+namespace boost { namespace leaf {
+
+struct BOOST_LEAF_SYMBOL_VISIBLE e_api_function { char const * value; };
+
+#if BOOST_LEAF_CFG_STD_STRING
+
+struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name
+{
+    std::string value;
+};
+
+#else
+
+struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name
+{
+    constexpr static char const * const value = "<unavailable>";
+    BOOST_LEAF_CONSTEXPR explicit e_file_name( char const * ) { }
+};
+
+#endif
+
+struct BOOST_LEAF_SYMBOL_VISIBLE e_errno
+{
+    int value;
+
+    explicit e_errno(int val=errno): value(val) { }
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, e_errno const & err)
+    {
+        return os << type<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
+    }
+};
+
+struct BOOST_LEAF_SYMBOL_VISIBLE e_type_info_name { char const * value; };
+
+struct BOOST_LEAF_SYMBOL_VISIBLE e_at_line { int value; };
+
+namespace windows
+{
+    struct e_LastError
+    {
+        unsigned value;
+
+        explicit e_LastError(unsigned val): value(val) { }
+
+#if BOOST_LEAF_CFG_WIN32
+        e_LastError(): value(GetLastError()) { }
+
+        template <class CharT, class Traits>
+        friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, e_LastError const & err)
+        {
+            struct msg_buf
+            {
+                LPVOID * p;
+                msg_buf(): p(nullptr) { }
+                ~msg_buf() noexcept { if(p) LocalFree(p); }
+            };
+            msg_buf mb;
+            if( FormatMessageA(
+                FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS,
+                nullptr,
+                err.value,
+                MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
+                (LPSTR)&mb.p,
+                0,
+                nullptr) )
+            {
+                BOOST_LEAF_ASSERT(mb.p != nullptr);
+                char * z = std::strchr((LPSTR)mb.p,0);
+                if( z[-1] == '\n' )
+                    *--z = 0;
+                if( z[-1] == '\r' )
+                    *--z = 0;
+                return os << type<e_LastError>() << ": " << err.value << ", \"" << (LPCSTR)mb.p << '"';
+            }
+            return os;
+        }
+#endif
+    };
+}
+
+} }
+
+#endif
+// Expanded at line 742: #include <boost/leaf/context.hpp>
+// Expanded at line 753: #include <boost/leaf/error.hpp>
+// >>> #include <boost/leaf/exception.hpp>
+#line 1 "boost/leaf/exception.hpp"
+#ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
+#define BOOST_LEAF_EXCEPTION_HPP_INCLUDED
+
+// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+// Expanded at line 16: #include <boost/leaf/config.hpp>
+// Expanded at line 753: #include <boost/leaf/error.hpp>
+#include <exception>
+
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace boost
+{
+    [[noreturn]] void throw_exception( std::exception const & ); // user defined
+}
+
+namespace boost { namespace leaf {
+
+namespace leaf_detail
+{
+    template <class T>
+    [[noreturn]] void throw_exception_impl( T && e )
+    {
+        ::boost::throw_exception(std::move(e));
+    }
+
+    class BOOST_LEAF_SYMBOL_VISIBLE exception_base
+    {
+    public:
+
+        virtual error_id get_error_id() const noexcept = 0;
+
+    protected:
+
+        exception_base() noexcept { }
+        ~exception_base() noexcept { }
+    };
+}
+
+} }
+
+#else
+
+#include <memory>
+
+namespace boost { namespace leaf {
+
+namespace leaf_detail
+{
+    template <class T>
+    [[noreturn]] void throw_exception_impl( T && e )
+    {
+        throw std::move(e);
+    }
+
+    class BOOST_LEAF_SYMBOL_VISIBLE exception_base
+    {
+        std::shared_ptr<void const> auto_id_bump_;
+
+    public:
+
+        virtual error_id get_error_id() const noexcept = 0;
+
+    protected:
+
+        exception_base():
+            auto_id_bump_(nullptr, [](void const *) { (void) new_id(); })
+        {
+        }
+
+        ~exception_base() noexcept { }
+    };
+}
+
+} }
+
+#endif
+
+////////////////////////////////////////
+
+#define BOOST_LEAF_THROW_EXCEPTION ::boost::leaf::leaf_detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::leaf_detail::make_exception
+
+namespace boost { namespace leaf {
+
+namespace leaf_detail
+{
+    struct throw_with_loc
+    {
+        char const * const file;
+        int const line;
+        char const * const fn;
+
+        template <class Ex>
+        [[noreturn]] friend void operator+( throw_with_loc loc, Ex && ex )
+        {
+            ex.load_source_location_(loc.file, loc.line, loc.fn);
+            ::boost::leaf::leaf_detail::throw_exception_impl(std::move(ex));
+        }
+    };
+}
+
+} }
+
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
+
+namespace leaf_detail
+{
+    inline void enforce_std_exception( std::exception const & ) noexcept { }
+
+    template <class Ex>
+    class BOOST_LEAF_SYMBOL_VISIBLE exception:
+        public Ex,
+        public exception_base,
+        public error_id
+    {
+        error_id get_error_id() const noexcept final override
+        {
+            return *this;
+        }
+
+    public:
+
+        exception( exception const & ) = default;
+        exception( exception && ) = default;
+
+        BOOST_LEAF_CONSTEXPR exception( error_id id, Ex const & ex ) noexcept:
+            Ex(ex),
+            error_id(id)
+        {
+            enforce_std_exception(*this);
+        }
+
+        BOOST_LEAF_CONSTEXPR exception( error_id id, Ex && ex ) noexcept:
+            Ex(std::move(ex)),
+            error_id(id)
+        {
+            enforce_std_exception(*this);
+        }
+
+        explicit BOOST_LEAF_CONSTEXPR exception( error_id id ) noexcept:
+            error_id(id)
+        {
+            enforce_std_exception(*this);
+        }
+    };
+
+    template <class... T>
+    struct at_least_one_derives_from_std_exception;
+
+    template <>
+    struct at_least_one_derives_from_std_exception<>: std::false_type { };
+
+    template <class T, class... Rest>
+    struct at_least_one_derives_from_std_exception<T, Rest...>
+    {
+        constexpr static const bool value = std::is_base_of<std::exception,typename std::remove_reference<T>::type>::value || at_least_one_derives_from_std_exception<Rest...>::value;
+    };
+
+    template <class Ex, class... E>
+    inline
+    typename std::enable_if<std::is_base_of<std::exception,typename std::remove_reference<Ex>::type>::value, exception<typename std::remove_reference<Ex>::type>>::type
+    make_exception( error_id err, Ex && ex, E && ... e ) noexcept
+    {
+        static_assert(!at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
+        return exception<typename std::remove_reference<Ex>::type>( err.load(std::forward<E>(e)...), std::forward<Ex>(ex) );
+    }
+
+    template <class E1, class... E>
+    inline
+    typename std::enable_if<!std::is_base_of<std::exception,typename std::remove_reference<E1>::type>::value, exception<std::exception>>::type
+    make_exception( error_id err, E1 && car, E && ... cdr ) noexcept
+    {
+        static_assert(!at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
+        return exception<std::exception>( err.load(std::forward<E1>(car), std::forward<E>(cdr)...) );
+    }
+
+    inline exception<std::exception> make_exception( error_id err ) noexcept
+    {
+        return exception<std::exception>(err);
+    }
+
+    template <class Ex, class... E>
+    inline
+    typename std::enable_if<std::is_base_of<std::exception,typename std::remove_reference<Ex>::type>::value, exception<typename std::remove_reference<Ex>::type>>::type
+    make_exception( Ex && ex, E && ... e ) noexcept
+    {
+        static_assert(!at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
+        return exception<typename std::remove_reference<Ex>::type>( new_error().load(std::forward<E>(e)...), std::forward<Ex>(ex) );
+    }
+
+    template <class E1, class... E>
+    inline
+    typename std::enable_if<!std::is_base_of<std::exception,typename std::remove_reference<E1>::type>::value, exception<std::exception>>::type
+    make_exception( E1 && car, E && ... cdr ) noexcept
+    {
+        static_assert(!at_least_one_derives_from_std_exception<E...>::value, "Error objects passed to leaf::exception may not derive from std::exception");
+        return exception<std::exception>( new_error().load(std::forward<E1>(car), std::forward<E>(cdr)...) );
+    }
+
+    inline exception<std::exception> make_exception() noexcept
+    {
+        return exception<std::exception>(leaf::new_error());
+    }
+}
+
+template <class... E>
+[[noreturn]] void throw_exception( E && ... e )
+{
+    // Warning: setting a breakpoint here will not intercept exceptions thrown
+    // via BOOST_LEAF_THROW_EXCEPTION or originating in the few other throw
+    // points elsewhere in LEAF. To intercept all of those exceptions as well,
+    // set a breakpoint inside boost::leaf::leaf_detail::throw_exception_impl.
+    leaf_detail::throw_exception_impl(leaf_detail::make_exception(std::forward<E>(e)...));
+}
+
+////////////////////////////////////////
+
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
+template <class T>
+class BOOST_LEAF_SYMBOL_VISIBLE result;
+
+namespace leaf_detail
+{
+    inline error_id catch_exceptions_helper( std::exception const &, leaf_detail_mp11::mp_list<> )
+    {
+        return leaf::new_error(std::current_exception());
+    }
+
+    template <class Ex1, class... Ex>
+    inline error_id catch_exceptions_helper( std::exception const & ex, leaf_detail_mp11::mp_list<Ex1,Ex...> )
+    {
+        if( Ex1 const * p = dynamic_cast<Ex1 const *>(&ex) )
+            return catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>{ }).load(*p);
+        else
+            return catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>{ });
+    }
+
+    template <class T>
+    struct deduce_exception_to_result_return_type_impl
+    {
+        using type = result<T>;
+    };
+
+    template <class T>
+    struct deduce_exception_to_result_return_type_impl<result<T>>
+    {
+        using type = result<T>;
+    };
+
+    template <class T>
+    using deduce_exception_to_result_return_type = typename deduce_exception_to_result_return_type_impl<T>::type;
+}
+
+template <class... Ex, class F>
+inline
+leaf_detail::deduce_exception_to_result_return_type<leaf_detail::fn_return_type<F>>
+exception_to_result( F && f ) noexcept
+{
+    try
+    {
+        return std::forward<F>(f)();
+    }
+    catch( std::exception const & ex )
+    {
+        return leaf_detail::catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>());
+    }
+    catch(...)
+    {
+        return leaf::new_error(std::current_exception());
+    }
+}
+
+#endif
+
+} }
+
+#endif
+// Expanded at line 731: #include <boost/leaf/handle_errors.hpp>
+// >>> #include <boost/leaf/on_error.hpp>
+#line 1 "boost/leaf/on_error.hpp"
+#ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
+#define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
+
+// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+// Expanded at line 16: #include <boost/leaf/config.hpp>
+// Expanded at line 753: #include <boost/leaf/error.hpp>
+
+namespace boost { namespace leaf {
+
+class error_monitor
+{
+#if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
+    int const uncaught_exceptions_;
+#endif
+    int const err_id_;
+
+public:
+
+    error_monitor() noexcept:
+#if !defined(BOOST_LEAF_NO_EXCEPTIONS) && BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
+        uncaught_exceptions_(std::uncaught_exceptions()),
+#endif
+        err_id_(leaf_detail::current_id())
+    {
+    }
+
+    int check_id() const noexcept
+    {
+        int err_id = leaf_detail::current_id();
+        if( err_id != err_id_ )
+            return err_id;
+        else
+        {
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+#   if BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS
+            if( std::uncaught_exceptions() > uncaught_exceptions_ )
+#   else
+            if( std::uncaught_exception() )
+#   endif
+                return leaf_detail::new_id();
+#endif
+            return 0;
+        }
+    }
+
+    int get_id() const noexcept
+    {
+        int err_id = leaf_detail::current_id();
+        if( err_id != err_id_ )
+            return err_id;
+        else
+            return leaf_detail::new_id();
+    }
+
+    error_id check() const noexcept
+    {
+        return leaf_detail::make_error_id(check_id());
+    }
+
+    error_id assigned_error_id() const noexcept
+    {
+        return leaf_detail::make_error_id(get_id());
+    }
+};
+
+////////////////////////////////////////////
+
+namespace leaf_detail
+{
+    template <int I, class Tuple>
+    struct tuple_for_each_preload
+    {
+        BOOST_LEAF_CONSTEXPR static void trigger( Tuple & tup, int err_id ) noexcept
+        {
+            BOOST_LEAF_ASSERT((err_id&3)==1);
+            tuple_for_each_preload<I-1,Tuple>::trigger(tup,err_id);
+            std::get<I-1>(tup).trigger(err_id);
+        }
+    };
+
+    template <class Tuple>
+    struct tuple_for_each_preload<0, Tuple>
+    {
+        BOOST_LEAF_CONSTEXPR static void trigger( Tuple const &, int ) noexcept { }
+    };
+
+    template <class E>
+    class preloaded_item
+    {
+        using decay_E = typename std::decay<E>::type;
+        decay_E e_;
+
+    public:
+
+        BOOST_LEAF_CONSTEXPR preloaded_item( E && e ):
+            e_(std::forward<E>(e))
+        {
+        }
+
+        BOOST_LEAF_CONSTEXPR void trigger( int err_id ) noexcept
+        {
+            (void) load_slot<true>(err_id, std::move(e_));
+        }
+    };
+
+    template <class F>
+    class deferred_item
+    {
+        using E = decltype(std::declval<F>()());
+        F f_;
+
+    public:
+
+        BOOST_LEAF_CONSTEXPR deferred_item( F && f ) noexcept:
+            f_(std::forward<F>(f))
+        {
+        }
+
+        BOOST_LEAF_CONSTEXPR void trigger( int err_id ) noexcept
+        {
+            (void) load_slot<true>(err_id, f_());
+        }
+    };
+
+    template <class F, class A0 = fn_arg_type<F,0>, int arity = function_traits<F>::arity>
+    class accumulating_item;
+
+    template <class F, class A0>
+    class accumulating_item<F, A0 &, 1>
+    {
+        using E = A0;
+        F f_;
+
+    public:
+
+        BOOST_LEAF_CONSTEXPR accumulating_item( F && f ) noexcept:
+            f_(std::forward<F>(f))
+        {
+        }
+
+        BOOST_LEAF_CONSTEXPR void trigger( int err_id ) noexcept
+        {
+            accumulate_slot<true>(err_id, std::move(f_));
+        }
+    };
+
+    template <class... Item>
+    class preloaded
+    {
+        preloaded & operator=( preloaded const & ) = delete;
+
+        std::tuple<Item...> p_;
+        bool moved_;
+        error_monitor id_;
+
+    public:
+
+        BOOST_LEAF_CONSTEXPR explicit preloaded( Item && ... i ):
+            p_(std::forward<Item>(i)...),
+            moved_(false)
+        {
+        }
+
+        BOOST_LEAF_CONSTEXPR preloaded( preloaded && x ) noexcept:
+            p_(std::move(x.p_)),
+            moved_(false),
+            id_(std::move(x.id_))
+        {
+            x.moved_ = true;
+        }
+
+        ~preloaded() noexcept
+        {
+            if( moved_ )
+                return;
+            if( auto id = id_.check_id() )
+                tuple_for_each_preload<sizeof...(Item),decltype(p_)>::trigger(p_,id);
+        }
+    };
+
+    template <class T, int arity = function_traits<T>::arity>
+    struct deduce_item_type;
+
+    template <class T>
+    struct deduce_item_type<T, -1>
+    {
+        using type = preloaded_item<T>;
+    };
+
+    template <class F>
+    struct deduce_item_type<F, 0>
+    {
+        using type = deferred_item<F>;
+    };
+
+    template <class F>
+    struct deduce_item_type<F, 1>
+    {
+        using type = accumulating_item<F>;
+    };
+}
+
+template <class... Item>
+BOOST_LEAF_ATTRIBUTE_NODISCARD BOOST_LEAF_CONSTEXPR inline
+leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...>
+on_error( Item && ... i )
+{
+    return leaf_detail::preloaded<typename leaf_detail::deduce_item_type<Item>::type...>(std::forward<Item>(i)...);
+}
+
+} }
+
+#endif
 // >>> #include <boost/leaf/pred.hpp>
 #line 1 "boost/leaf/pred.hpp"
 #ifndef BOOST_LEAF_PRED_HPP_INCLUDED
@@ -4810,7 +4881,7 @@ namespace leaf_detail
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3842: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 731: #include <boost/leaf/handle_errors.hpp>
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -5109,13 +5180,18 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 1324: #include <boost/leaf/detail/print.hpp>
-// Expanded at line 704: #include <boost/leaf/exception.hpp>
+// Expanded at line 1490: #include <boost/leaf/detail/print.hpp>
+// Expanded at line 1362: #include <boost/leaf/detail/capture_list.hpp>
+// Expanded at line 4370: #include <boost/leaf/exception.hpp>
 
 #include <climits>
 #include <functional>
 
 namespace boost { namespace leaf {
+
+namespace leaf_detail { class dynamic_allocator; }
+
+////////////////////////////////////////
 
 class bad_result:
     public std::exception,
@@ -5219,37 +5295,41 @@ namespace leaf_detail
 
     class result_discriminant
     {
-        unsigned state_;
+        int state_;
 
     public:
 
         enum kind_t
         {
-            no_error = 0,
+            err_id_zero = 0,
             err_id = 1,
-            ctx_ptr = 2,
+            err_id_capture_list = 2,
             val = 3
         };
 
         explicit result_discriminant( error_id id ) noexcept:
-            state_(unsigned(id.value()))
+            state_(id.value())
         {
-            BOOST_LEAF_ASSERT(state_==0 || (state_&3)==1);
+            BOOST_LEAF_ASSERT(state_ == 0 || (state_&3) == 1);
+            BOOST_LEAF_ASSERT(kind()==err_id_zero || kind()==err_id);
         }
+
+#if BOOST_LEAF_CFG_CAPTURE
+        explicit result_discriminant( int err_id, leaf_detail::capture_list const & ) noexcept:
+            state_((err_id&~3) | 2)
+        {
+            BOOST_LEAF_ASSERT((err_id&3) == 1);
+            BOOST_LEAF_ASSERT(kind() == err_id_capture_list);
+        }
+#endif
 
         struct kind_val { };
         explicit result_discriminant( kind_val ) noexcept:
             state_(val)
         {
+            BOOST_LEAF_ASSERT((state_&3) == 3);
+            BOOST_LEAF_ASSERT(kind()==val);
         }
-
-#if BOOST_LEAF_CFG_CAPTURE
-        struct kind_ctx_ptr { };
-        explicit result_discriminant( kind_ctx_ptr ) noexcept:
-            state_(ctx_ptr)
-        {
-        }
-#endif
 
         kind_t kind() const noexcept
         {
@@ -5258,8 +5338,8 @@ namespace leaf_detail
 
         error_id get_error_id() const noexcept
         {
-            BOOST_LEAF_ASSERT(kind()==no_error || kind()==err_id);
-            return make_error_id(int(state_));
+            BOOST_LEAF_ASSERT(kind()==err_id_zero || kind()==err_id || kind()==err_id_capture_list);
+            return make_error_id(int((state_&~3)|1));
         }
     };
 }
@@ -5267,12 +5347,35 @@ namespace leaf_detail
 ////////////////////////////////////////
 
 template <class T>
-class BOOST_LEAF_NODISCARD result
+class BOOST_LEAF_SYMBOL_VISIBLE result
 {
     template <class U>
     friend class result;
 
+    friend class leaf_detail::dynamic_allocator;
+
+#if BOOST_LEAF_CFG_CAPTURE
+    using capture_list = leaf_detail::capture_list;
+#endif
+
     using result_discriminant = leaf_detail::result_discriminant;
+    using stored_type = typename leaf_detail::stored<T>::type;
+    using value_no_ref = typename leaf_detail::stored<T>::value_no_ref;
+    using value_no_ref_const = typename leaf_detail::stored<T>::value_no_ref_const;
+    using value_ref = typename leaf_detail::stored<T>::value_ref;
+    using value_cref = typename leaf_detail::stored<T>::value_cref;
+    using value_rv_ref = typename leaf_detail::stored<T>::value_rv_ref;
+    using value_rv_cref = typename leaf_detail::stored<T>::value_rv_cref;
+
+    union
+    {
+        stored_type stored_;
+#if BOOST_LEAF_CFG_CAPTURE
+        mutable capture_list cap_;
+#endif
+    };
+
+    result_discriminant what_;
 
     struct error_result
     {
@@ -5290,77 +5393,46 @@ class BOOST_LEAF_NODISCARD result
         template <class U>
         operator result<U>() noexcept
         {
-            switch(r_.what_.kind())
+            result_discriminant const what = r_.what_;
+            switch( what.kind() )
             {
-            case result_discriminant::val:
-                return result<U>(error_id());
-            case result_discriminant::ctx_ptr:
+                case result_discriminant::val:
+                    return result<U>(error_id());
+                case result_discriminant::err_id_capture_list:
 #if BOOST_LEAF_CFG_CAPTURE
-                return result<U>(std::move(r_.ctx_));
+                    return result<U>(what.get_error_id().value(), std::move(r_.cap_));
 #else
-                BOOST_LEAF_ASSERT(0); // Possible ODR violation.
+                    BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
-            default:
-                return result<U>(std::move(r_.what_));
+                case result_discriminant::err_id_zero:
+                case result_discriminant::err_id:
+                    return result<U>(what.get_error_id());
             }
         }
 
         operator error_id() noexcept
         {
-            switch(r_.what_.kind())
-            {
-            case result_discriminant::val:
-                return error_id();
-            case result_discriminant::ctx_ptr:
-#if BOOST_LEAF_CFG_CAPTURE
-                {
-                    error_id captured_id = r_.ctx_->propagate_captured_errors();
-                    tls::write_uint<leaf_detail::tls_tag_id_factory_current_id>(unsigned(captured_id.value()));
-                    return captured_id;
-                }
-#else
-                BOOST_LEAF_ASSERT(0); // Possible ODR violation.
-#endif
-            default:
-                return r_.what_.get_error_id();
-            }
+            result_discriminant const what = r_.what_;
+            return what.kind() == result_discriminant::val? error_id() : what.get_error_id();
         }
     };
-
-    using stored_type = typename leaf_detail::stored<T>::type;
-    using value_no_ref = typename leaf_detail::stored<T>::value_no_ref;
-    using value_no_ref_const = typename leaf_detail::stored<T>::value_no_ref_const;
-    using value_ref = typename leaf_detail::stored<T>::value_ref;
-    using value_cref = typename leaf_detail::stored<T>::value_cref;
-    using value_rv_ref = typename leaf_detail::stored<T>::value_rv_ref;
-    using value_rv_cref = typename leaf_detail::stored<T>::value_rv_cref;
-
-    union
-    {
-        stored_type stored_;
-#if BOOST_LEAF_CFG_CAPTURE
-        context_ptr ctx_;
-#endif
-    };
-
-    result_discriminant what_;
 
     void destroy() const noexcept
     {
         switch(this->what_.kind())
         {
-        case result_discriminant::val:
-            stored_.~stored_type();
+        case result_discriminant::err_id_zero:
+        case result_discriminant::err_id:
             break;
-        case result_discriminant::ctx_ptr:
+        case result_discriminant::err_id_capture_list:
 #if BOOST_LEAF_CFG_CAPTURE
-            BOOST_LEAF_ASSERT(!ctx_ || ctx_->captured_id_);
-            ctx_.~context_ptr();
+            cap_.~capture_list();
 #else
             BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
-        default:
             break;
+        case result_discriminant::val:
+            stored_.~stored_type();
         }
     }
 
@@ -5370,46 +5442,26 @@ class BOOST_LEAF_NODISCARD result
         auto x_what = x.what_;
         switch(x_what.kind())
         {
-        case result_discriminant::val:
-            (void) new(&stored_) stored_type(std::move(x.stored_));
+        case result_discriminant::err_id_zero:
+        case result_discriminant::err_id:
             break;
-        case result_discriminant::ctx_ptr:
+        case result_discriminant::err_id_capture_list:
 #if BOOST_LEAF_CFG_CAPTURE
-            BOOST_LEAF_ASSERT(!x.ctx_ || x.ctx_->captured_id_);
-            (void) new(&ctx_) context_ptr(std::move(x.ctx_));
+            (void) new(&cap_) capture_list(std::move(x.cap_));
 #else
             BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
-        default:
             break;
+        case result_discriminant::val:
+            (void) new(&stored_) stored_type(std::move(x.stored_));
         }
         return x_what;
-    }
-
-    result( result_discriminant && what ) noexcept:
-        what_(std::move(what))
-    {
-        BOOST_LEAF_ASSERT(what_.kind()==result_discriminant::err_id || what_.kind()==result_discriminant::no_error);
     }
 
     error_id get_error_id() const noexcept
     {
         BOOST_LEAF_ASSERT(what_.kind() != result_discriminant::val);
-#if BOOST_LEAF_CFG_CAPTURE
-        if( what_.kind() == result_discriminant::ctx_ptr )
-        {
-            BOOST_LEAF_ASSERT(ctx_ && ctx_->captured_id_);
-            return ctx_->captured_id_;
-        }
-        else
-        {
-            BOOST_LEAF_ASSERT(what_.kind() == result_discriminant::err_id);
-            return what_.get_error_id();
-        }
-#else
-        BOOST_LEAF_ASSERT(what_.kind() != result_discriminant::ctx_ptr); // Possible ODR violation.
         return what_.get_error_id();
-#endif
     }
 
     stored_type const * get() const noexcept
@@ -5424,10 +5476,30 @@ class BOOST_LEAF_NODISCARD result
 
 protected:
 
+#if BOOST_LEAF_CFG_CAPTURE
+    result( int err_id, leaf_detail::capture_list && cap ) noexcept:
+        cap_(std::move(cap)),
+        what_(err_id, cap)
+    {
+    }
+#endif
+
     void enforce_value_state() const
     {
-        if( !has_value() )
+        switch( what_.kind() )
+        {
+        case result_discriminant::err_id_capture_list:
+#if BOOST_LEAF_CFG_CAPTURE
+            cap_.unload(what_.get_error_id().value());
+#else
+            BOOST_LEAF_ASSERT(0); // Possible ODR violation.
+#endif
+        case result_discriminant::err_id_zero:
+        case result_discriminant::err_id:
             ::boost::leaf::leaf_detail::throw_exception_impl(bad_result(get_error_id()));
+        case result_discriminant::val:
+            break;
+        }
     }
 
 public:
@@ -5509,22 +5581,6 @@ public:
     result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type * = nullptr ) noexcept:
         what_(error_id(e))
     {
-    }
-#endif
-
-#if BOOST_LEAF_CFG_CAPTURE
-    result( context_ptr const & ctx ) noexcept:
-        ctx_(ctx),
-        what_(result_discriminant::kind_ctx_ptr{})
-    {
-        BOOST_LEAF_ASSERT(ctx_ && ctx_->captured_id_);
-    }
-
-    result( context_ptr && ctx ) noexcept:
-        ctx_(std::move(ctx)),
-        what_(result_discriminant::kind_ctx_ptr{})
-    {
-        BOOST_LEAF_ASSERT(ctx_ && ctx_->captured_id_);
     }
 #endif
 
@@ -5674,27 +5730,36 @@ public:
         return error_id(error()).load(std::forward<Item>(item)...);
     }
 
+    void unload()
+    {
+#if BOOST_LEAF_CFG_CAPTURE
+        if( what_.kind() == result_discriminant::err_id_capture_list )
+            cap_.unload(what_.get_error_id().value());
+#endif
+    }
+
     template <class CharT, class Traits>
     void print( std::basic_ostream<CharT, Traits> & os ) const
     {
-        switch(what_.kind())
-        {
-        case result_discriminant::val:
+        result_discriminant const what = what_;
+        if( what.kind() == result_discriminant::val )
             leaf_detail::print_result_value(os, value());
-            break;
-        case result_discriminant::ctx_ptr:
+        else
+        {
+            error_id const err_id = what.get_error_id();
+            os << "Error ID " << err_id;
+            if( what.kind() == result_discriminant::err_id_capture_list )
+            {
 #if BOOST_LEAF_CFG_CAPTURE
-            BOOST_LEAF_ASSERT(ctx_ && ctx_->captured_id_);
-            os << "Error ID " << ctx_->captured_id_ << ", captured error objects:\n" << *ctx_;
-            break;
+#   if BOOST_LEAF_CFG_DIAGNOSTICS
+                cap_.print(os, ". Captured error objects:\n", err_id.value());
+#   endif
 #else
-            BOOST_LEAF_ASSERT(0); // Possible ODR violation.
+                BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
-        default:
-            os << "Error ID " << what_.get_error_id();
+            }
         }
     }
-
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, result const & r )
@@ -5712,20 +5777,24 @@ namespace leaf_detail
 }
 
 template <>
-class BOOST_LEAF_NODISCARD result<void>:
+class BOOST_LEAF_SYMBOL_VISIBLE result<void>:
     result<leaf_detail::void_>
 {
+    template <class U>
+    friend class result;
+
+    friend class leaf_detail::dynamic_allocator;
+
     using result_discriminant = leaf_detail::result_discriminant;
     using void_ = leaf_detail::void_;
     using base = result<void_>;
 
-    template <class U>
-    friend class result;
-
-    result( result_discriminant && what ) noexcept:
-        base(std::move(what))
+#if BOOST_LEAF_CFG_CAPTURE
+    result( int err_id, leaf_detail::capture_list && cap ) noexcept:
+        base(err_id, std::move(cap))
     {
     }
+#endif
 
 public:
 
@@ -5754,18 +5823,6 @@ public:
     template <class Enum>
     result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = nullptr ) noexcept:
         base(e)
-    {
-    }
-#endif
-
-#if BOOST_LEAF_CFG_CAPTURE
-    result( context_ptr const & ctx ) noexcept:
-        base(ctx)
-    {
-    }
-
-    result( context_ptr && ctx ) noexcept:
-        base(std::move(ctx))
     {
     }
 #endif
@@ -5815,6 +5872,7 @@ public:
     using base::get_error_id;
     using base::error;
     using base::load;
+    using base::unload;
 };
 
 ////////////////////////////////////////
@@ -5843,8 +5901,8 @@ struct is_result_type<result<T>>: std::true_type
 #if __cplusplus >= 201703L
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 3842: #include <boost/leaf/handle_errors.hpp>
-// Expanded at line 5103: #include <boost/leaf/result.hpp>
+// Expanded at line 731: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 5174: #include <boost/leaf/result.hpp>
 #include <variant>
 #include <optional>
 #include <tuple>

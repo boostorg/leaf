@@ -442,7 +442,7 @@ a:hover{color:#4101a7}
 a:focus{color:#000000}
 h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{font-family:"Quicksand","DejaVu Sans",sans-serif;font-weight:300;font-style:normal;color:#4101a7;text-rendering:optimizeLegibility;margin-top:1em;margin-bottom:.5em;line-height:1.4em}
 code{font-family:"Anonymous Pro","DejaVu Sans Mono",monospace;font-weight:400;color:black}
-*:not(pre)>code{font-size:1.08em;font-style:normal!important;letter-spacing:0;padding:0 0;word-spacing:-.15em;background-color:transparent;-webkit-border-radius:0;border-radius:0;line-height:1.45;text-rendering:optimizeLegibility;word-wrap:break-word}
+*:not(pre)>code{font-size:1.0em;font-style:normal!important;letter-spacing:0;padding:0 0;word-spacing:-.15em;background-color:transparent;-webkit-border-radius:0;border-radius:0;line-height:1.45;text-rendering:optimizeLegibility;word-wrap:break-word}
 pre,pre>code{line-height:1.45;color:rgba(0,0,0,.9);font-family:"Anonymous Pro","DejaVu Sans Mono",monospace;font-weight:400;text-rendering:optimizeLegibility;font-size:1.05em;background-color:#f7f8f7}
 a:not(pre)>code:hover {color:#4101a7}
 kbd{font-family:"Anonymous Pro","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background-color:#f7f7f7;border:1px solid #ccc;-webkit-border-radius:3px;border-radius:3px;-webkit-box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em white inset;box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em #fff inset;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
