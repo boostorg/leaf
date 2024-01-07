@@ -260,14 +260,10 @@ int main()
 
 #if BOOST_LEAF_CFG_CAPTURE
     { // error move -> capture -> move
-        leaf::result<val> r1 = leaf::try_handle_some(
+        leaf::result<val> r1 = leaf::try_capture_all(
             []()->leaf::result<val>
             {
                 return leaf::new_error(e_err{ });
-            },
-            [](leaf::dynamic_capture const & cap)->leaf::result<val>
-            {
-                return cap;
             });
         BOOST_TEST(!r1);
         BOOST_TEST_EQ(err::count, 1);
@@ -282,15 +278,11 @@ int main()
     BOOST_TEST_EQ(err::count, 0);
     BOOST_TEST_EQ(val::count, 0);
     { // error copy -> capture -> move
-        leaf::result<val> r1 = leaf::try_handle_some(
+        leaf::result<val> r1 = leaf::try_capture_all(
             []()->leaf::result<val>
             {
                 leaf::error_id err = leaf::new_error( e_err{ } );
                 return leaf::result<val>(err);
-            },
-            [](leaf::dynamic_capture const & cap)->leaf::result<val>
-            {
-                return cap;
             });
         BOOST_TEST(!r1);
         BOOST_TEST_EQ(err::count, 1);
@@ -306,14 +298,10 @@ int main()
     BOOST_TEST_EQ(val::count, 0);
 
     { // error move -> capture -> assign-move
-        leaf::result<val> r1 = leaf::try_handle_some(
+        leaf::result<val> r1 = leaf::try_capture_all(
             []()->leaf::result<val>
             {
                 return leaf::new_error(e_err{ });
-            },
-            [](leaf::dynamic_capture const & cap)->leaf::result<val>
-            {
-                return cap;
             });
         BOOST_TEST(!r1);
         BOOST_TEST_EQ(err::count, 1);
@@ -328,15 +316,11 @@ int main()
     BOOST_TEST_EQ(err::count, 0);
     BOOST_TEST_EQ(val::count, 0);
     { // error copy -> capture -> assign-move
-        leaf::result<val> r1 = leaf::try_handle_some(
+        leaf::result<val> r1 = leaf::try_capture_all(
             []()->leaf::result<val>
             {
                 leaf::error_id err = leaf::new_error( e_err{ } );
                 return leaf::result<val>(err);
-            },
-            [](leaf::dynamic_capture const & cap)->leaf::result<val>
-            {
-                return cap;
             });
         BOOST_TEST(!r1);
         BOOST_TEST_EQ(err::count, 1);
@@ -456,14 +440,10 @@ int main()
 
 #if BOOST_LEAF_CFG_CAPTURE
     { // void error move -> capture -> move
-        leaf::result<void> r1 = leaf::try_handle_some(
+        leaf::result<void> r1 = leaf::try_capture_all(
             []()->leaf::result<void>
             {
                 return leaf::new_error(e_err{ });
-            },
-            [](leaf::dynamic_capture const & cap)->leaf::result<void>
-            {
-                return cap;
             });
         BOOST_TEST(!r1);
         BOOST_TEST(r1.operator->() == 0);
@@ -477,15 +457,11 @@ int main()
     }
     BOOST_TEST_EQ(err::count, 0);
     { // void error copy -> capture -> move
-        leaf::result<void> r1 = leaf::try_handle_some(
+        leaf::result<void> r1 = leaf::try_capture_all(
             []()->leaf::result<void>
             {
                 leaf::error_id err = leaf::new_error( e_err{ } );
                 return leaf::result<void>(err);
-            },
-            [](leaf::dynamic_capture const & cap)->leaf::result<void>
-            {
-                return cap;
             });
         BOOST_TEST(!r1);
         BOOST_TEST(r1.operator->() == 0);
@@ -500,14 +476,10 @@ int main()
     BOOST_TEST_EQ(err::count, 0);
 
     { // void error move -> capture -> assign-move
-        leaf::result<void> r1 = leaf::try_handle_some(
+        leaf::result<void> r1 = leaf::try_capture_all(
             []()->leaf::result<void>
             {
                 return leaf::new_error(e_err{ });
-            },
-            [](leaf::dynamic_capture const & cap)->leaf::result<void>
-            {
-                return cap;
             });
         BOOST_TEST(!r1);
         BOOST_TEST(r1.operator->() == 0);
@@ -521,15 +493,11 @@ int main()
     }
     BOOST_TEST_EQ(err::count, 0);
     { // void error copy -> capture -> assign-move
-        leaf::result<void> r1 = leaf::try_handle_some(
+        leaf::result<void> r1 = leaf::try_capture_all(
             []()->leaf::result<void>
             {
                 leaf::error_id err = leaf::new_error( e_err{ } );
                 return leaf::result<void>(err);
-            },
-            [](leaf::dynamic_capture const & cap)->leaf::result<void>
-            {
-                return cap;
             });
         BOOST_TEST(!r1);
         BOOST_TEST(r1.operator->() == 0);

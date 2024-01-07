@@ -126,55 +126,39 @@ int main()
 {
     test( []
     {
-        return leaf::try_handle_some(
+        return leaf::try_capture_all(
             []() -> leaf::result<int>
             {
                 return leaf::new_error(errc_a::a0, info<1>{1}, info<3>{3});
-            },
-            []( leaf::dynamic_capture const & cap ) -> leaf::result<int>
-            {
-                return cap;
             } );
      } );
 
     test( []
     {
-        return leaf::try_handle_some(
+        return leaf::try_capture_all(
             []() -> leaf::result<void>
             {
                 return leaf::new_error(errc_a::a0, info<1>{1}, info<3>{3});
-            },
-            []( leaf::dynamic_capture const & cap ) -> leaf::result<void>
-            {
-                return cap;
             } );
      } );
 
     test( []
     {
-        return leaf::try_handle_some(
+        return leaf::try_capture_all(
             []() -> leaf::result<int>
             {
                 auto load = leaf::on_error(errc_a::a0, info<1>{1}, info<3>{3});
                 return leaf::new_error();
-            },
-            []( leaf::dynamic_capture const & cap ) -> leaf::result<int>
-            {
-                return cap;
             } );
      } );
 
     test( []
     {
-        return leaf::try_handle_some(
+        return leaf::try_capture_all(
             []() -> leaf::result<void>
             {
                 auto load = leaf::on_error(errc_a::a0, info<1>{1}, info<3>{3});
                 return leaf::new_error();
-            },
-            []( leaf::dynamic_capture const & cap ) -> leaf::result<void>
-            {
-                return cap;
             } );
      } );
 

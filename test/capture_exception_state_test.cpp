@@ -64,17 +64,11 @@ struct info
 int main()
 {
     {
-        leaf::result<int> r = leaf::try_handle_some(
-            []() -> leaf::result<int>
+        leaf::result<int> r = leaf::try_capture_all(
+            []() -> int
             {
                 leaf::throw_exception(info<1>{}, info<3>{});
-            },
-            [](leaf::dynamic_capture const & cap) -> leaf::result<int>
-            {
-                BOOST_TEST(!cap.empty());
-                BOOST_TEST_EQ(cap.size(), 2);
-                return cap;
-            } );
+            });
         BOOST_TEST_EQ(count, 2);
 
     #if BOOST_LEAF_CFG_STD_STRING

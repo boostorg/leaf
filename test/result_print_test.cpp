@@ -89,14 +89,10 @@ int main()
 
 #if BOOST_LEAF_CFG_CAPTURE
     {
-        leaf::result<int> r = leaf::try_handle_some(
+        leaf::result<int> r = leaf::try_capture_all(
             []() -> leaf::result<int>
             {
                 return leaf::new_error(e_err{ });
-            },
-            []( leaf::dynamic_capture const & cap ) -> leaf::result<int>
-            {
-                return cap;
             } );
 #if BOOST_LEAF_CFG_STD_STRING
         std::ostringstream ss;

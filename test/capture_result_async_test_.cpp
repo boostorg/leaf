@@ -5,7 +5,7 @@
 
 #include <boost/leaf/config.hpp>
 
-#if defined(BOOST_LEAF_NO_EXCEPTIONS) || defined(BOOST_LEAF_NO_THREADS) || !BOOST_LEAF_CFG_CAPTURE
+#if defined(BOOST_LEAF_NO_THREADS) || !BOOST_LEAF_CFG_CAPTURE
 
 #include <iostream>
 
@@ -20,9 +20,9 @@ int main()
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
 #   include "leaf.hpp"
 #else
+#   include <boost/leaf/capture.hpp>
 #   include <boost/leaf/result.hpp>
 #   include <boost/leaf/handle_errors.hpp>
-#   include <boost/leaf/exception.hpp>
 #   include <boost/leaf/on_error.hpp>
 #endif
 
@@ -44,7 +44,7 @@ struct fut_info
     std::future<leaf::result<int>> fut;
 };
 
-template <class F>
+template <class ErrorHandlers, class F>
 std::vector<fut_info> launch_tasks( int task_count, F f )
 {
     BOOST_LEAF_ASSERT(task_count>0);
@@ -58,11 +58,7 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
             return fut_info { a, b, res, std::async( std::launch::async,
                 [=]
                 {
-                    return leaf::try_capture_all(
-                        [&]
-                        {
-                            return f(a, b, res);
-                        } );
+                    return leaf::capture(leaf::make_shared_context<ErrorHandlers>(), f, a, b, res);
                 } ) };
         } );
     return fut;
@@ -70,20 +66,9 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
 
 int main()
 {
-    int const task_count = 100;
     int received_a, received_b;
-
-    auto task =
-        []( int a, int b, int res )
-        {
-            if( res >= 0 )
-                return res;
-            else
-                leaf::throw_exception(info<1>{a}, info<2>{b}, info<3>{});
-        };
-
     auto error_handlers = std::make_tuple(
-        [&]( info<1> const & x1, info<2> const & x2, info<4> const & )
+        [&received_a, &received_b]( info<1> const & x1, info<2> const & x2, info<4> const & )
         {
             received_a = x1.value;
             received_b = x2.value;
@@ -95,17 +80,26 @@ int main()
         } );
 
     {
-        std::vector<fut_info> fut = launch_tasks(task_count, task);
+        std::vector<fut_info> fut = launch_tasks<decltype(error_handlers)>(
+            100,
+            []( int a, int b, int res ) -> leaf::result<int>
+            {
+                if( res >= 0 )
+                    return res;
+                else
+                    return leaf::new_error( info<1>{a}, info<2>{b}, info<3>{} );
+            } );
 
         for( auto & f : fut )
         {
             f.fut.wait();
-            received_a = received_b = 0;
-            int r = leaf::try_catch(
+            int r = leaf::try_handle_all(
                 [&]
                 {
                     auto load = leaf::on_error( info<4>{} );
-                    return f.fut.get().value();
+
+                    // Calling future_get is required in order to make the on_error (above) work.
+                    return leaf::future_get(f.fut);
                 },
                 error_handlers );
             if( f.result>=0 )
@@ -120,25 +114,34 @@ int main()
     }
 
     {
-        std::vector<fut_info> fut = launch_tasks(task_count, task);
+        std::vector<fut_info> fut = launch_tasks<decltype(error_handlers)>(
+            100,
+            []( int a, int b, int res ) -> leaf::result<int>
+            {
+                if( res >= 0 )
+                    return res;
+                else
+                    return leaf::new_error( info<1>{a}, info<2>{b}, info<3>{} );
+            } );
 
         for( auto & f : fut )
         {
             f.fut.wait();
-            received_a = received_b = 0;
-            int r = leaf::try_catch(
+            int r = leaf::try_handle_all(
                 [&]
                 {
                     auto load = leaf::on_error( info<4>{} );
 
-                    return leaf::try_catch(
+                    return leaf::try_handle_some(
                         [&]
                         {
-                            return f.fut.get().value();
+                            // Not calling future_get, a on_error in this scope won't work correctly.
+                            // This is to verify that the on_error in the outer scope (above) works.
+                            return f.fut.get();
                         },
-                        []() -> int
+                        []( leaf::error_info const & err )
                         {
-                            throw;
+                            return err.error();
                         } );
                 },
                 error_handlers );

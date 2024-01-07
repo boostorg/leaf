@@ -336,84 +336,6 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-#if BOOST_LEAF_CFG_CAPTURE
-
-class dynamic_capture
-{
-    template <class T>
-    friend class ::boost::leaf::result;
-
-    dynamic_capture( dynamic_capture const & ) = delete;
-    dynamic_capture & operator=( dynamic_capture const & ) = delete;
-
-    leaf_detail::dynamic_allocator * const da_;
-    error_id err_;
-
-protected:
-
-    dynamic_capture( dynamic_capture && ) = default;
-
-    BOOST_LEAF_CONSTEXPR dynamic_capture( leaf_detail::dynamic_allocator * da, error_id err ) noexcept:
-        da_(da),
-        err_(err)
-    {
-    }
-
-public:
-
-    BOOST_LEAF_CONSTEXPR bool empty() const noexcept
-    {
-        return !da_ || da_->empty();
-    }
-
-    BOOST_LEAF_CONSTEXPR int size() const noexcept
-    {
-        return da_ ? da_->size() : 0;
-    }
-
-    template <class T>
-    operator result<T>() const noexcept
-    {
-        if( da_ )
-            return da_->extract_capture_list<T>();
-        else
-            return { error_id() };
-    }
-
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, dynamic_capture const & x )
-    {
-        if( x.da_ )
-            x.da_->print(os, "Captured error objects:\n", x.err_.value());
-        return os;
-    }
-};
-
-namespace leaf_detail
-{
-    struct dynamic_capture_: dynamic_capture
-    {
-        BOOST_LEAF_CONSTEXPR dynamic_capture_( leaf_detail::dynamic_allocator * da, error_id err ) noexcept:
-            dynamic_capture(da, err)
-        {
-        }
-    };
-
-    template <>
-    struct handler_argument_traits<dynamic_capture const &>: handler_argument_always_available<dynamic_allocator>
-    {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static dynamic_capture_ get( Tup & tup, error_info const & ei ) noexcept
-        {
-            return dynamic_capture_(handler_argument_traits_defaults<dynamic_allocator>::check(tup, ei), ei.error());
-        }
-    };
-}
-
-#endif
-
-////////////////////////////////////////
-
 namespace leaf_detail
 {
     template <class T, class... List>
@@ -992,6 +914,113 @@ try_catch( TryBlock && try_block, H && ... h )
     }
 }
 
+#endif
+
+#if BOOST_LEAF_CFG_CAPTURE
+
+namespace leaf_detail
+{
+    template <class LeafResult>
+    struct try_capture_all_dispatch_non_void
+    {
+        using leaf_result = LeafResult;
+
+        template <class TryBlock>
+        inline
+        static
+        leaf_result
+        try_capture_all_( TryBlock && try_block ) noexcept
+        {
+            leaf_detail::slot<leaf_detail::dynamic_allocator> sl;
+            sl.activate();
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+            try
+#endif
+            {
+                if( leaf_result r = std::forward<TryBlock>(try_block)() )
+                {
+                    sl.deactivate();
+                    return r;
+                }
+                else
+                {
+                    sl.deactivate();
+                    return leaf_result(sl.value(error_id(r.error()).value()).template extract_capture_list<leaf_result>());
+                }
+            }
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+            catch( std::exception & ex )
+            {
+                sl.deactivate();
+                return sl.value(error_info(&ex).error().value()).template extract_capture_list<leaf_result>();
+            }
+            catch(...)
+            {
+                sl.deactivate();
+                return sl.value(error_info(nullptr).error().value()).template extract_capture_list<leaf_result>();
+            }
+#endif
+        }
+    };
+
+    template <class R, bool IsVoid = std::is_same<void, R>::value, bool IsResultType = is_result_type<R>::value>
+    struct try_capture_all_dispatch;
+
+    template <class R>
+    struct try_capture_all_dispatch<R, false, true>:
+        try_capture_all_dispatch_non_void<::boost::leaf::result<typename std::decay<decltype(std::declval<R>().value())>::type>>
+    {
+    };
+
+    template <class R>
+    struct try_capture_all_dispatch<R, false, false>:
+        try_capture_all_dispatch_non_void<::boost::leaf::result<typename std::remove_reference<R>::type>>
+    {
+    };
+
+    template <class R>
+    struct try_capture_all_dispatch<R, true, false>
+    {
+        using leaf_result = ::boost::leaf::result<R>;
+
+        template <class TryBlock>
+        inline
+        static
+        leaf_result
+        try_capture_all_( TryBlock && try_block ) noexcept
+        {
+            leaf_detail::slot<leaf_detail::dynamic_allocator> sl;
+            sl.activate();
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+            try
+#endif
+            {
+                std::forward<TryBlock>(try_block)();
+                return {};
+            }
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+            catch( std::exception & ex )
+            {
+                sl.deactivate();
+                return sl.value(error_info(&ex).error().value()).template extract_capture_list<leaf_result>();
+            }
+            catch(...)
+            {
+                sl.deactivate();
+                return sl.value(error_info(nullptr).error().value()).template extract_capture_list<leaf_result>();
+            }
+#endif
+        }
+    };
+}
+
+template <class TryBlock>
+inline
+typename leaf_detail::try_capture_all_dispatch<decltype(std::declval<TryBlock>()())>::leaf_result
+try_capture_all( TryBlock && try_block ) noexcept
+{
+    return leaf_detail::try_capture_all_dispatch<decltype(std::declval<TryBlock>()())>::try_capture_all_(std::forward<TryBlock>(try_block));
+}
 #endif
 
 } }

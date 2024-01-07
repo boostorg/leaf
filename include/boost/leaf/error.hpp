@@ -70,9 +70,6 @@ namespace boost { namespace leaf {
 
 class BOOST_LEAF_SYMBOL_VISIBLE error_id;
 
-template <class T>
-class BOOST_LEAF_SYMBOL_VISIBLE result;
-
 namespace leaf_detail
 {
     struct BOOST_LEAF_SYMBOL_VISIBLE tls_tag_id_factory_current_id;
@@ -373,19 +370,8 @@ namespace leaf_detail
                 } );
         }
 
-        int size() const noexcept
-        {
-            int c = 0;
-            for_each(
-                [&]( capture_list::node const & )
-                {
-                    ++c;
-                } );
-            return c;
-        }
-
-        template <class T>
-        result<T> extract_capture_list() noexcept
+        template <class LeafResult>
+        LeafResult extract_capture_list() noexcept
         {
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             if( std::exception_ptr ex = std::current_exception() )
@@ -397,7 +383,6 @@ namespace leaf_detail
             return { err_id_, capture_list(f) };
         }
 
-        using capture_list::empty;
         using capture_list::print;
     };
 
@@ -809,6 +794,18 @@ inline error_id current_error() noexcept
 {
     return leaf_detail::make_error_id(leaf_detail::current_id());
 }
+
+////////////////////////////////////////////
+
+class polymorphic_context
+{
+};
+
+#if BOOST_LEAF_CFG_CAPTURE
+using context_ptr = std::shared_ptr<polymorphic_context>;
+#endif
+
+////////////////////////////////////////////
 
 template <class Ctx>
 class context_activator

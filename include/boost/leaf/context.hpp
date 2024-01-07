@@ -18,7 +18,6 @@ namespace boost { namespace leaf {
 class error_info;
 class diagnostic_info;
 class verbose_diagnostic_info;
-class dynamic_capture;
 
 template <class>
 struct is_predicate: std::false_type
@@ -60,7 +59,6 @@ namespace leaf_detail
         static_assert(!std::is_same<E, error_info>::value, "Handlers must take leaf::error_info arguments by const &");
         static_assert(!std::is_same<E, diagnostic_info>::value, "Handlers must take leaf::diagnostic_info arguments by const &");
         static_assert(!std::is_same<E, verbose_diagnostic_info>::value, "Handlers must take leaf::verbose_diagnostic_info arguments by const &");
-        static_assert(!std::is_same<E, dynamic_capture>::value, "Handlers must take leaf::dynamic_capture arguments by const &");
     };
 
     template <class Pred>
@@ -382,6 +380,26 @@ BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && 
 {
     return { };
 }
+
+////////////////////////////////////////////
+
+#if BOOST_LEAF_CFG_CAPTURE
+
+template <class...>
+BOOST_LEAF_DEPRECATED("Please use try_capture_all instead of make_shared_context/capture.")
+inline context_ptr make_shared_context() noexcept
+{
+    return std::make_shared<polymorphic_context>();
+}
+
+template <class... H>
+BOOST_LEAF_DEPRECATED("Please use try_capture_all instead of make_shared_context/capture.")
+inline context_ptr make_shared_context( H && ... ) noexcept
+{
+    return std::make_shared<polymorphic_context>();
+}
+
+#endif
 
 } }
 

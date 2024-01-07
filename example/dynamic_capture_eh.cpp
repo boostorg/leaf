@@ -57,14 +57,10 @@ int main()
                 std::launch::async,
                 [&]
                 {
-                    return leaf::try_catch(
-                        [&]() -> leaf::result<task_result>
+                    return leaf::try_capture_all(
+                        [&]
                         {
                             return task();
-                        },
-                        []( leaf::dynamic_capture const & cap ) -> leaf::result<task_result>
-                        {
-                            return cap;
                         } );
                 } );
         } );

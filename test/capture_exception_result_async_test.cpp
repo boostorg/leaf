@@ -57,14 +57,10 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
             return fut_info { a, b, res, std::async( std::launch::async,
                 [=]
                 {
-                    return leaf::try_handle_some(
-                        [&]() -> leaf::result<int>
+                    return leaf::try_capture_all(
+                        [&]
                         {
                             return f(a, b, res);
-                        },
-                        []( leaf::dynamic_capture const & cap ) -> leaf::result<int>
-                        {
-                            return cap;
                         } );
                 } ) };
         } );
@@ -82,7 +78,7 @@ int main()
             if( res >= 0 )
                 return res;
             else
-                    return leaf::new_error( info<1>{a}, info<2>{b}, info<3>{} );
+                return leaf::new_error( info<1>{a}, info<2>{b}, info<3>{} );
         };
 
     auto error_handlers = std::make_tuple(
@@ -130,7 +126,7 @@ int main()
             f.fut.wait();
             received_a = received_b = 0;
             int r = leaf::try_handle_all(
-                [&]() -> leaf::result<int>
+                [&]
                 {
                     auto load = leaf::on_error( info<4>{} );
 

@@ -63,16 +63,10 @@ struct info
 int main()
 {
     {
-        leaf::result<int> r = leaf::try_handle_some(
+        leaf::result<int> r = leaf::try_capture_all(
             []() -> leaf::result<int>
             {
                 return leaf::new_error( info<1>{}, info<3>{} );
-            },
-            [](leaf::dynamic_capture const & cap) -> leaf::result<int>
-            {
-                BOOST_TEST(!cap.empty());
-                BOOST_TEST_EQ(cap.size(), 2);
-                return cap;
             } );
         BOOST_TEST_EQ(count, 2);
 

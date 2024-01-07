@@ -93,11 +93,6 @@ namespace leaf_detail
                 } );
         }
 
-        bool empty() const noexcept
-        {
-            return first_ == nullptr;
-        }
-
         template <class CharT, class Traits>
         void print( std::basic_ostream<CharT, Traits> & os, char const * title, int const err_id_to_print ) const
         {

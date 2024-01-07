@@ -125,83 +125,59 @@ int main()
 {
     test( []
     {
-        return leaf::try_handle_some(
-            []() -> leaf::result<int>
+        return leaf::try_capture_all(
+            []() -> int
             {
                 leaf::throw_exception(errc_a::a0, info<1>{1}, info<3>{3});
-            },
-            []( leaf::dynamic_capture const & cap ) -> leaf::result<int>
-            {
-                return cap;
             } );
     } );
 
     test( []
     {
-        return leaf::try_handle_some(
-            []() -> leaf::result<void>
+        return leaf::try_capture_all(
+            []() -> void
             {
                 leaf::throw_exception(errc_a::a0, info<1>{1}, info<3>{3});
-            },
-            []( leaf::dynamic_capture const & cap ) -> leaf::result<void>
-            {
-                return cap;
             } );
     } );
 
     test( []
     {
-        return leaf::try_handle_some(
-            []() -> leaf::result<int>
+        return leaf::try_capture_all(
+            []() -> int
             {
                 auto load = leaf::on_error(errc_a::a0, info<1>{1}, info<3>{3});
                 leaf::throw_exception();
-            },
-            []( leaf::dynamic_capture const & cap ) -> leaf::result<int>
-            {
-                return cap;
             } );
     } );
 
     test( []
     {
-        return leaf::try_handle_some(
-            []() -> leaf::result<void>
+        return leaf::try_capture_all(
+            []() -> void
             {
                 auto load = leaf::on_error(errc_a::a0, info<1>{1}, info<3>{3});
                 leaf::throw_exception();
-            },
-            []( leaf::dynamic_capture const & cap ) -> leaf::result<void>
-            {
-                return cap;
             } );
     } );
 
     test( []
     {
-        return leaf::try_handle_some(
-            []() -> leaf::result<int>
+        return leaf::try_capture_all(
+            []() -> int
             {
                 auto load = leaf::on_error(errc_a::a0, info<1>{1}, info<3>{3});
                 throw std::exception();
-            },
-            []( leaf::dynamic_capture const & cap ) -> leaf::result<int>
-            {
-                return cap;
             } );
     } );
 
     test( []
     {
-        return leaf::try_handle_some(
-            []() -> leaf::result<void>
+        return leaf::try_capture_all(
+            []() -> void
             {
                 auto load = leaf::on_error(errc_a::a0, info<1>{1}, info<3>{3});
                 throw std::exception();
-            },
-            []( leaf::dynamic_capture const & cap ) -> leaf::result<void>
-            {
-                return cap;
             } );
     } );
 

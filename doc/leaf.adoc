@@ -1113,7 +1113,7 @@ The following predicates are available:
 * <<match>>: as described above.
 * <<match_value>>: where `match<E, V...>` compares the object `e` of type `E` with the values `V...`, `match_value<E, V...>` compare `e.value` with the values `V...`.
 * <<match_member>>: similar to `match_value`, but takes a pointer to the data member to compare; that is, `match_member<&E::value, V...>` is equvialent to `match_value<E, V...>`. Note, however, that `match_member` requires {CPP}17 or newer, while `match_value` does not.
-* `<<catch_,catch_>><Ex...>`: Similar to `match`, but checks whether the caught `std::exception` object can be `dynamic_cast` to any of the `Ex` types.
+* `<<catch_>><Ex...>`: Similar to `match`, but checks whether the caught `std::exception` object can be `dynamic_cast` to any of the `Ex` types.
 * <<if_not>> is a special predicate that takes any other predicate `Pred` and requires that an error object of type `E` is available and that `Pred` evaluates to `false`. For example, `if_not<match<E, V...>>` requires that an object `e` of type `E` is available, and that it does not compare equal to any of the specified `V...`.
 
 The predicate system is easily extensible, see <<predicates,Predicates>>.
@@ -1242,7 +1242,7 @@ Error handling functions accept a `std::tuple` of error handlers in place of any
 
 Like exceptions, LEAF error objects are local to a thread. When using concurrency, sometimes we need to collect error objects in one thread, then use them to handle errors in another thread.
 
-LEAF supports this functionality with or without exception handling. In both cases error objects are captured and transported in a `leaf::<<result,result>><T>` object.
+LEAF supports this functionality with or without exception handling. In both cases error objects are captured and transported in a `leaf::<<result>><T>` object.
 
 [[tutorial-async_result]]
 ==== Transporting Errors Between Threads Without Exception Handling
@@ -1254,7 +1254,7 @@ Let's assume we have a `task` that we want to launch asynchronously, which produ
 leaf::result<task_result> task();
 ----
 
-Because the task will run asynchronously, in case of a failure we need to capture any produced error objects but not handle errors. We do this by invoking `try_handle_some`, passing an error handler that takes an argument of type <<dynamic_capture>>:
+Because the task will run asynchronously, in case of a failure we need to capture any produced error objects but not handle errors. We do this by invoking `try_capture_all`:
 
 [source,c++]
 ----
@@ -1264,23 +1264,15 @@ std::future<leaf::result<task_result>> launch_task() noexcept
     std::launch::async,
     [&]
     {
-      return leaf::try_handle_some(
-        [&]() -> leaf::result<task_result>
-        {
-            return task();
-        },
-        []( leaf::dynamic_capture const & cap ) -> leaf::result<task_result>
-        {
-            return cap;
-        });
+      return leaf::try_capture_all(task);
     } );
 }
 ----
 
 [.text-right]
-<<result>> | <<dynamic_capture>>
+<<result>> | <<try_capture_all>>
 
-The `dynamic_capture` object passed to the error handler can hold multiple error objects of different types, at the cost of dynamic memory allocations. Returning it from the error handler converts it to `leaf::result<T>`, which now holds the captured error objects. The `result<T>` object can then be stashed away or moved to another thread, and later passed to an error-handling function to unload its content and handle errors:
+In case of a failure, the returned from `try_capture_all` `result<T>` object holds all error objects communicated out of the `task`, at the cost of dynamic allocations. The `result<T>` object can then be stashed away or moved to another thread, and later passed to an error-handling function to unload its content and handle errors:
 
 [source,c++]
 ----
@@ -1314,7 +1306,7 @@ return leaf::try_handle_some(
 [.text-right]
 <<try_handle_some>> | <<result>> | <<BOOST_LEAF_AUTO>>
 
-NOTE: Follow this link to see a complete example program: https://github.com/boostorg/leaf/blob/master/example/dynamic_capture_result.cpp?ts=4[dynamic_capture_result.cpp].
+NOTE: Follow this link to see a complete example program: https://github.com/boostorg/leaf/blob/master/example/try_capture_all_result.cpp?ts=4[try_capture_all_result.cpp].
 
 [[tutorial-async_eh]]
 ==== Transporting Errors Between Threads With Exception Handling
@@ -1326,7 +1318,7 @@ Let's assume we have an asynchronous `task` which produces a `task_result` but c
 task_result task();
 ----
 
-We use `try_catch` together with `dynamic_capture` to capture all error objects and the `std::current_exception()` in a `result<T>`:
+We use `try_capture_all` to capture all error objects and the `std::current_exception()` in a `result<T>`:
 
 [source,c++]
 ----
@@ -1336,21 +1328,13 @@ std::future<task_result> launch_task()
     std::launch::async,
     [&]
     {
-      return leaf::try_catch(
-        [&]() -> leaf::result<task_result>
-        {
-            return task();
-        },
-        []( leaf::dynamic_capture const & cap ) -> leaf::result<task_result>
-        {
-            return cap;
-        });
+      return leaf::try_capture_all(task);
     } );
 }
 ----
 
 [.text-right]
-<<dynamic_capture>>
+<<try_capture_all>>
 
 To handle errors after waiting on the future, we use `try_catch` as usual:
 
@@ -1384,7 +1368,7 @@ return leaf::try_catch(
 [.text-right]
 <<try_catch>> | <<result>>
 
-NOTE: Follow this link to see a complete example program: https://github.com/boostorg/leaf/blob/master/example/dynamic_capture_eh.cpp?ts=4[dynamic_capture_eh.cpp].
+NOTE: Follow this link to see a complete example program: https://github.com/boostorg/leaf/blob/master/example/try_capture_all_eh.cpp?ts=4[try_capture_all_eh.cpp].
 
 '''
 
@@ -1589,7 +1573,7 @@ leaf::result<int> compute_answer() noexcept
 [.text-right]
 <<result>> | <<exception_to_result>>
 
-The `exception_to_result` template takes any number of exception types. All exception types thrown by the passed function are caught, and an attempt is made to convert the exception object to each of the specified types. Each successfully-converted slice of the caught exception object, as well as the return value of `std::current_exception`, are copied and <<tutorial-loading,loaded>>, and in the end the exception is converted to a `<<result,result>><T>` object.
+The `exception_to_result` template takes any number of exception types. All exception types thrown by the passed function are caught, and an attempt is made to convert the exception object to each of the specified types. Each successfully-converted slice of the caught exception object, as well as the return value of `std::current_exception`, are copied and <<tutorial-loading,loaded>>, and in the end the exception is converted to a `<<result>><T>` object.
 
 (In our example, `error_a` and `error_b` slices as communicated as error objects, but `error_c` exceptions will still be captured by `std::exception_ptr`).
 
@@ -1719,7 +1703,7 @@ int do_work( lua_State * L ) noexcept
 <3> Generate a new `error_id` and associate a `do_work_error_code` with it. Normally, we'd return this in a `leaf::result<T>`, but the `do_work` function signature (required by Lua) does not permit this.
 <4> Tell the Lua interpreter to abort the Lua program.
 
-Now we'll write the function that calls the Lua interpreter to execute the Lua function `call_do_work`, which in turn calls `do_work`. We'll return `<<result,result>><int>`, so that our caller can get the answer in case of success, or an error:
+Now we'll write the function that calls the Lua interpreter to execute the Lua function `call_do_work`, which in turn calls `do_work`. We'll return `<<result>><int>`, so that our caller can get the answer in case of success, or an error:
 
 [source,c++]
 ----
@@ -2636,23 +2620,13 @@ namespace boost { namespace leaf {
   typename std::decay<decltype(std::declval<TryBlock>()())>::type
   try_catch( TryBlock && try_block, H && ... h );
 
-  //////////////////////////////////////////
-
 #if BOOST_LEAF_CFG_CAPTURE
-  class dynamic_capture
-  {
-    //No public constructors
-
-    bool empty() const noexcept;
-    int size() const noexcept;
-
-    template <class T>
-    operator result<T>() const noexcept;
-
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, dynamic_capture const & );
-  };
+  template <class TryBlock>
+  result<T> // T deduced depending on TryBlock return type
+  try_capture_all( TryBlock && try_block );
 #endif
+
+  //////////////////////////////////////////
 
   class error_info
   {
@@ -2689,10 +2663,10 @@ namespace boost { namespace leaf {
 ----
 
 [.text-right]
-Reference: <<try_handle_all>> | <<try_handle_some>> | <<try_catch>> | <<error_info>> | <<diagnostic_info>> | <<verbose_diagnostic_info>> | <<dynamic_capture>>
+Reference: <<try_handle_all>> | <<try_handle_some>> | <<try_catch>> | <<try_capture_all>> | <<error_info>> | <<diagnostic_info>> | <<verbose_diagnostic_info>>
 ====
 
-[[handle_errors.hpp]]
+[[to_variant.hpp]]
 ==== `to_variant.hpp`
 
 ====
@@ -2931,7 +2905,7 @@ namespace boost { namespace leaf {
 } }
 ----
 
-This function can be used to catch exceptions from a lower-level library and convert them to `<<result,result>><T>`.
+This function can be used to catch exceptions from a lower-level library and convert them to `<<result>><T>`.
 
 Returns: :: Where `f` returns a type `T`, `exception_to_result` returns `leaf::result<T>`.
 
@@ -3139,15 +3113,15 @@ The `throw_exception` function is overloaded: it can be invoked with no argument
 
 <1> Selected if the first argument is not of type `error_id` and is an exception object, that is, iff `Ex` derives publicly from `std::exception`. In this case the thrown exception is of unspecified type which derives publicly from `Ex` *and* from class <<error_id>>, such that:
 * its `Ex` subobject is initialized by `std::forward<Ex>(ex)`;
-* its `error_id` subobject is initialized by `<<new_error,new_error>>(std::forward<E>(e)...`).
+* its `error_id` subobject is initialized by `<<new_error>>(std::forward<E>(e)...`).
 
 <2> Selected if the first argument is not of type `error_id` and is not an exception object. In this case the thrown exception is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
 ** its `std::exception` subobject is default-initialized;
-** its `error_id` subobject is initialized by `<<new_error,new_error>>(std::forward<E1>(e1), std::forward<E>(e)...`).
+** its `error_id` subobject is initialized by `<<new_error>>(std::forward<E1>(e1), std::forward<E>(e)...`).
 
 <3> If the fuction is invoked without arguments, the thrown exception is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
 ** its `std::exception` subobject is default-initialized;
-** its `error_id` subobject is initialized by `<<new_error,new_error>>()`.
+** its `error_id` subobject is initialized by `<<new_error>>()`.
 
 <4> Selected if the first argument is of type `error_id` and the second argument is an exception object, that is, iff `Ex` derives publicly from `std::exception`. In this case the thrown exception is of unspecified type which derives publicly from `Ex` *and* from class <<error_id>>, such that:
 ** its `Ex` subobject is initialized by `std::forward<Ex>(ex)`;
@@ -3207,7 +3181,7 @@ Requires: ::
 
 * This function is only available under {CPP}-17 or newer.
 * The `try_block` function may not take any arguments.
-* The type returned by the `try_block` function must be a `result<T>` type (see <<is_result_type>>). It is valid for the `try_block` to return `leaf::<<result,result>><T>`, however this is not a requirement.
+* The type returned by the `try_block` function must be a `result<T>` type (see <<is_result_type>>). It is valid for the `try_block` to return `leaf::<<result>><T>`, however this is not a requirement.
 
 The `to_variant` function uses <<try_handle_all>> internally to invoke the `try_block` and capture the result in a `std::variant`. On success, the variant contains the `T` object from the produced `result<T>`. Otherwise, the variant contains a `std::tuple` where each `std::optional` element contains an object of type `E~i~` from the user-supplied sequence `E...`, or is empty if the failure did not produce an error object of that type.
 
@@ -3237,6 +3211,39 @@ assert(std::get<2>(t).value() == E3::e33); <3>
 <2> Grab the error tuple.
 <3> We communicated an `E1` and an `E3` error object...
 <4> ...but not an `E2` error object.
+
+'''
+
+[[try_capture_all]]
+=== `try_capture_all`
+
+.#include <boost/leaf/handle_errors.hpp>
+[source,c++]
+----
+#if BOOST_LEAF_CFG_CAPTURE
+
+namespace boost { namespace leaf {
+
+template <class TryBlock>
+result<T> // T deduced depending on TryBlock return type
+try_capture_all( TryBlock && try_block ) noexcept;
+
+} }
+
+#endif
+----
+
+Return type: :: An instance of `leaf::<<result>><T>`, where T is deduced depending on the return type `R` of the `TryBlock`:
+* If `R` is a some type `Result<T>` for which <<is_result_type>> is true, `try_capture_all` returns `leaf::<<result>><T>`.
+* Otherwise it is assumed that the `TryBlock` reports errors by throwing exceptions, and the return value of `try_capture_all` is deduced as `leaf::result<R>`.
+
+Effects: :: `try_capture_all` executes `try_block`, catching and capturing all exceptions and all communicated error objects in the returned `leaf::result` object. The error objects are allocated dynamically.
+
+WARNING: Calls to `try_capture_all` must not be nested in `try_handle_all`/`try_handle_some`/`try_catch` or in another `try_capture_all`.
+
+NOTE: Under `BOOST_LEAF_CFG_CAPTURE=0`, `try_capture_all` is unavailable.
+
+See also: :: <<tutorial-async>>.
 
 '''
 
@@ -3307,19 +3314,18 @@ namespace boost { namespace leaf {
 
 Requires: ::
 * The `try_block` function may not take any arguments.
-* The type `R` returned by the `try_block` function must be a `result<T>` type (see <<is_result_type>>). It is valid for the `try_block` to return `leaf::<<result,result>><T>`, however this is not a requirement.
+* The type `R` returned by the `try_block` function must be a `result<T>` type (see <<is_result_type>>). It is valid for the `try_block` to return `leaf::<<result>><T>`, however this is not a requirement.
 * Each of the `h...` functions:
 ** must return a type that can be used to initialize an object of the type `R`; in case R is a `result<void>` (that is, in case of success it does not communicate a value), handlers that return `void` are permitted. If such a handler is selected, the `try_handle_some` return value is initialized by `{}`;
 ** may take any error objects, by value, by (`const`) reference, or as pointer (to `const`);
-** may take arguments, by value, of any predicate type: <<catch_>>, <<match>>, <<match_value>>, <<match_member>>, <<if_not>>, or of any user-defined predicate type `Pred` for which `<<is_predicate,is_predicate>><Pred>::value` is `true`;
-** may take a <<dynamic_capture>> argument by `const &`;
+** may take arguments, by value, of any predicate type: <<catch_>>, <<match>>, <<match_value>>, <<match_member>>, <<if_not>>, or of any user-defined predicate type `Pred` for which `<<is_predicate>><Pred>::value` is `true`;
 ** may take an <<error_info>> argument by `const &`;
 ** may take a <<diagnostic_info>> argument by `const &`;
 ** may take a <<verbose_diagnostic_info>> argument by `const &`.
 
 Effects: ::
 
-* Creates a local `<<context,context>><E...>` object `ctx`, where the `E...` types are automatically deduced from the types of arguments taken by each of `h...`, which guarantees that `ctx` is able to store all of the types required to handle errors.
+* Creates a local `<<context>><E...>` object `ctx`, where the `E...` types are automatically deduced from the types of arguments taken by each of `h...`, which guarantees that `ctx` is able to store all of the types required to handle errors.
 * Invokes the `try_block`:
 ** if the returned object `r` indicates success [.underline]#and# the `try_block` did not throw, `r` is forwarded to the caller.
 ** otherwise, LEAF  considers each of the `h...` handlers, in order, until it finds one that it can supply with arguments using the error objects currently stored in `ctx`, associated with `r.error()`. The first such handler is invoked and its return value is used to initialize the return value of `try_handle_some`, which can indicate success if the handler was able to handle the error, or failure if it was not.
@@ -3399,37 +3405,12 @@ try_handle_some(
 <1> This handler can be selected to handle any error, because it takes `e_file_name` as a `const *` (and nothing else).
 <2> If an `e_file_name` is available with the current error, print it.
 +
-* If `a~i~` is of a predicate type `Pred` (for which `<<is_predicate,is_predicate>><Pred>::value` is `true`), `E` is deduced as `typename Pred::error_type`, and then:
+* If `a~i~` is of a predicate type `Pred` (for which `<<is_predicate>><Pred>::value` is `true`), `E` is deduced as `typename Pred::error_type`, and then:
 ** If `E` is not `void`, and an error object `e` of type `E`, associated with `err`, is not currently stored in `ctx`, the handler is dropped; otherwise the handler is dropped  if the expression `Pred::evaluate(e)` returns `false`.
 ** if `E` is `void`, and a `std::exception` was not caught, the handler is dropped; otherwise the handler is dropped if the expression `Pred::evaluate(e)`, where `e` is of type `std::exception const &`, returns `false`.
 ** To invoke the handler, the `Pred` argument `a~i~` is initialized with `Pred{e}`.
 +
 NOTE: See also: <<predicates,Predicates>>.
-+
-* If `a~i~` is of type `dynamic_capture const &`,  `try_handle_some` is always able to produce it. It captures error objects which would otherwise have been discarded.
-+
-.Example:
-[source,c++]
-----
-....
-try_handle_some(
-
-  []
-  {
-    return f(); // returns leaf::result<T>
-  },
-
-  [](leaf::dynamic_capture const & cap) -> leaf::result<T> <1>
-  {
-    return cap; <2>
-  } );
-----
-+
-<1> This handler matches any error.
-<2> In this typical use, the contents of `cap` are captured in the returned `leaf::result<T>`.
-+
-[.text-right]
-<<dynamic_capture>> | <<result>>
 +
 * If `a~i~` is of type `error_info const &`,  `try_handle_some` is always able to produce it.
 +
@@ -3618,11 +3599,11 @@ namespace boost { namespace leaf {
 } }
 ----
 
-Requires: :: `!<<context::is_active,is_active>>()`.
+Requires: :: `!<<context::is_active>>()`.
 
 Effects: :: Associates `*this` with the calling thread.
 
-Ensures: :: `<<context::is_active,is_active>>()`.
+Ensures: :: `<<context::is_active>>()`.
 
 When a context is associated with a thread, thread-local pointers are set to point each `E...` type in its store, while the previous value of each such pointer is preserved in the `context` object, so that the effect of `activate` can be undone by calling `deactivate`.
 
@@ -3645,12 +3626,12 @@ namespace boost { namespace leaf {
 ----
 
 Requires: ::
-* `<<context::is_active,is_active>>()`;
+* `<<context::is_active>>()`;
 * `*this` must be the last activated `context` object in the calling thread.
 
 Effects: :: Un-associates `*this` with the calling thread.
 
-Ensures: :: `!<<context::is_active,is_active>>()`.
+Ensures: :: `!<<context::is_active>>()`.
 
 When a context is deactivated, the thread-local pointers that currently point to each individual error object storage in it are restored to their original value prior to calling <<context::activate>>.
 
@@ -3735,7 +3716,7 @@ namespace boost { namespace leaf {
 ----
 
 Requires: ::
-`!<<context::is_active,is_active>>()`.
+`!<<context::is_active>>()`.
 
 Effects: ::
 
@@ -3811,139 +3792,6 @@ The behavior of `diagnostic_info` (and <<verbose_diagnostic_info>>) is affected 
 * If it is 1 (the default), LEAF produces `diagnostic_info` but only if an active error handling context on the call stack takes an argument of type `diagnostic_info`;
 * If it is 0, the `diagnostic_info` functionality is stubbed out even for error handling contexts that take an argument of type `diagnostic_info`. This could shave a few cycles off the error path in some programs (but it is probably not worth it).
 --
-
-'''
-
-[[dynamic_capture]]
-=== `dynamic_capture`
-
-.#include <boost/leaf/handle_errors.hpp>
-[source,c++]
-----
-#if BOOST_LEAF_CFG_CAPTURE
-
-namespace boost { namespace leaf {
-
-  class dynamic_capture
-  {
-    //Constructors unspecified
-
-  public:
-
-    bool empty() const noexcept;
-    
-    int size() const noexcept;
-
-    template <class T>
-    operator result<T>() const noexcept;
-
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, dynamic_capture const & );
-  };
-
-} }
-
-#endif
-----
-
-By default, error objects reported via LEAF which are not taken as arguments by any active handler are discarted. If an active handler exists which takes an argument of type `dynamic_capture const &`, that object collects the error objects that would otherwise have been discarded, storing them on the heap.
-
-The message printed by `operator<<` includes diagnostic information about the captured error objects, except if `BOOST_LEAF_CFG_DIAGNOSTICS=0` is defined, in which case it does not.
-
-When an object of type `dynamic_capture const &` is returned from a handler that produces a `leaf::<<result,result>><T>`, its contents are captured (together with the `std::current_exception`) by the returned `result<T>` object, which can later be used with <<try_handle_some>> to handle the captured error objects. See <<dynamic_capture::operator_result>>.
-
-Under `BOOST_LEAF_CFG_CAPTURE=0`, `dynamic_capture` is unavailable.
-
-[WARNING]
---
-A `dynamic_capture` does not capture all error objects, only the ones that would have been discarded if not for the presence of a `dynamic_capture` handler. In the example below, the returned `result<void>` will capture the error object of type `E2` but not `e1`:
-```
-auto r = try_handle_some(
-  []() -> leaf::result<void>
-  {
-    return leaf::new_error(E1{}, E2{});
-  },
-  []( E1 e1, leaf::dynamic_capture const & cap ) -> leaf::result<void>
-  {
-    return cap;
-  });
-```
-Perhaps more surprising, this is true for the next example as well:
-```
-auto r = try_handle_some(
-  []() -> leaf::result<void>
-  {
-    return try_handle_some(
-      []() -> leaf::result<void>
-      {
-        return leaf::new_error(E1{}, E2{});
-      },
-      []( leaf::dynamic_capture const & cap ) -> leaf::result<void>
-      {
-        return cap;
-      });
-  },
-  []( E1 e1 )
-  {
-  });
-```
---
-
-See also: :: <<tutorial-async>>.
-
-'''
-
-[[dynamic_capture::empty]]
-==== `empty`
-
-.#include <boost/leaf/handle_errors.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  bool dynamic_capture::empty() const noexcept;
-
-} }
-----
-
-Returns: :: `true` if the `dynamic_capture` objects is empty, `false` otherwise.
-
-'''
-
-[[dynamic_capture::size]]
-==== `size`
-
-.#include <boost/leaf/handle_errors.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  int dynamic_capture::size() const noexcept;
-
-} }
-----
-
-Returns: :: The number of error objects captured by `*this`.
-
-'''
-
-[[dynamic_capture::operator_result]]
-==== `operator result<T>`
-
-.#include <boost/leaf/handle_errors.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-    template <class T>
-    operator result<T>() const noexcept;
-
-} }
-----
-
-Effects: :: Implicit conversion to `leaf::<<result,result>><T>`. The contents of `*this`, together with the `std::current_exception()` (if available) are moved and stored in the returned `result<T>` object, which can be stashed away to be used at a later time with <<try_handle_some>> / <<try_handle_all>> / <<try_catch>> to handle the captured errors. 
-
-'''
 
 [[error_id]]
 === `error_id`
@@ -4026,7 +3874,7 @@ TIP: To check if a given `std::error_code` is actually carrying an `error_id`, u
 Typically, users create new `error_id` objects by invoking <<new_error>>. The constructor that takes `std::error_code`, and the one that takes a type `Enum` for which `std::is_error_code_enum<Enum>::value` is `true`, have the following effects:
 
 * If `ec.value()` is `0`, the effect is the same as using the default constructor.
-* Otherwise, if `<<is_error_id,is_error_id>>(ec)` is `true`, the original `error_id` value is used to initialize `*this`;
+* Otherwise, if `<<is_error_id>>(ec)` is `true`, the original `error_id` value is used to initialize `*this`;
 * Otherwise, `*this` is initialized by the value returned by <<new_error>>, while `ec` is passed to `load`, which enables handlers used with `try_handle_some`, `try_handle_all` or `try_catch` to receive it as an argument of type `std::error_code`.
 
 '''
@@ -4519,7 +4367,7 @@ Requires: :: `T` must be movable, and its move constructor may not throw.
 Invariant: :: A `result<T>` object is in one of three states:
 * Value state, in which case it contains an object of type `T`, and <<result::value>> / <<result::operator_deref>> / <<result::operator_ptr>> can be used to access the contained value.
 * Error state, in which case it contains an error ID, and calling <<result::value>> throws `leaf::bad_result`.
-* Dynamic capture state, which is the same as the Error state, but in addition to the error ID, it holds a list of dynamically captured error objects; see <<dynamic_capture>>.
+* Dynamic capture state, which is the same as the Error state, but in addition to the error ID, it holds a list of dynamically captured error objects; see <<try_capture_all>>.
 
 `result<T>` objects are nothrow-moveable but are not copyable.
 
@@ -4584,7 +4432,7 @@ CAUTION: Initializing a `result<T>` with a default-initialized `error_id` object
 +
 ** a `std::error_code` object.
 ** an object of type `Enum` for which `std::is_error_code_enum<Enum>::value` is `true`.
-* To get a `result<T>` in <<result,dynamic capture state>>, write an error handler that takes a <<dynamic_capture>> object and returns a `result<T>` object, and return the capture object from the error handler.
+* To get a `result<T>` in <<result,dynamic capture state>>, call <<try_capture_all>>.
 --
 +
 When a `result` object is initialized with a `std::error_code` object, it is used to initialize an `error_id` object, then the behavior is the same as if initialized with `error_id`.
@@ -4752,9 +4600,9 @@ Effects:
 
 * If `*this` is in <<result,value state>>, returns a reference to the stored value.
 * If `*this` is in <<result,dynamic capture state>>, the captured error objects are unloaded, and:
-** If `*this` contains a captured exception object `ex`, the behavior is equivalent to `<<throw_exception,throw_exception>>(ex)`.
-** Otherwise, the behavior is equivalent to `<<throw_exception,throw_exception>>(bad_result{})`. 
-* If `*this` is in any other state, the behavior is equivalent to `<<throw_exception,throw_exception>>(bad_result{})`.
+** If `*this` contains a captured exception object `ex`, the behavior is equivalent to `<<throw_exception>>(ex)`.
+** Otherwise, the behavior is equivalent to `<<throw_exception>>(bad_result{})`. 
+* If `*this` is in any other state, the behavior is equivalent to `<<throw_exception>>(bad_result{})`.
 
 '''
 
@@ -4864,7 +4712,7 @@ The following predicates are available:
 * <<catch_>>
 * <<if_not>>
 
-In addition, any user-defined type `Pred` for which `<<is_predicate,is_predicate>><Pred>::value` is `true` is treated as a predicate. In this case, it is required that:
+In addition, any user-defined type `Pred` for which `<<is_predicate>><Pred>::value` is `true` is treated as a predicate. In this case, it is required that:
 
 * `Pred` defines an accessible member type `error_type` to specify the error object type it requires;
 * `Pred` defines an accessible static member function `evaluate`, which returns a boolean type, and can be invoked with an object of type `error_type const &`;
@@ -5399,7 +5247,7 @@ The error handling functionality provided by <<try_handle_some>> and <<try_handl
 
 To use an external `result<T>`  type R, you must specialize the `is_result_type` template so that `is_result_type<R>::value` evaluates to `true`.
 
-Naturally, the provided `leaf::<<result,result>><T>` class template satisfies these requirements. In addition, it allows error objects to be transported across thread boundaries, using a <<dynamic_capture>>.
+Naturally, the provided `leaf::<<result>><T>` class template satisfies these requirements. In addition, it allows error objects to be transported across thread boundaries, using a <<try_capture_all>>.
 
 [[macros]]
 == Reference: Macros
@@ -5551,7 +5399,7 @@ If `BOOST_LEAF_CFG_GNUC_STMTEXPR` is `1` (which is the default under `pass:[__GN
 #define BOOST_LEAF_THROW_EXCEPTION <<exact-dedfinition-unspecified>>
 ----
 
-Effects: :: `BOOST_LEAF_THROW_EXCEPTION(e...)` is equivalent to `leaf::<<throw_exception,throw_exception>>(e...)`, except the current source location is automatically communicated with the thrown exception, in a `<<e_source_location>>` object (in addition to all `e...` objects).
+Effects: :: `BOOST_LEAF_THROW_EXCEPTION(e...)` is equivalent to `leaf::<<throw_exception>>(e...)`, except the current source location is automatically communicated with the thrown exception, in a `<<e_source_location>>` object (in addition to all `e...` objects).
 
 '''
 
@@ -5564,7 +5412,7 @@ Effects: :: `BOOST_LEAF_THROW_EXCEPTION(e...)` is equivalent to `leaf::<<throw_e
 #define BOOST_LEAF_NEW_ERROR <<exact-definition-unspecified>>
 ----
 
-Effects: :: `BOOST_LEAF_NEW_ERROR(e...)` is equivalent to `leaf::<<new_error,new_error>>(e...)`, except the current source location is automatically passed, in a `<<e_source_location>>` object (in addition to all `e...` objects).
+Effects: :: `BOOST_LEAF_NEW_ERROR(e...)` is equivalent to `leaf::<<new_error>>(e...)`, except the current source location is automatically passed, in a `<<e_source_location>>` object (in addition to all `e...` objects).
 
 [[configuration]]
 == Configuration
@@ -5577,7 +5425,7 @@ The following configuration macros are recognized:
 
 * `BOOST_LEAF_CFG_STD_STRING`: Defining this macro as `0` disables all use of `std::string` (this requires `BOOST_LEAF_CFG_DIAGNOSTICS=0` as well). In this case LEAF does not `#include <string>` which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as `1`).
 
-* `BOOST_LEAF_CFG_CAPTURE`: Defining this macro as `0` disables the <<dynamic_capture>> functionality, which (only if used) allocates memory dynamically (if the macro is left undefined, LEAF defines it as `1`).
+* `BOOST_LEAF_CFG_CAPTURE`: Defining this macro as `0` disables <<try_capture_all>>, which (only if used) allocates memory dynamically (if the macro is left undefined, LEAF defines it as `1`).
 
 * `BOOST_LEAF_CFG_GNUC_STMTEXPR`: This macro controls whether or not <<BOOST_LEAF_CHECK>> is defined in terms of a https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html[GNU C statement expression], which enables its use to check for errors similarly to how the questionmark operator works in some languages (see <<checking_for_errors>>). By default the macro is defined as `1` under `pass:[__GNUC__]`, otherwise as `0`.
 
@@ -5795,7 +5643,7 @@ leaf::try_catch(
 [.text-right]
 <<try_catch>> | <<e_file_name>> | <<e_errno>>
 
-Similar syntax works without exception handling as well. Below is the same snippet, written using `<<result,result>><T>`:
+Similar syntax works without exception handling as well. Below is the same snippet, written using `<<result>><T>`:
 
 [source,c++]
 ----
@@ -6006,9 +5854,9 @@ leaf::try_catch(
 
 [WARNING]
 ====
-The fact that Boost Exception stores all supplied `boost::error_info` objects -- while LEAF discards them if they aren't needed -- affects the completeness of the message we get when we print `leaf::<<diagnostic_info,diagnostic_info>>` objects, compared to the string returned by https://www.boost.org/doc/libs/release/libs/exception/doc/diagnostic_information.html[`boost::diagnostic_information`].
+The fact that Boost Exception stores all supplied `boost::error_info` objects -- while LEAF discards them if they aren't needed -- affects the completeness of the message we get when we print `leaf::<<diagnostic_info>` objects, compared to the string returned by https://www.boost.org/doc/libs/release/libs/exception/doc/diagnostic_information.html[`boost::diagnostic_information`].
 
-If the user requires a complete diagnostic message, the solution is to use `leaf::<<verbose_diagnostic_info,verbose_diagnostic_info>>`. In this case, before unused error objects are discarded by LEAF, they are converted to string and printed. Note that this allocates memory dynamically.
+If the user requires a complete diagnostic message, the solution is to use `leaf::<<verbose_diagnostic_info>>`. In this case, before unused error objects are discarded by LEAF, they are converted to string and printed. Note that this allocates memory dynamically.
 ====
 
 '''

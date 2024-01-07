@@ -57,14 +57,10 @@ std::vector<fut_info> launch_tasks( int task_count, F f )
             return fut_info { a, b, res, std::async( std::launch::async,
                 [=]
                 {
-                    return leaf::try_handle_some(
+                    return leaf::try_capture_all(
                         [&]() -> leaf::result<int>
                         {
                             return f(a, b, res);
-                        },
-                        []( leaf::dynamic_capture const & cap ) -> leaf::result<int>
-                        {
-                            return cap;
                         } );
                 } ) };
         } );

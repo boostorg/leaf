@@ -235,6 +235,16 @@
 
 ////////////////////////////////////////
 
+#ifndef BOOST_LEAF_DEPRECATED
+#   if __cplusplus > 201402L
+#       define BOOST_LEAF_DEPRECATED(msg) [[deprecated(msg)]]
+#   else
+#       define BOOST_LEAF_DEPRECATED(msg)
+#   endif
+#endif
+
+////////////////////////////////////////
+
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 #   include <exception>
 #   if (defined(__cpp_lib_uncaught_exceptions) && __cpp_lib_uncaught_exceptions >= 201411L) || (defined(_MSC_VER) && _MSC_VER >= 1900)
