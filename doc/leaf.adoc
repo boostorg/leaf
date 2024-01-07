@@ -1654,9 +1654,9 @@ std::shared_ptr<lua_State> init_lua_state() noexcept
   lua_register(&*L, "do_work", &do_work); //<2>
 
   luaL_dostring(&*L, "\ //<3>
-\n      function call_do_work()\
-\n          return do_work()\
-\n      end");
+\n  function call_do_work()\
+\n    return do_work()\
+\n  end");
 
   return L;
 }
@@ -3224,9 +3224,9 @@ assert(std::get<2>(t).value() == E3::e33); <3>
 
 namespace boost { namespace leaf {
 
-template <class TryBlock>
-result<T> // T deduced depending on TryBlock return type
-try_capture_all( TryBlock && try_block ) noexcept;
+  template <class TryBlock>
+  result<T> // T deduced depending on TryBlock return type
+  try_capture_all( TryBlock && try_block ) noexcept;
 
 } }
 
