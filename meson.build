@@ -141,7 +141,6 @@ if option_enable_unit_tests
         'diagnostic_info_test3',
         'diagnostic_info_test4',
         'diagnostic_info_test5',
-        'dynamic_capture_test',
         'e_errno_test',
         'e_LastError_test',
         'error_code_test',
@@ -181,6 +180,7 @@ if option_enable_unit_tests
         'tls_array_alloc_test3',
         'tls_array_test',
         'to_variant_test',
+        'try_capture_all_test',
         'try_catch_error_id_test',
         'try_catch_system_error_test',
         'try_catch_test',
@@ -249,15 +249,15 @@ endif
 if option_enable_examples
 
     examples = [
-        'dynamic_capture_result',
         'error_log',
         'error_trace',
-        'print_half'
+        'print_half',
+        'try_capture_all_result'
     ]
     if option_exceptions
         examples += [
-            'dynamic_capture_eh',
-            'exception_to_result'
+            'exception_to_result',
+            'try_capture_all_eh'
         ]
         if option_lua
             examples += [

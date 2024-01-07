@@ -57,11 +57,7 @@ int main()
                 std::launch::async,
                 [&]
                 {
-                    return leaf::try_capture_all(
-                        [&]
-                        {
-                            return task();
-                        } );
+                    return leaf::try_capture_all(task);
                 } );
         } );
 
