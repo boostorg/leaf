@@ -2297,9 +2297,9 @@ The complete program illustrating this technique is available <a href="https://g
   <span class="n">lua_register</span><span class="p">(</span><span class="o">&amp;*</span><span class="n">L</span><span class="p">,</span> <span class="s">"do_work"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">do_work</span><span class="p">);</span> <i class="conum" data-value="2"></i><b>(2)</b>
 
   <span class="n">luaL_dostring</span><span class="p">(</span><span class="o">&amp;*</span><span class="n">L</span><span class="p">,</span> <span class="s">"\ </span><span class="err"><i class="conum" data-value="3"></i><b>(3)</b>
-</span><span class="se">\n</span><span class="s">      function call_do_work()\
-</span><span class="se">\n</span><span class="s">          return do_work()\
-</span><span class="se">\n</span><span class="s">      end"</span><span class="p">);</span>
+</span><span class="se">\n</span><span class="s">  function call_do_work()\
+</span><span class="se">\n</span><span class="s">    return do_work()\
+</span><span class="se">\n</span><span class="s">  end"</span><span class="p">);</span>
 
   <span class="k">return</span> <span class="n">L</span><span class="p">;</span>
 <span class="p">}</span></code></pre>
@@ -4359,9 +4359,9 @@ To automatically capture <code>__FILE__</code>, <code>__LINE__</code> and <code>
 </span>
 <span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
-<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">TryBlock</span><span class="p">&gt;</span>
-<span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="c1">// T deduced depending on TryBlock return type</span>
-<span class="n">try_capture_all</span><span class="p">(</span> <span class="n">TryBlock</span> <span class="o">&amp;&amp;</span> <span class="n">try_block</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">TryBlock</span><span class="p">&gt;</span>
+  <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="c1">// T deduced depending on TryBlock return type</span>
+  <span class="n">try_capture_all</span><span class="p">(</span> <span class="n">TryBlock</span> <span class="o">&amp;&amp;</span> <span class="n">try_block</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
 <span class="p">}</span> <span class="p">}</span>
 
