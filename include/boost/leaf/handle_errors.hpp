@@ -721,7 +721,7 @@ namespace leaf_detail
         (void) r->unload();
     }
 
-    void unload_result( void * )
+    inline void unload_result( void * )
     {
     }
 }
