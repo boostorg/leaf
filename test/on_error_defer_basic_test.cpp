@@ -20,6 +20,8 @@
 
 namespace leaf = boost::leaf;
 
+int cleanup_count;
+
 int global;
 
 int get_global() noexcept
@@ -36,13 +38,14 @@ struct info
 leaf::error_id g()
 {
     global = 0;
-    auto load = leaf::on_error( []{ return info<42>{get_global()}; }, []{ return info<-42>{-42}; } );
+    auto load = leaf::on_error( []{++cleanup_count;}, []{ return info<42>{get_global()}; }, []{ return info<-42>{-42}; } );
     global = 42;
     return leaf::new_error();
 }
 
 leaf::error_id f()
 {
+    auto load = leaf::on_error([]{++cleanup_count;});
     return g();
 }
 
@@ -71,5 +74,6 @@ int main()
             return 2;
         } );
     BOOST_TEST_EQ(r, 1);
+    BOOST_TEST_EQ(cleanup_count, 2);
     return boost::report_errors();
 }

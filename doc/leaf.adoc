@@ -3913,10 +3913,10 @@ namespace boost { namespace leaf {
 Requires: :: Each of the `Item...` types must be no-throw movable.
 
 Effects: ::
-* If `value()==0`, all of `item...` are discarded and no further action is taken.
+* If `thispass:[->]value()==0`, all of `item...` are discarded and no further action is taken.
 * Otherwise, what happens with each `item` depends on its type:
 ** If it is a function that takes a single argument of some type `E &`, that function is called with the object of type `E` currently associated with `*this`. If no such object exists, a default-initialized object is associated with `*this` and then passed to the function.
-** If it is a function that takes no arguments, than function is called to obtain an error object, which is associated with `*this`.
+** If it is a function that takes no arguments, that function is called to obtain an error object which is associated with `*this`, except in the special case of a `void` function, in which case it is invoked and no error object is obtained/loaded.
 ** Otherwise, the `item` itself is assumed to be an error object, which is associated with `*this`.
 
 Returns: :: `*this`.

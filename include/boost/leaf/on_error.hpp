@@ -107,10 +107,9 @@ namespace leaf_detail
         }
     };
 
-    template <class F>
+    template <class F, class ReturnType = typename function_traits<F>::return_type>
     class deferred_item
     {
-        using E = decltype(std::declval<F>()());
         F f_;
 
     public:
@@ -122,7 +121,25 @@ namespace leaf_detail
 
         BOOST_LEAF_CONSTEXPR void trigger( int err_id ) noexcept
         {
-            (void) load_slot<true>(err_id, f_());
+            (void) load_slot_deferred<true>(err_id, f_);
+        }
+    };
+
+    template <class F>
+    class deferred_item<F, void>
+    {
+        F f_;
+
+    public:
+
+        BOOST_LEAF_CONSTEXPR deferred_item( F && f ) noexcept:
+            f_(std::forward<F>(f))
+        {
+        }
+
+        BOOST_LEAF_CONSTEXPR void trigger( int ) noexcept
+        {
+            f_();
         }
     };
 
@@ -132,7 +149,6 @@ namespace leaf_detail
     template <class F, class A0>
     class accumulating_item<F, A0 &, 1>
     {
-        using E = A0;
         F f_;
 
     public:
@@ -144,7 +160,7 @@ namespace leaf_detail
 
         BOOST_LEAF_CONSTEXPR void trigger( int err_id ) noexcept
         {
-            accumulate_slot<true>(err_id, std::move(f_));
+            load_slot_accumulate<true>(err_id, std::move(f_));
         }
     };
 

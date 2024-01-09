@@ -464,7 +464,7 @@ namespace leaf_detail
     }
 
     template <bool OnError, class E, class F>
-    inline void dynamic_accumulate( int err_id, F && f  ) noexcept(OnError)
+    inline void dynamic_load_accumulate( int err_id, F && f  ) noexcept(OnError)
     {
         if( OnError )
         {
@@ -512,9 +512,9 @@ namespace leaf_detail
     template <bool OnError, class E>
     BOOST_LEAF_CONSTEXPR inline int load_slot( int err_id, E && e ) noexcept(OnError)
     {
-        static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
-        static_assert(!std::is_same<typename std::decay<E>::type, error_id>::value, "Error objects of type error_id are not allowed");
         using T = typename std::decay<E>::type;
+        static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
+        static_assert(!std::is_same<T, error_id>::value, "Error objects of type error_id are not allowed");
         BOOST_LEAF_ASSERT((err_id&3)==1);
         if( slot<T> * p = tls::read_ptr<slot<T>>() )
         {
@@ -529,7 +529,27 @@ namespace leaf_detail
     }
 
     template <bool OnError, class F>
-    BOOST_LEAF_CONSTEXPR inline int accumulate_slot( int err_id, F && f ) noexcept(OnError)
+    BOOST_LEAF_CONSTEXPR inline int load_slot_deferred( int err_id, F && f ) noexcept(OnError)
+    {
+        using E = typename function_traits<F>::return_type;
+        using T = typename std::decay<E>::type;
+        static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
+        static_assert(!std::is_same<T, error_id>::value, "Error objects of type error_id are not allowed");
+        BOOST_LEAF_ASSERT((err_id&3)==1);
+        if( slot<T> * p = tls::read_ptr<slot<T>>() )
+        {
+            if( !OnError || !p->has_value(err_id) )
+                (void) p->load(err_id, std::forward<F>(f)());
+        }
+#if BOOST_LEAF_CFG_CAPTURE
+        else
+            dynamic_load<OnError>(err_id, std::forward<F>(f)());
+#endif        
+        return 0;
+    }
+
+    template <bool OnError, class F>
+    BOOST_LEAF_CONSTEXPR inline int load_slot_accumulate( int err_id, F && f ) noexcept(OnError)
     {
         static_assert(function_traits<F>::arity==1, "Lambdas passed to accumulate must take a single e-type argument by reference");
         using E = typename std::decay<fn_arg_type<F,0>>::type;
@@ -544,7 +564,7 @@ namespace leaf_detail
         }
 #if BOOST_LEAF_CFG_CAPTURE
         else
-            dynamic_accumulate<OnError, E>(err_id, std::forward<F>(f));
+            dynamic_load_accumulate<OnError, E>(err_id, std::forward<F>(f));
 #endif
         return 0;
     }
@@ -578,7 +598,7 @@ namespace leaf_detail
     {
         BOOST_LEAF_CONSTEXPR static int load_( int err_id, F && f ) noexcept
         {
-            return load_slot<false>(err_id, std::forward<F>(f)());
+            return load_slot_deferred<false>(err_id, std::forward<F>(f));
         }
     };
 
@@ -587,7 +607,7 @@ namespace leaf_detail
     {
         BOOST_LEAF_CONSTEXPR static int load_( int err_id, F && f ) noexcept
         {
-            return accumulate_slot<false>(err_id, std::forward<F>(f));
+            return load_slot_accumulate<false>(err_id, std::forward<F>(f));
         }
     };
 }
