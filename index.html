@@ -5463,7 +5463,7 @@ To check if a given <code>std::error_code</code> is actually carrying an <code>e
 <div class="ulist">
 <ul>
 <li>
-<p>If <code>value()==0</code>, all of <code>item&#8230;&#8203;</code> are discarded and no further action is taken.</p>
+<p>If <code>this->value()==0</code>, all of <code>item&#8230;&#8203;</code> are discarded and no further action is taken.</p>
 </li>
 <li>
 <p>Otherwise, what happens with each <code>item</code> depends on its type:</p>
@@ -5473,7 +5473,7 @@ To check if a given <code>std::error_code</code> is actually carrying an <code>e
 <p>If it is a function that takes a single argument of some type <code>E &amp;</code>, that function is called with the object of type <code>E</code> currently associated with <code>*this</code>. If no such object exists, a default-initialized object is associated with <code>*this</code> and then passed to the function.</p>
 </li>
 <li>
-<p>If it is a function that takes no arguments, than function is called to obtain an error object, which is associated with <code>*this</code>.</p>
+<p>If it is a function that takes no arguments, that function is called to obtain an error object which is associated with <code>*this</code>, except in the special case of a <code>void</code> function, in which case it is invoked and no error object is obtained/loaded.</p>
 </li>
 <li>
 <p>Otherwise, the <code>item</code> itself is assumed to be an error object, which is associated with <code>*this</code>.</p>
