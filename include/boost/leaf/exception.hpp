@@ -102,11 +102,7 @@ namespace leaf_detail
     };
 }
 
-} }
-
 ////////////////////////////////////////
-
-namespace boost { namespace leaf {
 
 namespace leaf_detail
 {

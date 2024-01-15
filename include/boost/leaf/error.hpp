@@ -68,63 +68,6 @@
 
 namespace boost { namespace leaf {
 
-class BOOST_LEAF_SYMBOL_VISIBLE error_id;
-
-namespace leaf_detail
-{
-    struct BOOST_LEAF_SYMBOL_VISIBLE tls_tag_id_factory_current_id;
-
-    template <class=void>
-    struct BOOST_LEAF_SYMBOL_VISIBLE id_factory
-    {
-        static atomic_unsigned_int counter;
-
-        BOOST_LEAF_CONSTEXPR static unsigned generate_next_id() noexcept
-        {
-            auto id = (counter+=4);
-            BOOST_LEAF_ASSERT((id&3)==1);
-            return id;
-        }
-    };
-
-    template <class T>
-    atomic_unsigned_int id_factory<T>::counter(unsigned(-3));
-
-    inline int current_id() noexcept
-    {
-        unsigned id = tls::read_uint<tls_tag_id_factory_current_id>();
-        BOOST_LEAF_ASSERT(id==0 || (id&3)==1);
-        return int(id);
-    }
-
-    inline int new_id() noexcept
-    {
-        unsigned id = id_factory<>::generate_next_id();
-        tls::write_uint<tls_tag_id_factory_current_id>(id);
-        return int(id);
-    }
-
-    struct inject_loc
-    {
-        char const * const file;
-        int const line;
-        char const * const fn;
-
-        template <class T>
-        friend T operator+( inject_loc loc, T && x ) noexcept
-        {
-            x.load_source_location_(loc.file, loc.line, loc.fn);
-            return std::move(x);
-        }
-    };
-}
-
-} }
-
-////////////////////////////////////////
-
-namespace boost { namespace leaf {
-
 struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
 {
     char const * file;
@@ -138,11 +81,9 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
     }
 };
 
-} }
-
 ////////////////////////////////////////
 
-namespace boost { namespace leaf {
+class BOOST_LEAF_SYMBOL_VISIBLE error_id;
 
 namespace leaf_detail
 {
@@ -207,13 +148,9 @@ namespace leaf_detail
     };
 }
 
-} }
-
 ////////////////////////////////////////
 
 #if BOOST_LEAF_CFG_CAPTURE
-
-namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
@@ -485,13 +422,9 @@ namespace leaf_detail
     }
 }
 
-} }
-
 #endif
 
 ////////////////////////////////////////
-
-namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
@@ -570,11 +503,7 @@ namespace leaf_detail
     }
 }
 
-} }
-
 ////////////////////////////////////////
-
-namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
@@ -612,13 +541,58 @@ namespace leaf_detail
     };
 }
 
-} }
-
 ////////////////////////////////////////
 
-#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+namespace leaf_detail
+{
+    struct BOOST_LEAF_SYMBOL_VISIBLE tls_tag_id_factory_current_id;
 
-namespace boost { namespace leaf {
+    template <class=void>
+    struct BOOST_LEAF_SYMBOL_VISIBLE id_factory
+    {
+        static atomic_unsigned_int counter;
+
+        BOOST_LEAF_CONSTEXPR static unsigned generate_next_id() noexcept
+        {
+            auto id = (counter+=4);
+            BOOST_LEAF_ASSERT((id&3)==1);
+            return id;
+        }
+    };
+
+    template <class T>
+    atomic_unsigned_int id_factory<T>::counter(unsigned(-3));
+
+    inline int current_id() noexcept
+    {
+        unsigned id = tls::read_uint<tls_tag_id_factory_current_id>();
+        BOOST_LEAF_ASSERT(id==0 || (id&3)==1);
+        return int(id);
+    }
+
+    inline int new_id() noexcept
+    {
+        unsigned id = id_factory<>::generate_next_id();
+        tls::write_uint<tls_tag_id_factory_current_id>(id);
+        return int(id);
+    }
+
+    struct inject_loc
+    {
+        char const * const file;
+        int const line;
+        char const * const fn;
+
+        template <class T>
+        friend T operator+( inject_loc loc, T && x ) noexcept
+        {
+            x.load_source_location_(loc.file, loc.line, loc.fn);
+            return std::move(x);
+        }
+    };
+}
+
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
 namespace leaf_detail
 {
@@ -670,13 +644,9 @@ inline bool is_error_id( std::error_code const & ec ) noexcept
     return res;
 }
 
-} }
-
 #endif
 
 ////////////////////////////////////////
-
-namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
@@ -857,11 +827,7 @@ public:
     }
 };
 
-} }
-
 ////////////////////////////////////////////
-
-namespace boost { namespace leaf {
 
 template <class R>
 struct is_result_type: std::false_type
