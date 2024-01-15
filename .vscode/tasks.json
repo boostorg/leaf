@@ -44,7 +44,7 @@
             "dependsOn": [
                 "Generate leaf.hpp"
             ],
-            "command": "cd ${workspaceRoot}/_bld/debug_leaf_hpp && ninja && meson test && cd ${workspaceRoot}/_bld/debug && ninja && meson test",
+            "command": "cd ${workspaceRoot}/_bld/debug && ninja && meson test && cd ${workspaceRoot}/_bld/debug && ninja && meson test",
             "problemMatcher": {
                 "base": "$gcc",
                 "fileLocation": [
