@@ -329,9 +329,18 @@ protected:
         }
     }
 
+    template <class U>
+    void move_assign( result<U> && x ) noexcept
+    {
+        destroy();
+        what_ = move_from(std::move(x));
+    }
+
 public:
 
     using value_type = T;
+
+    // NOTE: Copy constructor implicitly deleted.
 
     result( result && x ) noexcept:
         what_(move_from(std::move(x)))
@@ -404,8 +413,8 @@ public:
     {
     }
 
-    template <class Enum>
-    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type * = nullptr ) noexcept:
+    template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
+    result( Enum e ) noexcept:
         what_(error_id(e))
     {
     }
@@ -416,18 +425,18 @@ public:
         destroy();
     }
 
+    // NOTE: Assignment operator implicitly deleted.
+
     result & operator=( result && x ) noexcept
     {
-        destroy();
-        what_ = move_from(std::move(x));
+        move_assign(std::move(x));
         return *this;
     }
 
-    template <class U>
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
     result & operator=( result<U> && x ) noexcept
     {
-        destroy();
-        what_ = move_from(std::move(x));
+        move_assign(std::move(x));
         return *this;
     }
 
@@ -627,6 +636,7 @@ public:
 
     using value_type = void;
 
+    // NOTE: Copy constructor implicitly deleted.
     result( result && x ) noexcept:
         base(std::move(x))
     {
@@ -647,8 +657,8 @@ public:
     {
     }
 
-    template <class Enum>
-    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = nullptr ) noexcept:
+    template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
+    result( Enum e ) noexcept:
         base(e)
     {
     }
@@ -656,6 +666,13 @@ public:
 
     ~result() noexcept
     {
+    }
+
+    // NOTE: Assignment operator implicitly deleted.
+    result & operator=( result && x ) noexcept
+    {
+        base::move_assign(std::move(x));
+        return *this;
     }
 
     void value() const
