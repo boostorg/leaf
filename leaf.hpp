@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 01/15/2024 from https://github.com/boostorg/leaf/tree/bfabf9d.
+// Generated on 01/18/2024 from https://github.com/boostorg/leaf/tree/52bbec0.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
@@ -1840,25 +1840,25 @@ namespace leaf_detail
 #if BOOST_LEAF_CFG_GNUC_STMTEXPR
 
 #define BOOST_LEAF_CHECK(r)\
-        ({\
-            auto && BOOST_LEAF_TMP = (r);\
-            static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
-                "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
-            if( !BOOST_LEAF_TMP )\
-                return BOOST_LEAF_TMP.error();\
-            std::move(BOOST_LEAF_TMP);\
-        }).value()
+    ({\
+        auto && BOOST_LEAF_TMP = (r);\
+        static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
+            "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
+        if( !BOOST_LEAF_TMP )\
+            return BOOST_LEAF_TMP.error();\
+        std::move(BOOST_LEAF_TMP);\
+    }).value()
 
 #else
 
 #define BOOST_LEAF_CHECK(r)\
-        {\
-            auto && BOOST_LEAF_TMP = (r);\
-            static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
-                "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
-            if( !BOOST_LEAF_TMP )\
-                return BOOST_LEAF_TMP.error();\
-        }
+    {\
+        auto && BOOST_LEAF_TMP = (r);\
+        static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
+            "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
+        if( !BOOST_LEAF_TMP )\
+            return BOOST_LEAF_TMP.error();\
+    }
 
 #endif
 
@@ -5500,9 +5500,18 @@ protected:
         }
     }
 
+    template <class U>
+    void move_assign( result<U> && x ) noexcept
+    {
+        destroy();
+        what_ = move_from(std::move(x));
+    }
+
 public:
 
     using value_type = T;
+
+    // NOTE: Copy constructor implicitly deleted.
 
     result( result && x ) noexcept:
         what_(move_from(std::move(x)))
@@ -5575,8 +5584,8 @@ public:
     {
     }
 
-    template <class Enum>
-    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type * = nullptr ) noexcept:
+    template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
+    result( Enum e ) noexcept:
         what_(error_id(e))
     {
     }
@@ -5587,18 +5596,18 @@ public:
         destroy();
     }
 
+    // NOTE: Assignment operator implicitly deleted.
+
     result & operator=( result && x ) noexcept
     {
-        destroy();
-        what_ = move_from(std::move(x));
+        move_assign(std::move(x));
         return *this;
     }
 
-    template <class U>
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
     result & operator=( result<U> && x ) noexcept
     {
-        destroy();
-        what_ = move_from(std::move(x));
+        move_assign(std::move(x));
         return *this;
     }
 
@@ -5798,6 +5807,7 @@ public:
 
     using value_type = void;
 
+    // NOTE: Copy constructor implicitly deleted.
     result( result && x ) noexcept:
         base(std::move(x))
     {
@@ -5818,8 +5828,8 @@ public:
     {
     }
 
-    template <class Enum>
-    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = nullptr ) noexcept:
+    template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
+    result( Enum e ) noexcept:
         base(e)
     {
     }
@@ -5827,6 +5837,13 @@ public:
 
     ~result() noexcept
     {
+    }
+
+    // NOTE: Assignment operator implicitly deleted.
+    result & operator=( result && x ) noexcept
+    {
+        base::move_assign(std::move(x));
+        return *this;
     }
 
     void value() const
