@@ -50,9 +50,6 @@ endif::[]
 [[support]]
 == Support
 
-* https://Cpplang.slack.com[cpplang on Slack] (use the `#boost` channel)
-* https://lists.boost.org/mailman/listinfo.cgi/boost-users[Boost Users Mailing List]
-* https://lists.boost.org/mailman/listinfo.cgi/boost[Boost Developers Mailing List]
 * https://github.com/boostorg/leaf/issues[Report issues] on GitHub
 
 [[distribution]]
@@ -77,7 +74,7 @@ A typical design is to return a variant type, e.g. `result<T, E>`. Internally, s
 
 The design of LEAF is informed by the observation that the immediate caller must have access to the discriminant in order to determine the availability of a valid `T`, but otherwise it is rare that it needs to access any error objects. They are only needed once an error handling scope is reached.
 
-Therefore what would have been a `result<T, E>` becomes `result<T>`, which stores the discriminant and (optionally) a `T`, while error objects are delivered directly to the error handling scope where it is needed.
+Therefore what would have been a `result<T, E>` becomes `result<T>`, which stores the discriminant and (optionally) a `T`, while error objects are delivered directly to the error handling scope where they are needed.
 
 The benefit of this decomposition is that `result<T>` becomes extremely lightweight, as it is not coupled with error types; further, error objects are communicated in constant time (independent of the call stack depth). Even very large objects are handled efficiently without dynamic memory allocation.
 
@@ -211,7 +208,7 @@ leaf::result<U> r = leaf::try_handle_some(
 
 First, `try_handle_some` executes the first function passed to it; it attempts to produce a `result<U>`, but it may fail.
 
-The second lambda is an error handler: it will be called iff the first lambda fails, producing an error object of type `err1`. That object is stored on the stack, local to the `try_handle_some` function (LEAF knows to allocate this storage because we gave it an error handler that takes an `err1`). Error handlers passed to `leaf::try_handle_some` can return a valid `leaf::result<U>` but are allowed to fail.
+The second lambda is an error handler: it will be called iff the first lambda fails with an error object of type `err1`. That object is stored on the stack, local to the `try_handle_some` function (LEAF knows to allocate this storage because we gave it an error handler that takes an `err1`). Error handlers passed to `leaf::try_handle_some` can return a valid `leaf::result<U>` but are allowed to fail.
 
 It is possible for an error handler to declare that it can only handle some specific values of a given error type:
 
@@ -229,7 +226,7 @@ leaf::result<U> r = leaf::try_handle_some(
 
   []( leaf::match<err1, err1::e1, err1::e3> ) -> leaf::result<U>
   {
-    // Handle err::e1 or err1::e3
+    // Handle err1::e1 or err1::e3
   },
 
   []( err1 e ) -> leaf::result<U>
@@ -639,7 +636,7 @@ T f()
 
 The `leaf::throw_exception` function handles the passed error objects just like `leaf::new_error` does, and then throws an object of a type that derives from `std::exception`. Using this technique, the exception type is not important: `leaf::try_catch` catches all exceptions, then goes through the usual LEAF error handler selection routine.
 
-If instead we want to use the legacy convention of throwing different types to indicate different failures, we simply pass an exception object (that is, an object of a type that derives from `std::exception`) as the first argument to `leaf::throw_exception`:
+If instead we want to use the usual convention of throwing different types to indicate different failures, we simply pass an exception object (that is, an object of a type that derives from `std::exception`) as the first argument to `leaf::throw_exception`:
 
 [source,c++]
 ----
@@ -895,7 +892,7 @@ leaf::result<void> operation( char const * file_name ) noexcept
 <1> Success! Use `r.value()`.
 <2> `try_something` has failed; `compute_info` will only be called if an error handler exists in the call stack which takes a `info` argument.
 +
-* If we pass a function that takes a single argument of type `E &`, LEAF calls the function with the object of type `E` currently loaded in an active `context`, associated with the error. If no such object is available, a new one is default-initialized and then passed to the function.
+* If we pass a function that takes a single argument of some type `E &`, LEAF calls the function with the object of type `E` currently loaded in an active `context`, associated with the error. If no such object is available, a new one is default-initialized and then passed to the function.
 +
 For example, if an operation that involves many different files fails, a program may provide for collecting all relevant file names in a `e_relevant_file_names` object:
 +
@@ -1322,7 +1319,7 @@ We use `try_capture_all` to capture all error objects and the `std::current_exce
 
 [source,c++]
 ----
-std::future<task_result> launch_task()
+std::future<leaf::result<task_result>> launch_task()
 {
   return std::async(
     std::launch::async,
@@ -1883,10 +1880,9 @@ In this case, the output may look like this:
 Unrecognized error detected, cryptic diagnostic information follows.
 leaf::diagnostic_info for Error ID = 1:
 [with Name = error_code]: 1
-Detected 1 attempt to communicate an unexpected error object of type [with Name = boost::leaf::e_file_name]
 ----
 
-Notice how the diagnostic information for `e_file_name` changed: because it was discarded, LEAF is unable to print it, and so `diagnostic_info` can only inform about its type, but not its value.
+Notice how the diagnostic information for `e_file_name` changed: because it was discarded, LEAF is unable to print it.
 
 TIP: The automatically-generated diagnostic messages are developer-friendly, but not user-friendly. Therefore, `operator<<` overloads for error types should only print technical information in English, and should not attempt to localize strings or to format a user-friendly message; this should be done in error handling functions specifically designed for that purpose.
 
@@ -2289,12 +2285,26 @@ namespace boost { namespace leaf {
 #define BOOST_LEAF_AUTO(v, r)\
   BOOST_LEAF_ASSIGN(auto v, r)
 
+#if BOOST_LEAF_CFG_GNUC_STMTEXPR
+
 #define BOOST_LEAF_CHECK(r)\
-  auto && <<temp>> = r;\
-  if( <<temp>> )\
-    ;\
-  else\
-    return <<temp>>.error()
+  ({\
+    auto && <<temp>> = (r);\
+    if( !<<temp>> )\
+        return <<temp>>.error();\
+    std::move(<<temp>>);\
+  }).value()
+
+#else
+
+#define BOOST_LEAF_CHECK(r)\
+  {\
+    auto && <<temp>> = r;\
+    if( !<<temp>> )\
+      return <<temp>>.error()\
+  }
+
+#endif
 
 #define BOOST_LEAF_NEW_ERROR <<exact-definition-unspecified>>
 ----
@@ -2369,40 +2379,54 @@ namespace boost { namespace leaf {
 
     using value_type = T;
 
+    // NOTE: Copy constructor implicitly deleted.
+    result( result && r ) noexcept;
+
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
+    result( result<U> && r ) noexcept;
+
     result() noexcept;
+
     result( T && v ) noexcept;
+
     result( T const & v );
 
-    template <class U>
-    result( U && u, <<enabled_if_T_can_be_inited_with_U>> );
+    result( error_id err ) noexcept;
 
-    template <class Enum>
-    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
+    result( U && u );
+
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
     result( std::error_code const & ec ) noexcept;
 
-    result( result && r ) noexcept;
+    template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
+    result( Enum e ) noexcept;
 
-    template <class U>
-    result( result<U> && r ) noexcept;
+#endif
 
+    // NOTE: Assignment operator implicitly deleted.
     result & operator=( result && r ) noexcept;
 
-    template <class U>
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
     result & operator=( result<U> && r ) noexcept;
 
     bool has_value() const noexcept;
     bool has_error() const noexcept;
     explicit operator bool() const noexcept;
 
-    T const & value() const;
-    T & value();
+    T const & value() const &;
+    T & value() &;
+    T const && value() const &&;
+    T && value() &&;
 
     T const * operator->() const noexcept;
     T * operator->() noexcept;
 
-    T const & operator*() const noexcept;
-    T & operator*() noexcept;
+    T const & operator*() const & noexcept;
+    T & operator*() & noexcept;
+    T const && operator*() const && noexcept;
+    T && operator*() && noexcept;
 
     <<unspecified-type>> error() noexcept;
 
@@ -2422,28 +2446,33 @@ namespace boost { namespace leaf {
 
     using value_type = void;
 
+    // NOTE: Copy constructor implicitly deleted.
+    result( result && r ) noexcept;
+
     result() noexcept;
 
     result( error_id err ) noexcept;
 
-    template <class Enum>
-    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
     result( std::error_code const & ec ) noexcept;
 
-    result( result && r ) noexcept;
+    template <class Enum, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type>
+    result( Enum e ) noexcept;
 
-    template <class U>
-    result( result<U> && r ) noexcept;
+#endif
 
+    // NOTE: Assignment operator implicitly deleted.
     result & operator=( result && r ) noexcept;
-
-    template <class U>
-    result & operator=( result<U> && r ) noexcept;
 
     explicit operator bool() const noexcept;
 
     void value() const;
+
+    void const * operator->() const noexcept;
+    void * operator->() noexcept;
+
+    void operator*() const noexcept;
 
     <<unspecified-type>> error() noexcept;
 
@@ -4272,47 +4301,64 @@ namespace boost { namespace leaf {
 
     using value_type = T;
 
-    result() noexcept;
-    result( T && v ) noexcept;
-    result( T const & v );
+    // NOTE: Copy constructor implicitly deleted.
+    result( result && r ) noexcept;
 
-    template <class U>
-    result( U &&, <<enabled_if_T_can_be_inited_with_U>> );
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
+    result( result<U> && r ) noexcept;
+
+    result() noexcept;
+
+    result( T && v ) noexcept;
+
+    result( T const & v );
 
     result( error_id err ) noexcept;
 
-    template <class Enum>
-    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
+    result( U && u );
+
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
     result( std::error_code const & ec ) noexcept;
 
-    result( result && r ) noexcept;
+    template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
+    result( Enum e ) noexcept;
 
-    template <class U>
-    result( result<U> && r ) noexcept;
+#endif
 
+    // NOTE: Assignment operator implicitly deleted.
     result & operator=( result && r ) noexcept;
 
-    template <class U>
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
     result & operator=( result<U> && r ) noexcept;
 
     bool has_value() const noexcept;
     bool has_error() const noexcept;
     explicit operator bool() const noexcept;
 
-    T const & value() const;
-    T & value();
+    T const & value() const &;
+    T & value() &;
+    T const && value() const &&;
+    T && value() &&;
 
     T const * operator->() const noexcept;
     T * operator->() noexcept;
 
-    T const & operator*() const noexcept;
-    T & operator*() noexcept;
+    T const & operator*() const & noexcept;
+    T & operator*() & noexcept;
+    T const && operator*() const && noexcept;
+    T && operator*() && noexcept;
 
     <<unspecified-type>> error() noexcept;
 
     template <class... Item>
     error_id load( Item && ... item ) noexcept;
+    
+    void unload();
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const & );
   };
 
   template <>
@@ -4322,38 +4368,51 @@ namespace boost { namespace leaf {
 
     using value_type = void;
 
+    // NOTE: Copy constructor implicitly deleted.
+    result( result && r ) noexcept;
+
     result() noexcept;
 
     result( error_id err ) noexcept;
 
-    template <class Enum>
-    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
     result( std::error_code const & ec ) noexcept;
 
-    result( result && r ) noexcept;
+    template <class Enum, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type>
+    result( Enum e ) noexcept;
 
-    template <class U>
-    result( result<U> && r ) noexcept;
+#endif
 
+    // NOTE: Assignment operator implicitly deleted.
     result & operator=( result && r ) noexcept;
 
-    template <class U>
-    result & operator=( result<U> && r ) noexcept;
-
-    bool has_value() const noexcept;
-    bool has_error() const noexcept;
     explicit operator bool() const noexcept;
 
     void value() const;
+
+    void const * operator->() const noexcept;
+    void * operator->() noexcept;
+
+    void operator*() const noexcept;
 
     <<unspecified-type>> error() noexcept;
 
     template <class... Item>
     error_id load( Item && ... item ) noexcept;
+    
+    void unload();
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const &);
   };
 
   struct bad_result: std::exception { };
+
+  template <class T>
+  struct is_result_type<result<T>>: std::true_type
+  {
+  };
 
 } }
 ----
@@ -4382,46 +4441,51 @@ Invariant: :: A `result<T>` object is in one of three states:
 ----
 namespace boost { namespace leaf {
 
-  template <class T>
-  result<T>::result() noexcept;
+    // NOTE: Copy constructor implicitly deleted.
 
-  template <class T>
-  result<T>::result( T && v ) noexcept; <1>
+    template <class T>
+    result<T>::result( result && r ) noexcept;
 
-  template <class T>
-  result<T>::result( T const & v ); <1>
+    template <class T>
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
+    result<T>::result( result<U> && r ) noexcept;
 
-  template <class U>
-  result<T>::result( U && u, <<enabled_if_T_can_be_inited_with_U>> ); <2>
+    template <class T>
+    result<T>::result() noexcept;
 
-  template <class T>
-  result<T>::result( leaf::error_id err ) noexcept;
+    template <class T>
+    result<T>::result( T && v ) noexcept;
 
-  template <class T>
-  template <class Enum>
-  result<T>::result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+    template <class T>
+    result<T>::result( T const & v );
 
-  template <class T>
-  result<T>::result( std::error_code const & ec ) noexcept;
+    template <class T>
+    result<T>::result( error_id err ) noexcept;
 
-  template <class T>
-  result<T>::result( result && ) noexcept;
+    template <class T>
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
+    result<T>::result( U && u );
 
-  template <class T>
-  template <class U>
-  result<T>::result( result<U> && ) noexcept;
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+
+    template <class T>
+    result<T>::result( std::error_code const & ec ) noexcept;
+
+    template <class T>
+    template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
+    result<T>::result( Enum e ) noexcept;
+
+#endif
 
 } }
 ----
-<1> Not available if `T` is `void`.
-<2> Available if an object of type `T` can be initialized with `std::forward<U>(u)`. This is to enable e.g. `result<std::string>` to be initialized with a string literal.
 --
 
 Requires: :: `T` must be movable, and its move constructor may not throw; or `void`.
 
 Effects: ::
 
-Establishes the `result<T>` invariant:
+Establishes the `result<T>` invariants:
 +
 --
 * To get a `result<T>` in <<result,Value state>>, initialize it with an object of type `T` or use the default constructor.
