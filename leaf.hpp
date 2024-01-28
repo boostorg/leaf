@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 01/18/2024 from https://github.com/boostorg/leaf/tree/52bbec0.
+// Generated on 01/28/2024 from https://github.com/boostorg/leaf/tree/ed8f9cd.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
@@ -5542,6 +5542,13 @@ public:
     {
     }
 
+    template<class... A, class = typename std::enable_if<std::is_constructible<T, A...>::value && sizeof...(A) >= 2>::type>
+    result( A && ... a ) noexcept:
+        stored_(std::forward<A>(a)...),
+        what_(result_discriminant::kind_val{})
+    {
+    }
+
     result( error_id err ) noexcept:
         what_(err)
     {
@@ -5554,10 +5561,10 @@ public:
     // On the other hand, the workaround exposes a rather severe bug in
     //__GNUC__ under 11: https://github.com/boostorg/leaf/issues/25.
 
-    // SFINAE: T can be initialized with a U, e.g. result<std::string>("literal").
-    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
-    result( U && u ):
-        stored_(std::forward<U>(u)),
+    // SFINAE: T can be initialized with an A, e.g. result<std::string>("literal").
+    template<class A, class = typename std::enable_if<std::is_constructible<T, A>::value && std::is_convertible<A, T>::value>::type>
+    result( A && a ) noexcept:
+        stored_(std::forward<A>(a)),
         what_(result_discriminant::kind_val{})
     {
     }
@@ -5565,13 +5572,13 @@ public:
 #else
 
 private:
-    static int init_T_with_U( T && );
+    static int init_T_with_A( T && );
 public:
 
-    // SFINAE: T can be initialized with a U, e.g. result<std::string>("literal").
-    template <class U>
-    result( U && u, decltype(init_T_with_U(std::forward<U>(u))) * = nullptr ):
-        stored_(std::forward<U>(u)),
+    // SFINAE: T can be initialized with an A, e.g. result<std::string>("literal").
+    template <class A>
+    result( A && a, decltype(init_T_with_A(std::forward<A>(a))) * = nullptr ):
+        stored_(std::forward<A>(a)),
         what_(result_discriminant::kind_val{})
     {
     }
