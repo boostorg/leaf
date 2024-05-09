@@ -174,7 +174,7 @@ namespace leaf_detail
 ////////////////////////////////////////
 
 template <class T>
-class BOOST_LEAF_SYMBOL_VISIBLE result
+class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
 {
     template <class U>
     friend class result;
@@ -620,7 +620,7 @@ namespace leaf_detail
 }
 
 template <>
-class BOOST_LEAF_SYMBOL_VISIBLE result<void>:
+class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result<void>:
     result<leaf_detail::void_>
 {
     template <class U>
