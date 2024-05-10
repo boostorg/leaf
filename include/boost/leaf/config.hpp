@@ -215,7 +215,7 @@
 #   endif
 #elif defined(__has_cpp_attribute)
     //clang-6 accepts [[nodiscard]] with -std=c++14, but warns about it -pedantic
-#   if __has_cpp_attribute(nodiscard) && !(defined(__clang__) && (__cplusplus < 201703L)) && !(defined(__GNUC__) && (__cplusplus < 201100))
+#   if __has_cpp_attribute(nodiscard) && !(defined(__clang__) && (__cplusplus < 201703L)) && !(defined(__GNUC__) && (__cplusplus < 201703L))
 #       define BOOST_LEAF_ATTRIBUTE_NODISCARD [[nodiscard]]
 #   endif
 #endif
