@@ -214,8 +214,8 @@
 #       define BOOST_LEAF_ATTRIBUTE_NODISCARD [[nodiscard]]
 #   endif
 #elif defined(__has_cpp_attribute)
-    //clang-6 accepts [[nodiscard]] with -std=c++14, but warns about it -pedantic
-#   if __has_cpp_attribute(nodiscard) && !(defined(__clang__) && (__cplusplus < 201703L)) && !(defined(__GNUC__) && (__cplusplus < 201703L))
+// require c++17 regardless of compiler
+#   if __has_cpp_attribute(nodiscard) && __cplusplus >= 201703L
 #       define BOOST_LEAF_ATTRIBUTE_NODISCARD [[nodiscard]]
 #   endif
 #endif
