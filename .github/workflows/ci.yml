@@ -52,7 +52,7 @@ jobs:
             address-model: 32,64
           - toolset: gcc-11
             cxxstd: "11,14,17,20"
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             install: g++-11-multilib
             address-model: 32,64
           - toolset: gcc-12
@@ -142,13 +142,13 @@ jobs:
             install: clang-16
           - toolset: clang
             cxxstd: "11,14,17,2a"
-            os: macos-11
-          - toolset: clang
-            cxxstd: "11,14,17,20,2b"
             os: macos-12
           - toolset: clang
             cxxstd: "11,14,17,20,2b"
             os: macos-13
+          - toolset: clang
+            cxxstd: "11,14,17,20,2b"
+            os: macos-14
 
     runs-on: ${{matrix.os}}
     container: ${{matrix.container}}
