@@ -43,7 +43,7 @@ jobs:
           python gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o doc/html/leaf.hpp boost/leaf --hash "$REF"
 
       - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@3.7.1
+        uses: JamesIves/github-pages-deploy-action@4.6.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
