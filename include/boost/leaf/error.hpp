@@ -111,6 +111,11 @@ namespace leaf_detail
             BOOST_LEAF_ASSERT(x.prev_==nullptr);
         }
 
+        ~slot() noexcept
+        {
+            BOOST_LEAF_ASSERT(tls::read_ptr<slot<E>>() != this);
+        }
+
         void activate() noexcept
         {
             prev_ = tls::read_ptr<slot<E>>();
@@ -240,7 +245,7 @@ namespace leaf_detail
 
         public:
 
-            explicit capturing_exception_node( capture_list::node * * & last, std::exception_ptr && ex ) noexcept:
+            capturing_exception_node( capture_list::node * * & last, std::exception_ptr && ex ) noexcept:
                 capturing_node(last),
                 ex_(std::move(ex))
             {
@@ -250,14 +255,12 @@ namespace leaf_detail
         };
 #endif
 
-        int err_id_;
         node * * last_;
 
     public:
 
         dynamic_allocator() noexcept:
             capture_list(nullptr),
-            err_id_(0),
             last_(&first_)
         {
             BOOST_LEAF_ASSERT(first_ == nullptr);
@@ -265,24 +268,12 @@ namespace leaf_detail
 
         dynamic_allocator( dynamic_allocator && other ) noexcept:
             capture_list(std::move(other)),
-            err_id_(other.err_id_),
             last_(other.last_ == &other.first_? &first_ : other.last_)
         {
             BOOST_LEAF_ASSERT(last_ != nullptr);
             BOOST_LEAF_ASSERT(*last_ == nullptr);
             BOOST_LEAF_ASSERT(other.first_ == nullptr);
             other.last_ = &other.first_;
-        }
-
-        void append( dynamic_allocator && other ) noexcept
-        {
-            if( node * other_first = other.first_ )
-            {
-                *last_ = other_first;
-                last_ = other.last_;
-                other.first_ = nullptr;
-                other.last_ = &other.first_;
-            }
         }
 
         template <class E>
@@ -294,7 +285,6 @@ namespace leaf_detail
             BOOST_LEAF_ASSERT(tls::read_ptr<slot<T>>() == nullptr);
             capturing_slot_node<T> * csn = new capturing_slot_node<T>(last_, err_id, std::forward<E>(e));
             csn->activate();
-            err_id_ = err_id;
             return csn->value(err_id);
         }
 
@@ -308,7 +298,7 @@ namespace leaf_detail
         }
 
         template <class LeafResult>
-        LeafResult extract_capture_list() noexcept
+        LeafResult extract_capture_list(int err_id) noexcept
         {
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             if( std::exception_ptr ex = std::current_exception() )
@@ -317,9 +307,10 @@ namespace leaf_detail
             leaf_detail::capture_list::node * const f = first_;
             first_ = nullptr;
             last_ = &first_;
-            return { err_id_, capture_list(f) };
+            return { err_id, capture_list(f) };
         }
 
+        using capture_list::unload;
         using capture_list::print;
     };
 
@@ -337,9 +328,8 @@ namespace leaf_detail
     template <>
     inline void slot<dynamic_allocator>::deactivate() const noexcept
     {
-        if( int const err_id = this->key() )
-            if( dynamic_allocator const * c = this->has_value(err_id) )
-                c->deactivate();
+        if( dynamic_allocator const * c = this->has_value() )
+            c->deactivate();
         tls::write_ptr<slot<dynamic_allocator>>(prev_);
     }
 
@@ -347,12 +337,8 @@ namespace leaf_detail
     inline void slot<dynamic_allocator>::unload( int err_id ) noexcept(false)
     {
         BOOST_LEAF_ASSERT(err_id);
-        if( dynamic_allocator * da1 = this->has_value(err_id) )
-            if( impl * p = tls::read_ptr<slot<dynamic_allocator>>() )
-                if( dynamic_allocator * da2 = p->has_value(err_id) )
-                    da2->append(std::move(*da1));
-                else
-                    *p = std::move(*this);
+        if( dynamic_allocator * da1 = this->has_value() )
+            da1->unload(err_id);
     }
 
     template <class E>
@@ -360,7 +346,7 @@ namespace leaf_detail
     {
         if( slot<dynamic_allocator> * sl = tls::read_ptr<slot<dynamic_allocator>>() )
         {
-            if( dynamic_allocator * c = sl->has_value(err_id) )
+            if( dynamic_allocator * c = sl->has_value() )
                 c->dynamic_load(err_id, std::forward<E>(e));
             else
                 sl->load(err_id).dynamic_load(err_id, std::forward<E>(e));
@@ -435,7 +421,10 @@ namespace leaf_detail
         if( this->key()!=err_id )
             return;
         if( impl * p = tls::read_ptr<slot<E>>() )
-            *p = std::move(*this);
+        {
+            if( !p->has_value(err_id) )
+                *p = std::move(*this);
+        }
 #if BOOST_LEAF_CFG_CAPTURE
         else
             dynamic_load<false>(err_id, std::move(*this).value(err_id));

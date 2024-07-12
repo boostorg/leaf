@@ -226,6 +226,36 @@ protected:
 
 namespace leaf_detail
 {
+    template <class T>
+    struct get_dispatch
+    {
+        static BOOST_LEAF_CONSTEXPR T const * get(T const * x) noexcept
+        {
+            return x;
+        }
+        static BOOST_LEAF_CONSTEXPR T const * get(void const *) noexcept
+        {
+            return nullptr;
+        }
+    };
+
+    template <class T, int I = 0, class... Tp>
+    BOOST_LEAF_CONSTEXPR inline typename std::enable_if<I == sizeof...(Tp) - 1, T>::type const *
+    find_in_tuple(std::tuple<Tp...> const & t) noexcept
+    {
+        return get_dispatch<T>::get(&std::get<I>(t));
+    }
+
+    template<class T, int I = 0, class... Tp>
+    BOOST_LEAF_CONSTEXPR inline typename std::enable_if<I < sizeof...(Tp) - 1, T>::type const *
+    find_in_tuple(std::tuple<Tp...> const & t) noexcept
+    {
+        if( T const * x = get_dispatch<T>::get(&std::get<I>(t)) )
+            return x;
+        else
+            return find_in_tuple<T, I+1, Tp...>(t);
+    }
+
     struct verbose_diagnostic_info_: verbose_diagnostic_info
     {
         template <class Tup>
@@ -241,7 +271,8 @@ namespace leaf_detail
         template <class Tup>
         BOOST_LEAF_CONSTEXPR static verbose_diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept
         {
-            return verbose_diagnostic_info_(ei, tup, handler_argument_traits_defaults<dynamic_allocator>::check(tup, ei));
+            slot<dynamic_allocator> const * da = find_in_tuple<slot<dynamic_allocator>>(tup);
+            return verbose_diagnostic_info_(ei, tup, da ? da->has_value() : nullptr );
         }
     };
 }
@@ -945,19 +976,22 @@ namespace leaf_detail
                 else
                 {
                     sl.deactivate();
-                    return leaf_result(sl.value(error_id(r.error()).value()).template extract_capture_list<leaf_result>());
+                    int const err_id = error_id(r.error()).value();
+                    return leaf_result(sl.value(err_id).template extract_capture_list<leaf_result>(err_id));
                 }
             }
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             catch( std::exception & ex )
             {
                 sl.deactivate();
-                return sl.value(error_info(&ex).error().value()).template extract_capture_list<leaf_result>();
+                int const err_id = error_info(&ex).error().value();
+                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
             }
             catch(...)
             {
                 sl.deactivate();
-                return sl.value(error_info(nullptr).error().value()).template extract_capture_list<leaf_result>();
+                int const err_id = error_info(nullptr).error().value();
+                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
             }
 #endif
         }
@@ -1002,12 +1036,14 @@ namespace leaf_detail
             catch( std::exception & ex )
             {
                 sl.deactivate();
-                return sl.value(error_info(&ex).error().value()).template extract_capture_list<leaf_result>();
+                int const err_id = error_info(&ex).error().value();
+                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
             }
             catch(...)
             {
                 sl.deactivate();
-                return sl.value(error_info(nullptr).error().value()).template extract_capture_list<leaf_result>();
+                int const err_id = error_info(nullptr).error().value();
+                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
             }
 #endif
         }

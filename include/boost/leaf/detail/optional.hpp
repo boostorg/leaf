@@ -134,6 +134,16 @@ namespace leaf_detail
             return value_;
         }
 
+        BOOST_LEAF_CONSTEXPR T const * has_value() const noexcept
+        {
+            return key_ ? &value_ : nullptr;
+        }
+
+        BOOST_LEAF_CONSTEXPR T * has_value() noexcept
+        {
+            return key_ ? &value_ : nullptr;
+        }
+
         BOOST_LEAF_CONSTEXPR T const * has_value(int key) const noexcept
         {
             BOOST_LEAF_ASSERT(key);

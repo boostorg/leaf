@@ -127,6 +127,7 @@ if option_enable_unit_tests
         'diagnostic_info_test3',
         'diagnostic_info_test4',
         'diagnostic_info_test5',
+        'diagnostic_info_test6',
         'e_errno_test',
         'e_LastError_test',
         'error_code_test',
