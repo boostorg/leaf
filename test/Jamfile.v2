@@ -22,8 +22,8 @@ project
         <cxxstd>11
         <threading>multi
     : requirements
-        <source>/boost/config//boost_config
-        <source>/boost/exception//boost_exception
+        <library>/boost/config//boost_config
+        <library>/boost/exception//boost_exception
         <define>BOOST_LEAF_BOOST_AVAILABLE
         <threading>single:<define>BOOST_LEAF_NO_THREADS
         <toolset>gcc:<cxxflags>"-Wno-delete-non-virtual-dtor -Wno-parentheses"
