@@ -11,9 +11,10 @@ project /boost/leaf
     ;
 
 explicit
-    [ alias boost_leaf ]
+    [ alias boost_leaf : : : : <library>$(boost_dependencies) ]
     [ alias all : boost_leaf test ]
     ;
 
 call-if : boost-library leaf
     ;
+
