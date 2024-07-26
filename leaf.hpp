@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 01/28/2024 from https://github.com/boostorg/leaf/tree/ed8f9cd.
+// Generated on 07/26/2024 from https://github.com/boostorg/leaf/tree/5a621a8.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
@@ -895,6 +895,16 @@ namespace leaf_detail
             (void) new(&value_) T(std::move(v));
             key_=key;
             return value_;
+        }
+
+        BOOST_LEAF_CONSTEXPR T const * has_value() const noexcept
+        {
+            return key_ ? &value_ : nullptr;
+        }
+
+        BOOST_LEAF_CONSTEXPR T * has_value() noexcept
+        {
+            return key_ ? &value_ : nullptr;
         }
 
         BOOST_LEAF_CONSTEXPR T const * has_value(int key) const noexcept
@@ -1909,6 +1919,11 @@ namespace leaf_detail
             BOOST_LEAF_ASSERT(x.prev_==nullptr);
         }
 
+        ~slot() noexcept
+        {
+            BOOST_LEAF_ASSERT(tls::read_ptr<slot<E>>() != this);
+        }
+
         void activate() noexcept
         {
             prev_ = tls::read_ptr<slot<E>>();
@@ -2038,7 +2053,7 @@ namespace leaf_detail
 
         public:
 
-            explicit capturing_exception_node( capture_list::node * * & last, std::exception_ptr && ex ) noexcept:
+            capturing_exception_node( capture_list::node * * & last, std::exception_ptr && ex ) noexcept:
                 capturing_node(last),
                 ex_(std::move(ex))
             {
@@ -2048,14 +2063,12 @@ namespace leaf_detail
         };
 #endif
 
-        int err_id_;
         node * * last_;
 
     public:
 
         dynamic_allocator() noexcept:
             capture_list(nullptr),
-            err_id_(0),
             last_(&first_)
         {
             BOOST_LEAF_ASSERT(first_ == nullptr);
@@ -2063,24 +2076,12 @@ namespace leaf_detail
 
         dynamic_allocator( dynamic_allocator && other ) noexcept:
             capture_list(std::move(other)),
-            err_id_(other.err_id_),
             last_(other.last_ == &other.first_? &first_ : other.last_)
         {
             BOOST_LEAF_ASSERT(last_ != nullptr);
             BOOST_LEAF_ASSERT(*last_ == nullptr);
             BOOST_LEAF_ASSERT(other.first_ == nullptr);
             other.last_ = &other.first_;
-        }
-
-        void append( dynamic_allocator && other ) noexcept
-        {
-            if( node * other_first = other.first_ )
-            {
-                *last_ = other_first;
-                last_ = other.last_;
-                other.first_ = nullptr;
-                other.last_ = &other.first_;
-            }
         }
 
         template <class E>
@@ -2092,7 +2093,6 @@ namespace leaf_detail
             BOOST_LEAF_ASSERT(tls::read_ptr<slot<T>>() == nullptr);
             capturing_slot_node<T> * csn = new capturing_slot_node<T>(last_, err_id, std::forward<E>(e));
             csn->activate();
-            err_id_ = err_id;
             return csn->value(err_id);
         }
 
@@ -2106,7 +2106,7 @@ namespace leaf_detail
         }
 
         template <class LeafResult>
-        LeafResult extract_capture_list() noexcept
+        LeafResult extract_capture_list(int err_id) noexcept
         {
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             if( std::exception_ptr ex = std::current_exception() )
@@ -2115,9 +2115,10 @@ namespace leaf_detail
             leaf_detail::capture_list::node * const f = first_;
             first_ = nullptr;
             last_ = &first_;
-            return { err_id_, capture_list(f) };
+            return { err_id, capture_list(f) };
         }
 
+        using capture_list::unload;
         using capture_list::print;
     };
 
@@ -2135,9 +2136,8 @@ namespace leaf_detail
     template <>
     inline void slot<dynamic_allocator>::deactivate() const noexcept
     {
-        if( int const err_id = this->key() )
-            if( dynamic_allocator const * c = this->has_value(err_id) )
-                c->deactivate();
+        if( dynamic_allocator const * c = this->has_value() )
+            c->deactivate();
         tls::write_ptr<slot<dynamic_allocator>>(prev_);
     }
 
@@ -2145,12 +2145,8 @@ namespace leaf_detail
     inline void slot<dynamic_allocator>::unload( int err_id ) noexcept(false)
     {
         BOOST_LEAF_ASSERT(err_id);
-        if( dynamic_allocator * da1 = this->has_value(err_id) )
-            if( impl * p = tls::read_ptr<slot<dynamic_allocator>>() )
-                if( dynamic_allocator * da2 = p->has_value(err_id) )
-                    da2->append(std::move(*da1));
-                else
-                    *p = std::move(*this);
+        if( dynamic_allocator * da1 = this->has_value() )
+            da1->unload(err_id);
     }
 
     template <class E>
@@ -2158,7 +2154,7 @@ namespace leaf_detail
     {
         if( slot<dynamic_allocator> * sl = tls::read_ptr<slot<dynamic_allocator>>() )
         {
-            if( dynamic_allocator * c = sl->has_value(err_id) )
+            if( dynamic_allocator * c = sl->has_value() )
                 c->dynamic_load(err_id, std::forward<E>(e));
             else
                 sl->load(err_id).dynamic_load(err_id, std::forward<E>(e));
@@ -2233,7 +2229,10 @@ namespace leaf_detail
         if( this->key()!=err_id )
             return;
         if( impl * p = tls::read_ptr<slot<E>>() )
-            *p = std::move(*this);
+        {
+            if( !p->has_value(err_id) )
+                *p = std::move(*this);
+        }
 #if BOOST_LEAF_CFG_CAPTURE
         else
             dynamic_load<false>(err_id, std::move(*this).value(err_id));
@@ -3258,6 +3257,36 @@ protected:
 
 namespace leaf_detail
 {
+    template <class T>
+    struct get_dispatch
+    {
+        static BOOST_LEAF_CONSTEXPR T const * get(T const * x) noexcept
+        {
+            return x;
+        }
+        static BOOST_LEAF_CONSTEXPR T const * get(void const *) noexcept
+        {
+            return nullptr;
+        }
+    };
+
+    template <class T, int I = 0, class... Tp>
+    BOOST_LEAF_CONSTEXPR inline typename std::enable_if<I == sizeof...(Tp) - 1, T>::type const *
+    find_in_tuple(std::tuple<Tp...> const & t) noexcept
+    {
+        return get_dispatch<T>::get(&std::get<I>(t));
+    }
+
+    template<class T, int I = 0, class... Tp>
+    BOOST_LEAF_CONSTEXPR inline typename std::enable_if<I < sizeof...(Tp) - 1, T>::type const *
+    find_in_tuple(std::tuple<Tp...> const & t) noexcept
+    {
+        if( T const * x = get_dispatch<T>::get(&std::get<I>(t)) )
+            return x;
+        else
+            return find_in_tuple<T, I+1, Tp...>(t);
+    }
+
     struct verbose_diagnostic_info_: verbose_diagnostic_info
     {
         template <class Tup>
@@ -3273,7 +3302,8 @@ namespace leaf_detail
         template <class Tup>
         BOOST_LEAF_CONSTEXPR static verbose_diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept
         {
-            return verbose_diagnostic_info_(ei, tup, handler_argument_traits_defaults<dynamic_allocator>::check(tup, ei));
+            slot<dynamic_allocator> const * da = find_in_tuple<slot<dynamic_allocator>>(tup);
+            return verbose_diagnostic_info_(ei, tup, da ? da->has_value() : nullptr );
         }
     };
 }
@@ -3977,19 +4007,22 @@ namespace leaf_detail
                 else
                 {
                     sl.deactivate();
-                    return leaf_result(sl.value(error_id(r.error()).value()).template extract_capture_list<leaf_result>());
+                    int const err_id = error_id(r.error()).value();
+                    return leaf_result(sl.value(err_id).template extract_capture_list<leaf_result>(err_id));
                 }
             }
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             catch( std::exception & ex )
             {
                 sl.deactivate();
-                return sl.value(error_info(&ex).error().value()).template extract_capture_list<leaf_result>();
+                int const err_id = error_info(&ex).error().value();
+                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
             }
             catch(...)
             {
                 sl.deactivate();
-                return sl.value(error_info(nullptr).error().value()).template extract_capture_list<leaf_result>();
+                int const err_id = error_info(nullptr).error().value();
+                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
             }
 #endif
         }
@@ -4034,12 +4067,14 @@ namespace leaf_detail
             catch( std::exception & ex )
             {
                 sl.deactivate();
-                return sl.value(error_info(&ex).error().value()).template extract_capture_list<leaf_result>();
+                int const err_id = error_info(&ex).error().value();
+                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
             }
             catch(...)
             {
                 sl.deactivate();
-                return sl.value(error_info(nullptr).error().value()).template extract_capture_list<leaf_result>();
+                int const err_id = error_info(nullptr).error().value();
+                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
             }
 #endif
         }
@@ -4244,7 +4279,7 @@ future_get( Future & fut )
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 1501: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 1511: #include <boost/leaf/detail/demangle.hpp>
 
 #include <iosfwd>
 #include <cerrno>
@@ -5178,9 +5213,9 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 1490: #include <boost/leaf/detail/print.hpp>
-// Expanded at line 1362: #include <boost/leaf/detail/capture_list.hpp>
-// Expanded at line 4356: #include <boost/leaf/exception.hpp>
+// Expanded at line 1500: #include <boost/leaf/detail/print.hpp>
+// Expanded at line 1372: #include <boost/leaf/detail/capture_list.hpp>
+// Expanded at line 4391: #include <boost/leaf/exception.hpp>
 
 #include <climits>
 #include <functional>
@@ -5924,7 +5959,7 @@ struct is_result_type<result<T>>: std::true_type
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
 // Expanded at line 731: #include <boost/leaf/handle_errors.hpp>
-// Expanded at line 5172: #include <boost/leaf/result.hpp>
+// Expanded at line 5207: #include <boost/leaf/result.hpp>
 #include <variant>
 #include <optional>
 #include <tuple>
