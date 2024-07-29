@@ -214,8 +214,8 @@
 #       define BOOST_LEAF_ATTRIBUTE_NODISCARD [[nodiscard]]
 #   endif
 #elif defined(__has_cpp_attribute)
-    //clang-6 accepts [[nodiscard]] with -std=c++14, but warns about it -pedantic
-#   if __has_cpp_attribute(nodiscard) && !(defined(__clang__) && (__cplusplus < 201703L)) && !(defined(__GNUC__) && (__cplusplus < 201100))
+// require c++17 regardless of compiler
+#   if __has_cpp_attribute(nodiscard) && __cplusplus >= 201703L
 #       define BOOST_LEAF_ATTRIBUTE_NODISCARD [[nodiscard]]
 #   endif
 #endif
@@ -257,7 +257,7 @@
 ////////////////////////////////////////
 
 #ifdef __GNUC__
-#   define BOOST_LEAF_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
+#   define BOOST_LEAF_SYMBOL_VISIBLE [[gnu::visibility("default")]]
 #else
 #   define BOOST_LEAF_SYMBOL_VISIBLE
 #endif
