@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 07/28/2024 from https://github.com/boostorg/leaf/tree/e8ed8fe.
+// Generated on 07/30/2024 from https://github.com/boostorg/leaf/tree/64bb944.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
@@ -229,8 +229,8 @@
 #       define BOOST_LEAF_ATTRIBUTE_NODISCARD [[nodiscard]]
 #   endif
 #elif defined(__has_cpp_attribute)
-    //clang-6 accepts [[nodiscard]] with -std=c++14, but warns about it -pedantic
-#   if __has_cpp_attribute(nodiscard) && !(defined(__clang__) && (__cplusplus < 201703L)) && !(defined(__GNUC__) && (__cplusplus < 201100))
+// require c++17 regardless of compiler
+#   if __has_cpp_attribute(nodiscard) && __cplusplus >= 201703L
 #       define BOOST_LEAF_ATTRIBUTE_NODISCARD [[nodiscard]]
 #   endif
 #endif
@@ -272,7 +272,7 @@
 ////////////////////////////////////////
 
 #ifdef __GNUC__
-#   define BOOST_LEAF_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
+#   define BOOST_LEAF_SYMBOL_VISIBLE [[gnu::visibility("default")]]
 #else
 #   define BOOST_LEAF_SYMBOL_VISIBLE
 #endif
@@ -5380,7 +5380,7 @@ namespace leaf_detail
 ////////////////////////////////////////
 
 template <class T>
-class BOOST_LEAF_SYMBOL_VISIBLE result
+class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
 {
     template <class U>
     friend class result;
@@ -5826,7 +5826,7 @@ namespace leaf_detail
 }
 
 template <>
-class BOOST_LEAF_SYMBOL_VISIBLE result<void>:
+class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result<void>:
     result<leaf_detail::void_>
 {
     template <class U>
