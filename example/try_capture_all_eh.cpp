@@ -7,6 +7,20 @@
 // objects between threads, using exception handling. See capture_in_result.cpp
 // for the version that does not use exception handling.
 
+#include <boost/leaf/config.hpp>
+
+#if !BOOST_LEAF_CFG_CAPTURE || defined(BOOST_LEAF_NO_EXCEPTIONS)
+
+#include <iostream>
+
+int main()
+{
+    std::cout << "Unit test not applicable." << std::endl;
+    return 0;
+}
+
+#else
+
 #include <boost/leaf.hpp>
 #include <vector>
 #include <string>
@@ -88,3 +102,5 @@ int main()
             } );
     }
 }
+
+#endif

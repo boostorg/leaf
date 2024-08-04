@@ -7,6 +7,20 @@
 // objects between threads, without using exception handling. See capture_eh.cpp
 // for the version that uses exception handling.
 
+#include <boost/leaf/config.hpp>
+
+#if !BOOST_LEAF_CFG_CAPTURE
+
+#include <iostream>
+
+int main()
+{
+    std::cout << "Unit test not applicable." << std::endl;
+    return 0;
+}
+
+#else
+
 #include <boost/leaf.hpp>
 #include <vector>
 #include <string>
@@ -108,5 +122,7 @@ namespace boost
         throw_exception(e);
     }
 }
+
+#endif
 
 #endif
