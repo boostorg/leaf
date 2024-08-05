@@ -238,7 +238,7 @@ function switch_style()
 <p>Portable single-header format, no dependencies.</p>
 </li>
 <li>
-<p>Tiny code size when configured for embedded development.</p>
+<p>Tiny code size, configurable for embedded development.</p>
 </li>
 <li>
 <p>No dynamic memory allocations, even with very large payloads.</p>
@@ -7828,6 +7828,18 @@ Beware of <code>read_void_ptr</code>/<code>write_void_ptr</code> accessing threa
 </div>
 <div class="paragraph">
 <p>If your program does not use concurrency at all, simply define <code>BOOST_LEAF_NO_THREADS</code>, which requires no TLS support at all (but is NOT thread-safe).</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Contrary to popular belief, exception handling works great on embedded platforms. In <a href="https://www.youtube.com/watch?v=BGmzMuSDt-Y">this talk</a> Khalil Estell demonstrates that using exceptions to handle errors leads to a significant reduction in firmware code size (of course LEAF works with or without exception handling).
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
