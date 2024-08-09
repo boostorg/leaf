@@ -29,7 +29,7 @@ Boost LEAF is a lightweight error handling library for {CPP}11. Features:
 ====
 * Portable single-header format, no dependencies.
 
-* Tiny code size when configured for embedded development.
+* Tiny code size, configurable for embedded development.
 
 * No dynamic memory allocations, even with very large payloads.
 
@@ -5560,6 +5560,8 @@ LEAF supports FreeRTOS out of the box, please define `BOOST_LEAF_TLS_FREERTOS` (
 For other embedded platforms, please define `BOOST_LEAF_USE_TLS_ARRAY`, see <<configuring_tls_access>>.
 
 If your program does not use concurrency at all, simply define `BOOST_LEAF_NO_THREADS`, which requires no TLS support at all (but is NOT thread-safe).
+
+TIP: Contrary to popular belief, exception handling works great on embedded platforms. In https://www.youtube.com/watch?v=BGmzMuSDt-Y[this talk] Khalil Estell demonstrates that using exceptions to handle errors leads to a significant reduction in firmware code size (of course LEAF works with or without exception handling).
 
 [[portability]]
 == Portability
