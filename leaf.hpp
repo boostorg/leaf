@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 08/05/2024 from https://github.com/boostorg/leaf/tree/cf0dcfc.
+// Generated on 08/19/2024 from https://github.com/boostorg/leaf/tree/7d17e6f.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
@@ -947,6 +947,14 @@ namespace leaf_detail
             T tmp(std::move(value_));
             reset();
             return tmp;
+        }
+
+        BOOST_LEAF_CONSTEXPR T & value_or_default(int key) noexcept
+        {
+            if( T * v = has_value(key) )
+                return *v;
+            else
+                return load(key);
         }
     };
 
@@ -1958,6 +1966,7 @@ namespace leaf_detail
         using impl::load;
         using impl::has_value;
         using impl::value;
+        using impl::value_or_default;
     };
 }
 
@@ -4008,7 +4017,7 @@ namespace leaf_detail
                 {
                     sl.deactivate();
                     int const err_id = error_id(r.error()).value();
-                    return leaf_result(sl.value(err_id).template extract_capture_list<leaf_result>(err_id));
+                    return leaf_result(sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id));
                 }
             }
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
@@ -4016,13 +4025,13 @@ namespace leaf_detail
             {
                 sl.deactivate();
                 int const err_id = error_info(&ex).error().value();
-                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
+                return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
             }
             catch(...)
             {
                 sl.deactivate();
                 int const err_id = error_info(nullptr).error().value();
-                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
+                return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
             }
 #endif
         }
@@ -4068,13 +4077,13 @@ namespace leaf_detail
             {
                 sl.deactivate();
                 int const err_id = error_info(&ex).error().value();
-                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
+                return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
             }
             catch(...)
             {
                 sl.deactivate();
                 int const err_id = error_info(nullptr).error().value();
-                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
+                return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
             }
 #endif
         }
@@ -4279,7 +4288,7 @@ future_get( Future & fut )
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 1511: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 1519: #include <boost/leaf/detail/demangle.hpp>
 
 #include <iosfwd>
 #include <cerrno>
@@ -5213,9 +5222,9 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 1500: #include <boost/leaf/detail/print.hpp>
-// Expanded at line 1372: #include <boost/leaf/detail/capture_list.hpp>
-// Expanded at line 4391: #include <boost/leaf/exception.hpp>
+// Expanded at line 1508: #include <boost/leaf/detail/print.hpp>
+// Expanded at line 1380: #include <boost/leaf/detail/capture_list.hpp>
+// Expanded at line 4400: #include <boost/leaf/exception.hpp>
 
 #include <climits>
 #include <functional>
@@ -5959,7 +5968,7 @@ struct is_result_type<result<T>>: std::true_type
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
 // Expanded at line 731: #include <boost/leaf/handle_errors.hpp>
-// Expanded at line 5207: #include <boost/leaf/result.hpp>
+// Expanded at line 5216: #include <boost/leaf/result.hpp>
 #include <variant>
 #include <optional>
 #include <tuple>
