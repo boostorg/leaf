@@ -977,7 +977,7 @@ namespace leaf_detail
                 {
                     sl.deactivate();
                     int const err_id = error_id(r.error()).value();
-                    return leaf_result(sl.value(err_id).template extract_capture_list<leaf_result>(err_id));
+                    return leaf_result(sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id));
                 }
             }
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
@@ -985,13 +985,13 @@ namespace leaf_detail
             {
                 sl.deactivate();
                 int const err_id = error_info(&ex).error().value();
-                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
+                return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
             }
             catch(...)
             {
                 sl.deactivate();
                 int const err_id = error_info(nullptr).error().value();
-                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
+                return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
             }
 #endif
         }
@@ -1037,13 +1037,13 @@ namespace leaf_detail
             {
                 sl.deactivate();
                 int const err_id = error_info(&ex).error().value();
-                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
+                return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
             }
             catch(...)
             {
                 sl.deactivate();
                 int const err_id = error_info(nullptr).error().value();
-                return sl.value(err_id).template extract_capture_list<leaf_result>(err_id);
+                return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
             }
 #endif
         }

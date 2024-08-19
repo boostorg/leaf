@@ -69,6 +69,25 @@ namespace
 int main()
 {
     {
+        leaf::result<void> r = leaf::try_capture_all([]() { throw std::runtime_error("x"); });
+        BOOST_TEST(!r);
+        int r1 = leaf::try_handle_all(
+            [&]() -> leaf::result<int>
+            {
+                BOOST_LEAF_CHECK(r);
+                return 0;
+            },
+            [](std::runtime_error const &)
+            {
+                return 1;
+            },
+            []
+            {
+                return 2;
+            } );
+        BOOST_TEST_EQ(r1, 1);
+    }
+    {
         leaf::result<void> r = leaf::try_capture_all(
             []() -> leaf::result<void>
             {
