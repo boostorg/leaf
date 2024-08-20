@@ -185,6 +185,14 @@ namespace leaf_detail
             reset();
             return tmp;
         }
+
+        BOOST_LEAF_CONSTEXPR T & value_or_default(int key) noexcept
+        {
+            if( T * v = has_value(key) )
+                return *v;
+            else
+                return load(key);
+        }
     };
 
 }

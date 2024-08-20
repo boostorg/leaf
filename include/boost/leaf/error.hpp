@@ -150,6 +150,7 @@ namespace leaf_detail
         using impl::load;
         using impl::has_value;
         using impl::value;
+        using impl::value_or_default;
     };
 }
 
