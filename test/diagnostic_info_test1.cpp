@@ -73,8 +73,9 @@ struct printable_info_non_printable_payload
     }
 };
 
-struct non_printable_info_printable_payload
+class non_printable_info_printable_payload
 {
+public:
     printable_payload value;
 };
 

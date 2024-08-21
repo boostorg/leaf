@@ -550,8 +550,7 @@ int main(int argc, char **argv) {
                     rv = 0;
                 } else {
                     // Handle errors from running the server logic
-                    leaf::result<int> result_int{result.error()};
-                    rv = error_context.handle_error<int>(result_int.error(), error_handlers);
+                    rv = error_context.handle_error<int>(result.error(), error_handlers);
                 }
             });
             io_context.run();

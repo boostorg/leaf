@@ -221,7 +221,7 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
         operator result<U>() noexcept
         {
             result_discriminant const what = r_.what_;
-            switch( what.kind() )
+            switch(auto k = what.kind())
             {
                 case result_discriminant::val:
                     return result<U>(error_id());
@@ -231,8 +231,9 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
 #else
                     BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
+                default:
+                    BOOST_LEAF_ASSERT(k == result_discriminant::err_id);
                 case result_discriminant::err_id_zero:
-                case result_discriminant::err_id:
                     return result<U>(what.get_error_id());
             }
         }
@@ -246,10 +247,11 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
 
     void destroy() const noexcept
     {
-        switch(this->what_.kind())
+        switch(auto k = this->what_.kind())
         {
+        default:
+            BOOST_LEAF_ASSERT(k == result_discriminant::err_id);
         case result_discriminant::err_id_zero:
-        case result_discriminant::err_id:
             break;
         case result_discriminant::err_id_capture_list:
 #if BOOST_LEAF_CFG_CAPTURE
@@ -267,10 +269,11 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
     result_discriminant move_from( result<U> && x ) noexcept
     {
         auto x_what = x.what_;
-        switch(x_what.kind())
+        switch(auto k = x_what.kind())
         {
+        default:
+            BOOST_LEAF_ASSERT(k == result_discriminant::err_id);
         case result_discriminant::err_id_zero:
-        case result_discriminant::err_id:
             break;
         case result_discriminant::err_id_capture_list:
 #if BOOST_LEAF_CFG_CAPTURE

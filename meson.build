@@ -24,6 +24,10 @@ if not option_enable_examples
     endif
 endif
 
+if target_machine.system() == 'windows'
+    add_global_arguments('-D_CRT_SECURE_NO_WARNINGS', language: 'cpp')
+endif
+
 compiler = meson.get_compiler('cpp')
 compiler_id = compiler.get_id()
 if not meson.is_subproject()
