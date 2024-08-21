@@ -5,11 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(Windows) Launch",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/_bld/debug/capture_exception_result_async_test",
+            "args": [],
+            "cwd": "${fileDirname}",
+            "stopAtEntry": false,
+            "externalConsole": false
+        },
+
+        {
             "name": "(lldb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/_bld/debug/capture_exception_async_test",
-            "args": [ ],
+            "program": "${workspaceFolder}/_bld/debug/capture_exception_result_async_test",
+            "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "externalConsole": false,
