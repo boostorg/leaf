@@ -124,21 +124,21 @@ namespace leaf_detail
         exception( exception const & ) = default;
         exception( exception && ) = default;
 
-        BOOST_LEAF_CONSTEXPR exception( error_id id, Ex const & ex ) noexcept:
+        exception( error_id id, Ex const & ex ) noexcept:
             Ex(ex),
             error_id(id)
         {
             enforce_std_exception(*this);
         }
 
-        BOOST_LEAF_CONSTEXPR exception( error_id id, Ex && ex ) noexcept:
+        exception( error_id id, Ex && ex ) noexcept:
             Ex(std::move(ex)),
             error_id(id)
         {
             enforce_std_exception(*this);
         }
 
-        explicit BOOST_LEAF_CONSTEXPR exception( error_id id ) noexcept:
+        explicit exception( error_id id ) noexcept:
             error_id(id)
         {
             enforce_std_exception(*this);
