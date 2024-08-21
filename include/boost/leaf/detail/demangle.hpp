@@ -17,6 +17,7 @@
 
 #include <boost/leaf/config.hpp>
 
+#include <iosfwd>
 #include <cstring>
 
 namespace boost { namespace leaf {
@@ -24,37 +25,74 @@ namespace boost { namespace leaf {
 namespace leaf_detail
 {
     template <int N>
-    BOOST_LEAF_CONSTEXPR inline char const * check_prefix( char const * t, char const (&prefix)[N] )
+    BOOST_LEAF_CONSTEXPR inline int check_prefix(char const * t, char const (&prefix)[N]) noexcept
     {
-        return std::strncmp(t,prefix,sizeof(prefix)-1)==0 ? t+sizeof(prefix)-1 : t;
+        return std::strncmp(t, prefix, sizeof(prefix)-1) == 0 ? sizeof(prefix) - 1 : 0;
     }
 }
 
 template <class Name>
-inline char const * type()
+inline char const * type_str()
 {
-    using leaf_detail::check_prefix;
-    char const * t =
-#ifdef __FUNCSIG__
-        __FUNCSIG__;
-#else
-        __PRETTY_FUNCTION__;
-#endif
 #if defined(__clang__)
-    BOOST_LEAF_ASSERT(check_prefix(t,"const char *boost::leaf::type() ")==t+32);
-    return t+32;
+    BOOST_LEAF_ASSERT(leaf_detail::check_prefix(__PRETTY_FUNCTION__, "const char *boost::leaf::type_str() [Name = ") == 44);
+    return __PRETTY_FUNCTION__ + 44;
 #elif defined(__GNUC__)
-    BOOST_LEAF_ASSERT(check_prefix(t,"const char* boost::leaf::type() ")==t+32);
-    return t+32;
+    BOOST_LEAF_ASSERT(leaf_detail::check_prefix(__PRETTY_FUNCTION__, "const char* boost::leaf::type_str() [with Name = ") == 49);
+    return __PRETTY_FUNCTION__ + 49;
+#elif defined _MSC_VER
+    if( char const * p = std::strstr(__FUNCSIG__, "boost::leaf::type_str<") )
+        return p + 22;
+    else
+        return __FUNCSIG__;
 #else
-    char const * clang_style = check_prefix(t,"const char *boost::leaf::type() ");
-    if( clang_style!=t )
-        return clang_style;
-    char const * gcc_style = check_prefix(t,"const char* boost::leaf::type() ");
-    if( gcc_style!=t )
-        return gcc_style;
+    if( int clang_style = leaf_detail::check_prefix(__PRETTY_FUNCTION__, "const char *boost::leaf::type_str() [Name = ") )
+        return __PRETTY_FUNCTION__ + clang_style;
+    else if( int gcc_style = leaf_detail::check_prefix(__PRETTY_FUNCTION__, "const char* boost::leaf::type_str() [with Name = ") )
+        return __PRETTY_FUNCTION__ + gcc_style;
+    else
+        return __PRETTY_FUNCTION__;
 #endif
-    return t;
+}
+
+template <class Name, class CharT, class Traits>
+inline std::ostream & print_type_str(std::basic_ostream<CharT, Traits> & os)
+{
+    if( char const * t = type_str<Name>() )
+    {
+        char const * end = std::strchr(t, 0);
+#if defined(__clang__) || defined(__GNUC__)
+        BOOST_LEAF_ASSERT(end != t);
+        BOOST_LEAF_ASSERT(end[-1] == ']');
+        return os.write(t, end - t - 1) << ": ";
+#elif defined(_MSC_VER)
+        BOOST_LEAF_ASSERT(end - t > 7);
+        BOOST_LEAF_ASSERT(std::memcmp(end - 7, ">(void)", 7) == 0);
+        if( *t == 's' )
+        {
+            BOOST_LEAF_ASSERT(std::memcmp(t + 1, "truct ", 6) == 0);
+            t += 7;
+        }
+        else if( *t == 'c' )
+        {
+            BOOST_LEAF_ASSERT(std::memcmp(t + 1, "lass ", 5) == 0);
+            t += 6;
+        }
+        else if( *t == 'e' )
+        {
+            BOOST_LEAF_ASSERT(std::memcmp(t + 1, "num ", 4) == 0);
+            t += 5;
+        }
+        return os.write(t, end - t - 7) << ": ";
+#else
+        if( end != t && end[-1] == ']')
+            return os.write(t, end - t - 1) << ": ";
+        else
+            return os << t << ": ";
+#endif
+    }
+    else
+        return os << "no name: ";
 }
 
 } }

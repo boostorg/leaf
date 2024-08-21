@@ -57,7 +57,7 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_errno
     template <class CharT, class Traits>
     friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, e_errno const & err)
     {
-        return os << type<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
+        return print_type_str<e_errno>(os) << err.value << ", \"" << std::strerror(err.value) << '"';
     }
 };
 
@@ -101,7 +101,7 @@ namespace windows
                     *--z = 0;
                 if( z[-1] == '\r' )
                     *--z = 0;
-                return os << type<e_LastError>() << ": " << err.value << ", \"" << (LPCSTR)mb.p << '"';
+                return print_type_str<e_LastError>(os) << err.value << ", \"" << (LPCSTR)mb.p << '"';
             }
             return os;
         }
