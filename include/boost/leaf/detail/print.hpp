@@ -70,7 +70,7 @@ namespace leaf_detail
         template <class CharT, class Traits>
         static void print( std::basic_ostream<CharT, Traits> & os, Wrapper const & x )
         {
-            print_type_str<Wrapper>(os) << x.value;
+            os << parse_name<Wrapper>() << ": " << x.value;
         }
     };
 
@@ -82,7 +82,7 @@ namespace leaf_detail
         template <class CharT, class Traits>
         static void print( std::basic_ostream<CharT, Traits> & os, Wrapper const & ex )
         {
-            print_type_str<Wrapper>(os) << "std::exception::what(): " << ex.what();
+            os << parse_name<Wrapper>() << ": std::exception::what(): " << ex.what();
         }
     };
 
@@ -94,7 +94,7 @@ namespace leaf_detail
         template <class CharT, class Traits>
         static void print( std::basic_ostream<CharT, Traits> & os, Wrapper const & )
         {
-            print_type_str<Wrapper>(os) << "{not printable}";
+            os << parse_name<Wrapper>() << ": {not printable}";
         }
     };
 
@@ -106,7 +106,7 @@ namespace leaf_detail
         template <class CharT, class Traits>
         static void print( std::basic_ostream<CharT, Traits> & os, Wrapper const & w )
         {
-            print_type_str<Wrapper>(os) << static_cast<typename std::underlying_type<Wrapper>::type>(w);
+            os << parse_name<Wrapper>() << ": " << static_cast<typename std::underlying_type<Wrapper>::type>(w);
         }
     };
 

@@ -173,6 +173,7 @@ if option_enable_unit_tests
         'on_error_preload_nested_success_exception_test',
         'on_error_preload_nested_success_result_test',
         'optional_test',
+        'parse_name_test',
         'print_test',
         'result_bad_result_test',
         'result_implicit_conversion_test',

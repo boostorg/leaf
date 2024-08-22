@@ -18,81 +18,139 @@
 #include <boost/leaf/config.hpp>
 
 #include <iosfwd>
-#include <cstring>
 
 namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
-    template <int N>
-    BOOST_LEAF_CONSTEXPR inline int check_prefix(char const * t, char const (&prefix)[N]) noexcept
+    template <int S1, int S2, int I, bool = S1 >= S2>
+    struct cpp11_prefix
     {
-        return std::strncmp(t, prefix, sizeof(prefix)-1) == 0 ? sizeof(prefix) - 1 : 0;
+        constexpr static bool check(char const (&)[S1], char const (&)[S2]) noexcept
+        {
+            return false;
+        }
+    };
+    template <int S1, int S2, int I>
+    struct cpp11_prefix<S1, S2, I, true>
+    {
+        constexpr static bool check(char const (&str)[S1], char const (&prefix)[S2]) noexcept
+        {
+            return str[I] == prefix[I] && cpp11_prefix<S1, S2, I - 1>::check(str, prefix);
+        }
+    };
+    template <int S1, int S2>
+    struct cpp11_prefix<S1, S2, 0, true>
+    {
+        constexpr static bool check(char const (&str)[S1], char const (&prefix)[S2]) noexcept
+        {
+            return str[0] == prefix[0];
+        }
+    };
+    template <int S1, int S2>
+    constexpr int check_prefix(char const (&str)[S1], char const (&prefix)[S2]) noexcept
+    {
+        return cpp11_prefix<S1, S2, S2 - 2>::check(str, prefix) ? S2 - 1 : 0;
+    }
+
+    ////////////////////////////////////////
+
+    template <int S1, int S2, int I1, int I2, bool = S1 >= S2>
+    struct cpp11_suffix
+    {
+        constexpr static bool check(char const (&)[S1], char const (&)[S2]) noexcept
+        {
+            return false;
+        }
+    };
+    template <int S1, int S2, int I1, int I2>
+    struct cpp11_suffix<S1, S2, I1, I2, true>
+    {
+        constexpr static bool check(char const (&str)[S1], char const (&suffix)[S2]) noexcept
+        {
+            return str[I1] == suffix[I2] && cpp11_suffix<S1, S2, I1 - 1, I2 - 1>::check(str, suffix);
+        }
+    };
+    template <int S1, int S2, int I1>
+    struct cpp11_suffix<S1, S2, I1, 0, true>
+    {
+        constexpr static bool check(char const (&str)[S1], char const (&suffix)[S2]) noexcept
+        {
+            return str[I1] == suffix[0];
+        }
+    };
+    template <int S1, int S2>
+    constexpr int check_suffix(char const (&str)[S1], char const (&suffix)[S2]) noexcept
+    {
+        return cpp11_suffix<S1, S2, S1 - 2, S2 - 2>::check(str, suffix) ? S1 - S2 : 0;
     }
 }
+
+struct parsed_name
+{
+    char const * name;
+    int len;
+
+    parsed_name(char const * name, int len) noexcept:
+        name(name),
+        len(len)
+    {
+    }
+
+    template <int S>
+    parsed_name(char const(&name)[S]) noexcept:
+        name(name),
+        len(S-1)
+    {
+    }
+
+    bool parse_success() const noexcept
+    {
+        return name[len] != 0;
+    }
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, parsed_name const & pn)
+    {
+        return os.write(pn.name, pn.len);
+    }
+};
 
 template <class Name>
-inline char const * type_str()
+parsed_name parse_name()
 {
-#if defined(__clang__)
-    BOOST_LEAF_ASSERT(leaf_detail::check_prefix(__PRETTY_FUNCTION__, "const char *boost::leaf::type_str() [Name = ") == 44);
-    return __PRETTY_FUNCTION__ + 44;
-#elif defined(__GNUC__)
-    BOOST_LEAF_ASSERT(leaf_detail::check_prefix(__PRETTY_FUNCTION__, "const char* boost::leaf::type_str() [with Name = ") == 49);
-    return __PRETTY_FUNCTION__ + 49;
-#elif defined _MSC_VER
-    if( char const * p = std::strstr(__FUNCSIG__, "boost::leaf::type_str<") )
-        return p + 22;
-    else
-        return __FUNCSIG__;
-#else
-    if( int clang_style = leaf_detail::check_prefix(__PRETTY_FUNCTION__, "const char *boost::leaf::type_str() [Name = ") )
-        return __PRETTY_FUNCTION__ + clang_style;
-    else if( int gcc_style = leaf_detail::check_prefix(__PRETTY_FUNCTION__, "const char* boost::leaf::type_str() [with Name = ") )
-        return __PRETTY_FUNCTION__ + gcc_style;
-    else
-        return __PRETTY_FUNCTION__;
-#endif
-}
-
-template <class Name, class CharT, class Traits>
-inline std::ostream & print_type_str(std::basic_ostream<CharT, Traits> & os)
-{
-    if( char const * t = type_str<Name>() )
-    {
-        char const * end = std::strchr(t, 0);
-#if defined(__clang__) || defined(__GNUC__)
-        BOOST_LEAF_ASSERT(end != t);
-        BOOST_LEAF_ASSERT(end[-1] == ']');
-        return os.write(t, end - t - 1) << ": ";
-#elif defined(_MSC_VER)
-        BOOST_LEAF_ASSERT(end - t > 7);
-        BOOST_LEAF_ASSERT(std::memcmp(end - 7, ">(void)", 7) == 0);
-        if( *t == 's' )
-        {
-            BOOST_LEAF_ASSERT(std::memcmp(t + 1, "truct ", 6) == 0);
-            t += 7;
-        }
-        else if( *t == 'c' )
-        {
-            BOOST_LEAF_ASSERT(std::memcmp(t + 1, "lass ", 5) == 0);
-            t += 6;
-        }
-        else if( *t == 'e' )
-        {
-            BOOST_LEAF_ASSERT(std::memcmp(t + 1, "num ", 4) == 0);
-            t += 5;
-        }
-        return os.write(t, end - t - 7) << ": ";
-#else
-        if( end != t && end[-1] == ']')
-            return os.write(t, end - t - 1) << ": ";
-        else
-            return os << t << ": ";
-#endif
+    // Workaround for older gcc compilers where __PRETTY_FUNCTION__ is not constexpr.
+    // Instead of evaluating constexpr int x = f(__PRETTY_FUNCTION__), which fails,
+    // we evaluate int const x = f(__PRETTY_FUNCTION__). Then we enforce compile-time
+    // execution by evaluating sizeof(char[1 + x]) -1.
+#define BOOST_LEAF_PARSE_PF(prefix, suffix) \
+    { \
+        if( int const s = leaf_detail::check_suffix(BOOST_LEAF_PRETTY_FUNCTION, suffix) ) \
+            if( int const p = leaf_detail::check_prefix(BOOST_LEAF_PRETTY_FUNCTION, prefix) ) \
+                return parsed_name(BOOST_LEAF_PRETTY_FUNCTION + sizeof(char[1 + p]) - 1, sizeof(char[1 + s - p]) - 1); \
     }
-    else
-        return os << "no name: ";
+    // clang style:
+    BOOST_LEAF_PARSE_PF( "parsed_name boost::leaf::parse_name() [Name = ", "]");
+    // old clang style:
+    BOOST_LEAF_PARSE_PF( "boost::leaf::parsed_name boost::leaf::parse_name() [Name = ", "]");
+    // gcc style:
+    BOOST_LEAF_PARSE_PF( "boost::leaf::parsed_name boost::leaf::parse_name() [with Name = ", "]");
+    // msvc style, __cdecl, struct/class/enum:
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __cdecl boost::leaf::parse_name<struct ", ">(void)");
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __cdecl boost::leaf::parse_name<class ", ">(void)");
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __cdecl boost::leaf::parse_name<enum ", ">(void)");
+    // msvc style, __stdcall, struct/class/enum:
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __stdcall boost::leaf::parse_name<struct ", ">(void)");
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __stdcall boost::leaf::parse_name<class ", ">(void)");
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __stdcall boost::leaf::parse_name<enum ", ">(void)");
+    // msvc style, __fastcall, struct/class/enum:
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __fastcall boost::leaf::parse_name<struct ", ">(void)");
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __fastcall boost::leaf::parse_name<class ", ">(void)");
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __fastcall boost::leaf::parse_name<enum ", ">(void)");
+#undef BOOST_LEAF_PARSE_PF
+
+    // Unrecognized __PRETTY_FUNCTION__/__FUNSIG__ format, return as-is. Note, parsing is done at compile-time.
+    return parsed_name(BOOST_LEAF_PRETTY_FUNCTION);
 }
 
 } }

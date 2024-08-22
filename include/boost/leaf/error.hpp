@@ -77,7 +77,7 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, e_source_location const & x )
     {
-        return leaf::print_type_str<e_source_location>(os) << x.file << '(' << x.line << ") in function " << x.function;
+        return os << leaf::parse_name<e_source_location>() << x.file << '(' << x.line << ") in function " << x.function;
     }
 };
 

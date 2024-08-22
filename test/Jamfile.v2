@@ -109,6 +109,7 @@ run on_error_preload_nested_new_error_result_test.cpp ;
 run on_error_preload_nested_success_exception_test.cpp ;
 run on_error_preload_nested_success_result_test.cpp ;
 run optional_test.cpp ;
+run parse_name_test.cpp ;
 run print_test.cpp ;
 run result_bad_result_test.cpp ;
 run result_implicit_conversion_test.cpp ;
