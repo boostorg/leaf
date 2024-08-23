@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 08/19/2024 from https://github.com/boostorg/leaf/tree/7d17e6f.
+// Generated on 08/23/2024 from https://github.com/boostorg/leaf/tree/abaf59d.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
@@ -131,6 +131,16 @@
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR && !BOOST_LEAF_CFG_STD_STRING
 #   error BOOST_LEAF_CFG_STD_SYSTEM_ERROR requires BOOST_LEAF_CFG_STD_STRING, which has been disabled.
+#endif
+
+////////////////////////////////////////
+
+#ifndef BOOST_LEAF_PRETTY_FUNCTION
+#   if defined(_MSC_VER) && !defined(__clang__) && !defined(__GNUC__)
+#       define BOOST_LEAF_PRETTY_FUNCTION __FUNCSIG__
+#   else
+#       define BOOST_LEAF_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#   endif
 #endif
 
 ////////////////////////////////////////
@@ -710,7 +720,7 @@ namespace tls
 
 #endif
 // <<< #include <boost/leaf/config/tls.hpp>
-#line 277 "boost/leaf/config.hpp"
+#line 287 "boost/leaf/config.hpp"
 
 ////////////////////////////////////////
 
@@ -1535,44 +1545,140 @@ namespace leaf_detail
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
 
-#include <cstring>
+#include <iosfwd>
 
 namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
-    template <int N>
-    BOOST_LEAF_CONSTEXPR inline char const * check_prefix( char const * t, char const (&prefix)[N] )
+    template <int S1, int S2, int I, bool = S1 >= S2>
+    struct cpp11_prefix
     {
-        return std::strncmp(t,prefix,sizeof(prefix)-1)==0 ? t+sizeof(prefix)-1 : t;
+        constexpr static bool check(char const (&)[S1], char const (&)[S2]) noexcept
+        {
+            return false;
+        }
+    };
+    template <int S1, int S2, int I>
+    struct cpp11_prefix<S1, S2, I, true>
+    {
+        constexpr static bool check(char const (&str)[S1], char const (&prefix)[S2]) noexcept
+        {
+            return str[I] == prefix[I] && cpp11_prefix<S1, S2, I - 1>::check(str, prefix);
+        }
+    };
+    template <int S1, int S2>
+    struct cpp11_prefix<S1, S2, 0, true>
+    {
+        constexpr static bool check(char const (&str)[S1], char const (&prefix)[S2]) noexcept
+        {
+            return str[0] == prefix[0];
+        }
+    };
+    template <int S1, int S2>
+    constexpr int check_prefix(char const (&str)[S1], char const (&prefix)[S2]) noexcept
+    {
+        return cpp11_prefix<S1, S2, S2 - 2>::check(str, prefix) ? S2 - 1 : 0;
+    }
+
+    ////////////////////////////////////////
+
+    template <int S1, int S2, int I1, int I2, bool = S1 >= S2>
+    struct cpp11_suffix
+    {
+        constexpr static bool check(char const (&)[S1], char const (&)[S2]) noexcept
+        {
+            return false;
+        }
+    };
+    template <int S1, int S2, int I1, int I2>
+    struct cpp11_suffix<S1, S2, I1, I2, true>
+    {
+        constexpr static bool check(char const (&str)[S1], char const (&suffix)[S2]) noexcept
+        {
+            return str[I1] == suffix[I2] && cpp11_suffix<S1, S2, I1 - 1, I2 - 1>::check(str, suffix);
+        }
+    };
+    template <int S1, int S2, int I1>
+    struct cpp11_suffix<S1, S2, I1, 0, true>
+    {
+        constexpr static bool check(char const (&str)[S1], char const (&suffix)[S2]) noexcept
+        {
+            return str[I1] == suffix[0];
+        }
+    };
+    template <int S1, int S2>
+    constexpr int check_suffix(char const (&str)[S1], char const (&suffix)[S2]) noexcept
+    {
+        return cpp11_suffix<S1, S2, S1 - 2, S2 - 2>::check(str, suffix) ? S1 - S2 : 0;
     }
 }
 
-template <class Name>
-inline char const * type()
+struct parsed_name
 {
-    using leaf_detail::check_prefix;
-    char const * t =
-#ifdef __FUNCSIG__
-        __FUNCSIG__;
-#else
-        __PRETTY_FUNCTION__;
-#endif
-#if defined(__clang__)
-    BOOST_LEAF_ASSERT(check_prefix(t,"const char *boost::leaf::type() ")==t+32);
-    return t+32;
-#elif defined(__GNUC__)
-    BOOST_LEAF_ASSERT(check_prefix(t,"const char* boost::leaf::type() ")==t+32);
-    return t+32;
-#else
-    char const * clang_style = check_prefix(t,"const char *boost::leaf::type() ");
-    if( clang_style!=t )
-        return clang_style;
-    char const * gcc_style = check_prefix(t,"const char* boost::leaf::type() ");
-    if( gcc_style!=t )
-        return gcc_style;
-#endif
-    return t;
+    char const * name;
+    int len;
+
+    parsed_name(char const * name, int len) noexcept:
+        name(name),
+        len(len)
+    {
+    }
+
+    template <int S>
+    parsed_name(char const(&name)[S]) noexcept:
+        name(name),
+        len(S-1)
+    {
+    }
+
+    bool parse_success() const noexcept
+    {
+        return name[len] != 0;
+    }
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, parsed_name const & pn)
+    {
+        return os.write(pn.name, pn.len);
+    }
+};
+
+template <class Name>
+parsed_name parse_name()
+{
+    // Workaround for older gcc compilers where __PRETTY_FUNCTION__ is not constexpr.
+    // Instead of evaluating constexpr int x = f(__PRETTY_FUNCTION__), which fails,
+    // we evaluate int const x = f(__PRETTY_FUNCTION__). Then we enforce compile-time
+    // execution by evaluating sizeof(char[1 + x]) -1.
+#define BOOST_LEAF_PARSE_PF(prefix, suffix) \
+    { \
+        if( int const s = leaf_detail::check_suffix(BOOST_LEAF_PRETTY_FUNCTION, suffix) ) \
+            if( int const p = leaf_detail::check_prefix(BOOST_LEAF_PRETTY_FUNCTION, prefix) ) \
+                return parsed_name(BOOST_LEAF_PRETTY_FUNCTION + sizeof(char[1 + p]) - 1, sizeof(char[1 + s - p]) - 1); \
+    }
+    // clang style:
+    BOOST_LEAF_PARSE_PF( "parsed_name boost::leaf::parse_name() [Name = ", "]");
+    // old clang style:
+    BOOST_LEAF_PARSE_PF( "boost::leaf::parsed_name boost::leaf::parse_name() [Name = ", "]");
+    // gcc style:
+    BOOST_LEAF_PARSE_PF( "boost::leaf::parsed_name boost::leaf::parse_name() [with Name = ", "]");
+    // msvc style, __cdecl, struct/class/enum:
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __cdecl boost::leaf::parse_name<struct ", ">(void)");
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __cdecl boost::leaf::parse_name<class ", ">(void)");
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __cdecl boost::leaf::parse_name<enum ", ">(void)");
+    // msvc style, __stdcall, struct/class/enum:
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __stdcall boost::leaf::parse_name<struct ", ">(void)");
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __stdcall boost::leaf::parse_name<class ", ">(void)");
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __stdcall boost::leaf::parse_name<enum ", ">(void)");
+    // msvc style, __fastcall, struct/class/enum:
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __fastcall boost::leaf::parse_name<struct ", ">(void)");
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __fastcall boost::leaf::parse_name<class ", ">(void)");
+    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __fastcall boost::leaf::parse_name<enum ", ">(void)");
+#undef BOOST_LEAF_PARSE_PF
+
+    // Unrecognized __PRETTY_FUNCTION__/__FUNSIG__ format, return as-is. Note, parsing is done at compile-time.
+    return parsed_name(BOOST_LEAF_PRETTY_FUNCTION);
 }
 
 } }
@@ -1770,7 +1876,7 @@ namespace leaf_detail
         template <class CharT, class Traits>
         static void print( std::basic_ostream<CharT, Traits> & os, Wrapper const & x )
         {
-            os << type<Wrapper>() << ": " << x.value;
+            os << parse_name<Wrapper>() << ": " << x.value;
         }
     };
 
@@ -1782,7 +1888,7 @@ namespace leaf_detail
         template <class CharT, class Traits>
         static void print( std::basic_ostream<CharT, Traits> & os, Wrapper const & ex )
         {
-            os << type<Wrapper>() << ": std::exception::what(): " << ex.what();
+            os << parse_name<Wrapper>() << ": std::exception::what(): " << ex.what();
         }
     };
 
@@ -1794,7 +1900,7 @@ namespace leaf_detail
         template <class CharT, class Traits>
         static void print( std::basic_ostream<CharT, Traits> & os, Wrapper const & )
         {
-            os << type<Wrapper>() << ": {not printable}";
+            os << parse_name<Wrapper>() << ": {not printable}";
         }
     };
 
@@ -1806,7 +1912,7 @@ namespace leaf_detail
         template <class CharT, class Traits>
         static void print( std::basic_ostream<CharT, Traits> & os, Wrapper const & w )
         {
-            os << type<Wrapper>() << ": " << static_cast<typename std::underlying_type<Wrapper>::type>(w);
+            os << parse_name<Wrapper>() << ": " << static_cast<typename std::underlying_type<Wrapper>::type>(w);
         }
     };
 
@@ -1893,7 +1999,7 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, e_source_location const & x )
     {
-        return os << leaf::type<e_source_location>() << ": " << x.file << '(' << x.line << ") in function " << x.function;
+        return os << leaf::parse_name<e_source_location>() << x.file << '(' << x.line << ") in function " << x.function;
     }
 };
 
@@ -4288,10 +4394,11 @@ future_get( Future & fut )
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 1519: #include <boost/leaf/detail/demangle.hpp>
+// Expanded at line 1529: #include <boost/leaf/detail/demangle.hpp>
 
 #include <iosfwd>
 #include <cerrno>
+#include <cstring>
 
 #if BOOST_LEAF_CFG_STD_STRING
 #   include <string>
@@ -4338,7 +4445,7 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_errno
     template <class CharT, class Traits>
     friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, e_errno const & err)
     {
-        return os << type<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
+        return os << parse_name<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
     }
 };
 
@@ -4382,7 +4489,7 @@ namespace windows
                     *--z = 0;
                 if( z[-1] == '\r' )
                     *--z = 0;
-                return os << type<e_LastError>() << ": " << err.value << ", \"" << (LPCSTR)mb.p << '"';
+                return os << parse_name<e_LastError>() << ": " << err.value << ", \"" << (LPCSTR)mb.p << '"';
             }
             return os;
         }
@@ -4393,8 +4500,8 @@ namespace windows
 } }
 
 #endif
-// Expanded at line 742: #include <boost/leaf/context.hpp>
-// Expanded at line 753: #include <boost/leaf/error.hpp>
+// Expanded at line 752: #include <boost/leaf/context.hpp>
+// Expanded at line 763: #include <boost/leaf/error.hpp>
 // >>> #include <boost/leaf/exception.hpp>
 #line 1 "boost/leaf/exception.hpp"
 #ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
@@ -4406,7 +4513,7 @@ namespace windows
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 753: #include <boost/leaf/error.hpp>
+// Expanded at line 763: #include <boost/leaf/error.hpp>
 #include <exception>
 
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
@@ -4523,21 +4630,21 @@ namespace leaf_detail
         exception( exception const & ) = default;
         exception( exception && ) = default;
 
-        BOOST_LEAF_CONSTEXPR exception( error_id id, Ex const & ex ) noexcept:
+        exception( error_id id, Ex const & ex ) noexcept:
             Ex(ex),
             error_id(id)
         {
             enforce_std_exception(*this);
         }
 
-        BOOST_LEAF_CONSTEXPR exception( error_id id, Ex && ex ) noexcept:
+        exception( error_id id, Ex && ex ) noexcept:
             Ex(std::move(ex)),
             error_id(id)
         {
             enforce_std_exception(*this);
         }
 
-        explicit BOOST_LEAF_CONSTEXPR exception( error_id id ) noexcept:
+        explicit exception( error_id id ) noexcept:
             error_id(id)
         {
             enforce_std_exception(*this);
@@ -4676,7 +4783,7 @@ exception_to_result( F && f ) noexcept
 } }
 
 #endif
-// Expanded at line 731: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 741: #include <boost/leaf/handle_errors.hpp>
 // >>> #include <boost/leaf/on_error.hpp>
 #line 1 "boost/leaf/on_error.hpp"
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
@@ -4688,7 +4795,7 @@ exception_to_result( F && f ) noexcept
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 753: #include <boost/leaf/error.hpp>
+// Expanded at line 763: #include <boost/leaf/error.hpp>
 
 namespace boost { namespace leaf {
 
@@ -4923,7 +5030,7 @@ on_error( Item && ... i )
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 731: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 741: #include <boost/leaf/handle_errors.hpp>
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -5222,9 +5329,9 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 1508: #include <boost/leaf/detail/print.hpp>
-// Expanded at line 1380: #include <boost/leaf/detail/capture_list.hpp>
-// Expanded at line 4400: #include <boost/leaf/exception.hpp>
+// Expanded at line 1518: #include <boost/leaf/detail/print.hpp>
+// Expanded at line 1390: #include <boost/leaf/detail/capture_list.hpp>
+// Expanded at line 4507: #include <boost/leaf/exception.hpp>
 
 #include <climits>
 #include <functional>
@@ -5436,7 +5543,7 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
         operator result<U>() noexcept
         {
             result_discriminant const what = r_.what_;
-            switch( what.kind() )
+            switch(auto k = what.kind())
             {
                 case result_discriminant::val:
                     return result<U>(error_id());
@@ -5446,8 +5553,9 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
 #else
                     BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
+                default:
+                    BOOST_LEAF_ASSERT(k == result_discriminant::err_id);
                 case result_discriminant::err_id_zero:
-                case result_discriminant::err_id:
                     return result<U>(what.get_error_id());
             }
         }
@@ -5461,10 +5569,11 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
 
     void destroy() const noexcept
     {
-        switch(this->what_.kind())
+        switch(auto k = this->what_.kind())
         {
+        default:
+            BOOST_LEAF_ASSERT(k == result_discriminant::err_id);
         case result_discriminant::err_id_zero:
-        case result_discriminant::err_id:
             break;
         case result_discriminant::err_id_capture_list:
 #if BOOST_LEAF_CFG_CAPTURE
@@ -5482,10 +5591,11 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
     result_discriminant move_from( result<U> && x ) noexcept
     {
         auto x_what = x.what_;
-        switch(x_what.kind())
+        switch(auto k = x_what.kind())
         {
+        default:
+            BOOST_LEAF_ASSERT(k == result_discriminant::err_id);
         case result_discriminant::err_id_zero:
-        case result_discriminant::err_id:
             break;
         case result_discriminant::err_id_capture_list:
 #if BOOST_LEAF_CFG_CAPTURE
@@ -5967,8 +6077,8 @@ struct is_result_type<result<T>>: std::true_type
 #if __cplusplus >= 201703L
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-// Expanded at line 731: #include <boost/leaf/handle_errors.hpp>
-// Expanded at line 5216: #include <boost/leaf/result.hpp>
+// Expanded at line 741: #include <boost/leaf/handle_errors.hpp>
+// Expanded at line 5323: #include <boost/leaf/result.hpp>
 #include <variant>
 #include <optional>
 #include <tuple>
