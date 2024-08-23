@@ -23,6 +23,7 @@ project
         <threading>multi
     : requirements
         <define>BOOST_LEAF_BOOST_AVAILABLE
+        <target-os>windows:<define>_CRT_SECURE_NO_WARNINGS
         <threading>single:<define>BOOST_LEAF_NO_THREADS
         <toolset>gcc:<cxxflags>"-Wno-delete-non-virtual-dtor -Wno-parentheses"
         <toolset>clang:<cxxflags>"-Wno-unused-variable -Wno-delete-non-virtual-dtor -Wno-non-virtual-dtor -Wno-dangling-else"
@@ -108,6 +109,7 @@ run on_error_preload_nested_new_error_result_test.cpp ;
 run on_error_preload_nested_success_exception_test.cpp ;
 run on_error_preload_nested_success_result_test.cpp ;
 run optional_test.cpp ;
+run parse_name_test.cpp ;
 run print_test.cpp ;
 run result_bad_result_test.cpp ;
 run result_implicit_conversion_test.cpp ;

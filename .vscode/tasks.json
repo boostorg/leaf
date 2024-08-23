@@ -104,7 +104,7 @@
             },
             "label": "Test current editor file",
             "type": "shell",
-            "command": "cd ${workspaceRoot}/_bld/debug && ninja && { meson test ${fileBasenameNoExtension} || cat ./meson-logs/testlog.txt }",
+            "command": "cd ${workspaceRoot}/_bld/debug && ninja && meson test ${fileBasenameNoExtension} || cat ./meson-logs/testlog.txt",
             "problemMatcher": {
                 "base": "$gcc",
                 "fileLocation": [

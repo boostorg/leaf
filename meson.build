@@ -24,6 +24,10 @@ if not option_enable_examples
     endif
 endif
 
+if target_machine.system() == 'windows'
+    add_global_arguments('-D_CRT_SECURE_NO_WARNINGS', language: 'cpp')
+endif
+
 compiler = meson.get_compiler('cpp')
 compiler_id = compiler.get_id()
 if not meson.is_subproject()
@@ -169,6 +173,7 @@ if option_enable_unit_tests
         'on_error_preload_nested_success_exception_test',
         'on_error_preload_nested_success_result_test',
         'optional_test',
+        'parse_name_test',
         'print_test',
         'result_bad_result_test',
         'result_implicit_conversion_test',

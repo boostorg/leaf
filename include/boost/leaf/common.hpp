@@ -11,6 +11,7 @@
 
 #include <iosfwd>
 #include <cerrno>
+#include <cstring>
 
 #if BOOST_LEAF_CFG_STD_STRING
 #   include <string>
@@ -57,7 +58,7 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_errno
     template <class CharT, class Traits>
     friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, e_errno const & err)
     {
-        return os << type<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
+        return os << parse_name<e_errno>() << ": " << err.value << ", \"" << std::strerror(err.value) << '"';
     }
 };
 
@@ -101,7 +102,7 @@ namespace windows
                     *--z = 0;
                 if( z[-1] == '\r' )
                     *--z = 0;
-                return os << type<e_LastError>() << ": " << err.value << ", \"" << (LPCSTR)mb.p << '"';
+                return os << parse_name<e_LastError>() << ": " << err.value << ", \"" << (LPCSTR)mb.p << '"';
             }
             return os;
         }

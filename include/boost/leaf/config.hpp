@@ -120,6 +120,16 @@
 
 ////////////////////////////////////////
 
+#ifndef BOOST_LEAF_PRETTY_FUNCTION
+#   if defined(_MSC_VER) && !defined(__clang__) && !defined(__GNUC__)
+#       define BOOST_LEAF_PRETTY_FUNCTION __FUNCSIG__
+#   else
+#       define BOOST_LEAF_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#   endif
+#endif
+
+////////////////////////////////////////
+
 // Configure BOOST_LEAF_NO_EXCEPTIONS, unless already #defined
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
