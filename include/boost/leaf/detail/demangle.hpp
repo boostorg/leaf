@@ -16,8 +16,33 @@
 // http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/leaf/config.hpp>
-
 #include <iosfwd>
+#include <cstdlib>
+
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+
+// __has_include is currently supported by GCC and Clang. However GCC 4.9 may have issues and
+// returns 1 for 'defined( __has_include )', while '__has_include' is actually not supported:
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63662
+#if defined(__has_include) && (!defined(__GNUC__) || defined(__clang__) || (__GNUC__ + 0) >= 5)
+#   if __has_include(<cxxabi.h>)
+#       define BOOST_LEAF_HAS_CXXABI_H
+#   endif
+#elif defined(__GLIBCXX__) || defined(__GLIBCPP__)
+#   define BOOST_LEAF_HAS_CXXABI_H
+#endif
+
+#if defined(BOOST_LEAF_HAS_CXXABI_H)
+#   include <cxxabi.h>
+//  For some archtectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
+//  (https://android.googlesource.com/platform/ndk/+/master/sources/cxx-stl/gabi++/), which does not implement
+//  abi::__cxa_demangle(). We detect this implementation by checking the include guard here.
+#   if defined(__GABIXX_CXXABI_H__)
+#       undef BOOST_LEAF_HAS_CXXABI_H
+#   endif
+#endif
+
+#endif
 
 namespace boost { namespace leaf {
 
@@ -90,25 +115,21 @@ struct parsed_name
 {
     char const * name;
     int len;
-
     parsed_name(char const * name, int len) noexcept:
         name(name),
         len(len)
     {
     }
-
     template <int S>
     parsed_name(char const(&name)[S]) noexcept:
         name(name),
         len(S-1)
     {
     }
-
     bool parse_success() const noexcept
     {
         return name[len] != 0;
     }
-
     template <class CharT, class Traits>
     friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, parsed_name const & pn)
     {
@@ -157,130 +178,36 @@ parsed_name parse_name()
 
 ////////////////////////////////////////
 
-// __has_include is currently supported by GCC and Clang. However GCC 4.9 may have issues and
-// returns 1 for 'defined( __has_include )', while '__has_include' is actually not supported:
-// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63662
-#if defined(__has_include) && (!defined(__GNUC__) || defined(__clang__) || (__GNUC__ + 0) >= 5)
-#   if __has_include(<cxxabi.h>)
-#       define BOOST_LEAF_HAS_CXXABI_H
-#   endif
-#elif defined( __GLIBCXX__ ) || defined( __GLIBCPP__ )
-#   define BOOST_LEAF_HAS_CXXABI_H
-#endif
-
-#if defined( BOOST_LEAF_HAS_CXXABI_H )
-#   include <cxxabi.h>
-//  For some archtectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
-//  (https://android.googlesource.com/platform/ndk/+/master/sources/cxx-stl/gabi++/), which does not implement
-//  abi::__cxa_demangle(). We detect this implementation by checking the include guard here.
-#   if defined( __GABIXX_CXXABI_H__ )
-#       undef BOOST_LEAF_HAS_CXXABI_H
-#   else
-#       include <cstdlib>
-#       include <cstddef>
-#   endif
-#endif
-
-#if BOOST_LEAF_CFG_STD_STRING
-
-#include <string>
-
 namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
-    inline char const * demangle_alloc( char const * name ) noexcept;
-    inline void demangle_free( char const * name ) noexcept;
-
-    class scoped_demangled_name
+    template <class CharT, class Traits>
+    std::ostream & demangle_and_print(std::basic_ostream<CharT, Traits> & os, char const * mangled_name)
     {
-    private:
-
-        char const * m_p;
-
-    public:
-
-        explicit scoped_demangled_name( char const * name ) noexcept :
-            m_p( demangle_alloc( name ) )
+#if defined(BOOST_LEAF_CFG_DIAGNOSTICS) && defined(BOOST_LEAF_HAS_CXXABI_H)
+        BOOST_LEAF_ASSERT(mangled_name);
+        struct del
         {
-        }
-
-        ~scoped_demangled_name() noexcept
-        {
-            demangle_free( m_p );
-        }
-
-        char const * get() const noexcept
-        {
-            return m_p;
-        }
-
-        scoped_demangled_name( scoped_demangled_name const& ) = delete;
-        scoped_demangled_name& operator= ( scoped_demangled_name const& ) = delete;
-    };
-
-#ifdef BOOST_LEAF_HAS_CXXABI_H
-
-    inline char const * demangle_alloc( char const * name ) noexcept
-    {
-        int status = 0;
-        std::size_t size = 0;
-        return abi::__cxa_demangle( name, NULL, &size, &status );
-    }
-
-    inline void demangle_free( char const * name ) noexcept
-    {
-        std::free( const_cast< char* >( name ) );
-    }
-
-    inline std::string demangle( char const * name )
-    {
-        scoped_demangled_name demangled_name( name );
-        char const * p = demangled_name.get();
-        if( !p )
-            p = name;
-        return p;
-    }
-
+            char const * demangled_name;
+            del(char const * name) noexcept 
+            {
+                int status = 0;
+                std::size_t size = 0;
+                demangled_name = abi::__cxa_demangle(name, NULL, &size, &status);
+            }
+            ~del() noexcept
+            {
+                std::free(const_cast< char* >(demangled_name));
+            }
+        } d(mangled_name);
+        return os << d.demangled_name;
 #else
-
-    inline char const * demangle_alloc( char const * name ) noexcept
-    {
-        return name;
-    }
-
-    inline void demangle_free( char const * ) noexcept
-    {
-    }
-
-    inline char const * demangle( char const * name )
-    {
-        return name;
-    }
-
+        return os << mangled_name;
 #endif
-}
-
-} }
-
-#else
-
-namespace boost { namespace leaf {
-
-namespace leaf_detail
-{
-    inline char const * demangle( char const * name )
-    {
-        return name;
     }
 }
 
 } }
-
-#endif
-
-#ifdef BOOST_LEAF_HAS_CXXABI_H
-#   undef BOOST_LEAF_HAS_CXXABI_H
-#endif
 
 #endif

@@ -597,9 +597,7 @@ public:
             if( what.kind() == result_discriminant::err_id_capture_list )
             {
 #if BOOST_LEAF_CFG_CAPTURE
-#   if BOOST_LEAF_CFG_DIAGNOSTICS
                 cap_.print(os, ". Captured error objects:\n", err_id.value());
-#   endif
 #else
                 BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif

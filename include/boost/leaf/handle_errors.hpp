@@ -70,15 +70,15 @@ public:
     }
 
     template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, error_info const & x )
+    friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, error_info const & x)
     {
         os << "Error ID: " << x.err_id_.value();
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
         if( x.ex_ )
         {
-            os <<
-                "\nException dynamic type: " << leaf_detail::demangle(typeid(*x.ex_).name()) <<
-                "\nstd::exception::what(): " << x.ex_->what();
+            os << "\nException dynamic type: ";
+            leaf_detail::demangle_and_print(os, typeid(*x.ex_).name()) << "\n"
+            "std::exception::what(): " << x.ex_->what();
         }
 #endif
         return os << '\n';
@@ -91,7 +91,7 @@ namespace leaf_detail
     struct handler_argument_traits<error_info const &>: handler_argument_always_available<void>
     {
         template <class Tup>
-        BOOST_LEAF_CONSTEXPR static error_info const & get( Tup const &, error_info const & ei ) noexcept
+        BOOST_LEAF_CONSTEXPR static error_info const & get(Tup const &, error_info const & ei) noexcept
         {
             return ei;
         }
