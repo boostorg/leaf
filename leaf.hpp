@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 08/23/2024 from https://github.com/boostorg/leaf/tree/abaf59d.
+// Generated on 08/24/2024 from https://github.com/boostorg/leaf/tree/11dfa37.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
@@ -1544,8 +1544,33 @@ namespace leaf_detail
 // http://www.boost.org/LICENSE_1_0.txt
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
-
 #include <iosfwd>
+#include <cstdlib>
+
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+
+// __has_include is currently supported by GCC and Clang. However GCC 4.9 may have issues and
+// returns 1 for 'defined( __has_include )', while '__has_include' is actually not supported:
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63662
+#if defined(__has_include) && (!defined(__GNUC__) || defined(__clang__) || (__GNUC__ + 0) >= 5)
+#   if __has_include(<cxxabi.h>)
+#       define BOOST_LEAF_HAS_CXXABI_H
+#   endif
+#elif defined(__GLIBCXX__) || defined(__GLIBCPP__)
+#   define BOOST_LEAF_HAS_CXXABI_H
+#endif
+
+#if defined(BOOST_LEAF_HAS_CXXABI_H)
+#   include <cxxabi.h>
+//  For some archtectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
+//  (https://android.googlesource.com/platform/ndk/+/master/sources/cxx-stl/gabi++/), which does not implement
+//  abi::__cxa_demangle(). We detect this implementation by checking the include guard here.
+#   if defined(__GABIXX_CXXABI_H__)
+#       undef BOOST_LEAF_HAS_CXXABI_H
+#   endif
+#endif
+
+#endif
 
 namespace boost { namespace leaf {
 
@@ -1618,25 +1643,21 @@ struct parsed_name
 {
     char const * name;
     int len;
-
     parsed_name(char const * name, int len) noexcept:
         name(name),
         len(len)
     {
     }
-
     template <int S>
     parsed_name(char const(&name)[S]) noexcept:
         name(name),
         len(S-1)
     {
     }
-
     bool parse_success() const noexcept
     {
         return name[len] != 0;
     }
-
     template <class CharT, class Traits>
     friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, parsed_name const & pn)
     {
@@ -1685,131 +1706,37 @@ parsed_name parse_name()
 
 ////////////////////////////////////////
 
-// __has_include is currently supported by GCC and Clang. However GCC 4.9 may have issues and
-// returns 1 for 'defined( __has_include )', while '__has_include' is actually not supported:
-// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63662
-#if defined(__has_include) && (!defined(__GNUC__) || defined(__clang__) || (__GNUC__ + 0) >= 5)
-#   if __has_include(<cxxabi.h>)
-#       define BOOST_LEAF_HAS_CXXABI_H
-#   endif
-#elif defined( __GLIBCXX__ ) || defined( __GLIBCPP__ )
-#   define BOOST_LEAF_HAS_CXXABI_H
-#endif
-
-#if defined( BOOST_LEAF_HAS_CXXABI_H )
-#   include <cxxabi.h>
-//  For some archtectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
-//  (https://android.googlesource.com/platform/ndk/+/master/sources/cxx-stl/gabi++/), which does not implement
-//  abi::__cxa_demangle(). We detect this implementation by checking the include guard here.
-#   if defined( __GABIXX_CXXABI_H__ )
-#       undef BOOST_LEAF_HAS_CXXABI_H
-#   else
-#       include <cstdlib>
-#       include <cstddef>
-#   endif
-#endif
-
-#if BOOST_LEAF_CFG_STD_STRING
-
-#include <string>
-
 namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
-    inline char const * demangle_alloc( char const * name ) noexcept;
-    inline void demangle_free( char const * name ) noexcept;
-
-    class scoped_demangled_name
+    template <class CharT, class Traits>
+    std::ostream & demangle_and_print(std::basic_ostream<CharT, Traits> & os, char const * mangled_name)
     {
-    private:
-
-        char const * m_p;
-
-    public:
-
-        explicit scoped_demangled_name( char const * name ) noexcept :
-            m_p( demangle_alloc( name ) )
+#if defined(BOOST_LEAF_CFG_DIAGNOSTICS) && defined(BOOST_LEAF_HAS_CXXABI_H)
+        BOOST_LEAF_ASSERT(mangled_name);
+        struct del
         {
-        }
-
-        ~scoped_demangled_name() noexcept
-        {
-            demangle_free( m_p );
-        }
-
-        char const * get() const noexcept
-        {
-            return m_p;
-        }
-
-        scoped_demangled_name( scoped_demangled_name const& ) = delete;
-        scoped_demangled_name& operator= ( scoped_demangled_name const& ) = delete;
-    };
-
-#ifdef BOOST_LEAF_HAS_CXXABI_H
-
-    inline char const * demangle_alloc( char const * name ) noexcept
-    {
-        int status = 0;
-        std::size_t size = 0;
-        return abi::__cxa_demangle( name, NULL, &size, &status );
-    }
-
-    inline void demangle_free( char const * name ) noexcept
-    {
-        std::free( const_cast< char* >( name ) );
-    }
-
-    inline std::string demangle( char const * name )
-    {
-        scoped_demangled_name demangled_name( name );
-        char const * p = demangled_name.get();
-        if( !p )
-            p = name;
-        return p;
-    }
-
+            char const * demangled_name;
+            del(char const * name) noexcept 
+            {
+                int status = 0;
+                std::size_t size = 0;
+                demangled_name = abi::__cxa_demangle(name, NULL, &size, &status);
+            }
+            ~del() noexcept
+            {
+                std::free(const_cast< char* >(demangled_name));
+            }
+        } d(mangled_name);
+        return os << d.demangled_name;
 #else
-
-    inline char const * demangle_alloc( char const * name ) noexcept
-    {
-        return name;
-    }
-
-    inline void demangle_free( char const * ) noexcept
-    {
-    }
-
-    inline char const * demangle( char const * name )
-    {
-        return name;
-    }
-
+        return os << mangled_name;
 #endif
-}
-
-} }
-
-#else
-
-namespace boost { namespace leaf {
-
-namespace leaf_detail
-{
-    inline char const * demangle( char const * name )
-    {
-        return name;
     }
 }
 
 } }
-
-#endif
-
-#ifdef BOOST_LEAF_HAS_CXXABI_H
-#   undef BOOST_LEAF_HAS_CXXABI_H
-#endif
 
 #endif
 // <<< #include <boost/leaf/detail/demangle.hpp>
@@ -3216,15 +3143,15 @@ public:
     }
 
     template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, error_info const & x )
+    friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, error_info const & x)
     {
         os << "Error ID: " << x.err_id_.value();
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
         if( x.ex_ )
         {
-            os <<
-                "\nException dynamic type: " << leaf_detail::demangle(typeid(*x.ex_).name()) <<
-                "\nstd::exception::what(): " << x.ex_->what();
+            os << "\nException dynamic type: ";
+            leaf_detail::demangle_and_print(os, typeid(*x.ex_).name()) << "\n"
+            "std::exception::what(): " << x.ex_->what();
         }
 #endif
         return os << '\n';
@@ -3237,7 +3164,7 @@ namespace leaf_detail
     struct handler_argument_traits<error_info const &>: handler_argument_always_available<void>
     {
         template <class Tup>
-        BOOST_LEAF_CONSTEXPR static error_info const & get( Tup const &, error_info const & ei ) noexcept
+        BOOST_LEAF_CONSTEXPR static error_info const & get(Tup const &, error_info const & ei) noexcept
         {
             return ei;
         }
@@ -5331,7 +5258,7 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 // Expanded at line 16: #include <boost/leaf/config.hpp>
 // Expanded at line 1518: #include <boost/leaf/detail/print.hpp>
 // Expanded at line 1390: #include <boost/leaf/detail/capture_list.hpp>
-// Expanded at line 4507: #include <boost/leaf/exception.hpp>
+// Expanded at line 4434: #include <boost/leaf/exception.hpp>
 
 #include <climits>
 #include <functional>
@@ -5919,9 +5846,7 @@ public:
             if( what.kind() == result_discriminant::err_id_capture_list )
             {
 #if BOOST_LEAF_CFG_CAPTURE
-#   if BOOST_LEAF_CFG_DIAGNOSTICS
                 cap_.print(os, ". Captured error objects:\n", err_id.value());
-#   endif
 #else
                 BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
@@ -6078,7 +6003,7 @@ struct is_result_type<result<T>>: std::true_type
 
 // Expanded at line 16: #include <boost/leaf/config.hpp>
 // Expanded at line 741: #include <boost/leaf/handle_errors.hpp>
-// Expanded at line 5323: #include <boost/leaf/result.hpp>
+// Expanded at line 5250: #include <boost/leaf/result.hpp>
 #include <variant>
 #include <optional>
 #include <tuple>
