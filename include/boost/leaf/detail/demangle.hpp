@@ -185,26 +185,25 @@ namespace leaf_detail
     template <class CharT, class Traits>
     std::ostream & demangle_and_print(std::basic_ostream<CharT, Traits> & os, char const * mangled_name)
     {
-#if defined(BOOST_LEAF_CFG_DIAGNOSTICS) && defined(BOOST_LEAF_HAS_CXXABI_H)
         BOOST_LEAF_ASSERT(mangled_name);
-        struct del
+#if defined(BOOST_LEAF_CFG_DIAGNOSTICS) && defined(BOOST_LEAF_HAS_CXXABI_H)
+        struct raii
         {
-            char const * demangled_name;
-            del(char const * name) noexcept 
+            char * demangled_name;
+            raii(char const * mangled_name) noexcept 
             {
                 int status = 0;
-                std::size_t size = 0;
-                demangled_name = abi::__cxa_demangle(name, NULL, &size, &status);
+                demangled_name = abi::__cxa_demangle(mangled_name, nullptr, nullptr, &status);
             }
-            ~del() noexcept
+            ~raii() noexcept
             {
-                std::free(const_cast< char* >(demangled_name));
+                std::free(demangled_name);
             }
         } d(mangled_name);
-        return os << d.demangled_name;
-#else
-        return os << mangled_name;
+        if( d.demangled_name )
+            return os << d.demangled_name;
 #endif
+        return os << mangled_name;
     }
 }
 
