@@ -94,13 +94,13 @@ namespace leaf_detail
         }
 
         template <class CharT, class Traits>
-        void print( std::basic_ostream<CharT, Traits> & os, char const * title, int const err_id_to_print ) const
+        void print(std::basic_ostream<CharT, Traits> & os, int const err_id_to_print, char const * title = nullptr) const
         {
-            BOOST_LEAF_ASSERT(title != nullptr);
 #if BOOST_LEAF_CFG_DIAGNOSTICS
             if( first_ )
             {
-                os << title;
+                if( title )
+                    os << title;
                 for_each(
                     [&os, err_id_to_print]( node const & n )
                     {

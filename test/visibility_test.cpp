@@ -33,7 +33,7 @@ int main()
                 BOOST_LEAF_CHECK(hidden_result());
                 return 0;
             },
-            []( my_info<1> x1, my_info<2> x2, leaf::verbose_diagnostic_info const & info, leaf::verbose_diagnostic_info const & vinfo )
+            []( my_info<1> x1, my_info<2> x2, leaf::diagnostic_details const & info, leaf::diagnostic_details const & vinfo )
             {
                 BOOST_TEST_EQ(x1.value, 1);
                 BOOST_TEST_EQ(x2.value, 2);
@@ -64,7 +64,7 @@ int main()
                 hidden_throw();
                 return 0;
             },
-            []( my_info<1> x1, my_info<2> x2, leaf::verbose_diagnostic_info const & info, leaf::verbose_diagnostic_info const & vinfo )
+            []( my_info<1> x1, my_info<2> x2, leaf::diagnostic_details const & info, leaf::diagnostic_details const & vinfo )
             {
                 BOOST_TEST_EQ(x1.value, 1);
                 BOOST_TEST_EQ(x2.value, 2);

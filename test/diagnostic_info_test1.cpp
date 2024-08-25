@@ -166,7 +166,7 @@ int main()
             BOOST_ERROR("Bad error dispatch");
         } );
 
-    std::cout << __LINE__  << " ---- verbose_diagnostic_info\n";
+    std::cout << __LINE__  << " ---- diagnostic_details\n";
     leaf::try_handle_all(
         []() -> leaf::result<void>
         {
@@ -188,7 +188,7 @@ int main()
             non_printable_info_non_printable_payload,
             enum_class_payload,
             leaf::e_errno,
-            leaf::verbose_diagnostic_info const & di )
+            leaf::diagnostic_details const & di )
         {
 #if BOOST_LEAF_CFG_STD_STRING
             std::ostringstream st;
@@ -207,17 +207,16 @@ int main()
                 BOOST_TEST_EQ(s.find("dynamic_allocator"), s.npos);
                 if( BOOST_LEAF_CFG_CAPTURE )
                 {
-                    BOOST_TEST_NE(s.find("Unhandled error objects:"), s.npos);
                     BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
                     BOOST_TEST_NE(s.find("unexpected_test<2>"), s.npos);
                     BOOST_TEST_NE(s.find(": 1"), s.npos);
                     BOOST_TEST_NE(s.find(": 2"), s.npos);
                 }
                 else
-                    BOOST_TEST_NE(s.find("verbose_diagnostic_info not available due to BOOST_LEAF_CFG_CAPTURE=0"), s.npos);
+                    BOOST_TEST_NE(s.find("diagnostic_details not available due to BOOST_LEAF_CFG_CAPTURE=0"), s.npos);
             }
             else
-                BOOST_TEST_NE(s.find("verbose_diagnostic_info not available due to BOOST_LEAF_CFG_DIAGNOSTICS=0"), s.npos);
+                BOOST_TEST_NE(s.find("diagnostic_details not available due to BOOST_LEAF_CFG_DIAGNOSTICS=0"), s.npos);
 #endif
         },
         []()
@@ -308,7 +307,7 @@ int main()
 #endif
         } );
 
-    std::cout << __LINE__  << " ---- verbose_diagnostic_info\n";
+    std::cout << __LINE__  << " ---- diagnostic_details\n";
     leaf::try_catch(
         []
         {
@@ -330,7 +329,7 @@ int main()
             non_printable_info_non_printable_payload,
             enum_class_payload,
             leaf::e_errno,
-            leaf::verbose_diagnostic_info const & di )
+            leaf::diagnostic_details const & di )
         {
 #if BOOST_LEAF_CFG_STD_STRING
             std::ostringstream st;
@@ -351,17 +350,16 @@ int main()
                 BOOST_TEST_EQ(s.find("dynamic_allocator"), s.npos);
                 if( BOOST_LEAF_CFG_CAPTURE )
                 {
-                    BOOST_TEST_NE(s.find("Unhandled error objects:"), s.npos);
                     BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
                     BOOST_TEST_NE(s.find("unexpected_test<2>"), s.npos);
                     BOOST_TEST_NE(s.find(": 1"), s.npos);
                     BOOST_TEST_NE(s.find(": 2"), s.npos);
                 }
                 else
-                    BOOST_TEST_NE(s.find("verbose_diagnostic_info not available due to BOOST_LEAF_CFG_CAPTURE=0"), s.npos);
+                    BOOST_TEST_NE(s.find("diagnostic_details not available due to BOOST_LEAF_CFG_CAPTURE=0"), s.npos);
             }
             else
-                BOOST_TEST_NE(s.find("verbose_diagnostic_info not available due to BOOST_LEAF_CFG_DIAGNOSTICS=0"), s.npos);
+                BOOST_TEST_NE(s.find("diagnostic_details not available due to BOOST_LEAF_CFG_DIAGNOSTICS=0"), s.npos);
 #endif
         } );
 

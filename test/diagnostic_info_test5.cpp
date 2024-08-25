@@ -73,7 +73,7 @@ leaf::result<void> f3()
         {
             return f2();
         },
-        []( leaf::verbose_diagnostic_info const & e )
+        []( leaf::diagnostic_details const & e )
         {
             return e.error();
         } );
@@ -87,7 +87,7 @@ int main()
         {
             return f3();
         },
-        []( info<1> const &, leaf::verbose_diagnostic_info const & di )
+        []( info<1> const &, leaf::diagnostic_details const & di )
         {
 #if BOOST_LEAF_CFG_STD_STRING
             std::ostringstream st;
@@ -100,16 +100,10 @@ int main()
                 auto const n2 = s.find("info<2>: acc=0");
                 auto const n3 = s.find("info<3>: acc=0");
                 auto const n4 = s.find("info<4>: acc=2");
-                auto const nd = s.find("Unhandled");
                 BOOST_TEST_NE(n1, s.npos);
                 BOOST_TEST_NE(n2, s.npos);
                 BOOST_TEST_NE(n3, s.npos);
                 BOOST_TEST_NE(n4, s.npos);
-                BOOST_TEST_NE(nd, s.npos);
-                BOOST_TEST_LT(n1, nd);
-                BOOST_TEST_GT(n2, nd);
-                BOOST_TEST_GT(n3, nd);
-                BOOST_TEST_GT(n4, nd);
                 BOOST_TEST_EQ(counter, 4);
             }
             else

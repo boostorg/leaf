@@ -37,7 +37,7 @@ int main()
             BOOST_TEST(x.value==1);
             return 1;
         },
-        []( leaf::verbose_diagnostic_info const & info )
+        []( leaf::diagnostic_details const & info )
         {
             std::cout << info;
             return 2;

@@ -50,7 +50,7 @@ leaf::result<void> f3()
         {
             return f1();
         },
-        [](leaf::verbose_diagnostic_info const &)
+        [](leaf::diagnostic_details const &)
         {
             return leaf::new_error(info<1>{13});
         } );
@@ -63,7 +63,7 @@ leaf::result<void> f4()
         {
             return f1();
         },
-        [](leaf::verbose_diagnostic_info const & e)
+        [](leaf::diagnostic_details const & e)
         {
             return e.error().load(info<1>{14});
         } );
@@ -75,7 +75,7 @@ int main()
     {
         return f2();
     },
-    [](leaf::verbose_diagnostic_info const & e)
+    [](leaf::diagnostic_details const & e)
     {
 #if BOOST_LEAF_CFG_STD_STRING
         std::ostringstream st;
@@ -95,7 +95,7 @@ int main()
     {
         return f3();
     },
-    [](leaf::verbose_diagnostic_info const & e)
+    [](leaf::diagnostic_details const & e)
     {
 #if BOOST_LEAF_CFG_STD_STRING
         std::ostringstream st;
@@ -115,7 +115,7 @@ int main()
     {
         return f4();
     },
-    [](leaf::verbose_diagnostic_info const & e)
+    [](leaf::diagnostic_details const & e)
     {
 #if BOOST_LEAF_CFG_STD_STRING
         std::ostringstream st;

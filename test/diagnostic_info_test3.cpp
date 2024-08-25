@@ -41,7 +41,7 @@ int main()
         {
             return f2();
         },
-        []( leaf::verbose_diagnostic_info const & di )
+        []( leaf::diagnostic_details const & di )
         {
 #if BOOST_LEAF_CFG_STD_STRING
             std::ostringstream st;

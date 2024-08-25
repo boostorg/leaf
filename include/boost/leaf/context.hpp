@@ -17,7 +17,7 @@ namespace boost { namespace leaf {
 
 class error_info;
 class diagnostic_info;
-class verbose_diagnostic_info;
+class diagnostic_details;
 
 template <class>
 struct is_predicate: std::false_type
@@ -58,7 +58,7 @@ namespace leaf_detail
         static_assert(!is_predicate<error_type>::value, "Handlers must take predicate arguments by value");
         static_assert(!std::is_same<E, error_info>::value, "Handlers must take leaf::error_info arguments by const &");
         static_assert(!std::is_same<E, diagnostic_info>::value, "Handlers must take leaf::diagnostic_info arguments by const &");
-        static_assert(!std::is_same<E, verbose_diagnostic_info>::value, "Handlers must take leaf::verbose_diagnostic_info arguments by const &");
+        static_assert(!std::is_same<E, diagnostic_details>::value, "Handlers must take leaf::diagnostic_details arguments by const &");
     };
 
     template <class Pred>
