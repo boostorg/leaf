@@ -7,7 +7,7 @@
 #   include "leaf.hpp"
 #else
 #   include <boost/leaf/context.hpp>
-#   include <boost/leaf/handle_errors.hpp>
+#   include <boost/leaf/diagnostics.hpp>
 #   include <boost/leaf/result.hpp>
 #endif
 
@@ -31,7 +31,7 @@ leaf::result<int> f( Ctx & ctx )
 
 int main()
 {
-    leaf::context<info<1>, leaf::verbose_diagnostic_info const &> ctx;
+    leaf::context<info<1>, leaf::diagnostic_details const &> ctx;
 
     {
         leaf::result<int> r1 = f(ctx);
@@ -44,7 +44,7 @@ int main()
                 BOOST_TEST(x.value==1);
                 return 1;
             },
-            []( leaf::verbose_diagnostic_info const & info )
+            []( leaf::diagnostic_details const & info )
             {
                 std::cout << info;
                 return 2;

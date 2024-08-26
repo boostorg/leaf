@@ -1811,7 +1811,7 @@ leaf::try_handle_all(
     std::cerr << "Read error!" << std::endl;
   },
 
-  []( leaf::verbose_diagnostic_info const & info ) <3>
+  []( leaf::diagnostic_details const & info ) <3>
   {
     std::cerr << "Unrecognized error detected, cryptic diagnostic information follows.\n" << info;
   } );
@@ -1820,14 +1820,13 @@ leaf::try_handle_all(
 <2> One or more error handlers that should handle all possible failures.
 <3> This "catch all" error handler is required by `try_handle_all`. It will be called if LEAF is unable to use another error handler.
 
-The `verbose_diagnostic_info` output for the snippet above tells us that we got an `error_code` with value `1` (`write_error`), and an object of type `e_file_name` with `"file.txt"` stored in its `.value`:
+The `diagnostic_details` output for the snippet above tells us that we got an `error_code` with value `1` (`write_error`), and an object of type `e_file_name` with `"file.txt"` stored in its `.value`:
 
 ----
 Unrecognized error detected, cryptic diagnostic information follows.
-leaf::verbose_diagnostic_info for Error ID = 1:
-[with Name = error_code]: 1
-Unhandled error objects:
-[with Name = boost::leaf::e_file_name]: file.txt
+leaf::diagnostic_details for Error ID = 1:
+error_code: 1
+boost::leaf::e_file_name: file.txt
 ----
 
 To print each error object, LEAF attempts to bind an unqualified call to `operator<<`, passing a `std::ostream` and the error object. If that fails, it will also attempt to bind `operator<<` that takes the `.value` of the error type. If that also does not compile, the error object value will not appear in diagnostic messages, though LEAF will still print its type.
@@ -1849,9 +1848,9 @@ struct e_errno
 
 The `e_errno` type above is designed to hold `errno` values. The defined `operator<<` overload will automatically include the output from `strerror` when `e_errno` values are printed (LEAF defines `e_errno` in `<boost/leaf/common.hpp>`, together with other commonly-used error types).
 
-Using `verbose_diagnostic_info` comes at a cost. Normally, when the program attempts to communicate error objects of types which are not used in any error handling scope in the current call stack, they are discarded, which saves cycles. However, if an error handler is provided that takes `verbose_diagnostic_info` argument, such objects are stored on the heap instead of being discarded. They appear under `Unhandled error objects` in the output from `verbose_diagnostic_info`.
+Using `diagnostic_details` comes at a cost. Normally, when the program attempts to communicate error objects of types which are not used in any error handling scope in the current call stack, they are discarded, which saves cycles. However, if an error handler is provided that takes `diagnostic_details` argument, such objects are stored on the heap instead of being discarded.
 
-If handling `verbose_diagnostic_info` is considered too costly, use `diagnostic_info` instead:
+If handling `diagnostic_details` is considered too costly, use `diagnostic_info` instead:
 
 [source,c++]
 ----
@@ -1879,7 +1878,7 @@ In this case, the output may look like this:
 ----
 Unrecognized error detected, cryptic diagnostic information follows.
 leaf::diagnostic_info for Error ID = 1:
-[with Name = error_code]: 1
+error_code: 1
 ----
 
 Notice how the diagnostic information for `e_file_name` changed: because it was discarded, LEAF is unable to print it.
@@ -2203,6 +2202,56 @@ A standalone single-header option is available; please see <<distribution>>.
 [[synopsis-reporting]]
 === Error Reporting
 
+[[common.hpp]]
+==== `common.hpp`
+
+====
+.#include <boost/leaf/common.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  struct e_api_function { char const * value; };
+
+  struct e_file_name { std::string value; };
+
+  struct e_type_info_name { char const * value; };
+
+  struct e_at_line { int value; };
+
+  struct e_errno
+  {
+    int value;
+    explicit e_errno(int value=errno);
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, e_errno const &);
+  };
+
+  namespace windows
+  {
+    struct e_LastError
+    {
+      unsigned value;
+
+      explicit e_LastError(unsigned value);
+
+#if BOOST_LEAF_CFG_WIN32
+      e_LastError();
+
+      template <class CharT, class Traits>
+      friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, e_LastError const &);
+#endif
+    };
+  }
+
+} }
+----
+
+[.text-right]
+Reference: <<e_api_function>> | <<e_file_name>> | <<e_at_line>> | <<e_type_info_name>> | <<e_source_location>> | <<e_errno>> | <<e_LastError>>
+====
+
 [[error.hpp]]
 ==== `error.hpp`
 
@@ -2313,54 +2362,73 @@ namespace boost { namespace leaf {
 Reference: <<error_id>> | <<is_error_id>> | <<new_error>> | <<current_error>> | <<context_activator>> | <<activate_context>> | <<is_result_type>> | <<BOOST_LEAF_ASSIGN>> | <<BOOST_LEAF_AUTO>> | <<BOOST_LEAF_CHECK>> | <<BOOST_LEAF_NEW_ERROR>>
 ====
 
-[[common.hpp]]
-==== `common.hpp`
+[[exception.hpp]]
+==== `exception.hpp`
 
 ====
-.#include <boost/leaf/common.hpp>
+.#include <boost/leaf/exception.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
 
-  struct e_api_function { char const * value; };
+  template <class Ex, class... E> <1>
+  [[noreturn]] void throw_exception( Ex &&, E && ... );
 
-  struct e_file_name { std::string value; };
+  template <class E1, class... E> <2>
+  [[noreturn]] void throw_exception( E1 &&, E && ... );
 
-  struct e_type_info_name { char const * value; };
+  [[noreturn]] void throw_exception();
 
-  struct e_at_line { int value; };
+  template <class Ex, class... E> <1>
+  [[noreturn]] void throw_exception( error_id id, Ex &&, E && ... );
 
-  struct e_errno
+  template <class E1, class... E> <2>
+  [[noreturn]] void throw_exception( error_id id, E1 &&, E && ... );
+
+  [[noreturn]] void throw_exception( error_id id );
+
+  template <class... Ex, class F>
+  <<result<T>-deduced>> exception_to_result( F && f ) noexcept;
+
+} }
+
+#define BOOST_LEAF_THROW_EXCEPTION <<exact-definition-unspecified>>
+----
+
+[.text-right]
+Reference: <<throw_exception>> | <<BOOST_LEAF_THROW_EXCEPTION>>
+
+<1> Only enabled if std::is_base_of<std::exception, Ex>::value.
+<2> Only enabled if !std::is_base_of<std::exception, E1>::value.
+====
+
+[[on_error.hpp]]
+==== `on_error.hpp`
+
+====
+[source,c++]
+.#include <boost/leaf/on_error.hpp>
+----
+namespace boost { namespace leaf {
+
+  template <class... Item>
+  <<unspecified-type>> on_error( Item && ... e ) noexcept;
+
+  class error_monitor
   {
-    int value;
-    explicit e_errno(int value=errno);
+  public:
 
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, e_errno const &);
+    error_monitor() noexcept;
+
+    error_id check() const noexcept;
+    error_id assigned_error_id() const noexcept;
   };
-
-  namespace windows
-  {
-    struct e_LastError
-    {
-      unsigned value;
-
-      explicit e_LastError(unsigned value);
-
-#if BOOST_LEAF_CFG_WIN32
-      e_LastError();
-
-      template <class CharT, class Traits>
-      friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, e_LastError const &);
-#endif
-    };
-  }
 
 } }
 ----
 
 [.text-right]
-Reference: <<e_api_function>> | <<e_file_name>> | <<e_at_line>> | <<e_type_info_name>> | <<e_source_location>> | <<e_errno>> | <<e_LastError>>
+Reference: <<on_error>> | <<error_monitor>>
 ====
 
 [[result.hpp]]
@@ -2499,78 +2567,9 @@ namespace boost { namespace leaf {
 Reference: <<result>> | <<is_result_type>>
 ====
 
-[[on_error.hpp]]
-==== `on_error.hpp`
-
-====
-[source,c++]
-.#include <boost/leaf/on_error.hpp>
-----
-namespace boost { namespace leaf {
-
-  template <class... Item>
-  <<unspecified-type>> on_error( Item && ... e ) noexcept;
-
-  class error_monitor
-  {
-  public:
-
-    error_monitor() noexcept;
-
-    error_id check() const noexcept;
-    error_id assigned_error_id() const noexcept;
-  };
-
-} }
-----
-
-[.text-right]
-Reference: <<on_error>> | <<error_monitor>>
-====
-
-[[exception.hpp]]
-==== `exception.hpp`
-
-====
-.#include <boost/leaf/exception.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class Ex, class... E> <1>
-  [[noreturn]] void throw_exception( Ex &&, E && ... );
-
-  template <class E1, class... E> <2>
-  [[noreturn]] void throw_exception( E1 &&, E && ... );
-
-  [[noreturn]] void throw_exception();
-
-  template <class Ex, class... E> <1>
-  [[noreturn]] void throw_exception( error_id id, Ex &&, E && ... );
-
-  template <class E1, class... E> <2>
-  [[noreturn]] void throw_exception( error_id id, E1 &&, E && ... );
-
-  [[noreturn]] void throw_exception( error_id id );
-
-  template <class... Ex, class F>
-  <<result<T>-deduced>> exception_to_result( F && f ) noexcept;
-
-} }
-
-#define BOOST_LEAF_THROW_EXCEPTION <<exact-definition-unspecified>>
-----
-
-[.text-right]
-Reference: <<throw_exception>> | <<BOOST_LEAF_THROW_EXCEPTION>>
-
-<1> Only enabled if std::is_base_of<std::exception, Ex>::value.
-<2> Only enabled if !std::is_base_of<std::exception, E1>::value.
-====
-
 '''
 
-[[tutorial-handling]]
+[[synopsis-handling]]
 
 === Error Handling
 
@@ -2610,8 +2609,6 @@ namespace boost { namespace leaf {
     R handle_error( R &, H && ... ) const;
   };
 
-  //////////////////////////////////////////
-
   template <class... H>
   using context_type_from_handlers = typename <<unspecified>>::type;
 
@@ -2626,6 +2623,38 @@ namespace boost { namespace leaf {
 
 [.text-right]
 Reference: <<context>> | <<context_type_from_handlers>> | <<make_context>>
+====
+
+[[diagnostics.hpp]]
+==== `diagnostics.hpp`
+
+====
+.#include <boost/leaf/diagnostics.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  class diagnostic_info: public error_info
+  {
+    //No public constructors
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, diagnostic_info const & );
+  };
+
+  class diagnostic_details: public error_info
+  {
+    //No public constructors
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, diagnostic_info const & );
+  };
+
+} }
+----
+
+[.text-right]
+Reference: <<diagnostic_info>> | <<diagnostic_details>>
 ====
 
 [[handle_errors.hpp]]
@@ -2655,8 +2684,6 @@ namespace boost { namespace leaf {
   try_capture_all( TryBlock && try_block );
 #endif
 
-  //////////////////////////////////////////
-
   class error_info
   {
     //No public constructors
@@ -2672,51 +2699,11 @@ namespace boost { namespace leaf {
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, error_info const & );
   };
 
-  class diagnostic_info: public error_info
-  {
-    //No public constructors
-
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, diagnostic_info const & );
-  };
-
-  class verbose_diagnostic_info: public error_info
-  {
-    //No public constructors
-
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, diagnostic_info const & );
-  };
-
 } }
 ----
 
 [.text-right]
-Reference: <<try_handle_all>> | <<try_handle_some>> | <<try_catch>> | <<try_capture_all>> | <<error_info>> | <<diagnostic_info>> | <<verbose_diagnostic_info>>
-====
-
-[[to_variant.hpp]]
-==== `to_variant.hpp`
-
-====
-.#include <boost/leaf/to_variant.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  // Requires at least C++17
-  template <class... E, class TryBlock>
-  std::variant<
-    typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
-    std::tuple<
-      std::optional<E>...>>
-  to_variant( TryBlock && try_block );
-
-} }
-----
-
-[.text-right]
-Reference: <<to_variant>>
+Reference: <<try_handle_all>> | <<try_handle_some>> | <<try_catch>> | <<try_capture_all>> | <<error_info>>
 ====
 
 [[pred.hpp]]
@@ -2820,6 +2807,30 @@ namespace boost { namespace leaf {
 
 [.text-right]
 Reference: <<match>> | <<match_value>> | <<match_member>> | <<catch_>> | <<if_not>> | <<category,`category`>> | <<condition,`condition`>>
+====
+
+[[to_variant.hpp]]
+==== `to_variant.hpp`
+
+====
+.#include <boost/leaf/to_variant.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  // Requires at least C++17
+  template <class... E, class TryBlock>
+  std::variant<
+    typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+    std::tuple<
+      std::optional<E>...>>
+  to_variant( TryBlock && try_block );
+
+} }
+----
+
+[.text-right]
+Reference: <<to_variant>>
 ====
 
 [[functions]]
@@ -3350,7 +3361,7 @@ Requires: ::
 ** may take arguments, by value, of any predicate type: <<catch_>>, <<match>>, <<match_value>>, <<match_member>>, <<if_not>>, or of any user-defined predicate type `Pred` for which `<<is_predicate>><Pred>::value` is `true`;
 ** may take an <<error_info>> argument by `const &`;
 ** may take a <<diagnostic_info>> argument by `const &`;
-** may take a <<verbose_diagnostic_info>> argument by `const &`.
+** may take a <<diagnostic_details>> argument by `const &`.
 
 Effects: ::
 
@@ -3495,7 +3506,7 @@ try_handle_some(
 <2> Print diagnostic information, including limited information about dropped error objects.
 <3> Return the original error, which will be returned out of `try_handle_some`.
 +
-* If `a~i~` is of type `verbose_diagnostic_info const &`,  `try_handle_some` is always able to produce it.
+* If `a~i~` is of type `diagnostic_details const &`,  `try_handle_some` is always able to produce it.
 +
 .Example:
 [source,c++]
@@ -3508,15 +3519,15 @@ try_handle_some(
     return f(); // throws
   },
 
-  [](leaf::verbose_diagnostic_info const & info) <1>
+  [](leaf::diagnostic_details const & info) <1>
   {
-    std::cerr << "leaf::verbose_diagnostic_information:" << std::endl << info; <2>
+    std::cerr << "leaf::diagnostic_details\n" << info; <2>
     return info.error(); <3>
   } );
 ----
 +
 [.text-right]
-<<result>> | <<verbose_diagnostic_info>>
+<<result>> | <<diagnostic_details>>
 +
 <1> This handler matches any error.
 <2> Print verbose diagnostic information, including values of dropped error objects.
@@ -3789,10 +3800,47 @@ For automatic deduction of `Ctx`, use <<activate_context>>.
 
 '''
 
+[[diagnostic_details]]
+=== `diagnostic_details`
+
+.#include <boost/leaf/diagnostics.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  class diagnostic_details: public error_info
+  {
+    //Constructors unspecified
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, diagnostic_details const & );
+  };
+
+} }
+----
+
+Handlers passed to error handling functions such as <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> may take an argument of type `diagnostic_details const &` if they need to print diagnostic information about the error.
+
+The message printed by `operator<<` includes the message printed by `error_info`, followed by information about error objects that were communicated to LEAF (to be associated with the error) for which there was no storage available in any active <<context>> (these error objects were discarded by LEAF, because no handler needed them).
+
+The additional information includes the types and the values of all such error objects (but see  <<show_in_diagnostics>>).
+
+[NOTE]
+--
+The behavior of `diagnostic_details` (and <<diagnostic_info>>) is affected by the value of the macro `BOOST_LEAF_CFG_DIAGNOSTICS`:
+
+* If it is 1 (the default), LEAF produces `diagnostic_details` but only if an active error handling context on the call stack takes an argument of type `diagnostic_details`;
+* If it is 0, the `diagnostic_details` functionality is stubbed out even for error handling contexts that take an argument of type `diagnostic_details`. This could save some cycles on the error path in some programs (but is probably not worth it).
+--
+
+WARNING: Using `diagnostic_details` may allocate memory dynamically, but only if an active error handler takes an argument of type `diagnostic_details`.
+
+'''
+
 [[diagnostic_info]]
 === `diagnostic_info`
 
-.#include <boost/leaf/handle_errors.hpp>
+.#include <boost/leaf/diagnostics.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
@@ -3816,7 +3864,7 @@ The additional information is limited to the type name of the first such error o
 
 [NOTE]
 --
-The behavior of `diagnostic_info` (and <<verbose_diagnostic_info>>) is affected by the value of the macro `BOOST_LEAF_CFG_DIAGNOSTICS`:
+The behavior of `diagnostic_info` (and <<diagnostic_details>>) is affected by the value of the macro `BOOST_LEAF_CFG_DIAGNOSTICS`:
 
 * If it is 1 (the default), LEAF produces `diagnostic_info` but only if an active error handling context on the call stack takes an argument of type `diagnostic_info`;
 * If it is 0, the `diagnostic_info` functionality is stubbed out even for error handling contexts that take an argument of type `diagnostic_info`. This could shave a few cycles off the error path in some programs (but it is probably not worth it).
@@ -4726,40 +4774,40 @@ Returns :: a reference to the stored value.
 
 '''
 
-[[verbose_diagnostic_info]]
-=== `verbose_diagnostic_info`
+[[show_in_diagnostics]]
+=== `show_in_diagnostics`
 
 .#include <boost/leaf/handle_errors.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
 
-  class verbose_diagnostic_info: public error_info
-  {
-    //Constructors unspecified
-
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, verbose_diagnostic_info const & );
-  };
+template <class E>
+struct show_in_diagnostics: std::true_type
+{
+};
 
 } }
 ----
 
-Handlers passed to error handling functions such as <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> may take an argument of type `verbose_diagnostic_info const &` if they need to print diagnostic information about the error.
+This template can be specialized to prevent error objects of sensitive types from appearing in automatically generated diagnostic messages. Example:
 
-The message printed by `operator<<` includes the message printed by `error_info`, followed by information about error objects that were communicated to LEAF (to be associated with the error) for which there was no storage available in any active <<context>> (these error objects were discarded by LEAF, because no handler needed them).
+[source,c++]
+----
+struct e_user_name
+{
+  std::string value;
+};
 
-The additional information includes the types and the values of all such error objects.
+namespace boost { namespace leaf {
 
-[NOTE]
---
-The behavior of `verbose_diagnostic_info` (and <<diagnostic_info>>) is affected by the value of the macro `BOOST_LEAF_CFG_DIAGNOSTICS`:
+  template <>
+  struct show_in_diagnostics<e_user_name>: std::false_type
+  {
+  };
 
-* If it is 1 (the default), LEAF produces `verbose_diagnostic_info` but only if an active error handling context on the call stack takes an argument of type `verbose_diagnostic_info`;
-* If it is 0, the `verbose_diagnostic_info` functionality is stubbed out even for error handling contexts that take an argument of type `verbose_diagnostic_info`. This could save some cycles on the error path in some programs (but is probably not worth it).
---
-
-WARNING: Using `verbose_diagnostic_info` may allocate memory dynamically, but only if an active error handler takes an argument of type `verbose_diagnostic_info`.
+} }
+----
 
 [[predicates]]
 == Reference: Predicates
@@ -5483,7 +5531,7 @@ Effects: :: `BOOST_LEAF_NEW_ERROR(e...)` is equivalent to `leaf::<<new_error>>(e
 
 The following configuration macros are recognized:
 
-* `BOOST_LEAF_CFG_DIAGNOSTICS`: Defining this macro as `0` stubs out both <<diagnostic_info>> and <<verbose_diagnostic_info>> (if the macro is left undefined, LEAF defines it as `1`).
+* `BOOST_LEAF_CFG_DIAGNOSTICS`: Defining this macro as `0` stubs out both <<diagnostic_info>> and <<diagnostic_details>> (if the macro is left undefined, LEAF defines it as `1`).
 
 * `BOOST_LEAF_CFG_STD_SYSTEM_ERROR`: Defining this macro as `0` disables the `std::error_code` / `std::error_condition` integration. In this case LEAF does not `#include <system_error>`, which may be too heavy for embedded platforms (if the macro is left undefined, LEAF defines it as `1`).
 
@@ -5493,7 +5541,7 @@ The following configuration macros are recognized:
 
 * `BOOST_LEAF_CFG_GNUC_STMTEXPR`: This macro controls whether or not <<BOOST_LEAF_CHECK>> is defined in terms of a https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html[GNU C statement expression], which enables its use to check for errors similarly to how the questionmark operator works in some languages (see <<checking_for_errors>>). By default the macro is defined as `1` under `pass:[__GNUC__]`, otherwise as `0`.
 
-* `BOOST_LEAF_CFG_WIN32`: Defining this macro as 1 enables the default constructor in <<e_LastError>>, and the automatic conversion to string (via `FormatMessageA`) when <<verbose_diagnostic_info>> is printed. If the macro is left undefined, LEAF defines it as `0` (even on windows, since including `windows.h` is generally not desirable). Note that the `e_LastError` type itself is available on all platforms, there is no need for conditional compilation in error handlers that use it.
+* `BOOST_LEAF_CFG_WIN32`: Defining this macro as 1 enables the default constructor in <<e_LastError>>, and the automatic conversion to string (via `FormatMessageA`) when <<diagnostic_details>> is printed. If the macro is left undefined, LEAF defines it as `0` (even on windows, since including `windows.h` is generally not desirable). Note that the `e_LastError` type itself is available on all platforms, there is no need for conditional compilation in error handlers that use it.
 
 * `BOOST_LEAF_NO_EXCEPTIONS`: Disables all exception handling support. If left undefined, LEAF defines it automatically based on the compiler configuration (e.g. `-fno-exceptions`).
 
@@ -5922,7 +5970,7 @@ leaf::try_catch(
 ====
 The fact that Boost Exception stores all supplied `boost::error_info` objects -- while LEAF discards them if they aren't needed -- affects the completeness of the message we get when we print `leaf::<<diagnostic_info>` objects, compared to the string returned by https://www.boost.org/doc/libs/release/libs/exception/doc/diagnostic_information.html[`boost::diagnostic_information`].
 
-If the user requires a complete diagnostic message, the solution is to use `leaf::<<verbose_diagnostic_info>>`. In this case, before unused error objects are discarded by LEAF, they are converted to string and printed. Note that this allocates memory dynamically.
+If the user requires a complete diagnostic message, the solution is to use `leaf::<<diagnostic_details>>`. In this case, before unused error objects are discarded by LEAF, they are converted to string and printed. Note that this allocates memory dynamically.
 ====
 
 '''

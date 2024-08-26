@@ -16,6 +16,11 @@
 
 namespace boost { namespace leaf {
 
+template <class E>
+struct show_in_diagnostics: std::true_type
+{
+};
+
 namespace leaf_detail
 {
     template <class T, class E = void>
@@ -24,7 +29,7 @@ namespace leaf_detail
     };
 
     template <class T>
-    struct is_printable<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>(), void())>: std::true_type
+    struct is_printable<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>(), void())>: show_in_diagnostics<T>
     {
     };
 
@@ -36,7 +41,7 @@ namespace leaf_detail
     };
 
     template <class T>
-    struct has_printable_member_value<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>().value, void())>: std::true_type
+    struct has_printable_member_value<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>().value, void())>: show_in_diagnostics<T>
     {
     };
 
@@ -94,7 +99,10 @@ namespace leaf_detail
         template <class CharT, class Traits>
         static void print( std::basic_ostream<CharT, Traits> & os, Wrapper const & )
         {
-            os << parse_name<Wrapper>() << ": {not printable}";
+            os << parse_name<Wrapper>() <<
+                (show_in_diagnostics<Wrapper>::value ?
+                    ": {not printable}" :
+                    ": {hidden by show_in_diagnostics}");
         }
     };
 

@@ -7,6 +7,6 @@
 
 namespace leaf = boost::leaf;
 
-leaf::verbose_diagnostic_info f();
-leaf::verbose_diagnostic_info a = f();
-leaf::verbose_diagnostic_info b = a;
+leaf::diagnostic_details f();
+leaf::diagnostic_details a = f();
+leaf::diagnostic_details b = a;

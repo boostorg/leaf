@@ -68,6 +68,7 @@ namespace
 
 int main()
 {
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
     {
         leaf::result<void> r = leaf::try_capture_all([]() { throw std::runtime_error("x"); });
         BOOST_TEST(!r);
@@ -87,6 +88,7 @@ int main()
             } );
         BOOST_TEST_EQ(r1, 1);
     }
+#endif
     {
         leaf::result<void> r = leaf::try_capture_all(
             []() -> leaf::result<void>

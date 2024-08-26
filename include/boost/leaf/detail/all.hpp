@@ -7,6 +7,7 @@
 #include <boost/leaf/capture.hpp>
 #include <boost/leaf/common.hpp>
 #include <boost/leaf/context.hpp>
+#include <boost/leaf/diagnostics.hpp>
 #include <boost/leaf/error.hpp>
 #include <boost/leaf/exception.hpp>
 #include <boost/leaf/handle_errors.hpp>

@@ -9,7 +9,7 @@
 #   include <boost/leaf/config.hpp>
 #   include <boost/leaf/context.hpp>
 #   include <boost/leaf/pred.hpp>
-#   include <boost/leaf/handle_errors.hpp>
+#   include <boost/leaf/diagnostics.hpp>
 #endif
 
 #include "_test_ec.hpp"
@@ -139,9 +139,9 @@ void not_called_on_purpose()
 
     test< std::tuple<info<1>,info<2>> >( expd([]( info<1>, info<2>, leaf::diagnostic_info const & ){ }, []( info<1>, info<2> ){ }) );
 #if BOOST_LEAF_CFG_DIAGNOSTICS && BOOST_LEAF_CFG_CAPTURE
-    test< std::tuple<info<1>,info<2>,leaf::leaf_detail::dynamic_allocator> >( expd([]( info<1>, info<2>, leaf::verbose_diagnostic_info const & ){ }, []( info<1>, info<2> ){ }) );
+    test< std::tuple<info<1>,info<2>,leaf::leaf_detail::dynamic_allocator> >( expd([]( info<1>, info<2>, leaf::diagnostic_details const & ){ }, []( info<1>, info<2> ){ }) );
 #else
-    test< std::tuple<info<1>,info<2>> >( expd([]( info<1>, info<2> ){ }, []( info<1>, leaf::verbose_diagnostic_info const &, info<2> ){ }) );
+    test< std::tuple<info<1>,info<2>> >( expd([]( info<1>, info<2> ){ }, []( info<1>, leaf::diagnostic_details const &, info<2> ){ }) );
 #endif
 
     {

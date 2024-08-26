@@ -7,7 +7,7 @@
 #   include "leaf.hpp"
 #else
 #   include <boost/leaf/config.hpp>
-#   include <boost/leaf/handle_errors.hpp>
+#   include <boost/leaf/diagnostics.hpp>
 #   include <boost/leaf/result.hpp>
 #   include <boost/leaf/common.hpp>
 #endif
@@ -84,6 +84,28 @@ struct non_printable_info_non_printable_payload
     non_printable_payload value;
 };
 
+struct hidden_printable_info_printable_payload
+{
+    printable_payload value;
+
+    friend std::ostream & operator<<( std::ostream & os, hidden_printable_info_printable_payload const & x )
+    {
+        return os << "*** hidden_printable_info_printable_payload " << x.value << " ***";
+    }
+};
+
+struct hidden_non_printable_info_printable_payload
+{
+    printable_payload value;
+};
+
+namespace boost { namespace leaf {
+
+template <> struct show_in_diagnostics<hidden_printable_info_printable_payload>: std::false_type { };
+template <> struct show_in_diagnostics<hidden_non_printable_info_printable_payload>: std::false_type { };
+
+} }
+
 int main()
 {
     leaf::try_handle_all(
@@ -94,6 +116,8 @@ int main()
                 printable_info_non_printable_payload(),
                 non_printable_info_printable_payload(),
                 non_printable_info_non_printable_payload(),
+                hidden_printable_info_printable_payload(),
+                hidden_non_printable_info_printable_payload(),
                 enum_class_payload{},
                 leaf::e_errno{ENOENT} );
         },
@@ -103,6 +127,8 @@ int main()
             printable_info_non_printable_payload,
             non_printable_info_printable_payload,
             non_printable_info_non_printable_payload,
+            hidden_printable_info_printable_payload,
+            hidden_non_printable_info_printable_payload,
             enum_class_payload,
             leaf::e_errno,
             leaf::error_info const & unmatched )
@@ -129,6 +155,8 @@ int main()
                 printable_info_non_printable_payload(),
                 non_printable_info_printable_payload(),
                 non_printable_info_non_printable_payload(),
+                hidden_printable_info_printable_payload(),
+                hidden_non_printable_info_printable_payload(),
                 enum_class_payload{},
                 leaf::e_errno{ENOENT} );
         },
@@ -138,6 +166,8 @@ int main()
             printable_info_non_printable_payload,
             non_printable_info_printable_payload,
             non_printable_info_non_printable_payload,
+            hidden_printable_info_printable_payload,
+            hidden_non_printable_info_printable_payload,
             enum_class_payload,
             leaf::e_errno,
             leaf::diagnostic_info const & unmatched )
@@ -155,6 +185,11 @@ int main()
                 BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
                 BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
                 BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
+                std::size_t hidden1 = s.find(": {hidden by show_in_diagnostics}");
+                std::size_t hidden2 = s.find(": {hidden by show_in_diagnostics}", hidden1 + 1);
+                BOOST_TEST_NE(hidden1, s.npos);
+                BOOST_TEST_NE(hidden2, s.npos);
+                BOOST_TEST_NE(hidden1, hidden2);
                 BOOST_TEST_NE(s.find("enum_class_payload"), s.npos);
             }
             else
@@ -166,7 +201,7 @@ int main()
             BOOST_ERROR("Bad error dispatch");
         } );
 
-    std::cout << __LINE__  << " ---- verbose_diagnostic_info\n";
+    std::cout << __LINE__  << " ---- diagnostic_details\n";
     leaf::try_handle_all(
         []() -> leaf::result<void>
         {
@@ -175,6 +210,8 @@ int main()
                 printable_info_non_printable_payload(),
                 non_printable_info_printable_payload(),
                 non_printable_info_non_printable_payload(),
+                hidden_printable_info_printable_payload(),
+                hidden_non_printable_info_printable_payload(),
                 unexpected_test<1>{1},
                 unexpected_test<2>{2},
                 enum_class_payload{},
@@ -186,9 +223,11 @@ int main()
             printable_info_non_printable_payload,
             non_printable_info_printable_payload,
             non_printable_info_non_printable_payload,
+            hidden_printable_info_printable_payload,
+            hidden_non_printable_info_printable_payload,
             enum_class_payload,
             leaf::e_errno,
-            leaf::verbose_diagnostic_info const & di )
+            leaf::diagnostic_details const & di )
         {
 #if BOOST_LEAF_CFG_STD_STRING
             std::ostringstream st;
@@ -203,21 +242,25 @@ int main()
                 BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
                 BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
                 BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
+                std::size_t hidden1 = s.find(": {hidden by show_in_diagnostics}");
+                std::size_t hidden2 = s.find(": {hidden by show_in_diagnostics}", hidden1 + 1);
+                BOOST_TEST_NE(hidden1, s.npos);
+                BOOST_TEST_NE(hidden2, s.npos);
+                BOOST_TEST_NE(hidden1, hidden2);
                 BOOST_TEST_NE(s.find("enum_class"), s.npos);
                 BOOST_TEST_EQ(s.find("dynamic_allocator"), s.npos);
                 if( BOOST_LEAF_CFG_CAPTURE )
                 {
-                    BOOST_TEST_NE(s.find("Unhandled error objects:"), s.npos);
                     BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
                     BOOST_TEST_NE(s.find("unexpected_test<2>"), s.npos);
                     BOOST_TEST_NE(s.find(": 1"), s.npos);
                     BOOST_TEST_NE(s.find(": 2"), s.npos);
                 }
                 else
-                    BOOST_TEST_NE(s.find("verbose_diagnostic_info not available due to BOOST_LEAF_CFG_CAPTURE=0"), s.npos);
+                    BOOST_TEST_NE(s.find("diagnostic_details not available due to BOOST_LEAF_CFG_CAPTURE=0"), s.npos);
             }
             else
-                BOOST_TEST_NE(s.find("verbose_diagnostic_info not available due to BOOST_LEAF_CFG_DIAGNOSTICS=0"), s.npos);
+                BOOST_TEST_NE(s.find("diagnostic_details not available due to BOOST_LEAF_CFG_DIAGNOSTICS=0"), s.npos);
 #endif
         },
         []()
@@ -238,6 +281,8 @@ int main()
                 printable_info_non_printable_payload(),
                 non_printable_info_printable_payload(),
                 non_printable_info_non_printable_payload(),
+                hidden_printable_info_printable_payload(),
+                hidden_non_printable_info_printable_payload(),
                 enum_class_payload{},
                 leaf::e_errno{ENOENT} );
         },
@@ -247,6 +292,8 @@ int main()
             printable_info_non_printable_payload,
             non_printable_info_printable_payload,
             non_printable_info_non_printable_payload,
+            hidden_printable_info_printable_payload,
+            hidden_non_printable_info_printable_payload,
             enum_class_payload,
             leaf::e_errno,
             leaf::error_info const & unmatched )
@@ -273,6 +320,8 @@ int main()
                 printable_info_non_printable_payload(),
                 non_printable_info_printable_payload(),
                 non_printable_info_non_printable_payload(),
+                hidden_printable_info_printable_payload(),
+                hidden_non_printable_info_printable_payload(),
                 enum_class_payload{},
                 leaf::e_errno{ENOENT} );
         },
@@ -282,6 +331,8 @@ int main()
             printable_info_non_printable_payload,
             non_printable_info_printable_payload,
             non_printable_info_non_printable_payload,
+            hidden_printable_info_printable_payload,
+            hidden_non_printable_info_printable_payload,
             enum_class_payload,
             leaf::e_errno,
             leaf::diagnostic_info const & unmatched )
@@ -301,6 +352,11 @@ int main()
                 BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
                 BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
                 BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
+                std::size_t hidden1 = s.find(": {hidden by show_in_diagnostics}");
+                std::size_t hidden2 = s.find(": {hidden by show_in_diagnostics}", hidden1 + 1);
+                BOOST_TEST_NE(hidden1, s.npos);
+                BOOST_TEST_NE(hidden2, s.npos);
+                BOOST_TEST_NE(hidden1, hidden2);
                 BOOST_TEST_NE(s.find("enum_class_payload"), s.npos);
             }
             else
@@ -308,7 +364,7 @@ int main()
 #endif
         } );
 
-    std::cout << __LINE__  << " ---- verbose_diagnostic_info\n";
+    std::cout << __LINE__  << " ---- diagnostic_details\n";
     leaf::try_catch(
         []
         {
@@ -317,6 +373,8 @@ int main()
                 printable_info_non_printable_payload(),
                 non_printable_info_printable_payload(),
                 non_printable_info_non_printable_payload(),
+                hidden_printable_info_printable_payload(),
+                hidden_non_printable_info_printable_payload(),
                 enum_class_payload{},
                 unexpected_test<1>{1},
                 unexpected_test<2>{2},
@@ -328,9 +386,11 @@ int main()
             printable_info_non_printable_payload,
             non_printable_info_printable_payload,
             non_printable_info_non_printable_payload,
+            hidden_printable_info_printable_payload,
+            hidden_non_printable_info_printable_payload,
             enum_class_payload,
             leaf::e_errno,
-            leaf::verbose_diagnostic_info const & di )
+            leaf::diagnostic_details const & di )
         {
 #if BOOST_LEAF_CFG_STD_STRING
             std::ostringstream st;
@@ -347,21 +407,25 @@ int main()
                 BOOST_TEST_NE(s.find("*** printable_info_non_printable_payload ***"), s.npos);
                 BOOST_TEST_NE(s.find(": printed printable_payload"), s.npos);
                 BOOST_TEST_NE(s.find(": {not printable}"), s.npos);
+                std::size_t hidden1 = s.find(": {hidden by show_in_diagnostics}");
+                std::size_t hidden2 = s.find(": {hidden by show_in_diagnostics}", hidden1 + 1);
+                BOOST_TEST_NE(hidden1, s.npos);
+                BOOST_TEST_NE(hidden2, s.npos);
+                BOOST_TEST_NE(hidden1, hidden2);
                 BOOST_TEST_NE(s.find("enum_class_payload"), s.npos);
                 BOOST_TEST_EQ(s.find("dynamic_allocator"), s.npos);
                 if( BOOST_LEAF_CFG_CAPTURE )
                 {
-                    BOOST_TEST_NE(s.find("Unhandled error objects:"), s.npos);
                     BOOST_TEST_NE(s.find("unexpected_test<1>"), s.npos);
                     BOOST_TEST_NE(s.find("unexpected_test<2>"), s.npos);
                     BOOST_TEST_NE(s.find(": 1"), s.npos);
                     BOOST_TEST_NE(s.find(": 2"), s.npos);
                 }
                 else
-                    BOOST_TEST_NE(s.find("verbose_diagnostic_info not available due to BOOST_LEAF_CFG_CAPTURE=0"), s.npos);
+                    BOOST_TEST_NE(s.find("diagnostic_details not available due to BOOST_LEAF_CFG_CAPTURE=0"), s.npos);
             }
             else
-                BOOST_TEST_NE(s.find("verbose_diagnostic_info not available due to BOOST_LEAF_CFG_DIAGNOSTICS=0"), s.npos);
+                BOOST_TEST_NE(s.find("diagnostic_details not available due to BOOST_LEAF_CFG_DIAGNOSTICS=0"), s.npos);
 #endif
         } );
 

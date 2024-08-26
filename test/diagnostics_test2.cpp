@@ -7,7 +7,7 @@
 #   include "leaf.hpp"
 #else
 #   include <boost/leaf/config.hpp>
-#   include <boost/leaf/handle_errors.hpp>
+#   include <boost/leaf/diagnostics.hpp>
 #   include <boost/leaf/on_error.hpp>
 #   include <boost/leaf/result.hpp>
 #endif
@@ -52,7 +52,7 @@ int main()
                 {
                 } );
         },
-        []( leaf::verbose_diagnostic_info const & di )
+        []( leaf::diagnostic_details const & di )
         {
 #if BOOST_LEAF_CFG_STD_STRING
             std::ostringstream st;
@@ -88,7 +88,7 @@ int main()
                 {
                 } );
         },
-        []( leaf::verbose_diagnostic_info const & di )
+        []( leaf::diagnostic_details const & di )
         {
 #if BOOST_LEAF_CFG_STD_STRING
             std::ostringstream st;
@@ -124,7 +124,7 @@ int main()
                 {
                 } );
         },
-        []( leaf::verbose_diagnostic_info const & di )
+        []( leaf::diagnostic_details const & di )
         {
 #if BOOST_LEAF_CFG_STD_STRING
             std::ostringstream st;

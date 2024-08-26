@@ -386,7 +386,7 @@ leaf::result<std::string> execute_command(std::string_view line) {
     return response;
 }
 
-std::string diagnostic_to_str(leaf::verbose_diagnostic_info const &diag) {
+std::string diagnostic_to_str(leaf::diagnostic_details const &diag) {
     auto str = boost::str(boost::format("%1%") % diag);
     boost::algorithm::replace_all(str, "\n", "\n    ");
     return "\nDetailed error diagnostic:\n----\n" + str + "\n----";
@@ -430,28 +430,28 @@ response_t handle_request(request_t &&request) {
         // For the rest of error conditions we just build a message to be sent
         // to the remote client.
         [&](e_parse_int64_error const &e, e_http_status const *status, e_command const *cmd,
-            leaf::verbose_diagnostic_info const &diag) {
+            leaf::diagnostic_details const &diag) {
             return make_sr(status, boost::str(boost::format("%1% int64 parse error: %2%") % msg_prefix(cmd) % e.value) +
                                        diagnostic_to_str(diag));
         },
         [&](e_unexpected_arg_count const &e, e_http_status const *status, e_command const *cmd,
-            leaf::verbose_diagnostic_info const &diag) {
+            leaf::diagnostic_details const &diag) {
             return make_sr(status,
                            boost::str(boost::format("%1% wrong argument count: %2%") % msg_prefix(cmd) % e.value) +
                                diagnostic_to_str(diag));
         },
         [&](e_unexpected_http_method const &e, e_http_status const *status, e_command const *cmd,
-            leaf::verbose_diagnostic_info const &diag) {
+            leaf::diagnostic_details const &diag) {
             return make_sr(status, boost::str(boost::format("%1% unexpected HTTP method. Expected: %2%") %
                                               msg_prefix(cmd) % e.value) +
                                        diagnostic_to_str(diag));
         },
         [&](std::exception const & e, e_http_status const *status, e_command const *cmd,
-            leaf::verbose_diagnostic_info const &diag) {
+            leaf::diagnostic_details const &diag) {
             return make_sr(status, boost::str(boost::format("%1% %2%") % msg_prefix(cmd) % e.what()) +
                                        diagnostic_to_str(diag));
         },
-        [&](e_http_status const *status, e_command const *cmd, leaf::verbose_diagnostic_info const &diag) {
+        [&](e_http_status const *status, e_command const *cmd, leaf::diagnostic_details const &diag) {
             return make_sr(status, boost::str(boost::format("%1% unknown failure") % msg_prefix(cmd)) +
                                        diagnostic_to_str(diag));
         });
@@ -479,25 +479,25 @@ int main(int argc, char **argv) {
         [&](std::exception_ptr const &ep, e_last_operation const *op) {
             return leaf::try_handle_all(
                 [&]() -> leaf::result<int> { std::rethrow_exception(ep); },
-                [&](std::exception const & e, leaf::verbose_diagnostic_info const &diag) {
+                [&](std::exception const & e, leaf::diagnostic_details const &diag) {
                     std::cerr << msg_prefix(op) << e.what() << " (captured)" << diagnostic_to_str(diag)
                                 << std::endl;
                     return -11;
                 },
-                [&](leaf::verbose_diagnostic_info const &diag) {
+                [&](leaf::diagnostic_details const &diag) {
                     std::cerr << msg_prefix(op) << "unknown (captured)" << diagnostic_to_str(diag) << std::endl;
                     return -12;
                 });
         },
-        [&](std::exception const & e, e_last_operation const *op, leaf::verbose_diagnostic_info const &diag) {
+        [&](std::exception const & e, e_last_operation const *op, leaf::diagnostic_details const &diag) {
             std::cerr << msg_prefix(op) << e.what() << diagnostic_to_str(diag) << std::endl;
             return -21;
         },
-        [&](error_code ec, leaf::verbose_diagnostic_info const &diag, e_last_operation const *op) {
+        [&](error_code ec, leaf::diagnostic_details const &diag, e_last_operation const *op) {
             std::cerr << msg_prefix(op) << ec << ":" << ec.message() << diagnostic_to_str(diag) << std::endl;
             return -22;
         },
-        [&](leaf::verbose_diagnostic_info const &diag, e_last_operation const *op) {
+        [&](leaf::diagnostic_details const &diag, e_last_operation const *op) {
             std::cerr << msg_prefix(op) << "unknown" << diagnostic_to_str(diag) << std::endl;
             return -23;
         });
