@@ -9,7 +9,7 @@
 #   include <boost/leaf/config.hpp>
 #   include <boost/leaf/context.hpp>
 #   include <boost/leaf/pred.hpp>
-#   include <boost/leaf/handle_errors.hpp>
+#   include <boost/leaf/diagnostics.hpp>
 #endif
 
 #include "_test_ec.hpp"
