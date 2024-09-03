@@ -71,21 +71,21 @@ public:
 
 namespace leaf_detail
 {
-    template <int I, class Tuple>
+    template <int I, class Tup>
     struct tuple_for_each_preload
     {
-        BOOST_LEAF_CONSTEXPR static void trigger( Tuple & tup, int err_id ) noexcept
+        BOOST_LEAF_CONSTEXPR static void trigger( Tup & tup, int err_id ) noexcept
         {
             BOOST_LEAF_ASSERT((err_id&3)==1);
-            tuple_for_each_preload<I-1,Tuple>::trigger(tup,err_id);
+            tuple_for_each_preload<I-1,Tup>::trigger(tup,err_id);
             std::get<I-1>(tup).trigger(err_id);
         }
     };
 
-    template <class Tuple>
-    struct tuple_for_each_preload<0, Tuple>
+    template <class Tup>
+    struct tuple_for_each_preload<0, Tup>
     {
-        BOOST_LEAF_CONSTEXPR static void trigger( Tuple const &, int ) noexcept { }
+        BOOST_LEAF_CONSTEXPR static void trigger( Tup const &, int ) noexcept { }
     };
 
     template <class E>

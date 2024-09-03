@@ -10,7 +10,6 @@
 #include <boost/leaf/detail/optional.hpp>
 #include <boost/leaf/detail/function_traits.hpp>
 #include <boost/leaf/detail/capture_list.hpp>
-#include <boost/leaf/detail/print.hpp>
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 #   include <ostream>
@@ -68,6 +67,8 @@
 
 namespace boost { namespace leaf {
 
+class BOOST_LEAF_SYMBOL_VISIBLE error_id;
+
 struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
 {
     char const * file;
@@ -77,13 +78,28 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, e_source_location const & x )
     {
-        return os << leaf::parse_name<e_source_location>() << ": " << x.file << '(' << x.line << ") in function " << x.function;
+        return os << x.file << '(' << x.line << ") in function " << x.function;
     }
 };
 
 ////////////////////////////////////////
 
-class BOOST_LEAF_SYMBOL_VISIBLE error_id;
+namespace leaf_detail
+{
+    class BOOST_LEAF_SYMBOL_VISIBLE exception_base
+    {
+    public:
+        virtual error_id get_error_id() const noexcept = 0;
+#if BOOST_LEAF_CFG_DIAGNOSTICS && !defined(BOOST_LEAF_NO_EXCEPTIONS)
+        virtual void print_type_name(std::ostream &) const = 0;
+#endif
+    protected:
+        exception_base() noexcept { }
+        ~exception_base() noexcept { }
+    };
+}
+
+////////////////////////////////////////
 
 namespace leaf_detail
 {
@@ -129,22 +145,16 @@ namespace leaf_detail
 
         void unload( int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE);
 
-        template <class CharT, class Traits>
-        void print( std::basic_ostream<CharT, Traits> & os, int err_id_to_print ) const
+        template <class CharT, class Traits, class ErrorID>
+        void print(std::basic_ostream<CharT, Traits> & os, ErrorID to_print, char const * & prefix) const
         {
-            if( !diagnostic<E>::is_invisible )
-                if( int k = this->key() )
-                {
-                    if( err_id_to_print )
-                    {
-                        if( err_id_to_print!=k )
-                            return;
-                    }
-                    else
-                        os << '[' << k << "] ";
-                    diagnostic<E>::print(os, value(k));
-                    os << '\n';
-                }
+            if( int k = this->key() )
+            {
+                if( to_print && to_print.value() != k )
+                    return;
+                if( diagnostic<E>::print(os, prefix, "\n\t", value(k)) && !to_print )
+                    os << '(' << k/4 << ')';
+            }
         }
 
         using impl::load;
@@ -201,9 +211,9 @@ namespace leaf_detail
             }
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
-            void print( std::ostream & os, int err_id_to_print ) const final override
+            void print(std::ostream & os, error_id const & to_print, char const * & prefix) const final override
             {
-                impl::print(os, err_id_to_print);
+                impl::print(os, to_print, prefix);
             }
 #endif
 
@@ -237,7 +247,7 @@ namespace leaf_detail
             }
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
-            void print( std::ostream &, int err_id_to_print ) const final override
+            void print(std::ostream &, error_id const &, char const * &) const final override
             {
             }
 #endif
@@ -313,17 +323,6 @@ namespace leaf_detail
 
         using capture_list::unload;
         using capture_list::print;
-    };
-
-    template <>
-    struct diagnostic<dynamic_allocator, false, false, false>
-    {
-        static constexpr bool is_invisible = true;
-
-        template <class CharT, class Traits>
-        BOOST_LEAF_CONSTEXPR static void print( std::basic_ostream<CharT, Traits> &, dynamic_allocator const & )
-        {
-        }
     };
 
     template <>
@@ -408,6 +407,11 @@ namespace leaf_detail
             dynamic_accumulate_<E>(err_id, std::forward<F>(f));
     }
 }
+
+template <>
+struct show_in_diagnostics<leaf_detail::dynamic_allocator>: std::false_type
+{
+};
 
 #endif
 
@@ -551,7 +555,7 @@ namespace leaf_detail
     };
 
     template <class T>
-    atomic_unsigned_int id_factory<T>::counter(unsigned(-3));
+    atomic_unsigned_int id_factory<T>::counter(1);
 
     inline int current_id() noexcept
     {
@@ -569,9 +573,9 @@ namespace leaf_detail
 
     struct inject_loc
     {
-        char const * const file;
-        int const line;
-        char const * const fn;
+        char const * file;
+        int line;
+        char const * fn;
 
         template <class T>
         friend T operator+( inject_loc loc, T && x ) noexcept
@@ -737,7 +741,7 @@ public:
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, error_id x )
     {
-        return os << x.value_;
+        return os << (x.value_ / 4);
     }
 
     BOOST_LEAF_CONSTEXPR void load_source_location_( char const * file, int line, char const * function ) const noexcept

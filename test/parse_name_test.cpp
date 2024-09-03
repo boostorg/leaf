@@ -26,6 +26,10 @@ namespace leaf_test
     template <class> struct struct_template2 { };
 }
 
+namespace boost { namespace leaf {
+    struct in_namespace_boost_leaf { };
+} }
+
 class class_ { };
 struct struct_ { };
 enum enum_ { };
@@ -39,7 +43,7 @@ namespace
     template <class Name>
     void test_name(std::string const & correct)
     {
-        leaf::parsed_name pn = leaf::parse_name<Name>();
+        auto pn = leaf::leaf_detail::parse_name<Name>();
         BOOST_TEST(pn.parse_success());
         BOOST_TEST_EQ(std::string(pn.name, pn.len), correct);
     }
@@ -47,6 +51,8 @@ namespace
 
 int main()
 {
+    test_name<leaf::in_namespace_boost_leaf>("boost::leaf::in_namespace_boost_leaf");
+
     test_name<leaf_test::class_>("leaf_test::class_");
     test_name<leaf_test::struct_>("leaf_test::struct_");
     test_name<leaf_test::enum_>("leaf_test::enum_");

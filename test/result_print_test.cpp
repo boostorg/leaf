@@ -83,7 +83,7 @@ int main()
         std::cout << s << std::endl;
         leaf::error_id err = r.error();
         if( BOOST_LEAF_CFG_DIAGNOSTICS )
-            BOOST_TEST_EQ(s, "Error ID " + std::to_string(err.value()));
+            BOOST_TEST_EQ(s, "Error serial #" + std::to_string(err.value()/4));
 #endif
     }
 
@@ -100,11 +100,11 @@ int main()
         std::string s = ss.str();
         std::cout << s << std::endl;
         leaf::error_id err = r.error();
-        BOOST_TEST_NE(s.find("Error ID " + std::to_string(err.value())), s.npos);
+        BOOST_TEST_NE(s.find("Error serial #" + std::to_string(err.value()/4)), s.npos);
         if( BOOST_LEAF_CFG_DIAGNOSTICS )
         {
-            BOOST_TEST_NE(s.find("Captured error objects"), s.npos);
-            BOOST_TEST_NE(s.find("e_err"), s.npos);
+            BOOST_TEST_NE(s.find("Captured:"), s.npos);
+            BOOST_TEST_NE(s.find("e_err: e_err"), s.npos);
         }
 #endif
     }

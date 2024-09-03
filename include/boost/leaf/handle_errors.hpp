@@ -70,17 +70,28 @@ public:
     }
 
     template <class CharT, class Traits>
-    friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, error_info const & x)
+    void print_error_info(std::basic_ostream<CharT, Traits> & os) const
     {
-        os << "Error ID: " << x.err_id_.value();
+        os << "Error serial #" << err_id_;
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
-        if( x.ex_ )
+        if( ex_ )
         {
-            os << "\nException dynamic type: ";
-            leaf_detail::demangle_and_print(os, typeid(*x.ex_).name()) << "\n"
-            "std::exception::what(): " << x.ex_->what();
+            os << "\nCaught C++ exception:\n\tType: ";
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+            if( auto eb = dynamic_cast<leaf_detail::exception_base const *>(ex_) )
+                eb->print_type_name(os);
+            else
+#endif
+                leaf_detail::demangle_and_print(os, typeid(*ex_).name());
+            os << "\n\tstd::exception::what(): " << ex_->what();
         }
 #endif
+    }
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, error_info const & x)
+    {
+        x.print_error_info(os);
         return os << '\n';
     }
 };
@@ -117,7 +128,7 @@ namespace leaf_detail
         constexpr static int value = 1 + type_index<T,Cdr...>::value;
     };
 
-    template <class T, class Tuple>
+    template <class T, class Tup>
     struct tuple_type_index;
 
     template <class T, class... TupleTypes>

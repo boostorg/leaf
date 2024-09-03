@@ -339,6 +339,25 @@ protected:
         what_ = move_from(std::move(x));
     }
 
+    template <class CharT, class Traits>
+    void print_error_result(std::basic_ostream<CharT, Traits> & os) const
+    {
+        result_discriminant const what = what_;
+        BOOST_LEAF_ASSERT(what.kind() != result_discriminant::val);
+        error_id const err_id = what.get_error_id();
+        os << "Error serial #" << err_id;
+        if( what.kind() == result_discriminant::err_id_capture_list )
+        {
+#if BOOST_LEAF_CFG_CAPTURE
+            char const * prefix = "\nCaptured:";
+            cap_.print(os, err_id, prefix);
+            os << "\n";
+#else
+            BOOST_LEAF_ASSERT(0); // Possible ODR violation.
+#endif
+        }
+    }
+
 public:
 
     using value_type = T;
@@ -585,30 +604,12 @@ public:
     }
 
     template <class CharT, class Traits>
-    void print( std::basic_ostream<CharT, Traits> & os ) const
-    {
-        result_discriminant const what = what_;
-        if( what.kind() == result_discriminant::val )
-            leaf_detail::print_result_value(os, value());
-        else
-        {
-            error_id const err_id = what.get_error_id();
-            os << "Error ID " << err_id;
-            if( what.kind() == result_discriminant::err_id_capture_list )
-            {
-#if BOOST_LEAF_CFG_CAPTURE
-                cap_.print(os, err_id.value(), ". Captured error objects:\n");
-#else
-                BOOST_LEAF_ASSERT(0); // Possible ODR violation.
-#endif
-            }
-        }
-    }
-
-    template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, result const & r )
     {
-        r.print(os);
+        if( r.what_.kind() == result_discriminant::val )
+            leaf_detail::print_result_value(os, r.value());
+        else
+            r.print_error_result(os);
         return os;
     }
 };
@@ -704,18 +705,12 @@ public:
     }
 
     template <class CharT, class Traits>
-    void print( std::basic_ostream<CharT, Traits> & os ) const
-    {
-        if( what_.kind() == result_discriminant::val )
-            os << "No error";
-        else
-            os << *static_cast<base const *>(this);
-    }
-
-    template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, result const & r )
     {
-        r.print(os);
+        if( r )
+            os << "No error";
+        else
+            r.print_error_result(os);
         return os;
     }
 
