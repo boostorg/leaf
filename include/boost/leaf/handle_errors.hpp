@@ -24,6 +24,8 @@ class BOOST_LEAF_SYMBOL_VISIBLE error_info
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
     static error_id unpack_error_id( std::exception const * ex ) noexcept
     {
+        if( leaf_detail::exception_base const * eb = dynamic_cast<leaf_detail::exception_base const *>(ex) )
+            return eb->get_error_id();
         if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
             return *err_id;
         return current_error();
