@@ -1763,10 +1763,7 @@ int main() noexcept
 
       [](leaf::error_info const & unmatched)
       {
-        std::cerr <<
-          "Unknown failure detected" << std::endl <<
-          "Cryptic diagnostic information follows" << std::endl <<
-          unmatched;
+        std::cerr << "Unknown failure detected\n" << unmatched;
       } );
   }
 ----
@@ -1813,7 +1810,7 @@ leaf::try_handle_all(
 
   []( leaf::diagnostic_details const & info ) <3>
   {
-    std::cerr << "Unrecognized error detected, cryptic diagnostic information follows.\n" << info;
+    std::cerr << "Unrecognized error detected\n" << info;
   } );
 ----
 <1> We handle all failures that occur in this try block.
@@ -1823,10 +1820,11 @@ leaf::try_handle_all(
 The `diagnostic_details` output for the snippet above tells us that we got an `error_code` with value `1` (`write_error`), and an object of type `e_file_name` with `"file.txt"` stored in its `.value`:
 
 ----
-Unrecognized error detected, cryptic diagnostic information follows.
-leaf::diagnostic_details for Error ID = 1:
-error_code: 1
-boost::leaf::e_file_name: file.txt
+Unrecognized error detected
+Error serial #1
+Diagnostic details:
+  error_code: 1
+  boost::leaf::e_file_name: file.txt
 ----
 
 To print each error object, LEAF attempts to bind an unqualified call to `operator<<`, passing a `std::ostream` and the error object. If that fails, it will also attempt to bind `operator<<` that takes the `.value` of the error type. If that also does not compile, the error object value will not appear in diagnostic messages, though LEAF will still print its type.
@@ -1869,16 +1867,17 @@ leaf::try_handle_all(
 
   []( leaf::diagnostic_info const & info )
   {
-    std::cerr << "Unrecognized error detected, cryptic diagnostic information follows.\n" << info;
+    std::cerr << "Unrecognized error detected\n" << info;
   } );
 ----
 
 In this case, the output may look like this:
 
 ----
-Unrecognized error detected, cryptic diagnostic information follows.
-leaf::diagnostic_info for Error ID = 1:
-error_code: 1
+Unrecognized error detected
+Error serial #1
+Caught:
+  error_code: 1
 ----
 
 Notice how the diagnostic information for `e_file_name` changed: because it was discarded, LEAF is unable to print it.
@@ -3467,7 +3466,7 @@ try_handle_some(
 
   [](leaf::error_info const & info) <1>
   {
-    std::cerr << "leaf::error_info:" << std::endl << info; <2>
+    std::cerr << "leaf::error_info:\n" << info; <2>
     return info.error(); <3>
   } );
 ----
@@ -3494,7 +3493,7 @@ try_handle_some(
 
   [](leaf::diagnostic_info const & info) <1>
   {
-    std::cerr << "leaf::diagnostic_information:" << std::endl << info; <2>
+    std::cerr << "leaf::diagnostic_information:\n" << info; <2>
     return info.error(); <3>
   } );
 ----
