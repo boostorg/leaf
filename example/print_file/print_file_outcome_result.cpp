@@ -13,6 +13,7 @@
 #include <boost/outcome/std_result.hpp>
 #include <boost/leaf.hpp>
 #include <iostream>
+#include <memory>
 #include <stdio.h>
 
 namespace outcome = boost::outcome_v2;

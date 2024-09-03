@@ -8,6 +8,7 @@
 
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/context.hpp>
+#include <typeinfo>
 
 namespace boost { namespace leaf {
 
