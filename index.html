@@ -2451,10 +2451,7 @@ The complete program illustrating this technique is available <a href="https://g
 
       <span class="p">[](</span><span class="n">leaf</span><span class="o">::</span><span class="n">error_info</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">unmatched</span><span class="p">)</span>
       <span class="p">{</span>
-        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span>
-          <span class="s">"Unknown failure detected"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span> <span class="o">&lt;&lt;</span>
-          <span class="s">"Cryptic diagnostic information follows"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span> <span class="o">&lt;&lt;</span>
-          <span class="n">unmatched</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Unknown failure detected</span><span class="se">\n</span><span class="s">"</span> <span class="o">&lt;&lt;</span> <span class="n">unmatched</span><span class="p">;</span>
       <span class="p">}</span> <span class="p">);</span>
   <span class="p">}</span></code></pre>
 </div>
@@ -2534,7 +2531,7 @@ When using Lua with C&#43;&#43;, we need to protect the Lua interpreter from exc
 
   <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">diagnostic_details</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">info</span> <span class="p">)</span> <i class="conum" data-value="3"></i><b>(3)</b>
   <span class="p">{</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Unrecognized error detected, cryptic diagnostic information follows.</span><span class="se">\n</span><span class="s">"</span> <span class="o">&lt;&lt;</span> <span class="n">info</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Unrecognized error detected</span><span class="se">\n</span><span class="s">"</span> <span class="o">&lt;&lt;</span> <span class="n">info</span><span class="p">;</span>
   <span class="p">}</span> <span class="p">);</span></code></pre>
 </div>
 </div>
@@ -2559,10 +2556,11 @@ When using Lua with C&#43;&#43;, we need to protect the Lua interpreter from exc
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="nowrap">Unrecognized error detected, cryptic diagnostic information follows.
-leaf::diagnostic_details for Error ID = 1:
-error_code: 1
-boost::leaf::e_file_name: file.txt</pre>
+<pre class="nowrap">Unrecognized error detected
+Error serial #1
+Diagnostic details:
+  error_code: 1
+  boost::leaf::e_file_name: file.txt</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2610,7 +2608,7 @@ boost::leaf::e_file_name: file.txt</pre>
 
   <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">diagnostic_info</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">info</span> <span class="p">)</span>
   <span class="p">{</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Unrecognized error detected, cryptic diagnostic information follows.</span><span class="se">\n</span><span class="s">"</span> <span class="o">&lt;&lt;</span> <span class="n">info</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Unrecognized error detected</span><span class="se">\n</span><span class="s">"</span> <span class="o">&lt;&lt;</span> <span class="n">info</span><span class="p">;</span>
   <span class="p">}</span> <span class="p">);</span></code></pre>
 </div>
 </div>
@@ -2619,9 +2617,10 @@ boost::leaf::e_file_name: file.txt</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="nowrap">Unrecognized error detected, cryptic diagnostic information follows.
-leaf::diagnostic_info for Error ID = 1:
-error_code: 1</pre>
+<pre class="nowrap">Unrecognized error detected
+Error serial #1
+Caught:
+  error_code: 1</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4792,7 +4791,7 @@ See also: <a href="#predicates">Predicates</a>.
 
   <span class="p">[](</span><span class="n">leaf</span><span class="o">::</span><span class="n">error_info</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">info</span><span class="p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
   <span class="p">{</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"leaf::error_info:"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span> <span class="o">&lt;&lt;</span> <span class="n">info</span><span class="p">;</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"leaf::error_info:</span><span class="se">\n</span><span class="s">"</span> <span class="o">&lt;&lt;</span> <span class="n">info</span><span class="p">;</span> <i class="conum" data-value="2"></i><b>(2)</b>
     <span class="k">return</span> <span class="n">info</span><span class="p">.</span><span class="n">error</span><span class="p">();</span> <i class="conum" data-value="3"></i><b>(3)</b>
   <span class="p">}</span> <span class="p">);</span></code></pre>
 </div>
@@ -4832,7 +4831,7 @@ See also: <a href="#predicates">Predicates</a>.
 
   <span class="p">[](</span><span class="n">leaf</span><span class="o">::</span><span class="n">diagnostic_info</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">info</span><span class="p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
   <span class="p">{</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"leaf::diagnostic_information:"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span> <span class="o">&lt;&lt;</span> <span class="n">info</span><span class="p">;</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"leaf::diagnostic_information:</span><span class="se">\n</span><span class="s">"</span> <span class="o">&lt;&lt;</span> <span class="n">info</span><span class="p">;</span> <i class="conum" data-value="2"></i><b>(2)</b>
     <span class="k">return</span> <span class="n">info</span><span class="p">.</span><span class="n">error</span><span class="p">();</span> <i class="conum" data-value="3"></i><b>(3)</b>
   <span class="p">}</span> <span class="p">);</span></code></pre>
 </div>

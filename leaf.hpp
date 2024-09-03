@@ -3,7 +3,7 @@
 
 // LEAF single header distribution. Do not edit.
 
-// Generated on 09/03/2024 from https://github.com/boostorg/leaf/tree/acf0ae1.
+// Generated on 09/03/2024 from https://github.com/boostorg/leaf/tree/fa378e6.
 // Latest version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
 // Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
