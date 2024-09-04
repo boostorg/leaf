@@ -85,6 +85,11 @@ namespace leaf_detail
     {
         mutable bool clear_current_error_;
 
+        bool is_current_exception() const noexcept
+        {
+            return tls::read_uint<leaf_detail::tls_tag_id_factory_current_id>() == error_id::value();
+        }
+
         error_id get_error_id() const noexcept final override
         {
             clear_current_error_ = false;
@@ -143,7 +148,7 @@ namespace leaf_detail
 
         ~exception() noexcept
         {
-            if( clear_current_error_ )
+            if( clear_current_error_ && is_current_exception() )
                 tls::write_uint<leaf_detail::tls_tag_id_factory_current_id>(0);
         }
     };
