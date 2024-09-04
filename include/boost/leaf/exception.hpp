@@ -10,7 +10,6 @@
 #include <boost/leaf/error.hpp>
 #include <exception>
 #include <typeinfo>
-#include <memory>
 
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
 

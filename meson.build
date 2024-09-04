@@ -120,7 +120,6 @@ if option_enable_unit_tests
         'capture_exception_result_unload_test',
         'capture_exception_state_test',
         'capture_exception_unload_test',
-        'capture_result_async_test_',
         'capture_result_async_test',
         'capture_result_state_test',
         'capture_result_unload_test',

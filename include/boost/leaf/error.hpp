@@ -19,10 +19,6 @@
 #   include <system_error>
 #endif
 
-#if BOOST_LEAF_CFG_CAPTURE
-#   include <memory>
-#endif
-
 #define BOOST_LEAF_TOKEN_PASTE(x, y) x ## y
 #define BOOST_LEAF_TOKEN_PASTE2(x, y) BOOST_LEAF_TOKEN_PASTE(x, y)
 #define BOOST_LEAF_TMP BOOST_LEAF_TOKEN_PASTE2(boost_leaf_tmp_, __LINE__)
@@ -784,10 +780,6 @@ inline error_id current_error() noexcept
 class polymorphic_context
 {
 };
-
-#if BOOST_LEAF_CFG_CAPTURE
-using context_ptr = std::shared_ptr<polymorphic_context>;
-#endif
 
 ////////////////////////////////////////////
 

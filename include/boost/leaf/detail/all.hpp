@@ -4,7 +4,6 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/capture.hpp>
 #include <boost/leaf/common.hpp>
 #include <boost/leaf/context.hpp>
 #include <boost/leaf/diagnostics.hpp>
