@@ -17,7 +17,7 @@ namespace boost { namespace leaf {
 class diagnostic_info: public error_info
 {
     void const * tup_;
-    void (*print_context_content_)( std::ostream &, void const * tup, int err_id_to_print );
+    void (*print_tuple_contents_)(std::ostream &, void const * tup, error_id to_print, char const * & prefix);
 
 protected:
 
@@ -27,16 +27,23 @@ protected:
     BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei, Tup const & tup ) noexcept:
         error_info(ei),
         tup_(&tup),
-        print_context_content_(&leaf_detail::tuple_for_each<std::tuple_size<Tup>::value, Tup>::print)
+        print_tuple_contents_(&leaf_detail::print_tuple_contents<Tup>)
     {
+    }
+
+    template <class CharT, class Traits>
+    void print_diagnostic_info(std::basic_ostream<CharT, Traits> & os) const
+    {
+        print_error_info(os);
+        char const * prefix = exception() ? nullptr : "\nCaught:";
+        print_tuple_contents_(os, tup_, error(), prefix);
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
     {
-        os << static_cast<error_info const &>(x);
-        x.print_context_content_(os, x.tup_, x.error().value());
-        return os;
+        x.print_diagnostic_info(os);
+        return os << '\n';
     }
 };
 
@@ -76,9 +83,17 @@ protected:
     }
 
     template <class CharT, class Traits>
+    void print_diagnostic_info( std::basic_ostream<CharT, Traits> & os ) const
+    {
+        print_error_info(os);
+        os << "\nboost::leaf::diagnostic_info N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
+    }
+
+    template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
     {
-        return os << "diagnostic_info not available due to BOOST_LEAF_CFG_DIAGNOSTICS=0. Basic error_info follows.\n" << static_cast<error_info const &>(x);
+        x.print_diagnostic_info(os);
+        return os << "\n";
     }
 };
 
@@ -127,12 +142,21 @@ protected:
     }
 
     template <class CharT, class Traits>
+    void print_diagnostic_details( std::basic_ostream<CharT, Traits> & os) const
+    {
+        print_diagnostic_info(os);
+        if( da_ )
+        {
+            char const * prefix = "\nDiagnostic details:";
+            da_->print(os, error(), prefix);
+        }
+    }
+
+    template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_details const & x )
     {
-        os << static_cast<diagnostic_info const &>(x);
-        if( x.da_ )
-            x.da_->print(os, x.error().value());
-        return os;
+        x.print_diagnostic_details(os);
+        return os << '\n';
     }
 };
 
@@ -204,9 +228,17 @@ protected:
     }
 
     template <class CharT, class Traits>
+    void print_diagnostic_details( std::basic_ostream<CharT, Traits> & os ) const
+    {
+        print_diagnostic_info(os);
+        os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_CAPTURE=0";
+    }
+
+    template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_details const & x )
     {
-        return os << "diagnostic_details not available due to BOOST_LEAF_CFG_CAPTURE=0. Basic diagnostic_info follows.\n" << static_cast<diagnostic_info const &>(x);
+        x.print_diagnostic_details(os);
+        return os << "\n";
     }
 };
 
@@ -248,9 +280,17 @@ protected:
     }
 
     template <class CharT, class Traits>
+    void print_diagnostic_details( std::basic_ostream<CharT, Traits> & os ) const
+    {
+        print_error_info(os);
+        os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
+    }
+
+    template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_details const & x )
     {
-        return os << "diagnostic_details not available due to BOOST_LEAF_CFG_DIAGNOSTICS=0. Basic error_info follows.\n" << static_cast<error_info const &>(x);
+        x.print_diagnostic_details(os);
+        return os << "\n";
     }
 };
 

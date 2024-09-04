@@ -42,7 +42,7 @@ int main()
         },
         []( my_error const &, leaf::catch_<leaf::error_id> id )
         {
-            BOOST_TEST(dynamic_cast<leaf::error_id const *>(&id.matched)!=0 && dynamic_cast<leaf::error_id const *>(&id.matched)->value()==1);
+            BOOST_TEST(dynamic_cast<leaf::error_id const *>(&id.matched)!=0 && dynamic_cast<leaf::error_id const *>(&id.matched)->value()==5);
             return 1;
         },
         []

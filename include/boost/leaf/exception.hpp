@@ -26,18 +26,6 @@ namespace leaf_detail
     {
         ::boost::throw_exception(std::move(e));
     }
-
-    class BOOST_LEAF_SYMBOL_VISIBLE exception_base
-    {
-    public:
-
-        virtual error_id get_error_id() const noexcept = 0;
-
-    protected:
-
-        exception_base() noexcept { }
-        ~exception_base() noexcept { }
-    };
 }
 
 } }
@@ -56,22 +44,17 @@ namespace leaf_detail
         throw std::move(e);
     }
 
-    class BOOST_LEAF_SYMBOL_VISIBLE exception_base
+    class exception_id_bump
     {
         std::shared_ptr<void const> auto_id_bump_;
-
-    public:
-
-        virtual error_id get_error_id() const noexcept = 0;
-
     protected:
 
-        exception_base():
+        exception_id_bump():
             auto_id_bump_(nullptr, [](void const *) { (void) new_id(); })
         {
         }
 
-        ~exception_base() noexcept { }
+        ~exception_id_bump() noexcept { }
     };
 }
 
@@ -113,11 +96,21 @@ namespace leaf_detail
         public Ex,
         public exception_base,
         public error_id
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+        ,exception_id_bump
+#endif
     {
         error_id get_error_id() const noexcept final override
         {
             return *this;
         }
+
+#if BOOST_LEAF_CFG_DIAGNOSTICS && !defined(BOOST_LEAF_NO_EXCEPTIONS)
+        void print_type_name(std::ostream & os) const final override
+        {
+            leaf_detail::demangle_and_print(os, typeid(Ex).name());
+        }
+#endif
 
     public:
 

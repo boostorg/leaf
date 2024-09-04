@@ -47,85 +47,90 @@ namespace leaf_detail
 
     ////////////////////////////////////////
 
+    template <class T, class PrintableInfo, class CharT, class Traits>
+    bool print_impl(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, char const * mid, PrintableInfo const & x)
+    {
+        static_assert(show_in_diagnostics<T>::value, "show_in_diagnostics violation");
+        BOOST_LEAF_ASSERT(delimiter);
+        if( prefix )
+        {
+            os << prefix;
+            prefix = nullptr;
+        }
+        os << delimiter << parse_name<T>();
+        if( mid )
+            os << mid << x;
+        return true;
+    }
+
+    ////////////////////////////////////////
+
     template <
         class Wrapper,
+        bool ShowInDiagnostics = show_in_diagnostics<Wrapper>::value,
         bool WrapperPrintable = is_printable<Wrapper>::value,
         bool ValuePrintable = has_printable_member_value<Wrapper>::value,
         bool IsException = std::is_base_of<std::exception,Wrapper>::value,
         bool IsEnum = std::is_enum<Wrapper>::value>
     struct diagnostic;
 
-    template <class Wrapper, bool ValuePrintable, bool IsException, bool IsEnum>
-    struct diagnostic<Wrapper, true, ValuePrintable, IsException, IsEnum>
+    template <class Wrapper, bool WrapperPrintable, bool ValuePrintable, bool IsException, bool IsEnum>
+    struct diagnostic<Wrapper, false, WrapperPrintable, ValuePrintable, IsException, IsEnum>
     {
-        static constexpr bool is_invisible = false;
-
         template <class CharT, class Traits>
-        static void print( std::basic_ostream<CharT, Traits> & os, Wrapper const & x )
+        static bool print(std::basic_ostream<CharT, Traits> &, char const * &, char const *, Wrapper const & x) noexcept
         {
-            os << x;
+            return false;
         }
     };
 
-    template <class Wrapper, bool IsException, bool IsEnum>
-    struct diagnostic<Wrapper, false, true, IsException, IsEnum>
+    template <class Wrapper, bool ValuePrintable, bool IsEnum>
+    struct diagnostic<Wrapper, true, true, ValuePrintable, false, IsEnum>
     {
-        static constexpr bool is_invisible = false;
-
         template <class CharT, class Traits>
-        static void print( std::basic_ostream<CharT, Traits> & os, Wrapper const & x )
+        static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Wrapper const & x)
         {
-            os << parse_name<Wrapper>() << ": " << x.value;
-        }
-    };
-
-    template <class Wrapper, bool IsEnum>
-    struct diagnostic<Wrapper, false, false, true, IsEnum>
-    {
-        static constexpr bool is_invisible = false;
-
-        template <class CharT, class Traits>
-        static void print( std::basic_ostream<CharT, Traits> & os, Wrapper const & ex )
-        {
-            os << parse_name<Wrapper>() << ": std::exception::what(): " << ex.what();
+            return print_impl<Wrapper>(os, prefix, delimiter, ": ", x);
         }
     };
 
     template <class Wrapper>
-    struct diagnostic<Wrapper, false, false, false, false>
+    struct diagnostic<Wrapper, true, false, true, false, false>
     {
-        static constexpr bool is_invisible = false;
-
         template <class CharT, class Traits>
-        static void print( std::basic_ostream<CharT, Traits> & os, Wrapper const & )
+        static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Wrapper const & x)
         {
-            os << parse_name<Wrapper>() <<
-                (show_in_diagnostics<Wrapper>::value ?
-                    ": {not printable}" :
-                    ": {hidden by show_in_diagnostics}");
+            return print_impl<Wrapper>(os, prefix, delimiter, ": ", x.value);
+        }
+    };
+
+    template <class Exception, bool WrapperPrintable, bool ValuePrintable>
+    struct diagnostic<Exception, true, WrapperPrintable, ValuePrintable, true, false>
+    {
+        template <class CharT, class Traits>
+        static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Exception const & ex)
+        {
+            return print_impl<Exception>(os, prefix, delimiter, ", std::exception::what(): ", static_cast<std::exception const &>(ex).what());
         }
     };
 
     template <class Wrapper>
-    struct diagnostic<Wrapper, false, false, false, true>
+    struct diagnostic<Wrapper, true, false, false, false, false>
     {
-        static constexpr bool is_invisible = false;
-
         template <class CharT, class Traits>
-        static void print( std::basic_ostream<CharT, Traits> & os, Wrapper const & w )
+        static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Wrapper const &)
         {
-            os << parse_name<Wrapper>() << ": " << static_cast<typename std::underlying_type<Wrapper>::type>(w);
+            return print_impl<Wrapper>(os, prefix, delimiter, nullptr, 0);
         }
     };
 
-    template <>
-    struct diagnostic<std::exception_ptr, false, false, false>
+    template <class Enum>
+    struct diagnostic<Enum, true, false, false, false, true>
     {
-        static constexpr bool is_invisible = true;
-
         template <class CharT, class Traits>
-        BOOST_LEAF_CONSTEXPR static void print( std::basic_ostream<CharT, Traits> &, std::exception_ptr const & )
+        static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Enum const & enum_)
         {
+            return print_impl<Enum>(os, prefix, delimiter, ": ", static_cast<typename std::underlying_type<Enum>::type>(enum_));
         }
     };
 }

@@ -34,7 +34,7 @@ struct c0
 {
     friend std::ostream & operator<<( std::ostream & os, c0 const & )
     {
-        return os << "c0";
+        return os << "info";
     }
 };
 
@@ -42,9 +42,9 @@ struct c1
 {
     int value;
 
-    friend std::ostream & operator<<( std::ostream & os, c1 const & )
+    friend std::ostream & operator<<( std::ostream & os, c1 const & x )
     {
-        return os << "c1";
+        return os << "value " << x.value;
     }
 };
 
@@ -53,9 +53,9 @@ struct c2
     int value;
 };
 
-std::ostream & operator<<( std::ostream & os, c2 const & )
+std::ostream & operator<<( std::ostream & os, c2 const & x )
 {
-    return os << "c2";
+    return os << "value " << x.value;
 }
 
 struct c3
@@ -70,59 +70,58 @@ struct c4
 };
 
 template <int Line, class T>
-bool check( T const & x, char const * sub )
+std::string print(T const & x, char const * prefix, char const * delimiter)
 {
     using namespace leaf::leaf_detail;
     std::ostringstream s;
-    diagnostic<T>::print(s,x);
+    diagnostic<T>::print(s, prefix, delimiter, x);
     std::string q = s.str();
-    std::cout << "LINE " << Line << ": " << q << std::endl;
-    return q.find(sub)!=q.npos;
+    std::cout << "[LINE " << Line << "] " << q << '\n';
+    return q;
 }
 
 struct my_exception: std::exception
 {
-    char const * what() const noexcept override { return "my_exception_what"; }
+    char const * what() const noexcept override { return "my_exception what"; }
 };
 
 int main()
 {
-    BOOST_TEST(check<__LINE__>(c0{ },"c0"));
-    BOOST_TEST(check<__LINE__>(c1{42},"c1"));
     {
-        c1 x;
-        c1 & y = x;
-        BOOST_TEST(check<__LINE__>(x,"c1"));
-        BOOST_TEST(check<__LINE__>(y,"c1"));
+        std::string out = print<__LINE__>(c0{}, "Title", " --> ");
+        BOOST_TEST_NE(out.find("Title --> "), out.npos);
+        BOOST_TEST_NE(out.find("c0"), out.npos);
+        BOOST_TEST_NE(out.find(": info"), out.npos);
     }
-    BOOST_TEST(check<__LINE__>(c2{42},"c2"));
     {
-        c2 x = {42};
-        c2 & y = x;
-        BOOST_TEST(check<__LINE__>(x,"c2"));
-        BOOST_TEST(check<__LINE__>(y,"c2"));
+        std::string out = print<__LINE__>(c1{42}, "Title", " --> ");
+        BOOST_TEST_NE(out.find("Title --> "), out.npos);
+        BOOST_TEST_NE(out.find("c1"), out.npos);
+        BOOST_TEST_NE(out.find(": value 42"), out.npos);
     }
-    BOOST_TEST(check<__LINE__>(c3{42},"c3"));
-    BOOST_TEST(check<__LINE__>(c3{42},"42"));
     {
-        c3 x = {42};
-        c3 & y = x;
-        BOOST_TEST(check<__LINE__>(x,"c3"));
-        BOOST_TEST(check<__LINE__>(x,"42"));
-        BOOST_TEST(check<__LINE__>(y,"c3"));
-        BOOST_TEST(check<__LINE__>(y,"42"));
+        std::string out = print<__LINE__>(c2{42}, "Title", " --> ");
+        BOOST_TEST_NE(out.find("Title --> "), out.npos);
+        BOOST_TEST_NE(out.find("c2"), out.npos);
+        BOOST_TEST_NE(out.find(": value 42"), out.npos);
     }
-    BOOST_TEST(check<__LINE__>(c4(),"c4"));
-    BOOST_TEST(check<__LINE__>(c4(),"{not printable}"));
     {
-        c4 x;
-        c4 & y = x;
-        BOOST_TEST(check<__LINE__>(x,"c4"));
-        BOOST_TEST(check<__LINE__>(x,"{not printable}"));
-        BOOST_TEST(check<__LINE__>(y,"c4"));
-        BOOST_TEST(check<__LINE__>(y,"{not printable}"));
+        std::string out = print<__LINE__>(c3{42}, "Title", " --> ");
+        BOOST_TEST_NE(out.find("Title --> "), out.npos);
+        BOOST_TEST_NE(out.find("c3"), out.npos);
+        BOOST_TEST_NE(out.find(": 42"), out.npos);
     }
-    BOOST_TEST(check<__LINE__>(my_exception{}, "std::exception::what(): my_exception_what"));
+    {
+        std::string out = print<__LINE__>(c4{}, "Title", " --> ");
+        BOOST_TEST_NE(out.find("Title --> "), out.npos);
+        BOOST_TEST_NE(out.find("c4"), out.npos);
+        BOOST_TEST_EQ(out.find(": "), out.npos);
+    }
+    {
+        std::string out = print<__LINE__>(my_exception{}, "Title", " --> ");
+        BOOST_TEST_NE(out.find("Title --> "), out.npos);
+        BOOST_TEST_NE(out.find("my_exception, std::exception::what(): my_exception what"), out.npos);
+    }
     return boost::report_errors();
 }
 

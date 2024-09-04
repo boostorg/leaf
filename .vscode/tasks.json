@@ -10,6 +10,18 @@
             "problemMatcher": []
         },
         {
+            "label": "Configure Meson build directories (no diagnostics)",
+            "type": "shell",
+            "command": "cd ${workspaceRoot} && meson setup -D leaf_diagnostics=0 -D leaf_boost_examples=true -D leaf_lua_examples=true _bld/debug && meson setup -D leaf_diagnostics=0 -D leaf_boost_examples=true -D leaf_lua_examples=true -D leaf_hpp=true _bld/debug_leaf_hpp && meson setup -D leaf_diagnostics=0 -D leaf_boost_examples=true -D leaf_lua_examples=true _bld/release --buildtype release && meson setup -D leaf_diagnostics=0 -D leaf_boost_examples=true -D leaf_lua_examples=true -D leaf_hpp=true _bld/release_leaf_hpp --buildtype release",
+            "problemMatcher": []
+        },
+        {
+            "label": "Configure Meson build directories (no capture)",
+            "type": "shell",
+            "command": "cd ${workspaceRoot} && meson setup -D leaf_capture=0 -D leaf_boost_examples=true -D leaf_lua_examples=true _bld/debug && meson setup -D leaf_capture=0 -D leaf_boost_examples=true -D leaf_lua_examples=true -D leaf_hpp=true _bld/debug_leaf_hpp && meson setup -D leaf_capture=0 -D leaf_boost_examples=true -D leaf_lua_examples=true _bld/release --buildtype release && meson setup -D leaf_capture=0 -D leaf_boost_examples=true -D leaf_lua_examples=true -D leaf_hpp=true _bld/release_leaf_hpp --buildtype release",
+            "problemMatcher": []
+        },
+        {
             "label": "Configure Meson build directories (no Boost)",
             "type": "shell",
             "command": "cd ${workspaceRoot} && meson setup -D leaf_lua_examples=true _bld/debug && meson setup -D leaf_lua_examples=true -D leaf_hpp=true _bld/debug_leaf_hpp && meson setup -D leaf_lua_examples=true _bld/release --buildtype release && meson setup -D leaf_lua_examples=true -D leaf_hpp=true _bld/release_leaf_hpp --buildtype release",

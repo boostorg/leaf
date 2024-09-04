@@ -19,13 +19,6 @@
 
 ////////////////////////////////////////
 
-#ifdef BOOST_LEAF_DIAGNOSTICS
-#   warning BOOST_LEAF_DIAGNOSTICS has been renamed to BOOST_LEAF_CFG_DIAGNOSTICS.
-#   define BOOST_LEAF_CFG_DIAGNOSTICS BOOST_LEAF_DIAGNOSTICS
-#endif
-
-////////////////////////////////////////
-
 #ifdef BOOST_LEAF_TLS_FREERTOS
 
 #   ifndef BOOST_LEAF_EMBEDDED

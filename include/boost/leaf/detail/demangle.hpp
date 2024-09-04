@@ -109,69 +109,77 @@ namespace leaf_detail
     {
         return cpp11_suffix<S1, S2, S1 - 2, S2 - 2>::check(str, suffix) ? S1 - S2 : 0;
     }
-}
 
-struct parsed_name
-{
-    char const * name;
-    int len;
-    parsed_name(char const * name, int len) noexcept:
-        name(name),
-        len(len)
+    struct parsed_name
     {
-    }
-    template <int S>
-    parsed_name(char const(&name)[S]) noexcept:
-        name(name),
-        len(S-1)
-    {
-    }
-    bool parse_success() const noexcept
-    {
-        return name[len] != 0;
-    }
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, parsed_name const & pn)
-    {
-        return os.write(pn.name, pn.len);
-    }
-};
+        char const * name;
+        int len;
+        parsed_name(char const * name, int len) noexcept:
+            name(name),
+            len(len)
+        {
+        }
+        template <int S>
+        parsed_name(char const(&name)[S]) noexcept:
+            name(name),
+            len(S-1)
+        {
+        }
+        bool parse_success() const noexcept
+        {
+            return name[len] != 0;
+        }
+        template <class CharT, class Traits>
+        friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, parsed_name const & pn)
+        {
+            return os.write(pn.name, pn.len);
+        }
+    };
 
-template <class Name>
-parsed_name parse_name()
-{
-    // Workaround for older gcc compilers where __PRETTY_FUNCTION__ is not constexpr.
-    // Instead of evaluating constexpr int x = f(__PRETTY_FUNCTION__), which fails,
-    // we evaluate int const x = f(__PRETTY_FUNCTION__). Then we enforce compile-time
-    // execution by evaluating sizeof(char[1 + x]) -1.
+    // Workaround - we only use this function if parse_name (below) fails to parse __PRETTY_FUNCTION__ / __FUNCSIG__.
+    // In this case parse_name should be fixed to support the newly encountered (note, parsing is done at compile-time).
+    template <class Name>
+    parsed_name please_update_parse_name()
+    {
+        return parsed_name(BOOST_LEAF_PRETTY_FUNCTION);
+    }
+
+    template <class Name>
+    parsed_name parse_name()
+    {
+        // Workaround for older gcc compilers where __PRETTY_FUNCTION__ is not constexpr.
+        // Instead of evaluating constexpr int x = f(__PRETTY_FUNCTION__), which fails,
+        // we evaluate int const x = f(__PRETTY_FUNCTION__). Then we enforce compile-time
+        // execution by evaluating sizeof(char[1 + x]) -1.
 #define BOOST_LEAF_PARSE_PF(prefix, suffix) \
-    { \
-        if( int const s = leaf_detail::check_suffix(BOOST_LEAF_PRETTY_FUNCTION, suffix) ) \
-            if( int const p = leaf_detail::check_prefix(BOOST_LEAF_PRETTY_FUNCTION, prefix) ) \
-                return parsed_name(BOOST_LEAF_PRETTY_FUNCTION + sizeof(char[1 + p]) - 1, sizeof(char[1 + s - p]) - 1); \
-    }
-    // clang style:
-    BOOST_LEAF_PARSE_PF( "parsed_name boost::leaf::parse_name() [Name = ", "]");
-    // old clang style:
-    BOOST_LEAF_PARSE_PF( "boost::leaf::parsed_name boost::leaf::parse_name() [Name = ", "]");
-    // gcc style:
-    BOOST_LEAF_PARSE_PF( "boost::leaf::parsed_name boost::leaf::parse_name() [with Name = ", "]");
-    // msvc style, __cdecl, struct/class/enum:
-    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __cdecl boost::leaf::parse_name<struct ", ">(void)");
-    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __cdecl boost::leaf::parse_name<class ", ">(void)");
-    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __cdecl boost::leaf::parse_name<enum ", ">(void)");
-    // msvc style, __stdcall, struct/class/enum:
-    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __stdcall boost::leaf::parse_name<struct ", ">(void)");
-    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __stdcall boost::leaf::parse_name<class ", ">(void)");
-    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __stdcall boost::leaf::parse_name<enum ", ">(void)");
-    // msvc style, __fastcall, struct/class/enum:
-    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __fastcall boost::leaf::parse_name<struct ", ">(void)");
-    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __fastcall boost::leaf::parse_name<class ", ">(void)");
-    BOOST_LEAF_PARSE_PF( "struct boost::leaf::parsed_name __fastcall boost::leaf::parse_name<enum ", ">(void)");
+        { \
+            if( int const s = leaf_detail::check_suffix(BOOST_LEAF_PRETTY_FUNCTION, suffix) ) \
+                if( int const p = leaf_detail::check_prefix(BOOST_LEAF_PRETTY_FUNCTION, prefix) ) \
+                    return parsed_name(BOOST_LEAF_PRETTY_FUNCTION + sizeof(char[1 + p]) - 1, sizeof(char[1 + s - p]) - 1); \
+        }
+        // clang style:
+        BOOST_LEAF_PARSE_PF( "parsed_name boost::leaf::leaf_detail::parse_name() [Name = ", "]");
+        // old clang style:
+        BOOST_LEAF_PARSE_PF( "boost::leaf::leaf_detail::parsed_name boost::leaf::leaf_detail::parse_name() [Name = ", "]");
+        // gcc style:
+        BOOST_LEAF_PARSE_PF( "boost::leaf::leaf_detail::parsed_name boost::leaf::leaf_detail::parse_name() [with Name = ", "]");
+        // msvc style, __cdecl, struct/class/enum:
+        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __cdecl boost::leaf::leaf_detail::parse_name<struct ", ">(void)");
+        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __cdecl boost::leaf::leaf_detail::parse_name<class ", ">(void)");
+        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __cdecl boost::leaf::leaf_detail::parse_name<enum ", ">(void)");
+        // msvc style, __stdcall, struct/class/enum:
+        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __stdcall boost::leaf::leaf_detail::parse_name<struct ", ">(void)");
+        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __stdcall boost::leaf::leaf_detail::parse_name<class ", ">(void)");
+        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __stdcall boost::leaf::leaf_detail::parse_name<enum ", ">(void)");
+        // msvc style, __fastcall, struct/class/enum:
+        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __fastcall boost::leaf::leaf_detail::parse_name<struct ", ">(void)");
+        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __fastcall boost::leaf::leaf_detail::parse_name<class ", ">(void)");
+        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __fastcall boost::leaf::leaf_detail::parse_name<enum ", ">(void)");
 #undef BOOST_LEAF_PARSE_PF
 
-    // Unrecognized __PRETTY_FUNCTION__/__FUNSIG__ format, return as-is. Note, parsing is done at compile-time.
-    return parsed_name(BOOST_LEAF_PRETTY_FUNCTION);
+        // Unrecognized __PRETTY_FUNCTION__ / __FUNCSIG__ format, return as-is. Note, parsing is done at compile-time.
+        return please_update_parse_name<Name>();
+    }
 }
 
 } }

@@ -9,6 +9,7 @@ option_leaf_hpp = get_option('leaf_hpp')
 option_boost = get_option('leaf_boost_examples')
 option_lua = get_option('leaf_lua_examples')
 option_diagnostics = get_option('leaf_diagnostics')
+option_capture = get_option('leaf_capture')
 option_exceptions = (get_option('cpp_eh')!='none')
 option_enable_unit_tests = get_option('leaf_enable_unit_tests')
 option_enable_examples = get_option('leaf_enable_examples')
@@ -93,7 +94,10 @@ if option_lua
     dep_lua = subproject('lua').get_variable('all')
 endif
 
-defines = [ '-DBOOST_LEAF_CFG_DIAGNOSTICS=' + option_diagnostics.to_string() ]
+defines = [
+    '-DBOOST_LEAF_CFG_DIAGNOSTICS=' + option_diagnostics.to_string(),
+    '-DBOOST_LEAF_CFG_CAPTURE=' + option_capture.to_string()
+]
 
 if option_embedded
     defines += '-DBOOST_LEAF_EMBEDDED'

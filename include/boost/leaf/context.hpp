@@ -136,50 +136,56 @@ namespace leaf_detail
 
 namespace leaf_detail
 {
-    template <int I, class Tuple>
+    template <int I, class Tup>
     struct tuple_for_each
     {
-        BOOST_LEAF_CONSTEXPR static void activate( Tuple & tup ) noexcept
+        BOOST_LEAF_CONSTEXPR static void activate( Tup & tup ) noexcept
         {
             static_assert(!std::is_same<error_info, typename std::decay<decltype(std::get<I-1>(tup))>::type>::value, "Bug in LEAF: context type deduction");
-            tuple_for_each<I-1,Tuple>::activate(tup);
+            tuple_for_each<I-1,Tup>::activate(tup);
             std::get<I-1>(tup).activate();
         }
 
-        BOOST_LEAF_CONSTEXPR static void deactivate( Tuple & tup ) noexcept
+        BOOST_LEAF_CONSTEXPR static void deactivate( Tup & tup ) noexcept
         {
             static_assert(!std::is_same<error_info, typename std::decay<decltype(std::get<I-1>(tup))>::type>::value, "Bug in LEAF: context type deduction");
             std::get<I-1>(tup).deactivate();
-            tuple_for_each<I-1,Tuple>::deactivate(tup);
+            tuple_for_each<I-1,Tup>::deactivate(tup);
         }
 
-        BOOST_LEAF_CONSTEXPR static void unload( Tuple & tup, int err_id ) noexcept
+        BOOST_LEAF_CONSTEXPR static void unload( Tup & tup, int err_id ) noexcept
         {
             static_assert(!std::is_same<error_info, typename std::decay<decltype(std::get<I-1>(tup))>::type>::value, "Bug in LEAF: context type deduction");
             BOOST_LEAF_ASSERT(err_id != 0);
             auto & sl = std::get<I-1>(tup);
             sl.unload(err_id);
-            tuple_for_each<I-1,Tuple>::unload(tup, err_id);
+            tuple_for_each<I-1,Tup>::unload(tup, err_id);
         }
 
         template <class CharT, class Traits>
-        static void print( std::basic_ostream<CharT, Traits> & os, void const * tup, int err_id_to_print )
+        static void print(std::basic_ostream<CharT, Traits> & os, void const * tup, error_id to_print, char const * & prefix)
         {
             BOOST_LEAF_ASSERT(tup != nullptr);
-            tuple_for_each<I-1,Tuple>::print(os, tup, err_id_to_print);
-            std::get<I-1>(*static_cast<Tuple const *>(tup)).print(os, err_id_to_print);
+            tuple_for_each<I-1,Tup>::print(os, tup, to_print, prefix);
+            std::get<I-1>(*static_cast<Tup const *>(tup)).print(os, to_print, prefix);
         }
     };
 
-    template <class Tuple>
-    struct tuple_for_each<0, Tuple>
+    template <class Tup>
+    struct tuple_for_each<0, Tup>
     {
-        BOOST_LEAF_CONSTEXPR static void activate( Tuple & ) noexcept { }
-        BOOST_LEAF_CONSTEXPR static void deactivate( Tuple & ) noexcept { }
-        BOOST_LEAF_CONSTEXPR static void unload( Tuple &, int ) noexcept { }
+        BOOST_LEAF_CONSTEXPR static void activate( Tup & ) noexcept { }
+        BOOST_LEAF_CONSTEXPR static void deactivate( Tup & ) noexcept { }
+        BOOST_LEAF_CONSTEXPR static void unload( Tup &, int ) noexcept { }
         template <class CharT, class Traits>
-        BOOST_LEAF_CONSTEXPR static void print( std::basic_ostream<CharT, Traits> &, void const *, int ) { }
+        BOOST_LEAF_CONSTEXPR static void print(std::basic_ostream<CharT, Traits> &, void const *, error_id, char const * &) { }
     };
+
+    template <class Tup, class CharT, class Traits>
+    BOOST_LEAF_CONSTEXPR void print_tuple_contents(std::basic_ostream<CharT, Traits> & os, void const * tup, error_id to_print, char const * & prefix)
+    {
+        tuple_for_each<std::tuple_size<Tup>::value, Tup>::print(os, tup, to_print, prefix);
+    }
 }
 
 ////////////////////////////////////////////
@@ -300,14 +306,15 @@ public:
     template <class CharT, class Traits>
     void print( std::basic_ostream<CharT, Traits> & os ) const
     {
-        leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::print(os, &tup_, 0);
+        char const * prefix = "Contents:";
+        leaf_detail::print_tuple_contents<Tup>(os, &tup_, error_id(), prefix);
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, context const & ctx )
     {
         ctx.print(os);
-        return os;
+        return os << '\n';
     }
 
     template <class R, class... H>
