@@ -9,6 +9,7 @@
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/error.hpp>
 #include <exception>
+#include <typeinfo>
 
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
 
@@ -32,8 +33,6 @@ namespace leaf_detail
 
 #else
 
-#include <memory>
-
 namespace boost { namespace leaf {
 
 namespace leaf_detail
@@ -43,19 +42,6 @@ namespace leaf_detail
     {
         throw std::move(e);
     }
-
-    class exception_id_bump
-    {
-        std::shared_ptr<void const> auto_id_bump_;
-    protected:
-
-        exception_id_bump():
-            auto_id_bump_(nullptr, [](void const *) { (void) new_id(); })
-        {
-        }
-
-        ~exception_id_bump() noexcept { }
-    };
 }
 
 } }
@@ -96,12 +82,17 @@ namespace leaf_detail
         public Ex,
         public exception_base,
         public error_id
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-        ,exception_id_bump
-#endif
     {
+        mutable bool clear_current_error_;
+
+        bool is_current_exception() const noexcept
+        {
+            return tls::read_uint<leaf_detail::tls_tag_id_factory_current_id>() == error_id::value();
+        }
+
         error_id get_error_id() const noexcept final override
         {
+            clear_current_error_ = false;
             return *this;
         }
 
@@ -114,27 +105,51 @@ namespace leaf_detail
 
     public:
 
-        exception( exception const & ) = default;
-        exception( exception && ) = default;
+        exception( exception const & other ):
+            Ex(other),
+            exception_base(other),
+            error_id(other),
+            clear_current_error_(other.clear_current_error_)
+        {
+            other.clear_current_error_ = false;
+        }
+
+        exception( exception && other ) noexcept:
+            Ex(std::move(other)),
+            exception_base(std::move(other)),
+            error_id(std::move(other)),
+            clear_current_error_(std::move(other.clear_current_error_))
+        {
+            other.clear_current_error_ = false;
+        }
 
         exception( error_id id, Ex const & ex ) noexcept:
             Ex(ex),
-            error_id(id)
+            error_id(id),
+            clear_current_error_(true)
         {
             enforce_std_exception(*this);
         }
 
         exception( error_id id, Ex && ex ) noexcept:
             Ex(std::move(ex)),
-            error_id(id)
+            error_id(id),
+            clear_current_error_(true)
         {
             enforce_std_exception(*this);
         }
 
         explicit exception( error_id id ) noexcept:
-            error_id(id)
+            error_id(id),
+            clear_current_error_(true)
         {
             enforce_std_exception(*this);
+        }
+
+        ~exception() noexcept
+        {
+            if( clear_current_error_ && is_current_exception() )
+                tls::write_uint<leaf_detail::tls_tag_id_factory_current_id>(0);
         }
     };
 

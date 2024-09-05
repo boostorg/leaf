@@ -21,20 +21,11 @@ namespace leaf_detail { class dynamic_allocator; }
 ////////////////////////////////////////
 
 class bad_result:
-    public std::exception,
-    public error_id
+    public std::exception
 {
     char const * what() const noexcept final override
     {
         return "boost::leaf::bad_result";
-    }
-
-public:
-
-    explicit bad_result( error_id id ) noexcept:
-        error_id(id)
-    {
-        BOOST_LEAF_ASSERT(value());
     }
 };
 
@@ -326,7 +317,7 @@ protected:
 #endif
         case result_discriminant::err_id_zero:
         case result_discriminant::err_id:
-            ::boost::leaf::leaf_detail::throw_exception_impl(bad_result(get_error_id()));
+            throw_exception(get_error_id(), bad_result{});
         case result_discriminant::val:
             break;
         }

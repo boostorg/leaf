@@ -458,7 +458,7 @@ int main()
             std::cout << s << std::endl;
             if( BOOST_LEAF_CFG_DIAGNOSTICS )
                 BOOST_TEST(cmp(s,
-                    "Error serial #7\n"
+                    "Error serial #6\n"
                     "Caught C++ exception:"
                     "\n\tType: <removed variance>"
                     "\n\tstd::exception::what(): my_exception what"
@@ -472,7 +472,7 @@ int main()
                 ));
             else
                 BOOST_TEST(cmp(s,
-                    "Error serial #7\n"
+                    "Error serial #6\n"
                     "Caught C++ exception:"
                     "\n\tType: <removed variance>"
                     "\n\tstd::exception::what(): my_exception what"
@@ -517,7 +517,7 @@ int main()
             if( BOOST_LEAF_CFG_DIAGNOSTICS )
                 if( BOOST_LEAF_CFG_CAPTURE )
                     BOOST_TEST(cmp(s,
-                        "Error serial #9\n"
+                        "Error serial #7\n"
                         "Caught C++ exception:"
                         "\n\tType: <removed variance>"
                         "\n\tstd::exception::what(): my_exception what"
@@ -534,7 +534,7 @@ int main()
                     ));
                 else
                     BOOST_TEST(cmp(s,
-                        "Error serial #9\n"
+                        "Error serial #7\n"
                         "Caught C++ exception:"
                         "\n\tType: <removed variance>"
                         "\n\tstd::exception::what(): my_exception what"
@@ -549,7 +549,7 @@ int main()
                     ));
             else
                 BOOST_TEST(cmp(s,
-                    "Error serial #9\n"
+                    "Error serial #7\n"
                     "Caught C++ exception:"
                     "\n\tType: <removed variance>"
                     "\n\tstd::exception::what(): my_exception what"
@@ -584,7 +584,7 @@ int main()
             if( BOOST_LEAF_CFG_DIAGNOSTICS )
                 if( BOOST_LEAF_CFG_CAPTURE )
                     BOOST_TEST(cmp(s,
-                        "Error serial #11\n"
+                        "Error serial #8\n"
                         "Caught C++ exception:"
                         "\n\tType: <removed variance>"
                         "\n\tstd::exception::what(): my_exception what\n"
@@ -601,7 +601,7 @@ int main()
                     ));
                 else
                     BOOST_TEST(cmp(s,
-                        "Error serial #11\n"
+                        "Error serial #8\n"
                         "Caught C++ exception:"
                         "\n\tType: <removed variance>"
                         "\n\tstd::exception::what(): my_exception what"
@@ -609,7 +609,7 @@ int main()
                     ));
             else
                 BOOST_TEST(cmp(s,
-                    "Error serial #11\n"
+                    "Error serial #8\n"
                     "Caught C++ exception:"
                     "\n\tType: <removed variance>"
                     "\n\tstd::exception::what(): my_exception what"
