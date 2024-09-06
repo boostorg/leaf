@@ -63,8 +63,6 @@
 
 namespace boost { namespace leaf {
 
-class BOOST_LEAF_SYMBOL_VISIBLE error_id;
-
 struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
 {
     char const * file;
@@ -72,13 +70,20 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
     char const * function;
 
     template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, e_source_location const & x )
+    friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, e_source_location const & x)
     {
         return os << x.file << '(' << x.line << ") in function " << x.function;
     }
 };
 
+template <>
+struct show_in_diagnostics<e_source_location>: std::false_type
+{
+};
+
 ////////////////////////////////////////
+
+class BOOST_LEAF_SYMBOL_VISIBLE error_id;
 
 namespace leaf_detail
 {
@@ -148,7 +153,7 @@ namespace leaf_detail
             {
                 if( to_print && to_print.value() != k )
                     return;
-                if( diagnostic<E>::print(os, prefix, "\n\t", value(k)) && !to_print )
+                if( diagnostic<E>::print(os, prefix, BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER, value(k)) && !to_print )
                     os << '(' << k/4 << ')';
             }
         }
@@ -192,29 +197,23 @@ namespace leaf_detail
             public slot<E>
         {
             using impl = slot<E>;
-
             capturing_slot_node( capturing_slot_node const & ) = delete;
             capturing_slot_node & operator=( capturing_slot_node const & ) = delete;
-
             void deactivate() const noexcept final override
             {
                 impl::deactivate();
             }
-
             void unload( int err_id ) final override
             {
                 impl::unload(err_id);
             }
-
 #if BOOST_LEAF_CFG_DIAGNOSTICS
             void print(std::ostream & os, error_id const & to_print, char const * & prefix) const final override
             {
                 impl::print(os, to_print, prefix);
             }
 #endif
-
         public:
-
             template <class T>
             BOOST_LEAF_CONSTEXPR capturing_slot_node( capture_list::node * * & last, int err_id, T && e ):
                 capturing_node(last)
@@ -231,27 +230,21 @@ namespace leaf_detail
         {
             capturing_exception_node( capturing_exception_node const & ) = delete;
             capturing_exception_node & operator=( capturing_exception_node const & ) = delete;
-
             void deactivate() const noexcept final override
             {
                 BOOST_LEAF_ASSERT(0);
             }
-
             void unload( int ) final override
             {
                 std::rethrow_exception(ex_);
             }
-
 #if BOOST_LEAF_CFG_DIAGNOSTICS
             void print(std::ostream &, error_id const &, char const * &) const final override
             {
             }
 #endif
-
             std::exception_ptr const ex_;
-
         public:
-
             capturing_exception_node( capture_list::node * * & last, std::exception_ptr && ex ) noexcept:
                 capturing_node(last),
                 ex_(std::move(ex))
@@ -305,7 +298,7 @@ namespace leaf_detail
         }
 
         template <class LeafResult>
-        LeafResult extract_capture_list(int err_id) noexcept
+        LeafResult extract_capture_list(int err_id)
         {
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             if( std::exception_ptr ex = std::current_exception() )
@@ -774,44 +767,6 @@ inline error_id current_error() noexcept
 {
     return leaf_detail::make_error_id(leaf_detail::current_id());
 }
-
-////////////////////////////////////////////
-
-class polymorphic_context
-{
-};
-
-////////////////////////////////////////////
-
-template <class Ctx>
-class context_activator
-{
-    context_activator( context_activator const & ) = delete;
-    context_activator & operator=( context_activator const & ) = delete;
-
-    Ctx * ctx_;
-
-public:
-
-    explicit BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE context_activator(Ctx & ctx) noexcept:
-        ctx_(ctx.is_active() ? nullptr : &ctx)
-    {
-        if( ctx_ )
-            ctx_->activate();
-    }
-
-    BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE context_activator( context_activator && x ) noexcept:
-        ctx_(x.ctx_)
-    {
-        x.ctx_ = nullptr;
-    }
-
-    BOOST_LEAF_ALWAYS_INLINE ~context_activator() noexcept
-    {
-        if( ctx_ && ctx_->is_active() )
-            ctx_->deactivate();
-    }
-};
 
 ////////////////////////////////////////////
 

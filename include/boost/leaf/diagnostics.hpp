@@ -35,7 +35,7 @@ protected:
     void print_diagnostic_info(std::basic_ostream<CharT, Traits> & os) const
     {
         print_error_info(os);
-        char const * prefix = exception() ? nullptr : "\nCaught:";
+        char const * prefix = exception() ? nullptr : "\nCaught:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
         print_tuple_contents_(os, tup_, error(), prefix);
     }
 
@@ -59,7 +59,7 @@ namespace leaf_detail
     };
 
     template <>
-    struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<void>
+    struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<e_source_location>
     {
         template <class Tup>
         BOOST_LEAF_CONSTEXPR static diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept
@@ -108,7 +108,7 @@ namespace leaf_detail
     };
 
     template <>
-    struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<void>
+    struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<e_source_location>
     {
         template <class Tup>
         BOOST_LEAF_CONSTEXPR static diagnostic_info_ get( Tup const &, error_info const & ei ) noexcept
@@ -147,7 +147,7 @@ protected:
         print_diagnostic_info(os);
         if( da_ )
         {
-            char const * prefix = "\nDiagnostic details:";
+            char const * prefix = "\nDiagnostic details:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
             da_->print(os, error(), prefix);
         }
     }
@@ -162,36 +162,6 @@ protected:
 
 namespace leaf_detail
 {
-    template <class T>
-    struct get_dispatch
-    {
-        static BOOST_LEAF_CONSTEXPR T const * get(T const * x) noexcept
-        {
-            return x;
-        }
-        static BOOST_LEAF_CONSTEXPR T const * get(void const *) noexcept
-        {
-            return nullptr;
-        }
-    };
-
-    template <class T, int I = 0, class... Tp>
-    BOOST_LEAF_CONSTEXPR inline typename std::enable_if<I == sizeof...(Tp) - 1, T>::type const *
-    find_in_tuple(std::tuple<Tp...> const & t) noexcept
-    {
-        return get_dispatch<T>::get(&std::get<I>(t));
-    }
-
-    template<class T, int I = 0, class... Tp>
-    BOOST_LEAF_CONSTEXPR inline typename std::enable_if<I < sizeof...(Tp) - 1, T>::type const *
-    find_in_tuple(std::tuple<Tp...> const & t) noexcept
-    {
-        if( T const * x = get_dispatch<T>::get(&std::get<I>(t)) )
-            return x;
-        else
-            return find_in_tuple<T, I+1, Tp...>(t);
-    }
-
     struct diagnostic_details_: diagnostic_details
     {
         template <class Tup>
@@ -202,7 +172,7 @@ namespace leaf_detail
     };
 
     template <>
-    struct handler_argument_traits<diagnostic_details const &>: handler_argument_always_available<dynamic_allocator>
+    struct handler_argument_traits<diagnostic_details const &>: handler_argument_always_available<e_source_location, dynamic_allocator>
     {
         template <class Tup>
         BOOST_LEAF_CONSTEXPR static diagnostic_details_ get( Tup const & tup, error_info const & ei ) noexcept
@@ -254,7 +224,7 @@ namespace leaf_detail
     };
 
     template <>
-    struct handler_argument_traits<diagnostic_details const &>: handler_argument_always_available<void>
+    struct handler_argument_traits<diagnostic_details const &>: handler_argument_always_available<e_source_location>
     {
         template <class Tup>
         BOOST_LEAF_CONSTEXPR static diagnostic_details_ get( Tup const & tup, error_info const & ei ) noexcept
@@ -305,7 +275,7 @@ namespace leaf_detail
     };
 
     template <>
-    struct handler_argument_traits<diagnostic_details const &>: handler_argument_always_available<void>
+    struct handler_argument_traits<diagnostic_details const &>: handler_argument_always_available<e_source_location>
     {
         template <class Tup>
         BOOST_LEAF_CONSTEXPR static diagnostic_details_ get( Tup const &, error_info const & ei ) noexcept

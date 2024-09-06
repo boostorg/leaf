@@ -52,12 +52,9 @@ namespace leaf_detail
     {
         static_assert(show_in_diagnostics<T>::value, "show_in_diagnostics violation");
         BOOST_LEAF_ASSERT(delimiter);
-        if( prefix )
-        {
-            os << prefix;
-            prefix = nullptr;
-        }
-        os << delimiter << parse_name<T>();
+        char const * p = prefix;
+        prefix = nullptr;
+        os << (p ? p : delimiter) << parse_name<T>();
         if( mid )
             os << mid << x;
         return true;
@@ -110,7 +107,12 @@ namespace leaf_detail
         template <class CharT, class Traits>
         static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Exception const & ex)
         {
-            return print_impl<Exception>(os, prefix, delimiter, ", std::exception::what(): ", static_cast<std::exception const &>(ex).what());
+            if( print_impl<Exception>(os, prefix, delimiter, ": \"", static_cast<std::exception const &>(ex).what()) )
+            {
+                os << '"';
+                return true;
+            }
+            return false;
         }
     };
 

@@ -17,24 +17,33 @@ class BOOST_LEAF_SYMBOL_VISIBLE result;
 
 ////////////////////////////////////////
 
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace leaf_detail
+{
+    inline error_id unpack_error_id(std::exception const & ex) noexcept
+    {
+        if( leaf_detail::exception_base const * eb = dynamic_cast<leaf_detail::exception_base const *>(&ex) )
+            return eb->get_error_id();
+        if( error_id const * err_id = dynamic_cast<error_id const *>(&ex) )
+            return *err_id;
+        return current_error();
+    }
+}
+
+#endif
+
+////////////////////////////////////////
+
 class BOOST_LEAF_SYMBOL_VISIBLE error_info
 {
     error_info & operator=( error_info const & ) = delete;
 
+    error_id const err_id_;
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
-    static error_id unpack_error_id( std::exception const * ex ) noexcept
-    {
-        if( leaf_detail::exception_base const * eb = dynamic_cast<leaf_detail::exception_base const *>(ex) )
-            return eb->get_error_id();
-        if( error_id const * err_id = dynamic_cast<error_id const *>(ex) )
-            return *err_id;
-        return current_error();
-    }
-
     std::exception * const ex_;
 #endif
-
-    error_id const err_id_;
+    e_source_location const * const loc_;
 
 protected:
 
@@ -42,21 +51,15 @@ protected:
 
 public:
 
-    BOOST_LEAF_CONSTEXPR explicit error_info( error_id id ) noexcept:
+    BOOST_LEAF_CONSTEXPR error_info(error_id id, std::exception * ex, e_source_location const * loc) noexcept:
+        err_id_(id),
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
-        ex_(nullptr),
-#endif
-        err_id_(id)
-    {
-    }
-
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-    explicit error_info( std::exception * ex ) noexcept:
         ex_(ex),
-        err_id_(unpack_error_id(ex_))
-    {
-    }
 #endif
+        loc_(loc)
+    {
+        (void) ex;
+    }
 
     BOOST_LEAF_CONSTEXPR error_id error() const noexcept
     {
@@ -72,21 +75,28 @@ public:
 #endif
     }
 
+    BOOST_LEAF_CONSTEXPR e_source_location const * source_location() const noexcept
+    {
+        return loc_;
+    }
+
     template <class CharT, class Traits>
     void print_error_info(std::basic_ostream<CharT, Traits> & os) const
     {
-        os << "Error serial #" << err_id_;
+        os << "Error with serial #" << err_id_;
+        if( loc_ )
+            os << " reported at " << *loc_;
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
         if( ex_ )
         {
-            os << "\nCaught C++ exception:\n\tType: ";
+            os << "\nCaught:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
 #if BOOST_LEAF_CFG_DIAGNOSTICS
             if( auto eb = dynamic_cast<leaf_detail::exception_base const *>(ex_) )
                 eb->print_type_name(os);
             else
 #endif
                 leaf_detail::demangle_and_print(os, typeid(*ex_).name());
-            os << "\n\tstd::exception::what(): " << ex_->what();
+            os << ": \"" << ex_->what() << '"';
         }
 #endif
     }
@@ -102,7 +112,7 @@ public:
 namespace leaf_detail
 {
     template <>
-    struct handler_argument_traits<error_info const &>: handler_argument_always_available<void>
+    struct handler_argument_traits<error_info const &>: handler_argument_always_available<>
     {
         template <class Tup>
         BOOST_LEAF_CONSTEXPR static error_info const & get(Tup const &, error_info const & ei) noexcept
@@ -475,7 +485,7 @@ context<E...>::
 handle_error( error_id id, H && ... h ) const
 {
     BOOST_LEAF_ASSERT(!is_active());
-    return leaf_detail::handle_error_<R>(tup(), error_info(id), std::forward<H>(h)...);
+    return leaf_detail::handle_error_<R>(tup(), error_info(id, nullptr, this->get<e_source_location>(id)), std::forward<H>(h)...);
 }
 
 template <class... E>
@@ -486,7 +496,7 @@ context<E...>::
 handle_error( error_id id, H && ... h )
 {
     BOOST_LEAF_ASSERT(!is_active());
-    return leaf_detail::handle_error_<R>(tup(), error_info(id), std::forward<H>(h)...);
+    return leaf_detail::handle_error_<R>(tup(), error_info(id, nullptr, this->get<e_source_location>(id)), std::forward<H>(h)...);
 }
 
 ////////////////////////////////////////
@@ -581,22 +591,22 @@ namespace leaf_detail
         catch( std::exception & ex )
         {
             ctx.deactivate();
-            error_info e(&ex);
-            return handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
+            error_id id = leaf_detail::unpack_error_id(ex);
+            return handle_error_<R>(ctx.tup(), error_info(id, &ex, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
                 [&]() -> R
                 {
-                    ctx.unload(e.error());
+                    ctx.unload(id);
                     throw;
                 } );
         }
         catch(...)
         {
             ctx.deactivate();
-            error_info e(nullptr);
-            return handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
+            error_id id = current_error();
+            return handle_error_<R>(ctx.tup(), error_info(id, nullptr, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
                 [&]() -> R
                 {
-                    ctx.unload(e.error());
+                    ctx.unload(id);
                     throw;
                 } );
         }
@@ -671,22 +681,22 @@ try_catch( TryBlock && try_block, H && ... h )
     catch( std::exception & ex )
     {
         ctx.deactivate();
-        error_info e(&ex);
-        return leaf_detail::handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
+        error_id id = leaf_detail::unpack_error_id(ex);
+        return leaf_detail::handle_error_<R>(ctx.tup(), error_info(id, &ex, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
             [&]() -> R
             {
-                ctx.unload(e.error());
+                ctx.unload(id);
                 throw;
             } );
     }
     catch(...)
     {
         ctx.deactivate();
-        error_info e(nullptr);
-        return leaf_detail::handle_error_<R>(ctx.tup(), e, std::forward<H>(h)...,
+        error_id id = current_error();
+        return leaf_detail::handle_error_<R>(ctx.tup(), error_info(id, nullptr, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
             [&]() -> R
             {
-                ctx.unload(e.error());
+                ctx.unload(id);
                 throw;
             } );
     }
@@ -731,13 +741,13 @@ namespace leaf_detail
             catch( std::exception & ex )
             {
                 sl.deactivate();
-                int const err_id = error_info(&ex).error().value();
+                int err_id = unpack_error_id(ex).value();
                 return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
             }
             catch(...)
             {
                 sl.deactivate();
-                int const err_id = error_info(nullptr).error().value();
+                int err_id = current_error().value();
                 return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
             }
 #endif
@@ -783,13 +793,13 @@ namespace leaf_detail
             catch( std::exception & ex )
             {
                 sl.deactivate();
-                int const err_id = error_info(&ex).error().value();
+                int err_id = unpack_error_id(ex).value();
                 return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
             }
             catch(...)
             {
                 sl.deactivate();
-                int const err_id = error_info(nullptr).error().value();
+                int err_id = current_error().value();
                 return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
             }
 #endif
@@ -842,7 +852,7 @@ namespace leaf_detail
     template <class Tag, class T>
     struct handler_argument_traits<boost::error_info<Tag, T>>
     {
-        using error_type = void;
+        using context_types = leaf_detail_mp11::mp_list<>;
         constexpr static bool always_available = false;
 
         template <class Tup>

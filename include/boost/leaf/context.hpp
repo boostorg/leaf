@@ -41,6 +41,7 @@ namespace leaf_detail
     struct handler_argument_traits_defaults<E, false>
     {
         using error_type = typename std::decay<E>::type;
+        using context_types = leaf_detail_mp11::mp_list<error_type>;
         constexpr static bool always_available = false;
 
         template <class Tup>
@@ -81,10 +82,10 @@ namespace leaf_detail
         }
     };
 
-    template <class E>
+    template <class... E>
     struct handler_argument_always_available
     {
-        using error_type = E;
+        using context_types = leaf_detail_mp11::mp_list<E...>;
         constexpr static bool always_available = true;
 
         template <class Tup>
@@ -102,7 +103,7 @@ namespace leaf_detail
     template <>
     struct handler_argument_traits<void>
     {
-        using error_type = void;
+        using context_types = leaf_detail_mp11::mp_list<>;
         constexpr static bool always_available = false;
 
         template <class Tup>
@@ -130,6 +131,47 @@ namespace leaf_detail
     {
         static_assert(sizeof(E) == 0, "Error handlers must take this type by value");
     };
+}
+
+////////////////////////////////////////
+
+namespace leaf_detail
+{
+    template <class T>
+    struct get_dispatch
+    {
+        static BOOST_LEAF_CONSTEXPR T const * get(T const * x) noexcept
+        {
+            return x;
+        }
+        static BOOST_LEAF_CONSTEXPR T const * get(void const *) noexcept
+        {
+            return nullptr;
+        }
+    };
+
+    template <class T>
+    BOOST_LEAF_CONSTEXPR inline T * find_in_tuple(std::tuple<> const &)
+    {
+        return nullptr;
+    }
+
+    template <class T, int I = 0, class... Tp>
+    BOOST_LEAF_CONSTEXPR inline typename std::enable_if<I == sizeof...(Tp) - 1, T>::type const *
+    find_in_tuple(std::tuple<Tp...> const & t) noexcept
+    {
+        return get_dispatch<T>::get(&std::get<I>(t));
+    }
+
+    template<class T, int I = 0, class... Tp>
+    BOOST_LEAF_CONSTEXPR inline typename std::enable_if<I < sizeof...(Tp) - 1, T>::type const *
+    find_in_tuple(std::tuple<Tp...> const & t) noexcept
+    {
+        if( T const * x = get_dispatch<T>::get(&std::get<I>(t)) )
+            return x;
+        else
+            return find_in_tuple<T, I+1, Tp...>(t);
+    }
 }
 
 ////////////////////////////////////////
@@ -193,7 +235,6 @@ namespace leaf_detail
 namespace leaf_detail
 {
     template <class T> struct does_not_participate_in_context_deduction: std::is_abstract<T> { };
-    template <> struct does_not_participate_in_context_deduction<void>: std::true_type { };
     template <> struct does_not_participate_in_context_deduction<error_id>: std::true_type { };
 
     template <class L>
@@ -205,7 +246,7 @@ namespace leaf_detail
         using type =
             leaf_detail_mp11::mp_remove_if<
                 leaf_detail_mp11::mp_unique<
-                    leaf_detail_mp11::mp_list<typename handler_argument_traits<T>::error_type...>
+                    leaf_detail_mp11::mp_append<typename handler_argument_traits<T>::context_types...>
                 >,
                 does_not_participate_in_context_deduction
             >;
@@ -239,6 +280,30 @@ class context
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
     std::thread::id thread_id_;
 #endif
+
+    class raii_deactivator
+    {
+        raii_deactivator( raii_deactivator const & ) = delete;
+        raii_deactivator & operator=( raii_deactivator const & ) = delete;
+        context * ctx_;
+    public:
+        explicit BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE raii_deactivator(context & ctx) noexcept:
+            ctx_(ctx.is_active() ? nullptr : &ctx)
+        {
+            if( ctx_ )
+                ctx_->activate();
+        }
+        BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE raii_deactivator( raii_deactivator && x ) noexcept:
+            ctx_(x.ctx_)
+        {
+            x.ctx_ = nullptr;
+        }
+        BOOST_LEAF_ALWAYS_INLINE ~raii_deactivator() noexcept
+        {
+            if( ctx_ && ctx_->is_active() )
+                ctx_->deactivate();
+        }
+    };
 
 public:
 
@@ -317,18 +382,24 @@ public:
         return os << '\n';
     }
 
+    template <class T>
+    BOOST_LEAF_CONSTEXPR T const * get(error_id err) const noexcept
+    {
+        leaf_detail::slot<T> const * e = leaf_detail::find_in_tuple<leaf_detail::slot<T>>(tup_);
+        return e ? e->has_value(err.value()) : nullptr;
+    }
+
     template <class R, class... H>
     BOOST_LEAF_CONSTEXPR R handle_error( error_id, H && ... ) const;
 
     template <class R, class... H>
     BOOST_LEAF_CONSTEXPR R handle_error( error_id, H && ... );
-};
 
-template <class Ctx>
-BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE context_activator<Ctx> activate_context(Ctx & ctx) noexcept
-{
-    return context_activator<Ctx>(ctx);
-}
+    friend BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE raii_deactivator activate_context(context & ctx) noexcept
+    {
+        return raii_deactivator(ctx);
+    }
+};
 
 ////////////////////////////////////////
 
