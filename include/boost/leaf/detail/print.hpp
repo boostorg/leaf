@@ -47,16 +47,37 @@ namespace leaf_detail
 
     ////////////////////////////////////////
 
-    template <class T, class PrintableInfo, class CharT, class Traits>
-    bool print_impl(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, char const * mid, PrintableInfo const & x)
+    template <class T, class CharT, class Traits>
+    void print_name(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter)
     {
         static_assert(show_in_diagnostics<T>::value, "show_in_diagnostics violation");
         BOOST_LEAF_ASSERT(delimiter);
         char const * p = prefix;
         prefix = nullptr;
         os << (p ? p : delimiter) << parse<T>();
+    }
+
+    template <class T, class PrintableInfo, class CharT, class Traits>
+    bool print_impl(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, char const * mid, PrintableInfo const & x)
+    {
+        print_name<T>(os, prefix, delimiter);
         if( mid )
             os << mid << x;
+        return true;
+    }
+
+    template <class T, class PrintableInfo, class CharT, class Traits>
+    bool print_impl(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, char const * mid, PrintableInfo const * x)
+    {
+        print_name<T>(os, prefix, delimiter);
+        if( mid )
+        {
+            os << mid;
+            if( x )
+                os << x;
+            else
+                os << "<nullptr>";
+        }
         return true;
     }
 
