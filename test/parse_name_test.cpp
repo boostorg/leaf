@@ -9,7 +9,8 @@
 #   include <boost/leaf/detail/demangle.hpp>
 #endif
 
-#if BOOST_LEAF_CFG_STD_STRING
+#include <cstring>
+#include <cstdint>
 
 namespace leaf = boost::leaf;
 
@@ -38,48 +39,36 @@ template <int> struct struct_template1 { };
 template <class> class class_template2 { };
 template <class> struct struct_template2 { };
 
-namespace
+bool test(leaf::parsed const & pn, char const * correct)
 {
-    template <class Name>
-    void test_name(std::string const & correct)
-    {
-        auto pn = leaf::leaf_detail::parse_name<Name>();
-        BOOST_TEST(pn.parse_success());
-        BOOST_TEST_EQ(std::string(pn.name, pn.len), correct);
-    }
+    return
+        std::strlen(correct) == pn.len &&
+        std::memcmp(correct, pn.name, pn.len) == 0;
 }
 
 int main()
 {
-    test_name<leaf::in_namespace_boost_leaf>("boost::leaf::in_namespace_boost_leaf");
+    using leaf::parse;
 
-    test_name<leaf_test::class_>("leaf_test::class_");
-    test_name<leaf_test::struct_>("leaf_test::struct_");
-    test_name<leaf_test::enum_>("leaf_test::enum_");
-    test_name<leaf_test::class_template1<42>>("leaf_test::class_template1<42>");
-    test_name<leaf_test::struct_template1<42>>("leaf_test::struct_template1<42>");
-    test_name<leaf_test::class_template2<int>>("leaf_test::class_template2<int>");
-    test_name<leaf_test::struct_template2<int>>("leaf_test::struct_template2<int>");
+    BOOST_TEST(test(parse<leaf::in_namespace_boost_leaf>(), "boost::leaf::in_namespace_boost_leaf"));
 
-    test_name<class_>("class_");
-    test_name<struct_>("struct_");
-    test_name<enum_>("enum_");
-    test_name<class_template1<42>>("class_template1<42>");
-    test_name<struct_template1<42>>("struct_template1<42>");
-    test_name<class_template2<int>>("class_template2<int>");
-    test_name<struct_template2<int>>("struct_template2<int>");
+    BOOST_TEST(test(parse<int>(), "int"));
+
+    BOOST_TEST(test(parse<leaf_test::class_>(), "leaf_test::class_"));
+    BOOST_TEST(test(parse<leaf_test::struct_>(), "leaf_test::struct_"));
+    BOOST_TEST(test(parse<leaf_test::enum_>(), "leaf_test::enum_"));
+    BOOST_TEST(test(parse<leaf_test::class_template1<42>>(), "leaf_test::class_template1<42>"));
+    BOOST_TEST(test(parse<leaf_test::struct_template1<42>>(), "leaf_test::struct_template1<42>"));
+    BOOST_TEST(test(parse<leaf_test::class_template2<int>>(), "leaf_test::class_template2<int>"));
+    BOOST_TEST(test(parse<leaf_test::struct_template2<int>>(), "leaf_test::struct_template2<int>"));
+
+    BOOST_TEST(test(parse<class_>(), "class_"));
+    BOOST_TEST(test(parse<struct_>(), "struct_"));
+    BOOST_TEST(test(parse<enum_>(), "enum_"));
+    BOOST_TEST(test(parse<class_template1<42>>(), "class_template1<42>"));
+    BOOST_TEST(test(parse<struct_template1<42>>(), "struct_template1<42>"));
+    BOOST_TEST(test(parse<class_template2<int>>(), "class_template2<int>"));
+    BOOST_TEST(test(parse<struct_template2<int>>(), "struct_template2<int>"));
 
     return boost::report_errors();
 }
-
-#else
-
-#include <iostream>
-
-int main()
-{
-    std::cout << "Unit test not applicable." << std::endl;
-    return 0;
-}
-
-#endif

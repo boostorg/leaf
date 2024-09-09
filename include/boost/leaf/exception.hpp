@@ -87,7 +87,7 @@ namespace leaf_detail
 
         bool is_current_exception() const noexcept
         {
-            return tls::read_uint<leaf_detail::tls_tag_id_factory_current_id>() == error_id::value();
+            return tls::read_uint<leaf_detail::tls_tag_id_factory_current_id>() == unsigned(error_id::value());
         }
 
         error_id get_error_id() const noexcept final override

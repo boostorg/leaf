@@ -48,10 +48,13 @@ namespace boost { namespace leaf {
 
 namespace leaf_detail
 {
+    // The functions below are C++11 constexpr, but we use BOOST_LEAF_ALWAYS_INLINE to control object file
+    // section count / template bleat. Evidently this makes a difference on gcc / windows at least.
+
     template <int S1, int S2, int I, bool = S1 >= S2>
     struct cpp11_prefix
     {
-        constexpr static bool check(char const (&)[S1], char const (&)[S2]) noexcept
+        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&)[S1], char const (&)[S2]) noexcept
         {
             return false;
         }
@@ -59,7 +62,7 @@ namespace leaf_detail
     template <int S1, int S2, int I>
     struct cpp11_prefix<S1, S2, I, true>
     {
-        constexpr static bool check(char const (&str)[S1], char const (&prefix)[S2]) noexcept
+        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&str)[S1], char const (&prefix)[S2]) noexcept
         {
             return str[I] == prefix[I] && cpp11_prefix<S1, S2, I - 1>::check(str, prefix);
         }
@@ -67,13 +70,13 @@ namespace leaf_detail
     template <int S1, int S2>
     struct cpp11_prefix<S1, S2, 0, true>
     {
-        constexpr static bool check(char const (&str)[S1], char const (&prefix)[S2]) noexcept
+        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&str)[S1], char const (&prefix)[S2]) noexcept
         {
             return str[0] == prefix[0];
         }
     };
     template <int S1, int S2>
-    constexpr int check_prefix(char const (&str)[S1], char const (&prefix)[S2]) noexcept
+    BOOST_LEAF_ALWAYS_INLINE constexpr int check_prefix(char const (&str)[S1], char const (&prefix)[S2]) noexcept
     {
         return cpp11_prefix<S1, S2, S2 - 2>::check(str, prefix) ? S2 - 1 : 0;
     }
@@ -83,7 +86,7 @@ namespace leaf_detail
     template <int S1, int S2, int I1, int I2, bool = S1 >= S2>
     struct cpp11_suffix
     {
-        constexpr static bool check(char const (&)[S1], char const (&)[S2]) noexcept
+        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&)[S1], char const (&)[S2]) noexcept
         {
             return false;
         }
@@ -91,7 +94,7 @@ namespace leaf_detail
     template <int S1, int S2, int I1, int I2>
     struct cpp11_suffix<S1, S2, I1, I2, true>
     {
-        constexpr static bool check(char const (&str)[S1], char const (&suffix)[S2]) noexcept
+        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&str)[S1], char const (&suffix)[S2]) noexcept
         {
             return str[I1] == suffix[I2] && cpp11_suffix<S1, S2, I1 - 1, I2 - 1>::check(str, suffix);
         }
@@ -99,87 +102,109 @@ namespace leaf_detail
     template <int S1, int S2, int I1>
     struct cpp11_suffix<S1, S2, I1, 0, true>
     {
-        constexpr static bool check(char const (&str)[S1], char const (&suffix)[S2]) noexcept
+        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&str)[S1], char const (&suffix)[S2]) noexcept
         {
             return str[I1] == suffix[0];
         }
     };
     template <int S1, int S2>
-    constexpr int check_suffix(char const (&str)[S1], char const (&suffix)[S2]) noexcept
+    BOOST_LEAF_ALWAYS_INLINE constexpr int check_suffix(char const (&str)[S1], char const (&suffix)[S2]) noexcept
     {
         return cpp11_suffix<S1, S2, S1 - 2, S2 - 2>::check(str, suffix) ? S1 - S2 : 0;
     }
+}
 
-    struct parsed_name
+namespace n
+{
+    struct r
     {
         char const * name;
         int len;
-        parsed_name(char const * name, int len) noexcept:
+        r(char const * name, int len) noexcept:
             name(name),
             len(len)
         {
         }
-        template <int S>
-        parsed_name(char const(&name)[S]) noexcept:
-            name(name),
-            len(S-1)
-        {
-        }
-        bool parse_success() const noexcept
-        {
-            return name[len] != 0;
-        }
         template <class CharT, class Traits>
-        friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, parsed_name const & pn)
+        friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, r const & pn)
         {
             return os.write(pn.name, pn.len);
         }
     };
 
-    // Workaround - we only use this function if parse_name (below) fails to parse __PRETTY_FUNCTION__ / __FUNCSIG__.
-    // In this case parse_name should be fixed to support the newly encountered (note, parsing is done at compile-time).
-    template <class Name>
-    parsed_name please_update_parse_name()
+    template <class T>
+    BOOST_LEAF_ALWAYS_INLINE r p()
     {
-        return parsed_name(BOOST_LEAF_PRETTY_FUNCTION);
-    }
+        // C++11 compile-time parsing of __PRETTY_FUNCTION__/__FUNCSIG__. The sizeof hacks are a
+        // workaround for older GCC versions, where __PRETTY_FUNCTION__ is not constexpr, which triggers
+        // compile errors when used in constexpr expressinos, yet evaluating a sizeof exrpession works.
 
-    template <class Name>
-    parsed_name parse_name()
-    {
-        // Workaround for older gcc compilers where __PRETTY_FUNCTION__ is not constexpr.
-        // Instead of evaluating constexpr int x = f(__PRETTY_FUNCTION__), which fails,
-        // we evaluate int const x = f(__PRETTY_FUNCTION__). Then we enforce compile-time
-        // execution by evaluating sizeof(char[1 + x]) -1.
-#define BOOST_LEAF_PARSE_PF(prefix, suffix) \
-        { \
-            if( int const s = leaf_detail::check_suffix(BOOST_LEAF_PRETTY_FUNCTION, suffix) ) \
-                if( int const p = leaf_detail::check_prefix(BOOST_LEAF_PRETTY_FUNCTION, prefix) ) \
-                    return parsed_name(BOOST_LEAF_PRETTY_FUNCTION + sizeof(char[1 + p]) - 1, sizeof(char[1 + s - p]) - 1); \
-        }
+        // We don't try to recognize the compiler based on compiler-specific macros. Any compiler/version
+        // is supported as long as it uses one of the formats we recognize.
+
+        // Unrecognized __PRETTY_FUNCTION__/__FUNCSIG__ formats will result in compiler diagnostics.
+        // In that case, please file an issue on https://github.com/boostorg/leaf.
+
+#define BOOST_LEAF_P(P) (sizeof(char[1 + leaf_detail::check_prefix(BOOST_LEAF_PRETTY_FUNCTION, P)]) - 1)
         // clang style:
-        BOOST_LEAF_PARSE_PF( "parsed_name boost::leaf::leaf_detail::parse_name() [Name = ", "]");
+        int const p01 = BOOST_LEAF_P("r boost::leaf::n::p() [T = ");
         // old clang style:
-        BOOST_LEAF_PARSE_PF( "boost::leaf::leaf_detail::parsed_name boost::leaf::leaf_detail::parse_name() [Name = ", "]");
+        int const p02 = BOOST_LEAF_P("boost::leaf::n::r boost::leaf::n::p() [T = ");
         // gcc style:
-        BOOST_LEAF_PARSE_PF( "boost::leaf::leaf_detail::parsed_name boost::leaf::leaf_detail::parse_name() [with Name = ", "]");
-        // msvc style, __cdecl, struct/class/enum:
-        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __cdecl boost::leaf::leaf_detail::parse_name<struct ", ">(void)");
-        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __cdecl boost::leaf::leaf_detail::parse_name<class ", ">(void)");
-        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __cdecl boost::leaf::leaf_detail::parse_name<enum ", ">(void)");
-        // msvc style, __stdcall, struct/class/enum:
-        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __stdcall boost::leaf::leaf_detail::parse_name<struct ", ">(void)");
-        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __stdcall boost::leaf::leaf_detail::parse_name<class ", ">(void)");
-        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __stdcall boost::leaf::leaf_detail::parse_name<enum ", ">(void)");
-        // msvc style, __fastcall, struct/class/enum:
-        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __fastcall boost::leaf::leaf_detail::parse_name<struct ", ">(void)");
-        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __fastcall boost::leaf::leaf_detail::parse_name<class ", ">(void)");
-        BOOST_LEAF_PARSE_PF( "struct boost::leaf::leaf_detail::parsed_name __fastcall boost::leaf::leaf_detail::parse_name<enum ", ">(void)");
-#undef BOOST_LEAF_PARSE_PF
+        int const p03 = BOOST_LEAF_P("boost::leaf::n::r boost::leaf::n::p() [with T = ");
+        // msvc style, struct:
+        int const p04 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<struct ");
+        int const p05 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<struct ");
+        int const p06 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<struct ");
+        // msvc style, class:
+        int const p07 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<class ");
+        int const p08 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<class ");
+        int const p09 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<class ");
+        // msvc style, enum:
+        int const p10 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<enum ");
+        int const p11 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<enum ");
+        int const p12 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<enum ");
+        // msvc style, built-in type:
+        int const p13 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<");
+        int const p14 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<");
+        int const p15 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<");
+#undef BOOST_LEAF_P
 
-        // Unrecognized __PRETTY_FUNCTION__ / __FUNCSIG__ format, return as-is. Note, parsing is done at compile-time.
-        return please_update_parse_name<Name>();
+#define BOOST_LEAF_S(S) (sizeof(char[1 + leaf_detail::check_suffix(BOOST_LEAF_PRETTY_FUNCTION, S)]) - 1)
+        // clang/gcc style:
+        int const s01 = BOOST_LEAF_S("]");
+        // msvc style:
+        int const s02 = BOOST_LEAF_S(">(void)");
+#undef BOOST_LEAF_S
+
+        char static_assert_unrecognized_pretty_function_format_please_file_github_issue[sizeof(
+            char[
+                (s01 && (1 == (!!p01 + !!p02 + !!p03)))
+                ||
+                (s02 && (1 == (!!p04 + !!p05 + !!p06 + !!p07 + !!p08 + !!p09 + !!p10 + !!p11 + !!p12)))
+                ||
+                (s02 && (1 == (!!p13 + !!p14 + !!p15)))
+            ]
+        ) * 2 - 1];
+        (void) static_assert_unrecognized_pretty_function_format_please_file_github_issue;
+
+        if( int const p = sizeof(char[1 + !!s01 * (p01 + p02 + p03)]) - 1 )
+            return { BOOST_LEAF_PRETTY_FUNCTION + p, s01 - p };
+
+        if( int const p = sizeof(char[1 + !!s02 * (p04 + p05 + p06 + p07 + p08 + p09 + p10 + p11 + p12)]) - 1 )
+            return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p };
+
+        int const p = sizeof(char[1 + !!s02 * (p13 + p14 + p15)]) - 1; // p is not zero, we've static asserted the hell out of it
+        return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p };
     }
+}
+
+using parsed = n::r;
+
+template <class T>
+parsed parse()
+{
+    return n::p<T>();
 }
 
 } }

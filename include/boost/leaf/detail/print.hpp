@@ -54,7 +54,7 @@ namespace leaf_detail
         BOOST_LEAF_ASSERT(delimiter);
         char const * p = prefix;
         prefix = nullptr;
-        os << (p ? p : delimiter) << parse_name<T>();
+        os << (p ? p : delimiter) << parse<T>();
         if( mid )
             os << mid << x;
         return true;

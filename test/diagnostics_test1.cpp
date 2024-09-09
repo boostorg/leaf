@@ -162,6 +162,7 @@ int main()
         []() -> leaf::result<void>
         {
             return BOOST_LEAF_NEW_ERROR(
+                42,
                 printable_info_printable_value(),
                 printable_info_non_printable_value(),
                 non_printable_info_printable_value(),
@@ -172,6 +173,7 @@ int main()
                 leaf::e_errno{ENOENT} );
         },
         [](
+            int,
             printable_info_printable_value,
             printable_info_non_printable_value,
             non_printable_info_printable_value,
@@ -204,6 +206,7 @@ int main()
         []() -> leaf::result<void>
         {
             return BOOST_LEAF_NEW_ERROR(
+                42,
                 printable_info_printable_value(),
                 printable_info_non_printable_value(),
                 non_printable_info_printable_value(),
@@ -214,6 +217,7 @@ int main()
                 leaf::e_errno{ENOENT} );
         },
         [](
+            int,
             leaf::e_source_location,
             printable_info_printable_value,
             printable_info_non_printable_value,
@@ -247,6 +251,7 @@ int main()
         []() -> leaf::result<void>
         {
             return BOOST_LEAF_NEW_ERROR(
+                42,
                 printable_info_printable_value(),
                 printable_info_non_printable_value(),
                 non_printable_info_printable_value(),
@@ -257,6 +262,7 @@ int main()
                 leaf::e_errno{ENOENT} );
         },
         [](
+            int,
             leaf::e_source_location,
             printable_info_printable_value,
             printable_info_non_printable_value,
@@ -277,7 +283,8 @@ int main()
                 BOOST_TEST(cmp(s,
                     "Error with serial #3 reported at <removed variance>"
                     "\nCaught:"
-                    BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER "printable_info_printable_value: printed printable_value"
+                    BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER "int: 42"
+                    BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_printable_value: printed printable_value"
                     BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_non_printable_value: *** printable_info non_printable_value ***"
                     BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "non_printable_info_printable_value: printed printable_value"
                     BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "non_printable_info_non_printable_value"
@@ -303,6 +310,7 @@ int main()
         []() -> leaf::result<void>
         {
             return BOOST_LEAF_NEW_ERROR(
+                42,
                 printable_info_printable_value(),
                 printable_info_non_printable_value(),
                 non_printable_info_printable_value(),
@@ -315,6 +323,7 @@ int main()
                 leaf::e_errno{ENOENT} );
         },
         [](
+            int,
             leaf::e_source_location,
             printable_info_printable_value,
             printable_info_non_printable_value,
@@ -336,7 +345,8 @@ int main()
                     BOOST_TEST(cmp(s,
                         "Error with serial #4 reported at <removed variance>"
                         "\nCaught:"
-                        BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER "printable_info_printable_value: printed printable_value"
+                        BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER "int: 42"
+                        BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_printable_value: printed printable_value"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_non_printable_value: *** printable_info non_printable_value ***"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "non_printable_info_printable_value: printed printable_value"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "non_printable_info_non_printable_value"
@@ -351,7 +361,8 @@ int main()
                     BOOST_TEST(cmp(s,
                         "Error with serial #4 reported at <removed variance>"
                         "\nCaught:"
-                        BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER "printable_info_printable_value: printed printable_value"
+                        BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER "int: 42"
+                        BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_printable_value: printed printable_value"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_non_printable_value: *** printable_info non_printable_value ***"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "non_printable_info_printable_value: printed printable_value"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "non_printable_info_non_printable_value"
@@ -378,6 +389,7 @@ int main()
         []() -> leaf::result<void>
         {
             return BOOST_LEAF_NEW_ERROR(
+                42,
                 printable_info_printable_value(),
                 printable_info_non_printable_value(),
                 non_printable_info_printable_value(),
@@ -401,7 +413,8 @@ int main()
                     BOOST_TEST(cmp(s,
                         "Error with serial #5 reported at <removed variance>"
                         "\nDiagnostic details:"
-                        BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER "printable_info_printable_value: printed printable_value"
+                        BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER "int: 42"
+                        BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_printable_value: printed printable_value"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_non_printable_value: *** printable_info non_printable_value ***"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "non_printable_info_printable_value: printed printable_value"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "non_printable_info_non_printable_value"
@@ -439,6 +452,7 @@ int main()
         []
         {
             BOOST_LEAF_THROW_EXCEPTION( my_exception(),
+                42,
                 printable_info_printable_value(),
                 printable_info_non_printable_value(),
                 non_printable_info_printable_value(),
@@ -449,6 +463,7 @@ int main()
                 leaf::e_errno{ENOENT} );
         },
         [](
+            int,
             printable_info_printable_value,
             printable_info_non_printable_value,
             non_printable_info_printable_value,
@@ -478,6 +493,7 @@ int main()
         []
         {
             BOOST_LEAF_THROW_EXCEPTION( my_exception(),
+                42,
                 printable_info_printable_value(),
                 printable_info_non_printable_value(),
                 non_printable_info_printable_value(),
@@ -488,6 +504,7 @@ int main()
                 leaf::e_errno{ENOENT} );
         },
         [](
+            int,
             leaf::e_source_location,
             printable_info_printable_value,
             printable_info_non_printable_value,
@@ -518,6 +535,7 @@ int main()
         []
         {
             BOOST_LEAF_THROW_EXCEPTION( my_exception(),
+                42,
                 printable_info_printable_value(),
                 printable_info_non_printable_value(),
                 non_printable_info_printable_value(),
@@ -528,6 +546,7 @@ int main()
                 leaf::e_errno{ENOENT} );
         },
         [](
+            int,
             leaf::e_source_location,
             printable_info_printable_value,
             printable_info_non_printable_value,
@@ -549,6 +568,7 @@ int main()
                     "Error with serial #8 reported at <removed variance>"
                     "\nCaught:"
                     BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER "<removed variance>: \"my_exception what\""
+                    BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "int: 42"
                     BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_printable_value: printed printable_value"
                     BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_non_printable_value: *** printable_info non_printable_value ***"
                     BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "non_printable_info_printable_value: printed printable_value"
@@ -573,6 +593,7 @@ int main()
         []
         {
             BOOST_LEAF_THROW_EXCEPTION( my_exception(),
+                42,
                 printable_info_printable_value(),
                 printable_info_non_printable_value(),
                 non_printable_info_printable_value(),
@@ -585,6 +606,7 @@ int main()
                 leaf::e_errno{ENOENT} );
         },
         [](
+            int,
             leaf::e_source_location,
             printable_info_printable_value,
             printable_info_non_printable_value,
@@ -607,6 +629,7 @@ int main()
                         "Error with serial #9 reported at <removed variance>"
                         "\nCaught:"
                         BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER "<removed variance>: \"my_exception what\""
+                        BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "int: 42"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_printable_value: printed printable_value"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_non_printable_value: *** printable_info non_printable_value ***"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "non_printable_info_printable_value: printed printable_value"
@@ -623,6 +646,7 @@ int main()
                         "Error with serial #9 reported at <removed variance>"
                         "\nCaught:"
                         BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER "<removed variance>: \"my_exception what\""
+                        BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "int: 42"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_printable_value: printed printable_value"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_non_printable_value: *** printable_info non_printable_value ***"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "non_printable_info_printable_value: printed printable_value"
@@ -648,6 +672,7 @@ int main()
         []
         {
             BOOST_LEAF_THROW_EXCEPTION( my_exception(),
+                42,
                 printable_info_printable_value(),
                 printable_info_non_printable_value(),
                 non_printable_info_printable_value(),
@@ -673,7 +698,8 @@ int main()
                         "\nCaught:"
                         BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER "<removed variance>: \"my_exception what\""
                         "\nDiagnostic details:"
-                        BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER "printable_info_printable_value: printed printable_value"
+                        BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER "int: 42"
+                        BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_printable_value: printed printable_value"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "printable_info_non_printable_value: *** printable_info non_printable_value ***"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "non_printable_info_printable_value: printed printable_value"
                         BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "non_printable_info_non_printable_value"
