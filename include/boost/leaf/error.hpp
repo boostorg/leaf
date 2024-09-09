@@ -160,6 +160,7 @@ namespace leaf_detail
 
         using impl::load;
         using impl::has_value;
+        using impl::has_value_any_key;
         using impl::value;
         using impl::value_or_default;
     };
@@ -317,7 +318,7 @@ namespace leaf_detail
     template <>
     inline void slot<dynamic_allocator>::deactivate() const noexcept
     {
-        if( dynamic_allocator const * c = this->has_value() )
+        if( dynamic_allocator const * c = this->has_value_any_key() )
             c->deactivate();
         tls::write_ptr<slot<dynamic_allocator>>(prev_);
     }
@@ -326,7 +327,7 @@ namespace leaf_detail
     inline void slot<dynamic_allocator>::unload( int err_id ) noexcept(false)
     {
         BOOST_LEAF_ASSERT(err_id);
-        if( dynamic_allocator * da1 = this->has_value() )
+        if( dynamic_allocator * da1 = this->has_value_any_key() )
             da1->unload(err_id);
     }
 
@@ -335,7 +336,7 @@ namespace leaf_detail
     {
         if( slot<dynamic_allocator> * sl = tls::read_ptr<slot<dynamic_allocator>>() )
         {
-            if( dynamic_allocator * c = sl->has_value() )
+            if( dynamic_allocator * c = sl->has_value_any_key() )
                 c->dynamic_load(err_id, std::forward<E>(e));
             else
                 sl->load(err_id).dynamic_load(err_id, std::forward<E>(e));

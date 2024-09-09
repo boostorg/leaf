@@ -178,7 +178,7 @@ namespace leaf_detail
         BOOST_LEAF_CONSTEXPR static diagnostic_details_ get( Tup const & tup, error_info const & ei ) noexcept
         {
             slot<dynamic_allocator> const * da = find_in_tuple<slot<dynamic_allocator>>(tup);
-            return diagnostic_details_(ei, tup, da ? da->has_value() : nullptr );
+            return diagnostic_details_(ei, tup, da ? da->has_value_any_key() : nullptr );
         }
     };
 }
