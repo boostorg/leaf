@@ -1,4 +1,4 @@
-// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -38,8 +38,8 @@ int main()
 {
     static_assert(std::is_same<test_info, decltype(std::declval<leaf::match<test_info, 42>>().matched)>::value, "handler_argument_traits deduction bug");
 
-    using tr = leaf::leaf_detail::handler_argument_traits<leaf::match<test_info, 42>>;
-    static_assert(std::is_same<void, tr::error_type>::value, "handler_argument_traits deduction bug");
+    using tr = leaf::detail::handler_argument_traits<leaf::match<test_info, 42>>;
+    static_assert(std::is_same<leaf::leaf_detail_mp11::mp_list<>, tr::context_types>::value, "handler_argument_traits deduction bug");
 
     {
         int r = leaf::try_catch(

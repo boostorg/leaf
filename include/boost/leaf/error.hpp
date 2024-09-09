@@ -1,7 +1,7 @@
 #ifndef BOOST_LEAF_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ERROR_HPP_INCLUDED
 
-// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -59,11 +59,9 @@
 
 #endif
 
-#define BOOST_LEAF_NEW_ERROR ::boost::leaf::leaf_detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
+#define BOOST_LEAF_NEW_ERROR ::boost::leaf::detail::inject_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::new_error
 
 namespace boost { namespace leaf {
-
-class BOOST_LEAF_SYMBOL_VISIBLE error_id;
 
 struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
 {
@@ -72,15 +70,22 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_source_location
     char const * function;
 
     template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, e_source_location const & x )
+    friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, e_source_location const & x)
     {
         return os << x.file << '(' << x.line << ") in function " << x.function;
     }
 };
 
+template <>
+struct show_in_diagnostics<e_source_location>: std::false_type
+{
+};
+
 ////////////////////////////////////////
 
-namespace leaf_detail
+class BOOST_LEAF_SYMBOL_VISIBLE error_id;
+
+namespace detail
 {
     class BOOST_LEAF_SYMBOL_VISIBLE exception_base
     {
@@ -97,7 +102,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <class E>
     class BOOST_LEAF_SYMBOL_VISIBLE slot:
@@ -148,13 +153,14 @@ namespace leaf_detail
             {
                 if( to_print && to_print.value() != k )
                     return;
-                if( diagnostic<E>::print(os, prefix, "\n\t", value(k)) && !to_print )
+                if( diagnostic<E>::print(os, prefix, BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER, value(k)) && !to_print )
                     os << '(' << k/4 << ')';
             }
         }
 
         using impl::load;
         using impl::has_value;
+        using impl::has_value_any_key;
         using impl::value;
         using impl::value_or_default;
     };
@@ -164,7 +170,7 @@ namespace leaf_detail
 
 #if BOOST_LEAF_CFG_CAPTURE
 
-namespace leaf_detail
+namespace detail
 {
     class BOOST_LEAF_SYMBOL_VISIBLE dynamic_allocator:
         capture_list
@@ -192,29 +198,23 @@ namespace leaf_detail
             public slot<E>
         {
             using impl = slot<E>;
-
             capturing_slot_node( capturing_slot_node const & ) = delete;
             capturing_slot_node & operator=( capturing_slot_node const & ) = delete;
-
             void deactivate() const noexcept final override
             {
                 impl::deactivate();
             }
-
             void unload( int err_id ) final override
             {
                 impl::unload(err_id);
             }
-
 #if BOOST_LEAF_CFG_DIAGNOSTICS
             void print(std::ostream & os, error_id const & to_print, char const * & prefix) const final override
             {
                 impl::print(os, to_print, prefix);
             }
 #endif
-
         public:
-
             template <class T>
             BOOST_LEAF_CONSTEXPR capturing_slot_node( capture_list::node * * & last, int err_id, T && e ):
                 capturing_node(last)
@@ -231,27 +231,21 @@ namespace leaf_detail
         {
             capturing_exception_node( capturing_exception_node const & ) = delete;
             capturing_exception_node & operator=( capturing_exception_node const & ) = delete;
-
             void deactivate() const noexcept final override
             {
                 BOOST_LEAF_ASSERT(0);
             }
-
             void unload( int ) final override
             {
                 std::rethrow_exception(ex_);
             }
-
 #if BOOST_LEAF_CFG_DIAGNOSTICS
             void print(std::ostream &, error_id const &, char const * &) const final override
             {
             }
 #endif
-
             std::exception_ptr const ex_;
-
         public:
-
             capturing_exception_node( capture_list::node * * & last, std::exception_ptr && ex ) noexcept:
                 capturing_node(last),
                 ex_(std::move(ex))
@@ -305,13 +299,13 @@ namespace leaf_detail
         }
 
         template <class LeafResult>
-        LeafResult extract_capture_list(int err_id) noexcept
+        LeafResult extract_capture_list(int err_id)
         {
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             if( std::exception_ptr ex = std::current_exception() )
                 (void) new capturing_exception_node(last_, std::move(ex));
 #endif
-            leaf_detail::capture_list::node * const f = first_;
+            detail::capture_list::node * const f = first_;
             first_ = nullptr;
             last_ = &first_;
             return { err_id, capture_list(f) };
@@ -324,7 +318,7 @@ namespace leaf_detail
     template <>
     inline void slot<dynamic_allocator>::deactivate() const noexcept
     {
-        if( dynamic_allocator const * c = this->has_value() )
+        if( dynamic_allocator const * c = this->has_value_any_key() )
             c->deactivate();
         tls::write_ptr<slot<dynamic_allocator>>(prev_);
     }
@@ -333,7 +327,7 @@ namespace leaf_detail
     inline void slot<dynamic_allocator>::unload( int err_id ) noexcept(false)
     {
         BOOST_LEAF_ASSERT(err_id);
-        if( dynamic_allocator * da1 = this->has_value() )
+        if( dynamic_allocator * da1 = this->has_value_any_key() )
             da1->unload(err_id);
     }
 
@@ -342,7 +336,7 @@ namespace leaf_detail
     {
         if( slot<dynamic_allocator> * sl = tls::read_ptr<slot<dynamic_allocator>>() )
         {
-            if( dynamic_allocator * c = sl->has_value() )
+            if( dynamic_allocator * c = sl->has_value_any_key() )
                 c->dynamic_load(err_id, std::forward<E>(e));
             else
                 sl->load(err_id).dynamic_load(err_id, std::forward<E>(e));
@@ -405,7 +399,7 @@ namespace leaf_detail
 }
 
 template <>
-struct show_in_diagnostics<leaf_detail::dynamic_allocator>: std::false_type
+struct show_in_diagnostics<detail::dynamic_allocator>: std::false_type
 {
 };
 
@@ -413,7 +407,7 @@ struct show_in_diagnostics<leaf_detail::dynamic_allocator>: std::false_type
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <class E>
     inline void slot<E>::unload( int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE)
@@ -495,7 +489,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <class T, int Arity = function_traits<T>::arity>
     struct load_item
@@ -533,7 +527,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     struct BOOST_LEAF_SYMBOL_VISIBLE tls_tag_id_factory_current_id;
 
@@ -584,7 +578,7 @@ namespace leaf_detail
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
-namespace leaf_detail
+namespace detail
 {
     class leaf_category final: public std::error_category
     {
@@ -629,7 +623,7 @@ namespace leaf_detail
 
 inline bool is_error_id( std::error_code const & ec ) noexcept
 {
-    bool res = (&ec.category() == &leaf_detail::get_error_category<>::cat);
+    bool res = (&ec.category() == &detail::get_error_category<>::cat);
     BOOST_LEAF_ASSERT(!res || !ec.value() || ((ec.value()&3)==1));
     return res;
 }
@@ -638,14 +632,14 @@ inline bool is_error_id( std::error_code const & ec ) noexcept
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     BOOST_LEAF_CONSTEXPR error_id make_error_id(int) noexcept;
 }
 
 class BOOST_LEAF_SYMBOL_VISIBLE error_id
 {
-    friend error_id BOOST_LEAF_CONSTEXPR leaf_detail::make_error_id(int) noexcept;
+    friend error_id BOOST_LEAF_CONSTEXPR detail::make_error_id(int) noexcept;
 
     int value_;
 
@@ -664,20 +658,20 @@ public:
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     error_id( std::error_code const & ec ) noexcept:
-        value_(leaf_detail::import_error_code(ec))
+        value_(detail::import_error_code(ec))
     {
         BOOST_LEAF_ASSERT(!value_ || ((value_&3)==1));
     }
 
     template <class Enum>
     error_id( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept:
-        value_(leaf_detail::import_error_code(e))
+        value_(detail::import_error_code(e))
     {
     }
 
     operator std::error_code() const noexcept
     {
-        return std::error_code(value_, leaf_detail::get_error_category<>::cat);
+        return std::error_code(value_, detail::get_error_category<>::cat);
     }
 #endif
 
@@ -691,7 +685,7 @@ public:
     {
         if (int err_id = value())
         {
-            int const unused[] = { 42, leaf_detail::load_item<Item>::load_(err_id, std::forward<Item>(item)) };
+            int const unused[] = { 42, detail::load_item<Item>::load_(err_id, std::forward<Item>(item)) };
             (void)unused;
         }
         return *this;
@@ -702,7 +696,7 @@ public:
     {
         if( int err_id = value() )
         {
-            int const unused[] = { 42, leaf_detail::load_item<Item>::load_(err_id, std::forward<Item>(item))... };
+            int const unused[] = { 42, detail::load_item<Item>::load_(err_id, std::forward<Item>(item))... };
             (void) unused;
         }
         return *this;
@@ -750,7 +744,7 @@ public:
     }
 };
 
-namespace leaf_detail
+namespace detail
 {
     BOOST_LEAF_CONSTEXPR inline error_id make_error_id( int err_id ) noexcept
     {
@@ -761,57 +755,19 @@ namespace leaf_detail
 
 inline error_id new_error() noexcept
 {
-    return leaf_detail::make_error_id(leaf_detail::new_id());
+    return detail::make_error_id(detail::new_id());
 }
 
 template <class... Item>
 inline error_id new_error( Item && ... item ) noexcept
 {
-    return leaf_detail::make_error_id(leaf_detail::new_id()).load(std::forward<Item>(item)...);
+    return detail::make_error_id(detail::new_id()).load(std::forward<Item>(item)...);
 }
 
 inline error_id current_error() noexcept
 {
-    return leaf_detail::make_error_id(leaf_detail::current_id());
+    return detail::make_error_id(detail::current_id());
 }
-
-////////////////////////////////////////////
-
-class polymorphic_context
-{
-};
-
-////////////////////////////////////////////
-
-template <class Ctx>
-class context_activator
-{
-    context_activator( context_activator const & ) = delete;
-    context_activator & operator=( context_activator const & ) = delete;
-
-    Ctx * ctx_;
-
-public:
-
-    explicit BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE context_activator(Ctx & ctx) noexcept:
-        ctx_(ctx.is_active() ? nullptr : &ctx)
-    {
-        if( ctx_ )
-            ctx_->activate();
-    }
-
-    BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE context_activator( context_activator && x ) noexcept:
-        ctx_(x.ctx_)
-    {
-        x.ctx_ = nullptr;
-    }
-
-    BOOST_LEAF_ALWAYS_INLINE ~context_activator() noexcept
-    {
-        if( ctx_ && ctx_->is_active() )
-            ctx_->deactivate();
-    }
-};
 
 ////////////////////////////////////////////
 

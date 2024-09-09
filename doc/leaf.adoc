@@ -2865,7 +2865,7 @@ namespace boost { namespace leaf {
 leaf::context<E1, E2, E3> ctx;
 
 {
-  auto active_context = activate_context(ctx); <1>
+  auto active_context = ctx.raii_activate(); <1>
 } <2>
 ----
 <1> Activate `ctx`.
@@ -5805,7 +5805,7 @@ struct __attribute__ ((visibility ("default"))) my_error_info
 };
 ----
 
-This works as expected except on Windows, where thread-local storage is not shared between the individual binary modules. For this reason, to transport error objects across DLL boundaries, it is required that they're captured in a <<polymorphic_context>>, just like when <<tutorial-async>>.
+This works as expected except on Windows, where thread-local storage is not shared between the individual binary modules. For this reason, to transport error objects across DLL boundaries.
 
 TIP: When using dynamic linking, it is always best to define module interfaces in terms of C (and implement them in {CPP} if appropriate).
 

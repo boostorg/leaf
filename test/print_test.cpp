@@ -1,4 +1,4 @@
-// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -72,8 +72,9 @@ struct c4
 template <int Line, class T>
 std::string print(T const & x, char const * prefix, char const * delimiter)
 {
-    using namespace leaf::leaf_detail;
+    using namespace leaf::detail;
     std::ostringstream s;
+    diagnostic<T>::print(s, prefix, delimiter, x);
     diagnostic<T>::print(s, prefix, delimiter, x);
     std::string q = s.str();
     std::cout << "[LINE " << Line << "] " << q << '\n';
@@ -88,39 +89,28 @@ struct my_exception: std::exception
 int main()
 {
     {
-        std::string out = print<__LINE__>(c0{}, "Title", " --> ");
-        BOOST_TEST_NE(out.find("Title --> "), out.npos);
-        BOOST_TEST_NE(out.find("c0"), out.npos);
-        BOOST_TEST_NE(out.find(": info"), out.npos);
+        std::string out = print<__LINE__>(c0{}, "Title " , ", ");
+        BOOST_TEST_EQ(out, "Title c0: info, c0: info");
     }
     {
-        std::string out = print<__LINE__>(c1{42}, "Title", " --> ");
-        BOOST_TEST_NE(out.find("Title --> "), out.npos);
-        BOOST_TEST_NE(out.find("c1"), out.npos);
-        BOOST_TEST_NE(out.find(": value 42"), out.npos);
+        std::string out = print<__LINE__>(c1{42}, "Title ", ", ");
+        BOOST_TEST_EQ(out, "Title c1: value 42, c1: value 42");
     }
     {
-        std::string out = print<__LINE__>(c2{42}, "Title", " --> ");
-        BOOST_TEST_NE(out.find("Title --> "), out.npos);
-        BOOST_TEST_NE(out.find("c2"), out.npos);
-        BOOST_TEST_NE(out.find(": value 42"), out.npos);
+        std::string out = print<__LINE__>(c2{42}, "Title ", ", ");
+        BOOST_TEST_EQ(out, "Title c2: value 42, c2: value 42");
     }
     {
-        std::string out = print<__LINE__>(c3{42}, "Title", " --> ");
-        BOOST_TEST_NE(out.find("Title --> "), out.npos);
-        BOOST_TEST_NE(out.find("c3"), out.npos);
-        BOOST_TEST_NE(out.find(": 42"), out.npos);
+        std::string out = print<__LINE__>(c3{42}, "Title ", ", ");
+        BOOST_TEST_EQ(out, "Title c3: 42, c3: 42");
     }
     {
-        std::string out = print<__LINE__>(c4{}, "Title", " --> ");
-        BOOST_TEST_NE(out.find("Title --> "), out.npos);
-        BOOST_TEST_NE(out.find("c4"), out.npos);
-        BOOST_TEST_EQ(out.find(": "), out.npos);
+        std::string out = print<__LINE__>(c4{}, "Title ", ", ");
+        BOOST_TEST_EQ(out, "Title c4, c4");
     }
     {
-        std::string out = print<__LINE__>(my_exception{}, "Title", " --> ");
-        BOOST_TEST_NE(out.find("Title --> "), out.npos);
-        BOOST_TEST_NE(out.find("my_exception, std::exception::what(): my_exception what"), out.npos);
+        std::string out = print<__LINE__>(my_exception{}, "Title ", ", ");
+        BOOST_TEST_EQ(out, "Title my_exception: \"my_exception what\", my_exception: \"my_exception what\"");
     }
     return boost::report_errors();
 }

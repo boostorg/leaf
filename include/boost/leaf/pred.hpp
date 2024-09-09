@@ -1,7 +1,7 @@
 #ifndef BOOST_LEAF_PRED_HPP_INCLUDED
 #define BOOST_LEAF_PRED_HPP_INCLUDED
 
-// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -12,13 +12,13 @@
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
 #else
-#   define BOOST_LEAF_MATCH_ARGS(et,v1,v) typename leaf_detail::et::type v1, typename leaf_detail::et::type... v
+#   define BOOST_LEAF_MATCH_ARGS(et,v1,v) typename detail::et::type v1, typename detail::et::type... v
 #endif
 #define BOOST_LEAF_ESC(...) __VA_ARGS__
 
 namespace boost { namespace leaf {
 
-namespace leaf_detail
+namespace detail
 {
 #if __cplusplus >= 201703L
     template <class MatchType, class T>
@@ -76,7 +76,7 @@ BOOST_LEAF_CONSTEXPR inline bool category( std::error_code const & ec )
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <class T>
     struct match_enum_type
@@ -108,7 +108,7 @@ struct match
     template <class T>
     BOOST_LEAF_CONSTEXPR static bool evaluate(T && x)
     {
-        return leaf_detail::cmp_value_pack(std::forward<T>(x), V1, V...);
+        return detail::cmp_value_pack(std::forward<T>(x), V1, V...);
     }
 };
 
@@ -121,7 +121,7 @@ struct match<condition<Enum, Enum>, V1, V...>
 
     BOOST_LEAF_CONSTEXPR static bool evaluate(std::error_code const & e) noexcept
     {
-        return leaf_detail::cmp_value_pack(e, V1, V...);
+        return detail::cmp_value_pack(e, V1, V...);
     }
 };
 #endif
@@ -133,7 +133,7 @@ struct is_predicate<match<E, V1, V...>>: std::true_type
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <class E>
     struct match_value_enum_type
@@ -164,7 +164,7 @@ struct match_value
 
     BOOST_LEAF_CONSTEXPR static bool evaluate(E const & e) noexcept
     {
-        return leaf_detail::cmp_value_pack(e.value, V1, V...);
+        return detail::cmp_value_pack(e.value, V1, V...);
     }
 };
 
@@ -177,7 +177,7 @@ struct match_value<condition<E, Enum>, V1, V...>
 
     BOOST_LEAF_CONSTEXPR static bool evaluate(E const & e)
     {
-        return leaf_detail::cmp_value_pack(e.value, V1, V...);
+        return detail::cmp_value_pack(e.value, V1, V...);
     }
 };
 #endif
@@ -201,7 +201,7 @@ struct match_member<P, V1, V...>
 
     BOOST_LEAF_CONSTEXPR static bool evaluate(E const & e) noexcept
     {
-        return leaf_detail::cmp_value_pack(e.*P, V1, V...);
+        return detail::cmp_value_pack(e.*P, V1, V...);
     }
 };
 
@@ -236,7 +236,7 @@ struct is_predicate<if_not<P>>: std::true_type
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
-namespace leaf_detail
+namespace detail
 {
     template <class Ex>
     BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const * ) noexcept
@@ -264,7 +264,7 @@ struct catch_
 
     BOOST_LEAF_CONSTEXPR static bool evaluate(std::exception const & ex) noexcept
     {
-        return leaf_detail::check_exception_pack(ex, static_cast<Ex const *>(nullptr)...);
+        return detail::check_exception_pack(ex, static_cast<Ex const *>(nullptr)...);
     }
 };
 

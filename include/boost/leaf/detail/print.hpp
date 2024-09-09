@@ -1,7 +1,7 @@
 #ifndef BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
 
-// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -21,7 +21,7 @@ struct show_in_diagnostics: std::true_type
 {
 };
 
-namespace leaf_detail
+namespace detail
 {
     template <class T, class E = void>
     struct is_printable: std::false_type
@@ -47,19 +47,37 @@ namespace leaf_detail
 
     ////////////////////////////////////////
 
-    template <class T, class PrintableInfo, class CharT, class Traits>
-    bool print_impl(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, char const * mid, PrintableInfo const & x)
+    template <class T, class CharT, class Traits>
+    void print_name(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter)
     {
         static_assert(show_in_diagnostics<T>::value, "show_in_diagnostics violation");
         BOOST_LEAF_ASSERT(delimiter);
-        if( prefix )
-        {
-            os << prefix;
-            prefix = nullptr;
-        }
-        os << delimiter << parse_name<T>();
+        char const * p = prefix;
+        prefix = nullptr;
+        os << (p ? p : delimiter) << parse<T>();
+    }
+
+    template <class T, class PrintableInfo, class CharT, class Traits>
+    bool print_impl(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, char const * mid, PrintableInfo const & x)
+    {
+        print_name<T>(os, prefix, delimiter);
         if( mid )
             os << mid << x;
+        return true;
+    }
+
+    template <class T, class PrintableInfo, class CharT, class Traits>
+    bool print_impl(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, char const * mid, PrintableInfo const * x)
+    {
+        print_name<T>(os, prefix, delimiter);
+        if( mid )
+        {
+            os << mid;
+            if( x )
+                os << x;
+            else
+                os << "<nullptr>";
+        }
         return true;
     }
 
@@ -110,7 +128,12 @@ namespace leaf_detail
         template <class CharT, class Traits>
         static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Exception const & ex)
         {
-            return print_impl<Exception>(os, prefix, delimiter, ", std::exception::what(): ", static_cast<std::exception const &>(ex).what());
+            if( print_impl<Exception>(os, prefix, delimiter, ": \"", static_cast<std::exception const &>(ex).what()) )
+            {
+                os << '"';
+                return true;
+            }
+            return false;
         }
     };
 

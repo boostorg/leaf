@@ -1,7 +1,7 @@
 #ifndef BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED
 
-// Copyright 2018-2023 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
 // Copyright (c) 2022 Khalil Estell
 
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -53,7 +53,7 @@ static_assert((BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX) >= 0,
 
 namespace boost { namespace leaf {
 
-namespace leaf_detail
+namespace detail
 {
     using atomic_unsigned_int = std::atomic<unsigned int>;
 }
