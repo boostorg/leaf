@@ -20,7 +20,7 @@ namespace boost
 
 namespace boost { namespace leaf {
 
-namespace leaf_detail
+namespace detail
 {
     template <class T>
     [[noreturn]] void throw_exception_impl( T && e )
@@ -35,7 +35,7 @@ namespace leaf_detail
 
 namespace boost { namespace leaf {
 
-namespace leaf_detail
+namespace detail
 {
     template <class T>
     [[noreturn]] void throw_exception_impl( T && e )
@@ -50,11 +50,11 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-#define BOOST_LEAF_THROW_EXCEPTION ::boost::leaf::leaf_detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::leaf_detail::make_exception
+#define BOOST_LEAF_THROW_EXCEPTION ::boost::leaf::detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::detail::make_exception
 
 namespace boost { namespace leaf {
 
-namespace leaf_detail
+namespace detail
 {
     struct throw_with_loc
     {
@@ -66,14 +66,14 @@ namespace leaf_detail
         [[noreturn]] friend void operator+( throw_with_loc loc, Ex && ex )
         {
             ex.load_source_location_(loc.file, loc.line, loc.fn);
-            ::boost::leaf::leaf_detail::throw_exception_impl(std::move(ex));
+            ::boost::leaf::detail::throw_exception_impl(std::move(ex));
         }
     };
 }
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     inline void enforce_std_exception( std::exception const & ) noexcept { }
 
@@ -87,7 +87,7 @@ namespace leaf_detail
 
         bool is_current_exception() const noexcept
         {
-            return tls::read_uint<leaf_detail::tls_tag_id_factory_current_id>() == unsigned(error_id::value());
+            return tls::read_uint<detail::tls_tag_id_factory_current_id>() == unsigned(error_id::value());
         }
 
         error_id get_error_id() const noexcept final override
@@ -99,7 +99,7 @@ namespace leaf_detail
 #if BOOST_LEAF_CFG_DIAGNOSTICS && !defined(BOOST_LEAF_NO_EXCEPTIONS)
         void print_type_name(std::ostream & os) const final override
         {
-            leaf_detail::demangle_and_print(os, typeid(Ex).name());
+            detail::demangle_and_print(os, typeid(Ex).name());
         }
 #endif
 
@@ -149,7 +149,7 @@ namespace leaf_detail
         ~exception() noexcept
         {
             if( clear_current_error_ && is_current_exception() )
-                tls::write_uint<leaf_detail::tls_tag_id_factory_current_id>(0);
+                tls::write_uint<detail::tls_tag_id_factory_current_id>(0);
         }
     };
 
@@ -218,8 +218,8 @@ template <class... E>
     // Warning: setting a breakpoint here will not intercept exceptions thrown
     // via BOOST_LEAF_THROW_EXCEPTION or originating in the few other throw
     // points elsewhere in LEAF. To intercept all of those exceptions as well,
-    // set a breakpoint inside boost::leaf::leaf_detail::throw_exception_impl.
-    leaf_detail::throw_exception_impl(leaf_detail::make_exception(std::forward<E>(e)...));
+    // set a breakpoint inside boost::leaf::detail::throw_exception_impl.
+    detail::throw_exception_impl(detail::make_exception(std::forward<E>(e)...));
 }
 
 ////////////////////////////////////////
@@ -229,7 +229,7 @@ template <class... E>
 template <class T>
 class BOOST_LEAF_SYMBOL_VISIBLE result;
 
-namespace leaf_detail
+namespace detail
 {
     inline error_id catch_exceptions_helper( std::exception const &, leaf_detail_mp11::mp_list<> )
     {
@@ -263,7 +263,7 @@ namespace leaf_detail
 
 template <class... Ex, class F>
 inline
-leaf_detail::deduce_exception_to_result_return_type<leaf_detail::fn_return_type<F>>
+detail::deduce_exception_to_result_return_type<detail::fn_return_type<F>>
 exception_to_result( F && f ) noexcept
 {
     try
@@ -272,7 +272,7 @@ exception_to_result( F && f ) noexcept
     }
     catch( std::exception const & ex )
     {
-        return leaf_detail::catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>());
+        return detail::catch_exceptions_helper(ex, leaf_detail_mp11::mp_list<Ex...>());
     }
     catch(...)
     {

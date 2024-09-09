@@ -204,29 +204,29 @@ int main()
     }
 
     {
-        int const id = leaf::leaf_detail::current_id();
+        int const id = leaf::detail::current_id();
         BOOST_TEST_EQ( 21, test<my_exception const &>( []
         {
             auto load = leaf::on_error(info{42});
             throw my_exception(42);
         } ) );
-        BOOST_TEST_NE(id, leaf::leaf_detail::current_id());
+        BOOST_TEST_NE(id, leaf::detail::current_id());
     }
 
     {
-        int const id = leaf::leaf_detail::current_id();
+        int const id = leaf::detail::current_id();
         BOOST_TEST_EQ( 21, test<my_exception &>( []
         {
             auto load = leaf::on_error(info{42});
             throw my_exception(42);
         } ) );
-        BOOST_TEST_NE(id, leaf::leaf_detail::current_id());
+        BOOST_TEST_NE(id, leaf::detail::current_id());
     }
 
     {
         BOOST_TEST_EQ( 23, test<my_exception const &>( []
         {
-            int const id = leaf::leaf_detail::current_id();
+            int const id = leaf::detail::current_id();
             try
             {
                 leaf::try_catch(
@@ -237,7 +237,7 @@ int main()
             }
             catch(...)
             {
-                BOOST_TEST_EQ(id, leaf::leaf_detail::current_id());
+                BOOST_TEST_EQ(id, leaf::detail::current_id());
                 throw;
             }
         } ) );
@@ -246,7 +246,7 @@ int main()
     {
         BOOST_TEST_EQ( 23, test<my_exception &>( []
         {
-            int const id = leaf::leaf_detail::current_id();
+            int const id = leaf::detail::current_id();
             try
             {
                 leaf::try_catch(
@@ -257,7 +257,7 @@ int main()
             }
             catch(...)
             {
-                BOOST_TEST_EQ(id, leaf::leaf_detail::current_id());
+                BOOST_TEST_EQ(id, leaf::detail::current_id());
                 throw;
             }
         } ) );

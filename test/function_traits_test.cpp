@@ -16,7 +16,7 @@ namespace leaf = boost::leaf;
 template <class F>
 void check_traits( F )
 {
-    using namespace leaf::leaf_detail;
+    using namespace leaf::detail;
     using leaf::leaf_detail_mp11::mp_list;
     static_assert(function_traits<F>::arity==4,"arity");
     static_assert(std::is_same<fn_return_type<F>,double>::value,"return_type");
@@ -44,6 +44,6 @@ int main()
         {
             return 42;
         } );
-    static_assert(leaf::leaf_detail::function_traits<int>::arity==-1, "int arity");
+    static_assert(leaf::detail::function_traits<int>::arity==-1, "int arity");
     return 0;
 }

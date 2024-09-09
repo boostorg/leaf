@@ -21,7 +21,7 @@ struct show_in_diagnostics: std::true_type
 {
 };
 
-namespace leaf_detail
+namespace detail
 {
     template <class T, class E = void>
     struct is_printable: std::false_type

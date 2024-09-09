@@ -12,7 +12,7 @@
 
 namespace boost { namespace leaf {
 
-namespace leaf_detail
+namespace detail
 {
     template <class T> struct remove_noexcept { using type = T; };
     template <class R, class... A>  struct remove_noexcept<R(*)(A...) noexcept> { using type = R(*)(A...); };

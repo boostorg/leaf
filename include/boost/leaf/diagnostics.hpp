@@ -27,7 +27,7 @@ protected:
     BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei, Tup const & tup ) noexcept:
         error_info(ei),
         tup_(&tup),
-        print_tuple_contents_(&leaf_detail::print_tuple_contents<Tup>)
+        print_tuple_contents_(&detail::print_tuple_contents<Tup>)
     {
     }
 
@@ -47,7 +47,7 @@ protected:
     }
 };
 
-namespace leaf_detail
+namespace detail
 {
     struct diagnostic_info_: diagnostic_info
     {
@@ -97,7 +97,7 @@ protected:
     }
 };
 
-namespace leaf_detail
+namespace detail
 {
     struct diagnostic_info_: diagnostic_info
     {
@@ -128,14 +128,14 @@ namespace leaf_detail
 
 class diagnostic_details: public diagnostic_info
 {
-    leaf_detail::dynamic_allocator const * const da_;
+    detail::dynamic_allocator const * const da_;
 
 protected:
 
     diagnostic_details( diagnostic_details const & ) noexcept = default;
 
     template <class Tup>
-    BOOST_LEAF_CONSTEXPR diagnostic_details( error_info const & ei, Tup const & tup, leaf_detail::dynamic_allocator const * da ) noexcept:
+    BOOST_LEAF_CONSTEXPR diagnostic_details( error_info const & ei, Tup const & tup, detail::dynamic_allocator const * da ) noexcept:
         diagnostic_info(ei, tup),
         da_(da)
     {
@@ -160,7 +160,7 @@ protected:
     }
 };
 
-namespace leaf_detail
+namespace detail
 {
     struct diagnostic_details_: diagnostic_details
     {
@@ -212,7 +212,7 @@ protected:
     }
 };
 
-namespace leaf_detail
+namespace detail
 {
     struct diagnostic_details_: diagnostic_details
     {
@@ -264,7 +264,7 @@ protected:
     }
 };
 
-namespace leaf_detail
+namespace detail
 {
     struct diagnostic_details_: diagnostic_details
     {

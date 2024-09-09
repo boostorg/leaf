@@ -53,7 +53,7 @@ static_assert((BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX) >= 0,
 
 namespace boost { namespace leaf {
 
-namespace leaf_detail
+namespace detail
 {
     using atomic_unsigned_int = std::atomic<unsigned int>;
 }

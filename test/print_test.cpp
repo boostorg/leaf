@@ -72,7 +72,7 @@ struct c4
 template <int Line, class T>
 std::string print(T const & x, char const * prefix, char const * delimiter)
 {
-    using namespace leaf::leaf_detail;
+    using namespace leaf::detail;
     std::ostringstream s;
     diagnostic<T>::print(s, prefix, delimiter, x);
     diagnostic<T>::print(s, prefix, delimiter, x);

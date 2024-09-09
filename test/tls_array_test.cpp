@@ -62,7 +62,7 @@ struct my_error_info
 {
 };
 
-// Mirroring boost::leaf::leaf_detail::optional<T>, to verify correctness of TLS pointers
+// Mirroring boost::leaf::detail::optional<T>, to verify correctness of TLS pointers
 template <class T>
 struct optional
 {

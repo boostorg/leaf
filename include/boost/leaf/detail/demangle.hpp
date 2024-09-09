@@ -46,7 +46,7 @@
 
 namespace boost { namespace leaf {
 
-namespace leaf_detail
+namespace detail
 {
     // The functions below are C++11 constexpr, but we use BOOST_LEAF_ALWAYS_INLINE to control object file
     // section count / template bleat. Evidently this makes a difference on gcc / windows at least.
@@ -145,7 +145,7 @@ namespace n
         // Unrecognized __PRETTY_FUNCTION__/__FUNCSIG__ formats will result in compiler diagnostics.
         // In that case, please file an issue on https://github.com/boostorg/leaf.
 
-#define BOOST_LEAF_P(P) (sizeof(char[1 + leaf_detail::check_prefix(BOOST_LEAF_PRETTY_FUNCTION, P)]) - 1)
+#define BOOST_LEAF_P(P) (sizeof(char[1 + detail::check_prefix(BOOST_LEAF_PRETTY_FUNCTION, P)]) - 1)
         // clang style:
         int const p01 = BOOST_LEAF_P("r boost::leaf::n::p() [T = ");
         // old clang style:
@@ -170,7 +170,7 @@ namespace n
         int const p15 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<");
 #undef BOOST_LEAF_P
 
-#define BOOST_LEAF_S(S) (sizeof(char[1 + leaf_detail::check_suffix(BOOST_LEAF_PRETTY_FUNCTION, S)]) - 1)
+#define BOOST_LEAF_S(S) (sizeof(char[1 + detail::check_suffix(BOOST_LEAF_PRETTY_FUNCTION, S)]) - 1)
         // clang/gcc style:
         int const s01 = BOOST_LEAF_S("]");
         // msvc style:
@@ -213,7 +213,7 @@ parsed parse()
 
 namespace boost { namespace leaf {
 
-namespace leaf_detail
+namespace detail
 {
     template <class CharT, class Traits>
     std::ostream & demangle_and_print(std::basic_ostream<CharT, Traits> & os, char const * mangled_name)

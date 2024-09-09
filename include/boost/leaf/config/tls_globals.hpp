@@ -15,7 +15,7 @@
 
 namespace boost { namespace leaf {
 
-namespace leaf_detail
+namespace detail
 {
     using atomic_unsigned_int = unsigned int;
 }

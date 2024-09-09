@@ -13,7 +13,7 @@
 
 namespace boost { namespace leaf {
 
-namespace leaf_detail
+namespace detail
 {
     template <class T>
     class optional

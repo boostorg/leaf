@@ -16,7 +16,7 @@
 
 namespace boost { namespace leaf {
 
-namespace leaf_detail { class dynamic_allocator; }
+namespace detail { class dynamic_allocator; }
 
 ////////////////////////////////////////
 
@@ -31,7 +31,7 @@ class bad_result:
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <class T, bool Printable = is_printable<T>::value>
     struct result_value_printer;
@@ -65,7 +65,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <class T>
     struct stored
@@ -133,7 +133,7 @@ namespace leaf_detail
         }
 
 #if BOOST_LEAF_CFG_CAPTURE
-        explicit result_discriminant( int err_id, leaf_detail::capture_list const & ) noexcept:
+        explicit result_discriminant( int err_id, detail::capture_list const & ) noexcept:
             state_((err_id&~3) | 2)
         {
             BOOST_LEAF_ASSERT((err_id&3) == 1);
@@ -170,20 +170,20 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
     template <class U>
     friend class result;
 
-    friend class leaf_detail::dynamic_allocator;
+    friend class detail::dynamic_allocator;
 
 #if BOOST_LEAF_CFG_CAPTURE
-    using capture_list = leaf_detail::capture_list;
+    using capture_list = detail::capture_list;
 #endif
 
-    using result_discriminant = leaf_detail::result_discriminant;
-    using stored_type = typename leaf_detail::stored<T>::type;
-    using value_no_ref = typename leaf_detail::stored<T>::value_no_ref;
-    using value_no_ref_const = typename leaf_detail::stored<T>::value_no_ref_const;
-    using value_ref = typename leaf_detail::stored<T>::value_ref;
-    using value_cref = typename leaf_detail::stored<T>::value_cref;
-    using value_rv_ref = typename leaf_detail::stored<T>::value_rv_ref;
-    using value_rv_cref = typename leaf_detail::stored<T>::value_rv_cref;
+    using result_discriminant = detail::result_discriminant;
+    using stored_type = typename detail::stored<T>::type;
+    using value_no_ref = typename detail::stored<T>::value_no_ref;
+    using value_no_ref_const = typename detail::stored<T>::value_no_ref_const;
+    using value_ref = typename detail::stored<T>::value_ref;
+    using value_cref = typename detail::stored<T>::value_cref;
+    using value_rv_ref = typename detail::stored<T>::value_rv_ref;
+    using value_rv_cref = typename detail::stored<T>::value_rv_cref;
 
     union
     {
@@ -298,7 +298,7 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
 protected:
 
 #if BOOST_LEAF_CFG_CAPTURE
-    result( int err_id, leaf_detail::capture_list && cap ) noexcept:
+    result( int err_id, detail::capture_list && cap ) noexcept:
         cap_(std::move(cap)),
         what_(err_id, cap)
     {
@@ -519,12 +519,12 @@ public:
 
     value_no_ref_const * operator->() const noexcept
     {
-        return has_value() ? leaf_detail::stored<T>::cptr(stored_) : nullptr;
+        return has_value() ? detail::stored<T>::cptr(stored_) : nullptr;
     }
 
     value_no_ref * operator->() noexcept
     {
-        return has_value() ? leaf_detail::stored<T>::ptr(stored_) : nullptr;
+        return has_value() ? detail::stored<T>::ptr(stored_) : nullptr;
     }
 
 #ifdef BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
@@ -598,7 +598,7 @@ public:
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, result const & r )
     {
         if( r.what_.kind() == result_discriminant::val )
-            leaf_detail::print_result_value(os, r.value());
+            detail::print_result_value(os, r.value());
         else
             r.print_error_result(os);
         return os;
@@ -607,26 +607,26 @@ public:
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     struct void_ { };
 }
 
 template <>
 class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result<void>:
-    result<leaf_detail::void_>
+    result<detail::void_>
 {
     template <class U>
     friend class result;
 
-    friend class leaf_detail::dynamic_allocator;
+    friend class detail::dynamic_allocator;
 
-    using result_discriminant = leaf_detail::result_discriminant;
-    using void_ = leaf_detail::void_;
+    using result_discriminant = detail::result_discriminant;
+    using void_ = detail::void_;
     using base = result<void_>;
 
 #if BOOST_LEAF_CFG_CAPTURE
-    result( int err_id, leaf_detail::capture_list && cap ) noexcept:
+    result( int err_id, detail::capture_list && cap ) noexcept:
         base(err_id, std::move(cap))
     {
     }

@@ -139,7 +139,7 @@ void not_called_on_purpose()
 
     test<info<1>, info<2>, leaf::e_source_location>( expd([]( info<1>, info<2>, leaf::diagnostic_info const & ){ }, []( info<1>, info<2> ){ }) );
 #if BOOST_LEAF_CFG_DIAGNOSTICS && BOOST_LEAF_CFG_CAPTURE
-    test<info<1>, info<2>, leaf::e_source_location, leaf::leaf_detail::dynamic_allocator>( expd([]( info<1>, info<2>, leaf::diagnostic_details const & ){ }, []( info<1>, info<2> ){ }) );
+    test<info<1>, info<2>, leaf::e_source_location, leaf::detail::dynamic_allocator>( expd([]( info<1>, info<2>, leaf::diagnostic_details const & ){ }, []( info<1>, info<2> ){ }) );
 #else
     test<info<1>, info<2>, leaf::e_source_location>( expd([]( info<1>, info<2>, leaf::diagnostic_details const & ){ }, []( info<1>, info<2> ){ }) );
 #endif

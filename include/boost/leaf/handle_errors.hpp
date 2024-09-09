@@ -19,11 +19,11 @@ class BOOST_LEAF_SYMBOL_VISIBLE result;
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
-namespace leaf_detail
+namespace detail
 {
     inline error_id unpack_error_id(std::exception const & ex) noexcept
     {
-        if( leaf_detail::exception_base const * eb = dynamic_cast<leaf_detail::exception_base const *>(&ex) )
+        if( detail::exception_base const * eb = dynamic_cast<detail::exception_base const *>(&ex) )
             return eb->get_error_id();
         if( error_id const * err_id = dynamic_cast<error_id const *>(&ex) )
             return *err_id;
@@ -91,11 +91,11 @@ public:
         {
             os << "\nCaught:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
 #if BOOST_LEAF_CFG_DIAGNOSTICS
-            if( auto eb = dynamic_cast<leaf_detail::exception_base const *>(ex_) )
+            if( auto eb = dynamic_cast<detail::exception_base const *>(ex_) )
                 eb->print_type_name(os);
             else
 #endif
-                leaf_detail::demangle_and_print(os, typeid(*ex_).name());
+                detail::demangle_and_print(os, typeid(*ex_).name());
             os << ": \"" << ex_->what() << '"';
         }
 #endif
@@ -109,7 +109,7 @@ public:
     }
 };
 
-namespace leaf_detail
+namespace detail
 {
     template <>
     struct handler_argument_traits<error_info const &>: handler_argument_always_available<>
@@ -124,7 +124,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <class T, class... List>
     struct type_index;
@@ -297,7 +297,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <class A>
     template <class Tup>
@@ -352,7 +352,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <class>
     struct handler_matches_any_error: std::false_type
@@ -373,7 +373,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <class Tup, class... A>
     BOOST_LEAF_CONSTEXPR inline bool check_handler_( Tup & tup, error_info const & ei, leaf_detail_mp11::mp_list<A...> ) noexcept
@@ -485,7 +485,7 @@ context<E...>::
 handle_error( error_id id, H && ... h ) const
 {
     BOOST_LEAF_ASSERT(!is_active());
-    return leaf_detail::handle_error_<R>(tup(), error_info(id, nullptr, this->get<e_source_location>(id)), std::forward<H>(h)...);
+    return detail::handle_error_<R>(tup(), error_info(id, nullptr, this->get<e_source_location>(id)), std::forward<H>(h)...);
 }
 
 template <class... E>
@@ -496,12 +496,12 @@ context<E...>::
 handle_error( error_id id, H && ... h )
 {
     BOOST_LEAF_ASSERT(!is_active());
-    return leaf_detail::handle_error_<R>(tup(), error_info(id, nullptr, this->get<e_source_location>(id)), std::forward<H>(h)...);
+    return detail::handle_error_<R>(tup(), error_info(id, nullptr, this->get<e_source_location>(id)), std::forward<H>(h)...);
 }
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <class T>
     void unload_result( result<T> * r )
@@ -530,7 +530,7 @@ try_handle_all( TryBlock && try_block, H && ... h ) noexcept
         return std::move(r).value();
     else
     {
-        leaf_detail::unload_result(&r);
+        detail::unload_result(&r);
         error_id id = r.error();
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
@@ -550,7 +550,7 @@ try_handle_some( TryBlock && try_block, H && ... h ) noexcept
         return r;
     else
     {
-        leaf_detail::unload_result(&r);
+        detail::unload_result(&r);
         error_id id = r.error();
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
@@ -573,13 +573,13 @@ try_catch( TryBlock && try_block, H && ... ) noexcept
 
 #else
 
-namespace leaf_detail
+namespace detail
 {
     template <class Ctx, class TryBlock, class... H>
     decltype(std::declval<TryBlock>()())
     try_catch_( Ctx & ctx, TryBlock && try_block, H && ... h )
     {
-        using namespace leaf_detail;
+        using namespace detail;
         BOOST_LEAF_ASSERT(ctx.is_active());
         using R = decltype(std::declval<TryBlock>()());
         try
@@ -591,7 +591,7 @@ namespace leaf_detail
         catch( std::exception & ex )
         {
             ctx.deactivate();
-            error_id id = leaf_detail::unpack_error_id(ex);
+            error_id id = detail::unpack_error_id(ex);
             return handle_error_<R>(ctx.tup(), error_info(id, &ex, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
                 [&]() -> R
                 {
@@ -621,12 +621,12 @@ try_handle_all( TryBlock && try_block, H && ... h )
     static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to try_handle_all must be registered with leaf::is_result_type");
     context_type_from_handlers<H...> ctx;
     auto active_context = activate_context(ctx);
-    if( auto r = leaf_detail::try_catch_(ctx, std::forward<TryBlock>(try_block), std::forward<H>(h)...) )
+    if( auto r = detail::try_catch_(ctx, std::forward<TryBlock>(try_block), std::forward<H>(h)...) )
         return std::move(r).value();
     else
     {
         BOOST_LEAF_ASSERT(ctx.is_active());
-        leaf_detail::unload_result(&r);
+        detail::unload_result(&r);
         error_id id = r.error();
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
@@ -642,11 +642,11 @@ try_handle_some( TryBlock && try_block, H && ... h )
     static_assert(is_result_type<decltype(std::declval<TryBlock>()())>::value, "The return type of the try_block passed to try_handle_some must be registered with leaf::is_result_type");
     context_type_from_handlers<H...> ctx;
     auto active_context = activate_context(ctx);
-    if( auto r = leaf_detail::try_catch_(ctx, std::forward<TryBlock>(try_block), std::forward<H>(h)...) )
+    if( auto r = detail::try_catch_(ctx, std::forward<TryBlock>(try_block), std::forward<H>(h)...) )
         return r;
     else if( ctx.is_active() )
     {
-        leaf_detail::unload_result(&r);
+        detail::unload_result(&r);
         error_id id = r.error();
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
@@ -681,8 +681,8 @@ try_catch( TryBlock && try_block, H && ... h )
     catch( std::exception & ex )
     {
         ctx.deactivate();
-        error_id id = leaf_detail::unpack_error_id(ex);
-        return leaf_detail::handle_error_<R>(ctx.tup(), error_info(id, &ex, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
+        error_id id = detail::unpack_error_id(ex);
+        return detail::handle_error_<R>(ctx.tup(), error_info(id, &ex, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
             [&]() -> R
             {
                 ctx.unload(id);
@@ -693,7 +693,7 @@ try_catch( TryBlock && try_block, H && ... h )
     {
         ctx.deactivate();
         error_id id = current_error();
-        return leaf_detail::handle_error_<R>(ctx.tup(), error_info(id, nullptr, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
+        return detail::handle_error_<R>(ctx.tup(), error_info(id, nullptr, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
             [&]() -> R
             {
                 ctx.unload(id);
@@ -706,7 +706,7 @@ try_catch( TryBlock && try_block, H && ... h )
 
 #if BOOST_LEAF_CFG_CAPTURE
 
-namespace leaf_detail
+namespace detail
 {
     template <class LeafResult>
     struct try_capture_all_dispatch_non_void
@@ -719,7 +719,7 @@ namespace leaf_detail
         leaf_result
         try_capture_all_( TryBlock && try_block ) noexcept
         {
-            leaf_detail::slot<leaf_detail::dynamic_allocator> sl;
+            detail::slot<detail::dynamic_allocator> sl;
             sl.activate();
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             try
@@ -780,7 +780,7 @@ namespace leaf_detail
         leaf_result
         try_capture_all_( TryBlock && try_block ) noexcept
         {
-            leaf_detail::slot<leaf_detail::dynamic_allocator> sl;
+            detail::slot<detail::dynamic_allocator> sl;
             sl.activate();
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             try
@@ -809,10 +809,10 @@ namespace leaf_detail
 
 template <class TryBlock>
 inline
-typename leaf_detail::try_capture_all_dispatch<decltype(std::declval<TryBlock>()())>::leaf_result
+typename detail::try_capture_all_dispatch<decltype(std::declval<TryBlock>()())>::leaf_result
 try_capture_all( TryBlock && try_block ) noexcept
 {
-    return leaf_detail::try_capture_all_dispatch<decltype(std::declval<TryBlock>()())>::try_capture_all_(std::forward<TryBlock>(try_block));
+    return detail::try_capture_all_dispatch<decltype(std::declval<TryBlock>()())>::try_capture_all_(std::forward<TryBlock>(try_block));
 }
 #endif
 
@@ -826,7 +826,7 @@ namespace boost { namespace exception_detail { template <class ErrorInfo> struct
 
 namespace boost { namespace leaf {
 
-namespace leaf_detail
+namespace detail
 {
     template <class T>
     struct match_enum_type;

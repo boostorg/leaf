@@ -24,7 +24,7 @@ struct is_predicate: std::false_type
 {
 };
 
-namespace leaf_detail
+namespace detail
 {
     template <class T>
     struct is_exception: std::is_base_of<std::exception, typename std::decay<T>::type>
@@ -135,7 +135,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <class T>
     struct get_dispatch
@@ -176,7 +176,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <int I, class Tup>
     struct tuple_for_each
@@ -232,7 +232,7 @@ namespace leaf_detail
 
 ////////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <class T> struct does_not_participate_in_context_deduction: std::is_abstract<T> { };
     template <> struct does_not_participate_in_context_deduction<error_id>: std::true_type { };
@@ -273,7 +273,7 @@ class context
     context( context const & ) = delete;
     context & operator=( context const & ) = delete;
 
-    using Tup = leaf_detail::deduce_e_tuple<E...>;
+    using Tup = detail::deduce_e_tuple<E...>;
     Tup tup_;
     bool is_active_;
 
@@ -336,7 +336,7 @@ public:
 
     BOOST_LEAF_CONSTEXPR void activate() noexcept
     {
-        using namespace leaf_detail;
+        using namespace detail;
         BOOST_LEAF_ASSERT(!is_active());
         tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
@@ -347,7 +347,7 @@ public:
 
     BOOST_LEAF_CONSTEXPR void deactivate() noexcept
     {
-        using namespace leaf_detail;
+        using namespace detail;
         BOOST_LEAF_ASSERT(is_active());
         is_active_ = false;
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
@@ -360,7 +360,7 @@ public:
     BOOST_LEAF_CONSTEXPR void unload(error_id id) noexcept
     {
         BOOST_LEAF_ASSERT(!is_active());
-        leaf_detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::unload(tup_, id.value());
+        detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::unload(tup_, id.value());
     }
 
     BOOST_LEAF_CONSTEXPR bool is_active() const noexcept
@@ -372,7 +372,7 @@ public:
     void print( std::basic_ostream<CharT, Traits> & os ) const
     {
         char const * prefix = "Contents:";
-        leaf_detail::print_tuple_contents<Tup>(os, &tup_, error_id(), prefix);
+        detail::print_tuple_contents<Tup>(os, &tup_, error_id(), prefix);
     }
 
     template <class CharT, class Traits>
@@ -385,7 +385,7 @@ public:
     template <class T>
     BOOST_LEAF_CONSTEXPR T const * get(error_id err) const noexcept
     {
-        leaf_detail::slot<T> const * e = leaf_detail::find_in_tuple<leaf_detail::slot<T>>(tup_);
+        detail::slot<T> const * e = detail::find_in_tuple<detail::slot<T>>(tup_);
         return e ? e->has_value(err.value()) : nullptr;
     }
 
@@ -403,7 +403,7 @@ public:
 
 ////////////////////////////////////////
 
-namespace leaf_detail
+namespace detail
 {
     template <class TypeList>
     struct deduce_context_impl;
@@ -443,7 +443,7 @@ namespace leaf_detail
 }
 
 template <class... H>
-using context_type_from_handlers = typename leaf_detail::context_type_from_handlers_impl<H...>::type;
+using context_type_from_handlers = typename detail::context_type_from_handlers_impl<H...>::type;
 
 ////////////////////////////////////////////
 

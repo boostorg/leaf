@@ -85,7 +85,7 @@ public:
 
 void run_tests()
 {
-    using leaf::leaf_detail::optional;
+    using leaf::detail::optional;
     {
         optional<my_info> x;
         BOOST_TEST(x.empty());
