@@ -229,7 +229,7 @@ jobs:
       - name: Run tests
         run: |
           cd ../boost-root
-          ./b2 -j3 libs/$LIBRARY/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} ${ADDRMD:+address-model=$ADDRMD} link=shared,static variant=debug,release,leaf_debug_capture0,leaf_release_capture0,leaf_debug_diag0,leaf_release_diag0,leaf_debug_embedded,leaf_release_embedded,leaf_debug_leaf_hpp,leaf_release_leaf_hpp
+          ./b2 -j3 libs/$LIBRARY/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} ${ADDRMD:+address-model=$ADDRMD} link=shared,static variant=debug,release,leaf_debug_capture0,leaf_release_capture0,leaf_debug_diag0,leaf_release_diag0,leaf_debug_embedded,leaf_release_embedded,leaf_debug_single_header,leaf_release_single_header
 
   windows:
     strategy:
@@ -289,4 +289,4 @@ jobs:
         shell: cmd
         run: |
           cd ../boost-root
-          b2 -j3 libs/%LIBRARY%/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} address-model=${{matrix.addrmd}} ${{matrix.embedmanifest}} variant=debug,release,leaf_debug_capture0,leaf_release_capture0,leaf_debug_diag0,leaf_release_diag0,leaf_debug_embedded,leaf_release_embedded,leaf_debug_leaf_hpp,leaf_release_leaf_hpp
+          b2 -j3 libs/%LIBRARY%/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} address-model=${{matrix.addrmd}} ${{matrix.embedmanifest}} variant=debug,release,leaf_debug_capture0,leaf_release_capture0,leaf_debug_diag0,leaf_release_diag0,leaf_debug_embedded,leaf_release_embedded,leaf_debug_single_header,leaf_release_single_header

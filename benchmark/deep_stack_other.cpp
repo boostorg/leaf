@@ -1,5 +1,4 @@
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -70,7 +69,7 @@ namespace boost
     }
 }
 
-//////////////////////////////////////
+////////////////////////////////////////
 
 #if BENCHMARK_WHAT == 0 // tl::expected
 
@@ -97,7 +96,7 @@ namespace boost
 #   error Benchmark what?
 #endif
 
-//////////////////////////////////////
+////////////////////////////////////////
 
 enum class e_error_code
 {
@@ -177,7 +176,7 @@ inline int handle_error( e_heavy_payload const & e ) noexcept
     return std::accumulate(e.value.begin(), e.value.end(), 0);
 }
 
-//////////////////////////////////////
+////////////////////////////////////////
 
 // This is used to change the "success" type at each level.
 // Generally, functions return values of different types.
@@ -199,7 +198,7 @@ struct select_result_type<N, E, false>
 template <int N, class E>
 using select_result_t = typename select_result_type<N, E>::type;
 
-//////////////////////////////////////
+////////////////////////////////////////
 
 template <int N, class E>
 struct benchmark
@@ -227,7 +226,7 @@ struct benchmark<1, E>
     }
 };
 
-//////////////////////////////////////
+////////////////////////////////////////
 
 template <class Benchmark>
 NOINLINE int runner( int failure_rate ) noexcept
@@ -238,7 +237,7 @@ NOINLINE int runner( int failure_rate ) noexcept
         return handle_error(r.error());
 }
 
-//////////////////////////////////////
+////////////////////////////////////////
 
 std::fstream append_csv()
 {
@@ -260,7 +259,7 @@ int print_elapsed_time( int iteration_count, F && f )
 {
     auto start = std::chrono::steady_clock::now();
     int val = 0;
-    for( int i = 0; i!=iteration_count; ++i )
+    for( int i=0; i!=iteration_count; ++i )
         val += std::forward<F>(f)();
     auto stop = std::chrono::steady_clock::now();
     int elapsed = std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count();
@@ -269,7 +268,7 @@ int print_elapsed_time( int iteration_count, F && f )
     return val;
 }
 
-//////////////////////////////////////
+////////////////////////////////////////
 
 template <int Depth, class E>
 int benchmark_type( char const * type_name, int iteration_count )
@@ -286,7 +285,7 @@ int benchmark_type( char const * type_name, int iteration_count )
     return x;
 }
 
-//////////////////////////////////////
+////////////////////////////////////////
 
 int main()
 {

@@ -1,5 +1,4 @@
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -179,7 +178,7 @@ int main()
         BOOST_TEST_EQ(c, 2);
     }
 
-    //////////////////////////////////////
+    ////////////////////////////////////////
 
     // void, handle_some (failure, initially not matched), match_enum (single enum value)
     {
@@ -311,7 +310,7 @@ int main()
         BOOST_TEST_EQ(c, 1);
     }
 
-    //////////////////////////////////////
+    ////////////////////////////////////////
 
     // int, try_catch (success)
     {
@@ -375,7 +374,7 @@ int main()
         BOOST_TEST_EQ(r, 2);
     }
 
-    //////////////////////////////////////
+    ////////////////////////////////////////
 
     // int, handle_some (failure, matched), match_enum (single enum value)
     {
@@ -537,7 +536,7 @@ int main()
         BOOST_TEST_EQ(r, 1);
     }
 
-    //////////////////////////////////////
+    ////////////////////////////////////////
 
     // match<> with exceptions
     {
@@ -609,7 +608,7 @@ int main()
         BOOST_TEST_EQ(r, 2);
     }
 
-    //////////////////////////////////////
+    ////////////////////////////////////////
 
     return boost::report_errors();
 }

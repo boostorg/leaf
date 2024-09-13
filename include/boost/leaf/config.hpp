@@ -2,7 +2,6 @@
 #define BOOST_LEAF_CONFIG_HPP_INCLUDED
 
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -87,27 +86,27 @@
 #   define BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER "\n    "
 #endif
 
-#if BOOST_LEAF_CFG_DIAGNOSTICS!=0 && BOOST_LEAF_CFG_DIAGNOSTICS!=1
+#if BOOST_LEAF_CFG_DIAGNOSTICS != 0 && BOOST_LEAF_CFG_DIAGNOSTICS != 1
 #   error BOOST_LEAF_CFG_DIAGNOSTICS must be 0 or 1.
 #endif
 
-#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR!=0 && BOOST_LEAF_CFG_STD_SYSTEM_ERROR!=1
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR != 0 && BOOST_LEAF_CFG_STD_SYSTEM_ERROR != 1
 #   error BOOST_LEAF_CFG_STD_SYSTEM_ERROR must be 0 or 1.
 #endif
 
-#if BOOST_LEAF_CFG_STD_STRING!=0 && BOOST_LEAF_CFG_STD_STRING!=1
+#if BOOST_LEAF_CFG_STD_STRING != 0 && BOOST_LEAF_CFG_STD_STRING != 1
 #   error BOOST_LEAF_CFG_STD_STRING must be 0 or 1.
 #endif
 
-#if BOOST_LEAF_CFG_CAPTURE!=0 && BOOST_LEAF_CFG_CAPTURE!=1
+#if BOOST_LEAF_CFG_CAPTURE != 0 && BOOST_LEAF_CFG_CAPTURE != 1
 #   error BOOST_LEAF_CFG_CAPTURE must be 0 or 1.
 #endif
 
-#if BOOST_LEAF_CFG_WIN32!=0 && BOOST_LEAF_CFG_WIN32!=1
+#if BOOST_LEAF_CFG_WIN32 != 0 && BOOST_LEAF_CFG_WIN32 != 1
 #   error BOOST_LEAF_CFG_WIN32 must be 0 or 1.
 #endif
 
-#if BOOST_LEAF_CFG_GNUC_STMTEXPR!=0 && BOOST_LEAF_CFG_GNUC_STMTEXPR!=1
+#if BOOST_LEAF_CFG_GNUC_STMTEXPR != 0 && BOOST_LEAF_CFG_GNUC_STMTEXPR != 1
 #   error BOOST_LEAF_CFG_GNUC_STMTEXPR must be 0 or 1.
 #endif
 
@@ -288,4 +287,4 @@
 
 ////////////////////////////////////////
 
-#endif
+#endif // BOOST_LEAF_CONFIG_HPP_INCLUDED

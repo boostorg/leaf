@@ -1,5 +1,4 @@
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -47,7 +46,7 @@ public:
     ~my_info()
     {
         BOOST_TEST(--object_count>=0);
-        if( value!=-1 )
+        if( value != -1 )
             BOOST_TEST(--value_count>=0);
     }
 };

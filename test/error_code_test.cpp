@@ -1,5 +1,4 @@
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -179,7 +178,7 @@ void test()
             {
                 std::error_code const & ec = cond.matched;
                 BOOST_TEST_EQ(ec, errc_a::a0);
-                BOOST_TEST(ec==make_error_condition(cond_x::x00));
+                BOOST_TEST(ec == make_error_condition(cond_x::x00));
                 return 42;
             },
             []
@@ -199,7 +198,7 @@ void test()
             {
                 std::error_code const & ec = cond.matched;
                 BOOST_TEST_EQ(ec, errc_a::a0);
-                BOOST_TEST(ec==make_error_condition(cond_x::x00));
+                BOOST_TEST(ec == make_error_condition(cond_x::x00));
                 return 42;
             },
             []
@@ -279,7 +278,7 @@ void test()
                 e_wrapped_error_code const & wec = cond.matched;
                 std::error_code const & ec = wec.value;
                 BOOST_TEST_EQ(ec, errc_a::a0);
-                BOOST_TEST(ec==make_error_condition(cond_x::x00));
+                BOOST_TEST(ec == make_error_condition(cond_x::x00));
                 return 42;
             },
             []
@@ -300,7 +299,7 @@ void test()
                 e_wrapped_error_code const & wec = cond.matched;
                 std::error_code const & ec = wec.value;
                 BOOST_TEST_EQ(ec, errc_a::a0);
-                BOOST_TEST(ec==make_error_condition(cond_x::x00));
+                BOOST_TEST(ec == make_error_condition(cond_x::x00));
                 return 42;
             },
             []
@@ -467,7 +466,7 @@ void test_void()
             {
                 std::error_code const & ec = cond.matched;
                 BOOST_TEST_EQ(ec, errc_a::a0);
-                BOOST_TEST(ec==make_error_condition(cond_x::x00));
+                BOOST_TEST(ec == make_error_condition(cond_x::x00));
                 r = 42;
             },
             [&]
@@ -488,7 +487,7 @@ void test_void()
             {
                 std::error_code const & ec = cond.matched;
                 BOOST_TEST_EQ(ec, errc_a::a0);
-                BOOST_TEST(ec==make_error_condition(cond_x::x00));
+                BOOST_TEST(ec == make_error_condition(cond_x::x00));
                 r = 42;
             },
             [&]
@@ -572,7 +571,7 @@ void test_void()
                 e_wrapped_error_code const & wec = cond.matched;
                 std::error_code const & ec = wec.value;
                 BOOST_TEST_EQ(ec, errc_a::a0);
-                BOOST_TEST(ec==make_error_condition(cond_x::x00));
+                BOOST_TEST(ec == make_error_condition(cond_x::x00));
                 r = 42;
             },
             [&]
@@ -594,7 +593,7 @@ void test_void()
                 e_wrapped_error_code const & wec = cond.matched;
                 std::error_code const & ec = wec.value;
                 BOOST_TEST_EQ(ec, errc_a::a0);
-                BOOST_TEST(ec==make_error_condition(cond_x::x00));
+                BOOST_TEST(ec == make_error_condition(cond_x::x00));
                 r = 42;
             },
             [&]

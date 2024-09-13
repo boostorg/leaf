@@ -2,7 +2,6 @@
 #define BOOST_LEAF_RESULT_HPP_INCLUDED
 
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -129,7 +128,7 @@ namespace detail
             state_(id.value())
         {
             BOOST_LEAF_ASSERT(state_ == 0 || (state_&3) == 1);
-            BOOST_LEAF_ASSERT(kind()==err_id_zero || kind()==err_id);
+            BOOST_LEAF_ASSERT(kind() == err_id_zero || kind() == err_id);
         }
 
 #if BOOST_LEAF_CFG_CAPTURE
@@ -146,7 +145,7 @@ namespace detail
             state_(val)
         {
             BOOST_LEAF_ASSERT((state_&3) == 3);
-            BOOST_LEAF_ASSERT(kind()==val);
+            BOOST_LEAF_ASSERT(kind() == val);
         }
 
         kind_t kind() const noexcept
@@ -156,7 +155,7 @@ namespace detail
 
         error_id get_error_id() const noexcept
         {
-            BOOST_LEAF_ASSERT(kind()==err_id_zero || kind()==err_id || kind()==err_id_capture_list);
+            BOOST_LEAF_ASSERT(kind() == err_id_zero || kind() == err_id || kind() == err_id_capture_list);
             return make_error_id(int((state_&~3)|1));
         }
     };
@@ -725,4 +724,4 @@ struct is_result_type<result<T>>: std::true_type
 
 } }
 
-#endif
+#endif // BOOST_LEAF_RESULT_HPP_INCLUDED

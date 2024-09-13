@@ -2294,7 +2294,7 @@ namespace boost { namespace leaf {
 
   error_id current_error() noexcept;
 
-  //////////////////////////////////////////
+  ////////////////////////////////////////
 
   template <class Ctx>
   class context_activator

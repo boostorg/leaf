@@ -1,5 +1,4 @@
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -71,12 +70,12 @@ int main()
 #endif
     {
         leaf::result<res> r1 = leaf::new_error(e_test{42});
-        BOOST_TEST(r1.operator->()==0);
+        BOOST_TEST(!r1.operator->());
     }
 #if !BOOST_WORKAROUND( BOOST_GCC, < 50000 )
     {
         leaf::result<res> const r1 = leaf::new_error(e_test{42});
-        BOOST_TEST(r1.operator->()==0);
+        BOOST_TEST(!r1.operator->());
     }
 #endif
     {

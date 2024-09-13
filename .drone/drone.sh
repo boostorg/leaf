@@ -27,4 +27,4 @@ python gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p inc
 
 echo "Testing"
 echo "using $TOOLSET : : $COMPILER ;" > ~/user-config.jam
-../../b2 -j3 test $LINKFLAGS toolset=$TOOLSET cxxstd=$CXXSTD ${ADDRMD:+address-model=$ADDRMD} ${UBSAN:+undefined-sanitizer=norecover debug-symbols=on} ${ASAN:+address-sanitizer=norecover debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS} link=shared,static variant=debug,release,leaf_debug_capture0,leaf_release_capture0,leaf_debug_diag0,leaf_release_diag0,leaf_debug_embedded,leaf_release_embedded,leaf_debug_leaf_hpp,leaf_release_leaf_hpp
+../../b2 -j3 test $LINKFLAGS toolset=$TOOLSET cxxstd=$CXXSTD ${ADDRMD:+address-model=$ADDRMD} ${UBSAN:+undefined-sanitizer=norecover debug-symbols=on} ${ASAN:+address-sanitizer=norecover debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS} link=shared,static variant=debug,release,leaf_debug_capture0,leaf_release_capture0,leaf_debug_diag0,leaf_release_diag0,leaf_debug_embedded,leaf_release_embedded,leaf_debug_single_header,leaf_release_single_header

@@ -1,5 +1,4 @@
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -104,7 +103,7 @@ int main()
         BOOST_TEST_EQ(r.value(), 1);
     }
 
-    ///////////////////////////
+    ////////////////////////////////////////
 
     {
         auto error_handlers = std::make_tuple(
@@ -160,7 +159,7 @@ int main()
         }
     }
 
-    ///////////////////////////
+    ////////////////////////////////////////
 
     {
         int r = leaf::try_handle_all(
@@ -226,7 +225,7 @@ int main()
         BOOST_TEST_EQ(r, 1);
     }
 
-    ///////////////////////////
+    ////////////////////////////////////////
 
     {
         auto error_handlers = std::make_tuple(
@@ -282,7 +281,7 @@ int main()
         }
     }
 
-    ///////////////////////////
+    ////////////////////////////////////////
 
     {
         int r = leaf::try_handle_all(
@@ -352,7 +351,7 @@ int main()
         BOOST_TEST_EQ(r, 4);
     }
 
-    ///////////////////////////
+    ////////////////////////////////////////
 
     {
         auto error_handlers = std::make_tuple(
@@ -427,7 +426,7 @@ int main()
         BOOST_TEST_EQ(r, 4);
     }
 
-    ///////////////////////////
+    ////////////////////////////////////////
 
     {
         int r = leaf::try_handle_all(
@@ -498,7 +497,7 @@ int main()
         BOOST_TEST_EQ(r, 5);
     }
 
-    ///////////////////////////
+    ////////////////////////////////////////
 
     {
         auto error_handlers = std::make_tuple(
@@ -573,7 +572,7 @@ int main()
         BOOST_TEST_EQ(r, 5);
     }
 
-    //////////////////////////////////////
+    ////////////////////////////////////////
 
     // match_value<> with exceptions, try_handle_some
     {
@@ -635,7 +634,7 @@ int main()
         BOOST_TEST(!r);
     }
 
-    //////////////////////////////////////
+    ////////////////////////////////////////
 
     // match_value<> with exceptions, try_handle_all
     {

@@ -2,7 +2,6 @@
 #define BOOST_LEAF_TEST_EC_HPP_INCLUDED
 
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -43,7 +42,7 @@ inline std::error_code make_error_code( errc_a code )
 
 template <int> struct e_errc_a { std::error_code value; };
 
-///////////////////////////////////
+////////////////////////////////////////
 
 enum class errc_b { b0 = 20, b1, b2, b3 };
 
@@ -80,7 +79,7 @@ inline std::error_code make_error_code( errc_b code )
 
 template <int> struct e_errc_b { std::error_code value; };
 
-///////////////////////////////////
+////////////////////////////////////////
 
 enum class cond_x { x00 = 30, x11, x22, x33 };
 
@@ -115,13 +114,13 @@ inline std::error_category const & cat_cond_x()
             switch( cond_x(cond) )
             {
                 case cond_x::x00:
-                    return code==make_error_code(errc_a::a0) || code==make_error_code(errc_b::b0);
+                    return code == make_error_code(errc_a::a0) || code == make_error_code(errc_b::b0);
                 case cond_x::x11:
-                    return code==make_error_code(errc_a::a1) || code==make_error_code(errc_b::b1);
+                    return code == make_error_code(errc_a::a1) || code == make_error_code(errc_b::b1);
                 case cond_x::x22:
-                    return code==make_error_code(errc_a::a2) || code==make_error_code(errc_b::b2);
+                    return code == make_error_code(errc_a::a2) || code == make_error_code(errc_b::b2);
                 case cond_x::x33:
-                    return code==make_error_code(errc_a::a3) || code==make_error_code(errc_b::b3);
+                    return code == make_error_code(errc_a::a3) || code == make_error_code(errc_b::b3);
                 default:
                     return false;
             }
@@ -138,7 +137,7 @@ inline std::error_condition make_error_condition( cond_x cond )
 
 template <int> struct e_cond_x { cond_x value; };
 
-///////////////////////////////////
+////////////////////////////////////////
 
 enum class cond_y { y03 = 40, y12, y21, y30 };
 
@@ -173,13 +172,13 @@ inline std::error_category const & cat_cond_y()
             switch( cond_y(cond) )
             {
                 case cond_y::y03:
-                    return code==make_error_code(errc_a::a0) || code==make_error_code(errc_b::b0);
+                    return code == make_error_code(errc_a::a0) || code == make_error_code(errc_b::b0);
                 case cond_y::y12:
-                    return code==make_error_code(errc_a::a1) || code==make_error_code(errc_b::b1);
+                    return code == make_error_code(errc_a::a1) || code == make_error_code(errc_b::b1);
                 case cond_y::y21:
-                    return code==make_error_code(errc_a::a2) || code==make_error_code(errc_b::b2);
+                    return code == make_error_code(errc_a::a2) || code == make_error_code(errc_b::b2);
                 case cond_y::y30:
-                    return code==make_error_code(errc_a::a3) || code==make_error_code(errc_b::b3);
+                    return code == make_error_code(errc_a::a3) || code == make_error_code(errc_b::b3);
                 default:
                     return false;
             }

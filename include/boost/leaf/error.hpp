@@ -2,7 +2,6 @@
 #define BOOST_LEAF_ERROR_HPP_INCLUDED
 
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -125,7 +124,7 @@ namespace detail
             optional<E>(std::move(x)),
             prev_(nullptr)
         {
-            BOOST_LEAF_ASSERT(x.prev_==nullptr);
+            BOOST_LEAF_ASSERT(x.prev_ == nullptr);
         }
 
         ~slot() noexcept
@@ -413,7 +412,7 @@ namespace detail
     inline void slot<E>::unload( int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE)
     {
         BOOST_LEAF_ASSERT(err_id);
-        if( this->key()!=err_id )
+        if( this->key() != err_id )
             return;
         if( impl * p = tls::read_ptr<slot<E>>() )
         {
@@ -432,7 +431,7 @@ namespace detail
         using T = typename std::decay<E>::type;
         static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
         static_assert(!std::is_same<T, error_id>::value, "Error objects of type error_id are not allowed");
-        BOOST_LEAF_ASSERT((err_id&3)==1);
+        BOOST_LEAF_ASSERT((err_id&3) == 1);
         if( slot<T> * p = tls::read_ptr<slot<T>>() )
         {
             if( !OnError || !p->has_value(err_id) )
@@ -452,7 +451,7 @@ namespace detail
         using T = typename std::decay<E>::type;
         static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
         static_assert(!std::is_same<T, error_id>::value, "Error objects of type error_id are not allowed");
-        BOOST_LEAF_ASSERT((err_id&3)==1);
+        BOOST_LEAF_ASSERT((err_id&3) == 1);
         if( slot<T> * p = tls::read_ptr<slot<T>>() )
         {
             if( !OnError || !p->has_value(err_id) )
@@ -468,10 +467,10 @@ namespace detail
     template <bool OnError, class F>
     BOOST_LEAF_CONSTEXPR inline int load_slot_accumulate( int err_id, F && f ) noexcept(OnError)
     {
-        static_assert(function_traits<F>::arity==1, "Lambdas passed to accumulate must take a single e-type argument by reference");
+        static_assert(function_traits<F>::arity == 1, "Lambdas passed to accumulate must take a single e-type argument by reference");
         using E = typename std::decay<fn_arg_type<F,0>>::type;
         static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
-        BOOST_LEAF_ASSERT((err_id&3)==1);
+        BOOST_LEAF_ASSERT((err_id&3) == 1);
         if( auto sl = tls::read_ptr<slot<E>>() )
         {
             if( auto v = sl->has_value(err_id) )
@@ -494,7 +493,7 @@ namespace detail
     template <class T, int Arity = function_traits<T>::arity>
     struct load_item
     {
-        static_assert(Arity==0 || Arity==1, "If a functions is passed to new_error or load, it must take zero or one argument");
+        static_assert(Arity == 0 || Arity == 1, "If a functions is passed to new_error or load, it must take zero or one argument");
     };
 
     template <class E>
@@ -539,7 +538,7 @@ namespace detail
         BOOST_LEAF_CONSTEXPR static unsigned generate_next_id() noexcept
         {
             auto id = (counter+=4);
-            BOOST_LEAF_ASSERT((id&3)==1);
+            BOOST_LEAF_ASSERT((id&3) == 1);
             return id;
         }
     };
@@ -550,7 +549,7 @@ namespace detail
     inline int current_id() noexcept
     {
         unsigned id = tls::read_uint<tls_tag_id_factory_current_id>();
-        BOOST_LEAF_ASSERT(id==0 || (id&3)==1);
+        BOOST_LEAF_ASSERT(id == 0 || (id&3) == 1);
         return int(id);
     }
 
@@ -606,7 +605,7 @@ namespace detail
             std::error_category const & cat = get_error_category<>::cat;
             if( &ec.category() == &cat )
             {
-                BOOST_LEAF_ASSERT((err_id&3)==1);
+                BOOST_LEAF_ASSERT((err_id&3) == 1);
                 return (err_id&~3)|1;
             }
             else
@@ -624,7 +623,7 @@ namespace detail
 inline bool is_error_id( std::error_code const & ec ) noexcept
 {
     bool res = (&ec.category() == &detail::get_error_category<>::cat);
-    BOOST_LEAF_ASSERT(!res || !ec.value() || ((ec.value()&3)==1));
+    BOOST_LEAF_ASSERT(!res || !ec.value() || ((ec.value()&3) == 1));
     return res;
 }
 
@@ -646,7 +645,7 @@ class BOOST_LEAF_SYMBOL_VISIBLE error_id
     BOOST_LEAF_CONSTEXPR explicit error_id( int value ) noexcept:
         value_(value)
     {
-        BOOST_LEAF_ASSERT(value_==0 || ((value_&3)==1));
+        BOOST_LEAF_ASSERT(value_ == 0 || ((value_&3) == 1));
     }
 
 public:
@@ -660,7 +659,7 @@ public:
     error_id( std::error_code const & ec ) noexcept:
         value_(detail::import_error_code(ec))
     {
-        BOOST_LEAF_ASSERT(!value_ || ((value_&3)==1));
+        BOOST_LEAF_ASSERT(!value_ || ((value_&3) == 1));
     }
 
     template <class Enum>
@@ -704,7 +703,7 @@ public:
 
     BOOST_LEAF_CONSTEXPR int value() const noexcept
     {
-        BOOST_LEAF_ASSERT(value_==0 || ((value_&3)==1));
+        BOOST_LEAF_ASSERT(value_ == 0 || ((value_&3) == 1));
         return value_;
     }
 
@@ -748,7 +747,7 @@ namespace detail
 {
     BOOST_LEAF_CONSTEXPR inline error_id make_error_id( int err_id ) noexcept
     {
-        BOOST_LEAF_ASSERT(err_id==0 || (err_id&3)==1);
+        BOOST_LEAF_ASSERT(err_id == 0 || (err_id&3) == 1);
         return error_id((err_id&~3)|1);
     }
 }
@@ -769,7 +768,7 @@ inline error_id current_error() noexcept
     return detail::make_error_id(detail::current_id());
 }
 
-////////////////////////////////////////////
+////////////////////////////////////////
 
 template <class R>
 struct is_result_type: std::false_type
@@ -783,4 +782,4 @@ struct is_result_type<R const>: is_result_type<R>
 
 } }
 
-#endif
+#endif // BOOST_LEAF_ERROR_HPP_INCLUDED

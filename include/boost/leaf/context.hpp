@@ -2,7 +2,6 @@
 #define BOOST_LEAF_CONTEXT_HPP_INCLUDED
 
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -230,7 +229,7 @@ namespace detail
     }
 }
 
-////////////////////////////////////////////
+////////////////////////////////////////
 
 namespace detail
 {
@@ -265,7 +264,7 @@ namespace detail
     using deduce_e_tuple = typename deduce_e_tuple_impl<typename deduce_e_type_list<leaf_detail_mp11::mp_list<E...>>::type>::type;
 }
 
-////////////////////////////////////////////
+////////////////////////////////////////
 
 template <class... E>
 class context
@@ -445,7 +444,7 @@ namespace detail
 template <class... H>
 using context_type_from_handlers = typename detail::context_type_from_handlers_impl<H...>::type;
 
-////////////////////////////////////////////
+////////////////////////////////////////
 
 template <class...  H>
 BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context() noexcept
@@ -461,4 +460,4 @@ BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && 
 
 } }
 
-#endif
+#endif // BOOST_LEAF_CONTEXT_HPP_INCLUDED
