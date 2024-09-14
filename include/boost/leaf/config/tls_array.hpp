@@ -139,18 +139,6 @@ namespace tls
         static_assert(sizeof(std::intptr_t) >= sizeof(unsigned), "Incompatible tls_array implementation");
         write_ptr<Tag>((Tag *) (void *) (std::intptr_t) x);
     }
-
-    template <class Tag>
-    void uint_increment() noexcept
-    {
-        write_uint<Tag>(read_uint<Tag>() + 1);
-    }
-
-    template <class Tag>
-    void uint_decrement() noexcept
-    {
-        write_uint<Tag>(read_uint<Tag>() - 1);
-    }
 }
 
 } }

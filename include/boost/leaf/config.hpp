@@ -5,47 +5,32 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// The following is based in part on Boost Config.
+#ifdef BOOST_LEAF_TLS_FREERTOS
+#   ifndef BOOST_LEAF_EMBEDDED
+#       define BOOST_LEAF_EMBEDDED
+#   endif
+#endif
 
-// (C) Copyright John Maddock 2001 - 2003.
-// (C) Copyright Martin Wille 2003.
-// (C) Copyright Guillaume Melquiond 2003.
+#ifdef BOOST_LEAF_EMBEDDED
+#   ifndef BOOST_LEAF_CFG_DIAGNOSTICS
+#       define BOOST_LEAF_CFG_DIAGNOSTICS 0
+#   endif
+#   ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+#       define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 0
+#   endif
+#   ifndef BOOST_LEAF_CFG_STD_STRING
+#       define BOOST_LEAF_CFG_STD_STRING 0
+#   endif
+#   ifndef BOOST_LEAF_CFG_CAPTURE
+#       define BOOST_LEAF_CFG_CAPTURE 0
+#   endif
+#endif
+
+////////////////////////////////////////
 
 #ifndef BOOST_LEAF_ASSERT
 #   include <cassert>
 #   define BOOST_LEAF_ASSERT assert
-#endif
-
-////////////////////////////////////////
-
-#ifdef BOOST_LEAF_TLS_FREERTOS
-
-#   ifndef BOOST_LEAF_EMBEDDED
-#       define BOOST_LEAF_EMBEDDED
-#   endif
-
-#endif
-
-////////////////////////////////////////
-
-#ifdef BOOST_LEAF_EMBEDDED
-
-#   ifndef BOOST_LEAF_CFG_DIAGNOSTICS
-#       define BOOST_LEAF_CFG_DIAGNOSTICS 0
-#   endif
-
-#   ifndef BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-#       define BOOST_LEAF_CFG_STD_SYSTEM_ERROR 0
-#   endif
-
-#   ifndef BOOST_LEAF_CFG_STD_STRING
-#       define BOOST_LEAF_CFG_STD_STRING 0
-#   endif
-
-#   ifndef BOOST_LEAF_CFG_CAPTURE
-#       define BOOST_LEAF_CFG_CAPTURE 0
-#   endif
-
 #endif
 
 ////////////////////////////////////////
@@ -130,78 +115,40 @@
 
 ////////////////////////////////////////
 
-// Configure BOOST_LEAF_NO_EXCEPTIONS, unless already #defined
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
-
+// The following is based in part on Boost Config.
+// (C) Copyright John Maddock 2001 - 2003.
+// (C) Copyright Martin Wille 2003.
+// (C) Copyright Guillaume Melquiond 2003.
 #   if defined(__clang__) && !defined(__ibmxl__)
 //  Clang C++ emulates GCC, so it has to appear early.
-
 #       if !__has_feature(cxx_exceptions)
 #           define BOOST_LEAF_NO_EXCEPTIONS
 #       endif
-
-#   elif defined(__DMC__)
-//  Digital Mars C++
-
-#       if !defined(_CPPUNWIND)
-#           define BOOST_LEAF_NO_EXCEPTIONS
-#       endif
-
 #   elif defined(__GNUC__) && !defined(__ibmxl__)
 //  GNU C++:
-
 #       if !defined(__EXCEPTIONS)
 #           define BOOST_LEAF_NO_EXCEPTIONS
 #       endif
-
-#   elif defined(__KCC)
-//  Kai C++
-
-#       if !defined(_EXCEPTIONS)
-#           define BOOST_LEAF_NO_EXCEPTIONS
-#       endif
-
 #   elif defined(__CODEGEARC__)
 //  CodeGear - must be checked for before Borland
-
 #       if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
 #           define BOOST_LEAF_NO_EXCEPTIONS
 #       endif
-
-#   elif defined(__BORLANDC__)
-//  Borland
-
-#       if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
-#           define BOOST_LEAF_NO_EXCEPTIONS
-#       endif
-
-#   elif defined(__MWERKS__)
-//  Metrowerks CodeWarrior
-
-#       if !__option(exceptions)
-#           define BOOST_LEAF_NO_EXCEPTIONS
-#       endif
-
 #   elif defined(__IBMCPP__) && defined(__COMPILER_VER__) && defined(__MVS__)
 //  IBM z/OS XL C/C++
-
 #       if !defined(_CPPUNWIND) && !defined(__EXCEPTIONS)
 #           define BOOST_LEAF_NO_EXCEPTIONS
 #       endif
-
 #   elif defined(__ibmxl__)
 //  IBM XL C/C++ for Linux (Little Endian)
-
 #       if !__has_feature(cxx_exceptions)
 #           define BOOST_LEAF_NO_EXCEPTIONS
 #       endif
-
 #   elif defined(_MSC_VER)
 //  Microsoft Visual C++
-//
 //  Must remain the last #elif since some other vendors (Metrowerks, for
 //  example) also #define _MSC_VER
-
 #       if !_CPPUNWIND
 #           define BOOST_LEAF_NO_EXCEPTIONS
 #       endif
@@ -284,7 +231,5 @@
 
 // Configure TLS access
 #include <boost/leaf/config/tls.hpp>
-
-////////////////////////////////////////
 
 #endif // BOOST_LEAF_CONFIG_HPP_INCLUDED

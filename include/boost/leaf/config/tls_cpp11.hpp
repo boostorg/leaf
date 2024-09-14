@@ -65,18 +65,6 @@ namespace tls
     {
         tagged_uint<Tag>::x = x;
     }
-
-    template <class Tag>
-    void uint_increment() noexcept
-    {
-        ++tagged_uint<Tag>::x;
-    }
-
-    template <class Tag>
-    void uint_decrement() noexcept
-    {
-        --tagged_uint<Tag>::x;
-    }
 }
 
 } }
