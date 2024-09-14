@@ -5,7 +5,7 @@
 
 project('leaf', 'cpp', default_options : ['cpp_std=c++17', 'b_pch=false'], license : 'boost')
 
-option_leaf_hpp = get_option('leaf_hpp')
+option_single_header = get_option('single_header')
 option_boost = get_option('leaf_boost_examples')
 option_lua = get_option('leaf_lua_examples')
 option_diagnostics = get_option('leaf_diagnostics')
@@ -202,7 +202,7 @@ if option_enable_unit_tests
     endif
 
     dep_test_single_header = []
-    if option_leaf_hpp
+    if option_single_header
         dep_test_single_header = declare_dependency(compile_args: ['-DBOOST_LEAF_TEST_SINGLE_HEADER'])
     endif
 

@@ -1,5 +1,4 @@
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -162,7 +161,7 @@ int main( int argc, char const * argv[] )
 // Parse the command line, return the file name.
 result<char const *> parse_command_line( int argc, char const * argv[] )
 {
-    if( argc==2 )
+    if( argc == 2 )
         return argv[1];
     else
         return leaf::new_error(bad_command_line);
@@ -188,7 +187,7 @@ result<std::size_t> file_size( FILE & f )
         return leaf::new_error(size_error);
 
     long s = ftell(&f);
-    if( s==-1L )
+    if( s == -1L )
         return leaf::new_error(size_error);
 
     if( fseek(&f,0,SEEK_SET) )
@@ -206,7 +205,7 @@ result<void> file_read( FILE & f, void * buf, std::size_t size )
     if( ferror(&f) )
         return leaf::new_error(read_error, leaf::e_errno{errno});
 
-    if( n!=size )
+    if( n != size )
         return leaf::new_error(eof_error);
 
     return outcome::success();

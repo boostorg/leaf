@@ -1,5 +1,4 @@
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -18,7 +17,7 @@ void check_traits( F )
 {
     using namespace leaf::detail;
     using leaf::leaf_detail_mp11::mp_list;
-    static_assert(function_traits<F>::arity==4,"arity");
+    static_assert(function_traits<F>::arity == 4,"arity");
     static_assert(std::is_same<fn_return_type<F>,double>::value,"return_type");
     static_assert(std::is_same<fn_arg_type<F,0>,int>::value,"arg<0>");
     static_assert(std::is_same<fn_arg_type<F,1>,float>::value,"arg<1>");
@@ -44,6 +43,6 @@ int main()
         {
             return 42;
         } );
-    static_assert(leaf::detail::function_traits<int>::arity==-1, "int arity");
+    static_assert(leaf::detail::function_traits<int>::arity == -1, "int arity");
     return 0;
 }

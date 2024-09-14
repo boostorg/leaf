@@ -2,7 +2,6 @@
 #define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -67,7 +66,7 @@ public:
     }
 };
 
-////////////////////////////////////////////
+////////////////////////////////////////
 
 namespace detail
 {
@@ -76,7 +75,7 @@ namespace detail
     {
         BOOST_LEAF_CONSTEXPR static void trigger( Tup & tup, int err_id ) noexcept
         {
-            BOOST_LEAF_ASSERT((err_id&3)==1);
+            BOOST_LEAF_ASSERT((err_id&3) == 1);
             tuple_for_each_preload<I-1,Tup>::trigger(tup,err_id);
             std::get<I-1>(tup).trigger(err_id);
         }
@@ -230,4 +229,4 @@ on_error( Item && ... i )
 
 } }
 
-#endif
+#endif // BOOST_LEAF_ON_ERROR_HPP_INCLUDED

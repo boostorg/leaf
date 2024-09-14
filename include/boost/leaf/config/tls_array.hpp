@@ -2,10 +2,10 @@
 #define BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED
 
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-// Copyright (c) 2022 Khalil Estell
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+// Copyright (c) 2022 Khalil Estell
 
 // LEAF requires thread local storage support for pointers and for uin32_t values.
 
@@ -139,20 +139,8 @@ namespace tls
         static_assert(sizeof(std::intptr_t) >= sizeof(unsigned), "Incompatible tls_array implementation");
         write_ptr<Tag>((Tag *) (void *) (std::intptr_t) x);
     }
-
-    template <class Tag>
-    void uint_increment() noexcept
-    {
-        write_uint<Tag>(read_uint<Tag>() + 1);
-    }
-
-    template <class Tag>
-    void uint_decrement() noexcept
-    {
-        write_uint<Tag>(read_uint<Tag>() - 1);
-    }
 }
 
 } }
 
-#endif
+#endif // BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED

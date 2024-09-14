@@ -2,7 +2,6 @@
 #define BOOST_LEAF_PRED_HPP_INCLUDED
 
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -151,7 +150,7 @@ namespace detail
     template <class Enum>
     struct match_value_enum_type<condition<Enum, Enum>>
     {
-        static_assert(sizeof(Enum)==0, "leaf::condition<Enum> should be used with leaf::match<>, not with leaf::match_value<>");
+        static_assert(sizeof(Enum) == 0, "leaf::condition<Enum> should be used with leaf::match<>, not with leaf::match_value<>");
     };
 #endif
 }
@@ -241,13 +240,13 @@ namespace detail
     template <class Ex>
     BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const * ) noexcept
     {
-        return dynamic_cast<Ex const *>(&ex)!=nullptr;
+        return dynamic_cast<Ex const *>(&ex) != nullptr;
     }
 
     template <class Ex, class... ExRest>
     BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ex, Ex const *, ExRest const * ... ex_rest ) noexcept
     {
-        return dynamic_cast<Ex const *>(&ex)!=nullptr || check_exception_pack(ex, ex_rest...);
+        return dynamic_cast<Ex const *>(&ex) != nullptr || check_exception_pack(ex, ex_rest...);
     }
 
     BOOST_LEAF_CONSTEXPR inline bool check_exception_pack( std::exception const & ) noexcept
@@ -294,4 +293,4 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 
 } }
 
-#endif
+#endif // BOOST_LEAF_PRED_HPP_INCLUDED

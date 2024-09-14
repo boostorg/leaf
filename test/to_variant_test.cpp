@@ -1,5 +1,4 @@
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -39,8 +38,8 @@ int main()
             {
                 return 42;
             } );
-        BOOST_TEST(v.index() == 0);
-        BOOST_TEST(std::get<0>(v) == 42);
+        BOOST_TEST_EQ(v.index(), 0);
+        BOOST_TEST_EQ(std::get<0>(v), 42);
     }
 
     {

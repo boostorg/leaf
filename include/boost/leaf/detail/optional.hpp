@@ -2,7 +2,6 @@
 #define BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
 
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -90,7 +89,7 @@ namespace detail
 
         BOOST_LEAF_CONSTEXPR bool empty() const noexcept
         {
-            return key_==0;
+            return key_ == 0;
         }
 
         BOOST_LEAF_CONSTEXPR int key() const noexcept
@@ -147,13 +146,13 @@ namespace detail
         BOOST_LEAF_CONSTEXPR T const * has_value(int key) const noexcept
         {
             BOOST_LEAF_ASSERT(key);
-            return key_==key ? &value_ : nullptr;
+            return key_ == key ? &value_ : nullptr;
         }
 
         BOOST_LEAF_CONSTEXPR T * has_value(int key) noexcept
         {
             BOOST_LEAF_ASSERT(key);
-            return key_==key ? &value_ : nullptr;
+            return key_ == key ? &value_ : nullptr;
         }
 
         BOOST_LEAF_CONSTEXPR T const & value(int key) const & noexcept
@@ -199,4 +198,4 @@ namespace detail
 
 } }
 
-#endif
+#endif // BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED

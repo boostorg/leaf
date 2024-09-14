@@ -1,5 +1,4 @@
 // Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
-
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -43,7 +42,7 @@ int main()
     std::string s = ss.str();
     std::cout << s << std::endl;
 #if BOOST_LEAF_CFG_DIAGNOSTICS
-    BOOST_TEST(ss.str().find("The system cannot find the file specified") != std::string::npos);
+    BOOST_TEST_NE(ss.str().find("The system cannot find the file specified"), std::string::npos);
 #endif
 #endif
 

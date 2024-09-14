@@ -25,4 +25,4 @@ python gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p inc
 echo "Testing"
 if not "%CXXSTD%" == "" set CXXSTD=cxxstd=%CXXSTD%
 if not "%ADDRMD%" == "" set ADDRMD=address-model=%ADDRMD%
-..\..\b2 -j3 test toolset=%TOOLSET% %CXXSTD% %ADDRMD% embed-manifest-via=linker link=shared,static variant=debug,release,leaf_debug_capture0,leaf_release_capture0,leaf_debug_diag0,leaf_release_diag0,leaf_debug_embedded,leaf_release_embedded,leaf_debug_leaf_hpp,leaf_release_leaf_hpp
+..\..\b2 -j3 test toolset=%TOOLSET% %CXXSTD% %ADDRMD% embed-manifest-via=linker link=shared,static variant=debug,release,leaf_debug_capture0,leaf_release_capture0,leaf_debug_diag0,leaf_release_diag0,leaf_debug_embedded,leaf_release_embedded,leaf_debug_single_header,leaf_release_single_header
