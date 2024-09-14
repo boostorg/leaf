@@ -3109,7 +3109,7 @@ The automatically-generated diagnostic messages are developer-friendly, but not 
 
   <span class="n">error_id</span> <span class="n">current_error</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
 
-  <span class="c1">//////////////////////////////////////////</span>
+  <span class="c1">////////////////////////////////////////</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Ctx</span><span class="p">&gt;</span>
   <span class="k">class</span> <span class="nc">context_activator</span>
@@ -3716,7 +3716,7 @@ The contents of each Reference section are organized alphabetically.
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">leaf</span><span class="o">::</span><span class="n">context</span><span class="o">&lt;</span><span class="n">E1</span><span class="p">,</span> <span class="n">E2</span><span class="p">,</span> <span class="n">E3</span><span class="o">&gt;</span> <span class="n">ctx</span><span class="p">;</span>
 
 <span class="p">{</span>
-  <span class="k">auto</span> <span class="n">active_context</span> <span class="o">=</span> <span class="n">activate_context</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span> <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="k">auto</span> <span class="n">active_context</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">.</span><span class="n">raii_activate</span><span class="p">();</span> <i class="conum" data-value="1"></i><b>(1)</b>
 <span class="p">}</span> <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
 </div>
@@ -8190,7 +8190,7 @@ The following reasoning is independent of the mechanism used to transport error 
 </div>
 </div>
 <div class="paragraph">
-<p>This works as expected except on Windows, where thread-local storage is not shared between the individual binary modules. For this reason, to transport error objects across DLL boundaries, it is required that they&#8217;re captured in a <a href="#polymorphic_context">[polymorphic_context]</a>, just like when <a href="#tutorial-async">Transporting Errors Between Threads</a>.</p>
+<p>This works as expected except on Windows, where thread-local storage is not shared between the individual binary modules. For this reason, to transport error objects across DLL boundaries.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
