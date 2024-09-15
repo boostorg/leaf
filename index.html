@@ -1278,7 +1278,7 @@ When an error handler takes arguments by mutable reference or pointer, changes t
 <li>
 <p>If we pass a function that takes no arguments, it is invoked, and the returned error object is loaded.</p>
 <div class="paragraph">
-<p>Consider that if we pass to <code>load</code> an error object that is not used by an error handler, it will be discarded. If the object is expensive to compute, it would be better if the computation is only performed in case of an error. Passing a function with no arguments to <code>load</code> is an excellent way to achieve this behavior:</p>
+<p>Consider that if we pass to <code>load</code> an error object that is not used by an error handler, it will be discarded. If instead of an error object we pass a function that returns an error object, that function will only be called if the object it returns is needed, that is, if it will not be discarded. This is helpful when the error object is relatively expensive to produce:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1441,7 +1441,7 @@ When an error handler takes arguments by mutable reference or pointer, changes t
 </ol>
 </div>
 <div class="paragraph">
-<p>For example, if we want to use <code>on_error</code> to capture <code>errno</code>, we can&#8217;t just pass <a href="#e_errno"><code>e_errno</code></a> to it, because at that time it hasn&#8217;t been set (yet). Instead, we&#8217;d pass a function that returns it:</p>
+<p>For example, if we want to use <code>on_error</code> to capture <code>errno</code>, we could use the <a href="#e_errno"><code>e_errno</code></a> type, which is a simple struct that wraps an <code>int</code>. But, we can&#8217;t just pass an <a href="#e_errno"><code>e_errno</code></a> to <code>on_error</code>, because at that time <code>errno</code> hasn&#8217;t been set (yet). Instead, we&#8217;d pass a function that returns it:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2557,11 +2557,24 @@ When using Lua with C&#43;&#43;, we need to protect the Lua interpreter from exc
 <div class="listingblock">
 <div class="content">
 <pre class="nowrap">Unrecognized error detected
-Error serial #1
-Diagnostic details:
+Error with serial #1
+Caught:
   error_code: 1
+Diagnostic details:
   boost::leaf::e_file_name: file.txt</pre>
 </div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+In the <code>diagnostic_details</code> output, the section under <code>Caught:</code> lists the objects which error handlers take as arguments&#8201;&#8212;&#8201;these are the objects which are stored on the stack. The section under <code>Diagnostic details:</code> lists all other objects that were communicated. These are the objects that would have been discarded if we didn&#8217;t provide a handler that takes <code>diagnostic_details</code>.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>To print each error object, LEAF attempts to bind an unqualified call to <code>operator&lt;&lt;</code>, passing a <code>std::ostream</code> and the error object. If that fails, it will also attempt to bind <code>operator&lt;&lt;</code> that takes the <code>.value</code> of the error type. If that also does not compile, the error object value will not appear in diagnostic messages, though LEAF will still print its type.</p>
@@ -2577,7 +2590,7 @@ Diagnostic details:
 
   <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="n">os</span><span class="p">,</span> <span class="n">e_errno</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="p">)</span>
   <span class="p">{</span>
-    <span class="k">return</span> <span class="n">os</span> <span class="o">&lt;&lt;</span> <span class="s">"errno = "</span> <span class="o">&lt;&lt;</span> <span class="n">e</span><span class="p">.</span><span class="n">value</span> <span class="o">&lt;&lt;</span> <span class="s">", </span><span class="se">\"</span><span class="s">"</span> <span class="o">&lt;&lt;</span> <span class="n">strerror</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">'"'</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">os</span> <span class="o">&lt;&lt;</span> <span class="n">e</span><span class="p">.</span><span class="n">value</span> <span class="o">&lt;&lt;</span> <span class="s">", </span><span class="se">\"</span><span class="s">"</span> <span class="o">&lt;&lt;</span> <span class="n">strerror</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">'"'</span><span class="p">;</span>
   <span class="p">}</span>
 <span class="p">};</span></code></pre>
 </div>
@@ -2624,7 +2637,7 @@ Caught:
 </div>
 </div>
 <div class="paragraph">
-<p>Notice how the diagnostic information for <code>e_file_name</code> changed: because it was discarded, LEAF is unable to print it.</p>
+<p>Notice how we are missing the <code>Diagnostic details:</code> section. That&#8217;s because the <code>e_file_name</code> object was discarded by LEAF, since no error handler needed it.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -2633,7 +2646,7 @@ Caught:
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-The automatically-generated diagnostic messages are developer-friendly, but not user-friendly. Therefore, <code>operator&lt;&lt;</code> overloads for error types should only print technical information in English, and should not attempt to localize strings or to format a user-friendly message; this should be done in error handling functions specifically designed for that purpose.
+The automatically-generated diagnostic messages are developer-friendly, but not user-friendly.
 </td>
 </tr>
 </table>
