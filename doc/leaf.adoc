@@ -861,7 +861,7 @@ Besides error objects, `load` can take function arguments:
 
 * If we pass a function that takes no arguments, it is invoked, and the returned error object is loaded.
 +
-Consider that if we pass to `load` an error object that is not used by an error handler, it will be discarded. If the object is expensive to compute, it would be better if the computation is only performed in case of an error. Passing a function with no arguments to `load` is an excellent way to achieve this behavior:
+Consider that if we pass to `load` an error object that is not used by an error handler, it will be discarded. If instead of an error object we pass a function that returns an error object, that function will only be called if the object it returns is needed, that is, if it will not be discarded. This is helpful when the error object is relatively expensive to produce:
 +
 [source,c++]
 ----
@@ -968,7 +968,7 @@ When we invoke `on_error`, we can pass three kinds of arguments:
 . Functions that take no arguments and return an error object;
 . Functions that take a single error object by mutable reference.
 
-For example, if we want to use `on_error` to capture `errno`, we can't just pass <<e_errno>> to it, because at that time it hasn't been set (yet). Instead, we'd pass a function that returns it:
+For example, if we want to use `on_error` to capture `errno`, we could use the <<e_errno>> type, which is a simple struct that wraps an `int`. But, we can't just pass an <<e_errno>> to `on_error`, because at that time `errno` hasn't been set (yet). Instead, we'd pass a function that returns it:
 
 [source,c++]
 ----
@@ -1821,11 +1821,14 @@ The `diagnostic_details` output for the snippet above tells us that we got an `e
 
 ----
 Unrecognized error detected
-Error serial #1
-Diagnostic details:
+Error with serial #1
+Caught:
   error_code: 1
+Diagnostic details:
   boost::leaf::e_file_name: file.txt
 ----
+
+TIP: In the `diagnostic_details` output, the section under `Caught:` lists the objects which error handlers take as arguments -- these are the objects which are stored on the stack. The section under `Diagnostic details:` lists all other objects that were communicated. These are the objects that would have been discarded if we didn't provide a handler that takes `diagnostic_details`.
 
 To print each error object, LEAF attempts to bind an unqualified call to `operator<<`, passing a `std::ostream` and the error object. If that fails, it will also attempt to bind `operator<<` that takes the `.value` of the error type. If that also does not compile, the error object value will not appear in diagnostic messages, though LEAF will still print its type.
 
@@ -1839,7 +1842,7 @@ struct e_errno
 
   friend std::ostream & operator<<( std::ostream & os, e_errno const & e )
   {
-    return os << "errno = " << e.value << ", \"" << strerror(e.value) << '"';
+    return os << e.value << ", \"" << strerror(e.value) << '"';
   }
 };
 ----
@@ -1880,9 +1883,9 @@ Caught:
   error_code: 1
 ----
 
-Notice how the diagnostic information for `e_file_name` changed: because it was discarded, LEAF is unable to print it.
+Notice how we are missing the `Diagnostic details:` section. That's because the `e_file_name` object was discarded by LEAF, since no error handler needed it.
 
-TIP: The automatically-generated diagnostic messages are developer-friendly, but not user-friendly. Therefore, `operator<<` overloads for error types should only print technical information in English, and should not attempt to localize strings or to format a user-friendly message; this should be done in error handling functions specifically designed for that purpose.
+TIP: The automatically-generated diagnostic messages are developer-friendly, but not user-friendly.
 
 '''
 
