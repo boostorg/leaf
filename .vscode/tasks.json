@@ -10,6 +10,12 @@
             "problemMatcher": []
         },
         {
+            "label": "Setup Meson build directories (no exceptions)",
+            "type": "shell",
+            "command": "cd ${workspaceRoot} && meson setup -D cpp_eh=none -D leaf_boost_examples=true -D leaf_lua_examples=true _bld/debug && meson setup -D cpp_eh=none -D leaf_boost_examples=true -D single_header=true _bld/debug_single_header && meson setup -D cpp_eh=none -D leaf_boost_examples=true -D leaf_lua_examples=true _bld/release --buildtype release && meson setup -D cpp_eh=none -D leaf_boost_examples=true -D single_header=true _bld/release_single_header --buildtype release",
+            "problemMatcher": []
+        },
+        {
             "label": "Setup Meson build directories (no diagnostics)",
             "type": "shell",
             "command": "cd ${workspaceRoot} && meson setup -D leaf_diagnostics=0 -D leaf_boost_examples=true -D leaf_lua_examples=true _bld/debug && meson setup -D leaf_diagnostics=0 -D leaf_boost_examples=true -D single_header=true _bld/debug_single_header && meson setup -D leaf_diagnostics=0 -D leaf_boost_examples=true -D leaf_lua_examples=true _bld/release --buildtype release && meson setup -D leaf_diagnostics=0 -D leaf_boost_examples=true -D single_header=true _bld/release_single_header --buildtype release",
