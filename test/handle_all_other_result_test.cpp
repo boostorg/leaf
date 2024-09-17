@@ -44,7 +44,7 @@ ResType g( bool succeed )
     if( auto r = f<ResType>(succeed) )
         return r;
     else
-        return ResType(leaf::error_id(r.error()).load(info<42>{42}));
+        return leaf::error_id(r.error()).load(info<42>{42});
 }
 
 template <class ResType>

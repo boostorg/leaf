@@ -158,5 +158,6 @@ exe error_log : ../example/error_log.cpp : <exception-handling>off:<build>no ;
 exe error_trace : ../example/error_trace.cpp : <exception-handling>off:<build>no ;
 exe exception_to_result : ../example/exception_to_result.cpp : <exception-handling>off:<build>no ;
 exe print_file_eh : ../example/print_file/print_file_eh.cpp : <exception-handling>off:<build>no ;
-exe print_file_result : ../example/print_file/print_file_result.cpp : <exception-handling>off:<build>no ;
+exe print_file_leaf_result : ../example/print_file/print_file_leaf_result.cpp : <exception-handling>off:<build>no ;
+exe print_file_system_result : ../example/print_file/print_file_system_result.cpp : <exception-handling>off:<build>no ;
 exe print_half : ../example/print_half.cpp : <exception-handling>off:<build>no ;

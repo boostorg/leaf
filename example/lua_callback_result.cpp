@@ -5,11 +5,32 @@
 // This is a simple program that shows how to report error objects out of a
 // C-callback, converting them to leaf::result<T> as soon as controlreaches C++.
 
+#include <boost/leaf.hpp>
+
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace boost
+{
+    [[noreturn]] void throw_exception( std::exception const & e )
+    {
+        std::terminate();
+    }
+
+    struct source_location;
+    [[noreturn]] void throw_exception( std::exception const & e, boost::source_location const & )
+    {
+        throw_exception(e);
+    }
+}
+
+#endif
+
+////////////////////////////////////////
+
 extern "C" {
     #include "lua.h"
     #include "lauxlib.h"
 }
-#include <boost/leaf.hpp>
 #include <iostream>
 #include <memory>
 #include <stdlib.h>
@@ -153,22 +174,3 @@ int main()
 
     return 0;
 }
-
-#ifdef BOOST_LEAF_NO_EXCEPTIONS
-
-namespace boost
-{
-    [[noreturn]] void throw_exception( std::exception const & e )
-    {
-        std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
-        std::terminate();
-    }
-
-    struct source_location;
-    [[noreturn]] void throw_exception( std::exception const & e, boost::source_location const & )
-    {
-        throw_exception(e);
-    }
-}
-
-#endif

@@ -153,6 +153,12 @@ namespace detail
             return kind_t(state_&3);
         }
 
+        int get_error_id_value() const noexcept
+        {
+            BOOST_LEAF_ASSERT(kind() == err_id_zero || kind() == err_id || kind() == err_id_capture_list);
+            return int((state_&~3)|1);
+        }
+
         error_id get_error_id() const noexcept
         {
             BOOST_LEAF_ASSERT(kind() == err_id_zero || kind() == err_id || kind() == err_id_capture_list);
@@ -228,10 +234,22 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
             }
         }
 
-        operator error_id() noexcept
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        operator std::error_code() const noexcept
         {
             result_discriminant const what = r_.what_;
-            return what.kind() == result_discriminant::val? error_id() : what.get_error_id();
+            return what.kind() == result_discriminant::val?
+                std::error_code() :
+                std::error_code(what.get_error_id_value(), detail::get_leaf_error_category<>::cat);
+        }
+#endif
+
+        operator error_id() const noexcept
+        {
+            result_discriminant const what = r_.what_;
+            return what.kind() == result_discriminant::val?
+                error_id() :
+                what.get_error_id();
         }
     };
 
