@@ -3,9 +3,9 @@
 * [print_file](./print_file): The complete example from the [Five Minute Introduction](https://boostorg.github.io/leaf/#introduction). This directory contains several versions of the same program, each using a different error handling style.
 
 * [dynamic_capture_result.cpp](https://github.com/boostorg/leaf/blob/master/example/dynamic_capture_result.cpp?ts=4): Shows how to transport error objects between threads in a `leaf::result<T>` object without using exception handling.
-* [dynamic_capture_eh.cpp](https://github.com/boostorg/leaf/blob/master/example/dynamic_capture_eh.cpp?ts=4): Shows how to transport error objects between threads in an a `leaf::result<T>` object using exception handling.
+* [dynamic_capture_exceptions.cpp](https://github.com/boostorg/leaf/blob/master/example/dynamic_capture_exceptions.cpp?ts=4): Shows how to transport error objects between threads in an a `leaf::result<T>` object using exception handling.
 * [lua_callback_result.cpp](https://github.com/boostorg/leaf/blob/master/example/lua_callback_result.cpp?ts=4): Transporting arbitrary error objects through an uncooperative C API.
-* [lua_callback_eh.cpp](https://github.com/boostorg/leaf/blob/master/example/lua_callback_eh.cpp?ts=4): Transporting arbitrary error objects through an uncooperative exception-safe API.
+* [lua_callback_exceptions.cpp](https://github.com/boostorg/leaf/blob/master/example/lua_callback_exceptions.cpp?ts=4): Transporting arbitrary error objects through an uncooperative exception-safe API.
 * [exception_to_result.cpp](https://github.com/boostorg/leaf/blob/master/example/exception_to_result.cpp?ts=4): Demonstrates how to transport exceptions through a `noexcept` layer in the program.
 * [exception_error_log.cpp](https://github.com/boostorg/leaf/blob/master/example/error_log.cpp?ts=4): Using `accumulate` to produce an error log.
 * [exception_error_trace.cpp](https://github.com/boostorg/leaf/blob/master/example/error_trace.cpp?ts=4): Same as above, but the log is recorded in a `std::deque` rather than just printed.

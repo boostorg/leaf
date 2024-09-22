@@ -3,7 +3,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // This is a simple program that demonstrates the use of LEAF to transport error
-// objects between threads, without using exception handling. See capture_eh.cpp
+// objects between threads, without using exception handling. See try_capture_all_exceptions.cpp
 // for the version that uses exception handling.
 
 #include <boost/leaf/config.hpp>

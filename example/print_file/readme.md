@@ -15,5 +15,5 @@ different variation on error handling:
 * [print_file_outcome_result.cpp](./print_file_outcome_result.cpp) is the same as
   above, but using `boost::outcome::result<T>` instead of `boost::leaf::result<T>`.
 
-* [print_file_eh.cpp](./print_file_eh.cpp) throws on error, using an error code
+* [print_file_exceptions.cpp](./print_file_exceptions.cpp) throws on error, using an error code
   `enum` for classification of failures.

@@ -230,6 +230,9 @@ int main()
         BOOST_TEST_EQ(err::count, 1);
         BOOST_TEST_EQ(val::count, 0);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<val> r2 = std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -246,6 +249,9 @@ int main()
         BOOST_TEST_EQ(err::count, 1);
         BOOST_TEST_EQ(val::count, 0);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<val> r2 = std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -263,6 +269,9 @@ int main()
         BOOST_TEST_EQ(err::count, 1);
         BOOST_TEST_EQ(val::count, 0);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<val> r2; r2=std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -285,6 +294,9 @@ int main()
         BOOST_TEST_EQ(err::count, 1);
         BOOST_TEST_EQ(val::count, 0);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<val> r2; r2=std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -304,6 +316,9 @@ int main()
         BOOST_TEST_EQ(err::count, 1);
         BOOST_TEST_EQ(val::count, 0);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<val> r2 = std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -323,6 +338,9 @@ int main()
         BOOST_TEST_EQ(err::count, 1);
         BOOST_TEST_EQ(val::count, 0);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<val> r2 = std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -342,6 +360,9 @@ int main()
         BOOST_TEST_EQ(err::count, 1);
         BOOST_TEST_EQ(val::count, 0);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<val> r2; r2=std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -361,6 +382,9 @@ int main()
         BOOST_TEST_EQ(err::count, 1);
         BOOST_TEST_EQ(val::count, 0);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<val> r2; r2=std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -414,6 +438,9 @@ int main()
         BOOST_TEST(!r1.operator->());
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<void> r2 = std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -430,6 +457,9 @@ int main()
         BOOST_TEST(!r1.operator->());
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<void> r2 = std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -447,6 +477,9 @@ int main()
         BOOST_TEST(!r1.operator->());
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<void> r2; r2=std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -465,6 +498,9 @@ int main()
         BOOST_TEST(!r1.operator->());
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<void> r2; r2=std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -484,6 +520,9 @@ int main()
         BOOST_TEST(!r1.operator->());
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<void> r2 = std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -502,6 +541,9 @@ int main()
         BOOST_TEST(!r1.operator->());
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<void> r2 = std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -520,6 +562,9 @@ int main()
         BOOST_TEST(!r1.operator->());
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<void> r2; r2=std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -538,6 +583,9 @@ int main()
         BOOST_TEST(!r1.operator->());
         BOOST_TEST_EQ(err::count, 1);
         leaf::error_id r1e = r1.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(std::error_code(r1e) == r1.error());
+#endif
         leaf::result<void> r2; r2=std::move(r1);
         leaf::error_id r2e = r2.error();
         BOOST_TEST_EQ(r1e, r2e);
@@ -572,6 +620,9 @@ int main()
         BOOST_TEST_EQ(val::count, 0);
         BOOST_TEST(!r1);
         leaf::error_id id = r.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(!std::error_code(r.error()));
+#endif
         BOOST_TEST(!id);
     }
     BOOST_TEST_EQ(val::count, 0);
@@ -582,6 +633,9 @@ int main()
         leaf::result<void> r1 = r.error();
         BOOST_TEST(!r1);
         leaf::error_id id = r.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(!std::error_code(r.error()));
+#endif
         BOOST_TEST(!id);
         BOOST_TEST_EQ(val::count, 1);
     }
@@ -593,6 +647,9 @@ int main()
         leaf::result<float> r1 = r.error();
         BOOST_TEST(!r1);
         leaf::error_id id = r.error();
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        BOOST_TEST(!std::error_code(r.error()));
+#endif
         BOOST_TEST(!id);
         BOOST_TEST_EQ(val::count, 1);
     }
