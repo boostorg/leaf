@@ -244,7 +244,6 @@ if option_enable_examples
     endif
     if option_boost
         executable('print_file_system_result', 'example/print_file/print_file_system_result.cpp', dependencies: [leaf, dep_boost] )
-        executable('print_file_outcome_result', 'example/print_file/print_file_outcome_result.cpp', dependencies: [leaf, dep_boost] )
     endif
 
     executable('error_log', 'example/error_log.cpp', dependencies: [leaf] )

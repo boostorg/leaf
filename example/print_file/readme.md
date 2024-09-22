@@ -12,8 +12,5 @@ different variation on error handling:
   This demonstrates the ability of LEAF to transport arbitrary error objects using an
   external result type, rather than `boost::leaf::result<T>`.
 
-* [print_file_outcome_result.cpp](./print_file_outcome_result.cpp) is the same as
-  above, but using `boost::outcome::result<T>` instead of `boost::leaf::result<T>`.
-
 * [print_file_exceptions.cpp](./print_file_exceptions.cpp) throws on error, using an error code
   `enum` for classification of failures.
