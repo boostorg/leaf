@@ -159,5 +159,5 @@ exe error_trace : ../example/error_trace.cpp ;
 exe exception_to_result : ../example/exception_to_result.cpp : <exception-handling>off:<build>no ;
 exe print_file_exceptions : ../example/print_file/print_file_exceptions.cpp : <exception-handling>off:<build>no ;
 exe print_file_leaf_result : ../example/print_file/print_file_leaf_result.cpp ;
-exe print_file_system_result : ../example/print_file/print_file_system_result.cpp : <cxxstd>11:<build>no <cxxstd>14:<build>no <variant>leaf_debug_embedded:<build>no <variant>leaf_release_embedded:<build>no ;
+exe print_file_system_result : ../example/print_file/print_file_system_result.cpp : <cxxstd>11:<build>no <cxxstd>14:<build>no <cxxstd>1z:<build>no <variant>leaf_debug_embedded:<build>no <variant>leaf_release_embedded:<build>no ;
 exe print_half : ../example/print_half.cpp ;
