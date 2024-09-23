@@ -585,7 +585,7 @@ namespace detail
         {
             auto r = std::forward<TryBlock>(try_block)();
             unload_result(&r);
-            return std::move(r);
+            return r;
         }
         catch( std::exception & ex )
         {
