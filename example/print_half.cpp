@@ -6,27 +6,6 @@
 // https://github.com/ned14/outcome/blob/master/doc/src/snippets/using_result.cpp
 
 #include <boost/leaf.hpp>
-
-#ifdef BOOST_LEAF_NO_EXCEPTIONS
-
-namespace boost
-{
-    [[noreturn]] void throw_exception( std::exception const & e )
-    {
-        std::terminate();
-    }
-
-    struct source_location;
-    [[noreturn]] void throw_exception( std::exception const & e, boost::source_location const & )
-    {
-        throw_exception(e);
-    }
-}
-
-#endif
-
-////////////////////////////////////////
-
 #include <algorithm>
 #include <ctype.h>
 #include <string>
@@ -117,3 +96,24 @@ int main( int argc, char const * argv[] )
             return 3;
         } );
 }
+
+////////////////////////////////////////
+
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace boost
+{
+    [[noreturn]] void throw_exception( std::exception const & e )
+    {
+        std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
+        std::terminate();
+    }
+
+    struct source_location;
+    [[noreturn]] void throw_exception( std::exception const & e, boost::source_location const & )
+    {
+        throw_exception(e);
+    }
+}
+
+#endif

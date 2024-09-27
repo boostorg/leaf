@@ -11,27 +11,6 @@
 
 
 #include <boost/leaf.hpp>
-
-#ifdef BOOST_LEAF_NO_EXCEPTIONS
-
-namespace boost
-{
-    [[noreturn]] void throw_exception( std::exception const & e )
-    {
-        std::terminate();
-    }
-
-    struct source_location;
-    [[noreturn]] void throw_exception( std::exception const & e, boost::source_location const & )
-    {
-        throw_exception(e);
-    }
-}
-
-#endif
-
-////////////////////////////////////////
-
 #include <boost/system/result.hpp>
 #include <iostream>
 #include <memory>
@@ -53,12 +32,12 @@ enum error_code
 
 
 template <class T>
-using result = boost::system::result<T>;
+using result = boost::system::result<T, std::error_code>;
 
 // To enable LEAF to work with boost::system::result, we need to specialize the
 // is_result_type template:
 namespace boost { namespace leaf {
-    template <class T> struct is_result_type<boost::system::result<T>>: std::true_type { };
+    template <class T> struct is_result_type<boost::system::result<T, std::error_code>>: std::true_type { };
 } }
 
 
@@ -231,3 +210,24 @@ result<void> file_read( FILE & f, void * buf, std::size_t size )
 
     return { };
 }
+
+////////////////////////////////////////
+
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace boost
+{
+    BOOST_NORETURN void throw_exception( std::exception const & e )
+    {
+        std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
+        std::terminate();
+    }
+
+    struct source_location;
+    BOOST_NORETURN void throw_exception( std::exception const & e, boost::source_location const & )
+    {
+        throw_exception(e);
+    }
+}
+
+#endif

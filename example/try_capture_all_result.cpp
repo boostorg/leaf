@@ -21,27 +21,6 @@ int main()
 #else
 
 #include <boost/leaf.hpp>
-
-#ifdef BOOST_LEAF_NO_EXCEPTIONS
-
-namespace boost
-{
-    [[noreturn]] void throw_exception( std::exception const & e )
-    {
-        std::terminate();
-    }
-
-    struct source_location;
-    [[noreturn]] void throw_exception( std::exception const & e, boost::source_location const & )
-    {
-        throw_exception(e);
-    }
-}
-
-#endif
-
-////////////////////////////////////////
-
 #include <vector>
 #include <string>
 #include <future>
@@ -123,5 +102,26 @@ int main()
             } );
     }
 }
+
+////////////////////////////////////////
+
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+
+namespace boost
+{
+    [[noreturn]] void throw_exception( std::exception const & e )
+    {
+        std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
+        std::terminate();
+    }
+
+    struct source_location;
+    [[noreturn]] void throw_exception( std::exception const & e, boost::source_location const & )
+    {
+        throw_exception(e);
+    }
+}
+
+#endif
 
 #endif

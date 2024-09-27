@@ -29,7 +29,6 @@ int main()
 
 #include "boost/system/result.hpp"
 namespace boost { namespace leaf {
-    template <class T> struct is_result_type<boost::system::result<T>>: std::true_type { };
     template <class T> struct is_result_type<boost::system::result<T, std::error_code>>: std::true_type { };
 } }
 
@@ -618,9 +617,6 @@ int main()
     test_void<leaf::result<void>>();
     test_void<test_res<void, std::error_code>>();
     test<boost::system::result<int, std::error_code>>();
-#if __cplusplus >= 201703L
-    test<boost::system::result<int>>();
-#endif
     return boost::report_errors();
 }
 
