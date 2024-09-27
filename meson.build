@@ -262,10 +262,6 @@ if option_enable_examples
         executable('lua_callback_result', 'example/lua_callback_result.cpp', dependencies: [leaf, dep_lua] )
     endif
 
-    if option_boost and option_exceptions
-        executable('asio_beast_leaf_rpc', 'example/asio_beast_leaf_rpc.cpp', dependencies: [leaf, dep_boost] )
-    endif
-
 endif
 
 #################################

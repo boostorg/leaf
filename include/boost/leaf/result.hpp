@@ -153,12 +153,6 @@ namespace detail
             return kind_t(state_&3);
         }
 
-        int get_error_id_value() const noexcept
-        {
-            BOOST_LEAF_ASSERT(kind() == err_id_zero || kind() == err_id || kind() == err_id_capture_list);
-            return int((state_&~3)|1);
-        }
-
         error_id get_error_id() const noexcept
         {
             BOOST_LEAF_ASSERT(kind() == err_id_zero || kind() == err_id || kind() == err_id_capture_list);

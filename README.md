@@ -9,7 +9,7 @@ https://boostorg.github.io/leaf/
 ## Features
 
 * Portable single-header format, no dependencies.
-* Tiny code size when configured for embedded development.
+* Tiny code size, configurable for embedded development.
 * No dynamic memory allocations, even with very large payloads.
 * Deterministic unbiased efficiency on the "happy" path and the "sad" path.
 * Error objects are handled in constant time, independent of call stack depth.
