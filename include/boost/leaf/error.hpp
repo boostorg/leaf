@@ -656,8 +656,7 @@ public:
     }
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-    template <class T>
-    explicit error_id( T const & ec, typename std::enable_if<!std::is_error_code_enum<T>::value && std::is_constructible<std::error_code, T>::value, int>::type = 0 ) noexcept:
+    explicit error_id( std::error_code const & ec ) noexcept:
         value_(detail::import_error_code(std::error_code(ec)))
     {
         BOOST_LEAF_ASSERT(!value_ || ((value_&3) == 1));

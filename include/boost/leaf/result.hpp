@@ -234,16 +234,6 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
             }
         }
 
-#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-        operator std::error_code() const noexcept
-        {
-            result_discriminant const what = r_.what_;
-            return what.kind() == result_discriminant::val?
-                std::error_code() :
-                std::error_code(what.get_error_id_value(), detail::get_leaf_error_category<>::cat);
-        }
-#endif
-
         operator error_id() const noexcept
         {
             result_discriminant const what = r_.what_;
