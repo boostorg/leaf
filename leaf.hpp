@@ -2,7 +2,7 @@
 #define BOOST_LEAF_HPP_INCLUDED
 
 // Boost LEAF single header distribution. Do not edit.
-// Generated on Sep 15, 2024 from https://github.com/boostorg/leaf/tree/7bd20a5.
+// Generated on Sep 28, 2024 from https://github.com/boostorg/leaf/tree/c973cd4.
 
 // Latest published version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
@@ -891,7 +891,7 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name
 
 struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name
 {
-    constexpr static char const * const value = "<unavailable>";
+    char const * value = "<unavailable>";
     BOOST_LEAF_CONSTEXPR explicit e_file_name( char const * ) { }
 };
 
@@ -2427,30 +2427,30 @@ namespace detail
 
 namespace detail
 {
-    class leaf_category final: public std::error_category
+    class leaf_error_category final: public std::error_category
     {
         bool equivalent( int,  std::error_condition const & ) const noexcept final override { return false; }
         bool equivalent( std::error_code const &, int ) const noexcept final override { return false; }
         char const * name() const noexcept final override { return "LEAF error"; }
         std::string message( int ) const final override { return name(); }
     public:
-        ~leaf_category() noexcept final override { }
+        ~leaf_error_category() noexcept final override { }
     };
 
     template <class=void>
-    struct get_error_category
+    struct get_leaf_error_category
     {
-        static leaf_category cat;
+        static leaf_error_category cat;
     };
 
     template <class T>
-    leaf_category get_error_category<T>::cat;
+    leaf_error_category get_leaf_error_category<T>::cat;
 
     inline int import_error_code( std::error_code const & ec ) noexcept
     {
         if( int err_id = ec.value() )
         {
-            std::error_category const & cat = get_error_category<>::cat;
+            std::error_category const & cat = get_leaf_error_category<>::cat;
             if( &ec.category() == &cat )
             {
                 BOOST_LEAF_ASSERT((err_id&3) == 1);
@@ -2470,7 +2470,7 @@ namespace detail
 
 inline bool is_error_id( std::error_code const & ec ) noexcept
 {
-    bool res = (&ec.category() == &detail::get_error_category<>::cat);
+    bool res = (&ec.category() == &detail::get_leaf_error_category<>::cat);
     BOOST_LEAF_ASSERT(!res || !ec.value() || ((ec.value()&3) == 1));
     return res;
 }
@@ -2504,21 +2504,22 @@ public:
     }
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-    error_id( std::error_code const & ec ) noexcept:
-        value_(detail::import_error_code(ec))
+    explicit error_id( std::error_code const & ec ) noexcept:
+        value_(detail::import_error_code(std::error_code(ec)))
     {
         BOOST_LEAF_ASSERT(!value_ || ((value_&3) == 1));
     }
 
     template <class Enum>
-    error_id( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept:
+    error_id( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type = 0 ) noexcept:
         value_(detail::import_error_code(e))
     {
     }
 
-    operator std::error_code() const noexcept
+    template <class T, typename std::enable_if<std::is_constructible<T, std::error_code>::value, int>::type = 0>
+    operator T() const noexcept
     {
-        return std::error_code(value_, detail::get_error_category<>::cat);
+        return std::error_code(value_, detail::get_leaf_error_category<>::cat);
     }
 #endif
 
@@ -3624,7 +3625,7 @@ try_handle_all( TryBlock && try_block, H && ... h ) noexcept
     else
     {
         detail::unload_result(&r);
-        error_id id = r.error();
+        error_id id(r.error());
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
         return ctx.template handle_error<R>(std::move(id), std::forward<H>(h)...);
@@ -3644,12 +3645,12 @@ try_handle_some( TryBlock && try_block, H && ... h ) noexcept
     else
     {
         detail::unload_result(&r);
-        error_id id = r.error();
+        error_id id(r.error());
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
         auto rr = ctx.template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
         if( !rr )
-            ctx.unload(rr.error());
+            ctx.unload(error_id(rr.error()));
         return rr;
     }
 }
@@ -3679,7 +3680,7 @@ namespace detail
         {
             auto r = std::forward<TryBlock>(try_block)();
             unload_result(&r);
-            return std::move(r);
+            return r;
         }
         catch( std::exception & ex )
         {
@@ -3720,7 +3721,7 @@ try_handle_all( TryBlock && try_block, H && ... h )
     {
         BOOST_LEAF_ASSERT(ctx.is_active());
         detail::unload_result(&r);
-        error_id id = r.error();
+        error_id id(r.error());
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
         return ctx.template handle_error<R>(std::move(id), std::forward<H>(h)...);
@@ -3740,7 +3741,7 @@ try_handle_some( TryBlock && try_block, H && ... h )
     else if( ctx.is_active() )
     {
         detail::unload_result(&r);
-        error_id id = r.error();
+        error_id id(r.error());
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
         auto rr = ctx.template handle_error<R>(std::move(id), std::forward<H>(h)...,
@@ -3749,12 +3750,12 @@ try_handle_some( TryBlock && try_block, H && ... h )
                 return std::move(r);
             });
         if( !rr )
-            ctx.unload(rr.error());
+            ctx.unload(error_id(rr.error()));
         return rr;
     }
     else
     {
-        ctx.unload(r.error());
+        ctx.unload(error_id(r.error()));
         return r;
     }
 }
@@ -4544,7 +4545,7 @@ exception_to_result( F && f ) noexcept
 } }
 
 #endif // BOOST_LEAF_EXCEPTION_HPP_INCLUDED
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3098
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3099
 // >>> #include <boost/leaf/on_error.hpp>
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
@@ -4781,7 +4782,7 @@ on_error( Item && ... i )
 
 // #line 8 "boost/leaf/pred.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 14
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3098
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3099
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -5077,7 +5078,7 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 // #include <boost/leaf/config.hpp> // Expanded at line 14
 // #include <boost/leaf/detail/print.hpp> // Expanded at line 1582
 // #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 1576
-// #include <boost/leaf/exception.hpp> // Expanded at line 4264
+// #include <boost/leaf/exception.hpp> // Expanded at line 4265
 
 #include <climits>
 #include <functional>
@@ -5297,10 +5298,12 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
             }
         }
 
-        operator error_id() noexcept
+        operator error_id() const noexcept
         {
             result_discriminant const what = r_.what_;
-            return what.kind() == result_discriminant::val? error_id() : what.get_error_id();
+            return what.kind() == result_discriminant::val?
+                error_id() :
+                what.get_error_id();
         }
     };
 
@@ -5802,8 +5805,8 @@ struct is_result_type<result<T>>: std::true_type
 #if __cplusplus >= 201703L
 
 // #include <boost/leaf/config.hpp> // Expanded at line 14
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3098
-// #include <boost/leaf/result.hpp> // Expanded at line 5073
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3099
+// #include <boost/leaf/result.hpp> // Expanded at line 5074
 #include <variant>
 #include <optional>
 #include <tuple>
