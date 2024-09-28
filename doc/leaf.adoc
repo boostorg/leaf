@@ -1365,7 +1365,7 @@ return leaf::try_catch(
 [.text-right]
 <<try_catch>> | <<result>>
 
-NOTE: Follow this link to see a complete example program: https://github.com/boostorg/leaf/blob/master/example/try_capture_all_eh.cpp?ts=4[try_capture_all_eh.cpp].
+NOTE: Follow this link to see a complete example program: https://github.com/boostorg/leaf/blob/master/example/try_capture_all_exceptions.cpp?ts=4[try_capture_all_exceptions.cpp].
 
 '''
 
@@ -1776,7 +1776,7 @@ int main() noexcept
 
 NOTE: Follow this link to see the complete program: https://github.com/boostorg/leaf/blob/master/example/lua_callback_result.cpp?ts=4[lua_callback_result.cpp].
 
-TIP: When using Lua with {CPP}, we need to protect the Lua interpreter from exceptions that may be thrown from {CPP} functions installed as `lua_CFunction` callbacks. Here is the program from this section rewritten to use a {CPP} exception (instead of `leaf::result`) to safely communicate errors out of the `do_work` function: https://github.com/boostorg/leaf/blob/master/example/lua_callback_eh.cpp?ts=4[lua_callback_eh.cpp].
+TIP: When using Lua with {CPP}, we need to protect the Lua interpreter from exceptions that may be thrown from {CPP} functions installed as `lua_CFunction` callbacks. Here is the program from this section rewritten to use a {CPP} exception (instead of `leaf::result`) to safely communicate errors out of the `do_work` function: https://github.com/boostorg/leaf/blob/master/example/lua_callback_exceptions.cpp?ts=4[lua_callback_exceptions.cpp].
 
 ''''
 

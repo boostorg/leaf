@@ -152,11 +152,12 @@ compile-fail _compile-fail-result_2.cpp ;
 compile-fail _compile-fail-result_3.cpp ;
 compile-fail _compile-fail-result_4.cpp ;
 
-exe try_capture_all_eh : ../example/try_capture_all_eh.cpp : <threading>single:<build>no <exception-handling>off:<build>no <variant>leaf_debug_capture0:<build>no <variant>leaf_release_capture0:<build>no ;
+exe try_capture_all_exceptions : ../example/try_capture_all_exceptions.cpp : <threading>single:<build>no <exception-handling>off:<build>no <variant>leaf_debug_capture0:<build>no <variant>leaf_release_capture0:<build>no ;
 exe try_capture_all_result : ../example/try_capture_all_result.cpp : <threading>single:<build>no <variant>leaf_debug_capture0:<build>no <variant>leaf_release_capture0:<build>no <variant>leaf_debug_embedded:<build>no <variant>leaf_release_embedded:<build>no ;
-exe error_log : ../example/error_log.cpp : <exception-handling>off:<build>no ;
-exe error_trace : ../example/error_trace.cpp : <exception-handling>off:<build>no ;
+exe error_log : ../example/error_log.cpp ;
+exe error_trace : ../example/error_trace.cpp ;
 exe exception_to_result : ../example/exception_to_result.cpp : <exception-handling>off:<build>no ;
-exe print_file_eh : ../example/print_file/print_file_eh.cpp : <exception-handling>off:<build>no ;
-exe print_file_result : ../example/print_file/print_file_result.cpp : <exception-handling>off:<build>no ;
-exe print_half : ../example/print_half.cpp : <exception-handling>off:<build>no ;
+exe print_file_exceptions : ../example/print_file/print_file_exceptions.cpp : <exception-handling>off:<build>no ;
+exe print_file_leaf_result : ../example/print_file/print_file_leaf_result.cpp ;
+exe print_file_system_result : ../example/print_file/print_file_system_result.cpp : <variant>leaf_debug_embedded:<build>no <variant>leaf_release_embedded:<build>no ;
+exe print_half : ../example/print_half.cpp ;

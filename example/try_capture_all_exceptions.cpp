@@ -61,8 +61,8 @@ int main()
     std::vector<std::future<leaf::result<task_result>>> fut;
 
     // Launch the tasks, but rather than launching the task function directly,
-    // we use leaf::try_catch in compbination with leaf::dynamic_capture:
-    // in case of a failure, the returned leaf::result<> will capture all error objects.
+    // we use try_capture_all: in case of a failure, the returned leaf::result<>
+    // will capture all error objects.
     std::generate_n( std::back_inserter(fut), task_count,
         [&]
         {
