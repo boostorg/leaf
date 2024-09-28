@@ -26,6 +26,6 @@ https://boostorg.github.io/leaf/
 Besides GitHub, there are two other distribution channels:
 
 * LEAF is included in official [Boost](https://www.boost.org/) releases, starting with Boost 1.75.
-* For maximum portability, the library is also available in single-header format: simply download [leaf.hpp](https://boostorg.github.io/leaf/leaf.hpp) (direct download link).
+* For maximum portability, the library is also available in single-header format: [leaf.hpp](https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp).
 
 Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc. Distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
