@@ -13,7 +13,6 @@ option_capture = get_option('leaf_capture')
 option_exceptions = (get_option('cpp_eh')!='none')
 option_enable_unit_tests = get_option('leaf_enable_unit_tests')
 option_enable_examples = get_option('leaf_enable_examples')
-option_enable_benchmarks = get_option('leaf_enable_benchmarks')
 option_embedded = get_option('leaf_embedded')
 
 if not option_enable_examples
@@ -260,28 +259,6 @@ if option_enable_examples
             executable('lua_callback_exceptions', 'example/lua_callback_exceptions.cpp', dependencies: [leaf, dep_lua] )
         endif
         executable('lua_callback_result', 'example/lua_callback_result.cpp', dependencies: [leaf, dep_lua] )
-    endif
-
-endif
-
-#################################
-
-if option_enable_benchmarks
-
-    if get_option('optimization')=='0'
-        error('The option leaf_enable_benchmarks requires optimizations to be enabled. Aborting.')
-    endif
-
-    if option_exceptions
-        error('The option leaf_enable_benchmarks requires the built-in option cpp_exceptions set to none. Aborting.')
-    endif
-
-    dep_tl_expected = subproject('tl_expected').get_variable('headers')
-    executable('deep_stack_tl', 'benchmark/deep_stack_other.cpp', override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=0', dependencies: [dep_tl_expected] )
-    executable('deep_stack_leaf', 'benchmark/deep_stack_leaf.cpp', dependencies: [leaf], override_options: ['cpp_std=c++17'], cpp_args: '-DBOOST_LEAF_CFG_DIAGNOSTICS=0')
-    if option_boost
-        executable('deep_stack_result', 'benchmark/deep_stack_other.cpp', dependencies: [dep_boost], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=1' )
-        executable('deep_stack_outcome', 'benchmark/deep_stack_other.cpp', dependencies: [dep_boost], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=2' )
     endif
 
 endif

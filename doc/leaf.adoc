@@ -43,7 +43,7 @@ Boost LEAF is a lightweight error handling library for {CPP}11. Features:
 ifndef::backend-pdf[]
 [grid=none, frame=none]
 |====
-| <<tutorial>> \| <<synopsis>> \| https://github.com/boostorg/leaf/blob/master/doc/whitepaper.md[Whitepaper] \| https://github.com/boostorg/leaf/blob/master/benchmark/benchmark.md[Benchmark] >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<predicates,Predicates>> \| <<traits,Traits>> \| <<macros,Macros>>
+| <<tutorial>> \| <<synopsis>> \| https://github.com/boostorg/leaf/blob/master/doc/whitepaper.md[Whitepaper] >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<predicates,Predicates>> \| <<traits,Traits>> \| <<macros,Macros>>
 |====
 endif::[]
 
@@ -5646,10 +5646,6 @@ Assuming the current working directory is `<boostroot>/libs/leaf`:
 ----
 ../../b2 test
 ----
-
-== Benchmark
-
-https://github.com/boostorg/leaf/blob/master/benchmark/benchmark.md[This benchmark] compares the performance of LEAF, Boost Outcome and `tl::expected`.
 
 [[rationale]]
 == Design Rationale
