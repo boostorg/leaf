@@ -3,19 +3,19 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // This is the program presented in
-// https://boostorg.github.io/leaf/#introduction-result, converted to use
-// outcome::result instead of leaf::result.
+// https://boostorg.github.io/leaf/#introduction-result.
 
 // It reads a text file in a buffer and prints it to std::cout, using LEAF to
-// handle errors. This version does not use exception handling.
+// handle errors. This version does not use exception handling. The version that
+// does use exception handling is in print_file_exceptions.cpp.
 
-#include <boost/outcome/std_result.hpp>
+
 #include <boost/leaf.hpp>
+#include <boost/system/result.hpp>
 #include <iostream>
 #include <memory>
 #include <stdio.h>
 
-namespace outcome = boost::outcome_v2;
 namespace leaf = boost::leaf;
 
 
@@ -32,12 +32,12 @@ enum error_code
 
 
 template <class T>
-using result = outcome::std_result<T>;
+using result = boost::system::result<T, std::error_code>;
 
-// To enable LEAF to work with outcome::result, we need to specialize the
+// To enable LEAF to work with boost::system::result, we need to specialize the
 // is_result_type template:
 namespace boost { namespace leaf {
-    template <class T> struct is_result_type<outcome::std_result<T>>: std::true_type { };
+    template <class T> struct is_result_type<boost::system::result<T, std::error_code>>: std::true_type { };
 } }
 
 
@@ -208,7 +208,7 @@ result<void> file_read( FILE & f, void * buf, std::size_t size )
     if( n != size )
         return leaf::new_error(eof_error);
 
-    return outcome::success();
+    return { };
 }
 
 ////////////////////////////////////////
@@ -217,14 +217,14 @@ result<void> file_read( FILE & f, void * buf, std::size_t size )
 
 namespace boost
 {
-    [[noreturn]] void throw_exception( std::exception const & e )
+    BOOST_NORETURN void throw_exception( std::exception const & e )
     {
         std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
         std::terminate();
     }
 
     struct source_location;
-    [[noreturn]] void throw_exception( std::exception const & e, boost::source_location const & )
+    BOOST_NORETURN void throw_exception( std::exception const & e, boost::source_location const & )
     {
         throw_exception(e);
     }

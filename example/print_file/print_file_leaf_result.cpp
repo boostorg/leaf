@@ -7,7 +7,7 @@
 
 // It reads a text file in a buffer and prints it to std::cout, using LEAF to
 // handle errors. This version does not use exception handling. The version that
-// does use exception handling is in print_file_eh.cpp.
+// does use exception handling is in print_file_exceptions.cpp.
 
 #include <boost/leaf.hpp>
 #include <iostream>

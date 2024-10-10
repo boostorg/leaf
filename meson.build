@@ -13,7 +13,6 @@ option_capture = get_option('leaf_capture')
 option_exceptions = (get_option('cpp_eh')!='none')
 option_enable_unit_tests = get_option('leaf_enable_unit_tests')
 option_enable_examples = get_option('leaf_enable_examples')
-option_enable_benchmarks = get_option('leaf_enable_benchmarks')
 option_embedded = get_option('leaf_embedded')
 
 if not option_enable_examples
@@ -37,7 +36,11 @@ if not meson.is_subproject()
             '-DBOOST_LEAF_BOOST_AVAILABLE',
             language:'cpp' )
     endif
-    if compiler_id=='clang'
+    if compiler_id=='msvc'
+        add_global_arguments(
+            '/FC',
+            language:'cpp' )
+    elif compiler_id=='clang'
         if get_option('buildtype')!='debug'
             add_global_arguments(
                 '-Wno-unused-variable',
@@ -234,82 +237,28 @@ endif
 
 if option_enable_examples
 
-    print_file_examples = [
-        'print_file_result'
-    ]
+    executable('print_file_leaf_result', 'example/print_file/print_file_leaf_result.cpp', dependencies: [leaf] )
     if option_exceptions
-        print_file_examples += [
-            'print_file_eh'
-        ]
+        executable('print_file_exceptions', 'example/print_file/print_file_exceptions.cpp', dependencies: [leaf] )
     endif
     if option_boost
-        print_file_examples += [
-            'print_file_outcome_result'
-        ]
+        executable('print_file_system_result', 'example/print_file/print_file_system_result.cpp', dependencies: [leaf, dep_boost] )
     endif
 
-    foreach e : print_file_examples
-        executable(e, 'example/print_file/'+e+'.cpp', dependencies: [leaf, dep_thread, dep_boost] )
-    endforeach
-
-endif
-
-#################################
-
-if option_enable_examples
-
-    examples = [
-        'error_log',
-        'error_trace',
-        'print_half',
-        'try_capture_all_result'
-    ]
+    executable('error_log', 'example/error_log.cpp', dependencies: [leaf] )
+    executable('error_trace', 'example/error_trace.cpp', dependencies: [leaf] )
+    executable('print_half', 'example/print_half.cpp', dependencies: [leaf] )
+    executable('try_capture_all_result', 'example/try_capture_all_result.cpp', dependencies: [leaf] )
     if option_exceptions
-        examples += [
-            'exception_to_result',
-            'try_capture_all_eh'
-        ]
-        if option_lua
-            examples += [
-                'lua_callback_eh'
-            ]
-        endif
-        if option_boost
-            examples += [
-               'asio_beast_leaf_rpc'
-            ]
-        endif
+        executable('try_capture_all_exceptions', 'example/try_capture_all_exceptions.cpp', dependencies: [leaf] )
+        executable('exception_to_result', 'example/exception_to_result.cpp', dependencies: [leaf] )
     endif
+
     if option_lua
-        examples += [
-            'lua_callback_result'
-        ]
-    endif
-
-    foreach e : examples
-        executable(e, 'example/'+e+'.cpp', dependencies: [leaf, dep_thread, dep_boost, dep_lua] )
-    endforeach
-
-endif
-
-#################################
-
-if option_enable_benchmarks
-
-    if get_option('optimization')=='0'
-        error('The option leaf_enable_benchmarks requires optimizations to be enabled. Aborting.')
-    endif
-
-    if option_exceptions
-        error('The option leaf_enable_benchmarks requires the built-in option cpp_eh set to none. Aborting.')
-    endif
-
-    dep_tl_expected = subproject('tl_expected').get_variable('headers')
-    executable('deep_stack_tl', 'benchmark/deep_stack_other.cpp', override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=0', dependencies: [dep_tl_expected] )
-    executable('deep_stack_leaf', 'benchmark/deep_stack_leaf.cpp', dependencies: [leaf], override_options: ['cpp_std=c++17'], cpp_args: '-DBOOST_LEAF_CFG_DIAGNOSTICS=0')
-    if option_boost
-        executable('deep_stack_result', 'benchmark/deep_stack_other.cpp', dependencies: [dep_boost], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=1' )
-        executable('deep_stack_outcome', 'benchmark/deep_stack_other.cpp', dependencies: [dep_boost], override_options: ['cpp_std=c++17'], cpp_args: '-DBENCHMARK_WHAT=2' )
+        if option_exceptions
+            executable('lua_callback_exceptions', 'example/lua_callback_exceptions.cpp', dependencies: [leaf, dep_lua] )
+        endif
+        executable('lua_callback_result', 'example/lua_callback_result.cpp', dependencies: [leaf, dep_lua] )
     endif
 
 endif

@@ -579,30 +579,30 @@ namespace detail
 
 namespace detail
 {
-    class leaf_category final: public std::error_category
+    class leaf_error_category final: public std::error_category
     {
         bool equivalent( int,  std::error_condition const & ) const noexcept final override { return false; }
         bool equivalent( std::error_code const &, int ) const noexcept final override { return false; }
         char const * name() const noexcept final override { return "LEAF error"; }
         std::string message( int ) const final override { return name(); }
     public:
-        ~leaf_category() noexcept final override { }
+        ~leaf_error_category() noexcept final override { }
     };
 
     template <class=void>
-    struct get_error_category
+    struct get_leaf_error_category
     {
-        static leaf_category cat;
+        static leaf_error_category cat;
     };
 
     template <class T>
-    leaf_category get_error_category<T>::cat;
+    leaf_error_category get_leaf_error_category<T>::cat;
 
     inline int import_error_code( std::error_code const & ec ) noexcept
     {
         if( int err_id = ec.value() )
         {
-            std::error_category const & cat = get_error_category<>::cat;
+            std::error_category const & cat = get_leaf_error_category<>::cat;
             if( &ec.category() == &cat )
             {
                 BOOST_LEAF_ASSERT((err_id&3) == 1);
@@ -622,7 +622,7 @@ namespace detail
 
 inline bool is_error_id( std::error_code const & ec ) noexcept
 {
-    bool res = (&ec.category() == &detail::get_error_category<>::cat);
+    bool res = (&ec.category() == &detail::get_leaf_error_category<>::cat);
     BOOST_LEAF_ASSERT(!res || !ec.value() || ((ec.value()&3) == 1));
     return res;
 }
@@ -656,21 +656,22 @@ public:
     }
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-    error_id( std::error_code const & ec ) noexcept:
-        value_(detail::import_error_code(ec))
+    explicit error_id( std::error_code const & ec ) noexcept:
+        value_(detail::import_error_code(std::error_code(ec)))
     {
         BOOST_LEAF_ASSERT(!value_ || ((value_&3) == 1));
     }
 
     template <class Enum>
-    error_id( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept:
+    error_id( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type = 0 ) noexcept:
         value_(detail::import_error_code(e))
     {
     }
 
-    operator std::error_code() const noexcept
+    template <class T, typename std::enable_if<std::is_constructible<T, std::error_code>::value, int>::type = 0>
+    operator T() const noexcept
     {
-        return std::error_code(value_, detail::get_error_category<>::cat);
+        return std::error_code(value_, detail::get_leaf_error_category<>::cat);
     }
 #endif
 

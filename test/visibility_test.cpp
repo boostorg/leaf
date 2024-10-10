@@ -48,8 +48,9 @@ int main()
                 }
                 return 1;
             },
-            []
+            [](leaf::diagnostic_details const & vinfo)
             {
+                std::cout << "Test is failing\n" << vinfo;
                 return 2;
             } );
         BOOST_TEST_EQ(r, 1);
@@ -79,8 +80,9 @@ int main()
                 }
                 return 1;
             },
-            []
+            [](leaf::diagnostic_details const & vinfo)
             {
+                std::cout << "Test is failing\n" << vinfo;
                 return 2;
             } );
         BOOST_TEST_EQ(r, 1);

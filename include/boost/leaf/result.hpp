@@ -228,10 +228,12 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
             }
         }
 
-        operator error_id() noexcept
+        operator error_id() const noexcept
         {
             result_discriminant const what = r_.what_;
-            return what.kind() == result_discriminant::val? error_id() : what.get_error_id();
+            return what.kind() == result_discriminant::val?
+                error_id() :
+                what.get_error_id();
         }
     };
 

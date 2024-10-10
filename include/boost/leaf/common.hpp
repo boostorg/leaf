@@ -42,7 +42,7 @@ struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name
 
 struct BOOST_LEAF_SYMBOL_VISIBLE e_file_name
 {
-    constexpr static char const * const value = "<unavailable>";
+    char const * value = "<unavailable>";
     BOOST_LEAF_CONSTEXPR explicit e_file_name( char const * ) { }
 };
 

@@ -530,7 +530,7 @@ try_handle_all( TryBlock && try_block, H && ... h ) noexcept
     else
     {
         detail::unload_result(&r);
-        error_id id = r.error();
+        error_id id(r.error());
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
         return ctx.template handle_error<R>(std::move(id), std::forward<H>(h)...);
@@ -550,12 +550,12 @@ try_handle_some( TryBlock && try_block, H && ... h ) noexcept
     else
     {
         detail::unload_result(&r);
-        error_id id = r.error();
+        error_id id(r.error());
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
         auto rr = ctx.template handle_error<R>(std::move(id), std::forward<H>(h)..., [&r]()->R { return std::move(r); });
         if( !rr )
-            ctx.unload(rr.error());
+            ctx.unload(error_id(rr.error()));
         return rr;
     }
 }
@@ -585,7 +585,7 @@ namespace detail
         {
             auto r = std::forward<TryBlock>(try_block)();
             unload_result(&r);
-            return std::move(r);
+            return r;
         }
         catch( std::exception & ex )
         {
@@ -626,7 +626,7 @@ try_handle_all( TryBlock && try_block, H && ... h )
     {
         BOOST_LEAF_ASSERT(ctx.is_active());
         detail::unload_result(&r);
-        error_id id = r.error();
+        error_id id(r.error());
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()().value())>::type;
         return ctx.template handle_error<R>(std::move(id), std::forward<H>(h)...);
@@ -646,7 +646,7 @@ try_handle_some( TryBlock && try_block, H && ... h )
     else if( ctx.is_active() )
     {
         detail::unload_result(&r);
-        error_id id = r.error();
+        error_id id(r.error());
         ctx.deactivate();
         using R = typename std::decay<decltype(std::declval<TryBlock>()())>::type;
         auto rr = ctx.template handle_error<R>(std::move(id), std::forward<H>(h)...,
@@ -655,12 +655,12 @@ try_handle_some( TryBlock && try_block, H && ... h )
                 return std::move(r);
             });
         if( !rr )
-            ctx.unload(rr.error());
+            ctx.unload(error_id(rr.error()));
         return rr;
     }
     else
     {
-        ctx.unload(r.error());
+        ctx.unload(error_id(r.error()));
         return r;
     }
 }

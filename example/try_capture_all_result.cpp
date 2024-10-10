@@ -3,7 +3,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // This is a simple program that demonstrates the use of LEAF to transport error
-// objects between threads, without using exception handling. See capture_eh.cpp
+// objects between threads, without using exception handling. See try_capture_all_exceptions.cpp
 // for the version that uses exception handling.
 
 #include <boost/leaf/config.hpp>
@@ -61,8 +61,8 @@ int main()
     std::vector<std::future<leaf::result<task_result>>> fut;
 
     // Launch the tasks, but rather than launching the task function directly,
-    // we use leaf::try_handle_some in compbination with leaf::dynamic_capture:
-    // in case of a failure, the returned leaf::result<> will capture all error objects.
+    // we use leaf::try_capture_all: in case of a failure, the returned leaf::result<>
+    // will capture all error objects.
     std::generate_n( std::back_inserter(fut), task_count,
         [&]
         {

@@ -18,9 +18,19 @@
 
 import argparse
 import os
+import filecmp
 import re
 from datetime import date
 import subprocess
+
+def compare_and_update(old_file, new_file):
+    if not os.path.exists(old_file):
+        os.rename(new_file, old_file)
+    elif filecmp.cmp(old_file, new_file, shallow=False):
+        os.remove(new_file)
+    else:
+        os.remove(old_file)
+        os.rename(new_file, old_file)
 
 included = {}
 total_line_count = 14
@@ -79,17 +89,18 @@ def _main():
 
     regex_includes = re.compile(r"""^\s*#[\t\s]*include[\t\s]*("|\<)(?P<include>%s.*)("|\>)""" % args.prefix)
     print('Rebuilding %s:' % args.input)
-    with open(args.output, 'w') as output_file, open(args.input, 'r') as input_file:
-        output_file.write(
+    tmp_file_name = args.output + '.tmp'
+    with open(tmp_file_name, 'w') as tmp_file, open(args.input, 'r') as input_file:
+        tmp_file.write(
             '#ifndef BOOST_LEAF_HPP_INCLUDED\n'
             '#define BOOST_LEAF_HPP_INCLUDED\n'
             '\n'
             '// Boost LEAF single header distribution. Do not edit.\n'
             '// Generated on ' + date.today().strftime('%b %d, %Y'))
         if args.hash:
-            output_file.write(
+            tmp_file.write(
                 ' from https://github.com/boostorg/leaf/tree/' + args.hash[0:7])
-        output_file.write(
+        tmp_file.write(
             '.\n'
             '\n'
             '// Latest published version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.\n'
@@ -98,10 +109,11 @@ def _main():
             '// Distributed under the Boost Software License, Version 1.0. (See accompanying\n'
             '// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)\n'
             '\n')
-        append(args.input, input_file, output_file, regex_includes, args.path, '' if args.linerefs else '// ', 0)
-        output_file.write(
+        append(args.input, input_file, tmp_file, regex_includes, args.path, '' if args.linerefs else '// ', 0)
+        tmp_file.write(
             '\n'
             '#endif // BOOST_LEAF_HPP_INCLUDED\n' )
+    compare_and_update(args.output, tmp_file_name)
 #       print('%d' % total_line_count)
 
 if __name__ == "__main__":
