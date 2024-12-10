@@ -146,7 +146,7 @@ jobs:
             install: clang-16
           - toolset: clang
             compiler: clang++-17
-            cxxstd: "11,14,17,20,2b"
+            cxxstd: "11,14,17,20"
             os: ubuntu-24.04
             install: clang-17
           - toolset: clang
