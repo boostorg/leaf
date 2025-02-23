@@ -199,7 +199,7 @@ namespace n
         if( int const p = sizeof(char[1 + !!s01 * (p01 + p02 + p03 + p04 + p05 + p06 + p07 + p08 + p09 + p10 + p11 + p12)]) - 1 )
             return { BOOST_LEAF_PRETTY_FUNCTION + p, s01 - p };
 
-        if( int const p = sizeof(char[1 + !!p13 + (!!p14 + !!p15 + !!p16 + !!p17 + !!p18 + !!p19 + !!p20 + !!p21)]) - 1 )
+        if( int const p = sizeof(char[1 + !!s02 * (p13 + p14 + p15 + p16 + p17 + p18 + p19 + p20 + p21)]) - 1 )
             return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p };
 
         int const p = sizeof(char[1 + !!s02 * (p22 + p23 + p24)]) - 1; // p is not zero, we've static asserted the hell out of it
