@@ -2,7 +2,7 @@
 #define BOOST_LEAF_HPP_INCLUDED
 
 // Boost LEAF single header distribution. Do not edit.
-// Generated on Sep 29, 2024 from https://github.com/boostorg/leaf/tree/6633c36.
+// Generated on Feb 24, 2025 from https://github.com/boostorg/leaf/tree/aff38b5.
 
 // Latest published version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
@@ -759,26 +759,35 @@ namespace n
 #define BOOST_LEAF_P(P) (sizeof(char[1 + detail::check_prefix(BOOST_LEAF_PRETTY_FUNCTION, P)]) - 1)
         // clang style:
         int const p01 = BOOST_LEAF_P("r boost::leaf::n::p() [T = ");
+        int const p02 = BOOST_LEAF_P("r __cdecl boost::leaf::n::p(void) [T = ");
+        int const p03 = BOOST_LEAF_P("r __stdcall boost::leaf::n::p(void) [T = ");
+        int const p04 = BOOST_LEAF_P("r __fastcall boost::leaf::n::p(void) [T = ");
         // old clang style:
-        int const p02 = BOOST_LEAF_P("boost::leaf::n::r boost::leaf::n::p() [T = ");
+        int const p05 = BOOST_LEAF_P("boost::leaf::n::r boost::leaf::n::p() [T = ");
+        int const p06 = BOOST_LEAF_P("boost::leaf::n::r __cdecl boost::leaf::n::p(void) [T = ");
+        int const p07 = BOOST_LEAF_P("boost::leaf::n::r __stdcall boost::leaf::n::p(void) [T = ");
+        int const p08 = BOOST_LEAF_P("boost::leaf::n::r __fastcall boost::leaf::n::p(void) [T = ");
         // gcc style:
-        int const p03 = BOOST_LEAF_P("boost::leaf::n::r boost::leaf::n::p() [with T = ");
+        int const p09 = BOOST_LEAF_P("boost::leaf::n::r boost::leaf::n::p() [with T = ");
+        int const p10 = BOOST_LEAF_P("boost::leaf::n::r __cdecl boost::leaf::n::p() [with T = ");
+        int const p11 = BOOST_LEAF_P("boost::leaf::n::r __stdcall boost::leaf::n::p() [with T = ");
+        int const p12 = BOOST_LEAF_P("boost::leaf::n::r __fastcall boost::leaf::n::p() [with T = ");
         // msvc style, struct:
-        int const p04 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<struct ");
-        int const p05 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<struct ");
-        int const p06 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<struct ");
+        int const p13 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<struct ");
+        int const p14 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<struct ");
+        int const p15 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<struct ");
         // msvc style, class:
-        int const p07 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<class ");
-        int const p08 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<class ");
-        int const p09 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<class ");
+        int const p16 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<class ");
+        int const p17 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<class ");
+        int const p18 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<class ");
         // msvc style, enum:
-        int const p10 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<enum ");
-        int const p11 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<enum ");
-        int const p12 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<enum ");
+        int const p19 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<enum ");
+        int const p20 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<enum ");
+        int const p21 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<enum ");
         // msvc style, built-in type:
-        int const p13 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<");
-        int const p14 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<");
-        int const p15 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<");
+        int const p22 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<");
+        int const p23 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<");
+        int const p24 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<");
 #undef BOOST_LEAF_P
 
 #define BOOST_LEAF_S(S) (sizeof(char[1 + detail::check_suffix(BOOST_LEAF_PRETTY_FUNCTION, S)]) - 1)
@@ -790,22 +799,22 @@ namespace n
 
         char static_assert_unrecognized_pretty_function_format_please_file_github_issue[sizeof(
             char[
-                (s01 && (1 == (!!p01 + !!p02 + !!p03)))
+                (s01 && (1 == (!!p01 + !!p02 + !!p03 + !!p04 + !!p05 + !!p06 + !!p07 + !!p08 + !!p09 + !!p10 + !!p11 + !!p12)))
                 ||
-                (s02 && (1 == (!!p04 + !!p05 + !!p06 + !!p07 + !!p08 + !!p09 + !!p10 + !!p11 + !!p12)))
+                (s02 && (1 == (!!p13 + !!p14 + !!p15 + !!p16 + !!p17 + !!p18 + !!p19 + !!p20 + !!p21)))
                 ||
-                (s02 && (1 == (!!p13 + !!p14 + !!p15)))
+                (s02 && (1 == (!!p22 + !!p23 + !!p24)))
             ]
         ) * 2 - 1];
         (void) static_assert_unrecognized_pretty_function_format_please_file_github_issue;
 
-        if( int const p = sizeof(char[1 + !!s01 * (p01 + p02 + p03)]) - 1 )
+        if( int const p = sizeof(char[1 + !!s01 * (p01 + p02 + p03 + p04 + p05 + p06 + p07 + p08 + p09 + p10 + p11 + p12)]) - 1 )
             return { BOOST_LEAF_PRETTY_FUNCTION + p, s01 - p };
 
-        if( int const p = sizeof(char[1 + !!s02 * (p04 + p05 + p06 + p07 + p08 + p09 + p10 + p11 + p12)]) - 1 )
+        if( int const p = sizeof(char[1 + !!s02 * (p13 + p14 + p15 + p16 + p17 + p18 + p19 + p20 + p21)]) - 1 )
             return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p };
 
-        int const p = sizeof(char[1 + !!s02 * (p13 + p14 + p15)]) - 1; // p is not zero, we've static asserted the hell out of it
+        int const p = sizeof(char[1 + !!s02 * (p22 + p23 + p24)]) - 1; // p is not zero, we've static asserted the hell out of it
         return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p };
     }
 }
@@ -3094,14 +3103,14 @@ BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && 
 
 // #line 8 "boost/leaf/diagnostics.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 14
-// #include <boost/leaf/context.hpp> // Expanded at line 965
+// #include <boost/leaf/context.hpp> // Expanded at line 974
 // >>> #include <boost/leaf/handle_errors.hpp>
 #ifndef BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
 #define BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
 
 // #line 8 "boost/leaf/handle_errors.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 14
-// #include <boost/leaf/context.hpp> // Expanded at line 965
+// #include <boost/leaf/context.hpp> // Expanded at line 974
 #include <typeinfo>
 
 namespace boost { namespace leaf {
@@ -4260,14 +4269,14 @@ using verbose_diagnostic_info = diagnostic_details;
 } }
 
 #endif // BOOST_LEAF_DIAGNOSTICS_HPP_INCLUDED
-// #include <boost/leaf/error.hpp> // Expanded at line 971
+// #include <boost/leaf/error.hpp> // Expanded at line 980
 // >>> #include <boost/leaf/exception.hpp>
 #ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
 #define BOOST_LEAF_EXCEPTION_HPP_INCLUDED
 
 // #line 8 "boost/leaf/exception.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 14
-// #include <boost/leaf/error.hpp> // Expanded at line 971
+// #include <boost/leaf/error.hpp> // Expanded at line 980
 #include <exception>
 #include <typeinfo>
 
@@ -4545,14 +4554,14 @@ exception_to_result( F && f ) noexcept
 } }
 
 #endif // BOOST_LEAF_EXCEPTION_HPP_INCLUDED
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3099
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3108
 // >>> #include <boost/leaf/on_error.hpp>
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 
 // #line 8 "boost/leaf/on_error.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 14
-// #include <boost/leaf/error.hpp> // Expanded at line 971
+// #include <boost/leaf/error.hpp> // Expanded at line 980
 
 namespace boost { namespace leaf {
 
@@ -4782,7 +4791,7 @@ on_error( Item && ... i )
 
 // #line 8 "boost/leaf/pred.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 14
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3099
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3108
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -5076,9 +5085,9 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 
 // #line 8 "boost/leaf/result.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 14
-// #include <boost/leaf/detail/print.hpp> // Expanded at line 1582
-// #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 1576
-// #include <boost/leaf/exception.hpp> // Expanded at line 4265
+// #include <boost/leaf/detail/print.hpp> // Expanded at line 1591
+// #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 1585
+// #include <boost/leaf/exception.hpp> // Expanded at line 4274
 
 #include <climits>
 #include <functional>
@@ -5805,8 +5814,8 @@ struct is_result_type<result<T>>: std::true_type
 #if __cplusplus >= 201703L
 
 // #include <boost/leaf/config.hpp> // Expanded at line 14
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3099
-// #include <boost/leaf/result.hpp> // Expanded at line 5074
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3108
+// #include <boost/leaf/result.hpp> // Expanded at line 5083
 #include <variant>
 #include <optional>
 #include <tuple>
