@@ -21,57 +21,44 @@ jobs:
             cxxstd: "11,14,1z"
             os: ubuntu-latest
             container: ubuntu:18.04
-            install: g++-5-multilib
-            address-model: 32,64
+            install: g++-5
           - toolset: gcc-6
             cxxstd: "11,14,1z"
             os: ubuntu-latest
             container: ubuntu:18.04
-            install: g++-6-multilib
-            address-model: 32,64
+            install: g++-6
           - toolset: gcc-7
             cxxstd: "11,14"
             os: ubuntu-latest
             container: ubuntu:18.04
-            install: g++-7-multilib
-            address-model: 32,64
           - toolset: gcc-8
             cxxstd: "11,14,17,2a"
             os: ubuntu-20.04
-            install: g++-8-multilib
-            address-model: 32,64
+            install: g++-8
           - toolset: gcc-9
             cxxstd: "11,14,17,2a"
             os: ubuntu-20.04
-            install: g++-9-multilib
-            address-model: 32,64
           - toolset: gcc-10
             cxxstd: "11,14,17,2a"
             os: ubuntu-20.04
-            install: g++-10-multilib
-            address-model: 32,64
+            install: g++-10
           - toolset: gcc-11
             cxxstd: "11,14,17,20"
             os: ubuntu-22.04
-            install: g++-11-multilib
-            address-model: 32,64
           - toolset: gcc-12
             cxxstd: "11,14,17,20,2b"
             os: ubuntu-22.04
-            install: g++-12-multilib
-            address-model: 32,64
+            install: g++-12
           - toolset: gcc-13
             cxxstd: "11,14,17,20,2b"
             os: ubuntu-latest
-            container: ubuntu:23.04
-            install: g++-13-multilib
-            address-model: 32,64
+            container: ubuntu:24.04
+            install: g++-13
           - toolset: gcc-14
             cxxstd: "11,14,17,20,2b"
             os: ubuntu-latest
             container: ubuntu:24.04
-            install: g++-14-multilib
-            address-model: 32,64
+            install: g++-14
           - toolset: clang
             compiler: clang++-3.9
             cxxstd: "11,14"
@@ -107,7 +94,7 @@ jobs:
             install: clang-8
           - toolset: clang
             compiler: clang++-9
-            cxxstd: "11,14,17,2a"
+            cxxstd: "11,14,17"
             os: ubuntu-20.04
             install: clang-9
           - toolset: clang
@@ -143,13 +130,13 @@ jobs:
           - toolset: clang
             compiler: clang++-16
             cxxstd: "11,14,17,20,2b"
-            container: ubuntu:23.04
+            container: ubuntu:24.04
             os: ubuntu-latest
             install: clang-16
           - toolset: clang
             compiler: clang++-17
             cxxstd: "11,14,17,20,2b"
-            container: ubuntu:23.10
+            container: ubuntu:24.04
             os: ubuntu-latest
             install: clang-17
           - toolset: clang
@@ -159,34 +146,48 @@ jobs:
             os: ubuntu-latest
             install: clang-18
           - toolset: clang
+            compiler: clang++-19
             cxxstd: "11,14,17,20,2b"
-            os: macos-12
+            container: ubuntu:24.10
+            os: ubuntu-latest
+            install: clang-19
           - toolset: clang
             cxxstd: "11,14,17,20,2b"
             os: macos-13
           - toolset: clang
             cxxstd: "11,14,17,20,2b"
             os: macos-14
+          - toolset: clang
+            cxxstd: "11,14,17,20,2b"
+            os: macos-15
 
     runs-on: ${{matrix.os}}
-    container: ${{matrix.container}}
+
+    container:
+      image: ${{matrix.container}}
+      volumes:
+        - /node20217:/node20217:rw,rshared
+        - ${{ startsWith(matrix.container, 'ubuntu:1') && '/node20217:/__e/node20:ro,rshared' || ' ' }}
 
     defaults:
       run:
         shell: bash
 
     steps:
-      - name: Enable Node 16
-        run: |
-          echo "ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true" >> $GITHUB_ENV
-
-      - uses: actions/checkout@v3
-
       - name: Setup container environment
         if: matrix.container
         run: |
           apt-get update
-          apt-get -y install sudo python3 git g++
+          apt-get -y install sudo python3 git g++ curl xz-utils
+
+      - name: Install nodejs20glibc2.17
+        if: ${{ startsWith( matrix.container, 'ubuntu:1' ) }}
+        run: |
+          curl -LO https://archives.boost.io/misc/node/node-v20.9.0-linux-x64-glibc-217.tar.xz
+          tar -xf node-v20.9.0-linux-x64-glibc-217.tar.xz --strip-components 1 -C /node20217
+          ldd /__e/node20/bin/node
+
+      - uses: actions/checkout@v4
 
       - name: Install packages
         if: matrix.install
