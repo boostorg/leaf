@@ -6,15 +6,12 @@
 require-b2 5.2 ;
 
 project /boost/leaf
-    : common-requirements
-        <include>include
     ;
 
 explicit
-    [ alias boost_leaf ]
+    [ alias boost_leaf : : : : <include>include ]
     [ alias all : boost_leaf test ]
     ;
 
 call-if : boost-library leaf
     ;
-
