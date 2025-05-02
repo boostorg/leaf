@@ -1,0 +1,17 @@
+# Copyright René Ferdinand Rivera Morell 2023-2024
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+require-b2 5.2 ;
+
+project /boost/leaf
+    ;
+
+explicit
+    [ alias boost_leaf : : : : <include>include ]
+    [ alias all : boost_leaf test ]
+    ;
+
+call-if : boost-library leaf
+    ;
