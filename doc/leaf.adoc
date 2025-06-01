@@ -401,7 +401,7 @@ leaf::result<U> r = leaf::try_handle_some(
 Once again, error handlers are considered in order:
 
 * The first error handler will be used if an error object of type `io_error` _and_ and error_object of type `e_file_name` are available;
-* otherwise, the second error handler will be used if an error object of type `io_error` is avaliable;
+* otherwise, the second error handler will be used if an error object of type `io_error` is available;
 * otherwise, `leaf_try_handle_some` fails.
  
 An alternative way to write the above is to provide a single error handler that takes the `e_file_name` argument as a pointer:
@@ -3161,7 +3161,7 @@ The `throw_exception` function is overloaded: it can be invoked with no argument
 ** its `std::exception` subobject is default-initialized;
 ** its `error_id` subobject is initialized by `<<new_error>>(std::forward<E1>(e1), std::forward<E>(e)...`).
 
-<3> If the fuction is invoked without arguments, the thrown exception is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
+<3> If the function is invoked without arguments, the thrown exception is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
 ** its `std::exception` subobject is default-initialized;
 ** its `error_id` subobject is initialized by `<<new_error>>()`.
 
@@ -4025,7 +4025,7 @@ namespace boost { namespace leaf {
 
 These functions have the usual semantics, comparing `a.value()` and `b.value()`.
 
-NOTE: The exact strict weak ordering implemented by `operator<` is not specified. In particular, if for two `error_id` objects `a` and `b`, `a < b` is true, it does not follow that the failure identified by `a` ocurred earlier than the one identified by `b`.
+NOTE: The exact strict weak ordering implemented by `operator<` is not specified. In particular, if for two `error_id` objects `a` and `b`, `a < b` is true, it does not follow that the failure identified by `a` occurred earlier than the one identified by `b`.
 
 '''
 
@@ -4723,7 +4723,7 @@ Effects:
 [[result::value_type]]
 ==== `value_type`
 
-A member type of `result<T>`, defined as a synonim for `T`.
+A member type of `result<T>`, defined as a synonym for `T`.
 
 '''
 
