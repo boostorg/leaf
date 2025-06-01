@@ -1,6 +1,6 @@
 # Print File Example
 
-This directory contains several versions of a trivial program which takes a file name on the command line and prints it. Each version uses a different error handling implementaiton.
+This directory contains several versions of a trivial program which takes a file name on the command line and prints it. Each version uses a different error handling implementation.
 
 * [print_file_leaf_result.cpp](./print_file_leaf_result.cpp) reports errors with
   `leaf::result<T>`, using an error code `enum` for classification of failures.

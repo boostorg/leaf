@@ -1,6 +1,6 @@
 # Example Programs Using LEAF to Handle Errors
 
-* [print_file](./print_file): This directory contains several versions of a trivial program which takes a file name on the command line and prints it. Each version uses a different error handling implementaiton.
+* [print_file](./print_file): This directory contains several versions of a trivial program which takes a file name on the command line and prints it. Each version uses a different error handling implementation.
 
 * [try_capture_all_result.cpp](https://github.com/boostorg/leaf/blob/master/example/try_capture_all_result.cpp?ts=4): Shows how to transport error objects between threads in a `leaf::result<T>` object without using exception handling.
 * [try_capture_all_exceptions.cpp](https://github.com/boostorg/leaf/blob/master/example/try_capture_all_exceptions.cpp?ts=4): Shows how to transport error objects between threads in a `leaf::result<T>` object using exception handling.

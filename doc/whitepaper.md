@@ -241,7 +241,7 @@ The above function computes a `float` value based on the contents of the specifi
 
 In case of failure to `open()`, our function stays out of the way: the error code is communicated from `open()` (which sets the `errno`) *directly* to an *error handling* function up the call stack (which examines the `errno` in order to understand the failure), while the return value of each intermediate function needs only communicate a single bit of data (the *failure flag*).
 
-The major drawback of this appoach is that the *failure flag* is not communicated uniformly, which means that *error neutral* functions can't check for errors generically (e.g. each layer needs to know about the different `INVALID_VALUE`s).
+The major drawback of this approach is that the *failure flag* is not communicated uniformly, which means that *error neutral* functions can't check for errors generically (e.g. each layer needs to know about the different `INVALID_VALUE`s).
 
 ### 6.2. C++ Exceptions
 
@@ -357,7 +357,7 @@ Using LEAF, *error handling* functions match error objects similarly to the way 
 * Each handler can specify multiple objects to be matched by type, rather than only one.
 * The error objects are matched dynamically, but solely based on their static type. This allows *all* error objects to be allocated on the stack, using automatic storage duration.
 
-Whithout exception handling, this is achieved using the following syntax:
+Without exception handling, this is achieved using the following syntax:
 
 ```c++
 leaf::handle_all(
