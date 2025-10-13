@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.23">
+<meta name="generator" content="Asciidoctor 2.0.24">
 <meta name="author" content="Lightweight Error Augmentation Framework written in C&#43;&#43;11 | Emil Dotchevski">
 <title>LEAF</title>
 <link rel="stylesheet" href="./zajo-dark.css">
@@ -730,7 +730,7 @@ If we wanted to signal a new error (rather than propagating the current error), 
 <p>The first error handler will be used if an error object of type <code>io_error</code> <em>and</em> and error_object of type <code>e_file_name</code> are available;</p>
 </li>
 <li>
-<p>otherwise, the second error handler will be used if an error object of type <code>io_error</code> is avaliable;</p>
+<p>otherwise, the second error handler will be used if an error object of type <code>io_error</code> is available;</p>
 </li>
 <li>
 <p>otherwise, <code>leaf_try_handle_some</code> fails.</p>
@@ -4200,7 +4200,7 @@ See <a href="#tutorial-on_error">Using <code>on_error</code></a> from the Tutori
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>If the fuction is invoked without arguments, the thrown exception is of unspecified type which derives publicly from <code>std::exception</code> <strong>and</strong> from class <code>error_id</code>, such that:
+<td>If the function is invoked without arguments, the thrown exception is of unspecified type which derives publicly from <code>std::exception</code> <strong>and</strong> from class <code>error_id</code>, such that:
 <div class="ulist">
 <ul>
 <li>
@@ -5662,7 +5662,7 @@ When loaded into a <code>context</code>, an error object of a type <code>E</code
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The exact strict weak ordering implemented by <code>operator&lt;</code> is not specified. In particular, if for two <code>error_id</code> objects <code>a</code> and <code>b</code>, <code>a &lt; b</code> is true, it does not follow that the failure identified by <code>a</code> ocurred earlier than the one identified by <code>b</code>.
+The exact strict weak ordering implemented by <code>operator&lt;</code> is not specified. In particular, if for two <code>error_id</code> objects <code>a</code> and <code>b</code>, <code>a &lt; b</code> is true, it does not follow that the failure identified by <code>a</code> occurred earlier than the one identified by <code>b</code>.
 </td>
 </tr>
 </table>
@@ -6643,7 +6643,7 @@ The returned proxy object refers to <code>*this</code>; avoid holding on to it.
 <div class="sect3">
 <h4 id="result::value_type"><code>value_type</code></h4>
 <div class="paragraph">
-<p>A member type of <code>result&lt;T&gt;</code>, defined as a synonim for <code>T</code>.</p>
+<p>A member type of <code>result&lt;T&gt;</code>, defined as a synonym for <code>T</code>.</p>
 </div>
 <hr>
 <div id="result::bad_result" class="dlist">

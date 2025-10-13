@@ -2,7 +2,7 @@
 #define BOOST_LEAF_HPP_INCLUDED
 
 // Boost LEAF single header distribution. Do not edit.
-// Generated on Feb 24, 2025 from https://github.com/boostorg/leaf/tree/aff38b5.
+// Generated on Oct 13, 2025 from https://github.com/boostorg/leaf/tree/d8e4a84.
 
 // Latest published version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
@@ -645,7 +645,7 @@ namespace tls
 
 #if defined(BOOST_LEAF_HAS_CXXABI_H)
 #   include <cxxabi.h>
-//  For some archtectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
+//  For some architectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
 //  (https://android.googlesource.com/platform/ndk/+/master/sources/cxx-stl/gabi++/), which does not implement
 //  abi::__cxa_demangle(). We detect this implementation by checking the include guard here.
 #   if defined(__GABIXX_CXXABI_H__)
@@ -2286,7 +2286,7 @@ namespace detail
     BOOST_LEAF_CONSTEXPR inline int load_slot( int err_id, E && e ) noexcept(OnError)
     {
         using T = typename std::decay<E>::type;
-        static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
+        static_assert(!std::is_pointer<T>::value, "Error objects of pointer types are not allowed");
         static_assert(!std::is_same<T, error_id>::value, "Error objects of type error_id are not allowed");
         BOOST_LEAF_ASSERT((err_id&3) == 1);
         if( slot<T> * p = tls::read_ptr<slot<T>>() )
@@ -2306,7 +2306,7 @@ namespace detail
     {
         using E = typename function_traits<F>::return_type;
         using T = typename std::decay<E>::type;
-        static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
+        static_assert(!std::is_pointer<T>::value, "Error objects of pointer types are not allowed");
         static_assert(!std::is_same<T, error_id>::value, "Error objects of type error_id are not allowed");
         BOOST_LEAF_ASSERT((err_id&3) == 1);
         if( slot<T> * p = tls::read_ptr<slot<T>>() )
@@ -2326,7 +2326,8 @@ namespace detail
     {
         static_assert(function_traits<F>::arity == 1, "Lambdas passed to accumulate must take a single e-type argument by reference");
         using E = typename std::decay<fn_arg_type<F,0>>::type;
-        static_assert(!std::is_pointer<E>::value, "Error objects of pointer types are not allowed");
+        using T = typename std::decay<E>::type;
+        static_assert(!std::is_pointer<T>::value, "Error objects of pointer types are not allowed");
         BOOST_LEAF_ASSERT((err_id&3) == 1);
         if( auto sl = tls::read_ptr<slot<E>>() )
         {
@@ -4554,7 +4555,7 @@ exception_to_result( F && f ) noexcept
 } }
 
 #endif // BOOST_LEAF_EXCEPTION_HPP_INCLUDED
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3108
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3109
 // >>> #include <boost/leaf/on_error.hpp>
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
@@ -4791,7 +4792,7 @@ on_error( Item && ... i )
 
 // #line 8 "boost/leaf/pred.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 14
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3108
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3109
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -5087,7 +5088,7 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 // #include <boost/leaf/config.hpp> // Expanded at line 14
 // #include <boost/leaf/detail/print.hpp> // Expanded at line 1591
 // #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 1585
-// #include <boost/leaf/exception.hpp> // Expanded at line 4274
+// #include <boost/leaf/exception.hpp> // Expanded at line 4275
 
 #include <climits>
 #include <functional>
@@ -5814,8 +5815,8 @@ struct is_result_type<result<T>>: std::true_type
 #if __cplusplus >= 201703L
 
 // #include <boost/leaf/config.hpp> // Expanded at line 14
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3108
-// #include <boost/leaf/result.hpp> // Expanded at line 5083
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3109
+// #include <boost/leaf/result.hpp> // Expanded at line 5084
 #include <variant>
 #include <optional>
 #include <tuple>
