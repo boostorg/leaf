@@ -40,7 +40,7 @@ struct my_error
 leaf::result<void> f1()
 {
     auto ctx_ = leaf::on_error([](my_error & e) {e.append(42);});
-    return leaf::new_error("new_error");
+    return leaf::new_error();
 }
 
 leaf::result<void> f2()
@@ -64,7 +64,6 @@ int main()
         std::cout << s << std::endl;
         if( BOOST_LEAF_CFG_DIAGNOSTICS && BOOST_LEAF_CFG_CAPTURE )
         {
-            BOOST_TEST_NE(s.find("new_error"), s.npos);
             BOOST_TEST_NE(s.find("appended: 42"), s.npos);
             BOOST_TEST_NE(s.find("appended: 43"), s.npos);
         }
