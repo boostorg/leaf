@@ -11,7 +11,9 @@
 // is required, define BOOST_LEAF_CFG_WIN32=2 before including any LEAF headers
 // to enable the alternative implementation defined in tls_win32.hpp.
 
-#include <atomic>
+// This header implements thread local storage for pointers and for unsigned int
+// values using the C++11 built-in thread_local storage class specifier.
+
 #include <cstdint>
 
 namespace boost { namespace leaf {
@@ -38,34 +40,41 @@ namespace detail
     template <class T>
     thread_local T * ptr<T>::p;
 
-    template <class=void>
-    struct BOOST_LEAF_SYMBOL_VISIBLE current_error_id_storage
+    template <class T>
+    T * read_ptr() noexcept
+    {
+        return ptr<T>::p;
+    }
+
+    template <class T>
+    void alloc_write_ptr( T * p ) noexcept
+    {
+        ptr<T>::p = p;
+    }
+
+    template <class T>
+    void write_ptr( T * p ) noexcept
+    {
+        ptr<T>::p = p;
+    }
+
+    ////////////////////////////////////////
+
+    struct current_error_id_storage
     {
         static thread_local unsigned x;
     };
 
-    template <class T>
-    thread_local unsigned current_error_id_storage<T>::x;
-} // namespace detail
+    thread_local unsigned current_error_id_storage::x;
 
-} } // namespace boost::leaf
-
-////////////////////////////////////////
-
-namespace boost { namespace leaf {
-
-namespace tls
-{
-    BOOST_LEAF_ALWAYS_INLINE unsigned generate_next_error_id() noexcept
+    inline unsigned read_current_error_id() noexcept
     {
-        unsigned id = (detail::id_factory<>::counter += 4);
-        BOOST_LEAF_ASSERT((id&3) == 1);
-        return id;
+        return current_error_id_storage::x;
     }
 
-    BOOST_LEAF_ALWAYS_INLINE void write_current_error_id( unsigned x ) noexcept
+    inline void write_current_error_id( unsigned x ) noexcept
     {
-        detail::current_error_id_storage<>::x = x;
+        current_error_id_storage::x = x;
     }
 
     BOOST_LEAF_ALWAYS_INLINE unsigned read_current_error_id() noexcept

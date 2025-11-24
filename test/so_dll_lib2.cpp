@@ -10,7 +10,23 @@
 #   include <boost/leaf/on_error.hpp>
 #endif
 
-#include "lightweight_test.hpp"
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+#include <iostream>
+namespace boost
+{
+    [[noreturn]] void throw_exception( std::exception const & e )
+    {
+        std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
+        std::terminate();
+    }
+
+    struct source_location;
+    [[noreturn]] void throw_exception( std::exception const & e, boost::source_location const & )
+    {
+        throw_exception(e);
+    }
+}
+#endif
 
 #define BOOST_LEAF_SO_DLL_TEST_BUILDING_LIB2
 

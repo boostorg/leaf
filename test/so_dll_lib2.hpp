@@ -8,16 +8,18 @@
 #include "so_dll_test.hpp"
 
 #ifdef _WIN32
-#   ifdef BOOST_LEAF_SO_DLL_TEST_STATIC
-#       define BOOST_LEAF_SO_DLL_TEST_LIB2_API
-#   elif defined(BOOST_LEAF_SO_DLL_TEST_BUILDING_LIB2)
+#   ifdef BOOST_LEAF_SO_DLL_TEST_BUILDING_LIB2
 #       define BOOST_LEAF_SO_DLL_TEST_LIB2_API __declspec(dllexport)
 #   else
 #       define BOOST_LEAF_SO_DLL_TEST_LIB2_API __declspec(dllimport)
 #   endif
 #else
-#   define BOOST_LEAF_SO_DLL_TEST_LIB2_API [[gnu::visibility("default")]]
+#   define BOOST_LEAF_SO_DLL_TEST_LIB2_API BOOST_LEAF_SYMBOL_VISIBLE
 #endif
+
+namespace boost { namespace leaf {
+    template <class T> class result;
+} }
 
 BOOST_LEAF_SO_DLL_TEST_LIB2_API boost::leaf::result<void> hidden_result2();
 

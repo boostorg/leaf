@@ -34,34 +34,36 @@ namespace detail
     template <class T>
     T * ptr<T>::p;
 
-    template <class=void>
-    struct BOOST_LEAF_SYMBOL_VISIBLE current_error_id_storage
-    {
-        static unsigned x;
-    };
-
     template <class T>
-    unsigned current_error_id_storage<T>::x = 0;
-} // namespace detail
-
-} } // namespace boost::leaf
-
-////////////////////////////////////////
-
-namespace boost { namespace leaf {
-
-namespace tls
-{
-    BOOST_LEAF_ALWAYS_INLINE unsigned generate_next_error_id() noexcept
+    T * read_ptr() noexcept
     {
-        unsigned id = (detail::id_factory<>::counter += 4);
-        BOOST_LEAF_ASSERT((id&3) == 1);
-        return id;
+        return ptr<T>::p;
     }
 
-    BOOST_LEAF_ALWAYS_INLINE void write_current_error_id( unsigned v ) noexcept
+    template <class T>
+    void alloc_write_ptr( T * p ) noexcept
     {
-        detail::current_error_id_storage<>::x = v;
+        ptr<T>::p = p;
+    }
+
+    template <class T>
+    void write_ptr( T * p ) noexcept
+    {
+        ptr<T>::p = p;
+    }
+
+    ////////////////////////////////////////
+
+    inline unsigned read_current_error_id() noexcept
+    {
+        static unsigned x = 0;
+        return x;
+    }
+
+    inline void write_current_error_id( unsigned v ) noexcept
+    {
+        static unsigned x = 0;
+        x = v;
     }
 
     BOOST_LEAF_ALWAYS_INLINE unsigned read_current_error_id() noexcept

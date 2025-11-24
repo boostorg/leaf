@@ -25,7 +25,6 @@ namespace tls
 
 ////////////////////////////////////////
 
-#include <atomic>
 #include <limits>
 #include <cstdint>
 #include <type_traits>
@@ -106,10 +105,10 @@ namespace detail
     };
 
     template <class T>
-    BOOST_LEAF_CFG_TLS_INDEX_TYPE const reserve_tls_index<T>::idx = tls_index<T>::idx = index_counter<>::next<T>();
-} // namespace detail
+    int index_counter<T>::c_ = BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX + 1;
 
-} } // namespace boost::leaf
+    template <class T>
+    BOOST_LEAF_CFG_TLS_INDEX_TYPE tls_index<T>::idx = BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX + 1;
 
 ////////////////////////////////////////
 
@@ -119,25 +118,15 @@ namespace tls
 {
     BOOST_LEAF_ALWAYS_INLINE unsigned generate_next_error_id() noexcept
     {
-        unsigned id = (detail::id_factory<>::counter += 4);
-        BOOST_LEAF_ASSERT((id&3) == 1);
-        return id;
-    }
-
-    BOOST_LEAF_ALWAYS_INLINE void write_current_error_id( unsigned x ) noexcept
-    {
-        static_assert(sizeof(std::intptr_t) >= sizeof(unsigned), "Incompatible tls_array implementation");
-        write_void_ptr(BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX, (void *) (std::intptr_t) x);
-    }
-
-    BOOST_LEAF_ALWAYS_INLINE unsigned read_current_error_id() noexcept
-    {
-        static_assert(sizeof(std::intptr_t) >= sizeof(unsigned), "Incompatible tls_array implementation");
-        return (unsigned) (std::intptr_t) read_void_ptr(BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX);
+        int tls_idx = tls_index<T>::idx;
+        if( tls_idx == (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX + 1) )
+            return nullptr;
+        --tls_idx;
+        return reinterpret_cast<T *>(read_void_ptr(tls_idx));
     }
 
     template <class T>
-    BOOST_LEAF_ALWAYS_INLINE void reserve_ptr()
+    void alloc_write_ptr( T * p ) noexcept
     {
         (void) detail::reserve_tls_index<T>::idx;
     }
@@ -153,16 +142,29 @@ namespace tls
     }
 
     template <class T>
-    BOOST_LEAF_ALWAYS_INLINE T * read_ptr() noexcept
+    void write_ptr( T * p ) noexcept
     {
-        int tls_idx = detail::tls_index<T>::idx;
-        if( tls_idx == (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX + 1) )
-            return nullptr;
+        int tls_idx = tls_index<T>::idx;
+        BOOST_LEAF_ASSERT(tls_idx != (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX + 1));
         --tls_idx;
-        return reinterpret_cast<T *>(read_void_ptr(tls_idx));
+        write_void_ptr(tls_idx, p);
+        BOOST_LEAF_ASSERT(read_void_ptr(tls_idx) == p);
     }
 } // namespace tls
 
-} } // namespace boost::leaf
+    ////////////////////////////////////////
+
+    inline unsigned read_current_error_id() noexcept
+    {
+        static_assert(sizeof(std::intptr_t) >= sizeof(unsigned), "Incompatible tls_array implementation");
+        return (unsigned) (std::intptr_t) read_void_ptr(BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX);
+    }
+
+    inline void write_current_error_id( unsigned x ) noexcept
+    {
+        static_assert(sizeof(std::intptr_t) >= sizeof(unsigned), "Incompatible tls_array implementation");
+        write_void_ptr(BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX, (void *) (std::intptr_t) x);
+    }
+}
 
 #endif // #ifndef BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED

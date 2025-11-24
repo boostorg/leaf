@@ -140,10 +140,10 @@ namespace detail
             BOOST_LEAF_ASSERT(tls::read_ptr<slot<E>>() != this);
         }
 
-        void activate() noexcept
+        void activate()
         {
             prev_ = tls::read_ptr<slot<E>>();
-            tls::write_ptr<slot<E>>(this);
+            tls::alloc_write_ptr<slot<E>>(this);
         }
 
         void deactivate() const noexcept
@@ -565,38 +565,6 @@ namespace detail
 
 namespace detail
 {
-#if BOOST_LEAF_CFG_CAPTURE
-    class preloaded_base
-    {
-    protected:
-
-        preloaded_base() noexcept:
-            next_(
-                []( preloaded_base * this_ ) -> preloaded_base *
-                {
-                    if( dynamic_allocator * da = get_dynamic_allocator() )
-                        return da->link_preloaded_item(this_);
-                    return nullptr;
-                }(this))
-        {
-        }
-
-        ~preloaded_base() noexcept
-        {
-            if( dynamic_allocator * da = get_dynamic_allocator() )
-                da->unlink_preloaded_item(next_);
-            else
-                BOOST_LEAF_ASSERT(next_ == nullptr);
-        }
-
-    public:
-
-        preloaded_base * const next_;
-
-        virtual void reserve( dynamic_allocator & ) const = 0;
-    };
-#endif // #if BOOST_LEAF_CFG_CAPTURE
-
     inline int current_id() noexcept
     {
         unsigned id = tls::read_current_error_id();
@@ -606,7 +574,7 @@ namespace detail
 
     inline int new_id() noexcept
     {
-        unsigned id = tls::generate_next_error_id();
+        unsigned id = generate_next_error_id();
         tls::write_current_error_id(id);
         return int(id);
     }
