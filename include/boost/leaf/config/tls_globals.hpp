@@ -37,6 +37,12 @@ namespace tls
     }
 
     template <class T>
+    void alloc_write_ptr( T * p ) noexcept
+    {
+        ptr<T>::p = p;
+    }
+
+    template <class T>
     void write_ptr( T * p ) noexcept
     {
         ptr<T>::p = p;
@@ -44,25 +50,16 @@ namespace tls
 
     ////////////////////////////////////////
 
-    template <class Tag>
-    struct BOOST_LEAF_SYMBOL_VISIBLE tagged_uint
+    inline unsigned read_current_error_id() noexcept
     {
-        static unsigned x;
-    };
-
-    template <class Tag>
-    unsigned tagged_uint<Tag>::x;
-
-    template <class Tag>
-    unsigned read_uint() noexcept
-    {
-        return tagged_uint<Tag>::x;
+        static unsigned x = 0;
+        return x;
     }
 
-    template <class Tag>
-    void write_uint( unsigned x ) noexcept
+    inline void write_current_error_id( unsigned v ) noexcept
     {
-        tagged_uint<Tag>::x = x;
+        static unsigned x = 0;
+        x = v;
     }
 }
 

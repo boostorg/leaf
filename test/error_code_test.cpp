@@ -27,10 +27,12 @@ int main()
 #include "_test_res.hpp"
 #include "lightweight_test.hpp"
 
+#if BOOST_LEAF_BOOST_AVAILABLE
 #include "boost/system/result.hpp"
 namespace boost { namespace leaf {
     template <class T> struct is_result_type<boost::system::result<T, std::error_code>>: std::true_type { };
 } }
+#endif
 
 namespace leaf = boost::leaf;
 
@@ -616,7 +618,9 @@ int main()
     test<test_res<int, std::error_code>>();
     test_void<leaf::result<void>>();
     test_void<test_res<void, std::error_code>>();
+#ifdef BOOST_LEAF_BOOST_AVAILABLE
     test<boost::system::result<int, std::error_code>>();
+#endif
     return boost::report_errors();
 }
 

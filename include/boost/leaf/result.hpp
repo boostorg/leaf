@@ -10,7 +10,6 @@
 #include <boost/leaf/detail/capture_list.hpp>
 #include <boost/leaf/exception.hpp>
 
-#include <climits>
 #include <functional>
 
 namespace boost { namespace leaf {
@@ -223,6 +222,7 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
 #endif
                 default:
                     BOOST_LEAF_ASSERT(k == result_discriminant::err_id);
+                    (void) k;
                 case result_discriminant::err_id_zero:
                     return result<U>(what.get_error_id());
             }
@@ -243,6 +243,7 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
         {
         default:
             BOOST_LEAF_ASSERT(k == result_discriminant::err_id);
+            (void) k;
         case result_discriminant::err_id_zero:
             break;
         case result_discriminant::err_id_capture_list:
@@ -265,6 +266,7 @@ class BOOST_LEAF_SYMBOL_VISIBLE BOOST_LEAF_ATTRIBUTE_NODISCARD result
         {
         default:
             BOOST_LEAF_ASSERT(k == result_discriminant::err_id);
+            (void) k;
         case result_discriminant::err_id_zero:
             break;
         case result_discriminant::err_id_capture_list:

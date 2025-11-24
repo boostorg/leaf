@@ -70,7 +70,7 @@ run diagnostics_test3.cpp ;
 run diagnostics_test4.cpp ;
 run diagnostics_test5.cpp ;
 run e_errno_test.cpp ;
-run e_LastError_test.cpp ;
+run e_LastError_test.cpp : : : <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=1 ;
 run error_code_test.cpp ;
 run error_id_test.cpp ;
 run exception_test.cpp ;
@@ -129,9 +129,9 @@ run try_catch_system_error_test.cpp ;
 run try_catch_test.cpp ;
 run try_exception_and_result_test.cpp ;
 
-lib visibility_test_lib : visibility_test_lib.cpp : <visibility>hidden ;
-run visibility_test.cpp visibility_test_lib/<link>shared ;
-run visibility_test.cpp visibility_test_lib/<link>static : : : <target-os>windows ; # This can't work on Windows, so use static link for the test.
+lib so_dll_lib1 : so_dll_lib1.cpp : <link>shared <visibility>hidden <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 : : <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 ;
+lib so_dll_lib2 : so_dll_lib2.cpp : <link>shared <visibility>hidden <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 : : <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 ;
+run so_dll_test.cpp so_dll_lib1 so_dll_lib2 : : : <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 ;
 
 compile-fail _compile-fail-arg_boost_error_info_1.cpp ;
 compile-fail _compile-fail-arg_boost_error_info_2.cpp ;

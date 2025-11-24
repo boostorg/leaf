@@ -180,7 +180,7 @@ namespace detail
     template <int I, class Tup>
     struct tuple_for_each
     {
-        BOOST_LEAF_CONSTEXPR static void activate( Tup & tup ) noexcept
+        BOOST_LEAF_CONSTEXPR static void activate( Tup & tup )
         {
             static_assert(!std::is_same<error_info, typename std::decay<decltype(std::get<I-1>(tup))>::type>::value, "Bug in LEAF: context type deduction");
             tuple_for_each<I-1,Tup>::activate(tup);
@@ -286,7 +286,7 @@ class context
         raii_deactivator & operator=( raii_deactivator const & ) = delete;
         context * ctx_;
     public:
-        explicit BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE raii_deactivator(context & ctx) noexcept:
+        explicit BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE raii_deactivator(context & ctx):
             ctx_(ctx.is_active() ? nullptr : &ctx)
         {
             if( ctx_ )
@@ -333,7 +333,7 @@ public:
         return tup_;
     }
 
-    BOOST_LEAF_CONSTEXPR void activate() noexcept
+    BOOST_LEAF_CONSTEXPR void activate()
     {
         using namespace detail;
         BOOST_LEAF_ASSERT(!is_active());
@@ -394,7 +394,7 @@ public:
     template <class R, class... H>
     BOOST_LEAF_CONSTEXPR R handle_error( error_id, H && ... );
 
-    friend BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE raii_deactivator activate_context(context & ctx) noexcept
+    friend BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE raii_deactivator activate_context(context & ctx)
     {
         return raii_deactivator(ctx);
     }

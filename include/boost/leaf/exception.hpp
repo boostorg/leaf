@@ -7,45 +7,7 @@
 
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/error.hpp>
-#include <exception>
 #include <typeinfo>
-
-#ifdef BOOST_LEAF_NO_EXCEPTIONS
-
-namespace boost
-{
-    [[noreturn]] void throw_exception( std::exception const & ); // user defined
-}
-
-namespace boost { namespace leaf {
-
-namespace detail
-{
-    template <class T>
-    [[noreturn]] void throw_exception_impl( T && e )
-    {
-        ::boost::throw_exception(std::move(e));
-    }
-}
-
-} }
-
-#else
-
-namespace boost { namespace leaf {
-
-namespace detail
-{
-    template <class T>
-    [[noreturn]] void throw_exception_impl( T && e )
-    {
-        throw std::move(e);
-    }
-}
-
-} }
-
-#endif
 
 ////////////////////////////////////////
 
@@ -65,7 +27,7 @@ namespace detail
         [[noreturn]] friend void operator+( throw_with_loc loc, Ex && ex )
         {
             ex.load_source_location_(loc.file, loc.line, loc.fn);
-            ::boost::leaf::detail::throw_exception_impl(std::move(ex));
+            ::boost::leaf::throw_exception_(std::move(ex));
         }
     };
 }
@@ -86,7 +48,7 @@ namespace detail
 
         bool is_current_exception() const noexcept
         {
-            return tls::read_uint<detail::tls_tag_id_factory_current_id>() == unsigned(error_id::value());
+            return tls::read_current_error_id() == unsigned(error_id::value());
         }
 
         error_id get_error_id() const noexcept final override
@@ -148,7 +110,7 @@ namespace detail
         ~exception() noexcept
         {
             if( clear_current_error_ && is_current_exception() )
-                tls::write_uint<detail::tls_tag_id_factory_current_id>(0);
+                tls::write_current_error_id(0);
         }
     };
 
@@ -217,8 +179,8 @@ template <class... E>
     // Warning: setting a breakpoint here will not intercept exceptions thrown
     // via BOOST_LEAF_THROW_EXCEPTION or originating in the few other throw
     // points elsewhere in LEAF. To intercept all of those exceptions as well,
-    // set a breakpoint inside boost::leaf::detail::throw_exception_impl.
-    detail::throw_exception_impl(detail::make_exception(std::forward<E>(e)...));
+    // set a breakpoint inside boost::leaf::throw_exception_.
+    throw_exception_(detail::make_exception(std::forward<E>(e)...));
 }
 
 ////////////////////////////////////////

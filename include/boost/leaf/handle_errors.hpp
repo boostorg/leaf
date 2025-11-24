@@ -716,7 +716,7 @@ namespace detail
         inline
         static
         leaf_result
-        try_capture_all_( TryBlock && try_block ) noexcept
+        try_capture_all_( TryBlock && try_block )
         {
             detail::slot<detail::dynamic_allocator> sl;
             sl.activate();
@@ -777,7 +777,7 @@ namespace detail
         inline
         static
         leaf_result
-        try_capture_all_( TryBlock && try_block ) noexcept
+        try_capture_all_( TryBlock && try_block )
         {
             detail::slot<detail::dynamic_allocator> sl;
             sl.activate();

@@ -8,13 +8,15 @@
 
 int main()
 {
-    std::cout << "This test requires Windows";
+    std::cout << "Test skipped (Windows only)";
     return 0;
 }
 
 #else
 
-#define BOOST_LEAF_CFG_WIN32 1
+#if BOOST_LEAF_CFG_WIN32 <= 0
+#   error This test requires BOOST_LEAF_CFG_WIN32 > 0
+#endif
 
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
 #   include "leaf.hpp"

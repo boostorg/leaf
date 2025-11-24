@@ -11,7 +11,6 @@
 // values using the C++11 built-in thread_local storage class specifier.
 
 #include <cstdint>
-#include <atomic>
 
 namespace boost { namespace leaf {
 
@@ -38,6 +37,12 @@ namespace tls
     }
 
     template <class T>
+    void alloc_write_ptr( T * p ) noexcept
+    {
+        ptr<T>::p = p;
+    }
+
+    template <class T>
     void write_ptr( T * p ) noexcept
     {
         ptr<T>::p = p;
@@ -45,25 +50,21 @@ namespace tls
 
     ////////////////////////////////////////
 
-    template <class Tag>
-    struct BOOST_LEAF_SYMBOL_VISIBLE tagged_uint
+    struct current_error_id_storage
     {
         static thread_local unsigned x;
     };
 
-    template <class Tag>
-    thread_local unsigned tagged_uint<Tag>::x;
+    thread_local unsigned current_error_id_storage::x;
 
-    template <class Tag>
-    unsigned read_uint() noexcept
+    inline unsigned read_current_error_id() noexcept
     {
-        return tagged_uint<Tag>::x;
+        return current_error_id_storage::x;
     }
 
-    template <class Tag>
-    void write_uint( unsigned x ) noexcept
+    inline void write_current_error_id( unsigned x ) noexcept
     {
-        tagged_uint<Tag>::x = x;
+        current_error_id_storage::x = x;
     }
 }
 

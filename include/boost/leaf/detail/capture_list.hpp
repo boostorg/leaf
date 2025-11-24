@@ -18,7 +18,6 @@ class error_id;
 
 namespace detail
 {
-    struct BOOST_LEAF_SYMBOL_VISIBLE tls_tag_id_factory_current_id;
 
     class capture_list
     {
@@ -87,7 +86,7 @@ namespace detail
         {
             capture_list moved(first_);
             first_ = nullptr;
-            tls::write_uint<detail::tls_tag_id_factory_current_id>(unsigned(err_id));
+            tls::write_current_error_id(unsigned(err_id));
             moved.for_each(
                 [err_id]( node & n )
                 {

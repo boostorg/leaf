@@ -5,6 +5,9 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <utility>
+#include <exception>
+
 #ifdef BOOST_LEAF_TLS_FREERTOS
 #   ifndef BOOST_LEAF_EMBEDDED
 #       define BOOST_LEAF_EMBEDDED
@@ -87,8 +90,8 @@
 #   error BOOST_LEAF_CFG_CAPTURE must be 0 or 1.
 #endif
 
-#if BOOST_LEAF_CFG_WIN32 != 0 && BOOST_LEAF_CFG_WIN32 != 1
-#   error BOOST_LEAF_CFG_WIN32 must be 0 or 1.
+#if BOOST_LEAF_CFG_WIN32 != 0 && BOOST_LEAF_CFG_WIN32 != 1 && BOOST_LEAF_CFG_WIN32 != 2
+#   error BOOST_LEAF_CFG_WIN32 must be 0 or 1 or 2.
 #endif
 
 #if BOOST_LEAF_CFG_GNUC_STMTEXPR != 0 && BOOST_LEAF_CFG_GNUC_STMTEXPR != 1
@@ -203,7 +206,6 @@
 ////////////////////////////////////////
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
-#   include <exception>
 #   if (defined(__cpp_lib_uncaught_exceptions) && __cpp_lib_uncaught_exceptions >= 201411L) || (defined(_MSC_VER) && _MSC_VER >= 1900)
 #       define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 1
 #   else
@@ -226,6 +228,27 @@
 #       define BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
 #   endif
 #endif
+
+////////////////////////////////////////
+
+namespace boost
+{
+    [[noreturn]] void throw_exception( std::exception const & ); // user defined
+}
+
+namespace boost { namespace leaf {
+
+template <class T>
+[[noreturn]] void throw_exception_( T && e )
+{
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+    ::boost::throw_exception(std::move(e));
+#else
+    throw std::move(e);
+#endif
+}
+
+} }
 
 ////////////////////////////////////////
 

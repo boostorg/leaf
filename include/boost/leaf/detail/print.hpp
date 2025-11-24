@@ -9,9 +9,7 @@
 #include <boost/leaf/detail/demangle.hpp>
 
 #include <type_traits>
-#include <exception>
 #include <iosfwd>
-#include <cstring>
 
 namespace boost { namespace leaf {
 

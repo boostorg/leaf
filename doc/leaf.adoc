@@ -68,19 +68,15 @@ NOTE: LEAF does not depend on Boost or other libraries.
 [[tutorial]]
 == Tutorial
 
-What is a failure? It is simply the inability of a function to return a valid result, instead producing an error object describing the reason for the failure.
+Typically, error handling libraries define a variant result type, e.g. `result<T, E>`. In LEAF we drop the `E`, using just `result<T>`.
 
-A typical design is to return a variant type, e.g. `result<T, E>`. Internally, such variant types must store a discriminant (in this case a boolean) to indicate whether the object holds a `T` or an `E`.
+In case of success, access to the value `T` is immediate and direct, but because error objects are not held in results, handling errors requires a special syntax. Error objects are transported directly to error handling scopes that need them. This is not only more efficient, but also enables any given handler to access multiple objects associated with the same failure, if needed.
 
-The design of LEAF is informed by the observation that the immediate caller must have access to the discriminant in order to determine the availability of a valid `T`, but otherwise it is rare that it needs to access any error objects. They are only needed once an error handling scope is reached.
-
-Therefore what would have been a `result<T, E>` becomes `result<T>`, which stores the discriminant and (optionally) a `T`, while error objects are delivered directly to the error handling scope where they are needed.
-
-The benefit of this decomposition is that `result<T>` becomes extremely lightweight, as it is not coupled with error types; further, error objects are communicated in constant time (independent of the call stack depth). Even very large objects are handled efficiently without dynamic memory allocation.
+LEAF is also compatible with exception handling, providing identical functionality but without needing a result type.
 
 === Reporting Errors
 
-A function that reports an error:
+Report errors with `leaf::new_error`:
 
 [source,c++]
 ----
@@ -103,7 +99,7 @@ leaf::result<T> f()
 [[checking_for_errors]]
 === Checking for Errors
 
-Checking for errors communicated by a `leaf::result<T>` works as expected:
+To bail out on failure, return `result::error()`:
 
 [source,c++]
 ----
@@ -120,9 +116,7 @@ leaf::result<U> g()
 [.text-right]
 <<result>>
 
-TIP: The the result of `r.error()` is compatible with any instance of the `leaf::result` template. In the example above, note that `g` returns a `leaf::result<U>`, while `r` is of type `leaf::result<T>`.
-
-The boilerplate `if` statement can be avoided using `BOOST_LEAF_AUTO`:
+Use `BOOST_LEAF_AUTO` to avoid the boilerplate `if` statement:
 
 [source,c++]
 ----
@@ -136,7 +130,7 @@ leaf::result<U> g()
 [.text-right]
 <<BOOST_LEAF_AUTO>>
 
-`BOOST_LEAF_AUTO` can not be used with `void` results; in that case, to avoid the boilerplate `if` statement, use `BOOST_LEAF_CHECK`:
+Use `BOOST_LEAF_CHECK` in case of `void` results:
 
 [source,c++]
 ----
@@ -151,7 +145,7 @@ leaf::result<int> g()
 [.text-right]
 <<BOOST_LEAF_CHECK>>
 
-On implementations that define `pass:[__GNUC__]` (e.g. GCC/clang), the `BOOST_LEAF_CHECK` macro definition takes advantage of https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html[GNU C statement expressions]. In this case, in addition to its portable usage with `result<void>`, `BOOST_LEAF_CHECK` can be used in expressions with non-`void` result types:
+On implementations that define `pass:[__GNUC__]` (e.g. GCC/clang), `BOOST_LEAF_CHECK` is compatible with with non-`void` results as well:
 
 [source,c++]
 ----
@@ -221,7 +215,7 @@ leaf::result<U> r = leaf::try_handle_some(
     BOOST_LEAF_AUTO(v1, f1());
     BOOST_LEAF_AUTO(v2, f2());
 
-    return g(v1. v2);
+    return g(v1, v2);
   },
 
   []( leaf::match<err1, err1::e1, err1::e3> ) -> leaf::result<U>
@@ -256,7 +250,7 @@ leaf::result<U> r = leaf::try_handle_some(
     BOOST_LEAF_AUTO(v1, f1());
     BOOST_LEAF_AUTO(v2, f2());
 
-    return g(v1. v2);
+    return g(v1, v2);
   },
 
   []( err1 e, leaf::error_info const & ei ) -> leaf::result<U>
@@ -285,7 +279,7 @@ U r = leaf::try_handle_all(
     BOOST_LEAF_AUTO(v1, f1());
     BOOST_LEAF_AUTO(v2, f2());
 
-    return g(v1. v2);
+    return g(v1, v2);
   },
 
   []( leaf::match<err1, err1::e1> ) -> U
@@ -400,9 +394,9 @@ leaf::result<U> r = leaf::try_handle_some(
 
 Once again, error handlers are considered in order:
 
-* The first error handler will be used if an error object of type `io_error` _and_ and error_object of type `e_file_name` are available;
+* The first error handler will be used if an error object of type `io_error` _and_ an error_object of type `e_file_name` are available;
 * otherwise, the second error handler will be used if an error object of type `io_error` is available;
-* otherwise, `leaf_try_handle_some` fails.
+* otherwise, `leaf::try_handle_some` fails.
  
 An alternative way to write the above is to provide a single error handler that takes the `e_file_name` argument as a pointer:
 
@@ -718,7 +712,6 @@ leaf::result<int> r = leaf::try_handle_some(
   {
     // Handle lib2::error_code
   } );
-}
 ----
 [.text-right]
 <<try_handle_some>> | <<result>>
@@ -803,7 +796,7 @@ Ideally, when an error is detected, a program using LEAF would always call <<new
 
 Alas, this is not always possible.
 
-For example, the error may need to be communicated through uncooperative 3rd-party interfaces. To facilitate this transmission, a error ID may be encoded in a `std::error_code`. As long as a 3rd-party interface is able to transport a `std::error_code`, it can be compatible with LEAF.
+For example, the error may need to be communicated through uncooperative 3rd-party interfaces. To facilitate this transmission, an error ID may be encoded in a `std::error_code`. As long as a 3rd-party interface is able to transport a `std::error_code`, it can be compatible with LEAF.
 
 Further, it is sometimes necessary to communicate errors through an interface that does not even use `std::error_code`. An example of this is when an external lower-level library throws an exception, which is unlikely to be able to carry an `error_id`.
 
@@ -823,7 +816,7 @@ For a detailed tutorial see <<tutorial-on_error_in_c_callbacks>>.
 [[tutorial-loading]]
 === Loading of Error Objects
 
-Recall that error objects communicated to LEAF are stored on the stack, local to the `try_handle_same`, `try_handle_all` or `try_catch` function used to handle errors. To _load_ an error object means to move it into such storage, if available.
+Recall that error objects communicated to LEAF are stored on the stack, local to the `try_handle_some`, `try_handle_all` or `try_catch` function used to handle errors. To _load_ an error object means to move it into such storage, if available.
 
 Various LEAF functions take a list of error objects to load. As an example, if a function `copy_file` that takes the name of the input file and the name of the output file as its arguments detects a failure, it could communicate an error code `ec`, plus the two relevant file names using <<new_error>>:
 
@@ -1098,7 +1091,7 @@ It is also possible to select a handler based on `std::error_category`. The foll
 
 [source,c++]
 ----
-[]( std::error_code, leaf::category<std::errc>> )
+[]( std::error_code, leaf::category<std::errc> )
 {
 }
 ----
@@ -1109,7 +1102,7 @@ The following predicates are available:
 
 * <<match>>: as described above.
 * <<match_value>>: where `match<E, V...>` compares the object `e` of type `E` with the values `V...`, `match_value<E, V...>` compare `e.value` with the values `V...`.
-* <<match_member>>: similar to `match_value`, but takes a pointer to the data member to compare; that is, `match_member<&E::value, V...>` is equvialent to `match_value<E, V...>`. Note, however, that `match_member` requires {CPP}17 or newer, while `match_value` does not.
+* <<match_member>>: similar to `match_value`, but takes a pointer to the data member to compare; that is, `match_member<&E::value, V...>` is equivalent to `match_value<E, V...>`. Note, however, that `match_member` requires {CPP}17 or newer, while `match_value` does not.
 * `<<catch_>><Ex...>`: Similar to `match`, but checks whether the caught `std::exception` object can be `dynamic_cast` to any of the `Ex` types.
 * <<if_not>> is a special predicate that takes any other predicate `Pred` and requires that an error object of type `E` is available and that `Pred` evaluates to `false`. For example, `if_not<match<E, V...>>` requires that an object `e` of type `E` is available, and that it does not compare equal to any of the specified `V...`.
 
@@ -1778,7 +1771,7 @@ NOTE: Follow this link to see the complete program: https://github.com/boostorg/
 
 TIP: When using Lua with {CPP}, we need to protect the Lua interpreter from exceptions that may be thrown from {CPP} functions installed as `lua_CFunction` callbacks. Here is the program from this section rewritten to use a {CPP} exception (instead of `leaf::result`) to safely communicate errors out of the `do_work` function: https://github.com/boostorg/leaf/blob/master/example/lua_callback_exceptions.cpp?ts=4[lua_callback_exceptions.cpp].
 
-''''
+'''
 
 [[tutorial-diagnostic_information]]
 === Diagnostic Information
@@ -5543,7 +5536,10 @@ The following configuration macros are recognized:
 
 * `BOOST_LEAF_CFG_GNUC_STMTEXPR`: This macro controls whether or not <<BOOST_LEAF_CHECK>> is defined in terms of a https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html[GNU C statement expression], which enables its use to check for errors similarly to how the questionmark operator works in some languages (see <<checking_for_errors>>). By default the macro is defined as `1` under `pass:[__GNUC__]`, otherwise as `0`.
 
-* `BOOST_LEAF_CFG_WIN32`: Defining this macro as 1 enables the default constructor in <<e_LastError>>, and the automatic conversion to string (via `FormatMessageA`) when <<diagnostic_details>> is printed. If the macro is left undefined, LEAF defines it as `0` (even on windows, since including `windows.h` is generally not desirable). Note that the `e_LastError` type itself is available on all platforms, there is no need for conditional compilation in error handlers that use it.
+* `BOOST_LEAF_CFG_WIN32`: This macro controls the use of Win32 APIs. If left undefined, LEAF defines it as `0` (even on Windows, since including `windows.h` is generally not desirable). The possible values are:
+** `0`: Disables all Win32-specific features.
+** `1`: Includes `windows.h` and enables <<e_LastError>> support, which is otherwise stubbed.
+** `2`: In addition, switches LEAF to using the Win32 TLS API instead of {CPP}11 `thread_local`, enabling error objects to be used across DLL boundaries.
 
 * `BOOST_LEAF_NO_EXCEPTIONS`: Disables all exception handling support. If left undefined, LEAF defines it automatically based on the compiler configuration (e.g. `-fno-exceptions`).
 
@@ -5552,7 +5548,13 @@ The following configuration macros are recognized:
 [[configuring_tls_access]]
 === Configuring TLS Access
 
-LEAF requires support for thread-local `void` pointers. By default, this is implemented by means of the {CPP}11 `thread_local` keyword, but in order to support <<embedded_platforms,embedded platforms>>, it is possible to configure LEAF to use an array of thread local pointers instead, by defining `BOOST_LEAF_USE_TLS_ARRAY`. In this case, the user is required to define the following two functions to implement the required TLS access:
+LEAF requires support for thread-local `void` pointers. The available TLS implementations are:
+
+** {CPP}11 `thread_local` keyword (the default).
+** Win32 TLS API: selected by defining `BOOST_LEAF_CFG_WIN32=2`. This enables error objects to be used across DLL boundaries.
+** Custom TLS array: selected by defining `BOOST_LEAF_USE_TLS_ARRAY`. This is intended for <<embedded_platforms,embedded platforms>> where the {CPP}11 `thread_local` keyword is not available or not suitable.
+
+When using `BOOST_LEAF_USE_TLS_ARRAY`, the user is required to define the following two functions to implement the required TLS access:
 
 [source,c++]
 ----
@@ -5577,7 +5579,7 @@ Under `BOOST_LEAF_USE_TLS_ARRAY` the following additional configuration macros a
 
 * `BOOST_LEAF_CFG_TLS_INDEX_TYPE` may be defined to specify the integral type used to store assigned TLS indices (if the macro is left undefined, LEAF defines it as `unsigned char`).
 
-TIP: Reporting error objects of types that are not used by the program to handle failures does not consume TLS pointers. The minimum size of the TLS pointer array required by LEAF is the total number of different types used as arguments to error handlers (in the entire program), plus one.
+TIP: TLS slots are allocated only for types used in error handlers. The minimum size of the TLS pointer array required by LEAF is the total number of different types used as arguments to error handlers (in the entire program), plus one.
 
 WARNING: Beware of `read_void_ptr`/`write_void_ptr` accessing thread local pointers beyond the static boundaries of the thread local pointer array; this will likely result in undefined behavior.
 
@@ -5605,9 +5607,9 @@ Defining `BOOST_LEAF_EMBEDDED` is equivalent to the following:
 #endif
 ----
 
-LEAF supports FreeRTOS out of the box, please define `BOOST_LEAF_TLS_FREERTOS` (in which case LEAF automatically defines `BOOST_LEAF_EMBEDDED`, if it is not defined already).
+LEAF supports FreeRTOS out of the box, define `BOOST_LEAF_TLS_FREERTOS` (in which case LEAF automatically defines `BOOST_LEAF_EMBEDDED`, if it is not defined already).
 
-For other embedded platforms, please define `BOOST_LEAF_USE_TLS_ARRAY`, see <<configuring_tls_access>>.
+For other embedded platforms, define `BOOST_LEAF_USE_TLS_ARRAY`, see <<configuring_tls_access>>.
 
 If your program does not use concurrency at all, simply define `BOOST_LEAF_NO_THREADS`, which requires no TLS support at all (but is NOT thread-safe).
 
@@ -5617,8 +5619,6 @@ TIP: Contrary to popular belief, exception handling works great on embedded plat
 == Portability
 
 The source code is compatible with {CPP}11 or newer.
-
-LEAF uses thread-local storage (only for pointers). By default, this is implemented via the {CPP}11 `thread_local` storage class specifier, but the library is easily configurable to use any platform-specific TLS API instead (it ships with built-in support for FreeRTOS). See <<configuration>>.
 
 == Running the Unit Tests
 
@@ -5792,9 +5792,9 @@ return leaf::try_handle_some(
 [.text-right]
 <<result>> | <<try_handle_some>> | <<match>> | <<e_file_name>> | <<e_errno>>
 
-== Limitations
+== Dynamic linking
 
-When using dynamic linking, it is required that error types are declared with `default` visibility, e.g.:
+When using dynamic linking, on POSIX platforms it is required that error types are declared with `default` visibility, e.g.:
 
 [source,c++]
 ----
@@ -5804,9 +5804,7 @@ struct __attribute__ ((visibility ("default"))) my_error_info
 };
 ----
 
-This works as expected except on Windows, where thread-local storage is not shared between the individual binary modules. For this reason, to transport error objects across DLL boundaries.
-
-TIP: When using dynamic linking, it is always best to define module interfaces in terms of C (and implement them in {CPP} if appropriate).
+On Windows, to use error objects across DLL boundaries, define `BOOST_LEAF_CFG_WIN32=2`. For two modules to be able to share LEAF error objects, it is required that they are both compiled with the same compiler (not necessarily with the same compiler version). For example, if one module is compiled with MSVC and the other with GCC, the error objects will not be shared.
 
 == Alternatives to LEAF
 
@@ -5929,7 +5927,7 @@ leaf::try_catch(
   []
   {
     f(); // throws
-  }
+  },
   [](my_exception &, my_info const & x)
   {
     //my_info is available with

@@ -4,7 +4,6 @@
 
 #include <boost/leaf/config.hpp>
 #include "boost/core/lightweight_test.hpp"
-#include <exception>
 
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
 namespace boost

@@ -13,7 +13,6 @@
 #endif
 
 #include "lightweight_test.hpp"
-#include <exception>
 
 namespace leaf = boost::leaf;
 
