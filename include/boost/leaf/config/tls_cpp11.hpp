@@ -11,9 +11,7 @@
 // is required, define BOOST_LEAF_CFG_WIN32=2 before including any LEAF headers
 // to enable the alternative implementation defined in tls_win32.hpp.
 
-// This header implements thread local storage for pointers and for unsigned int
-// values using the C++11 built-in thread_local storage class specifier.
-
+#include <atomic>
 #include <cstdint>
 
 namespace boost { namespace leaf {
@@ -40,41 +38,55 @@ namespace detail
     template <class T>
     thread_local T * ptr<T>::p;
 
-    template <class T>
-    T * read_ptr() noexcept
-    {
-        return ptr<T>::p;
-    }
-
-    template <class T>
-    void alloc_write_ptr( T * p ) noexcept
-    {
-        ptr<T>::p = p;
-    }
-
-    template <class T>
-    void write_ptr( T * p ) noexcept
-    {
-        ptr<T>::p = p;
-    }
-
-    ////////////////////////////////////////
-
     struct current_error_id_storage
     {
         static thread_local unsigned x;
     };
 
     thread_local unsigned current_error_id_storage::x;
+}
 
-    inline unsigned read_current_error_id() noexcept
+} }
+
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
+
+namespace tls
+{
+    BOOST_LEAF_ALWAYS_INLINE unsigned generate_next_error_id() noexcept
     {
-        return current_error_id_storage::x;
+        unsigned id = (detail::id_factory<>::counter += 4);
+        BOOST_LEAF_ASSERT((id&3) == 1);
+        return id;
     }
 
-    inline void write_current_error_id( unsigned x ) noexcept
+    BOOST_LEAF_ALWAYS_INLINE void write_current_error_id( unsigned x ) noexcept
     {
-        current_error_id_storage::x = x;
+        detail::current_error_id_storage::x = x;
+    }
+
+    BOOST_LEAF_ALWAYS_INLINE unsigned read_current_error_id() noexcept
+    {
+        return detail::current_error_id_storage::x;
+    }
+
+    template <class T>
+    BOOST_LEAF_ALWAYS_INLINE void write_ptr_alloc( T * p )
+    {
+        detail::ptr<T>::p = p;
+    }
+
+    template <class T>
+    BOOST_LEAF_ALWAYS_INLINE void write_ptr( T * p ) noexcept
+    {
+        detail::ptr<T>::p = p;
+    }
+
+    template <class T>
+    BOOST_LEAF_ALWAYS_INLINE T * read_ptr() noexcept
+    {
+        return detail::ptr<T>::p;
     }
 
     BOOST_LEAF_ALWAYS_INLINE unsigned read_current_error_id() noexcept

@@ -34,36 +34,57 @@ namespace detail
     template <class T>
     T * ptr<T>::p;
 
-    template <class T>
-    T * read_ptr() noexcept
+    template <class=void>
+    struct BOOST_LEAF_SYMBOL_VISIBLE current_error_id_storage
     {
-        return ptr<T>::p;
-    }
+        static unsigned x;
+    };
 
     template <class T>
-    void alloc_write_ptr( T * p ) noexcept
+    unsigned current_error_id_storage<T>::x = 0;
+}
+
+} }
+
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
+
+namespace tls
+{
+    BOOST_LEAF_ALWAYS_INLINE unsigned generate_next_error_id() noexcept
     {
-        ptr<T>::p = p;
+        unsigned id = (detail::id_factory<>::counter += 4);
+        BOOST_LEAF_ASSERT((id&3) == 1);
+        return id;
+    }
+
+    BOOST_LEAF_ALWAYS_INLINE void write_current_error_id( unsigned v ) noexcept
+    {
+        detail::current_error_id_storage<>::x = v;
+    }
+
+    BOOST_LEAF_ALWAYS_INLINE unsigned read_current_error_id() noexcept
+    {
+        return detail::current_error_id_storage<>::x;
     }
 
     template <class T>
-    void write_ptr( T * p ) noexcept
+    BOOST_LEAF_ALWAYS_INLINE void write_ptr_alloc( T * p )
     {
-        ptr<T>::p = p;
+        detail::ptr<T>::p = p;
     }
 
-    ////////////////////////////////////////
-
-    inline unsigned read_current_error_id() noexcept
+    template <class T>
+    BOOST_LEAF_ALWAYS_INLINE void write_ptr( T * p ) noexcept
     {
-        static unsigned x = 0;
-        return x;
+        detail::ptr<T>::p = p;
     }
 
-    inline void write_current_error_id( unsigned v ) noexcept
+    template <class T>
+    BOOST_LEAF_ALWAYS_INLINE T * read_ptr() noexcept
     {
-        static unsigned x = 0;
-        x = v;
+        return detail::ptr<T>::p;
     }
 
     BOOST_LEAF_ALWAYS_INLINE unsigned read_current_error_id() noexcept
