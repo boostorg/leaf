@@ -94,6 +94,11 @@
 #   error BOOST_LEAF_CFG_WIN32 must be 0 or 1 or 2.
 #endif
 
+#if BOOST_LEAF_CFG_WIN32 && !defined(_WIN32)
+#   warning "Ignoring BOOST_LEAF_CFG_WIN32 because _WIN32 is not defined"
+#   define BOOST_LEAF_CFG_WIN32 0
+#endif
+
 #if BOOST_LEAF_CFG_GNUC_STMTEXPR != 0 && BOOST_LEAF_CFG_GNUC_STMTEXPR != 1
 #   error BOOST_LEAF_CFG_GNUC_STMTEXPR must be 0 or 1.
 #endif

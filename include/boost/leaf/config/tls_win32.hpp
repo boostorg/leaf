@@ -1,18 +1,26 @@
 #ifndef BOOST_LEAF_CONFIG_TLS_WIN32_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_TLS_WIN32_HPP_INCLUDED
 
-// LATEST
-
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2025 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <windows.h>
+// This header implements the TLS API specified in tls.hpp using Win32 TLS
+// functions, allowing error objects to cross DLL boundaries on Windows. This
+// implementation is enabled by defining BOOST_LEAF_CFG_WIN32=2 before including
+// any LEAF headers.
+
+#ifndef _WIN32
+#   error "This header is only for Windows"
+#endif
+
+#include <atomic>
 #include <unordered_map>
 #include <typeinfo>
 #include <cstdint>
 #include <stdexcept>
 #include <cstdio>
+#include <windows.h>
 #ifdef min
 #   undef min
 #endif
@@ -22,6 +30,7 @@
 
 namespace boost { namespace leaf {
 
+// Thrown on TLS allocation failure.
 class win32_tls_error:
     public std::runtime_error
 {
@@ -31,6 +40,12 @@ public:
     {
     }
 };
+
+} }
+
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
 
 namespace detail
 {
@@ -64,7 +79,7 @@ namespace detail
 namespace n
 {
     template <class T>
-    BOOST_LEAF_ALWAYS_INLINE constexpr std::uint32_t h() noexcept
+    BOOST_LEAF_ALWAYS_INLINE constexpr std::uint32_t __cdecl h() noexcept
     {
         return detail::cpp11_hash_string(BOOST_LEAF_PRETTY_FUNCTION);
     }
@@ -73,11 +88,20 @@ namespace n
 namespace detail
 {
     template<class T>
-    constexpr inline std::uint32_t type_hash() noexcept
+    BOOST_LEAF_ALWAYS_INLINE constexpr std::uint32_t type_hash() noexcept
     {
         return n::h<T>();
     }
+}
 
+} }
+
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
+
+namespace detail
+{
     class slot_map
     {
         slot_map(slot_map const &) = delete;
@@ -100,14 +124,14 @@ namespace detail
 
         public:
 
-            tls_slot_index():
+            BOOST_LEAF_ALWAYS_INLINE tls_slot_index():
                 idx_(TlsAlloc())    
             {
                 if (idx_ == TLS_OUT_OF_INDEXES)
                     throw_exception_(win32_tls_error("TLS_OUT_OF_INDEXES"));
             }   
 
-            ~tls_slot_index() noexcept
+            BOOST_LEAF_ALWAYS_INLINE ~tls_slot_index() noexcept
             {
                 if (idx_ == TLS_OUT_OF_INDEXES)
                     return;
@@ -115,13 +139,13 @@ namespace detail
                 BOOST_LEAF_ASSERT(r), (void) r;
             }
 
-            tls_slot_index(tls_slot_index && other) noexcept:
+            BOOST_LEAF_ALWAYS_INLINE tls_slot_index(tls_slot_index && other) noexcept:
                 idx_(other.idx_)
             {
                 other.idx_ = TLS_OUT_OF_INDEXES;
             }
 
-            DWORD get() const noexcept
+            BOOST_LEAF_ALWAYS_INLINE DWORD get() const noexcept
             {
                 BOOST_LEAF_ASSERT(idx_ != TLS_OUT_OF_INDEXES);
                 return idx_;
@@ -146,13 +170,13 @@ namespace detail
             InitializeCriticalSection(&cs_);
         }
 
-        void add_ref() noexcept
+        BOOST_LEAF_ALWAYS_INLINE void add_ref() noexcept
         {
             BOOST_LEAF_ASSERT(refcount_ >= 1);
             ++refcount_;
         }
 
-        void release() noexcept
+        BOOST_LEAF_ALWAYS_INLINE void release() noexcept
         {
             --refcount_;
             BOOST_LEAF_ASSERT(refcount_ >= 0);
@@ -178,12 +202,12 @@ namespace detail
             return idx;
         }
 
-        DWORD error_id_slot() const noexcept
+        BOOST_LEAF_ALWAYS_INLINE DWORD error_id_slot() const noexcept
         {
             return error_id_slot_.get();
         }
 
-        atomic_unsigned_int & error_id_storage() noexcept
+        BOOST_LEAF_ALWAYS_INLINE atomic_unsigned_int & error_id_storage() noexcept
         {
             return error_id_storage_;
         }
@@ -211,7 +235,7 @@ namespace detail
         {
         }
 
-        slot_map & sm() const noexcept
+        BOOST_LEAF_ALWAYS_INLINE slot_map & sm() const noexcept
         {
             BOOST_LEAF_ASSERT(hinstance_);
             BOOST_LEAF_ASSERT(!(tls_failures_ & tls_failure_create_mapping));
@@ -221,7 +245,7 @@ namespace detail
             return *sm_;
         }
 
-        void update(PVOID hinstDLL, DWORD dwReason) noexcept
+        BOOST_LEAF_ALWAYS_INLINE void update(PVOID hinstDLL, DWORD dwReason) noexcept
         {
             if (dwReason == DLL_PROCESS_ATTACH)
             {
@@ -294,7 +318,7 @@ namespace detail
     template<int N>
     module_state module<N>::state;
 
-    inline unsigned generate_next_error_id() noexcept
+    BOOST_LEAF_ALWAYS_INLINE unsigned generate_next_error_id() noexcept
     {
         static atomic_unsigned_int & counter = module<>::state.sm().error_id_storage();
         unsigned id = (counter += 4);
@@ -322,10 +346,60 @@ namespace detail
 #endif
 }
 
+} }
+
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
+
 namespace tls
 {
+    BOOST_LEAF_ALWAYS_INLINE unsigned generate_next_error_id() noexcept
+    {
+        return detail::generate_next_error_id();
+    }
+
+    BOOST_LEAF_ALWAYS_INLINE void write_current_error_id(unsigned x) noexcept
+    {
+        using namespace detail;
+        DWORD slot = module<>::state.sm().error_id_slot();
+        BOOL r = TlsSetValue(slot, reinterpret_cast<void *>(static_cast<std::uintptr_t>(x)));
+        BOOST_LEAF_ASSERT(r), (void) r;
+    }
+
+    BOOST_LEAF_ALWAYS_INLINE unsigned read_current_error_id() noexcept
+    {
+        using namespace detail;
+        DWORD slot = module<>::state.sm().error_id_slot();
+        LPVOID value = TlsGetValue(slot);
+        BOOST_LEAF_ASSERT(GetLastError() == ERROR_SUCCESS);
+        return static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(value));
+    }
+
     template <class T>
-    T * read_ptr() noexcept
+    BOOST_LEAF_ALWAYS_INLINE void write_ptr_alloc(T * p)
+    {
+        using namespace detail;
+        thread_local DWORD const cached_slot = module<>::state.sm().get(type_hash<T>());
+        DWORD slot = cached_slot;
+        BOOST_LEAF_ASSERT(slot != TLS_OUT_OF_INDEXES);
+        BOOL r = TlsSetValue(slot, p);
+        BOOST_LEAF_ASSERT(r), (void) r;
+    }
+
+    template <class T>
+    BOOST_LEAF_ALWAYS_INLINE void write_ptr(T * p) noexcept
+    {
+        using namespace detail;
+        thread_local DWORD const cached_slot = module<>::state.sm().check(type_hash<T>());
+        DWORD slot = cached_slot;
+        BOOST_LEAF_ASSERT(slot != TLS_OUT_OF_INDEXES);
+        BOOL r = TlsSetValue(slot, p);
+        BOOST_LEAF_ASSERT(r), (void) r;
+    }
+
+    template <class T>
+    BOOST_LEAF_ALWAYS_INLINE T * read_ptr() noexcept
     {
         using namespace detail;
         thread_local DWORD cached_slot = TLS_OUT_OF_INDEXES;
@@ -337,45 +411,6 @@ namespace tls
         LPVOID value = TlsGetValue(slot);
         BOOST_LEAF_ASSERT(GetLastError() == ERROR_SUCCESS);
         return static_cast<T *>(value);
-    }
-
-    template <class T>
-    void alloc_write_ptr(T * p)
-    {
-        using namespace detail;
-        thread_local DWORD const cached_slot = module<>::state.sm().get(type_hash<T>());
-        DWORD slot = cached_slot;
-        BOOST_LEAF_ASSERT(slot != TLS_OUT_OF_INDEXES);
-        BOOL r = TlsSetValue(slot, p);
-        BOOST_LEAF_ASSERT(r), (void) r;
-    }
-
-    template <class T>
-    void write_ptr(T * p) noexcept
-    {
-        using namespace detail;
-        thread_local DWORD const cached_slot = module<>::state.sm().check(type_hash<T>());
-        DWORD slot = cached_slot;
-        BOOST_LEAF_ASSERT(slot != TLS_OUT_OF_INDEXES);
-        BOOL r = TlsSetValue(slot, p);
-        BOOST_LEAF_ASSERT(r), (void) r;
-    }
-
-    inline unsigned read_current_error_id() noexcept
-    {
-        using namespace detail;
-        DWORD slot = module<>::state.sm().error_id_slot();
-        LPVOID value = TlsGetValue(slot);
-        BOOST_LEAF_ASSERT(GetLastError() == ERROR_SUCCESS);
-        return static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(value));
-    }
-
-    inline void write_current_error_id(unsigned x) noexcept
-    {
-        using namespace detail;
-        DWORD slot = module<>::state.sm().error_id_slot();
-        BOOL r = TlsSetValue(slot, reinterpret_cast<void *>(static_cast<std::uintptr_t>(x)));
-        BOOST_LEAF_ASSERT(r), (void) r;
     }
 }
 

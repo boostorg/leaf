@@ -135,7 +135,7 @@ namespace detail
         void activate()
         {
             prev_ = tls::read_ptr<slot<E>>();
-            tls::alloc_write_ptr<slot<E>>(this);
+            tls::write_ptr_alloc<slot<E>>(this);
         }
 
         void deactivate() const noexcept
@@ -538,7 +538,7 @@ namespace detail
 
     inline int new_id() noexcept
     {
-        unsigned id = generate_next_error_id();
+        unsigned id = tls::generate_next_error_id();
         tls::write_current_error_id(id);
         return int(id);
     }
