@@ -261,13 +261,6 @@ namespace detail
         bool moved_ = false;
 #endif
 
-#if BOOST_LEAF_CFG_CAPTURE
-        void reserve( dynamic_allocator & da ) const override
-        {
-            tuple_for_each_preload<sizeof...(Item),decltype(p_)>::reserve(p_,da);
-        }
-#endif
-
     public:
 
         BOOST_LEAF_CONSTEXPR explicit preloaded( Item && ... i ):
