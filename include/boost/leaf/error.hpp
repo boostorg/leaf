@@ -334,65 +334,57 @@ namespace detail
     inline void dynamic_load_( int err_id, E && e )
     {
         if( slot<dynamic_allocator> * sl = tls::read_ptr<slot<dynamic_allocator>>() )
-        {
             if( dynamic_allocator * c = sl->has_value_any_key() )
                 c->dynamic_load(err_id, std::forward<E>(e));
             else
                 sl->load(err_id).dynamic_load(err_id, std::forward<E>(e));
-        }
     }
 
     template <class E, class F>
     inline void dynamic_accumulate_( int err_id, F && f )
     {
         if( slot<dynamic_allocator> * sl = tls::read_ptr<slot<dynamic_allocator>>() )
-        {
             if( dynamic_allocator * c = sl->has_value(err_id) )
                 (void) std::forward<F>(f)(c->dynamic_load(err_id, E{}));
             else
                 (void) std::forward<F>(f)(sl->load(err_id).dynamic_load(err_id, E{}));
-        }
     }
 
     template <bool OnError, class E>
     inline void dynamic_load( int err_id, E && e  ) noexcept(OnError)
     {
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
         if( OnError )
         {
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
             try
             {
-#endif
                 dynamic_load_(err_id, std::forward<E>(e));
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
             }
             catch(...)
             {
             }
-#endif
         }
         else
+#endif
             dynamic_load_(err_id, std::forward<E>(e));
     }
 
     template <bool OnError, class E, class F>
     inline void dynamic_load_accumulate( int err_id, F && f  ) noexcept(OnError)
     {
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
         if( OnError )
         {
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
             try
             {
-#endif
                 dynamic_accumulate_<E>(err_id, std::forward<F>(f));
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
             }
             catch(...)
             {
             }
-#endif
         }
         else
+#endif
             dynamic_accumulate_<E>(err_id, std::forward<F>(f));
     }
 }
