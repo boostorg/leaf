@@ -96,9 +96,9 @@ namespace windows
             {
                 BOOST_LEAF_ASSERT(mb.p != nullptr);
                 char * z = std::strchr((LPSTR)mb.p,0);
-                if( z[-1] == '\n' )
+                if( z != (LPSTR)mb.p && z[-1] == '\n' )
                     *--z = 0;
-                if( z[-1] == '\r' )
+                if( z != (LPSTR)mb.p && z[-1] == '\r' )
                     *--z = 0;
                 return os << err.value << ", \"" << (LPCSTR)mb.p << '"';
             }
