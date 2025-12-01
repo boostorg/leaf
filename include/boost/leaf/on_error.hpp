@@ -166,32 +166,37 @@ namespace detail
     template <class... Item>
     class preloaded
     {
+        preloaded( preloaded const & ) = delete;
         preloaded & operator=( preloaded const & ) = delete;
 
         std::tuple<Item...> p_;
-        bool moved_;
         error_monitor id_;
+#if __cplusplus < 201703L
+        bool moved_ = false;
+#endif
 
     public:
 
         BOOST_LEAF_CONSTEXPR explicit preloaded( Item && ... i ):
-            p_(std::forward<Item>(i)...),
-            moved_(false)
+            p_(std::forward<Item>(i)...)
         {
         }
 
+#if __cplusplus < 201703L
         BOOST_LEAF_CONSTEXPR preloaded( preloaded && x ) noexcept:
             p_(std::move(x.p_)),
-            moved_(false),
             id_(std::move(x.id_))
         {
             x.moved_ = true;
         }
+#endif
 
         ~preloaded() noexcept
         {
+#if __cplusplus < 201703L
             if( moved_ )
                 return;
+#endif
             if( auto id = id_.check_id() )
                 tuple_for_each_preload<sizeof...(Item),decltype(p_)>::trigger(p_,id);
         }

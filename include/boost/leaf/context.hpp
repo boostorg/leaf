@@ -292,11 +292,13 @@ class context
             if( ctx_ )
                 ctx_->activate();
         }
+#if __cplusplus < 201703L
         BOOST_LEAF_CONSTEXPR BOOST_LEAF_ALWAYS_INLINE raii_deactivator( raii_deactivator && x ) noexcept:
             ctx_(x.ctx_)
         {
             x.ctx_ = nullptr;
         }
+#endif
         BOOST_LEAF_ALWAYS_INLINE ~raii_deactivator() noexcept
         {
             if( ctx_ && ctx_->is_active() )
