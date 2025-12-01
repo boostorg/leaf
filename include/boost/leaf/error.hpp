@@ -389,30 +389,64 @@ namespace detail
         dynamic_allocator da_;
         slot * prev_;
 
-    public:
+    template <class E>
+    inline void dynamic_load_( int err_id, E && e )
+    {
+        if( slot<dynamic_allocator> * sl = tls::read_ptr<slot<dynamic_allocator>>() )
+            if( dynamic_allocator * c = sl->has_value_any_key() )
+                c->dynamic_load(err_id, std::forward<E>(e));
+            else
+                sl->load(err_id).dynamic_load(err_id, std::forward<E>(e));
+    }
 
-        slot() noexcept:
-            prev_(nullptr)
-        {
-            tls::reserve_ptr<slot<dynamic_allocator>>();
-        }
+    template <class E, class F>
+    inline void dynamic_accumulate_( int err_id, F && f )
+    {
+        if( slot<dynamic_allocator> * sl = tls::read_ptr<slot<dynamic_allocator>>() )
+            if( dynamic_allocator * c = sl->has_value(err_id) )
+                (void) std::forward<F>(f)(c->dynamic_load(err_id, E{}));
+            else
+                (void) std::forward<F>(f)(sl->load(err_id).dynamic_load(err_id, E{}));
+    }
 
-        slot( slot && x ) noexcept:
-            da_(std::move(x.da_)),
-            prev_(nullptr)
+    template <bool OnError, class E>
+    inline void dynamic_load( int err_id, E && e  ) noexcept(OnError)
+    {
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+        if( OnError )
         {
-            BOOST_LEAF_ASSERT(x.prev_ == nullptr);
+            try
+            {
+                dynamic_load_(err_id, std::forward<E>(e));
+            }
+            catch(...)
+            {
+            }
         }
+        else
+#endif
+            dynamic_load_(err_id, std::forward<E>(e));
+    }
 
-        ~slot() noexcept
+    template <bool OnError, class E, class F>
+    inline void dynamic_load_accumulate( int err_id, F && f  ) noexcept(OnError)
+    {
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+        if( OnError )
         {
-            BOOST_LEAF_ASSERT(tls::read_ptr<slot<dynamic_allocator>>() != this);
+            try
+            {
+                dynamic_accumulate_<E>(err_id, std::forward<F>(f));
+            }
+            catch(...)
+            {
+            }
         }
-
-        dynamic_allocator const & get() const noexcept
-        {
-            return da_;
-        }
+        else
+#endif
+            dynamic_accumulate_<E>(err_id, std::forward<F>(f));
+    }
+}
 
         dynamic_allocator & get() noexcept
         {
