@@ -509,7 +509,7 @@ leaf::result<void> r = leaf::try_handle_some(
 
   []( io_error e, e_line const * current_line )
   {
-    std::cerr << "Parse error";
+    std::cerr << "I/O error";
     if( current_line )
       std::cerr << " at line " << current_line->value;
     std::cerr << std::endl;
@@ -544,7 +544,7 @@ leaf::result<void> r = leaf::try_handle_some(
 
   []( io_error e, e_line const * l )
   {
-    std::cerr << "Parse error";
+    std::cerr << "I/O error";
     if( l )
       std::cerr << " at line " << l.value;
     std::cerr << std::endl;
@@ -578,7 +578,7 @@ leaf::try_catch(
 
   []( io_error e, e_line const * l )
   {
-    std::cerr << "Parse error";
+    std::cerr << "I/O error";
     if( l )
       std::cerr << " at line " << l.value;
     std::cerr << std::endl;
