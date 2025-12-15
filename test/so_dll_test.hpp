@@ -14,7 +14,7 @@
 // Note, under BOOST_LEAF_CFG_WIN32==2 (using Win32 TLS) we do not need
 // import/export for error types. We still need default visibility on POSIX.
 template <int Tag>
-struct BOOST_LEAF_SYMBOL_VISIBLE my_info
+struct [[gnu::visibility("default")]] my_info
 {
     int value;
 

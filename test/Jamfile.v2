@@ -137,6 +137,10 @@ lib so_dll_lib1 : so_dll_lib1.cpp : <link>shared <visibility>hidden <target-os>w
 lib so_dll_lib2 : so_dll_lib2.cpp : <link>shared <visibility>hidden <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 : : <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 ;
 run so_dll_test.cpp so_dll_lib1 so_dll_lib2 : : : <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 ;
 
+lib so_dll_static_lib1 : so_dll_lib1.cpp : <link>static <define>BOOST_LEAF_SO_DLL_TEST_STATIC <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 ;
+lib so_dll_static_lib2 : so_dll_lib2.cpp : <link>static <define>BOOST_LEAF_SO_DLL_TEST_STATIC <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 ;
+run so_dll_test.cpp so_dll_static_lib1 so_dll_static_lib2 : : : <define>BOOST_LEAF_SO_DLL_TEST_STATIC <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 : so_dll_static_test ;
+
 compile-fail _compile-fail-arg_boost_error_info_1.cpp ;
 compile-fail _compile-fail-arg_boost_error_info_2.cpp ;
 compile-fail _compile-fail-arg_catch_1.cpp ;

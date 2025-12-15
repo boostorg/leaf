@@ -238,6 +238,13 @@ if option_enable_unit_tests
     so_dll_test_lib2 = shared_library('so_dll_test_lib2', 'test/so_dll_lib2.cpp', dependencies: [leaf, dep_so_dll], gnu_symbol_visibility: 'hidden')
     test('so_dll_test', executable('so_dll_test', 'test/so_dll_test.cpp', dependencies: [leaf, dep_so_dll], link_with: [so_dll_test_lib1, so_dll_test_lib2]))
 
+    # Test that the DLL test works when linked statically as well.
+    # This is to verify that we don't get multiply defined symbol link errors when tls_win32.hpp is included in multiple compilation units..
+    dep_so_dll_static = declare_dependency(compile_args: ['-DBOOST_LEAF_SO_DLL_TEST_STATIC'])
+    so_dll_static_lib1 = static_library('so_dll_static_lib1', 'test/so_dll_lib1.cpp', dependencies: [leaf, dep_so_dll, dep_so_dll_static])
+    so_dll_static_lib2 = static_library('so_dll_static_lib2', 'test/so_dll_lib2.cpp', dependencies: [leaf, dep_so_dll, dep_so_dll_static])
+    test('so_dll_static_test', executable('so_dll_static_test', 'test/so_dll_test.cpp', dependencies: [leaf, dep_so_dll, dep_so_dll_static], link_with: [so_dll_static_lib1, so_dll_static_lib2]))
+
 endif
 
 #################################

@@ -42,9 +42,9 @@ namespace detail
 
     template <class T>
     unsigned current_error_id_storage<T>::x = 0;
-}
+} // namespace detail
 
-} }
+} } // namespace boost::leaf
 
 ////////////////////////////////////////
 
@@ -62,29 +62,6 @@ namespace tls
     BOOST_LEAF_ALWAYS_INLINE void write_current_error_id( unsigned v ) noexcept
     {
         detail::current_error_id_storage<>::x = v;
-    }
-
-    BOOST_LEAF_ALWAYS_INLINE unsigned read_current_error_id() noexcept
-    {
-        return detail::current_error_id_storage<>::x;
-    }
-
-    template <class T>
-    BOOST_LEAF_ALWAYS_INLINE void write_ptr_alloc( T * p )
-    {
-        detail::ptr<T>::p = p;
-    }
-
-    template <class T>
-    BOOST_LEAF_ALWAYS_INLINE void write_ptr( T * p ) noexcept
-    {
-        detail::ptr<T>::p = p;
-    }
-
-    template <class T>
-    BOOST_LEAF_ALWAYS_INLINE T * read_ptr() noexcept
-    {
-        return detail::ptr<T>::p;
     }
 
     BOOST_LEAF_ALWAYS_INLINE unsigned read_current_error_id() noexcept

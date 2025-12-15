@@ -211,7 +211,7 @@ namespace detail
         {
             return error_id_storage_;
         }
-    };
+    }; // class slot_map
 
     class module_state
     {
@@ -300,6 +300,7 @@ namespace detail
             }
             else if (dwReason == DLL_PROCESS_DETACH)
             {
+                BOOST_LEAF_ASSERT(sm_ || tls_failures_);
                 if (sm_)
                 {
                     sm_->release();
@@ -307,7 +308,7 @@ namespace detail
                 }
             }
         }
-    };
+    }; // class module_state
 
     template<int = 0>
     struct module
@@ -334,7 +335,7 @@ namespace detail
 #ifdef _MSC_VER
 #pragma section(".CRT$XLB", long, read)
 #pragma data_seg(push, ".CRT$XLB")
-    extern "C" PIMAGE_TLS_CALLBACK boost_leaf_tls_callback = tls_callback;
+    extern "C" __declspec(selectany) PIMAGE_TLS_CALLBACK boost_leaf_tls_callback = tls_callback;
 #pragma data_seg(pop)
 #ifdef _WIN64
 #pragma comment(linker, "/INCLUDE:boost_leaf_tls_callback")
@@ -342,11 +343,11 @@ namespace detail
 #pragma comment(linker, "/INCLUDE:_boost_leaf_tls_callback")
 #endif
 #elif defined(__GNUC__)
-    extern "C" __attribute__((used)) PIMAGE_TLS_CALLBACK boost_leaf_tls_callback __attribute__((section(".CRT$XLB"))) = tls_callback;
+    extern "C" __attribute__((used, weak)) PIMAGE_TLS_CALLBACK boost_leaf_tls_callback __attribute__((section(".CRT$XLB"))) = tls_callback;
 #endif
-}
+} // namespace detail
 
-} }
+} } // namespace boost::leaf
 
 ////////////////////////////////////////
 
@@ -377,14 +378,11 @@ namespace tls
     }
 
     template <class T>
-    BOOST_LEAF_ALWAYS_INLINE void write_ptr_alloc(T * p)
+    BOOST_LEAF_ALWAYS_INLINE void reserve_ptr()
     {
         using namespace detail;
         thread_local DWORD const cached_slot = module<>::state.sm().get(type_hash<T>());
-        DWORD slot = cached_slot;
-        BOOST_LEAF_ASSERT(slot != TLS_OUT_OF_INDEXES);
-        BOOL r = TlsSetValue(slot, p);
-        BOOST_LEAF_ASSERT(r), (void) r;
+        BOOST_LEAF_ASSERT(cached_slot != TLS_OUT_OF_INDEXES), (void) cached_slot;
     }
 
     template <class T>
@@ -412,8 +410,8 @@ namespace tls
         BOOST_LEAF_ASSERT(GetLastError() == ERROR_SUCCESS);
         return static_cast<T *>(value);
     }
-}
+} // namespace tls
 
-} }
+} } // namespace boost::leaf
 
-#endif // BOOST_LEAF_CONFIG_TLS_WIN32_HPP_INCLUDED
+#endif // #ifndef BOOST_LEAF_CONFIG_TLS_WIN32_HPP_INCLUDED

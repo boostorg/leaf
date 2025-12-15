@@ -126,7 +126,7 @@ int test_catch(void (*f)())
         return 2;
     }
 }
-#endif
+#endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
 void test_single_thread()
 {
@@ -138,7 +138,7 @@ void test_single_thread()
     BOOST_TEST_EQ(test_catch(hidden_throw1), 0);
     BOOST_TEST_EQ(test_exception(hidden_throw2, true), 0);
     BOOST_TEST_EQ(test_catch(hidden_throw2), 0);
-#endif
+#endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
 }
 
 void test_multithreaded()
@@ -212,7 +212,7 @@ void test_multithreaded()
         for (auto & f : futures)
             BOOST_TEST_EQ(f.get(), 0);
     }
-#endif
+#endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
 }
 
 int main()
