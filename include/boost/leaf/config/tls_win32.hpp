@@ -252,14 +252,16 @@ namespace detail
                 hinstance_ = hinstDLL;
                 char name[64];
                 int num_written = std::snprintf(name, sizeof(name), "Local\\boost_leaf_tls_%lu", GetCurrentProcessId());
-                BOOST_LEAF_ASSERT(num_written >= 0 && num_written < sizeof(name)), (void) num_written;
+                BOOST_LEAF_ASSERT(num_written >= 0 && num_written < int(sizeof(name))), (void) num_written;
                 HANDLE mapping = CreateFileMappingA(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(slot_map *), name);
                 if (!mapping)
                 {
                     tls_failures_ |= tls_failure_create_mapping;
                     return;
                 }
-                bool is_first_module = (GetLastError() != ERROR_ALREADY_EXISTS);
+                DWORD mapping_status = GetLastError();
+                BOOST_LEAF_ASSERT(mapping_status == ERROR_ALREADY_EXISTS || mapping_status == ERROR_SUCCESS);
+                bool is_first_module = (mapping_status == ERROR_SUCCESS);
                 slot_map * * mapped_ptr = static_cast<slot_map * *>(MapViewOfFile(mapping, FILE_MAP_WRITE, 0, 0, sizeof(slot_map *)));
                 if (!mapped_ptr)
                 {
@@ -333,17 +335,26 @@ namespace detail
     }
 
 #ifdef _MSC_VER
-#pragma section(".CRT$XLB", long, read)
-#pragma data_seg(push, ".CRT$XLB")
-    extern "C" __declspec(selectany) PIMAGE_TLS_CALLBACK boost_leaf_tls_callback = tls_callback;
-#pragma data_seg(pop)
-#ifdef _WIN64
-#pragma comment(linker, "/INCLUDE:boost_leaf_tls_callback")
-#else
-#pragma comment(linker, "/INCLUDE:_boost_leaf_tls_callback")
-#endif
+#   pragma section(".CRT$XLB", long, read)
+#   pragma data_seg(push, ".CRT$XLB")
+
+extern "C" __declspec(selectany) PIMAGE_TLS_CALLBACK boost_leaf_tls_callback = tls_callback;
+
+#   pragma data_seg(pop)
+#   ifdef _WIN64
+#       pragma comment(linker, "/INCLUDE:boost_leaf_tls_callback")
+#   else
+#       pragma comment(linker, "/INCLUDE:_boost_leaf_tls_callback")
+#   endif
 #elif defined(__GNUC__)
-    extern "C" __attribute__((used, weak)) PIMAGE_TLS_CALLBACK boost_leaf_tls_callback __attribute__((section(".CRT$XLB"))) = tls_callback;
+#   pragma GCC diagnostic push
+#   pragma GCC diagnostic ignored "-Wattributes"
+
+extern "C" __attribute__((used, selectany)) PIMAGE_TLS_CALLBACK boost_leaf_tls_callback __attribute__((section(".CRT$XLB"))) = tls_callback;
+
+#   pragma GCC diagnostic pop
+#else
+#   error Unknown compiler, unable to define .CRT$XLB section
 #endif
 } // namespace detail
 
