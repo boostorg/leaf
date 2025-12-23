@@ -81,7 +81,7 @@ int main()
                 BOOST_TEST_NE(s.find("info<3> instance"), s.npos);
             }
         }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_STRING
 
         int ret = leaf::try_handle_all(
             [&]
@@ -103,4 +103,4 @@ int main()
     return boost::report_errors();
 }
 
-#endif
+#endif // #if !BOOST_LEAF_CFG_CAPTURE

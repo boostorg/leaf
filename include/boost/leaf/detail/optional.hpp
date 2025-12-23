@@ -1,13 +1,11 @@
 #ifndef BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
 
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-
-#include <utility>
 #include <new>
 
 namespace boost { namespace leaf {
@@ -133,16 +131,6 @@ namespace detail
             return value_;
         }
 
-        BOOST_LEAF_CONSTEXPR T const * has_value_any_key() const noexcept
-        {
-            return key_ ? &value_ : nullptr;
-        }
-
-        BOOST_LEAF_CONSTEXPR T * has_value_any_key() noexcept
-        {
-            return key_ ? &value_ : nullptr;
-        }
-
         BOOST_LEAF_CONSTEXPR T const * has_value(int key) const noexcept
         {
             BOOST_LEAF_ASSERT(key);
@@ -184,18 +172,10 @@ namespace detail
             reset();
             return tmp;
         }
+    }; // template optional
 
-        BOOST_LEAF_CONSTEXPR T & value_or_default(int key) noexcept
-        {
-            if( T * v = has_value(key) )
-                return *v;
-            else
-                return load(key);
-        }
-    };
+} // namespace detail
 
-}
+} } // namespace boost::leaf
 
-} }
-
-#endif // BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
+#endif // #ifndef BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED

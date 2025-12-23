@@ -52,7 +52,7 @@ leaf::result<R> f_errc_wrapped( Errc ec )
 {
     return leaf::new_error(e_std_error_code{make_error_code(ec)}, info<1>{1}, info<2>{2}, info<3>{3});
 }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
 struct move_only
 {
@@ -142,7 +142,7 @@ int main()
             } );
         BOOST_TEST_EQ(c, 2);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     // void, try_handle_all (failure), match cond_x (wrapped std::error_code)
@@ -175,7 +175,7 @@ int main()
             } );
         BOOST_TEST_EQ(c, 2);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
     // void, try_handle_all (failure), match enum (single enum value)
     {
@@ -366,7 +366,7 @@ int main()
             } );
         BOOST_TEST_EQ(r, 2);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     // int, try_handle_all (failure), match cond_x (wrapped std::error_code)
@@ -394,7 +394,7 @@ int main()
             } );
         BOOST_TEST_EQ(r, 2);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
     // int, try_handle_all (failure), match enum (single enum value)
     {
@@ -565,7 +565,7 @@ int main()
             } );
         BOOST_TEST_EQ(r.value, 2);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     // move_only, try_handle_all (failure), match cond_x (wrapped std::error_code)
@@ -593,7 +593,7 @@ int main()
             } );
         BOOST_TEST_EQ(r.value, 2);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
     // move_only, try_handle_all (failure), match enum (single enum value)
     {

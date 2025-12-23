@@ -87,7 +87,7 @@ int main()
             } );
         BOOST_TEST_EQ(r1, 1);
     }
-#endif
+#endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
     {
         leaf::result<void> r = leaf::try_capture_all(
             []() -> leaf::result<void>
@@ -147,4 +147,4 @@ int main()
     return boost::report_errors();
 }
 
-#endif
+#endif // #if !BOOST_LEAF_CFG_CAPTURE

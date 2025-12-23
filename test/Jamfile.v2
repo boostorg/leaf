@@ -70,8 +70,8 @@ run diagnostics_test3.cpp ;
 run diagnostics_test4.cpp ;
 run diagnostics_test5.cpp ;
 run e_errno_test.cpp ;
-run e_LastError_test.cpp ;
-run error_code_test.cpp ;
+run e_LastError_test.cpp : : : <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=1 ;
+run error_code_test.cpp : : : <toolset>clang-darwin,<exception-handling>off,<rtti>off:<linkflags>"-Wl,-ld_classic" ; # workaround for macos-14 linker bug
 run error_id_test.cpp ;
 run exception_test.cpp ;
 run exception_to_result_test.cpp ;
@@ -94,6 +94,7 @@ run on_error_accumulate_nested_new_error_exception_test.cpp ;
 run on_error_accumulate_nested_new_error_result_test.cpp ;
 run on_error_accumulate_nested_success_exception_test.cpp ;
 run on_error_accumulate_nested_success_result_test.cpp ;
+run on_error_alloc_fail_test.cpp ;
 run on_error_defer_basic_test.cpp ;
 run on_error_defer_nested_error_exception_test.cpp ;
 run on_error_defer_nested_error_result_test.cpp ;
@@ -101,6 +102,9 @@ run on_error_defer_nested_new_error_exception_test.cpp ;
 run on_error_defer_nested_new_error_result_test.cpp ;
 run on_error_defer_nested_success_exception_test.cpp ;
 run on_error_defer_nested_success_result_test.cpp ;
+run on_error_dynamic_reserve_test1.cpp ;
+run on_error_dynamic_reserve_test2.cpp ;
+run on_error_dynamic_reserve_test3.cpp ;
 run on_error_preload_basic_test.cpp ;
 run on_error_preload_exception_test.cpp ;
 run on_error_preload_nested_error_exception_test.cpp ;
@@ -129,9 +133,13 @@ run try_catch_system_error_test.cpp ;
 run try_catch_test.cpp ;
 run try_exception_and_result_test.cpp ;
 
-lib visibility_test_lib : visibility_test_lib.cpp : <visibility>hidden ;
-run visibility_test.cpp visibility_test_lib/<link>shared ;
-run visibility_test.cpp visibility_test_lib/<link>static : : : <target-os>windows ; # This can't work on Windows, so use static link for the test.
+lib so_dll_lib1 : so_dll_lib1.cpp : <link>shared <visibility>hidden <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 : : <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 ;
+lib so_dll_lib2 : so_dll_lib2.cpp : <link>shared <visibility>hidden <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 : : <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 ;
+run so_dll_test.cpp so_dll_lib1 so_dll_lib2 : : : <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 ;
+
+lib so_dll_static_lib1 : so_dll_lib1.cpp : <link>static <define>BOOST_LEAF_SO_DLL_TEST_STATIC <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 ;
+lib so_dll_static_lib2 : so_dll_lib2.cpp : <link>static <define>BOOST_LEAF_SO_DLL_TEST_STATIC <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 ;
+run so_dll_test.cpp so_dll_static_lib1 so_dll_static_lib2 : : : <define>BOOST_LEAF_SO_DLL_TEST_STATIC <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=2 : so_dll_static_test ;
 
 compile-fail _compile-fail-arg_boost_error_info_1.cpp ;
 compile-fail _compile-fail-arg_boost_error_info_2.cpp ;

@@ -1,7 +1,7 @@
 #ifndef BOOST_LEAF_DETAIL_CAPTURE_LIST_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_CAPTURE_LIST_HPP_INCLUDED
 
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -14,11 +14,8 @@
 
 namespace boost { namespace leaf {
 
-class error_id;
-
 namespace detail
 {
-    struct BOOST_LEAF_SYMBOL_VISIBLE tls_tag_id_factory_current_id;
 
     class capture_list
     {
@@ -87,7 +84,7 @@ namespace detail
         {
             capture_list moved(first_);
             first_ = nullptr;
-            tls::write_uint<detail::tls_tag_id_factory_current_id>(unsigned(err_id));
+            tls::write_current_error_id(unsigned(err_id));
             moved.for_each(
                 [err_id]( node & n )
                 {
@@ -113,12 +110,12 @@ namespace detail
             (void) to_print;
 #endif
         }
-    };
+    }; // class capture_list
 
-}
+} // namespace detail
 
-} }
+} } // namespace boost::leaf
 
-#endif
+#endif // #if BOOST_LEAF_CFG_CAPTURE
 
-#endif // BOOST_LEAF_DETAIL_CAPTURE_LIST_HPP_INCLUDED
+#endif // #ifndef BOOST_LEAF_DETAIL_CAPTURE_LIST_HPP_INCLUDED

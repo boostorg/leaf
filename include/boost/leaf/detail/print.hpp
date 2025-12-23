@@ -1,7 +1,7 @@
 #ifndef BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
 
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -9,9 +9,7 @@
 #include <boost/leaf/detail/demangle.hpp>
 
 #include <type_traits>
-#include <exception>
 #include <iosfwd>
-#include <cstring>
 
 namespace boost { namespace leaf {
 
@@ -155,8 +153,8 @@ namespace detail
             return print_impl<Enum>(os, prefix, delimiter, ": ", static_cast<typename std::underlying_type<Enum>::type>(enum_));
         }
     };
-}
+} // namespace detail
 
-} }
+} } // namespace boost::leaf
 
-#endif // BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
+#endif // #ifndef BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED

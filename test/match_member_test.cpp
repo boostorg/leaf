@@ -24,7 +24,6 @@ int main()
 
 #include "_test_ec.hpp"
 #include "lightweight_test.hpp"
-#include <exception>
 
 namespace leaf = boost::leaf;
 

@@ -1,7 +1,7 @@
 #ifndef BOOST_LEAF_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED
 
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -92,8 +92,8 @@ namespace detail
 
     template <class F>
     using fn_mp_args = typename function_traits<F>::mp_args;
-}
+} // namespace detail
 
-} }
+} } // namespace boost::leaf
 
-#endif // BOOST_LEAF_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED
+#endif // #ifndef BOOST_LEAF_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED

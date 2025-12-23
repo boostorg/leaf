@@ -1,7 +1,7 @@
 #ifndef BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
 
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -41,14 +41,14 @@
 #   endif
 #endif
 
-#endif
+#endif // #if BOOST_LEAF_CFG_DIAGNOSTICS
 
 namespace boost { namespace leaf {
 
 namespace detail
 {
     // The functions below are C++11 constexpr, but we use BOOST_LEAF_ALWAYS_INLINE to control object file
-    // section count / template bleat. Evidently this makes a difference on gcc / windows at least.
+    // section count / template bloat.
 
     template <int S1, int S2, int I, bool = S1 >= S2>
     struct cpp11_prefix
@@ -111,7 +111,7 @@ namespace detail
     {
         return cpp11_suffix<S1, S2, S1 - 2, S2 - 2>::check(str, suffix) ? S1 - S2 : 0;
     }
-}
+} // namespace detail
 
 namespace n
 {
@@ -205,7 +205,7 @@ namespace n
         int const p = sizeof(char[1 + !!s02 * (p22 + p23 + p24)]) - 1; // p is not zero, we've static asserted the hell out of it
         return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p };
     }
-}
+} // namespace n
 
 using parsed = n::r;
 
@@ -215,7 +215,7 @@ parsed parse()
     return n::p<T>();
 }
 
-} }
+} } // namespace boost::leaf
 
 ////////////////////////////////////////
 
@@ -243,11 +243,11 @@ namespace detail
         } d(mangled_name);
         if( d.demangled_name )
             return os << d.demangled_name;
-#endif
+#endif // #if defined(BOOST_LEAF_CFG_DIAGNOSTICS) && defined(BOOST_LEAF_HAS_CXXABI_H)
         return os << mangled_name;
     }
-}
+} // namespace detail
 
-} }
+} } // namespace boost::leaf
 
-#endif // BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
+#endif // #ifndef BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED

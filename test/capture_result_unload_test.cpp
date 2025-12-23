@@ -164,4 +164,4 @@ int main()
     return boost::report_errors();
 }
 
-#endif
+#endif // #if !BOOST_LEAF_CFG_CAPTURE

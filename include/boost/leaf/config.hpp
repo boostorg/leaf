@@ -1,9 +1,12 @@
 #ifndef BOOST_LEAF_CONFIG_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_HPP_INCLUDED
 
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#include <utility>
+#include <exception>
 
 #ifdef BOOST_LEAF_TLS_FREERTOS
 #   ifndef BOOST_LEAF_EMBEDDED
@@ -24,7 +27,7 @@
 #   ifndef BOOST_LEAF_CFG_CAPTURE
 #       define BOOST_LEAF_CFG_CAPTURE 0
 #   endif
-#endif
+#endif // #ifdef BOOST_LEAF_EMBEDDED
 
 ////////////////////////////////////////
 
@@ -87,8 +90,13 @@
 #   error BOOST_LEAF_CFG_CAPTURE must be 0 or 1.
 #endif
 
-#if BOOST_LEAF_CFG_WIN32 != 0 && BOOST_LEAF_CFG_WIN32 != 1
-#   error BOOST_LEAF_CFG_WIN32 must be 0 or 1.
+#if BOOST_LEAF_CFG_WIN32 != 0 && BOOST_LEAF_CFG_WIN32 != 1 && BOOST_LEAF_CFG_WIN32 != 2
+#   error BOOST_LEAF_CFG_WIN32 must be 0 or 1 or 2.
+#endif
+
+#if BOOST_LEAF_CFG_WIN32 && !defined(_WIN32)
+#   warning "Ignoring BOOST_LEAF_CFG_WIN32 because _WIN32 is not defined"
+#   define BOOST_LEAF_CFG_WIN32 0
 #endif
 
 #if BOOST_LEAF_CFG_GNUC_STMTEXPR != 0 && BOOST_LEAF_CFG_GNUC_STMTEXPR != 1
@@ -154,7 +162,7 @@
 #       endif
 #   endif
 
-#endif
+#endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
 ////////////////////////////////////////
 
@@ -203,7 +211,6 @@
 ////////////////////////////////////////
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
-#   include <exception>
 #   if (defined(__cpp_lib_uncaught_exceptions) && __cpp_lib_uncaught_exceptions >= 201411L) || (defined(_MSC_VER) && _MSC_VER >= 1900)
 #       define BOOST_LEAF_STD_UNCAUGHT_EXCEPTIONS 1
 #   else
@@ -219,6 +226,8 @@
 #   define BOOST_LEAF_SYMBOL_VISIBLE
 #endif
 
+#include <boost/leaf/config/visibility.hpp>
+
 ////////////////////////////////////////
 
 #if defined(__GNUC__) && !(defined(__clang__) || defined(__INTEL_COMPILER) || defined(__ICL) || defined(__ICC) || defined(__ECC)) && (__GNUC__ * 100 + __GNUC_MINOR__) < 409
@@ -229,7 +238,36 @@
 
 ////////////////////////////////////////
 
+#ifdef _MSC_VER
+#   define BOOST_LEAF_UNREACHABLE __assume(0)
+#else
+#   define BOOST_LEAF_UNREACHABLE __builtin_unreachable()
+#endif
+
+////////////////////////////////////////
+
+namespace boost
+{
+    [[noreturn]] void throw_exception( std::exception const & ); // user defined
+}
+
+namespace boost { namespace leaf {
+
+template <class T>
+[[noreturn]] void throw_exception_( T && e )
+{
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+    ::boost::throw_exception(std::move(e));
+#else
+    throw std::move(e);
+#endif
+}
+
+} }
+
+////////////////////////////////////////
+
 // Configure TLS access
 #include <boost/leaf/config/tls.hpp>
 
-#endif // BOOST_LEAF_CONFIG_HPP_INCLUDED
+#endif // #ifndef BOOST_LEAF_CONFIG_HPP_INCLUDED

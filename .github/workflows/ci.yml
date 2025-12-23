@@ -16,7 +16,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
+        config:
+          - variant: "debug,release"
+          - name: No capture
+            variant: "leaf_debug_capture0,leaf_release_capture0"
+          - name: No diagnostics
+            variant: "leaf_debug_diag0,leaf_release_diag0"
+          - name: Embedded
+            variant: "leaf_debug_embedded,leaf_release_embedded"
+          - name: Single header
+            variant: "leaf_debug_single_header,leaf_release_single_header"
+        platform:
           - toolset: gcc-5
             cxxstd: "11,14,1z"
             container: ubuntu:18.04
@@ -177,21 +187,23 @@ jobs:
             install: clang-20
           - toolset: clang
             cxxstd: "11,14,17,20,2b"
-            os: macos-13
-          - toolset: clang
-            cxxstd: "11,14,17,20,2b"
             os: macos-14
           - toolset: clang
             cxxstd: "11,14,17,20,2b"
             os: macos-15
+          - toolset: clang
+            cxxstd: "11,14,17,20,2b"
+            os: macos-26
 
-    runs-on: ${{matrix.os}}
+    name: ${{matrix.platform.os}} / ${{matrix.platform.compiler || matrix.platform.toolset}}${{matrix.config.name && format(' / {0}', matrix.config.name) || ''}}
+
+    runs-on: ${{matrix.platform.os}}
 
     container:
-      image: ${{matrix.container}}
+      image: ${{matrix.platform.container}}
       volumes:
         - /node20217:/node20217:rw,rshared
-        - ${{ startsWith(matrix.container, 'ubuntu:1') && '/node20217:/__e/node20:ro,rshared' || ' ' }}
+        - ${{ startsWith(matrix.platform.container, 'ubuntu:1') && '/node20217:/__e/node20:ro,rshared' || ' ' }}
 
     defaults:
       run:
@@ -199,13 +211,13 @@ jobs:
 
     steps:
       - name: Setup container environment
-        if: matrix.container
+        if: matrix.platform.container
         run: |
           apt-get update
           apt-get -y install sudo python3 git g++ curl xz-utils
 
       - name: Install nodejs20glibc2.17
-        if: ${{ startsWith( matrix.container, 'ubuntu:1' ) }}
+        if: ${{ startsWith( matrix.platform.container, 'ubuntu:1' ) }}
         run: |
           curl -LO https://archives.boost.io/misc/node/node-v20.9.0-linux-x64-glibc-217.tar.xz
           tar -xf node-v20.9.0-linux-x64-glibc-217.tar.xz --strip-components 1 -C /node20217
@@ -214,10 +226,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install packages
-        if: matrix.install
+        if: matrix.platform.install
         run: |
           sudo apt-get update
-          sudo apt-get -y install ${{matrix.install}}
+          sudo apt-get -y install ${{matrix.platform.install}}
 
       - name: Setup Boost
         run: |
@@ -242,9 +254,9 @@ jobs:
           ./b2 -d0 headers
 
       - name: Create user-config.jam
-        if: matrix.compiler
+        if: matrix.platform.compiler
         run: |
-          echo "using ${{matrix.toolset}} : : ${{matrix.compiler}} ;" > ~/user-config.jam
+          echo "using ${{matrix.platform.toolset}} : : ${{matrix.platform.compiler}} ;" > ~/user-config.jam
 
       - name: Generate headers
         run: |
@@ -254,13 +266,24 @@ jobs:
       - name: Run tests
         run: |
           cd ../boost-root
-          ./b2 -j3 libs/$LIBRARY/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} ${ADDRMD:+address-model=$ADDRMD} link=shared,static variant=debug,release,leaf_debug_capture0,leaf_release_capture0,leaf_debug_diag0,leaf_release_diag0,leaf_debug_embedded,leaf_release_embedded,leaf_debug_single_header,leaf_release_single_header
+          ./b2 -j3 libs/$LIBRARY/test toolset=${{matrix.platform.toolset}} cxxstd=${{matrix.platform.cxxstd}} ${ADDRMD:+address-model=$ADDRMD} link=shared,static variant=${{matrix.config.variant}}
+          ./b2 -j3 libs/$LIBRARY/test toolset=${{matrix.platform.toolset}} cxxstd=${{matrix.platform.cxxstd}} ${ADDRMD:+address-model=$ADDRMD} link=shared,static variant=${{matrix.config.variant}} exception-handling=off rtti=off
 
   windows:
     strategy:
       fail-fast: false
       matrix:
-        include:
+        config:
+          - variant: "debug,release"
+          - name: No capture
+            variant: "leaf_debug_capture0,leaf_release_capture0"
+          - name: No diagnostics
+            variant: "leaf_debug_diag0,leaf_release_diag0"
+          - name: Embedded
+            variant: "leaf_debug_embedded,leaf_release_embedded"
+          - name: Single header
+            variant: "leaf_debug_single_header,leaf_release_single_header"
+        platform:
           - toolset: msvc-14.3
             cxxstd: "14,17,20,latest"
             addrmd: 32,64
@@ -274,7 +297,9 @@ jobs:
             addrmd: 64
             os: windows-2022
 
-    runs-on: ${{matrix.os}}
+    name: ${{matrix.platform.os}} / ${{matrix.platform.compiler || matrix.platform.toolset}}${{matrix.config.name && format(' / {0}', matrix.config.name) || ''}}
+
+    runs-on: ${{matrix.platform.os}}
 
     steps:
       - uses: actions/checkout@v4
@@ -310,4 +335,5 @@ jobs:
         shell: cmd
         run: |
           cd ../boost-root
-          b2 -j3 libs/%LIBRARY%/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} address-model=${{matrix.addrmd}} ${{matrix.embedmanifest}} variant=debug,release,leaf_debug_capture0,leaf_release_capture0,leaf_debug_diag0,leaf_release_diag0,leaf_debug_embedded,leaf_release_embedded,leaf_debug_single_header,leaf_release_single_header
+          b2 -j3 --abbreviate-paths libs/%LIBRARY%/test toolset=${{matrix.platform.toolset}} cxxstd=${{matrix.platform.cxxstd}} address-model=${{matrix.platform.addrmd}} link=shared,static variant=${{matrix.config.variant}}
+          b2 -j3 --abbreviate-paths libs/%LIBRARY%/test toolset=${{matrix.platform.toolset}} cxxstd=${{matrix.platform.cxxstd}} address-model=${{matrix.platform.addrmd}} link=shared,static variant=${{matrix.config.variant}} exception-handling=off rtti=off

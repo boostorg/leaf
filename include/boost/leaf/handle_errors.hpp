@@ -1,7 +1,7 @@
 #ifndef BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
 #define BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
 
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -10,9 +10,6 @@
 #include <typeinfo>
 
 namespace boost { namespace leaf {
-
-template <class T>
-class BOOST_LEAF_SYMBOL_VISIBLE result;
 
 ////////////////////////////////////////
 
@@ -30,11 +27,11 @@ namespace detail
     }
 }
 
-#endif
+#endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
 ////////////////////////////////////////
 
-class BOOST_LEAF_SYMBOL_VISIBLE error_info
+class error_info
 {
     error_info & operator=( error_info const & ) = delete;
 
@@ -97,7 +94,7 @@ public:
                 detail::demangle_and_print(os, typeid(*ex_).name());
             os << ": \"" << ex_->what() << '"';
         }
-#endif
+#endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
     }
 
     template <class CharT, class Traits>
@@ -106,7 +103,7 @@ public:
         x.print_error_info(os);
         return os << '\n';
     }
-};
+}; // class error_info
 
 namespace detail
 {
@@ -202,7 +199,7 @@ namespace detail
                 return nullptr;
         }
     };
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
     template <class E>
     struct peek_exception<E, true>
@@ -222,7 +219,7 @@ namespace detail
         }
     };
 
-#endif
+#endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
     template <class E, bool = does_not_participate_in_context_deduction<E>::value>
     struct peek_tuple;
@@ -292,7 +289,7 @@ namespace detail
         }
         return nullptr;
     }
-}
+} // namespace detail
 
 ////////////////////////////////////////
 
@@ -347,7 +344,7 @@ namespace detail
             return handler_argument_traits<Car>::check(tup, ei) && check_arguments<Tup, Cdr...>::check(tup, ei);
         }
     };
-}
+} // namespace detail
 
 ////////////////////////////////////////
 
@@ -472,7 +469,7 @@ namespace detail
             std::forward<Car>(car),
             std::forward<Cdr>(cdr)...);
     }
-}
+} // namespace detail
 
 ////////////////////////////////////////
 
@@ -570,7 +567,7 @@ try_catch( TryBlock && try_block, H && ... ) noexcept
     return std::forward<TryBlock>(try_block)();
 }
 
-#else
+#else // #ifdef BOOST_LEAF_NO_EXCEPTIONS
 
 namespace detail
 {
@@ -610,7 +607,7 @@ namespace detail
                 } );
         }
     }
-}
+} // namespace detail
 
 template <class TryBlock, class... H>
 inline
@@ -701,7 +698,7 @@ try_catch( TryBlock && try_block, H && ... h )
     }
 }
 
-#endif
+#endif // #else (#ifdef BOOST_LEAF_NO_EXCEPTIONS)
 
 #if BOOST_LEAF_CFG_CAPTURE
 
@@ -716,7 +713,7 @@ namespace detail
         inline
         static
         leaf_result
-        try_capture_all_( TryBlock && try_block ) noexcept
+        try_capture_all_( TryBlock && try_block )
         {
             detail::slot<detail::dynamic_allocator> sl;
             sl.activate();
@@ -733,7 +730,7 @@ namespace detail
                 {
                     sl.deactivate();
                     int const err_id = error_id(r.error()).value();
-                    return leaf_result(sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id));
+                    return leaf_result(sl.get().template extract_capture_list<leaf_result>(err_id));
                 }
             }
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
@@ -741,15 +738,15 @@ namespace detail
             {
                 sl.deactivate();
                 int err_id = unpack_error_id(ex).value();
-                return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
+                return sl.get().template extract_capture_list<leaf_result>(err_id);
             }
             catch(...)
             {
                 sl.deactivate();
                 int err_id = current_error().value();
-                return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
+                return sl.get().template extract_capture_list<leaf_result>(err_id);
             }
-#endif
+#endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
         }
     };
 
@@ -777,7 +774,7 @@ namespace detail
         inline
         static
         leaf_result
-        try_capture_all_( TryBlock && try_block ) noexcept
+        try_capture_all_( TryBlock && try_block )
         {
             detail::slot<detail::dynamic_allocator> sl;
             sl.activate();
@@ -793,18 +790,18 @@ namespace detail
             {
                 sl.deactivate();
                 int err_id = unpack_error_id(ex).value();
-                return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
+                return sl.get().template extract_capture_list<leaf_result>(err_id);
             }
             catch(...)
             {
                 sl.deactivate();
                 int err_id = current_error().value();
-                return sl.value_or_default(err_id).template extract_capture_list<leaf_result>(err_id);
+                return sl.get().template extract_capture_list<leaf_result>(err_id);
             }
-#endif
+#endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
         }
     };
-}
+} // namespace detail
 
 template <class TryBlock>
 inline
@@ -813,9 +810,10 @@ try_capture_all( TryBlock && try_block ) noexcept
 {
     return detail::try_capture_all_dispatch<decltype(std::declval<TryBlock>()())>::try_capture_all_(std::forward<TryBlock>(try_block));
 }
-#endif
 
-} }
+#endif // #if BOOST_LEAF_CFG_CAPTURE
+
+} } // namespace boost::leaf
 
 // Boost Exception Integration
 
@@ -875,8 +873,8 @@ namespace detail
     template <class Tag, class T> struct handler_argument_traits<boost::error_info<Tag, T> const *>: handler_argument_traits_require_by_value<boost::error_info<Tag, T>> { };
     template <class Tag, class T> struct handler_argument_traits<boost::error_info<Tag, T> &>: handler_argument_traits_require_by_value<boost::error_info<Tag, T>> { };
     template <class Tag, class T> struct handler_argument_traits<boost::error_info<Tag, T> *>: handler_argument_traits_require_by_value<boost::error_info<Tag, T>> { };
-}
+} // namespace detail
 
-} }
+} } // namespace boost::leaf
 
-#endif // BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
+#endif // #ifndef BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED

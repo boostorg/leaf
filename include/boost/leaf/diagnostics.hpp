@@ -1,7 +1,7 @@
 #ifndef BOOST_LEAF_DIAGNOSTICS_HPP_INCLUDED
 #define BOOST_LEAF_DIAGNOSTICS_HPP_INCLUDED
 
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -44,7 +44,7 @@ protected:
         x.print_diagnostic_info(os);
         return os << '\n';
     }
-};
+}; // class diagnostic_info
 
 namespace detail
 {
@@ -68,7 +68,7 @@ namespace detail
     };
 }
 
-#else
+#else // #if BOOST_LEAF_CFG_DIAGNOSTICS
 
 class diagnostic_info: public error_info
 {
@@ -94,7 +94,7 @@ protected:
         x.print_diagnostic_info(os);
         return os << "\n";
     }
-};
+}; // class diagnostic_info
 
 namespace detail
 {
@@ -117,7 +117,7 @@ namespace detail
     };
 }
 
-#endif
+#endif // #else (#if BOOST_LEAF_CFG_DIAGNOSTICS)
 
 ////////////////////////////////////////
 
@@ -157,7 +157,7 @@ protected:
         x.print_diagnostic_details(os);
         return os << '\n';
     }
-};
+}; // class diagnostic_details
 
 namespace detail
 {
@@ -177,12 +177,12 @@ namespace detail
         BOOST_LEAF_CONSTEXPR static diagnostic_details_ get( Tup const & tup, error_info const & ei ) noexcept
         {
             slot<dynamic_allocator> const * da = find_in_tuple<slot<dynamic_allocator>>(tup);
-            return diagnostic_details_(ei, tup, da ? da->has_value_any_key() : nullptr );
+            return diagnostic_details_(ei, tup, da ? &da->get() : nullptr );
         }
     };
 }
 
-#else
+#else // #if BOOST_LEAF_CFG_CAPTURE
 
 class diagnostic_details: public diagnostic_info
 {
@@ -209,7 +209,7 @@ protected:
         x.print_diagnostic_details(os);
         return os << "\n";
     }
-};
+}; // class diagnostic_details
 
 namespace detail
 {
@@ -233,9 +233,9 @@ namespace detail
     };
 }
 
-#endif
+#endif // #else (#if BOOST_LEAF_CFG_CAPTURE)
 
-#else
+#else // #if BOOST_LEAF_CFG_DIAGNOSTICS
 
 class diagnostic_details: public diagnostic_info
 {
@@ -284,10 +284,10 @@ namespace detail
     };
 }
 
-#endif
+#endif // #else (#if BOOST_LEAF_CFG_DIAGNOSTICS)
 
 using verbose_diagnostic_info = diagnostic_details;
 
-} }
+} } // namespace boost::leaf
 
-#endif // BOOST_LEAF_DIAGNOSTICS_HPP_INCLUDED
+#endif // #ifndef BOOST_LEAF_DIAGNOSTICS_HPP_INCLUDED

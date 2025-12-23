@@ -183,4 +183,4 @@ int main()
     return boost::report_errors();
 }
 
-#endif
+#endif // #if defined(BOOST_LEAF_NO_EXCEPTIONS) || !BOOST_LEAF_CFG_CAPTURE

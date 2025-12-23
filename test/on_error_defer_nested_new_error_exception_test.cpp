@@ -91,4 +91,4 @@ int main()
     return boost::report_errors();
 }
 
-#endif
+#endif // #ifdef BOOST_LEAF_NO_EXCEPTIONS

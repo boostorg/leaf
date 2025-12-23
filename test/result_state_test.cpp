@@ -369,7 +369,7 @@ int main()
     }
     BOOST_TEST_EQ(err::count, 0);
     BOOST_TEST_EQ(val::count, 0);
-#endif
+#endif // #if BOOST_LEAF_CFG_CAPTURE
 
     // ^^ result<T> ^^
 
@@ -545,7 +545,7 @@ int main()
         BOOST_TEST(r2.operator->() == 0);
     }
     BOOST_TEST_EQ(err::count, 0);
-#endif
+#endif // #if BOOST_LEAF_CFG_CAPTURE
 
     {
         leaf::result<int> r = leaf::error_id();

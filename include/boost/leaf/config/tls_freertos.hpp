@@ -1,22 +1,17 @@
 #ifndef BOOST_LEAF_CONFIG_TLS_FREERTOS_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_TLS_FREERTOS_HPP_INCLUDED
 
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Copyright (c) 2022 Khalil Estell
 
-// LEAF requires thread local storage support for pointers and for uin32_t values.
-
-// This header implements "thread local" storage via FreeTOS functions
+// This header implements the TLS API specified in tls.hpp via the FreeTOS
 // pvTaskGetThreadLocalStoragePointer / pvTaskSetThreadLocalStoragePointer
+// functions, using the more general implementation defined in tls_array.hpp.
 
 #include <task.h>
-
-#ifndef BOOST_LEAF_USE_TLS_ARRAY
-#   define BOOST_LEAF_USE_TLS_ARRAY
-#endif
 
 #ifndef BOOST_LEAF_CFG_TLS_ARRAY_SIZE
 #   define BOOST_LEAF_CFG_TLS_ARRAY_SIZE configNUM_THREAD_LOCAL_STORAGE_POINTERS
@@ -31,12 +26,12 @@ namespace tls
 {
     // See https://www.freertos.org/thread-local-storage-pointers.html.
 
-    inline void * read_void_ptr( int tls_index ) noexcept
+    BOOST_LEAF_ALWAYS_INLINE void * read_void_ptr( int tls_index ) noexcept
     {
         return pvTaskGetThreadLocalStoragePointer(0, tls_index);
     }
 
-    inline void write_void_ptr( int tls_index, void * p ) noexcept
+    BOOST_LEAF_ALWAYS_INLINE void write_void_ptr( int tls_index, void * p ) noexcept
     {
         vTaskSetThreadLocalStoragePointer(0, tls_index, p);
     }
@@ -44,4 +39,4 @@ namespace tls
 
 } }
 
-#endif // BOOST_LEAF_CONFIG_TLS_FREERTOS_HPP_INCLUDED
+#endif // #ifndef BOOST_LEAF_CONFIG_TLS_FREERTOS_HPP_INCLUDED

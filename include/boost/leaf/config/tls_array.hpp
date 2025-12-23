@@ -1,16 +1,15 @@
 #ifndef BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED
 
-// Copyright 2018-2024 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // Copyright (c) 2022 Khalil Estell
 
-// LEAF requires thread local storage support for pointers and for uin32_t values.
-
-// This header implements thread local storage for pointers and for unsigned int
-// values for platforms that support thread local pointers by index.
+// This header implements the TLS API specified in tls.hpp for platforms that
+// provide TLS by indexing an array (this is typical for embedded platforms).
+// The array is accessed via user-defined functions.
 
 namespace boost { namespace leaf {
 
@@ -26,8 +25,8 @@ namespace tls
 
 ////////////////////////////////////////
 
-#include <limits>
 #include <atomic>
+#include <limits>
 #include <cstdint>
 #include <type_traits>
 
@@ -56,19 +55,25 @@ namespace boost { namespace leaf {
 namespace detail
 {
     using atomic_unsigned_int = std::atomic<unsigned int>;
-}
 
-namespace tls
-{
+    template <class=void>
+    struct BOOST_LEAF_SYMBOL_VISIBLE id_factory
+    {
+        static atomic_unsigned_int counter;
+    };
+
+    template <class T>
+    atomic_unsigned_int id_factory<T>::counter(1);
+
     template <class=void>
     class BOOST_LEAF_SYMBOL_VISIBLE index_counter
     {
         static int c_;
 
-        static BOOST_LEAF_CFG_TLS_INDEX_TYPE next_() noexcept
+        BOOST_LEAF_ALWAYS_INLINE static BOOST_LEAF_CFG_TLS_INDEX_TYPE next_() noexcept
         {
             int idx = ++c_;
-            BOOST_LEAF_ASSERT(idx > (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX));
+            BOOST_LEAF_ASSERT(idx > (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX + 1));
             BOOST_LEAF_ASSERT(idx < (BOOST_LEAF_CFG_TLS_ARRAY_SIZE));
             return idx;
         }
@@ -76,11 +81,14 @@ namespace tls
     public:
 
         template <class T>
-        static BOOST_LEAF_CFG_TLS_INDEX_TYPE next() noexcept
+        BOOST_LEAF_ALWAYS_INLINE static BOOST_LEAF_CFG_TLS_INDEX_TYPE next() noexcept
         {
-            return next_(); // Set breakpoint here to monitor TLS index allocation for T.
+            return next_();
         }
     };
+
+    template <class T>
+    int index_counter<T>::c_ = BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX + 1;
 
     template <class T>
     struct BOOST_LEAF_SYMBOL_VISIBLE tls_index
@@ -89,58 +97,72 @@ namespace tls
     };
 
     template <class T>
-    struct BOOST_LEAF_SYMBOL_VISIBLE alloc_tls_index
+    BOOST_LEAF_CFG_TLS_INDEX_TYPE tls_index<T>::idx = BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX + 1;
+
+    template <class T>
+    struct BOOST_LEAF_SYMBOL_VISIBLE reserve_tls_index
     {
         static BOOST_LEAF_CFG_TLS_INDEX_TYPE const idx;
     };
 
     template <class T>
-    int index_counter<T>::c_ = BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX;
+    BOOST_LEAF_CFG_TLS_INDEX_TYPE const reserve_tls_index<T>::idx = tls_index<T>::idx = index_counter<>::next<T>();
+} // namespace detail
 
-    template <class T>
-    BOOST_LEAF_CFG_TLS_INDEX_TYPE tls_index<T>::idx = BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX;
+} } // namespace boost::leaf
 
-    template <class T>
-    BOOST_LEAF_CFG_TLS_INDEX_TYPE const alloc_tls_index<T>::idx = tls_index<T>::idx = index_counter<>::next<T>();
+////////////////////////////////////////
 
-    ////////////////////////////////////////
+namespace boost { namespace leaf {
 
-    template <class T>
-    T * read_ptr() noexcept
+namespace tls
+{
+    BOOST_LEAF_ALWAYS_INLINE unsigned generate_next_error_id() noexcept
     {
-        int tls_idx = tls_index<T>::idx;
-        if( tls_idx == (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX) )
-            return nullptr;
-        --tls_idx;
-        return reinterpret_cast<T *>(read_void_ptr(tls_idx));
+        unsigned id = (detail::id_factory<>::counter += 4);
+        BOOST_LEAF_ASSERT((id&3) == 1);
+        return id;
+    }
+
+    BOOST_LEAF_ALWAYS_INLINE void write_current_error_id( unsigned x ) noexcept
+    {
+        static_assert(sizeof(std::intptr_t) >= sizeof(unsigned), "Incompatible tls_array implementation");
+        write_void_ptr(BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX, (void *) (std::intptr_t) x);
+    }
+
+    BOOST_LEAF_ALWAYS_INLINE unsigned read_current_error_id() noexcept
+    {
+        static_assert(sizeof(std::intptr_t) >= sizeof(unsigned), "Incompatible tls_array implementation");
+        return (unsigned) (std::intptr_t) read_void_ptr(BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX);
     }
 
     template <class T>
-    void write_ptr( T * p ) noexcept
+    BOOST_LEAF_ALWAYS_INLINE void reserve_ptr()
     {
-        int tls_idx = alloc_tls_index<T>::idx;
+        (void) detail::reserve_tls_index<T>::idx;
+    }
+
+    template <class T>
+    BOOST_LEAF_ALWAYS_INLINE void write_ptr( T * p ) noexcept
+    {
+        int tls_idx = detail::tls_index<T>::idx;
+        BOOST_LEAF_ASSERT(tls_idx != (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX + 1));
         --tls_idx;
         write_void_ptr(tls_idx, p);
         BOOST_LEAF_ASSERT(read_void_ptr(tls_idx) == p);
     }
 
-    ////////////////////////////////////////
-
-    template <class Tag>
-    unsigned read_uint() noexcept
+    template <class T>
+    BOOST_LEAF_ALWAYS_INLINE T * read_ptr() noexcept
     {
-        static_assert(sizeof(std::intptr_t) >= sizeof(unsigned), "Incompatible tls_array implementation");
-        return (unsigned) (std::intptr_t) (void *) read_ptr<Tag>();
+        int tls_idx = detail::tls_index<T>::idx;
+        if( tls_idx == (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX + 1) )
+            return nullptr;
+        --tls_idx;
+        return reinterpret_cast<T *>(read_void_ptr(tls_idx));
     }
+} // namespace tls
 
-    template <class Tag>
-    void write_uint( unsigned x ) noexcept
-    {
-        static_assert(sizeof(std::intptr_t) >= sizeof(unsigned), "Incompatible tls_array implementation");
-        write_ptr<Tag>((Tag *) (void *) (std::intptr_t) x);
-    }
-}
+} } // namespace boost::leaf
 
-} }
-
-#endif // BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED
+#endif // #ifndef BOOST_LEAF_CONFIG_TLS_ARRAY_HPP_INCLUDED

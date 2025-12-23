@@ -52,7 +52,7 @@ leaf::result<R> f_errc_wrapped( Errc ec )
 {
     return leaf::new_error(e_std_error_code{make_error_code(ec)}, info<1>{1}, info<2>{2}, info<3>{3});
 }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
 int main()
 {
@@ -120,7 +120,7 @@ int main()
         BOOST_TEST_EQ(c, 1);
         BOOST_TEST(r);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     // void, try_handle_some (failure, matched), match cond_x (wrapped std::error_code)
@@ -144,7 +144,7 @@ int main()
         BOOST_TEST_EQ(c, 1);
         BOOST_TEST(r);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
     // void, try_handle_some (failure, matched), match enum (single enum value)
     {
@@ -330,7 +330,7 @@ int main()
             } );
         BOOST_TEST_EQ(c, 2);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     // void, try_handle_some (failure, initially not matched), match cond_x (wrapped std::error_code)
@@ -370,7 +370,7 @@ int main()
             } );
         BOOST_TEST_EQ(c, 2);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
     // void, try_handle_some (failure, initially not matched), match enum (single enum value)
     {
@@ -600,7 +600,7 @@ int main()
             } );
         BOOST_TEST_EQ(c, 1);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     // void, try_handle_some (failure, initially matched), match cond_x (wrapped std::error_code)
@@ -640,7 +640,7 @@ int main()
             } );
         BOOST_TEST_EQ(c, 1);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
     // void, try_handle_some (failure, initially matched), match enum (single enum value)
     {
@@ -853,7 +853,7 @@ int main()
         BOOST_TEST(r);
         BOOST_TEST_EQ(*r, 2);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
     // int, try_handle_some (failure, matched), match enum (single enum value)
     {
@@ -1011,7 +1011,7 @@ int main()
             } );
         BOOST_TEST_EQ(r, 2);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     // int, try_handle_some (failure, initially not matched), match cond_x (wrapped std::error_code)
@@ -1045,7 +1045,7 @@ int main()
             } );
         BOOST_TEST_EQ(r, 2);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
     // int, try_handle_some (failure, initially not matched), match enum (single enum value)
     {
@@ -1239,7 +1239,7 @@ int main()
             } );
         BOOST_TEST_EQ(r, 1);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     // int, try_handle_some (failure, initially matched), match cond_x (wrapped std::error_code)
@@ -1273,7 +1273,7 @@ int main()
             } );
         BOOST_TEST_EQ(r, 1);
     }
-#endif
+#endif // #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 
     // int, try_handle_some (failure, initially matched), match enum (single enum value)
     {
@@ -1474,7 +1474,7 @@ int main()
         BOOST_TEST_EQ(r.value(), 1);
         BOOST_TEST_EQ(handle_some_handler_called, 1);
     }
-#endif
+#endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
     // exception caught, error not handled
@@ -1509,7 +1509,7 @@ int main()
             });
         BOOST_TEST_EQ(r, 1);
     }
-#endif
+#endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
     return boost::report_errors();
 }
