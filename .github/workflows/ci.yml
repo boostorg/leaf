@@ -267,6 +267,7 @@ jobs:
         run: |
           cd ../boost-root
           ./b2 -j3 libs/$LIBRARY/test toolset=${{matrix.platform.toolset}} cxxstd=${{matrix.platform.cxxstd}} ${ADDRMD:+address-model=$ADDRMD} link=shared,static variant=${{matrix.config.variant}}
+          ./b2 -j3 libs/$LIBRARY/test toolset=${{matrix.platform.toolset}} cxxstd=${{matrix.platform.cxxstd}} ${ADDRMD:+address-model=$ADDRMD} link=shared,static variant=${{matrix.config.variant}} exception-handling=off rtti=off
 
   windows:
     strategy:
@@ -334,4 +335,5 @@ jobs:
         shell: cmd
         run: |
           cd ../boost-root
-          b2 -j3 libs/%LIBRARY%/test toolset=${{matrix.platform.toolset}} cxxstd=${{matrix.platform.cxxstd}} address-model=${{matrix.platform.addrmd}} variant=${{matrix.config.variant}}
+          b2 -j3 --abbreviate-paths libs/%LIBRARY%/test toolset=${{matrix.platform.toolset}} cxxstd=${{matrix.platform.cxxstd}} address-model=${{matrix.platform.addrmd}} link=shared,static variant=${{matrix.config.variant}}
+          b2 -j3 --abbreviate-paths libs/%LIBRARY%/test toolset=${{matrix.platform.toolset}} cxxstd=${{matrix.platform.cxxstd}} address-model=${{matrix.platform.addrmd}} link=shared,static variant=${{matrix.config.variant}} exception-handling=off rtti=off
