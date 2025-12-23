@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.24">
+<meta name="generator" content="Asciidoctor 2.0.26">
 <meta name="author" content="Lightweight Error Augmentation Framework written in C&#43;&#43;11 | Emil Dotchevski">
 <title>LEAF</title>
 <link rel="stylesheet" href="./zajo-dark.css">
@@ -201,7 +201,7 @@ function switch_style()
 </ul>
 </li>
 <li><a href="#rationale">Design Rationale</a></li>
-<li><a href="#_limitations">Limitations</a></li>
+<li><a href="#_dynamic_linking">Dynamic linking</a></li>
 <li><a href="#_alternatives_to_leaf">Alternatives to LEAF</a>
 <ul class="sectlevel2">
 <li><a href="#boost_exception">Comparison to Boost Exception</a></li>
@@ -323,24 +323,18 @@ LEAF does not depend on Boost or other libraries.
 <h2 id="tutorial">Tutorial</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>What is a failure? It is simply the inability of a function to return a valid result, instead producing an error object describing the reason for the failure.</p>
+<p>Typically, error handling libraries define a variant result type, e.g. <code>result&lt;T, E&gt;</code>. In LEAF we drop the <code>E</code>, using just <code>result&lt;T&gt;</code>.</p>
 </div>
 <div class="paragraph">
-<p>A typical design is to return a variant type, e.g. <code>result&lt;T, E&gt;</code>. Internally, such variant types must store a discriminant (in this case a boolean) to indicate whether the object holds a <code>T</code> or an <code>E</code>.</p>
+<p>In case of success, access to the value <code>T</code> is immediate and direct, but because error objects are not held in results, handling errors requires a special syntax. Error objects are transported directly to error handling scopes that need them. This is not only more efficient, but also enables any given handler to access multiple objects associated with the same failure, if needed.</p>
 </div>
 <div class="paragraph">
-<p>The design of LEAF is informed by the observation that the immediate caller must have access to the discriminant in order to determine the availability of a valid <code>T</code>, but otherwise it is rare that it needs to access any error objects. They are only needed once an error handling scope is reached.</p>
-</div>
-<div class="paragraph">
-<p>Therefore what would have been a <code>result&lt;T, E&gt;</code> becomes <code>result&lt;T&gt;</code>, which stores the discriminant and (optionally) a <code>T</code>, while error objects are delivered directly to the error handling scope where they are needed.</p>
-</div>
-<div class="paragraph">
-<p>The benefit of this decomposition is that <code>result&lt;T&gt;</code> becomes extremely lightweight, as it is not coupled with error types; further, error objects are communicated in constant time (independent of the call stack depth). Even very large objects are handled efficiently without dynamic memory allocation.</p>
+<p>LEAF is also compatible with exception handling, providing identical functionality but without needing a result type.</p>
 </div>
 <div class="sect2">
 <h3 id="_reporting_errors">Reporting Errors</h3>
 <div class="paragraph">
-<p>A function that reports an error:</p>
+<p>Report errors with <code>leaf::new_error</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -364,7 +358,7 @@ LEAF does not depend on Boost or other libraries.
 <div class="sect2">
 <h3 id="checking_for_errors">Checking for Errors</h3>
 <div class="paragraph">
-<p>Checking for errors communicated by a <code>leaf::result&lt;T&gt;</code> works as expected:</p>
+<p>To bail out on failure, return <code>result::error()</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -382,20 +376,8 @@ LEAF does not depend on Boost or other libraries.
 <div class="paragraph text-right">
 <p><a href="#result"><code>result</code></a></p>
 </div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-The the result of <code>r.error()</code> is compatible with any instance of the <code>leaf::result</code> template. In the example above, note that <code>g</code> returns a <code>leaf::result&lt;U&gt;</code>, while <code>r</code> is of type <code>leaf::result&lt;T&gt;</code>.
-</td>
-</tr>
-</table>
-</div>
 <div class="paragraph">
-<p>The boilerplate <code>if</code> statement can be avoided using <code>BOOST_LEAF_AUTO</code>:</p>
+<p>Use <code>BOOST_LEAF_AUTO</code> to avoid the boilerplate <code>if</code> statement:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -411,7 +393,7 @@ The the result of <code>r.error()</code> is compatible with any instance of the 
 <p><a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a></p>
 </div>
 <div class="paragraph">
-<p><code>BOOST_LEAF_AUTO</code> can not be used with <code>void</code> results; in that case, to avoid the boilerplate <code>if</code> statement, use <code>BOOST_LEAF_CHECK</code>:</p>
+<p>Use <code>BOOST_LEAF_CHECK</code> in case of <code>void</code> results:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -428,7 +410,7 @@ The the result of <code>r.error()</code> is compatible with any instance of the 
 <p><a href="#BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></a></p>
 </div>
 <div class="paragraph">
-<p>On implementations that define <code>__GNUC__</code> (e.g. GCC/clang), the <code>BOOST_LEAF_CHECK</code> macro definition takes advantage of <a href="https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html">GNU C statement expressions</a>. In this case, in addition to its portable usage with <code>result&lt;void&gt;</code>, <code>BOOST_LEAF_CHECK</code> can be used in expressions with non-<code>void</code> result types:</p>
+<p>On implementations that define <code>__GNUC__</code> (e.g. GCC/clang), <code>BOOST_LEAF_CHECK</code> is compatible with with non-<code>void</code> results as well:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -503,7 +485,7 @@ The the result of <code>r.error()</code> is compatible with any instance of the 
     <span class="n">BOOST_LEAF_AUTO</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">f1</span><span class="p">());</span>
     <span class="n">BOOST_LEAF_AUTO</span><span class="p">(</span><span class="n">v2</span><span class="p">,</span> <span class="n">f2</span><span class="p">());</span>
 
-    <span class="k">return</span> <span class="n">g</span><span class="p">(</span><span class="n">v1</span><span class="p">.</span> <span class="n">v2</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">g</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">);</span>
   <span class="p">},</span>
 
   <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">match</span><span class="o">&lt;</span><span class="n">err1</span><span class="p">,</span> <span class="n">err1</span><span class="o">::</span><span class="n">e1</span><span class="p">,</span> <span class="n">err1</span><span class="o">::</span><span class="n">e3</span><span class="o">&gt;</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span>
@@ -548,7 +530,7 @@ The the result of <code>r.error()</code> is compatible with any instance of the 
     <span class="n">BOOST_LEAF_AUTO</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">f1</span><span class="p">());</span>
     <span class="n">BOOST_LEAF_AUTO</span><span class="p">(</span><span class="n">v2</span><span class="p">,</span> <span class="n">f2</span><span class="p">());</span>
 
-    <span class="k">return</span> <span class="n">g</span><span class="p">(</span><span class="n">v1</span><span class="p">.</span> <span class="n">v2</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">g</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">);</span>
   <span class="p">},</span>
 
   <span class="p">[](</span> <span class="n">err1</span> <span class="n">e</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">error_info</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ei</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span>
@@ -590,7 +572,7 @@ If we wanted to signal a new error (rather than propagating the current error), 
     <span class="n">BOOST_LEAF_AUTO</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">f1</span><span class="p">());</span>
     <span class="n">BOOST_LEAF_AUTO</span><span class="p">(</span><span class="n">v2</span><span class="p">,</span> <span class="n">f2</span><span class="p">());</span>
 
-    <span class="k">return</span> <span class="n">g</span><span class="p">(</span><span class="n">v1</span><span class="p">.</span> <span class="n">v2</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">g</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">);</span>
   <span class="p">},</span>
 
   <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">match</span><span class="o">&lt;</span><span class="n">err1</span><span class="p">,</span> <span class="n">err1</span><span class="o">::</span><span class="n">e1</span><span class="o">&gt;</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">U</span>
@@ -727,13 +709,13 @@ If we wanted to signal a new error (rather than propagating the current error), 
 <div class="ulist">
 <ul>
 <li>
-<p>The first error handler will be used if an error object of type <code>io_error</code> <em>and</em> and error_object of type <code>e_file_name</code> are available;</p>
+<p>The first error handler will be used if an error object of type <code>io_error</code> <em>and</em> an error_object of type <code>e_file_name</code> are available;</p>
 </li>
 <li>
 <p>otherwise, the second error handler will be used if an error object of type <code>io_error</code> is available;</p>
 </li>
 <li>
-<p>otherwise, <code>leaf_try_handle_some</code> fails.</p>
+<p>otherwise, <code>leaf::try_handle_some</code> fails.</p>
 </li>
 </ul>
 </div>
@@ -868,7 +850,7 @@ When an error handler takes arguments by mutable reference or pointer, changes t
 
   <span class="p">[](</span> <span class="n">io_error</span> <span class="n">e</span><span class="p">,</span> <span class="n">e_line</span> <span class="k">const</span> <span class="o">*</span> <span class="n">current_line</span> <span class="p">)</span>
   <span class="p">{</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Parse error"</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"I/O error"</span><span class="p">;</span>
     <span class="k">if</span><span class="p">(</span> <span class="n">current_line</span> <span class="p">)</span>
       <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">" at line "</span> <span class="o">&lt;&lt;</span> <span class="n">current_line</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">;</span>
     <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
@@ -903,7 +885,7 @@ When an error handler takes arguments by mutable reference or pointer, changes t
 
   <span class="p">[](</span> <span class="n">io_error</span> <span class="n">e</span><span class="p">,</span> <span class="n">e_line</span> <span class="k">const</span> <span class="o">*</span> <span class="n">l</span> <span class="p">)</span>
   <span class="p">{</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Parse error"</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"I/O error"</span><span class="p">;</span>
     <span class="k">if</span><span class="p">(</span> <span class="n">l</span> <span class="p">)</span>
       <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">" at line "</span> <span class="o">&lt;&lt;</span> <span class="n">l</span><span class="p">.</span><span class="n">value</span><span class="p">;</span>
     <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
@@ -940,7 +922,7 @@ When an error handler takes arguments by mutable reference or pointer, changes t
 
   <span class="p">[](</span> <span class="n">io_error</span> <span class="n">e</span><span class="p">,</span> <span class="n">e_line</span> <span class="k">const</span> <span class="o">*</span> <span class="n">l</span> <span class="p">)</span>
   <span class="p">{</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Parse error"</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"I/O error"</span><span class="p">;</span>
     <span class="k">if</span><span class="p">(</span> <span class="n">l</span> <span class="p">)</span>
       <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">" at line "</span> <span class="o">&lt;&lt;</span> <span class="n">l</span><span class="p">.</span><span class="n">value</span><span class="p">;</span>
     <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
@@ -1088,8 +1070,7 @@ When an error handler takes arguments by mutable reference or pointer, changes t
   <span class="p">[](</span> <span class="n">lib2</span><span class="o">::</span><span class="n">error_code</span> <span class="n">ec</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>
   <span class="p">{</span>
     <span class="c1">// Handle lib2::error_code</span>
-  <span class="p">}</span> <span class="p">);</span>
-<span class="p">}</span></code></pre>
+  <span class="p">}</span> <span class="p">);</span></code></pre>
 </div>
 </div>
 <div class="paragraph text-right">
@@ -1184,7 +1165,7 @@ When an error handler takes arguments by mutable reference or pointer, changes t
 <p>Alas, this is not always possible.</p>
 </div>
 <div class="paragraph">
-<p>For example, the error may need to be communicated through uncooperative 3rd-party interfaces. To facilitate this transmission, a error ID may be encoded in a <code>std::error_code</code>. As long as a 3rd-party interface is able to transport a <code>std::error_code</code>, it can be compatible with LEAF.</p>
+<p>For example, the error may need to be communicated through uncooperative 3rd-party interfaces. To facilitate this transmission, an error ID may be encoded in a <code>std::error_code</code>. As long as a 3rd-party interface is able to transport a <code>std::error_code</code>, it can be compatible with LEAF.</p>
 </div>
 <div class="paragraph">
 <p>Further, it is sometimes necessary to communicate errors through an interface that does not even use <code>std::error_code</code>. An example of this is when an external lower-level library throws an exception, which is unlikely to be able to carry an <code>error_id</code>.</p>
@@ -1223,7 +1204,7 @@ When an error handler takes arguments by mutable reference or pointer, changes t
 <div class="sect2">
 <h3 id="tutorial-loading">Loading of Error Objects</h3>
 <div class="paragraph">
-<p>Recall that error objects communicated to LEAF are stored on the stack, local to the <code>try_handle_same</code>, <code>try_handle_all</code> or <code>try_catch</code> function used to handle errors. To <em>load</em> an error object means to move it into such storage, if available.</p>
+<p>Recall that error objects communicated to LEAF are stored on the stack, local to the <code>try_handle_some</code>, <code>try_handle_all</code> or <code>try_catch</code> function used to handle errors. To <em>load</em> an error object means to move it into such storage, if available.</p>
 </div>
 <div class="paragraph">
 <p>Various LEAF functions take a list of error objects to load. As an example, if a function <code>copy_file</code> that takes the name of the input file and the name of the output file as its arguments detects a failure, it could communicate an error code <code>ec</code>, plus the two relevant file names using <a href="#new_error"><code>new_error</code></a>:</p>
@@ -1580,7 +1561,7 @@ When an error handler takes arguments by mutable reference or pointer, changes t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="p">[](</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">category</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">errc</span><span class="o">&gt;&gt;</span> <span class="p">)</span>
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="p">[](</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">category</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">errc</span><span class="o">&gt;</span> <span class="p">)</span>
 <span class="p">{</span>
 <span class="p">}</span></code></pre>
 </div>
@@ -1609,7 +1590,7 @@ See <a href="#match"><code>match</code></a> for more examples.
 <p><a href="#match_value"><code>match_value</code></a>: where <code>match&lt;E, V&#8230;&#8203;&gt;</code> compares the object <code>e</code> of type <code>E</code> with the values <code>V&#8230;&#8203;</code>, <code>match_value&lt;E, V&#8230;&#8203;&gt;</code> compare <code>e.value</code> with the values <code>V&#8230;&#8203;</code>.</p>
 </li>
 <li>
-<p><a href="#match_member"><code>match_member</code></a>: similar to <code>match_value</code>, but takes a pointer to the data member to compare; that is, <code>match_member&lt;&amp;E::value, V&#8230;&#8203;&gt;</code> is equvialent to <code>match_value&lt;E, V&#8230;&#8203;&gt;</code>. Note, however, that <code>match_member</code> requires C&#43;&#43;17 or newer, while <code>match_value</code> does not.</p>
+<p><a href="#match_member"><code>match_member</code></a>: similar to <code>match_value</code>, but takes a pointer to the data member to compare; that is, <code>match_member&lt;&amp;E::value, V&#8230;&#8203;&gt;</code> is equivalent to <code>match_value&lt;E, V&#8230;&#8203;&gt;</code>. Note, however, that <code>match_member</code> requires C&#43;&#43;17 or newer, while <code>match_value</code> does not.</p>
 </li>
 <li>
 <p><code><a href="#catch_"><code>catch_</code></a>&lt;Ex&#8230;&#8203;&gt;</code>: Similar to <code>match</code>, but checks whether the caught <code>std::exception</code> object can be <code>dynamic_cast</code> to any of the <code>Ex</code> types.</p>
@@ -7778,7 +7759,20 @@ See also <a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a>.
 <p><code>BOOST_LEAF_CFG_GNUC_STMTEXPR</code>: This macro controls whether or not <a href="#BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></a> is defined in terms of a <a href="https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html">GNU C statement expression</a>, which enables its use to check for errors similarly to how the questionmark operator works in some languages (see <a href="#checking_for_errors">Checking for Errors</a>). By default the macro is defined as <code>1</code> under <code>__GNUC__</code>, otherwise as <code>0</code>.</p>
 </li>
 <li>
-<p><code>BOOST_LEAF_CFG_WIN32</code>: Defining this macro as 1 enables the default constructor in <a href="#e_LastError"><code>e_LastError</code></a>, and the automatic conversion to string (via <code>FormatMessageA</code>) when <a href="#diagnostic_details"><code>diagnostic_details</code></a> is printed. If the macro is left undefined, LEAF defines it as <code>0</code> (even on windows, since including <code>windows.h</code> is generally not desirable). Note that the <code>e_LastError</code> type itself is available on all platforms, there is no need for conditional compilation in error handlers that use it.</p>
+<p><code>BOOST_LEAF_CFG_WIN32</code>: This macro controls the use of Win32 APIs. If left undefined, LEAF defines it as <code>0</code> (even on Windows, since including <code>windows.h</code> is generally not desirable). The possible values are:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>0</code>: Disables all Win32-specific features.</p>
+</li>
+<li>
+<p><code>1</code>: Includes <code>windows.h</code> and enables <a href="#e_LastError"><code>e_LastError</code></a> support, which is otherwise stubbed.</p>
+</li>
+<li>
+<p><code>2</code>: In addition, switches LEAF to using the Win32 TLS API instead of C&#43;&#43;11 <code>thread_local</code>, enabling error objects to be used across DLL boundaries.</p>
+</li>
+</ul>
+</div>
 </li>
 <li>
 <p><code>BOOST_LEAF_NO_EXCEPTIONS</code>: Disables all exception handling support. If left undefined, LEAF defines it automatically based on the compiler configuration (e.g. <code>-fno-exceptions</code>).</p>
@@ -7791,7 +7785,23 @@ See also <a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a>.
 <div class="sect2">
 <h3 id="configuring_tls_access">Configuring TLS Access</h3>
 <div class="paragraph">
-<p>LEAF requires support for thread-local <code>void</code> pointers. By default, this is implemented by means of the C&#43;&#43;11 <code>thread_local</code> keyword, but in order to support <a href="#embedded_platforms">embedded platforms</a>, it is possible to configure LEAF to use an array of thread local pointers instead, by defining <code>BOOST_LEAF_USE_TLS_ARRAY</code>. In this case, the user is required to define the following two functions to implement the required TLS access:</p>
+<p>LEAF requires support for thread-local <code>void</code> pointers. The available TLS implementations are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>C&#43;&#43;11 <code>thread_local</code> keyword (the default).</p>
+</li>
+<li>
+<p>Win32 TLS API: selected by defining <code>BOOST_LEAF_CFG_WIN32=2</code>. This enables error objects to be used across DLL boundaries.</p>
+</li>
+<li>
+<p>Custom TLS array: selected by defining <code>BOOST_LEAF_USE_TLS_ARRAY</code>. This is intended for <a href="#embedded_platforms">embedded platforms</a> where the C&#43;&#43;11 <code>thread_local</code> keyword is not available or not suitable.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>When using <code>BOOST_LEAF_USE_TLS_ARRAY</code>, the user is required to define the following two functions to implement the required TLS access:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -7841,7 +7851,7 @@ For efficiency, <code>read_void_ptr</code> and <code>write_void_ptr</code> shoul
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-Reporting error objects of types that are not used by the program to handle failures does not consume TLS pointers. The minimum size of the TLS pointer array required by LEAF is the total number of different types used as arguments to error handlers (in the entire program), plus one.
+TLS slots are allocated only for types used in error handlers. The minimum size of the TLS pointer array required by LEAF is the total number of different types used as arguments to error handlers (in the entire program), plus one.
 </td>
 </tr>
 </table>
@@ -7884,10 +7894,10 @@ Beware of <code>read_void_ptr</code>/<code>write_void_ptr</code> accessing threa
 </div>
 </div>
 <div class="paragraph">
-<p>LEAF supports FreeRTOS out of the box, please define <code>BOOST_LEAF_TLS_FREERTOS</code> (in which case LEAF automatically defines <code>BOOST_LEAF_EMBEDDED</code>, if it is not defined already).</p>
+<p>LEAF supports FreeRTOS out of the box, define <code>BOOST_LEAF_TLS_FREERTOS</code> (in which case LEAF automatically defines <code>BOOST_LEAF_EMBEDDED</code>, if it is not defined already).</p>
 </div>
 <div class="paragraph">
-<p>For other embedded platforms, please define <code>BOOST_LEAF_USE_TLS_ARRAY</code>, see <a href="#configuring_tls_access">Configuring TLS Access</a>.</p>
+<p>For other embedded platforms, define <code>BOOST_LEAF_USE_TLS_ARRAY</code>, see <a href="#configuring_tls_access">Configuring TLS Access</a>.</p>
 </div>
 <div class="paragraph">
 <p>If your program does not use concurrency at all, simply define <code>BOOST_LEAF_NO_THREADS</code>, which requires no TLS support at all (but is NOT thread-safe).</p>
@@ -7912,9 +7922,6 @@ Contrary to popular belief, exception handling works great on embedded platforms
 <div class="sectionbody">
 <div class="paragraph">
 <p>The source code is compatible with C&#43;&#43;11 or newer.</p>
-</div>
-<div class="paragraph">
-<p>LEAF uses thread-local storage (only for pointers). By default, this is implemented via the C&#43;&#43;11 <code>thread_local</code> storage class specifier, but the library is easily configurable to use any platform-specific TLS API instead (it ships with built-in support for FreeRTOS). See <a href="#configuration">Configuration</a>.</p>
 </div>
 </div>
 </div>
@@ -8180,10 +8187,10 @@ The following reasoning is independent of the mechanism used to transport error 
 </div>
 </div>
 <div class="sect1">
-<h2 id="_limitations">Limitations</h2>
+<h2 id="_dynamic_linking">Dynamic linking</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>When using dynamic linking, it is required that error types are declared with <code>default</code> visibility, e.g.:</p>
+<p>When using dynamic linking, on POSIX platforms it is required that error types are declared with <code>default</code> visibility, e.g.:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -8194,19 +8201,7 @@ The following reasoning is independent of the mechanism used to transport error 
 </div>
 </div>
 <div class="paragraph">
-<p>This works as expected except on Windows, where thread-local storage is not shared between the individual binary modules. For this reason, to transport error objects across DLL boundaries.</p>
-</div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-When using dynamic linking, it is always best to define module interfaces in terms of C (and implement them in C&#43;&#43; if appropriate).
-</td>
-</tr>
-</table>
+<p>On Windows, to use error objects across DLL boundaries, define <code>BOOST_LEAF_CFG_WIN32=2</code>. For two modules to be able to share LEAF error objects, it is required that they are both compiled with the same compiler (not necessarily with the same compiler version). For example, if one module is compiled with MSVC and the other with GCC, the error objects will not be shared.</p>
 </div>
 </div>
 </div>
@@ -8410,7 +8405,7 @@ It is possible to access Boost Exception error information using the LEAF error 
   <span class="p">[]</span>
   <span class="p">{</span>
     <span class="n">f</span><span class="p">();</span> <span class="c1">// throws</span>
-  <span class="p">}</span>
+  <span class="p">},</span>
   <span class="p">[](</span><span class="n">my_exception</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">my_info</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">x</span><span class="p">)</span>
   <span class="p">{</span>
     <span class="c1">//my_info is available with</span>
