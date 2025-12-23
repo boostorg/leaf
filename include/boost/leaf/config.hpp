@@ -238,6 +238,14 @@
 
 ////////////////////////////////////////
 
+#ifdef _MSC_VER
+#   define BOOST_LEAF_UNREACHABLE __assume(0)
+#else
+#   define BOOST_LEAF_UNREACHABLE __builtin_unreachable()
+#endif
+
+////////////////////////////////////////
+
 namespace boost
 {
     [[noreturn]] void throw_exception( std::exception const & ); // user defined

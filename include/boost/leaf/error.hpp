@@ -179,11 +179,17 @@ namespace detail
 {
     class preloaded_base;
 
+    template <class E>
+    struct capturing_slot_node_allocator;
+
     class dynamic_allocator:
         capture_list
     {
         dynamic_allocator( dynamic_allocator const & ) = delete;
         dynamic_allocator & operator=( dynamic_allocator const & ) = delete;
+
+        template <class>
+        friend struct capturing_slot_node_allocator;
 
         preloaded_base * preloaded_list_;
 
@@ -319,7 +325,7 @@ namespace detail
             BOOST_LEAF_ASSERT(last_ != nullptr);
             BOOST_LEAF_ASSERT(*last_ == nullptr);
             BOOST_LEAF_ASSERT(tls::read_ptr<slot<E>>() == nullptr);
-            capturing_slot_node<E> * csn = new capturing_slot_node<E>(last_);
+            capturing_slot_node<E> * csn = capturing_slot_node_allocator<E>::new_(last_);
             csn->activate();
             return csn;
         }
@@ -358,6 +364,21 @@ namespace detail
         using capture_list::unload;
         using capture_list::print;
     }; // class dynamic_allocator
+
+    template <class E>
+    struct capturing_slot_node_allocator
+    {
+        template <class... A>
+        static dynamic_allocator::capturing_slot_node<E> * new_( A && ... a )
+        {
+            return new dynamic_allocator::capturing_slot_node<E>(std::forward<A>(a)...);
+        }
+
+        static void delete_( dynamic_allocator::capturing_slot_node<E> * p ) noexcept
+        {
+            delete p;
+        }
+    };
 
     template <>
     class slot<dynamic_allocator>

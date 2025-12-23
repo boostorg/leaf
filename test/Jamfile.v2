@@ -71,7 +71,7 @@ run diagnostics_test4.cpp ;
 run diagnostics_test5.cpp ;
 run e_errno_test.cpp ;
 run e_LastError_test.cpp : : : <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=1 ;
-run error_code_test.cpp ;
+run error_code_test.cpp : : : <toolset>clang-darwin,<exception-handling>off,<rtti>off:<linkflags>"-Wl,-ld_classic" ; # workaround for macos-14 linker bug
 run error_id_test.cpp ;
 run exception_test.cpp ;
 run exception_to_result_test.cpp ;
