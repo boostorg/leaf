@@ -40,7 +40,19 @@ public:
 #   else
             if( std::uncaught_exception() )
 #   endif
+#   if BOOST_LEAF_CFG_CAPTURE
+                try
+                {
+                    return detail::start_new_error();
+                }
+                catch(...)
+                {
+                    BOOST_LEAF_ASSERT(detail::current_id() == err_id_);
+                    return detail::new_id();
+                }
+#   else
                 return detail::start_new_error();
+#   endif
 #endif
             return 0;
         }

@@ -10,6 +10,7 @@
 #   include <boost/leaf/handle_errors.hpp>
 #   include <boost/leaf/result.hpp>
 #   include <boost/leaf/diagnostics.hpp>
+#   include <boost/leaf/exception.hpp>
 #endif
 
 #if !BOOST_LEAF_CFG_CAPTURE || defined(BOOST_LEAF_NO_EXCEPTIONS)
@@ -22,6 +23,7 @@ int main()
 #else
 
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 namespace leaf = boost::leaf;
@@ -100,6 +102,118 @@ int main()
             {
                 BOOST_LEAF_CHECK(f());
                 return 0;
+            },
+            []( std::bad_alloc const &, leaf::diagnostic_details const & dd )
+            {
+                std::ostringstream s;
+                s << dd;
+                std::string str = s.str();
+                BOOST_TEST(str.find("other_info<1>") != std::string::npos);
+                BOOST_TEST(str.find("other_info<2>") == std::string::npos);
+                BOOST_TEST(str.find("alloc_fail_info") == std::string::npos);
+                return 1;
+            },
+            []
+            {
+                return 2;
+            } );
+        BOOST_TEST_EQ(r, 1);
+    }
+#endif
+
+////////////////////////////////////////
+
+    {
+        auto captured = leaf::try_capture_all(
+            []() -> leaf::result<void>
+            {
+                auto load = leaf::on_error( other_info<1>{1}, alloc_fail_info{42}, other_info<2>{2} );
+                throw std::runtime_error("test");
+            } );
+
+        int r = leaf::try_handle_all(
+            [&]() -> leaf::result<int>
+            {
+                (void) captured.value();
+                return 0;
+            },
+            []( other_info<1> const & oi1, other_info<2> const * oi2, alloc_fail_info const * afi )
+            {
+                BOOST_TEST_EQ(oi1.value, 1);
+                BOOST_TEST_EQ(oi2, nullptr);
+                BOOST_TEST_EQ(afi, nullptr);
+                return 1;
+            },
+            []
+            {
+                return 2;
+            } );
+        BOOST_TEST_EQ(r, 1);
+    }
+
+#if BOOST_LEAF_CFG_DIAGNOSTICS && BOOST_LEAF_CFG_STD_STRING
+    {
+        int r = leaf::try_catch(
+            []() -> int
+            {
+                auto load = leaf::on_error( other_info<1>{1}, alloc_fail_info{42}, other_info<2>{2} );
+                throw std::runtime_error("test");
+            },
+            []( leaf::diagnostic_details const & dd )
+            {
+                std::ostringstream s;
+                s << dd;
+                std::string str = s.str();
+                BOOST_TEST(str.find("other_info<1>") != std::string::npos);
+                BOOST_TEST(str.find("other_info<2>") == std::string::npos);
+                BOOST_TEST(str.find("alloc_fail_info") == std::string::npos);
+                return 1;
+            },
+            []
+            {
+                return 2;
+            } );
+        BOOST_TEST_EQ(r, 1);
+    }
+#endif
+
+////////////////////////////////////////
+
+    {
+        auto captured = leaf::try_capture_all(
+            []() -> leaf::result<void>
+            {
+                auto load = leaf::on_error( other_info<1>{1}, alloc_fail_info{42}, other_info<2>{2} );
+                leaf::throw_exception(std::runtime_error("test"));
+            } );
+
+        int r = leaf::try_handle_all(
+            [&]() -> leaf::result<int>
+            {
+                (void) captured.value();
+                return 0;
+            },
+            []( std::bad_alloc const &, other_info<1> const & oi1, other_info<2> const * oi2, alloc_fail_info const * afi )
+            {
+                BOOST_TEST_EQ(oi1.value, 1);
+                BOOST_TEST_EQ(oi2, nullptr);
+                BOOST_TEST_EQ(afi, nullptr);
+                return 1;
+            },
+            []
+            {
+                return 2;
+            } );
+        BOOST_TEST_EQ(r, 1);
+    }
+
+#if BOOST_LEAF_CFG_DIAGNOSTICS && BOOST_LEAF_CFG_STD_STRING
+    {
+        int r = leaf::try_catch(
+            []() -> int
+            {
+                auto load = leaf::on_error( other_info<1>{1}, alloc_fail_info{42}, other_info<2>{2} );
+                leaf::throw_exception(std::runtime_error("test"));
             },
             []( std::bad_alloc const &, leaf::diagnostic_details const & dd )
             {

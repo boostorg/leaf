@@ -611,15 +611,14 @@ namespace detail
         return int(id);
     }
 
-    inline int start_new_error()
+    inline int start_new_error() noexcept(!BOOST_LEAF_CFG_CAPTURE)
     {
-        int id = new_id();
 #if BOOST_LEAF_CFG_CAPTURE
         if( dynamic_allocator * da = get_dynamic_allocator() )
             for( preloaded_base const * e = da->preloaded_list(); e; e = e->next_ )
                 e->reserve(*da);
 #endif
-        return id;
+        return new_id();
     }
 
     struct inject_loc
