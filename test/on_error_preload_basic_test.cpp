@@ -76,13 +76,13 @@ int main()
         []() -> leaf::result<void>
         {
             leaf::detail::dynamic_allocator * da = leaf::detail::get_dynamic_allocator();
-            BOOST_TEST(da != nullptr);
-            BOOST_TEST(da->preloaded_list() == nullptr);
+            BOOST_TEST_NE(da, nullptr);
+            BOOST_TEST_EQ(da->preloaded_list(), nullptr);
             {
                 auto load = leaf::on_error( info<42>{42} );
-                BOOST_TEST(da->preloaded_list() != nullptr);
+                BOOST_TEST_NE(da->preloaded_list(), nullptr);
             }
-            BOOST_TEST(da->preloaded_list() == nullptr);
+            BOOST_TEST_EQ(da->preloaded_list(), nullptr);
             return { };
         } );
 #endif

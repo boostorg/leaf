@@ -23,10 +23,10 @@ struct info
 
 leaf::result<void> f()
 {
-    BOOST_TEST(leaf::tls::read_ptr<leaf::detail::slot<info<42>>>() == nullptr);
-    BOOST_TEST(leaf::tls::read_ptr<leaf::detail::slot<info<43>>>() != nullptr);
+    BOOST_TEST_EQ(leaf::tls::read_ptr<leaf::detail::slot<info<42>>>(), nullptr);
+    BOOST_TEST_NE(leaf::tls::read_ptr<leaf::detail::slot<info<43>>>(), nullptr);
     auto load = leaf::on_error( info<42>{42} );
-    BOOST_TEST(leaf::tls::read_ptr<leaf::detail::slot<info<42>>>() == nullptr);
+    BOOST_TEST_EQ(leaf::tls::read_ptr<leaf::detail::slot<info<42>>>(), nullptr);
     return leaf::new_error(info<43>{});
 }
 

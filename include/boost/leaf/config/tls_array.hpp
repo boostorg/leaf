@@ -151,7 +151,6 @@ namespace tls
         write_void_ptr(tls_idx, p);
         BOOST_LEAF_ASSERT(read_void_ptr(tls_idx) == p);
     }
-} // namespace tls
 
     template <class T>
     BOOST_LEAF_ALWAYS_INLINE T * read_ptr() noexcept

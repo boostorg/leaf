@@ -48,7 +48,7 @@ int main()
             {
                 return leaf::new_error(E1::e12, E3::e31);
             } );
-        BOOST_TEST(v.index() == 1);
+        BOOST_TEST_EQ(v.index(), 1);
         auto t = std::get<1>(v);
 
         BOOST_TEST(std::get<0>(t).has_value());
