@@ -2,7 +2,7 @@
 #define BOOST_LEAF_HPP_INCLUDED
 
 // Boost LEAF single header distribution. Do not edit.
-// Generated on Dec 23, 2025 from https://github.com/boostorg/leaf/tree/56b247d.
+// Generated on Dec 25, 2025 from https://github.com/boostorg/leaf/tree/eb8d68c.
 
 // Latest published version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
@@ -3137,15 +3137,14 @@ namespace detail
         return int(id);
     }
 
-    inline int start_new_error()
+    inline int start_new_error() noexcept(!BOOST_LEAF_CFG_CAPTURE)
     {
-        int id = new_id();
 #if BOOST_LEAF_CFG_CAPTURE
         if( dynamic_allocator * da = get_dynamic_allocator() )
             for( preloaded_base const * e = da->preloaded_list(); e; e = e->next_ )
                 e->reserve(*da);
 #endif
-        return id;
+        return new_id();
     }
 
     struct inject_loc
@@ -5245,7 +5244,7 @@ exception_to_result( F && f ) noexcept(!BOOST_LEAF_CFG_CAPTURE)
 } } // namespace boost::leaf
 
 #endif // #ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3843
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3842
 // >>> #include <boost/leaf/on_error.hpp>
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
@@ -5286,7 +5285,19 @@ public:
 #   else
             if( std::uncaught_exception() )
 #   endif
+#   if BOOST_LEAF_CFG_CAPTURE
+                try
+                {
+                    return detail::start_new_error();
+                }
+                catch(...)
+                {
+                    BOOST_LEAF_ASSERT(detail::current_id() == err_id_);
+                    return detail::new_id();
+                }
+#   else
                 return detail::start_new_error();
+#   endif
 #endif
             return 0;
         }
@@ -5580,7 +5591,7 @@ on_error( Item && ... i )
 
 // #line 8 "boost/leaf/pred.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 14
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3843
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3842
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -5876,7 +5887,7 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 // #include <boost/leaf/config.hpp> // Expanded at line 14
 // #include <boost/leaf/detail/print.hpp> // Expanded at line 2266
 // #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 2260
-// #include <boost/leaf/exception.hpp> // Expanded at line 5007
+// #include <boost/leaf/exception.hpp> // Expanded at line 5006
 
 #include <functional>
 
@@ -6602,8 +6613,8 @@ struct is_result_type<result<T>>: std::true_type
 #if __cplusplus >= 201703L
 
 // #include <boost/leaf/config.hpp> // Expanded at line 14
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3843
-// #include <boost/leaf/result.hpp> // Expanded at line 5873
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3842
+// #include <boost/leaf/result.hpp> // Expanded at line 5884
 #include <variant>
 #include <optional>
 #include <tuple>
