@@ -70,25 +70,29 @@ NOTE: LEAF does not depend on Boost or other libraries.
 
 Typically, error handling libraries define a variant result type, e.g. `result<T, E>`. In LEAF we drop the `E`, using just `result<T>`.
 
-In case of success, access to the value `T` is immediate and direct, but because error objects are not held in results, handling errors requires a special syntax. Error objects are transported directly to error handling scopes that need them. This is not only more efficient, but also enables any given handler to access multiple objects associated with the same failure, if needed.
+In case of success, access to the value `T` is immediate and direct, and we can easily bail out in case of a failure.
+
+To handle errors, we use a special syntax, which enables error objects to be transported directly to the error handling scopes that need them. This is more efficient than holding them in result types, and it also allows any given handler to access multiple error objects associated with the same failure.
 
 LEAF is also compatible with exception handling, providing identical functionality but without needing a result type.
 
 === Reporting Errors
 
+Let's introduce the `result<T>`-based interface first.
+
 Report errors with `leaf::new_error`:
 
 [source,c++]
 ----
-enum class err1 { e1, e2, e3 };
+enum class api_error { connect_failed, invalid_request, timeout };
 
-leaf::result<T> f()
+leaf::result<connection> connect()
 {
   ....
-  if( error_detected )
-    return leaf::new_error( err1::e1 ); // Pass an error object of any type
+  if( <<connection-failure-detected>> )
+    return leaf::new_error( api_error::connect_failed ); // Pass error objects of any type
 
-  // Produce and return a T.
+  // Produce and return a connection object.
 }
 ----
 [.text-right]
@@ -103,14 +107,15 @@ To bail out on failure, return `result::error()`:
 
 [source,c++]
 ----
-leaf::result<U> g()
+leaf::result<data> connect_and_fetch_data()
 {
-  leaf::result<T> r = f();
-  if( !r )
-    return r.error();
+  leaf::result<connection> cr = connect();
+  if( !cr )
+    return cr.error();
 
-  T const & v = r.value();
-  // Use v to produce a valid U
+  connection & c = cr.value();
+
+  // Use c to fetch and return data
 }
 ----
 [.text-right]
@@ -120,11 +125,11 @@ Use `BOOST_LEAF_AUTO` to avoid the boilerplate `if` statement:
 
 [source,c++]
 ----
-leaf::result<U> g()
+leaf::result<data> connect_and_fetch_data()
 {
-  BOOST_LEAF_AUTO(v, f()); // Bail out on error
+  BOOST_LEAF_AUTO(c, connect()); // Bail out on error
 
-  // Use v to produce a valid U
+  // Use c to fetch and return data
 }
 ----
 [.text-right]
@@ -134,28 +139,29 @@ Use `BOOST_LEAF_CHECK` in case of `void` results:
 
 [source,c++]
 ----
-leaf::result<void> f();
+leaf::result<void> flush(connection & c);
+leaf::result<std::size_t> bytes_sent(connection & c);
 
-leaf::result<int> g()
+leaf::result<std::size_t> flush_and_get_bytes_sent(connection & c)
 {
-  BOOST_LEAF_CHECK(f()); // Bail out on error
-  return 42;
+  BOOST_LEAF_CHECK(flush(c)); // Bail out on error
+  return bytes_sent(c);
 }
 ----
 [.text-right]
 <<BOOST_LEAF_CHECK>>
 
-On implementations that define `pass:[__GNUC__]` (e.g. GCC/clang), `BOOST_LEAF_CHECK` is compatible with with non-`void` results as well:
+On implementations that define `pass:[__GNUC__]` (e.g. GCC/clang), `BOOST_LEAF_CHECK` is compatible with non-`void` results as well:
 
 [source,c++]
 ----
-leaf::result<int> f();
+leaf::result<int> count_rows();
 
-float g(int x);
+float update_average(int n);
 
-leaf::result<float> t()
+leaf::result<float> average_row_count()
 {
-  return g( BOOST_LEAF_CHECK(f()) );
+  return update_average( BOOST_LEAF_CHECK(count_rows()) );
 }
 ----
 
@@ -163,10 +169,10 @@ The following is the portable alternative:
 
 [source,c++]
 ----
-leaf::result<float> t()
+leaf::result<float> average_row_count()
 {
-  BOOST_LEAF_AUTO(x, f());
-  return g(x);
+  BOOST_LEAF_AUTO(n, count_rows());
+  return update_average(n);
 }
 ----
 
@@ -175,57 +181,53 @@ leaf::result<float> t()
 [[tutorial-error_handling]]
 === Error Handling
 
-Error handling scopes must use a special syntax to indicate that they need to access error objects. The following excerpt attempts several operations and handles errors of type `err1`:
+Error handling scopes use a special syntax to indicate that they need to access error objects:
 
 [source,c++]
 ----
-leaf::result<U> r = leaf::try_handle_some(
+leaf::result<data> r = leaf::try_handle_some(
 
-  []() -> leaf::result<U>
+  []() -> leaf::result<data>
   {
-    BOOST_LEAF_AUTO(v1, f1());
-    BOOST_LEAF_AUTO(v2, f2());
-
-    return g(v1, v2);
+    BOOST_LEAF_AUTO(c, connect());
+    return fetch(c);
   },
 
-  []( err1 e ) -> leaf::result<U>
+  []( api_error e ) -> leaf::result<data>
   {
-    if( e == err1::e1 )
-      .... // Handle err1::e1
+    if( e == api_error::connect_failed )
+      .... // Handle api_error::connect_failed
     else
-      .... // Handle any other err1 value
+      .... // Handle any other api_error value
   } );
 ----
 [.text-right]
 <<try_handle_some>> | <<result>> | <<BOOST_LEAF_AUTO>>
 
-First, `try_handle_some` executes the first function passed to it; it attempts to produce a `result<U>`, but it may fail.
+First, `try_handle_some` executes the first function passed to it; it attempts to produce a `result<data>`, but it may fail.
 
-The second lambda is an error handler: it will be called iff the first lambda fails with an error object of type `err1`. That object is stored on the stack, local to the `try_handle_some` function (LEAF knows to allocate this storage because we gave it an error handler that takes an `err1`). Error handlers passed to `leaf::try_handle_some` can return a valid `leaf::result<U>` but are allowed to fail.
+The second lambda is an error handler: it will be called iff the first lambda fails with an error object of type `api_error`. That object is stored on the stack, local to the `try_handle_some` function (LEAF knows to allocate this storage because we gave it an error handler that takes an `api_error`). Error handlers passed to `leaf::try_handle_some` can return a valid `leaf::result` but are allowed to fail.
 
 It is possible for an error handler to declare that it can only handle some specific values of a given error type:
 
 [source,c++]
 ----
-leaf::result<U> r = leaf::try_handle_some(
+leaf::result<data> r = leaf::try_handle_some(
 
-  []() -> leaf::result<U>
+  []() -> leaf::result<data>
   {
-    BOOST_LEAF_AUTO(v1, f1());
-    BOOST_LEAF_AUTO(v2, f2());
-
-    return g(v1, v2);
+    BOOST_LEAF_AUTO(c, connect());
+    return fetch(c);
   },
 
-  []( leaf::match<err1, err1::e1, err1::e3> ) -> leaf::result<U>
+  []( leaf::match<api_error, api_error::connect_failed, api_error::timeout> ) -> leaf::result<data>
   {
-    // Handle err1::e1 or err1::e3
+    // Handle api_error::connect_failed or api_error::timeout
   },
 
-  []( err1 e ) -> leaf::result<U>
+  []( api_error e ) -> leaf::result<data>
   {
-    // Handle any other err1 value
+    // Handle any other api_error value
   } );
 ----
 [.text-right]
@@ -233,9 +235,9 @@ leaf::result<U> r = leaf::try_handle_some(
 
 LEAF considers the provided error handlers in order, and calls the first one for which it is able to supply arguments, based on the error objects currently being communicated. Above:
 
-* The first error handler will be called iff an error object of type `err1` is available, and its value is either `err1::e1` or `err1::e3`.
+* The first error handler will be called iff an error object of type `api_error` is available, and its value is either `api_error::connect_failed` or `api_error::timeout`.
 
-* Otherwise the second error handler will be called iff an error object of type `err1` is available, regardless of its value.
+* Otherwise the second error handler will be called iff an error object of type `api_error` is available, regardless of its value.
 
 * Otherwise `leaf::try_handle_some` is unable to handle the error.
 
@@ -243,20 +245,18 @@ It is possible for an error handler to conditionally leave the failure unhandled
 
 [source,c++]
 ----
-leaf::result<U> r = leaf::try_handle_some(
+leaf::result<data> r = leaf::try_handle_some(
 
-  []() -> leaf::result<U>
+  []() -> leaf::result<data>
   {
-    BOOST_LEAF_AUTO(v1, f1());
-    BOOST_LEAF_AUTO(v2, f2());
-
-    return g(v1, v2);
+    BOOST_LEAF_AUTO(c, connect());
+    return fetch(c);
   },
 
-  []( err1 e, leaf::error_info const & ei ) -> leaf::result<U>
+  []( api_error e, leaf::error_info const & ei ) -> leaf::result<data>
   {
-    if( <<condition>> )
-      return valid_U;
+    if( e == api_error::timeout )
+      return cached_data();
     else
       return ei.error();
   } );
@@ -272,27 +272,25 @@ If we want to ensure that all possible failures are handled, we use `leaf::try_h
 
 [source,c++]
 ----
-U r = leaf::try_handle_all(
+data r = leaf::try_handle_all(
 
-  []() -> leaf::result<U>
+  []() -> leaf::result<data>
   {
-    BOOST_LEAF_AUTO(v1, f1());
-    BOOST_LEAF_AUTO(v2, f2());
-
-    return g(v1, v2);
+    BOOST_LEAF_AUTO(c, connect());
+    return fetch(c);
   },
 
-  []( leaf::match<err1, err1::e1> ) -> U
+  []( leaf::match<api_error, api_error::connect_failed> ) -> data
   {
-    // Handle err::e1
+    // Handle api_error::connect_failed
   },
 
-  []( err1 e ) -> U
+  []( api_error e ) -> data
   {
-    // Handle any other err1 value
+    // Handle any other api_error value
   },
 
-  []() -> U
+  []() -> data
   {
     // Handle any other failure
   } );
@@ -300,7 +298,7 @@ U r = leaf::try_handle_all(
 [.text-right]
 <<try_handle_all>>
 
-The `leaf::try_handle_all` function enforces at compile time that at least one of the supplied error handlers takes no arguments (and therefore is able to handle any failure). In addition, all error handlers are forced to return a valid `U`, rather than a `leaf::result<U>`, so that `leaf::try_handle_all` is guaranteed to succeed, always.
+The `leaf::try_handle_all` function enforces at compile time that at least one of the supplied error handlers takes no arguments (and therefore is able to handle any failure). In addition, all error handlers are forced to return a valid object rather than a `leaf::result`, so that `leaf::try_handle_all` is guaranteed to succeed.
 
 '''
 
@@ -310,29 +308,27 @@ It is of course possible to provide different handlers for different error types
 
 [source,c++]
 ----
-enum class err1 { e1, e2, e3 };
-enum class err2 { e1, e2 };
+enum class api_error { connect_failed, invalid_request, timeout };
+enum class auth_error { unauthorized, forbidden };
 
 ....
 
-leaf::result<U> r = leaf::try_handle_some(
+leaf::result<data> r = leaf::try_handle_some(
 
-  []() -> leaf::result<U>
+  []() -> leaf::result<data>
   {
-    BOOST_LEAF_AUTO(v1, f1());
-    BOOST_LEAF_AUTO(v2, f2());
-
-    return g(v1, v2);
+    BOOST_LEAF_AUTO(c, connect());
+    return fetch(c);
   },
 
-  []( err1 e ) -> leaf::result<U>
+  []( api_error e ) -> leaf::result<data>
   {
-    // Handle errors of type `err1`.
+    // Handle errors of type `api_error`.
   },
 
-  []( err2 e ) -> leaf::result<U>
+  []( auth_error e ) -> leaf::result<data>
   {
-    // Handle errors of type `err2`.
+    // Handle errors of type `auth_error`.
   } );
 ----
 [.text-right]
@@ -340,8 +336,8 @@ leaf::result<U> r = leaf::try_handle_some(
 
 Error handlers are always considered in order:
 
-* The first error handler will be used if an error object of type `err1` is available;
-* otherwise, the second error handler will be used if an error object of type `err2` is available;
+* The first error handler will be used if an error object of type `api_error` is available;
+* otherwise, the second error handler will be used if an error object of type `auth_error` is available;
 * otherwise, `leaf::try_handle_some` fails.
 
 '''
@@ -354,7 +350,7 @@ The `leaf::new_error` function can be invoked with multiple error objects, for e
 ----
 enum class io_error { open_error, read_error, write_error };
 
-struct e_file_name { std::string value; }
+struct e_file_name { std::string value; };
 
 leaf::result<File> open_file( char const * name )
 {
@@ -371,20 +367,20 @@ Similarly, error handlers may take multiple error objects as arguments:
 
 [source,c++]
 ----
-leaf::result<U> r = leaf::try_handle_some(
+leaf::result<T> r = leaf::try_handle_some(
 
-  []() -> leaf::result<U>
+  []() -> leaf::result<T>
   {
     BOOST_LEAF_AUTO(f, open_file(fn));
     ....
   },
 
-  []( io_error ec, e_file_name fn ) -> leaf::result<U>
+  []( io_error ec, e_file_name fn ) -> leaf::result<T>
   {
     // Handle I/O errors when a file name is also available.
   },
 
-  []( io_error ec ) -> leaf::result<U>
+  []( io_error ec ) -> leaf::result<T>
   {
     // Handle I/O errors when no file name is available.
   } );
@@ -394,7 +390,7 @@ leaf::result<U> r = leaf::try_handle_some(
 
 Once again, error handlers are considered in order:
 
-* The first error handler will be used if an error object of type `io_error` _and_ an error_object of type `e_file_name` are available;
+* The first error handler will be used if an error object of type `io_error` _and_ an error object of type `e_file_name` are available;
 * otherwise, the second error handler will be used if an error object of type `io_error` is available;
 * otherwise, `leaf::try_handle_some` fails.
  
@@ -402,15 +398,15 @@ An alternative way to write the above is to provide a single error handler that 
 
 [source,c++]
 ----
-leaf::result<U> r = leaf::try_handle_some(
+leaf::result<T> r = leaf::try_handle_some(
 
-  []() -> leaf::result<U>
+  []() -> leaf::result<T>
   {
     BOOST_LEAF_AUTO(f, open_file(fn));
     ....
   },
 
-  []( io_error ec, e_file_name const * fn ) -> leaf::result<U>
+  []( io_error ec, e_file_name const * fn ) -> leaf::result<T>
   {
     if( fn )
       .... // Handle I/O errors when a file name is also available.
@@ -428,7 +424,7 @@ TIP: When an error handler takes arguments by mutable reference or pointer, chan
 [[tutorial-augmenting_errors]]
 === Augmenting Errors
 
-Let's say we have a function `parse_line` which could fail due to an `io_error` or  a `parse_error`:
+Let's say we have a function `parse_line` which could fail due to an `io_error` or a `parse_error`:
 
 [source,c++]
 ----
@@ -587,14 +583,14 @@ leaf::try_catch(
 [.text-right]
 <<try_catch>>
 
-We did not have to change the error handlers! But how does this work? What kind of exceptions does `process_file` throw?
+We did not have to change the error handlers! But how does this work? What kind of exceptions would `process_file` throw?
 
 LEAF enables a novel exception handling technique, which does not require an exception type hierarchy to classify failures and does not carry data in exception objects. Recall that when failures are communicated via `leaf::result`, we call `leaf::new_error` in a `return` statement, passing any number of error objects which are sent directly to the correct error handling scope:
 
 [source,c++]
 ----
-enum class err1 { e1, e2, e3 };
-enum class err2 { e1, e2 };
+enum class api_error { connect_failed, invalid_request, timeout };
+enum class auth_error { unauthorized, forbidden };
 
 ....
 
@@ -602,7 +598,7 @@ leaf::result<T> f()
 {
   ....
   if( error_detected )
-    return leaf::new_error(err1::e1, err2::e2);
+    return leaf::new_error(api_error::connect_failed, auth_error::forbidden);
 
   // Produce and return a T.
 }
@@ -614,13 +610,13 @@ When using exception handling this becomes:
 
 [source,c++]
 ----
-enum class err1 { e1, e2, e3 };
-enum class err2 { e1, e2 };
+enum class api_error { connect_failed, invalid_request, timeout };
+enum class auth_error { unauthorized, forbidden };
 
 T f()
 {
   if( error_detected )
-    leaf::throw_exception(err1::e1, err2::e2);
+    leaf::throw_exception(api_error::connect_failed, auth_error::forbidden);
 
   // Produce and return a T.
 }
@@ -630,14 +626,14 @@ T f()
 
 The `leaf::throw_exception` function handles the passed error objects just like `leaf::new_error` does, and then throws an object of a type that derives from `std::exception`. Using this technique, the exception type is not important: `leaf::try_catch` catches all exceptions, then goes through the usual LEAF error handler selection routine.
 
-If instead we want to use the usual convention of throwing different types to indicate different failures, we simply pass an exception object (that is, an object of a type that derives from `std::exception`) as the first argument to `leaf::throw_exception`:
+If instead we want to use the standard convention of throwing different types to indicate different failures, we simply pass an exception object (that is, an object of a type that derives from `std::exception`) as the first argument to `leaf::throw_exception`:
 
 [source,c++]
 ----
-leaf::throw_exception(std::runtime_error("Error!"), err1::e1, err2::e2);
+leaf::throw_exception(std::runtime_error("Error!"), api_error::connect_failed, auth_error::forbidden);
 ----
 
-In this case the thrown exception object will be of type that derives from `std::runtime_error`, rather than from `std::exception`.
+In this case the thrown exception object will be of a type that derives from `std::runtime_error`, rather than from `std::exception`.
 
 Finally, `leaf::on_error` "just works" as well. Here is our `process_file` function rewritten to work with exceptions, rather than return a `leaf::result` (see <<tutorial-augmenting_errors>>):
 
@@ -782,7 +778,6 @@ lib3::result<int> r = leaf::try_handle_some(
   {
     // Handle lib2::error_code
   } );
-}
 ----
 [.text-right]
 <<try_handle_some>>
@@ -798,7 +793,7 @@ Alas, this is not always possible.
 
 For example, the error may need to be communicated through uncooperative 3rd-party interfaces. To facilitate this transmission, an error ID may be encoded in a `std::error_code`. As long as a 3rd-party interface is able to transport a `std::error_code`, it can be compatible with LEAF.
 
-Further, it is sometimes necessary to communicate errors through an interface that does not even use `std::error_code`. An example of this is when an external lower-level library throws an exception, which is unlikely to be able to carry an `error_id`.
+Further, it is sometimes necessary to communicate errors through an interface that does not even use `std::error_code`. An example of this is when an external low level library throws an exception, which is unlikely to be able to carry an `error_id`.
 
 To support this tricky use case, LEAF provides the function <<current_error>>, which returns the error ID returned by the most recent call (from this thread) to <<new_error>>. One possible approach to solving the problem is to use the following logic (implemented by the <<error_monitor>> type):
 
@@ -885,7 +880,7 @@ leaf::result<void> operation( char const * file_name ) noexcept
 <1> Success! Use `r.value()`.
 <2> `try_something` has failed; `compute_info` will only be called if an error handler exists in the call stack which takes a `info` argument.
 +
-* If we pass a function that takes a single argument of some type `E &`, LEAF calls the function with the object of type `E` currently loaded in an active `context`, associated with the error. If no such object is available, a new one is default-initialized and then passed to the function.
+* If we pass a function that takes a single argument of some reference type `E &`, LEAF calls the function with the object of type `E` currently loaded in an active `context`, associated with the error. If no such object is available, a new one is default-initialized and then passed to the function.
 +
 For example, if an operation that involves many different files fails, a program may provide for collecting all relevant file names in a `e_relevant_file_names` object:
 +
@@ -1000,15 +995,15 @@ Consider this error code enum:
 
 [source,c++]
 ----
-enum class my_error
+enum class validation_error
 {
-  e1=1,
-  e2,
-  e3
+  empty_field = 1,
+  invalid_format,
+  out_of_range
 };
 ----
 
-We could handle `my_error` errors like so:
+We could handle `validation_error` errors like so:
 
 [source,c++]
 ----
@@ -1016,27 +1011,28 @@ return leaf::try_handle_some(
 
   []
   {
-    return f(); // Returns leaf::result<T>
+    return validate_input(); // Returns leaf::result<input>
   },
 
-  []( my_error e ) // handle my_error objects
+  []( validation_error e )
   {
     switch(e)
     {
-      case my_error::e1:
-        ....; // Handle e1 error values
+      case validation_error::empty_field:
+        ....; // Handle empty_field errors
         break;
-      case my_error::e2:
-      case my_error::e3:
-        ....; // Handle e2 and e3 error values
+      case validation_error::invalid_format:
+      case validation_error::out_of_range:
+        ....; // Handle invalid_format and out_of_range errors
         break;
       default:
-        ....; // Handle bad my_error values
+        ....; // Handle unexpected validation_error values
         break;
+    }
   } );
 ----
 
-If a `my_error` object is available, LEAF will call our error handler. If not, the failure will be forwarded to the caller.
+If a `validation_error` object is available, LEAF will call our error handler. If not, the failure will be forwarded to the caller.
 
 This can be rewritten using the <<match>> predicate to organize the different cases in different error handlers. The following is equivalent:
 
@@ -1046,22 +1042,22 @@ return leaf::try_handle_some(
 
   []
   {
-    return f(); // returns leaf::result<T>
+    return validate_input(); // Returns leaf::result<input>
   },
 
-  []( leaf::match<my_error, my_error::e1> m )
+  []( leaf::match<validation_error, validation_error::empty_field> m )
   {
-    assert(m.matched == my_error::e1);
+    assert(m.matched == validation_error::empty_field);
     ....;
   },
 
-  []( leaf::match<my_error, my_error::e2, my_error::e3> m )
+  []( leaf::match<validation_error, validation_error::invalid_format, validation_error::out_of_range> m )
   {
-    assert(m.matched == my_error::e2 || m.matched == my_error::e3);
+    assert(m.matched == validation_error::invalid_format || m.matched == validation_error::out_of_range);
     ....;
   },
 
-  []( my_error e )
+  []( validation_error e )
   {
     ....;
   } );
@@ -1103,7 +1099,7 @@ The following predicates are available:
 * <<match>>: as described above.
 * <<match_value>>: where `match<E, V...>` compares the object `e` of type `E` with the values `V...`, `match_value<E, V...>` compare `e.value` with the values `V...`.
 * <<match_member>>: similar to `match_value`, but takes a pointer to the data member to compare; that is, `match_member<&E::value, V...>` is equivalent to `match_value<E, V...>`. Note, however, that `match_member` requires {CPP}17 or newer, while `match_value` does not.
-* `<<catch_>><Ex...>`: Similar to `match`, but checks whether the caught `std::exception` object can be `dynamic_cast` to any of the `Ex` types.
+* `<<catch_>><Ex...>`: Similar to `match`, but checks whether the caught `std::exception` object can be `dynamic_cast` to any of the `Ex...` types.
 * <<if_not>> is a special predicate that takes any other predicate `Pred` and requires that an error object of type `E` is available and that `Pred` evaluates to `false`. For example, `if_not<match<E, V...>>` requires that an object `e` of type `E` is available, and that it does not compare equal to any of the specified `V...`.
 
 The predicate system is easily extensible, see <<predicates,Predicates>>.
@@ -1119,26 +1115,26 @@ Consider this snippet:
 
 [source,c++]
 ----
-leaf::try_handle_all(
+config cfg = leaf::try_handle_all(
 
   [&]
   {
-    return f(); // returns leaf::result<T>
+    return load_config_file(config_path); // returns leaf::result<config>
   },
 
-  [](my_error_enum x)
+  [](api_error e) -> config
   {
-    ...
+    ....
   },
 
-  [](read_file_error_enum y, e_file_name const & fn)
+  [](io_error e, e_file_name const & fn) -> config
   {
-    ...
+    ....
   },
 
-  []
+  []() -> config
   {
-    ...
+    ....
   });
 ----
 
@@ -1149,26 +1145,26 @@ If we need to attempt a different set of operations yet use the same handlers, w
 
 [source,c++]
 ----
-leaf::try_handle_all(
+config cfg = leaf::try_handle_all(
 
   [&]
   {
-    return g(); // returns leaf::result<T>
+    return load_config_file(fallback_path); // returns leaf::result<config>
   },
 
-  [](my_error_enum x)
+  [](api_error e) -> config
   {
-    ...
+    ....
   },
 
-  [](read_file_error_enum y, e_file_name const & fn)
+  [](io_error e, e_file_name const & fn) -> config
   {
-    ...
+    ....
   },
 
-  []
+  []() -> config
   {
-    ...
+    ....
   });
 ----
 
@@ -1176,52 +1172,52 @@ That works, but it is also possible to bind the error handlers in a `std::tuple`
 
 [source,c++]
 ----
-auto error_handlers = std::make_tuple(
+auto load_config_error_handlers = std::make_tuple(
 
-  [](my_error_enum x)
+  [](api_error e) -> config
   {
-    ...
+    ....
   },
 
-  [](read_file_error_enum y, e_file_name const & fn)
+  [](io_error e, e_file_name const & fn) -> config
   {
-    ...
+    ....
   },
 
-  []
+  []() -> config
   {
-    ...
+    ....
   });
 ----
 
-The `error_handlers` tuple can later be used with any error handling function:
+The `load_config_error_handlers` tuple can later be used with any error handling function:
 
 [source,c++]
 ----
-leaf::try_handle_all(
+config cfg1 = leaf::try_handle_all(
 
   [&]
   {
-    // Operations which may fail <1>
+    return load_config_file(config_path); // <1>
   },
 
-  error_handlers );
+  load_config_error_handlers );
 
-leaf::try_handle_all(
+config cfg2 = leaf::try_handle_all(
 
   [&]
   {
-    // Different operations which may fail <2>
+    return load_config_file(fallback_path); // <2>
   },
 
-  error_handlers ); <3>
+  load_config_error_handlers ); // <3>
 ----
 [.text-right]
 <<try_handle_all>> | <<error_info>>
 
 <1> One set of operations which may fail...
 <2> A different set of operations which may fail...
-<3> ... both using the same `error_handlers`.
+<3> ... both using the same `load_config_error_handlers`.
 
 Error handling functions accept a `std::tuple` of error handlers in place of any error handler. The behavior is as if the tuple is unwrapped in-place.
 
@@ -1275,7 +1271,7 @@ return leaf::try_handle_some(
   {
     BOOST_LEAF_AUTO(r, fut.get());
     //Success!
-    return { }
+    return { };
   },
 
   [](E1 e1, E2 e2)
@@ -1521,68 +1517,31 @@ Remarkably, because the classification of the failure does not depend on error c
 [[tutorial-exception_to_result]]
 === Converting Exceptions to `result<T>`
 
-It is sometimes necessary to catch exceptions thrown by a lower-level library function, and report the error through different means, to a higher-level library which may not use exception handling.
-
-TIP: Error handlers that take arguments of types that derive from `std::exception` work correctly -- regardless of whether the error object itself is thrown as an exception, or <<tutorial-loading,loaded>> into a <<context>>. The technique described here is only needed when the exception must be communicated through functions which are not exception-safe, or are compiled with exception handling disabled.
-
-Suppose we have an exception type hierarchy and a function `compute_answer_throws`:
+When integrating a library that throws exceptions into code that uses `result<T>`, use `exception_to_result` to convert exceptions at the boundary:
 
 [source,c++]
 ----
-class error_base: public std::exception { };
-class error_a: public error_base { };
-class error_b: public error_base { };
-class error_c: public error_base { };
+struct parse_error: std::exception { };
+struct syntax_error: parse_error { };
+struct encoding_error: parse_error { };
 
-int compute_answer_throws()
+json_value parse_json(char const * str); // Throws parse_error
+
+leaf::result<json_value> safe_parse_json(char const * str) noexcept
 {
-  switch( rand()%4 )
-  {
-    default: return 42;
-    case 1: throw error_a();
-    case 2: throw error_b();
-    case 3: throw error_c();
-  }
-}
-----
-
-We can write a simple wrapper using `exception_to_result`, which calls `compute_answer_throws` and switches to `result<int>` for error handling:
-
-[source,c++]
-----
-leaf::result<int> compute_answer() noexcept
-{
-  return leaf::exception_to_result<error_a, error_b>(
-    []
+  return leaf::exception_to_result<syntax_error, encoding_error>(
+    [&]
     {
-      return compute_answer_throws();
+      return parse_json(str);
     } );
 }
 ----
-
 [.text-right]
 <<result>> | <<exception_to_result>>
 
-The `exception_to_result` template takes any number of exception types. All exception types thrown by the passed function are caught, and an attempt is made to convert the exception object to each of the specified types. Each successfully-converted slice of the caught exception object, as well as the return value of `std::current_exception`, are copied and <<tutorial-loading,loaded>>, and in the end the exception is converted to a `<<result>><T>` object.
+The template arguments specify which exception types to capture as error objects. All exceptions are caught, and for each type listed, LEAF attempts a `dynamic_cast` and loads a copy of that slice. The `std::current_exception()` is also captured, so unlisted exception types can still be handled.
 
-(In our example, `error_a` and `error_b` slices as communicated as error objects, but `error_c` exceptions will still be captured by `std::exception_ptr`).
-
-Here is a simple function which prints successfully computed answers, forwarding any error (originally reported by throwing an exception) to its caller:
-
-[source,c++]
-----
-leaf::result<void> print_answer() noexcept
-{
-  BOOST_LEAF_AUTO(answer, compute_answer());
-  std::cout << "Answer: " << answer << std::endl;
-  return { };
-}
-----
-
-[.text-right]
-<<result>> | <<BOOST_LEAF_AUTO>>
-
-Finally, here is the scope that handles the errors -- it will work correctly regardless of whether `error_a` and `error_b` objects are thrown as exceptions or not.
+Errors can then be handled normally:
 
 [source,c++]
 ----
@@ -1590,186 +1549,75 @@ leaf::try_handle_all(
 
   []() -> leaf::result<void>
   {
-    BOOST_LEAF_CHECK(print_answer());
+    BOOST_LEAF_AUTO(doc, safe_parse_json(input));
+    process(doc);
     return { };
   },
 
-  [](error_a const & e)
+  [](syntax_error const &)
   {
-    std::cerr << "Error A!" << std::endl;
+    std::cerr << "JSON syntax error" << std::endl;
   },
 
-  [](error_b const & e)
+  [](encoding_error const &)
   {
-    std::cerr << "Error B!" << std::endl;
+    std::cerr << "Invalid encoding" << std::endl;
   },
 
   []
   {
-    std::cerr << "Unknown error!" << std::endl;
+    std::cerr << "Unknown error" << std::endl;
   } );
 ----
-
 [.text-right]
-<<try_handle_all>> | <<result>> | <<BOOST_LEAF_CHECK>>
+<<try_handle_all>> | <<result>> | <<BOOST_LEAF_AUTO>>
 
-NOTE: The complete program illustrating this technique is available https://github.com/boostorg/leaf/blob/master/example/exception_to_result.cpp?ts=4[here].
+TIP: Handlers that take exception types work the same way whether the object was thrown or loaded via `exception_to_result`.
 
 '''
 
 [[tutorial-on_error_in_c_callbacks]]
-=== Using `error_monitor` to Report Arbitrary Errors from C-callbacks
+=== Using `error_monitor` to Report Errors from C Callbacks
 
-Communicating information pertaining to a failure detected in a C callback is tricky, because C callbacks are limited to a specific function signature, which may not use {CPP} types.
+C callbacks have fixed signatures that cannot return {CPP} types like `leaf::result<T>`. The <<error_monitor>> class solves this problem.
 
-LEAF makes this easy. As an example, we'll write a program that uses Lua and reports a failure from a {CPP} function registered as a C callback, called from a Lua program. The failure will be propagated from {CPP}, through the Lua interpreter (written in C), back to the {CPP} function which called it.
-
-C/{CPP} functions designed to be invoked from a Lua program must use the following signature:
-
-[source,c]
-----
-int do_work( lua_State * L ) ;
-----
-
-Arguments are passed on the Lua stack (which is accessible through `L`). Results too are pushed onto the Lua stack.
-
-First, let's initialize the Lua interpreter and register a function, `do_work`, as a C callback available for Lua programs to call:
+Consider a C library that invokes a user-provided callback:
 
 [source,c++]
 ----
-std::shared_ptr<lua_State> init_lua_state() noexcept
+enum class parse_error { unexpected_token, invalid_syntax };
+
+int on_element(void * ctx, char const * data)
 {
-  std::shared_ptr<lua_State> L(lua_open(), &lua_close); //<1>
-
-  lua_register(&*L, "do_work", &do_work); //<2>
-
-  luaL_dostring(&*L, "\ //<3>
-\n  function call_do_work()\
-\n    return do_work()\
-\n  end");
-
-  return L;
+  if( <<error-detected>> )
+  {
+    leaf::new_error(parse_error::unexpected_token);
+    return -1;
+  }
+  return 0;
 }
 ----
-<1> Create a new `lua_State`. We'll use `std::shared_ptr` for automatic cleanup.
-<2> Register the `do_work` {CPP} function as a C callback, under the global name `do_work`. With this, calls from Lua programs to `do_work` will land in the `do_work` {CPP} function.
-<3> Pass some Lua code as a `C` string literal to Lua. This creates a global Lua function called `call_do_work`, which we will later ask Lua to execute.
+[.text-right]
+<<new_error>>
 
-Next, let's define our `enum` used to communicate `do_work` failures:
-
-[source,c++]
-----
-enum do_work_error_code
-{
-  ec1=1,
-  ec2
-};
-----
-
-We're now ready to define the `do_work` callback function:
+The callback calls `new_error` to associate error objects with the failure, then returns an error code to the C library. The wrapper function uses `error_monitor` to retrieve the `error_id`:
 
 [source,c++]
 ----
-int do_work( lua_State * L ) noexcept
+leaf::result<document> parse(char const * input)
 {
-  bool success = rand() % 2; <1>
-  if( success )
-  {
-    lua_pushnumber(L, 42); <2>
-    return 1;
-  }
+  leaf::error_monitor cur_err;
+
+  if( c_library_parse(input, &on_element, nullptr) != 0 )
+    return cur_err.assigned_error_id();
   else
-  {
-    (void) leaf::new_error(ec1); <3>
-    return luaL_error(L, "do_work_error"); <4>
-  }
+    return make_document();
 }
 ----
 [.text-right]
-<<new_error>> | <<error_id::load>>
+<<result>> | <<error_monitor>>
 
-<1> "Sometimes" `do_work` fails.
-<2> In case of success, push the result on the Lua stack, return back to Lua.
-<3> Generate a new `error_id` and associate a `do_work_error_code` with it. Normally, we'd return this in a `leaf::result<T>`, but the `do_work` function signature (required by Lua) does not permit this.
-<4> Tell the Lua interpreter to abort the Lua program.
-
-Now we'll write the function that calls the Lua interpreter to execute the Lua function `call_do_work`, which in turn calls `do_work`. We'll return `<<result>><int>`, so that our caller can get the answer in case of success, or an error:
-
-[source,c++]
-----
-leaf::result<int> call_lua( lua_State * L )
-{
-  lua_getfield(L, LUA_GLOBALSINDEX, "call_do_work");
-
-  error_monitor cur_err;
-  if( int err = lua_pcall(L, 0, 1, 0) ) <1>
-  {
-    auto load = leaf::on_error(e_lua_error_message{lua_tostring(L,1)}); <2>
-    lua_pop(L,1);
-
-    return cur_err.assigned_error_id().load(e_lua_pcall_error{err}); <3>
-  }
-  else
-  {
-    int answer = lua_tonumber(L, -1); <4>
-    lua_pop(L, 1);
-    return answer;
-  }
-}
-----
-[.text-right]
-<<result>> | <<on_error>> | <<error_monitor>>
-
-<1> Ask the Lua interpreter to call the global Lua function `call_do_work`.
-<2> `on_error` works as usual.
-<3> `load` will use the `error_id` generated in our Lua callback. This is the same `error_id` the `on_error` uses as well.
-<4> Success! Just return the `int` answer.
-
-Finally, here is the `main` function which exercises `call_lua`, each time handling any failure:
-
-[source,c++]
-----
-int main() noexcept
-{
-  std::shared_ptr<lua_State> L=init_lua_state();
-
-  for( int i=0; i!=10; ++i )
-  {
-    leaf::try_handle_all(
-
-      [&]() -> leaf::result<void>
-      {
-        BOOST_LEAF_AUTO(answer, call_lua(&*L));
-        std::cout << "do_work succeeded, answer=" << answer << '\n'; <1>
-        return { };
-      },
-
-      [](do_work_error_code e) <2>
-      {
-        std::cout << "Got do_work_error_code = " << e <<  "!\n";
-      },
-
-      [](e_lua_pcall_error const & err, e_lua_error_message const & msg) <3>
-      {
-        std::cout << "Got e_lua_pcall_error, Lua error code = " << err.value << ", " << msg.value << "\n";
-      },
-
-      [](leaf::error_info const & unmatched)
-      {
-        std::cerr << "Unknown failure detected\n" << unmatched;
-      } );
-  }
-----
-[.text-right]
-<<try_handle_all>> | <<result>> | <<BOOST_LEAF_AUTO>> | <<error_info>>
-
-<1> If the call to `call_lua` succeeded, just print the answer.
-<2> Handle `do_work` failures.
-<3> Handle all other `lua_pcall` failures.
-
-NOTE: Follow this link to see the complete program: https://github.com/boostorg/leaf/blob/master/example/lua_callback_result.cpp?ts=4[lua_callback_result.cpp].
-
-TIP: When using Lua with {CPP}, we need to protect the Lua interpreter from exceptions that may be thrown from {CPP} functions installed as `lua_CFunction` callbacks. Here is the program from this section rewritten to use a {CPP} exception (instead of `leaf::result`) to safely communicate errors out of the `do_work` function: https://github.com/boostorg/leaf/blob/master/example/lua_callback_exceptions.cpp?ts=4[lua_callback_exceptions.cpp].
+If `new_error` was called inside the callback, `assigned_error_id` returns that `error_id`. Otherwise, it calls `new_error` and returns a fresh `error_id`. Either way, the caller can handle the failure normally.
 
 '''
 
@@ -1792,7 +1640,7 @@ leaf::try_handle_all(
 
   []() -> leaf::result<void> <1>
   {
-    ...
+    ....
     return leaf::new_error( error_code::write_error, leaf::e_file_name{ "file.txt" } );
   },
 
@@ -1840,7 +1688,7 @@ struct e_errno
 };
 ----
 
-The `e_errno` type above is designed to hold `errno` values. The defined `operator<<` overload will automatically include the output from `strerror` when `e_errno` values are printed (LEAF defines `e_errno` in `<boost/leaf/common.hpp>`, together with other commonly-used error types).
+The `e_errno` type above is designed to hold `errno` values. The defined `operator<<` overload will automatically include the output from `strerror` when `e_errno` values are printed (LEAF defines `e_errno` in `<boost/leaf/common.hpp>`, together with other commonly used error types).
 
 Using `diagnostic_details` comes at a cost. Normally, when the program attempts to communicate error objects of types which are not used in any error handling scope in the current call stack, they are discarded, which saves cycles. However, if an error handler is provided that takes `diagnostic_details` argument, such objects are stored on the heap instead of being discarded.
 
@@ -1852,7 +1700,7 @@ leaf::try_handle_all(
 
   []() -> leaf::result<void>
   {
-    ...
+    ....
     return leaf::new_error( error_code::write_error, leaf::e_file_name{ "file.txt" } );
   },
 
@@ -1878,7 +1726,7 @@ Caught:
 
 Notice how we are missing the `Diagnostic details:` section. That's because the `e_file_name` object was discarded by LEAF, since no error handler needed it.
 
-TIP: The automatically-generated diagnostic messages are developer-friendly, but not user-friendly.
+TIP: The automatically generated diagnostic messages are developer-friendly, but not user-friendly.
 
 '''
 
@@ -1895,35 +1743,35 @@ Let's say we have this `enum`:
 
 [source,c++]
 ----
-enum class libfoo_error
+enum class file_error
 {
-  e1 = 1,
-  e2,
-  e3
+  not_found = 1,
+  permission_denied,
+  disk_full
 };
 ----
 
-We want to be able to transport `libfoo_error` values in `std::error_code` objects. This erases their static type, which enables them to travel freely across API boundaries. To this end, we must define a `std::error_category` that represents our `libfoo_error` type:
+We want to be able to transport `file_error` values in `std::error_code` objects. This erases their static type, which enables them to travel freely across API boundaries. To this end, we must define a `std::error_category` that represents our `file_error` type:
 
 [source,c++]
 ----
-std::error_category const & libfoo_error_category()
+std::error_category const & file_error_category()
 {
   struct category: std::error_category
   {
     char const * name() const noexcept override
     {
-      return "libfoo";
+      return "file_error";
     }
 
     std::string message(int code) const override
     {
-      switch( libfoo_error(code) )
+      switch( file_error(code) )
       {
-        case libfoo_error::e1: return "e1";
-        case libfoo_error::e2: return "e2";
-        case libfoo_error::e3: return "e3";
-        default: return "error";
+        case file_error::not_found: return "file not found";
+        case file_error::permission_denied: return "permission denied";
+        case file_error::disk_full: return "disk full";
+        default: return "unknown file error";
       }
     }
   };
@@ -1933,39 +1781,39 @@ std::error_category const & libfoo_error_category()
 }
 ----
 
-We also need to inform the standard library that `libfoo_error` is compatible with `std::error_code`, and provide a factory function which can be used to make `std::error_code` objects out of `libfoo_error` values:
+We also need to inform the standard library that `file_error` is compatible with `std::error_code`, and provide a factory function which can be used to make `std::error_code` objects out of `file_error` values:
 
 [source,c++]
 ----
 namespace std
 {
   template <>
-  struct is_error_code_enum<libfoo_error>: std::true_type
+  struct is_error_code_enum<file_error>: std::true_type
   {
   };
 }
 
-std::error_code make_error_code(libfoo_error e)
+std::error_code make_error_code(file_error e)
 {
-  return std::error_code(int(e), libfoo_error_category());
+  return std::error_code(int(e), file_error_category());
 }
 ----
 
-With this in place, if we receive a `std::error_code`, we can easily check if it represents some of the `libfoo_error` values we're interested in:
+With this in place, if we receive a `std::error_code`, we can easily check if it represents some of the `file_error` values we're interested in:
 
 [source,c++]
 ----
-std::error_code f();
+std::error_code read_file();
 
 ....
-auto ec = f();
-if( ec == libfoo_error::e1 || ec == libfoo_error::e2 )
+auto ec = read_file();
+if( ec == file_error::not_found || ec == file_error::permission_denied )
 {
-  // We got either a libfoo_error::e1 or a libfoo_error::e2
+  // We got either file_error::not_found or file_error::permission_denied
 }
 ----
 
-This works because the standard library detects that `std::is_error_code_enum<libfoo_error>::value` is `true`, and then uses `make_error_code` to create a `std::error_code` object it actually uses to compare to `ec`.
+This works because the standard library detects that `std::is_error_code_enum<file_error>::value` is `true`, and then uses `make_error_code` to create a `std::error_code` object it actually uses to compare to `ec`.
 
 So far so good, but remember, the standard library defines another type also, `std::error_condition`. The first confusing thing is that in terms of its physical representation, `std::error_condition` is identical to `std::error_code`; that is, it is also like a pair of `std::error_category` reference and an `int`. Why do we need two different types which use identical physical representation?
 
@@ -1973,67 +1821,66 @@ The key to answering this question is to understand that `std::error_code` objec
 
 This leads us to the second confusing thing about `std::error_condition`: it uses the same `std::error_category` type, but for a completely different purpose: to specify what `std::error_code` values are equivalent to what `std::error_condition` values.
 
-Let's say that in addition to `libfoo`, our program uses another library, `libbar`, which communicates failures in terms of `std::error_code` with a different error category. Perhaps `libbar_error` looks like this:
+Let's say that in addition to `file_error`, our program uses a network library which communicates failures in terms of `std::error_code` with a different error category:
 
 [source,c++]
 ----
-enum class libbar_error
+enum class net_error
 {
-  e1 = 1,
-  e2,
-  e3,
-  e4
+  connection_refused = 1,
+  timeout,
+  host_unreachable,
+  dns_failed
 };
 
 // Boilerplate omitted:
-// - libbar_error_category()
+// - net_error_category()
 // - specialization of std::is_error_code_enum
-// - make_error_code factory function for libbar_error.
+// - make_error_code factory function for net_error.
 ----
 
-We can now use `std::error_condition` to define the _logical_ error conditions represented by the `std::error_code` values communicated by `libfoo` and `libbar`:
+We can now use `std::error_condition` to define _logical_ error conditions that group related `std::error_code` values from both libraries:
 
 [source,c++]
 ----
-enum class my_error_condition <1>
+enum class resource_condition <1>
 {
-  c1 = 1,
-  c2
+  unavailable = 1,
+  access_denied
 };
 
-std::error_category const & libfoo_error_category() <2>
+std::error_category const & resource_condition_category() <2>
 {
   struct category: std::error_category
   {
     char const * name() const noexcept override
     {
-      return "my_error_condition";
+      return "resource_condition";
     }
 
     std::string message(int cond) const override
     {
-      switch( my_error_condition(code) )
+      switch( resource_condition(cond) )
       {
-        case my_error_condition::c1: return "c1";
-        case my_error_condition::c2: return "c2";
-        default: return "error";
+        case resource_condition::unavailable: return "resource unavailable";
+        case resource_condition::access_denied: return "access denied";
+        default: return "unknown condition";
       }
     }
 
     bool equivalent(std::error_code const & code, int cond) const noexcept
     {
-      switch( my_error_condition(cond) )
+      switch( resource_condition(cond) )
       {
-        case my_error_condition::c1: <3>
+        case resource_condition::unavailable: <3>
           return
-            code == libfoo_error::e1 ||
-            code == libbar_error::e3 ||
-            code == libbar_error::e4;
-        case my_error_condition::c2: <4>
+            code == file_error::not_found ||
+            code == net_error::host_unreachable ||
+            code == net_error::dns_failed;
+        case resource_condition::access_denied: <4>
           return
-            code == libfoo_error::e2 ||
-            code == libbar_error::e1 ||
-            code == libbar_error::e2;
+            code == file_error::permission_denied ||
+            code == net_error::connection_refused;
         default:
           return false;
       }
@@ -2047,40 +1894,40 @@ std::error_category const & libfoo_error_category() <2>
 namespace std
 {
   template <> <5>
-  class is_error_condition_enum<my_error_condition>: std::true_type
+  class is_error_condition_enum<resource_condition>: std::true_type
   {
   };
 }
 
-std::error_condition make_error_condition(my_error_condition e) <6>
+std::error_condition make_error_condition(resource_condition e) <6>
 {
-  return std::error_condition(int(e), my_error_condition_error_category());
+  return std::error_condition(int(e), resource_condition_category());
 }
 ----
-<1> Enumeration of the two logical error conditions, `c1` and `c2`.
-<2> Define the `std::error_category` for `std::error_condition` objects that represent a `my_error_condition`.
-<3> Here we specify that any of `libfoo:error::e1`, `libbar_error::e3` and `libbar_error::e4` are logically equivalent to `my_error_condition::c1`, and that...
-<4> ...any of `libfoo:error::e2`, `libbar_error::e1` and `libbar_error::e2` are logically equivalent to `my_error_condition::c2`.
-<5> This specialization tells the standard library that the `my_error_condition` enum is designed to be used with `std::error_condition`.
-<6> The factory function to make `std::error_condition` objects out of `my_error_condition` values.
+<1> Enumeration of the two logical conditions: `unavailable` and `access_denied`.
+<2> Define the `std::error_category` for `std::error_condition` objects that represent a `resource_condition`.
+<3> Here we specify that `file_error::not_found`, `net_error::host_unreachable`, and `net_error::dns_failed` are all logically equivalent to `resource_condition::unavailable`, and that...
+<4> ...`file_error::permission_denied` and `net_error::connection_refused` are logically equivalent to `resource_condition::access_denied`.
+<5> This specialization tells the standard library that the `resource_condition` enum is designed to be used with `std::error_condition`.
+<6> The factory function to make `std::error_condition` objects out of `resource_condition` values.
 
 Phew!
 
-Now, if we have a `std::error_code` object `ec`, we can easily check if it is equivalent to `my_error_condition::c1` like so:
+Now, if we have a `std::error_code` object `ec`, we can easily check if it is equivalent to `resource_condition::unavailable` like so:
 
 [source,c++]
 ----
-if( ec == my_error_condition::c1 )
+if( ec == resource_condition::unavailable )
 {
-  // We have a c1 in our hands
+  // The resource is unavailable (file not found, host unreachable, or DNS failed)
 }
 ----
 
-Again, remember that beyond defining the `std::error_category` for `std::error_condition` objects initialized with a `my_error_condition` value, we don't need to interact with the actual `std::error_condition` instances: they're created when needed to compare to a `std::error_code`, and that's pretty much all they're good for.
+Again, remember that beyond defining the `std::error_category` for `std::error_condition` objects initialized with a `resource_condition` value, we don't need to interact with the actual `std::error_condition` instances: they're created when needed to compare to a `std::error_code`, and that's pretty much all they're good for.
 
 ==== Support in LEAF
 
-The `match` predicate can be used as an argument to a LEAF error handler to match a `std::error_code` with a given error condition. For example, to handle `my_error_condition::c1` (see above), we could use:
+The `match` predicate can be used as an argument to a LEAF error handler to match a `std::error_code` with a given error condition. For example, to handle `resource_condition::unavailable` (see above), we could use:
 
 [source,c++]
 ----
@@ -2088,12 +1935,12 @@ leaf::try_handle_some(
 
   []
   {
-    return f(); // returns leaf::result<T>
+    return open_resource(); // returns leaf::result<resource>
   },
 
-  []( leaf::match<std::error_code, my_error_condition::c1> m )
+  []( leaf::match<std::error_code, resource_condition::unavailable> m )
   {
-    assert(m.matched == my_error_condition::c1);
+    assert(m.matched == resource_condition::unavailable);
     ....
   } );
 ----
@@ -2270,7 +2117,7 @@ namespace boost { namespace leaf {
     int value() const noexcept;
     explicit operator bool() const noexcept;
 
-    std::error_code to_error_code() const noexept;
+    std::error_code to_error_code() const noexcept;
 
     friend bool operator==( error_id a, error_id b ) noexcept;
     friend bool operator!=( error_id a, error_id b ) noexcept;
@@ -2745,7 +2592,7 @@ namespace boost { namespace leaf {
   struct match_member;
 
   template <class E, class T, T E::* P, auto... V>
-  struct member<P, V...>
+  struct match_member<P, V...>
   {
     E matched;
 
@@ -2816,7 +2663,7 @@ namespace boost { namespace leaf {
   // Requires at least C++17
   template <class... E, class TryBlock>
   std::variant<
-    typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+    typename std::decay<decltype(std::declval<TryBlock>()().value())>::type,
     std::tuple<
       std::optional<E>...>>
   to_variant( TryBlock && try_block );
@@ -2903,7 +2750,7 @@ leaf::context_type_from_handlers<decltype(error_handlers)> ctx; <1>
 ----
 <1> `ctx` will be of type `context<e_this, e_that>`, deduced automatically from the specified error handlers.
 
-TIP: Alternatively, a suitable context may be created by calling <<make_context>>, or allocated dynamically by calling <<make_shared_context>>.
+TIP: Alternatively, a suitable context may be created by calling <<make_context>>.
 
 '''
 
@@ -2959,7 +2806,11 @@ int compute_answer_throws();
 //Call compute_answer, convert exceptions to result<int>
 leaf::result<int> compute_answer()
 {
-  return leaf::exception_to_result<ex_type1, ex_type2>(compute_answer_throws());
+  return leaf::exception_to_result<ex_type1, ex_type2>(
+    []
+    {
+      return compute_answer_throws();
+    } );
 }
 ----
 
@@ -2969,7 +2820,7 @@ At a later time we can invoke <<try_handle_some>> / <<try_handle_all>> as usual,
 ----
 return leaf::try_handle_some(
 
-  [] -> leaf::result<void>
+  []() -> leaf::result<void>
   {
     BOOST_LEAF_AUTO(answer, compute_answer());
     //Use answer
@@ -3166,7 +3017,7 @@ The `throw_exception` function is overloaded: it can be invoked with no argument
 ** its `std::exception` subobject is default-initialized;
 ** its `error_id` subobject is initialized by `id.<<error_id::load>>(std::forward<E1>(e1), std::forward<E>(e)...`).
 
-<6> If `exception` is invoked with just an `error_id` object, the thrown exception is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
+<6> If `throw_exception` is invoked with just an `error_id` object, the thrown exception is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
 ** its `std::exception` subobject is default-initialized;
 ** its `error_id` subobject is initialized by copying from `id`.
 
@@ -3204,7 +3055,7 @@ namespace boost { namespace leaf {
 
   template <class... E, class TryBlock>
   std::variant<
-    typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+    typename std::decay<decltype(std::declval<TryBlock>()().value())>::type,
     std::tuple<
       std::optional<E>...>>
   to_variant( TryBlock && try_block );
@@ -3431,7 +3282,6 @@ try_handle_some(
 
     return 1;
   } );
-}
 ----
 +
 [.text-right]
@@ -3784,12 +3634,12 @@ namespace boost { namespace leaf {
 
 `context_activator` is a simple class that activates and deactivates a <<context>> using RAII:
 
-If `<<context::is_active,ctx.is_active>>`() is `true` at the time the `context_activator` is initialized, the constructor and the destructor have no effects. Otherwise:
+If `ctx.<<context::is_active>>()` is `true` at the time the `context_activator` is initialized, the constructor and the destructor have no effects. Otherwise:
 
-* The constructor stores a reference to `ctx` in `*this` and calls `<<context::activate,ctx.activate>>`().
+* The constructor stores a reference to `ctx` in `*this` and calls `ctx.<<context::activate>>()`.
 * The destructor:
 ** Has no effects if `ctx.is_active()` is `false` (that is, it is valid to call <<context::deactivate>> manually, before the `context_activator` object expires);
-** Otherwise, calls `<<context::deactivate,ctx.deactivate>>`().
+** Otherwise, calls `ctx.<<context::deactivate>>()`.
 
 For automatic deduction of `Ctx`, use <<activate_context>>.
 
@@ -3880,7 +3730,7 @@ namespace boost { namespace leaf {
     error_id() noexcept;
 
     template <class Enum>
-    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+    error_id( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
 
     error_id( std::error_code const & ec ) noexcept;
 
@@ -4109,7 +3959,7 @@ The common usage of this class is as follows:
 ----
 error_code compute_value( int * out_value ) noexcept; <1>
 
-leaf::error<int> augmenter() noexcept
+leaf::result<int> augmenter() noexcept
 {
   leaf::error_monitor cur_err; <2>
 
@@ -4841,7 +4691,7 @@ struct my_pred
   static bool evaluate(my_error) noexcept; <2>
 
   my_error matched; <3>
-}
+};
 
 namespace boost { namespace leaf {
 
@@ -4866,7 +4716,7 @@ struct my_pred
   static bool evaluate(leaf::e_errno const &) noexcept; <2>
 
   leaf::e_errno const & matched; <3>
-}
+};
 
 namespace boost { namespace leaf {
 
@@ -5151,7 +5001,7 @@ leaf::try_handle_some(
   []( leaf::match<std::error_code, leaf::category<enum_a>, enum_b::b2> m )
   { <1>
     static_assert(std::is_same<std::error_code const &, decltype(m.matched)>::value);
-    assert(&m.matched.category() == &std::error_code(enum_{}).category() || m.matched == enum_b::b2);
+    assert(&m.matched.category() == &std::error_code(enum_a{}).category() || m.matched == enum_b::b2);
     ....
   } );
 ----
@@ -5190,7 +5040,7 @@ Instead of a set of values, the `match` template can be given pointers to functi
 .Example 5: Handling of failures with severity::value greater than a specified threshold (requires at least {CPP}17).
 [source,c++]
 ----
-struct severity { int value; }
+struct severity { int value; };
 
 template <int S>
 constexpr bool severity_greater_than( severity const & e ) noexcept
@@ -5315,7 +5165,7 @@ TIP: The contents of each Reference section are organized alphabetically.
 === `is_predicate`
 
 [source,c++]
-.#include <boost/leaf/pred.hpp>>
+.#include <boost/leaf/pred.hpp>
 ----
 namespace boost { namespace leaf {
 
@@ -5335,7 +5185,7 @@ The `is_predicate` template is used by the <<handler_selection_procedure,handler
 === `is_result_type`
 
 [source,c++]
-.#include <boost/leaf/error.hpp>>
+.#include <boost/leaf/error.hpp>
 ----
 namespace boost { namespace leaf {
 
@@ -5538,7 +5388,7 @@ The following configuration macros are recognized:
 
 * `BOOST_LEAF_CFG_WIN32`: This macro controls the use of Win32 APIs. If left undefined, LEAF defines it as `0` (even on Windows, since including `windows.h` is generally not desirable). The possible values are:
 ** `0`: Disables all Win32-specific features.
-** `1`: Includes `windows.h` and enables <<e_LastError>> support, which is otherwise stubbed.
+** `1`: Includes `windows.h` and enables <<e_LastError>> support, which is otherwise stubbed out.
 ** `2`: In addition, switches LEAF to using the Win32 TLS API instead of {CPP}11 `thread_local`, enabling error objects to be used across DLL boundaries.
 
 * `BOOST_LEAF_NO_EXCEPTIONS`: Disables all exception handling support. If left undefined, LEAF defines it automatically based on the compiler configuration (e.g. `-fno-exceptions`).
@@ -5631,8 +5481,8 @@ Clone LEAF into any local directory and execute:
 [source,sh]
 ----
 cd leaf
-meson bld/debug
-cd bld/debug
+meson setup _bld/debug
+cd _bld/debug
 meson test
 ----
 
@@ -5659,7 +5509,7 @@ Definition: :: Depending on their interaction with error objects, functions can 
 * *Error neutral*: functions that forward to the caller error objects communicated by lower-level functions they call.
 * *Error handling*: functions that dispose of error objects they have received, recovering normal program operation.
 
-A crucial observation is that _error initiating_ functions are typically low-level functions that lack any context and can not determine, much less dictate, the correct program behavior in response to the errors they may initiate. Error conditions which (correctly) lead to termination in some programs may (correctly) be ignored in others; yet other programs may recover from them and resume normal operation.
+A crucial observation is that _error initiating_ functions are typically low level functions that lack any context and can not determine, much less dictate, the correct program behavior in response to the errors they may initiate. Error conditions which (correctly) lead to termination in some programs may (correctly) be ignored in others; yet other programs may recover from them and resume normal operation.
 
 The same reasoning applies to _error neutral_ functions, but in this case there is the additional issue that the errors they need to communicate, in general, are initiated by functions multiple levels removed from them in the call chain, functions which usually are -- and should be treated as -- implementation details. An _error neutral_ function should not be coupled with error object types communicated by _error initiating_ functions, for the same reason it should not be coupled with any other aspect of their interface.
 
@@ -5681,333 +5531,77 @@ Fact: ::
 
 For example, if a library function is able to communicate an error code but the program does not need to know the exact error code, then that information may be ignored at the time the library function attempts to communicate it. On the other hand, if an _error handling_ function needs that information, the memory needed to store it can be reserved statically in its scope.
 
-The LEAF functions <<try_handle_some>>, <<try_handle_all>> and <<try_catch>> implement this idea. Users provide error handling lambda functions, each taking arguments of the types it needs in order to recover from a particular error condition. LEAF simply provides the space needed to store these types (in the form of a `std::tuple`, using automatic storage duration) until they are passed to a suitable handler.
+The LEAF functions <<try_handle_some>>, <<try_handle_all>> and <<try_catch>> implement this idea. Users provide error handling lambda functions, each taking arguments of the types it needs in order to recover from a particular error condition. LEAF reserves storage for these types (using automatic storage duration) until they are passed to a suitable handler.
 
-At the time this space is reserved in the scope of an error handling function, `thread_local` pointers of the required error types are set to point to the corresponding objects within it. Later on, _error initiating_ or _error neutral_ functions wanting to communicate an error object of a given type `E` use the corresponding `thread_local` pointer to detect if there is currently storage available for this type:
+When an error is reported, LEAF checks if storage is available for each error object type:
 
-* If the pointer is not null, storage is available and the object is moved into the pointed storage, exactly once -- regardless of how many levels of function calls must unwind before an _error handling_ function is reached.
-* If the pointer is null, storage is not available and the error object is discarded, since no error handling function makes any use of it in this program -- saving resources.
+* If storage is available, the object is stored directly in the error handling scope, bypassing all _error neutral_ functions in between.
+* If storage is not available, the error object is discarded, since no error handling function makes any use of it -- saving resources.
 
-This almost works, except we need to make sure that _error handling_ functions are protected from accessing stale error objects stored in response to previous failures, which would be a serious logic error. To this end, each occurrence of an error is assigned a unique <<error_id>>. Each of the `E...` objects stored in error handling scopes is assigned an `error_id` as well, permanently associating it with a particular failure.
+Each error occurrence is assigned a unique <<error_id>>, which prevents handlers from accessing stale error objects from previous failures. To handle a failure, LEAF matches the available error objects (by their `error_id`) with the argument types required by each handler.
 
-Thus, to handle a failure we simply match the available error objects (associated with its unique `error_id`) with the argument types required by each user-provided error handling function. In terms of {CPP} exception handling, it is as if we could write something like:
+== Dynamic Linking
 
-[source,c++]
-----
-try
-{
-  auto r = process_file();
+=== POSIX
 
-  //Success, use r:
-  ....
-}
-
-catch(file_read_error &, e_file_name const & fn, e_errno const & err)
-{
-  std::cerr <<
-    "Could not read " << fn << ", errno=" << err << std::endl;
-}
-
-catch(file_read_error &, e_errno const & err)
-{
-  std::cerr <<
-    "File read error, errno=" << err << std::endl;
-}
-
-catch(file_read_error &)
-{
-  std::cerr << "File read error!" << std::endl;
-}
-----
-
-Of course this syntax is not valid, so LEAF uses lambda functions to express the same idea:
+When compiling with `-fvisibility=hidden`, error types must be declared with `default` visibility. It is recommended to use `BOOST_LEAF_SYMBOL_VISIBLE`, which expands to the appropriate attribute on POSIX and to nothing on Windows:
 
 [source,c++]
 ----
-leaf::try_catch(
-
-  []
-  {
-    auto r = process_file(); //Throws in case of failure, error objects stored inside the try_catch scope
-
-    //Success, use r:
-    ....
-  }
-
-  [](file_read_error &, e_file_name const & fn, e_errno const & err)
-  {
-    std::cerr <<
-      "Could not read " << fn << ", errno=" << err << std::endl;
-  },
-
-  [](file_read_error &, e_errno const & err)
-  {
-    std::cerr <<
-      "File read error, errno=" << err << std::endl;
-  },
-
-  [](file_read_error &)
-  {
-    std::cerr << "File read error!" << std::endl;
-  } );
-----
-
-[.text-right]
-<<try_catch>> | <<e_file_name>> | <<e_errno>>
-
-Similar syntax works without exception handling as well. Below is the same snippet, written using `<<result>><T>`:
-
-[source,c++]
-----
-return leaf::try_handle_some(
-
-  []() -> leaf::result<void>
-  {
-    BOOST_LEAF_AUTO(r, process_file()); //In case of errors, error objects are stored inside the try_handle_some scope
-
-    //Success, use r:
-    ....
-
-    return { };
-  }
-
-  [](leaf::match<error_enum, file_read_error>, e_file_name const & fn, e_errno const & err)
-  {
-    std::cerr <<
-      "Could not read " << fn << ", errno=" << err << std::endl;
-  },
-
-  [](leaf::match<error_enum, file_read_error>, e_errno const & err)
-  {
-    std::cerr <<
-      "File read error, errno=" << err << std::endl;
-  },
-
-  [](leaf::match<error_enum, file_read_error>)
-  {
-    std::cerr << "File read error!" << std::endl;
-  } );
-----
-
-[.text-right]
-<<result>> | <<try_handle_some>> | <<match>> | <<e_file_name>> | <<e_errno>>
-
-== Dynamic linking
-
-When using dynamic linking, on POSIX platforms it is required that error types are declared with `default` visibility, e.g.:
-
-[source,c++]
-----
-struct __attribute__ ((visibility ("default"))) my_error_info
+struct BOOST_LEAF_SYMBOL_VISIBLE my_error_info
 {
     int value;
 };
 ----
 
-On Windows, to use error objects across DLL boundaries, define `BOOST_LEAF_CFG_WIN32=2`. For two modules to be able to share LEAF error objects, it is required that they are both compiled with the same compiler (not necessarily with the same compiler version). For example, if one module is compiled with MSVC and the other with GCC, the error objects will not be shared.
+LEAF declares the following types with `BOOST_LEAF_SYMBOL_VISIBLE`: `error_id`, `error_info`, `diagnostic_info`, `diagnostic_details`, `e_api_function`, `e_file_name`, `e_errno`, `e_type_info_name`, `e_at_line`, `e_source_location`, `bad_result`, `result<T>`.
+
+=== Windows
+
+To use error objects across DLL boundaries, define `BOOST_LEAF_CFG_WIN32=2`. This switches LEAF to using the Win32 TLS API instead of {CPP}11 `thread_local`. Dynamic unloading of DLLs is not supported.
+
+Modules linked against different CRT configurations (static or dynamic) can share LEAF error objects. However, for two modules to share error objects, they must be compiled with the same compiler (not necessarily the same compiler version). For example, if one module is compiled with MSVC and another with GCC, error objects will not be shared between them.
 
 == Alternatives to LEAF
 
-* https://www.boost.org/doc/libs/release/libs/exception/doc/boost-exception.html[Boost Exception]
+* https://en.cppreference.com/w/cpp/utility/expected[`std::expected`] (C++23)
 * https://ned14.github.io/outcome[Boost Outcome]
-* https://github.com/TartanLlama/expected[`tl::expected`]
+* https://www.boost.org/doc/libs/release/libs/exception/doc/boost-exception.html[Boost Exception]
 
-Below we offer a comparison of Boost LEAF to Boost Exception and to Boost Outcome.
+Below we offer a comparison of Boost LEAF to these alternatives.
 
-[[boost_exception]]
-=== Comparison to Boost Exception
+[[std_expected]]
+=== Comparison to `std::expected`
 
-While LEAF can be used without exception handling, in the use case when errors are communicated by throwing exceptions, it can be viewed as a better, more efficient alternative to Boost Exception. LEAF has the following advantages over Boost Exception:
+`std::expected<T, E>`, introduced in C++23, is a vocabulary type for functions that return either a value of type `T` or an error of type `E`. It is similar to `leaf::result<T>` in purpose but differs in design:
 
-* LEAF does not allocate memory dynamically;
-* LEAF does not waste system resources communicating error objects not used by specific error handling functions;
-* LEAF does not store the error objects in the exception object, and therefore it is able to augment exceptions thrown by external libraries (Boost Exception can only augment exceptions of types that derive from `boost::exception`).
+* `std::expected<T, E>` encodes the error type `E` in the function signature. `leaf::result<T>` does not specify an error type; error objects are transported separately.
+* With `std::expected`, a function can only return a single error object of type `E`. LEAF allows associating multiple error objects of different types with a single failure.
+* LEAF's <<on_error>> allows intermediate functions to attach additional context as errors propagate, without modifying function signatures.
 
-The following tables outline the differences between the two libraries which should be considered when code that uses Boost Exception is refactored to use LEAF instead.
-
-NOTE: It is possible to access Boost Exception error information using the LEAF error handling interface. See <<tutorial-boost_exception_integration>>.
-
-.Defining a custom type for transporting values of type T
-[cols="1a,1a",options="header",stripes=none]
-|====
-| Boost Exception | LEAF
-|
-[source,c++,options="nowrap"]
-----
-typedef error_info<struct my_info_,T> my_info;
-----
-[.text-right]
-https://www.boost.org/doc/libs/release/libs/exception/doc/error_info.html[`boost::error_info`]
-|
-[source,c++,options="nowrap"]
-----
-struct my_info { T value; };
-----
-|====
-
-.Passing arbitrary info at the point of the throw
-[cols="1a,1a",options="header",stripes=none]
-|====
-| Boost Exception | LEAF
-|
-[source,c++,options="nowrap"]
-----
-throw my_exception() <<
-  my_info(x) <<
-  my_info(y);
-----
-[.text-right]
-https://www.boost.org/doc/libs/release/libs/exception/doc/exception_operator_shl.html[`operator<<`]
-|
-[source,c++,options="nowrap"]
-----
-leaf::throw_exception( my_exception(),
-  my_info{x},
-  my_info{y} );
-----
-[.text-right]
-<<throw_exception>>
-|====
-
-.Augmenting exceptions in error neutral contexts
-[cols="1a,1a",options="header",stripes=none]
-|====
-| Boost Exception | LEAF
-|
-[source,c++,options="nowrap"]
-----
-try
-{
-  f();
-}
-catch( boost::exception & e )
-{
-  e << my_info(x);
-  throw;
-}
-----
-[.text-right]
-https://www.boost.org/doc/libs/release/libs/exception/doc/exception.html[`boost::exception`] \| https://www.boost.org/doc/libs/release/libs/exception/doc/exception_operator_shl.html[`operator<<`]
-|
-[source,c++,options="nowrap"]
-----
-auto load = leaf::on_error( my_info{x} );
-
-f();
-----
-[.text-right]
-<<on_error>>
-|====
-
-.Obtaining arbitrary info at the point of the catch
-[cols="1a,1a",options="header",stripes=none]
-|====
-| Boost Exception | LEAF
-|
-[source,c++,options="nowrap"]
-----
-try
-{
-  f();
-}
-catch( my_exception & e )
-{
-  if( T * v = get_error_info<my_info>(e) )
-  {
-    //my_info is available in e.
-  }
-}
-----
-[.text-right]
-https://www.boost.org/doc/libs/release/libs/exception/doc/get_error_info.html[`boost::get_error_info`]
-|
-[source,c++,options="nowrap"]
-----
-leaf::try_catch(
-  []
-  {
-    f(); // throws
-  },
-  [](my_exception &, my_info const & x)
-  {
-    //my_info is available with
-    //the caught exception.
-  } );
-----
-[.text-right]
-<<try_catch>>
-|====
-
-.Transporting of error objects
-[cols="1a,1a",options="header",stripes=none]
-|====
-| Boost Exception | LEAF
-| All supplied https://www.boost.org/doc/libs/release/libs/exception/doc/error_info.html[`boost::error_info`] objects are allocated dynamically and stored in the https://www.boost.org/doc/libs/release/libs/exception/doc/exception.html[`boost::exception`] subobject of exception objects.
-|  User-defined error objects are stored statically in the scope of <<try_catch>>, but only if their types are needed to handle errors; otherwise they are discarded.
-|====
-
-.Transporting of error objects across thread boundaries
-[cols="1a,1a",options="header",stripes=none]
-|====
-| Boost Exception | LEAF
-| https://www.boost.org/doc/libs/release/libs/exception/doc/exception_ptr.html[`boost::exception_ptr`] automatically captures https://www.boost.org/doc/libs/release/libs/exception/doc/error_info.html[`boost::error_info`] objects stored in a `boost::exception` and can transport them across thread boundaries.
-| Transporting error objects across thread boundaries requires the use of <<capture>>.
-|====
-
-.Printing of error objects in automatically-generated diagnostic information messages
-[cols="1a,1a",options="header",stripes=none]
-|====
-| Boost Exception | LEAF
-| `boost::error_info` types may define conversion to `std::string` by providing `to_string` overloads *or* by overloading `operator<<` for `std::ostream`.
-| LEAF does not use `to_string`. Error types may define `operator<<` overloads for `std::ostream`.
-|====
-
-[WARNING]
-====
-The fact that Boost Exception stores all supplied `boost::error_info` objects -- while LEAF discards them if they aren't needed -- affects the completeness of the message we get when we print `leaf::<<diagnostic_info>` objects, compared to the string returned by https://www.boost.org/doc/libs/release/libs/exception/doc/diagnostic_information.html[`boost::diagnostic_information`].
-
-If the user requires a complete diagnostic message, the solution is to use `leaf::<<diagnostic_details>>`. In this case, before unused error objects are discarded by LEAF, they are converted to string and printed. Note that this allocates memory dynamically.
-====
+The choice between them depends on whether encoding error types in function signatures is desired, and whether associating multiple error objects with a single failure is needed.
 
 '''
 
 [[boost_outcome]]
 === Comparison to Boost Outcome
 
-==== Design Differences
+Like LEAF, https://ned14.github.io/outcome[Boost Outcome] is designed for low latency environments. It provides `result<T,EC,NVP>` and `outcome<T,EC,EP,NVP>`, where `EC` is an error code type (defaulting to `std::error_code`) and `EP` is a pointer type for additional error information (defaulting to `std::exception_ptr`).
 
-Like LEAF, the https://ned14.github.io/outcome[Boost Outcome] library is designed to work in low latency environments. It provides two class templates, `result<>` and `outcome<>`:
+The key design difference is in how error information is transported:
 
-* `result<T,EC,NVP>` can be used as the return type in `noexcept` functions which may fail, where `T` specifies the type of the return value in case of success, while `EC` is an "error code" type. Semantically, `result<T,EC>` is similar to `std::variant<T,EC>`. Naturally, `EC` defaults to `std::error_code`.
-* `outcome<T,EC,EP,NVP>` is similar to `result<>`, but in case of failure, in addition to the "error code" type `EC` it can hold a "pointer" object of type `EP`, which defaults to `std::exception_ptr`.
-
-NOTE: `NVP` is a policy type used to customize the behavior of `.value()` when the `result<>` or the `outcome<>` object contains an error.
-
-The idea is to use `result<>` to communicate failures which can be fully specified by an "error code", and `outcome<>` to communicate failures that require additional information.
-
-Another way to describe this design is that `result<>` is used when it suffices to return an error object of some static type `EC`, while `outcome<>` can also transport a polymorphic error object, using the pointer type `EP`.
-
-NOTE: In the default configuration of `outcome<T>` the additional information -- or the additional polymorphic object -- is an exception object held by `std::exception_ptr`. This targets the use case when an exception thrown by a lower-level library function needs to be transported through some intermediate contexts that are not exception-safe, to a higher-level context able to handle it. LEAF directly supports this use as well, see <<exception_to_result>>.
-
-Similar reasoning drives the design of LEAF as well. The difference is that while both libraries recognize the need to transport "something else" in addition to an "error code", LEAF provides an efficient solution to this problem, while Outcome shifts this burden to the user.
-
-The `leaf::result<>` template deletes both `EC` and `EP`, which decouples it from the type of the error objects that are transported in case of a failure. This enables lower-level functions to freely communicate anything and everything they "know" about the failure: error code, even multiple error codes, file names, URLs, port numbers, etc. At the same time, the higher-level error handling functions control which of this information is needed in a specific client program and which is not. This is ideal, because:
-
-* Authors of lower-level library functions lack context to determine which of the information that is both relevant to the error _and_ naturally available to them needs to be communicated in order for a particular client program to recover from that error;
-* Authors of higher-level error handling functions can easily and confidently make this determination, which they communicate naturally to LEAF, by simply writing the different error handlers. LEAF will transport the needed error objects while discarding the ones handlers don't care to use, saving resources.
+* Outcome encodes error types in function signatures via the `EC` and `EP` template parameters, giving callers explicit visibility of possible error types.
+* LEAF decouples `leaf::result<T>` from error types entirely. Error objects are transported separately to error handling scopes, where the handlers determine which types are needed.
 
 TIP: The LEAF examples include an adaptation of the program from the https://ned14.github.io/outcome/tutorial/essential/result/[Boost Outcome `result<>` tutorial]. You can https://github.com/boostorg/leaf/blob/master/example/print_half.cpp?ts=4[view it on GitHub].
 
-NOTE: Programs using LEAF for error handling are not required to use `leaf::result<T>`; for example, it is possible to use `outcome::result<T>` with LEAF.
+NOTE: LEAF is compatible with `outcome::result<T>`; you don't have to use `leaf::result<T>`.
 
 [[interoperability]]
 ==== The Interoperability Problem
 
-The Boost Outcome documentation discusses the important problem of bringing together multiple libraries -- each using its own error reporting mechanism -- and incorporating them in a robust error handling infrastructure in a client program.
+The Boost Outcome documentation discusses the challenge of integrating multiple libraries with different error types:
 
-Users are advised that whenever possible they should use a common error handling system throughout their entire codebase, but because this is not practical, both the `result<>` and the `outcome<>` templates can carry user-defined "payloads".
-
-The following analysis is from the Boost Outcome documentation:
 ====
 If library A uses `result<T, libraryA::failure_info>`, and library B uses `result<T, libraryB::error_info>` and so on, there becomes a problem for the application writer who is bringing in these third party dependencies and tying them together into an application. As a general rule, each third party library author will not have built in explicit interoperation support for unknown other third party libraries. The problem therefore lands with the application writer.
 
@@ -6015,20 +5609,27 @@ The application writer has one of three choices:
 
 . In the application, the form of result used is `result<T, std::variant<E1, E2, ...>>` where `E1, E2 …` are the failure types for every third party library in use in the application. This has the advantage of preserving the original information exactly, but comes with a certain amount of use inconvenience and maybe excessive coupling between high level layers and implementation detail.
 
-. One can translate/map the third party’s failure type into the application’s failure type at the point of the failure exiting the third party library and entering the application. One might do this, say, with a C preprocessor macro wrapping every invocation of the third party API from the application. This approach may lose the original failure detail, or mis-map under certain circumstances if the mapping between the two systems is not one-one.
+. One can translate/map the third party's failure type into the application's failure type at the point of the failure exiting the third party library and entering the application. One might do this, say, with a C preprocessor macro wrapping every invocation of the third party API from the application. This approach may lose the original failure detail, or mis-map under certain circumstances if the mapping between the two systems is not one-one.
 
-. One can type erase the third party’s failure type into some application failure type, which can later be reconstituted if necessary. *This is the cleanest solution with the least coupling issues and no problems with mis-mapping*, but it almost certainly requires the use of `malloc` which the previous two did not.
+. One can type erase the third party's failure type into some application failure type, which can later be reconstituted if necessary. *This is the cleanest solution with the least coupling issues and no problems with mis-mapping*, but it almost certainly requires the use of `malloc` which the previous two did not.
 ====
 
-The analysis above (emphasis added) is clear and precise, but LEAF and Boost Outcome tackle the interoperability problem differently:
+Boost Outcome addresses this by providing converters in the `outcome::convert` namespace to translate between error types (option 2).
 
-* The Boost Outcome design asserts that the "cleanest" solution based on type-erasure is suboptimal ("almost certainly requires the use of `malloc`pass:[]"), and instead provides a system for injecting custom converters into the `outcome::convert` namespace, used to translate between library-specific and program-wide error types, even though this approach "may lose the original failure detail".
+LEAF takes a different approach: error objects are transported directly to error handling scopes where storage is allocated statically, implementing option 3 without dynamic allocation.
 
-* The LEAF design asserts that coupling the signatures of <<rationale,error neutral>> functions with the static types of the error objects they need to forward to the caller <<translation,does not scale>>, and instead transports error objects directly to error handling scopes where they are stored statically, effectively implementing the third choice outlined above (without the use of `malloc`).
+'''
 
-Further, consider that Outcome aims to hopefully become _the_ one error handling API all libraries would use, and in theory everyone would benefit from uniformity and standardization. But the reality is that this is wishful thinking. In fact, that reality is reflected in the design of `outcome::result<>`, in its lack of commitment to using `std::error_code` for its intended purpose: to be _the_ standard type for transporting error codes. The fact is that `std::error_code` became _yet another_ error code type programmers need to understand and support.
+[[boost_exception]]
+=== Comparison to Boost Exception
 
-In contrast, the design of LEAF acknowledges that {CPP} programmers don't even agree on what a string is. If your project uses 10 different libraries, this probably means 15 different ways to report errors, sometimes across uncooperative interfaces (e.g. C APIs). LEAF helps you get the job done.
+Both LEAF and https://www.boost.org/doc/libs/release/libs/exception/doc/boost-exception.html[Boost Exception] allow transporting arbitrary error information with exceptions. The key design differences:
+
+* Boost Exception stores error objects in the exception object itself (requiring dynamic allocation). LEAF stores error objects in the error handling scope, discarding those not needed by handlers.
+* Boost Exception can only augment exceptions deriving from `boost::exception`. LEAF can augment any exception type.
+* Boost Exception automatically captures error objects across thread boundaries via `boost::exception_ptr`. LEAF requires explicit use of <<capture>>.
+
+NOTE: LEAF can access Boost Exception error information using its error handling interface. See <<tutorial-boost_exception_integration>>.
 
 == Acknowledgements
 
