@@ -149,31 +149,42 @@ int main()
                 BOOST_TEST_EQ(e1j["code"].get<int>(), 1);
                 BOOST_TEST_EQ(e1j["message"].get<std::string>(), "error one");
 
-                auto const & e2j = jc["my_error<2>"];
-                BOOST_TEST_EQ(e2j["code"].get<int>(), 2);
-                BOOST_TEST_EQ(e2j["message"].get<std::string>(), "error two");
+                if( BOOST_LEAF_CFG_CAPTURE )
+                {
+                    auto const & e2j = jc["my_error<2>"];
+                    BOOST_TEST_EQ(e2j["code"].get<int>(), 2);
+                    BOOST_TEST_EQ(e2j["message"].get<std::string>(), "error two");
 
-                auto const & ej = jc["boost::leaf::e_errno"];
-                BOOST_TEST_EQ(ej["value"].get<int>(), ENOENT);
-                BOOST_TEST(!ej["message"].get<std::string>().empty());
+                    auto const & ej = jc["boost::leaf::e_errno"];
+                    BOOST_TEST_EQ(ej["value"].get<int>(), ENOENT);
+                    BOOST_TEST(!ej["message"].get<std::string>().empty());
 
-                BOOST_TEST_EQ(jc["boost::leaf::e_api_function"].get<std::string>(), "fail");
+                    BOOST_TEST_EQ(jc["boost::leaf::e_api_function"].get<std::string>(), "fail");
 
-                auto const & ecj = jc["std::error_code"];
-                BOOST_TEST_EQ(ecj["value"].get<int>(), static_cast<int>(std::errc::invalid_argument));
-                BOOST_TEST(!ecj["category"].get<std::string>().empty());
-                BOOST_TEST(!ecj["message"].get<std::string>().empty());
+                    auto const & ecj = jc["std::error_code"];
+                    BOOST_TEST_EQ(ecj["value"].get<int>(), static_cast<int>(std::errc::invalid_argument));
+                    BOOST_TEST(!ecj["category"].get<std::string>().empty());
+                    BOOST_TEST(!ecj["message"].get<std::string>().empty());
+                }
+                else
+                {
+                    BOOST_TEST(!jc.contains("my_error<2>"));
+                    BOOST_TEST(!jc.contains("boost::leaf::e_errno"));
+                    BOOST_TEST(!jc.contains("boost::leaf::e_api_function"));
+                    BOOST_TEST(!jc.contains("std::error_code"));
+                }
             }
         );
     }
 
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
     {
         leaf::try_handle_all(
             []() -> leaf::result<void>
             {
                 return leaf::new_error(std::make_exception_ptr(std::runtime_error("test exception")));
             },
-            [](leaf::diagnostic_details const & dd)
+            [](leaf::diagnostic_details const & dd, std::exception_ptr *)
             {
                 nlohmann::ordered_json j;
                 nlohmann_writer w(j);
@@ -185,13 +196,8 @@ int main()
                 auto const & ep = jc["std::exception_ptr"];
                 std::string type = ep["typeid.name"].get<std::string>();
                 std::string what = ep["what"].get<std::string>();
-#ifdef BOOST_LEAF_NO_EXCEPTIONS
-                BOOST_TEST(type == "<<unknown>>" || type == "<<empty>>");
-                BOOST_TEST_EQ(what, "N/A");
-#else
                 BOOST_TEST(type.find("std::runtime_error") != std::string::npos);
                 BOOST_TEST_EQ(what, "test exception");
-#endif
             }
         );
     }
@@ -202,7 +208,7 @@ int main()
             {
                 return leaf::new_error(std::make_exception_ptr(42));
             },
-            [](leaf::diagnostic_details const & dd)
+            [](leaf::diagnostic_details const & dd, std::exception_ptr *)
             {
                 nlohmann::ordered_json j;
                 nlohmann_writer w(j);
@@ -214,15 +220,12 @@ int main()
                 auto const & ep = jc["std::exception_ptr"];
                 std::string type = ep["typeid.name"].get<std::string>();
                 std::string what = ep["what"].get<std::string>();
-#ifdef BOOST_LEAF_NO_EXCEPTIONS
-                BOOST_TEST(type == "<<unknown>>" || type == "<<empty>>");
-#else
                 BOOST_TEST_EQ(type, "<<unknown>>");
-#endif
                 BOOST_TEST_EQ(what, "N/A");
             }
         );
     }
+#endif
 
     return boost::report_errors();
 }
