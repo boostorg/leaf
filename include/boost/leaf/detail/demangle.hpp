@@ -239,7 +239,7 @@ namespace detail
     {
         char const * mangled_name_;
 #ifdef BOOST_LEAF_HAS_CXXABI_H
-        char const * demangled_name_ = nullptr;
+        char * demangled_name_ = nullptr;
 #endif
 
     public:
