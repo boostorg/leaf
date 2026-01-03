@@ -14,6 +14,8 @@
 #   include <ostream>
 #endif
 
+#include <cstring>
+
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 #   include <system_error>
 #endif
@@ -72,6 +74,16 @@ struct e_source_location
     friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, e_source_location const & x)
     {
         return os << x.file << '(' << x.line << ") in function " << x.function;
+    }
+
+    template <class Json>
+    friend void to_json(Json & j, e_source_location const & x)
+    {
+        char zstr[256];
+        Json & v = j[parse_to_zstr<e_source_location>(zstr)];
+        v["file"] = x.file;
+        v["line"] = x.line;
+        v["function"] = x.function;
     }
 };
 
@@ -153,15 +165,14 @@ namespace detail
 
         void unload( int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE);
 
-        template <class CharT, class Traits, class ErrorID>
-        void print(std::basic_ostream<CharT, Traits> & os, ErrorID to_print, char const * & prefix) const
+        template <class ErrorID>
+        void write_to(writer & w, ErrorID id) const
         {
             if( int k = this->key() )
             {
-                if( to_print && to_print.value() != k )
+                if( id && id.value() != k )
                     return;
-                if( diagnostic<E>::print(os, prefix, BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER, value(k)) && !to_print )
-                    os << '(' << k/4 << ')';
+                serialize(w, value(k));
             }
         }
 
@@ -224,9 +235,9 @@ namespace detail
                 impl::unload(err_id);
             }
 #if BOOST_LEAF_CFG_DIAGNOSTICS
-            void print(std::ostream & os, error_id const & to_print, char const * & prefix) const override
+            void write_to(writer & w, error_id const & id) const override
             {
-                impl::print(os, to_print, prefix);
+                impl::write_to(w, id);
             }
 #endif
         public:
@@ -261,7 +272,7 @@ namespace detail
                 std::rethrow_exception(ex_);
             }
 #if BOOST_LEAF_CFG_DIAGNOSTICS
-            void print(std::ostream &, error_id const &, char const * &) const override
+            void write_to(writer &, error_id const &) const override
             {
             }
 #endif
@@ -362,7 +373,7 @@ namespace detail
         }
 
         using capture_list::unload;
-        using capture_list::print;
+        using capture_list::write_to;
     }; // class dynamic_allocator
 
     template <class E>
@@ -438,8 +449,8 @@ namespace detail
         }
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
-        template <class CharT, class Traits, class ErrorID>
-        void print(std::basic_ostream<CharT, Traits> &, ErrorID, char const * &) const
+        template <class ErrorID>
+        void write_to(writer &, ErrorID) const
         {
         }
 #endif
@@ -794,6 +805,12 @@ public:
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, error_id x )
     {
         return os << (x.value_ / 4);
+    }
+
+    template <class Json>
+    friend void to_json(Json & j, error_id x)
+    {
+        j["serial number"] = x.value_ / 4;
     }
 
     BOOST_LEAF_CONSTEXPR void load_source_location_( char const * file, int line, char const * function ) const noexcept(!BOOST_LEAF_CFG_CAPTURE)

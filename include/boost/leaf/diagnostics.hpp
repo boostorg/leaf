@@ -11,12 +11,21 @@
 
 namespace boost { namespace leaf {
 
+namespace detail
+{
+    template <class>
+    struct dependent_writer
+    {
+        using type = writer;
+    };
+}
+
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 
 class diagnostic_info: public error_info
 {
     void const * tup_;
-    void (*print_tuple_contents_)(std::ostream &, void const * tup, error_id to_print, char const * & prefix);
+    void (*serialize_tuple_contents_)(writer &, void const *, error_id);
 
 protected:
 
@@ -26,7 +35,7 @@ protected:
     BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei, Tup const & tup ) noexcept:
         error_info(ei),
         tup_(&tup),
-        print_tuple_contents_(&detail::print_tuple_contents<Tup>)
+        serialize_tuple_contents_(&detail::serialize_tuple_contents<Tup>)
     {
     }
 
@@ -35,7 +44,8 @@ protected:
     {
         print_error_info(os);
         char const * prefix = exception() ? nullptr : "\nCaught:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
-        print_tuple_contents_(os, tup_, error(), prefix);
+        ostream_writer w(os, prefix, BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER);
+        serialize_tuple_contents_(w, tup_, error());
     }
 
     template <class CharT, class Traits>
@@ -43,6 +53,16 @@ protected:
     {
         x.print_diagnostic_info(os);
         return os << '\n';
+    }
+
+public:
+
+    template <class W>
+    void write_to(W & w) const
+    {
+        typename detail::dependent_writer<W>::type & wr = w;
+        serialize(wr, error());
+        serialize_tuple_contents_(wr, tup_, error());
     }
 }; // class diagnostic_info
 
@@ -93,6 +113,15 @@ protected:
     {
         x.print_diagnostic_info(os);
         return os << "\n";
+    }
+
+public:
+
+    template <class W>
+    void write_to(W & w) const
+    {
+        typename detail::dependent_writer<W>::type & wr = w;
+        serialize(wr, error());
     }
 }; // class diagnostic_info
 
@@ -147,7 +176,8 @@ protected:
         if( da_ )
         {
             char const * prefix = "\nDiagnostic details:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
-            da_->print(os, error(), prefix);
+            ostream_writer w(os, prefix, BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER);
+            da_->write_to(w, error());
         }
     }
 
@@ -156,6 +186,17 @@ protected:
     {
         x.print_diagnostic_details(os);
         return os << '\n';
+    }
+
+public:
+
+    template <class W>
+    void write_to(W & w) const
+    {
+        typename detail::dependent_writer<W>::type & wr = w;
+        diagnostic_info::write_to(wr);
+        if( da_ )
+            da_->write_to(wr, error());
     }
 }; // class diagnostic_details
 
@@ -209,6 +250,15 @@ protected:
         x.print_diagnostic_details(os);
         return os << "\n";
     }
+
+public:
+
+    template <class W>
+    void write_to(W & w) const
+    {
+        typename detail::dependent_writer<W>::type & wr = w;
+        diagnostic_info::write_to(wr);
+    }
 }; // class diagnostic_details
 
 namespace detail
@@ -260,6 +310,15 @@ protected:
     {
         x.print_diagnostic_details(os);
         return os << "\n";
+    }
+
+public:
+
+    template <class W>
+    void write_to(W & w) const
+    {
+        typename detail::dependent_writer<W>::type & wr = w;
+        diagnostic_info::write_to(wr);
     }
 };
 

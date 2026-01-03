@@ -196,11 +196,11 @@ namespace detail
         public:
 
             BOOST_LEAF_ALWAYS_INLINE tls_slot_index():
-                idx_(TlsAlloc())    
+                idx_(TlsAlloc())
             {
                 if (idx_ == TLS_OUT_OF_INDEXES)
                     throw_exception_(win32_tls_error("TLS_OUT_OF_INDEXES"));
-            }   
+            }
 
             BOOST_LEAF_ALWAYS_INLINE ~tls_slot_index() noexcept
             {

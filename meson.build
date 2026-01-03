@@ -141,6 +141,7 @@ if option_enable_unit_tests
         'handle_basic_test',
         'handle_some_other_result_test',
         'handle_some_test',
+        'json_test',
         'match_member_test',
         'match_test',
         'match_value_test',

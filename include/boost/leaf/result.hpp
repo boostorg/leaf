@@ -6,7 +6,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/detail/print.hpp>
+#include <boost/leaf/serialize.hpp>
 #include <boost/leaf/detail/capture_list.hpp>
 #include <boost/leaf/exception.hpp>
 
@@ -341,7 +341,8 @@ protected:
         {
 #if BOOST_LEAF_CFG_CAPTURE
             char const * prefix = "\nCaptured:";
-            cap_.print(os, err_id, prefix);
+            ostream_writer w(os, prefix, BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER);
+            cap_.write_to(w, err_id);
             os << "\n";
 #else
             BOOST_LEAF_ASSERT(0); // Possible ODR violation.

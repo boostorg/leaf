@@ -48,7 +48,13 @@
         {
             "label": "Generate leaf.hpp",
             "type": "shell",
-            "command": "cd ${workspaceRoot} && python gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p ${workspaceRoot}/include -o ${workspaceRoot}/test/leaf.hpp boost/leaf",
+            "command": "cd ${workspaceRoot} && python scripts/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p ${workspaceRoot}/include -o ${workspaceRoot}/test/leaf.hpp boost/leaf",
+            "problemMatcher": []
+        },
+        {
+            "label": "Download nlohmann/json.hpp",
+            "type": "shell",
+            "command": "cd ${workspaceRoot} && python scripts/download_nlohmann_json.py",
             "problemMatcher": []
         },
         {
@@ -81,7 +87,8 @@
             "label": "Run all unit tests (debug)",
             "type": "shell",
             "dependsOn": [
-                "Generate leaf.hpp"
+                "Generate leaf.hpp",
+                "Download nlohmann/json.hpp"
             ],
             "command": "cd ${workspaceRoot}/_bld/debug && ninja && meson test && cd ${workspaceRoot}/_bld/debug && ninja && meson test",
             "problemMatcher": {
@@ -106,7 +113,8 @@
             "label": "Run all unit tests (release)",
             "type": "shell",
             "dependsOn": [
-                "Generate leaf.hpp"
+                "Generate leaf.hpp",
+                "Download nlohmann/json.hpp"
             ],
             "command": "cd ${workspaceRoot}/_bld/release && ninja && meson test && cd ${workspaceRoot}/_bld/release_single_header && ninja && meson test",
             "problemMatcher": {
@@ -131,7 +139,8 @@
             "label": "Run all unit tests (b2, all configurations)",
             "type": "shell",
             "dependsOn": [
-                "Generate leaf.hpp"
+                "Generate leaf.hpp",
+                "Download nlohmann/json.hpp"
             ],
             "command": "../../b2 --abbreviate-paths test link=shared,static variant=debug,release,leaf_debug_diag0,leaf_release_diag0,leaf_debug_single_header,leaf_release_single_header,leaf_debug_embedded,leaf_release_embedded exception-handling=off rtti=off cxxstd=11,14,1z,17 && ../../b2 --abbreviate-paths test link=shared,static variant=debug,release,leaf_debug_diag0,leaf_release_diag0,leaf_debug_single_header,leaf_release_single_header exception-handling=on,off cxxstd=11,14,1z,17",
             "problemMatcher": {

@@ -6,11 +6,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/detail/print.hpp>
+#include <boost/leaf/serialize.hpp>
 
 #if BOOST_LEAF_CFG_CAPTURE
-
-#include <iosfwd>
 
 namespace boost { namespace leaf {
 
@@ -30,7 +28,7 @@ namespace detail
 
             virtual void unload( int err_id ) = 0;
 #if BOOST_LEAF_CFG_DIAGNOSTICS
-            virtual void print(std::ostream &, error_id const & to_print, char const * & prefix) const = 0;
+            virtual void write_to(writer &, error_id const &) const = 0;
 #endif
 
         protected:
@@ -92,22 +90,20 @@ namespace detail
                 } );
         }
 
-        template <class CharT, class Traits>
-        void print(std::basic_ostream<CharT, Traits> & os, error_id const & to_print, char const * & prefix) const
+        void write_to(writer & w, error_id const & id) const
         {
 #if BOOST_LEAF_CFG_DIAGNOSTICS
             if( first_ )
             {
                 for_each(
-                    [&os, &to_print, &prefix]( node const & n )
+                    [&w, &id]( node const & n )
                     {
-                        n.print(os, to_print, prefix);
+                        n.write_to(w, id);
                     } );
             }
 #else
-            (void) os;
-            (void) prefix;
-            (void) to_print;
+            (void) w;
+            (void) id;
 #endif
         }
     }; // class capture_list

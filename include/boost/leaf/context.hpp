@@ -203,12 +203,11 @@ namespace detail
             tuple_for_each<I-1,Tup>::unload(tup, err_id);
         }
 
-        template <class CharT, class Traits>
-        static void print(std::basic_ostream<CharT, Traits> & os, void const * tup, error_id to_print, char const * & prefix)
+        static void write_to(writer & w, void const * tup, error_id id)
         {
             BOOST_LEAF_ASSERT(tup != nullptr);
-            tuple_for_each<I-1,Tup>::print(os, tup, to_print, prefix);
-            std::get<I-1>(*static_cast<Tup const *>(tup)).print(os, to_print, prefix);
+            tuple_for_each<I-1,Tup>::write_to(w, tup, id);
+            std::get<I-1>(*static_cast<Tup const *>(tup)).write_to(w, id);
         }
     };
 
@@ -218,14 +217,13 @@ namespace detail
         BOOST_LEAF_CONSTEXPR static void activate( Tup & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void deactivate( Tup & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void unload( Tup &, int ) noexcept { }
-        template <class CharT, class Traits>
-        BOOST_LEAF_CONSTEXPR static void print(std::basic_ostream<CharT, Traits> &, void const *, error_id, char const * &) { }
+        BOOST_LEAF_CONSTEXPR static void write_to(writer &, void const *, error_id) { }
     };
 
-    template <class Tup, class CharT, class Traits>
-    BOOST_LEAF_CONSTEXPR void print_tuple_contents(std::basic_ostream<CharT, Traits> & os, void const * tup, error_id to_print, char const * & prefix)
+    template <class Tup>
+    BOOST_LEAF_CONSTEXPR void serialize_tuple_contents(writer & w, void const * tup, error_id id)
     {
-        tuple_for_each<std::tuple_size<Tup>::value, Tup>::print(os, tup, to_print, prefix);
+        tuple_for_each<std::tuple_size<Tup>::value, Tup>::write_to(w, tup, id);
     }
 } // namespace detail
 
@@ -369,17 +367,17 @@ public:
         return is_active_;
     }
 
-    template <class CharT, class Traits>
-    void print( std::basic_ostream<CharT, Traits> & os ) const
+    void write_to( writer & w ) const
     {
-        char const * prefix = "Contents:";
-        detail::print_tuple_contents<Tup>(os, &tup_, error_id(), prefix);
+        detail::serialize_tuple_contents<Tup>(w, &tup_, error_id());
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, context const & ctx )
     {
-        ctx.print(os);
+        char const * prefix = "Contents:";
+        ostream_writer w(os, prefix, BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER);
+        ctx.write_to(w);
         return os << '\n';
     }
 

@@ -83,6 +83,7 @@ run handle_all_test.cpp ;
 run handle_basic_test.cpp ;
 run handle_some_other_result_test.cpp ;
 run handle_some_test.cpp ;
+run json_test.cpp ;
 run match_member_test.cpp ;
 run match_test.cpp ;
 run match_value_test.cpp ;
@@ -161,6 +162,7 @@ compile-fail _compile-fail-result_1.cpp ;
 compile-fail _compile-fail-result_2.cpp ;
 compile-fail _compile-fail-result_3.cpp ;
 compile-fail _compile-fail-result_4.cpp ;
+compile-fail _compile-fail-to_json.cpp ;
 
 exe try_capture_all_exceptions : ../example/try_capture_all_exceptions.cpp : <threading>single:<build>no <exception-handling>off:<build>no <variant>leaf_debug_capture0:<build>no <variant>leaf_release_capture0:<build>no ;
 exe try_capture_all_result : ../example/try_capture_all_result.cpp : <threading>single:<build>no <variant>leaf_debug_capture0:<build>no <variant>leaf_release_capture0:<build>no <variant>leaf_debug_embedded:<build>no <variant>leaf_release_embedded:<build>no ;

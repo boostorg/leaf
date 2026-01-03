@@ -1478,7 +1478,7 @@ int main()
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
     // exception caught, error not handled
-    {     
+    {
         int handle_some_handler_called = 0;
         int r = leaf::try_handle_all(
             [&]

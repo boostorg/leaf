@@ -261,7 +261,8 @@ jobs:
       - name: Generate headers
         run: |
           cd ../boost-root/libs/leaf
-          python3 gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o test/leaf.hpp boost/leaf
+          python3 scripts/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o test/leaf.hpp boost/leaf
+          python3 scripts/download_nlohmann_json.py
 
       - name: Run tests
         run: |
@@ -329,7 +330,8 @@ jobs:
       - name: Generate headers
         run: |
           cd ../boost-root/libs/leaf
-          python3 gen/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o test/leaf.hpp boost/leaf
+          python3 scripts/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o test/leaf.hpp boost/leaf
+          python3 scripts/download_nlohmann_json.py
 
       - name: Run tests
         shell: cmd

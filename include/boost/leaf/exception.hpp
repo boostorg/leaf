@@ -60,7 +60,7 @@ namespace detail
 #if BOOST_LEAF_CFG_DIAGNOSTICS && !defined(BOOST_LEAF_NO_EXCEPTIONS)
         void print_type_name(std::ostream & os) const override
         {
-            detail::demangle_and_print(os, typeid(Ex).name());
+            os << detail::demangler(typeid(Ex).name()).get();
         }
 #endif
 

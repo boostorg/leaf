@@ -91,7 +91,7 @@ public:
                 eb->print_type_name(os);
             else
 #endif
-                detail::demangle_and_print(os, typeid(*ex_).name());
+                os << detail::demangler(typeid(*ex_).name()).get();
             os << ": \"" << ex_->what() << '"';
         }
 #endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
@@ -232,7 +232,7 @@ namespace detail
         {
             return nullptr;
         }
-        
+
         template <class SlotsTuple>
         BOOST_LEAF_CONSTEXPR static E * peek( SlotsTuple &, error_id const & ) noexcept
         {
