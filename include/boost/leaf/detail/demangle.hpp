@@ -19,6 +19,10 @@
 #include <cstdlib>
 #include <cstring>
 
+#if BOOST_LEAF_CFG_STD_STRING
+#   include <string>
+#endif
+
 #if BOOST_LEAF_CFG_DIAGNOSTICS
 
 // __has_include is currently supported by GCC and Clang. However GCC 4.9 may have issues and
@@ -131,6 +135,13 @@ namespace n
         {
             return os.write(pn.name, pn.len);
         }
+
+#if BOOST_LEAF_CFG_STD_STRING
+        friend std::string to_string(r const & pn)
+        {
+            return std::string(pn.name, pn.len);
+        }
+#endif
     };
 
     template <class T>
@@ -215,16 +226,6 @@ template <class T>
 parsed parse()
 {
     return n::p<T>();
-}
-
-template <class T, int N>
-char const * parse_to_zstr(char (&zstr)[N]) noexcept
-{
-    parsed p = parse<T>();
-    std::size_t n = p.len < N - 1 ? p.len : N - 1;
-    std::memcpy(zstr, p.name, n);
-    zstr[n] = '\0';
-    return zstr;
 }
 
 } } // namespace boost::leaf

@@ -62,10 +62,8 @@ struct e_errno
     template <class Json>
     friend void to_json(Json & j, e_errno const & e)
     {
-        char zstr[256];
-        Json & v = j[parse_to_zstr<e_errno>(zstr)];
-        v["value"] = e.value;
-        v["message"] = std::strerror(e.value);
+        j["value"] = e.value;
+        j["message"] = std::strerror(e.value);
     }
 };
 

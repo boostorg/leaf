@@ -30,16 +30,27 @@ struct show_in_diagnostics: std::true_type
 
 class writer
 {
-    virtual parsed type() const noexcept = 0;
+    parsed const type_;
 
 protected:
-    ~writer() noexcept { }
+
+    template <class Derived>
+    explicit writer(Derived * d) noexcept:
+        type_(parse<Derived>())
+    {
+        BOOST_LEAF_ASSERT(d == this), (void) d;
+    }
+
+    ~writer() noexcept
+    {
+    }
 
 public:
-    template <class W>
-    W * check_type(parsed tid) noexcept
+
+    template <class Derived>
+    Derived * get() noexcept
     {
-        return type() == tid ? static_cast<W *>(this) : nullptr;
+        return type_ == parse<typename std::decay<Derived>::type>() ? static_cast<Derived *>(this) : nullptr;
     }
 };
 
@@ -86,11 +97,6 @@ class ostream_writer: public writer
     char const * & prefix_;
     char const * const delimiter_;
 
-    parsed type() const noexcept override
-    {
-        return parse<ostream_writer>();
-    }
-
     template <class T, class CharT, class Traits>
     static void print_name(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter)
     {
@@ -135,7 +141,9 @@ class ostream_writer: public writer
     struct diagnostic;
 
 public:
+
     ostream_writer(std::ostream & os, char const * & prefix, char const * delimiter) noexcept:
+        writer(this),
         os_(os),
         prefix_(prefix),
         delimiter_(delimiter)
@@ -152,7 +160,7 @@ public:
 template <class Writer, class E>
 void serialize(Writer & w, E const & e)
 {
-    if( ostream_writer * ow = w.template check_type<ostream_writer>(parse<ostream_writer>()) )
+    if( ostream_writer * ow = w.template get<ostream_writer>() )
         ow->write(e);
 }
 
@@ -228,30 +236,39 @@ struct ostream_writer::diagnostic<Enum, true, false, false, false, true>
 template <class Json, class E>
 auto to_json(Json & j, E const & e) -> decltype(to_json(j, e.value), void())
 {
-    char zstr[256];
-    j[parse_to_zstr<E>(zstr)] = e.value;
+    j["value"] = e.value;
 }
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 template <class Json>
 void to_json(Json & j, std::error_code const & ec)
 {
-    Json & v = j["std::error_code"];
-    v["category"] = ec.category().name();
-    v["value"] = ec.value();
-    v["message"] = ec.message();
+    j["category"] = ec.category().name();
+    j["value"] = ec.value();
+    j["message"] = ec.message();
+}
+#endif
+
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+template <class Json>
+void to_json(Json & j, std::exception const & ex)
+{
+    j["typeid.name"] = detail::demangler(typeid(ex).name()).get();
+    if( char const * w = ex.what() )
+        j["what"] = w;
+    else
+        j["what"] = "<<nullptr>>";
 }
 #endif
 
 template <class Json>
 void to_json(Json & j, std::exception_ptr const & ep)
 {
-    Json & v = j["std::exception_ptr"];
     if( ep )
     {
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
-        v["typeid.name"] = "<<unknown>>";
-        v["what"] = "N/A";
+        j["typeid.name"] = "<<unknown>>";
+        j["what"] = "N/A";
 #else
         try
         {
@@ -259,23 +276,23 @@ void to_json(Json & j, std::exception_ptr const & ep)
         }
         catch( std::exception const & ex )
         {
-            v["typeid.name"] = detail::demangler(typeid(ex).name()).get();
+            j["typeid.name"] = detail::demangler(typeid(ex).name()).get();
             if( char const * w = ex.what() )
-                v["what"] = w;
+                j["what"] = w;
             else
-                v["what"] = "<<nullptr>>";
+                j["what"] = "<<nullptr>>";
         }
         catch( ... )
         {
-            v["typeid.name"] = "<<unknown>>";
-            v["what"] = "N/A";
+            j["typeid.name"] = "<<unknown>>";
+            j["what"] = "N/A";
         }
 #endif
     }
     else
     {
-        v["typeid.name"] = "<<empty>>";
-        v["what"] = "N/A";
+        j["typeid.name"] = "<<empty>>";
+        j["what"] = "N/A";
     }
 }
 

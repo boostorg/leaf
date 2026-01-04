@@ -79,11 +79,9 @@ struct e_source_location
     template <class Json>
     friend void to_json(Json & j, e_source_location const & x)
     {
-        char zstr[256];
-        Json & v = j[parse_to_zstr<e_source_location>(zstr)];
-        v["file"] = x.file;
-        v["line"] = x.line;
-        v["function"] = x.function;
+        j["file"] = x.file;
+        j["line"] = x.line;
+        j["function"] = x.function;
     }
 };
 
@@ -805,12 +803,6 @@ public:
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, error_id x )
     {
         return os << (x.value_ / 4);
-    }
-
-    template <class Json>
-    friend void to_json(Json & j, error_id x)
-    {
-        j["serial number"] = x.value_ / 4;
     }
 
     BOOST_LEAF_CONSTEXPR void load_source_location_( char const * file, int line, char const * function ) const noexcept(!BOOST_LEAF_CFG_CAPTURE)

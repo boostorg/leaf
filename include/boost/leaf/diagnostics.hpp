@@ -61,7 +61,10 @@ public:
     void write_to(W & w) const
     {
         typename detail::dependent_writer<W>::type & wr = w;
-        serialize(wr, error());
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+        if( exception() )
+            serialize(wr, *exception());
+#endif
         serialize_tuple_contents_(wr, tup_, error());
     }
 }; // class diagnostic_info
@@ -121,7 +124,10 @@ public:
     void write_to(W & w) const
     {
         typename detail::dependent_writer<W>::type & wr = w;
-        serialize(wr, error());
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+        if( exception() )
+            serialize(wr, *exception());
+#endif
     }
 }; // class diagnostic_info
 
