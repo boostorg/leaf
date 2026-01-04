@@ -233,12 +233,6 @@ struct ostream_writer::diagnostic<Enum, true, false, false, false, true>
 
 ////////////////////////////////////////
 
-template <class Json, class E>
-auto to_json(Json & j, E const & e) -> decltype(to_json(j, e.value), void())
-{
-    j["value"] = e.value;
-}
-
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 template <class Json>
 void to_json(Json & j, std::error_code const & ec)
@@ -294,6 +288,12 @@ void to_json(Json & j, std::exception_ptr const & ep)
         j["typeid.name"] = "<<empty>>";
         j["what"] = "N/A";
     }
+}
+
+template <class Json, class E>
+auto to_json(Json & j, E const & e) -> decltype(to_json(j, e.value), void())
+{
+    to_json(j["value"], e.value);
 }
 
 template <class Json, class E, class = void>

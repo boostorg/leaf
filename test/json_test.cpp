@@ -70,6 +70,13 @@ void serialize(writer & w, E const & e)
 
 } } // namespace boost::leaf
 
+struct my_exception { };
+
+struct my_exception_ptr
+{
+    std::exception_ptr value;
+};
+
 template <int N>
 struct my_error
 {
@@ -109,8 +116,6 @@ void leaf_throw()
         leaf::e_api_function{"my_api_function"},
         std::make_error_code(std::errc::invalid_argument) );
 }
-
-struct my_exception { };
 
 void throw_()
 {
@@ -312,9 +317,9 @@ int main()
         leaf::try_handle_all(
             []() -> leaf::result<void>
             {
-                return leaf::new_error(std::make_exception_ptr(std::runtime_error("test exception")));
+                return leaf::new_error(my_exception_ptr{std::make_exception_ptr(std::runtime_error("test exception"))});
             },
-            [&j](leaf::diagnostic_details const & dd, std::exception_ptr *)
+            [&j](leaf::diagnostic_details const & dd, my_exception_ptr *)
             {
                 nlohmann_writer w(j, dd.error());
                 dd.write_to(w);
@@ -322,7 +327,7 @@ int main()
         );
         std::cout << "std::exception_ptr JSON output:\n" << std::setw(2) << j << std::endl;
 
-        auto const & ep = j["std::exception_ptr"];
+        auto const & ep = j["my_exception_ptr"]["value"];
         std::string type = ep["typeid.name"].get<std::string>();
         std::string what = ep["what"].get<std::string>();
         BOOST_TEST(type.find("std::runtime_error") != std::string::npos);
@@ -334,9 +339,9 @@ int main()
         leaf::try_handle_all(
             []() -> leaf::result<void>
             {
-                return leaf::new_error(std::make_exception_ptr(42));
+                return leaf::new_error(my_exception_ptr{std::make_exception_ptr(42)});
             },
-            [&j](leaf::diagnostic_details const & dd, std::exception_ptr *)
+            [&j](leaf::diagnostic_details const & dd, my_exception_ptr *)
             {
                 nlohmann_writer w(j, dd.error());
                 dd.write_to(w);
@@ -344,7 +349,7 @@ int main()
         );
         std::cout << "non-std::exception_ptr JSON output:\n" << std::setw(2) << j << std::endl;
 
-        auto const & ep = j["std::exception_ptr"];
+        auto const & ep = j["my_exception_ptr"]["value"];
         std::string type = ep["typeid.name"].get<std::string>();
         std::string what = ep["what"].get<std::string>();
         BOOST_TEST_EQ(type, "<<unknown>>");
