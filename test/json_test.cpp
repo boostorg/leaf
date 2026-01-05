@@ -4,18 +4,6 @@
 
 #include <boost/leaf/config.hpp>
 
-#if !BOOST_LEAF_CFG_DIAGNOSTICS
-
-#include <iostream>
-
-int main()
-{
-    std::cout << "Unit test not applicable." << std::endl;
-    return 0;
-}
-
-#else
-
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
 #   include "leaf.hpp"
 #else
@@ -24,16 +12,25 @@ int main()
 #   include <boost/leaf/diagnostics.hpp>
 #   include <boost/leaf/common.hpp>
 #   include <boost/leaf/on_error.hpp>
+#   include <boost/leaf/writer.hpp>
 #endif
+
 #include "nlohmann/json.hpp"
 #include <iomanip>
 #include <iostream>
-#include <system_error>
 #include <stdexcept>
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+#   include <system_error>
+#endif
 
 #include "lightweight_test.hpp"
 
 namespace leaf = boost::leaf;
+
+std::string to_string(leaf::parsed const & pn)
+{
+    return std::string(pn.name, pn.len);
+}
 
 class nlohmann_writer: public leaf::writer
 {
@@ -41,11 +38,10 @@ class nlohmann_writer: public leaf::writer
 
 public:
 
-    nlohmann_writer(nlohmann::ordered_json & j, leaf::error_id id) noexcept:
+    nlohmann_writer(nlohmann::ordered_json & j, leaf::error_id id, leaf::e_source_location const * loc, std::exception const * ex) noexcept:
         writer(this),
         json_(j)
     {
-        json_["error_id"] = id.value();
     }
 
     template <class E>
@@ -64,8 +60,6 @@ void serialize(writer & w, E const & e)
 {
     if( nlohmann_writer * nw = w.get<nlohmann_writer>() )
         nw->write(e);
-    else if( ostream_writer * ow = w.get<ostream_writer>() )
-        ow->write(e);
 }
 
 } } // namespace boost::leaf
@@ -99,39 +93,45 @@ struct my_error
 leaf::result<void> fail()
 {
     return BOOST_LEAF_NEW_ERROR(
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        std::make_error_code(std::errc::invalid_argument),
+#endif
         my_error<1>{1, "error one"},
         my_error<2>{2, "error two"},
         leaf::e_errno{ENOENT},
-        leaf::e_api_function{"my_api_function"},
-        std::make_error_code(std::errc::invalid_argument) );
+        leaf::e_api_function{"my_api_function"} );
 }
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 void leaf_throw()
 {
     BOOST_LEAF_THROW_EXCEPTION(
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        std::make_error_code(std::errc::invalid_argument),
+#endif
         my_error<1>{1, "error one"},
         my_error<2>{2, "error two"},
         leaf::e_errno{ENOENT},
-        leaf::e_api_function{"my_api_function"},
-        std::make_error_code(std::errc::invalid_argument) );
+        leaf::e_api_function{"my_api_function"} );
 }
 
 void throw_()
 {
     auto load = leaf::on_error(
+#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
+        std::make_error_code(std::errc::invalid_argument),
+#endif
         my_error<1>{1, "error one"},
         my_error<2>{2, "error two"},
         leaf::e_errno{ENOENT},
-        leaf::e_api_function{"my_api_function"},
-        std::make_error_code(std::errc::invalid_argument) );
+        leaf::e_api_function{"my_api_function"} );
     throw my_exception{};
 }
 #endif
 
 void check_diagnostic_info(nlohmann::ordered_json const & j, bool has_source_location)
 {
-    BOOST_TEST(j["error_id"].get<int>() > 0);
+    BOOST_TEST(j["boost::leaf::error_id"].get<int>() > 0);
 
     auto const & e1j = j["my_error<1>"];
     BOOST_TEST_EQ(e1j["code"].get<int>(), 1);
@@ -150,7 +150,7 @@ void check_diagnostic_info(nlohmann::ordered_json const & j, bool has_source_loc
 
 void check_diagnostic_details(nlohmann::ordered_json const & j, bool has_source_location)
 {
-    BOOST_TEST(j["error_id"].get<int>() > 0);
+    BOOST_TEST(j["boost::leaf::error_id"].get<int>() > 0);
 
     auto const & e1j = j["my_error<1>"];
     BOOST_TEST_EQ(e1j["code"].get<int>(), 1);
@@ -176,10 +176,13 @@ void check_diagnostic_details(nlohmann::ordered_json const & j, bool has_source_
 
         BOOST_TEST_EQ(j["boost::leaf::e_api_function"]["value"].get<std::string>(), "my_api_function");
 
-        auto const & ecj = j["std::error_code"];
-        BOOST_TEST_EQ(ecj["value"].get<int>(), static_cast<int>(std::errc::invalid_argument));
-        BOOST_TEST(!ecj["category"].get<std::string>().empty());
-        BOOST_TEST(!ecj["message"].get<std::string>().empty());
+        if( BOOST_LEAF_CFG_STD_SYSTEM_ERROR )
+        {
+            auto const & ecj = j["std::error_code"];
+            BOOST_TEST_EQ(ecj["value"].get<int>(), static_cast<int>(std::errc::invalid_argument));
+            BOOST_TEST(!ecj["category"].get<std::string>().empty());
+            BOOST_TEST(!ecj["message"].get<std::string>().empty());
+        }
     }
     else
     {
@@ -211,11 +214,11 @@ int main()
             [&j](leaf::diagnostic_info const & di, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                nlohmann_writer w(j, di.error());
+                nlohmann_writer w(j, di.error(), di.source_location(), di.exception());
                 di.write_to(w);
             }
         );
-        std::cout << "diagnostic_info JSON output:\n" << std::setw(2) << j << std::endl;
+        std::cout << __LINE__ << " diagnostic_info JSON output:\n" << std::setw(2) << j << std::endl;
         check_diagnostic_info(j, true);
     }
 
@@ -229,11 +232,11 @@ int main()
             [&j](leaf::diagnostic_details const & dd, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                nlohmann_writer w(j, dd.error());
+                nlohmann_writer w(j, dd.error(), dd.source_location(), dd.exception());
                 dd.write_to(w);
             }
         );
-        std::cout << "diagnostic_details JSON output:\n" << std::setw(2) << j << std::endl;
+        std::cout << __LINE__ << " diagnostic_details JSON output:\n" << std::setw(2) << j << std::endl;
         check_diagnostic_details(j, true);
     }
 
@@ -248,11 +251,11 @@ int main()
             [&j](leaf::diagnostic_info const & di, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                nlohmann_writer w(j, di.error());
+                nlohmann_writer w(j, di.error(), di.source_location(), di.exception());
                 di.write_to(w);
             }
         );
-        std::cout << "leaf_throw diagnostic_info JSON output:\n" << std::setw(2) << j << std::endl;
+        std::cout << __LINE__ << " leaf_throw diagnostic_info JSON output:\n" << std::setw(2) << j << std::endl;
         check_diagnostic_info(j, true);
         check_exception(j);
     }
@@ -267,11 +270,11 @@ int main()
             [&j](leaf::diagnostic_details const & dd, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                nlohmann_writer w(j, dd.error());
+                nlohmann_writer w(j, dd.error(), dd.source_location(), dd.exception());
                 dd.write_to(w);
             }
         );
-        std::cout << "leaf_throw diagnostic_details JSON output:\n" << std::setw(2) << j << std::endl;
+        std::cout << __LINE__ << " leaf_throw diagnostic_details JSON output:\n" << std::setw(2) << j << std::endl;
         check_diagnostic_details(j, true);
         check_exception(j);
     }
@@ -286,11 +289,11 @@ int main()
             [&j](leaf::diagnostic_info const & di, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                nlohmann_writer w(j, di.error());
+                nlohmann_writer w(j, di.error(), di.source_location(), di.exception());
                 di.write_to(w);
             }
         );
-        std::cout << "throw_ diagnostic_info JSON output:\n" << std::setw(2) << j << std::endl;
+        std::cout << __LINE__ << " throw_ diagnostic_info JSON output:\n" << std::setw(2) << j << std::endl;
         check_diagnostic_info(j, false);
     }
 
@@ -304,11 +307,11 @@ int main()
             [&j](leaf::diagnostic_details const & dd, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                nlohmann_writer w(j, dd.error());
+                nlohmann_writer w(j, dd.error(), dd.source_location(), dd.exception());
                 dd.write_to(w);
             }
         );
-        std::cout << "throw_ diagnostic_details JSON output:\n" << std::setw(2) << j << std::endl;
+        std::cout << __LINE__ << " throw_ diagnostic_details JSON output:\n" << std::setw(2) << j << std::endl;
         check_diagnostic_details(j, false);
     }
 
@@ -321,11 +324,11 @@ int main()
             },
             [&j](leaf::diagnostic_details const & dd, my_exception_ptr *)
             {
-                nlohmann_writer w(j, dd.error());
+                nlohmann_writer w(j, dd.error(), dd.source_location(), dd.exception());
                 dd.write_to(w);
             }
         );
-        std::cout << "std::exception_ptr JSON output:\n" << std::setw(2) << j << std::endl;
+        std::cout << __LINE__ << " std::exception_ptr JSON output:\n" << std::setw(2) << j << std::endl;
 
         auto const & ep = j["my_exception_ptr"]["value"];
         std::string type = ep["typeid.name"].get<std::string>();
@@ -343,11 +346,11 @@ int main()
             },
             [&j](leaf::diagnostic_details const & dd, my_exception_ptr *)
             {
-                nlohmann_writer w(j, dd.error());
+                nlohmann_writer w(j, dd.error(), dd.source_location(), dd.exception());
                 dd.write_to(w);
             }
         );
-        std::cout << "non-std::exception_ptr JSON output:\n" << std::setw(2) << j << std::endl;
+        std::cout << __LINE__ << " non-std::exception_ptr JSON output:\n" << std::setw(2) << j << std::endl;
 
         auto const & ep = j["my_exception_ptr"]["value"];
         std::string type = ep["typeid.name"].get<std::string>();
@@ -359,5 +362,3 @@ int main()
 
     return boost::report_errors();
 }
-
-#endif

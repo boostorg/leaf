@@ -135,13 +135,6 @@ namespace n
         {
             return os.write(pn.name, pn.len);
         }
-
-#if BOOST_LEAF_CFG_STD_STRING
-        friend std::string to_string(r const & pn)
-        {
-            return std::string(pn.name, pn.len);
-        }
-#endif
     };
 
     template <class T>

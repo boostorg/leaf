@@ -7,6 +7,7 @@
 
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/context.hpp>
+#include <boost/leaf/detail/diagnostics_writer.hpp>
 #include <typeinfo>
 
 namespace boost { namespace leaf {
@@ -76,32 +77,22 @@ public:
         return loc_;
     }
 
-    template <class CharT, class Traits>
-    void print_error_info(std::basic_ostream<CharT, Traits> & os) const
+    template <class W>
+    void write_to(W & w) const
     {
-        os << "Error with serial #" << err_id_;
-        if( loc_ )
-            os << " reported at " << *loc_;
+        typename detail::dependent_writer<W>::type & wr = w;
+        detail::serialize_(wr, err_id_);
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
         if( ex_ )
-        {
-            os << "\nCaught:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-            if( auto eb = dynamic_cast<detail::exception_base const *>(ex_) )
-                eb->print_type_name(os);
-            else
+            detail::serialize_(wr, *ex_);
 #endif
-                os << detail::demangler(typeid(*ex_).name()).get();
-            os << ": \"" << ex_->what() << '"';
-        }
-#endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, error_info const & x)
     {
-        x.print_error_info(os);
-        return os << '\n';
+        detail::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
+        return os;
     }
 }; // class error_info
 

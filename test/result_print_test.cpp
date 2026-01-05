@@ -82,7 +82,7 @@ int main()
         std::cout << s << std::endl;
         leaf::error_id err = r.error();
         if( BOOST_LEAF_CFG_DIAGNOSTICS )
-            BOOST_TEST_EQ(s, "Error serial #" + std::to_string(err.value()/4));
+            BOOST_TEST_EQ(s, "Error serial #" + std::to_string(err.value()/4) + "\n");
 #endif
     }
 

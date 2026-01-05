@@ -6,8 +6,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/serialize.hpp>
 #include <boost/leaf/detail/capture_list.hpp>
+#include <boost/leaf/detail/diagnostics_writer.hpp>
 #include <boost/leaf/exception.hpp>
 
 #include <functional>
@@ -336,14 +336,13 @@ protected:
         result_discriminant const what = what_;
         BOOST_LEAF_ASSERT(what.kind() != result_discriminant::val);
         error_id const err_id = what.get_error_id();
+        detail::diagnostics_writer w(os);
         os << "Error serial #" << err_id;
         if( what.kind() == result_discriminant::err_id_capture_list )
         {
 #if BOOST_LEAF_CFG_CAPTURE
-            char const * prefix = "\nCaptured:";
-            ostream_writer w(os, prefix, BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER);
+            w.set_prefix("\nCaptured:");
             cap_.write_to(w, err_id);
-            os << "\n";
 #else
             BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif

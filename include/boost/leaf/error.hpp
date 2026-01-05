@@ -11,6 +11,7 @@
 #include <boost/leaf/detail/capture_list.hpp>
 
 #if BOOST_LEAF_CFG_DIAGNOSTICS
+#   include <boost/leaf/detail/diagnostics_writer.hpp>
 #   include <ostream>
 #endif
 
@@ -92,19 +93,22 @@ struct show_in_diagnostics<e_source_location>: std::false_type
 
 ////////////////////////////////////////
 
+template <class Writer, class E>
+void serialize(Writer &, E const &)
+{
+}
+
 namespace detail
 {
-    class exception_base
+    template <class Writer, class E>
+    void serialize_(Writer & w, E const & e)
     {
-    public:
-        virtual error_id get_error_id() const noexcept = 0;
-#if BOOST_LEAF_CFG_DIAGNOSTICS && !defined(BOOST_LEAF_NO_EXCEPTIONS)
-        virtual void print_type_name(std::ostream &) const = 0;
-#endif
-    protected:
-        exception_base() noexcept { }
-        ~exception_base() noexcept { }
-    };
+        serialize(w, e);
+    #if BOOST_LEAF_CFG_DIAGNOSTICS
+        if( detail::diagnostics_writer * ow = w.template get<detail::diagnostics_writer>() )
+            ow->write(e);
+    #endif
+    }
 }
 
 ////////////////////////////////////////
@@ -170,7 +174,7 @@ namespace detail
             {
                 if( id && id.value() != k )
                     return;
-                serialize(w, value(k));
+                serialize_(w, value(k));
             }
         }
 
@@ -232,12 +236,10 @@ namespace detail
             {
                 impl::unload(err_id);
             }
-#if BOOST_LEAF_CFG_DIAGNOSTICS
             void write_to(writer & w, error_id const & id) const override
             {
                 impl::write_to(w, id);
             }
-#endif
         public:
             BOOST_LEAF_CONSTEXPR explicit capturing_slot_node( capture_list::node * * & last ):
                 capturing_node(last)
@@ -269,11 +271,9 @@ namespace detail
             {
                 std::rethrow_exception(ex_);
             }
-#if BOOST_LEAF_CFG_DIAGNOSTICS
             void write_to(writer &, error_id const &) const override
             {
             }
-#endif
             std::exception_ptr const ex_;
         public:
             capturing_exception_node( capture_list::node * * & last, std::exception_ptr && ex ) noexcept:
@@ -446,12 +446,10 @@ namespace detail
             da_.unload(err_id);
         }
 
-#if BOOST_LEAF_CFG_DIAGNOSTICS
         template <class ErrorID>
         void write_to(writer &, ErrorID) const
         {
         }
-#endif
     }; // slot specialization for dynamic_allocator
 } // namespace detail
 
@@ -803,6 +801,12 @@ public:
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, error_id x )
     {
         return os << (x.value_ / 4);
+    }
+
+    template <class Json>
+    friend void to_json(Json & j, error_id x)
+    {
+        j = (x.value_ / 4);
     }
 
     BOOST_LEAF_CONSTEXPR void load_source_location_( char const * file, int line, char const * function ) const noexcept(!BOOST_LEAF_CFG_CAPTURE)

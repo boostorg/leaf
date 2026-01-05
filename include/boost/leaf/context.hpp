@@ -6,6 +6,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
+#include <boost/leaf/detail/diagnostics_writer.hpp>
 #include <boost/leaf/error.hpp>
 
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
@@ -375,10 +376,10 @@ public:
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, context const & ctx )
     {
-        char const * prefix = "Contents:";
-        ostream_writer w(os, prefix, BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER);
+        detail::diagnostics_writer w(os);
+        w.set_prefix("Contents:");
         ctx.write_to(w);
-        return os << '\n';
+        return os;
     }
 
     template <class T>

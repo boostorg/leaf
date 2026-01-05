@@ -7,7 +7,7 @@
 
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/error.hpp>
-#include <typeinfo>
+#include <boost/leaf/detail/exception_base.hpp>
 
 ////////////////////////////////////////
 
@@ -57,12 +57,10 @@ namespace detail
             return *this;
         }
 
-#if BOOST_LEAF_CFG_DIAGNOSTICS && !defined(BOOST_LEAF_NO_EXCEPTIONS)
-        void print_type_name(std::ostream & os) const override
+        parsed type_name() const override
         {
-            os << detail::demangler(typeid(Ex).name()).get();
+            return parse<Ex>();
         }
-#endif
 
     public:
 

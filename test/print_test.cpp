@@ -19,7 +19,7 @@ int main()
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
 #   include "leaf.hpp"
 #else
-#   include <boost/leaf/serialize.hpp>
+#   include <boost/leaf/detail/diagnostics_writer.hpp>
 #endif
 
 #include <sstream>
@@ -72,8 +72,8 @@ template <int Line, class T>
 std::string print(T const & x, char const * prefix, char const * delimiter)
 {
     std::ostringstream s;
-    char const * p = prefix;
-    leaf::ostream_writer w(s, p, delimiter);
+    leaf::detail::diagnostics_writer w(s, delimiter);
+    w.set_prefix(prefix);
     w.write(x);
     w.write(x);
     std::string q = s.str();

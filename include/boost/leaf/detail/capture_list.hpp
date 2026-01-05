@@ -6,7 +6,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/serialize.hpp>
+#include <boost/leaf/writer.hpp>
 
 #if BOOST_LEAF_CFG_CAPTURE
 
@@ -27,9 +27,7 @@ namespace detail
             friend class capture_list;
 
             virtual void unload( int err_id ) = 0;
-#if BOOST_LEAF_CFG_DIAGNOSTICS
             virtual void write_to(writer &, error_id const &) const = 0;
-#endif
 
         protected:
 
@@ -92,7 +90,6 @@ namespace detail
 
         void write_to(writer & w, error_id const & id) const
         {
-#if BOOST_LEAF_CFG_DIAGNOSTICS
             if( first_ )
             {
                 for_each(
@@ -101,10 +98,6 @@ namespace detail
                         n.write_to(w, id);
                     } );
             }
-#else
-            (void) w;
-            (void) id;
-#endif
         }
     }; // class capture_list
 
