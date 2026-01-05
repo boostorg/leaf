@@ -93,20 +93,23 @@ int main()
             st << di;
             std::string s = st.str();
             std::cout << s << std::endl;
-            if( BOOST_LEAF_CFG_DIAGNOSTICS && BOOST_LEAF_CFG_CAPTURE )
+            if( BOOST_LEAF_CFG_CAPTURE )
             {
-                auto const n1 = s.find("info<1>: acc=0");
-                auto const n2 = s.find("info<2>: acc=0");
-                auto const n3 = s.find("info<3>: acc=0");
-                auto const n4 = s.find("info<4>: acc=2");
-                BOOST_TEST_NE(n1, s.npos);
-                BOOST_TEST_NE(n2, s.npos);
-                BOOST_TEST_NE(n3, s.npos);
-                BOOST_TEST_NE(n4, s.npos);
+                if( BOOST_LEAF_CFG_DIAGNOSTICS )
+                {
+                    auto const n1 = s.find("info<1>: acc=0");
+                    auto const n2 = s.find("info<2>: acc=0");
+                    auto const n3 = s.find("info<3>: acc=0");
+                    auto const n4 = s.find("info<4>: acc=2");
+                    BOOST_TEST_NE(n1, s.npos);
+                    BOOST_TEST_NE(n2, s.npos);
+                    BOOST_TEST_NE(n3, s.npos);
+                    BOOST_TEST_NE(n4, s.npos);
+                }
                 BOOST_TEST_EQ(counter, 4);
             }
             else
-            BOOST_TEST_EQ(counter, 1);
+                BOOST_TEST_EQ(counter, 1);
 #endif
         },
         []
