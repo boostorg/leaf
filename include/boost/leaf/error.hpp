@@ -11,8 +11,6 @@
 #include <boost/leaf/detail/capture_list.hpp>
 #include <boost/leaf/serialization/diagnostics_writer.hpp>
 
-#include <cstring>
-
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 #   include <system_error>
 #endif

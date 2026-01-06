@@ -5,6 +5,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <boost/leaf/config.hpp>
 #include <boost/leaf/detail/demangle.hpp>
 
 #include <type_traits>
@@ -37,14 +38,14 @@ public:
     {
         return type_ == parse<typename std::decay<Derived>::type>() ? static_cast<Derived *>(this) : nullptr;
     }
-}; // class writer
+};
 
-template <class W, class E>
-typename std::enable_if<std::is_base_of<writer, W>::value>::type
-serialize(W &, E const &)
-{
+    template <class W, class E>
+    typename std::enable_if<std::is_base_of<writer, W>::value>::type
+    serialize(W &, E const &)
+    {
+    }
 }
-} // namespace serialization
 
 namespace detail
 {
@@ -53,7 +54,7 @@ namespace detail
     {
         using type = serialization::writer;
     };
-} // namespace detail
+}
 
 } } // namespace boost::leaf
 

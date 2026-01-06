@@ -6,7 +6,6 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/detail/demangle.hpp>
 
 #include <iosfwd>
 #include <cerrno>
