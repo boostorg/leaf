@@ -182,7 +182,7 @@ namespace n
         // Unrecognized __PRETTY_FUNCTION__/__FUNCSIG__ formats will result in compiler diagnostics.
         // In that case, please file an issue on https://github.com/boostorg/leaf.
 
-#define BOOST_LEAF_P(P) (sizeof(char[1 + detail::check_prefix(BOOST_LEAF_PRETTY_FUNCTION, (P))]) - 1)
+#define BOOST_LEAF_P(P) (sizeof(char[1 + detail::check_prefix(BOOST_LEAF_PRETTY_FUNCTION, P)]) - 1)
         // clang style:
         std::size_t const p01 = BOOST_LEAF_P("r boost::leaf::n::p() [T = ");
         std::size_t const p02 = BOOST_LEAF_P("r __cdecl boost::leaf::n::p(void) [T = ");
@@ -216,7 +216,7 @@ namespace n
         std::size_t const p24 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<");
 #undef BOOST_LEAF_P
 
-#define BOOST_LEAF_S(S) (sizeof(char[1 + detail::check_suffix(BOOST_LEAF_PRETTY_FUNCTION, (S))]) - 1)
+#define BOOST_LEAF_S(S) (sizeof(char[1 + detail::check_suffix(BOOST_LEAF_PRETTY_FUNCTION, S)]) - 1)
         // clang/gcc style:
         std::size_t const s01 = BOOST_LEAF_S("]");
         // msvc style:
@@ -233,20 +233,23 @@ namespace n
             ]
         ) * 2 - 1];
         (void) static_assert_unrecognized_pretty_function_format_please_file_github_issue;
-
-        if( std::size_t const p = sizeof(char[1 + !!s01 * (p01 + p02 + p03 + p04 + p05 + p06 + p07 + p08 + p09 + p10 + p11 + p12)]) - 1 )
         {
+            std::size_t const p = sizeof(char[1 + !!s01 * (p01 + p02 + p03 + p04 + p05 + p06 + p07 + p08 + p09 + p10 + p11 + p12)]) - 1;
             char begin[1 + p], end[1 + s01];
-            return { BOOST_LEAF_PRETTY_FUNCTION + p, s01 - p, detail::compute_hash(begin, end, BOOST_LEAF_PRETTY_FUNCTION) };
+            if( p )
+                return { BOOST_LEAF_PRETTY_FUNCTION + p, s01 - p, detail::compute_hash(begin, end, BOOST_LEAF_PRETTY_FUNCTION) };
         }
-        if( std::size_t const p = sizeof(char[1 + !!s02 * (p13 + p14 + p15 + p16 + p17 + p18 + p19 + p20 + p21)]) - 1 )
         {
+            std::size_t const p = sizeof(char[1 + !!s02 * (p13 + p14 + p15 + p16 + p17 + p18 + p19 + p20 + p21)]) - 1;
+            char begin[1 + p], end[1 + s02];
+            if( p )
+                return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p, detail::compute_hash(begin, end, BOOST_LEAF_PRETTY_FUNCTION) };
+        }
+        {
+            std::size_t const p = sizeof(char[1 + !!s02 * (p22 + p23 + p24)]) - 1;
             char begin[1 + p], end[1 + s02];
             return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p, detail::compute_hash(begin, end, BOOST_LEAF_PRETTY_FUNCTION) };
         }
-        std::size_t const p = sizeof(char[1 + !!s02 * (p22 + p23 + p24)]) - 1;
-        char begin[1 + p], end[1 + s02];
-        return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p, detail::compute_hash(begin, end, BOOST_LEAF_PRETTY_FUNCTION) };
     }
 } // namespace n
 
