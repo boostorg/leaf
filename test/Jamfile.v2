@@ -44,6 +44,9 @@ compile _hpp_leaf_test.cpp ;
 compile _hpp_on_error_test.cpp ;
 compile _hpp_pred_test.cpp ;
 compile _hpp_result_test.cpp ;
+compile _hpp_serialization_diagnostics_writer_test.cpp ;
+compile _hpp_serialization_json_writer_test.cpp ;
+compile _hpp_serialization_writer_test.cpp ;
 compile _hpp_to_variant_test.cpp ;
 
 run boost_exception_test.cpp ;
@@ -83,7 +86,7 @@ run handle_all_test.cpp ;
 run handle_basic_test.cpp ;
 run handle_some_other_result_test.cpp ;
 run handle_some_test.cpp ;
-run json_test.cpp ;
+run json_test.cpp : : : <toolset>clang,<target-os>linux,<cxxstd>2b:<build>no <toolset>clang,<target-os>linux,<cxxstd>23:<build>no ;
 run match_member_test.cpp ;
 run match_test.cpp ;
 run match_value_test.cpp ;

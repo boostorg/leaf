@@ -9,11 +9,7 @@
 #include <boost/leaf/detail/optional.hpp>
 #include <boost/leaf/detail/function_traits.hpp>
 #include <boost/leaf/detail/capture_list.hpp>
-
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-#   include <boost/leaf/detail/diagnostics_writer.hpp>
-#   include <ostream>
-#endif
+#include <boost/leaf/serialization/diagnostics_writer.hpp>
 
 #include <cstring>
 
@@ -93,21 +89,15 @@ struct show_in_diagnostics<e_source_location>: std::false_type
 
 ////////////////////////////////////////
 
-template <class Writer, class E>
-void serialize(Writer &, E const &)
-{
-}
-
 namespace detail
 {
     template <class Writer, class E>
     void serialize_(Writer & w, E const & e)
     {
+        using namespace serialization;
         serialize(w, e);
-    #if BOOST_LEAF_CFG_DIAGNOSTICS
-        if( detail::diagnostics_writer * ow = w.template get<detail::diagnostics_writer>() )
+        if( diagnostics_writer * ow = w.template get<diagnostics_writer>() )
             ow->write(e);
-    #endif
     }
 }
 
@@ -168,7 +158,7 @@ namespace detail
         void unload( int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE);
 
         template <class ErrorID>
-        void write_to(writer & w, ErrorID id) const
+        void write_to(serialization::writer & w, ErrorID id) const
         {
             if( int k = this->key() )
             {
@@ -236,7 +226,7 @@ namespace detail
             {
                 impl::unload(err_id);
             }
-            void write_to(writer & w, error_id const & id) const override
+            void write_to(serialization::writer & w, error_id const & id) const override
             {
                 impl::write_to(w, id);
             }
@@ -271,7 +261,7 @@ namespace detail
             {
                 std::rethrow_exception(ex_);
             }
-            void write_to(writer &, error_id const &) const override
+            void write_to(serialization::writer &, error_id const &) const override
             {
             }
             std::exception_ptr const ex_;
@@ -447,7 +437,7 @@ namespace detail
         }
 
         template <class ErrorID>
-        void write_to(writer &, ErrorID) const
+        void write_to(serialization::writer &, ErrorID) const
         {
         }
     }; // slot specialization for dynamic_allocator

@@ -22,8 +22,8 @@ namespace detail
         exception_base() noexcept { }
         ~exception_base() noexcept { }
     };
-} // namespace detail
+}
 
-} } // namespace boost::leaf
+} }
 
 #endif // #ifndef BOOST_LEAF_DETAIL_EXCEPTION_BASE_HPP_INCLUDED

@@ -7,7 +7,7 @@
 
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/context.hpp>
-#include <boost/leaf/detail/diagnostics_writer.hpp>
+#include <boost/leaf/serialization/diagnostics_writer.hpp>
 #include <typeinfo>
 
 namespace boost { namespace leaf {
@@ -91,7 +91,7 @@ public:
     template <class CharT, class Traits>
     friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, error_info const & x)
     {
-        detail::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
+        serialization::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
         return os;
     }
 }; // class error_info

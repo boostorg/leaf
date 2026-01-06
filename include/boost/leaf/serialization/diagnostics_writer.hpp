@@ -1,18 +1,29 @@
-#ifndef BOOST_LEAF_DETAIL_DIAGNOSTICS_WRITER_HPP_INCLUDED
-#define BOOST_LEAF_DETAIL_DIAGNOSTICS_WRITER_HPP_INCLUDED
+#ifndef BOOST_LEAF_SERIALIZATION_DIAGNOSTICS_WRITER_HPP_INCLUDED
+#define BOOST_LEAF_SERIALIZATION_DIAGNOSTICS_WRITER_HPP_INCLUDED
 
 // Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/writer.hpp>
+#include <boost/leaf/serialization/writer.hpp>
 #include <boost/leaf/detail/exception_base.hpp>
 
-#include <iosfwd>
+#include <type_traits>
+
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+#   include <iostream>
+#else
+#   include <iosfwd>
+#endif
 
 namespace boost { namespace leaf {
 
-namespace detail
+template <class E>
+struct show_in_diagnostics: std::integral_constant<bool, BOOST_LEAF_CFG_DIAGNOSTICS>
+{
+};
+
+namespace serialization
 {
     template <class T, class E = void>
     struct is_printable: std::false_type
@@ -126,10 +137,10 @@ namespace detail
             if( ex )
             {
                 os << "\nCaught:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
-                if( auto eb = dynamic_cast<exception_base const *>(ex) )
+                if( auto eb = dynamic_cast<detail::exception_base const *>(ex) )
                     os << eb->type_name();
                 else
-                    os << demangler(typeid(*ex).name()).get();
+                    os << detail::demangler(typeid(*ex).name()).get();
                 os << ": \"" << ex->what() << '"';
             }
             else
@@ -224,8 +235,8 @@ namespace detail
         }
     };
 
-} // namespace detail
+} // namespace serialization
 
 } } // namespace boost::leaf
 
-#endif // #ifndef BOOST_LEAF_DETAIL_DIAGNOSTICS_WRITER_HPP_INCLUDED
+#endif // #ifndef BOOST_LEAF_SERIALIZATION_DIAGNOSTICS_WRITER_HPP_INCLUDED

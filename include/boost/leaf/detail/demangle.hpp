@@ -23,8 +23,6 @@
 #   include <string>
 #endif
 
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-
 // __has_include is currently supported by GCC and Clang. However GCC 4.9 may have issues and
 // returns 1 for 'defined( __has_include )', while '__has_include' is actually not supported:
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63662
@@ -45,8 +43,6 @@
 #       undef BOOST_LEAF_HAS_CXXABI_H
 #   endif
 #endif
-
-#endif // #if BOOST_LEAF_CFG_DIAGNOSTICS
 
 namespace boost { namespace leaf {
 
@@ -134,6 +130,15 @@ namespace n
         friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, r const & pn)
         {
             return os.write(pn.name, pn.len);
+        }
+
+        template <std::size_t S>
+        friend char * to_zstr(char (&zstr)[S], r const & pn) noexcept
+        {
+            std::size_t n = pn.len < S - 1 ? pn.len : S - 1;
+            std::memcpy(zstr, pn.name, n);
+            zstr[n] = 0;
+            return zstr;
         }
     };
 

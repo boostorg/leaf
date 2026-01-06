@@ -6,9 +6,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/detail/capture_list.hpp>
-#include <boost/leaf/detail/diagnostics_writer.hpp>
 #include <boost/leaf/exception.hpp>
+#include <boost/leaf/serialization/diagnostics_writer.hpp>
+#include <boost/leaf/detail/capture_list.hpp>
 
 #include <functional>
 
@@ -29,7 +29,7 @@ class bad_result:
 
 namespace detail
 {
-    template <class T, bool Printable = is_printable<T>::value>
+    template <class T, bool Printable = serialization::is_printable<T>::value>
     struct result_value_printer;
 
     template <class T>
@@ -336,7 +336,7 @@ protected:
         result_discriminant const what = what_;
         BOOST_LEAF_ASSERT(what.kind() != result_discriminant::val);
         error_id const err_id = what.get_error_id();
-        detail::diagnostics_writer w(os);
+        serialization::diagnostics_writer w(os);
         os << "Error serial #" << err_id;
         if( what.kind() == result_discriminant::err_id_capture_list )
         {

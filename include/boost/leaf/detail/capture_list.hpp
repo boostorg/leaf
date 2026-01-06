@@ -6,11 +6,13 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/writer.hpp>
 
 #if BOOST_LEAF_CFG_CAPTURE
 
 namespace boost { namespace leaf {
+
+class error_id;
+namespace serialization { class writer; }
 
 namespace detail
 {
@@ -27,7 +29,7 @@ namespace detail
             friend class capture_list;
 
             virtual void unload( int err_id ) = 0;
-            virtual void write_to(writer &, error_id const &) const = 0;
+            virtual void write_to(serialization::writer &, error_id const &) const = 0;
 
         protected:
 
@@ -88,7 +90,7 @@ namespace detail
                 } );
         }
 
-        void write_to(writer & w, error_id const & id) const
+        void write_to(serialization::writer & w, error_id const & id) const
         {
             if( first_ )
             {
