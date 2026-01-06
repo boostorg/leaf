@@ -13,11 +13,6 @@ namespace boost { namespace leaf {
 
 namespace serialization
 {
-template <class Writer, class E>
-void serialize(Writer &, E const &)
-{
-}
-
 class writer
 {
     parsed const type_;
@@ -42,7 +37,13 @@ public:
     {
         return type_ == parse<typename std::decay<Derived>::type>() ? static_cast<Derived *>(this) : nullptr;
     }
-    }; // class writer
+}; // class writer
+
+template <class W, class E>
+typename std::enable_if<std::is_base_of<writer, W>::value>::type
+serialize(W &, E const &)
+{
+}
 } // namespace serialization
 
 namespace detail

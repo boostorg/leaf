@@ -58,13 +58,6 @@ struct e_errno
     {
         return os << err.value << ", \"" << std::strerror(err.value) << '"';
     }
-
-    template <class Json>
-    friend void to_json(Json & j, e_errno const & e)
-    {
-        j["value"] = e.value;
-        j["message"] = std::strerror(e.value);
-    }
 };
 
 struct e_type_info_name { char const * value; };

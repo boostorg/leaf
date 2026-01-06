@@ -16,6 +16,10 @@
 #   include <iosfwd>
 #endif
 
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+#   include <typeinfo>
+#endif
+
 namespace boost { namespace leaf {
 
 template <class E>
@@ -31,7 +35,7 @@ namespace serialization
     };
 
     template <class T>
-    struct is_printable<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>(), void())>: show_in_diagnostics<T>
+    struct is_printable<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>(), void())>: std::true_type
     {
     };
 
@@ -41,7 +45,7 @@ namespace serialization
     };
 
     template <class T>
-    struct has_printable_member_value<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>().value, void())>: show_in_diagnostics<T>
+    struct has_printable_member_value<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>().value, void())>: std::true_type
     {
     };
 
@@ -62,10 +66,10 @@ namespace serialization
         diagnostics_writer(diagnostics_writer const &) = delete;
         diagnostics_writer & operator=(diagnostics_writer const &) = delete;
 
-        void (*print_lf_)(std::ostream &);
         std::ostream & os_;
         char const * prefix_;
-        char const * const delimiter_;
+        char const * delimiter_;
+        void (* const print_suffix_)(std::ostream &);
 
         template <class T, class CharT, class Traits>
         static void print_name(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter)
@@ -113,22 +117,22 @@ namespace serialization
     public:
 
         template <class CharT, class Traits>
-        explicit diagnostics_writer(std::basic_ostream<CharT, Traits> & os, char const * delimiter = BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER) noexcept:
+        explicit diagnostics_writer(std::basic_ostream<CharT, Traits> & os) noexcept:
             writer(this),
-            print_lf_([](std::basic_ostream<CharT, Traits> & os) { os << '\n'; }),
             os_(os),
-            prefix_(nullptr),
-            delimiter_(delimiter)
+            prefix_(BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER),
+            delimiter_(BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER),
+            print_suffix_([](std::basic_ostream<CharT, Traits> &) { })
         {
         }
 
-        template <class CharT, class Traits, class ErrorId, class SourceLocation, class Exception>
-        diagnostics_writer(std::basic_ostream<CharT, Traits> & os, ErrorId id, SourceLocation const * loc, Exception const * ex) noexcept:
+        template <class CharT, class Traits>
+        diagnostics_writer(std::basic_ostream<CharT, Traits> & os, error_id const & id, e_source_location const * loc, std::exception const * ex) noexcept:
             writer(this),
-            print_lf_([](std::basic_ostream<CharT, Traits> & os) { os << '\n'; }),
             os_(os),
-            prefix_(nullptr),
-            delimiter_(BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER)
+            prefix_(BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER),
+            delimiter_(BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER),
+            print_suffix_([](std::basic_ostream<CharT, Traits> & os) { os << '\n'; })
         {
             os << "Error with serial #" << id;
             if( loc )
@@ -145,20 +149,23 @@ namespace serialization
             }
             else
 #endif
-            {
                 prefix_ = "\nCaught:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
-            }
             (void) ex;
         }
 
         ~diagnostics_writer() noexcept
         {
-            print_lf_(os_);
+            print_suffix_(os_);
         }
 
         void set_prefix(char const * prefix) noexcept
         {
             prefix_ = prefix;
+        }
+
+        void set_delimiter(char const * delimiter) noexcept
+        {
+            delimiter_ = delimiter;
         }
 
         template <class E>

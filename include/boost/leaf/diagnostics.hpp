@@ -31,8 +31,7 @@ protected:
     template <class W>
     void write_to_(W & w) const
     {
-        typename detail::dependent_writer<W>::type & wr = w;
-        serialize_tuple_contents_(wr, tup_, error());
+        serialize_tuple_contents_(w, tup_, error());
     }
 
 public:
@@ -101,9 +100,8 @@ protected:
     template <class W>
     void write_to_(W & w) const
     {
-        typename detail::dependent_writer<W>::type & wr = w;
         if( da_ )
-            da_->write_to(wr, error());
+            da_->write_to(w, error());
     }
 
 public:

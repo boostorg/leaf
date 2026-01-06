@@ -112,6 +112,31 @@ namespace detail
     {
         return cpp11_suffix<S1, S2, S1 - 2, S2 - 2>::check(str, suffix) ? S1 - S2 : 0;
     }
+
+    ////////////////////////////////////////
+
+    // FNV-1a hash computed via template metaprogramming
+    template <int Begin, int End, int S>
+    struct cpp11_hash
+    {
+        BOOST_LEAF_ALWAYS_INLINE constexpr static unsigned compute(char const (&str)[S], unsigned h) noexcept
+        {
+            return cpp11_hash<Begin + 1, End, S>::compute(str, (h ^ static_cast<unsigned char>(str[Begin])) * 16777619u);
+        }
+    };
+    template <int End, int S>
+    struct cpp11_hash<End, End, S>
+    {
+        BOOST_LEAF_ALWAYS_INLINE constexpr static unsigned compute(char const (&)[S], unsigned h) noexcept
+        {
+            return h;
+        }
+    };
+    template <int Begin, int End, int S>
+    BOOST_LEAF_ALWAYS_INLINE constexpr unsigned compute_hash(char const (&str)[S]) noexcept
+    {
+        return cpp11_hash<Begin, End, S>::compute(str, 2166136261u);
+    }
 } // namespace detail
 
 namespace n
@@ -120,10 +145,12 @@ namespace n
     {
         char const * name;
         std::size_t len;
+        unsigned hash;
 
         friend bool operator==(r const & a, r const & b) noexcept
         {
-            return a.len == b.len && std::memcmp(a.name, b.name, a.len) == 0;
+            BOOST_LEAF_ASSERT((a.hash == b.hash) == (a.len == b.len && std::memcmp(a.name, b.name, a.len) == 0));
+            return a.hash == b.hash;
         }
 
         template <class CharT, class Traits>
@@ -208,13 +235,13 @@ namespace n
         (void) static_assert_unrecognized_pretty_function_format_please_file_github_issue;
 
         if( std::size_t const p = sizeof(char[1 + !!s01 * (p01 + p02 + p03 + p04 + p05 + p06 + p07 + p08 + p09 + p10 + p11 + p12)]) - 1 )
-            return { BOOST_LEAF_PRETTY_FUNCTION + p, s01 - p };
+            return { BOOST_LEAF_PRETTY_FUNCTION + p, s01 - p, detail::compute_hash<p, s01>(BOOST_LEAF_PRETTY_FUNCTION) };
 
         if( std::size_t const p = sizeof(char[1 + !!s02 * (p13 + p14 + p15 + p16 + p17 + p18 + p19 + p20 + p21)]) - 1 )
-            return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p };
+            return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p, detail::compute_hash<p, s02>(BOOST_LEAF_PRETTY_FUNCTION) };
 
         std::size_t const p = sizeof(char[1 + !!s02 * (p22 + p23 + p24)]) - 1; // p is not zero, we've static asserted the hell out of it
-        return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p };
+        return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p, detail::compute_hash<p, s02>(BOOST_LEAF_PRETTY_FUNCTION) };
     }
 } // namespace n
 

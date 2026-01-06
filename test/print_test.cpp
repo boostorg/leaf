@@ -72,8 +72,9 @@ template <int Line, class T>
 std::string print(T const & x, char const * prefix, char const * delimiter)
 {
     std::ostringstream s;
-    leaf::serialization::diagnostics_writer w(s, delimiter);
+    leaf::serialization::diagnostics_writer w(s);
     w.set_prefix(prefix);
+    w.set_delimiter(delimiter);
     w.write(x);
     w.write(x);
     std::string q = s.str();

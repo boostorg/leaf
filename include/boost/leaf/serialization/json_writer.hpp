@@ -7,6 +7,8 @@
 
 #include <boost/leaf/serialization/writer.hpp>
 #include <boost/leaf/detail/exception_base.hpp>
+#include <boost/leaf/error.hpp>
+#include <boost/leaf/common.hpp>
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 #   include <system_error>
@@ -21,6 +23,27 @@ namespace boost { namespace leaf {
 
 namespace serialization
 {
+    template <class Json>
+    void to_json(Json & j, error_id x)
+    {
+        j = x.value() / 4;
+    }
+
+    template <class Json>
+    void to_json(Json & j, e_source_location const & x)
+    {
+        j["file"] = x.file;
+        j["line"] = x.line;
+        j["function"] = x.function;
+    }
+
+    template <class Json>
+    void to_json(Json & j, e_errno const & e)
+    {
+        j["value"] = e.value;
+        j["message"] = std::strerror(e.value);
+    }
+
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     template <class Json>
     void to_json(Json & j, std::error_code const & ec)

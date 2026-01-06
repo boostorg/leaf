@@ -8,7 +8,6 @@
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/context.hpp>
 #include <boost/leaf/serialization/diagnostics_writer.hpp>
-#include <typeinfo>
 
 namespace boost { namespace leaf {
 
@@ -80,11 +79,10 @@ public:
     template <class W>
     void write_to(W & w) const
     {
-        typename detail::dependent_writer<W>::type & wr = w;
-        detail::serialize_(wr, err_id_);
+        detail::serialize_(w, err_id_);
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
         if( ex_ )
-            detail::serialize_(wr, *ex_);
+            detail::serialize_(w, *ex_);
 #endif
     }
 

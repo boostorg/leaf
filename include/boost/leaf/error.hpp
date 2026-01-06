@@ -72,14 +72,6 @@ struct e_source_location
     {
         return os << x.file << '(' << x.line << ") in function " << x.function;
     }
-
-    template <class Json>
-    friend void to_json(Json & j, e_source_location const & x)
-    {
-        j["file"] = x.file;
-        j["line"] = x.line;
-        j["function"] = x.function;
-    }
 };
 
 template <>
@@ -95,9 +87,10 @@ namespace detail
     void serialize_(Writer & w, E const & e)
     {
         using namespace serialization;
-        serialize(w, e);
-        if( diagnostics_writer * ow = w.template get<diagnostics_writer>() )
-            ow->write(e);
+        typename dependent_writer<Writer>::type & wr = w;
+        serialize(wr, e);
+        if( diagnostics_writer * dw = w.template get<diagnostics_writer>() )
+            dw->write(e);
     }
 }
 
@@ -791,12 +784,6 @@ public:
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, error_id x )
     {
         return os << (x.value_ / 4);
-    }
-
-    template <class Json>
-    friend void to_json(Json & j, error_id x)
-    {
-        j = (x.value_ / 4);
     }
 
     BOOST_LEAF_CONSTEXPR void load_source_location_( char const * file, int line, char const * function ) const noexcept(!BOOST_LEAF_CFG_CAPTURE)

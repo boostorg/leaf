@@ -76,6 +76,7 @@ leaf::result<void> fail()
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
         std::make_error_code(std::errc::invalid_argument),
 #endif
+        42,
         my_error<1>{1, "error one"},
         my_error<2>{2, "error two"},
         leaf::e_errno{ENOENT},
@@ -89,6 +90,7 @@ void leaf_throw()
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
         std::make_error_code(std::errc::invalid_argument),
 #endif
+        42,
         my_error<1>{1, "error one"},
         my_error<2>{2, "error two"},
         leaf::e_errno{ENOENT},
@@ -101,6 +103,7 @@ void throw_()
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
         std::make_error_code(std::errc::invalid_argument),
 #endif
+        42,
         my_error<1>{1, "error one"},
         my_error<2>{2, "error two"},
         leaf::e_errno{ENOENT},
@@ -146,6 +149,8 @@ void check_diagnostic_details(nlohmann::ordered_json const & j, bool has_source_
 
     if( BOOST_LEAF_CFG_CAPTURE )
     {
+        BOOST_TEST_EQ(j["int"].get<int>(), 42);
+
         auto const & e2j = j["my_error<2>"];
         BOOST_TEST_EQ(e2j["code"].get<int>(), 2);
         BOOST_TEST_EQ(e2j["message"].get<std::string>(), "error two");
@@ -166,6 +171,7 @@ void check_diagnostic_details(nlohmann::ordered_json const & j, bool has_source_
     }
     else
     {
+        BOOST_TEST(!j.contains("int"));
         BOOST_TEST(!j.contains("my_error<2>"));
         BOOST_TEST(!j.contains("boost::leaf::e_errno"));
         BOOST_TEST(!j.contains("boost::leaf::e_api_function"));
@@ -337,6 +343,48 @@ int main()
         std::string what = ep["what"].get<std::string>();
         BOOST_TEST_EQ(type, "<<unknown>>");
         BOOST_TEST_EQ(what, "N/A");
+    }
+#endif
+
+    {
+        nlohmann::ordered_json j;
+        leaf::result<int> r = 42;
+        BOOST_TEST(r);
+        nlohmann_writer w(j);
+        r.write_to(w);
+        std::cout << __LINE__ << " result<int> success JSON output:\n" << std::setw(2) << j << std::endl;
+        BOOST_TEST_EQ(j["int"].get<int>(), 42);
+    }
+
+    {
+        nlohmann::ordered_json j;
+        leaf::result<int> r = leaf::new_error();
+        BOOST_TEST(!r);
+        nlohmann_writer w(j);
+        r.write_to(w);
+        std::cout << __LINE__ << " result<int> error JSON output:\n" << std::setw(2) << j << std::endl;
+        BOOST_TEST(j["boost::leaf::error_id"].get<int>() > 0);
+    }
+
+#if BOOST_LEAF_CFG_CAPTURE
+    {
+        nlohmann::ordered_json j;
+        leaf::result<int> r = leaf::try_capture_all(
+            []() -> leaf::result<int>
+            {
+                return leaf::new_error(my_error<1>{1, "error one"}, my_error<2>{2, "error two"});
+            } );
+        BOOST_TEST(!r);
+        nlohmann_writer w(j);
+        r.write_to(w);
+        std::cout << __LINE__ << " result<int> captured error JSON output:\n" << std::setw(2) << j << std::endl;
+        BOOST_TEST(j["boost::leaf::error_id"].get<int>() > 0);
+        auto const & e1j = j["my_error<1>"];
+        BOOST_TEST_EQ(e1j["code"].get<int>(), 1);
+        BOOST_TEST_EQ(e1j["message"].get<std::string>(), "error one");
+        auto const & e2j = j["my_error<2>"];
+        BOOST_TEST_EQ(e2j["code"].get<int>(), 2);
+        BOOST_TEST_EQ(e2j["message"].get<std::string>(), "error two");
     }
 #endif
 
