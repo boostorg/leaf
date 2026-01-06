@@ -133,9 +133,9 @@ namespace detail
         }
     };
     template <int Begin, int End, int S>
-    BOOST_LEAF_ALWAYS_INLINE constexpr unsigned compute_hash(char const (&str)[S]) noexcept
+    BOOST_LEAF_ALWAYS_INLINE constexpr unsigned compute_hash(char const(&)[Begin], char const (&)[End], char const (&str)[S]) noexcept
     {
-        return cpp11_hash<Begin, End, S>::compute(str, 2166136261u);
+        return cpp11_hash<Begin-1, End-1, S>::compute(str, 2166136261u);
     }
 } // namespace detail
 
@@ -234,16 +234,22 @@ namespace n
         ) * 2 - 1];
         (void) static_assert_unrecognized_pretty_function_format_please_file_github_issue;
 
-#define BOOST_LEAF_COMPUTE_TYPE_HASH(P, S) detail::compute_hash<sizeof(char[(1 + (P))]) - 1, sizeof(char[(1 + (S))]) - 1>(BOOST_LEAF_PRETTY_FUNCTION)
         if( std::size_t const p = sizeof(char[1 + !!s01 * (p01 + p02 + p03 + p04 + p05 + p06 + p07 + p08 + p09 + p10 + p11 + p12)]) - 1 )
-            return { BOOST_LEAF_PRETTY_FUNCTION + p, s01 - p, BOOST_LEAF_COMPUTE_TYPE_HASH(p, s01) };
-
+        {
+            using begin = char[1 + p];
+            using end = char[1 + s01];
+            return { BOOST_LEAF_PRETTY_FUNCTION + p, s01 - p, detail::compute_hash(begin{}, end{}, BOOST_LEAF_PRETTY_FUNCTION) };
+        }
         if( std::size_t const p = sizeof(char[1 + !!s02 * (p13 + p14 + p15 + p16 + p17 + p18 + p19 + p20 + p21)]) - 1 )
-            return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p, BOOST_LEAF_COMPUTE_TYPE_HASH(p, s02) };
-
+        {
+            using begin = char[1 + p];
+            using end = char[1 + s02];
+            return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p, detail::compute_hash(begin{}, end{}, BOOST_LEAF_PRETTY_FUNCTION) };
+        }
         std::size_t const p = sizeof(char[1 + !!s02 * (p22 + p23 + p24)]) - 1;
-        return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p, BOOST_LEAF_COMPUTE_TYPE_HASH(p, s02) };
-#undef BOOST_LEAF_COMPUTE_TYPE_HASH
+        using begin = char[1 + p];
+        using end = char[1 + s02];
+        return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p, detail::compute_hash(begin{}, end{}, BOOST_LEAF_PRETTY_FUNCTION) };
     }
 } // namespace n
 
