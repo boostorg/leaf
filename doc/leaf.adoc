@@ -1733,7 +1733,12 @@ TIP: The automatically generated diagnostic messages are developer-friendly, but
 [[tutorial-serialization]]
 === Serialization
 
-LEAF provides a serialization API that enables exporting error information into different formats, such as JSON. This is useful for structured logging, remote debugging, or integrating with monitoring systems. To serialize error information, use the `write_to` member function available on <<error_info>>, <<diagnostic_info>>, and <<diagnostic_details>> classes.
+LEAF provides a serialization API that enables exporting error information into different formats, such as JSON. This is useful for structured logging, remote debugging, or integrating with monitoring systems. To serialize error information, use the `write_to` member function available on the following types:
+
+* <<error_info>>
+* <<diagnostic_info>>
+* <<diagnostic_details>>
+* <<result>>
 
 ==== Custom Writers
 
@@ -2521,6 +2526,9 @@ namespace boost { namespace leaf {
     
     void unload();
 
+    template <class Writer>
+    void write_to( Writer & w ) const;
+
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const & );
   };
@@ -2566,6 +2574,9 @@ namespace boost { namespace leaf {
     error_id load( Item && ... item ) noexcept;
     
     void unload();
+
+    template <class Writer>
+    void write_to( Writer & w ) const;
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const &);
@@ -4716,6 +4727,9 @@ namespace boost { namespace leaf {
     
     void unload();
 
+    template <class Writer>
+    void write_to( Writer & w ) const;
+
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const & );
   };
@@ -4762,6 +4776,9 @@ namespace boost { namespace leaf {
     
     void unload();
 
+    template <class Writer>
+    void write_to( Writer & w ) const;
+
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const &);
   };
@@ -4776,7 +4793,7 @@ namespace boost { namespace leaf {
 } }
 ----
 [.text-right]
-<<result::result>> | <<result::operator_eq>> | <<result::has_value>> | <<result::has_error>> | <<result::operator_bool>> | <<result::value>> | <<result::operator_ptr>> | <<result::operator_deref>> | <<result::error>> | <<result::load>>
+<<result::result>> | <<result::operator_eq>> | <<result::has_value>> | <<result::has_error>> | <<result::operator_bool>> | <<result::value>> | <<result::operator_ptr>> | <<result::operator_deref>> | <<result::error>> | <<result::load>> | <<result::write_to>>
 
 The `result<T>` type can be returned by functions which produce a value of type `T` but may fail doing so.
 
@@ -4899,6 +4916,42 @@ WARNING: The returned proxy object refers to `*this`; avoid holding on to it.
 
 '''
 
+[[result::has_error]]
+==== `has_error`
+
+.#include <boost/leaf/result.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class T>
+  bool result<T>::has_error() const noexcept;
+
+} }
+----
+
+Returns: :: If `*this` is in <<result,value state>>, returns `false`, otherwise returns `true`.
+
+'''
+
+[[result::has_value]]
+==== `has_value`
+
+.#include <boost/leaf/result.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class T>
+  bool result<T>::has_value() const noexcept;
+
+} }
+----
+
+Returns: :: If `*this` is in <<result,value state>>, returns `true`, otherwise returns `false`.
+
+'''
+
 [[result::load]]
 ==== `load`
 
@@ -4919,6 +4972,47 @@ This member function is designed for use in `return` statements in functions tha
 Effects: :: As if `error_id(thispass:[->]error()).load(std::forward<Item>(item)...)`.
 
 Returns: :: `*this`.
+
+'''
+
+[[result::operator_bool]]
+==== `operator bool`
+
+.#include <boost/leaf/result.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class T>
+  result<T>::operator bool() const noexcept;
+
+} }
+----
+
+Returns: :: If `*this` is in <<result,value state>>, returns `true`, otherwise returns `false`.
+
+'''
+
+[[result::operator_deref]]
+==== `operator*`
+
+.#include <boost/leaf/result.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+  template <class T>
+  T const & result<T>::operator*() const noexcept;
+
+  template <class T>
+  T & result<T>::operator*() noexcept;
+
+} }
+----
+
+Requires: :: `*this` must be in <<result,value state>>.
+
+Returns :: a reference to the stored value.
 
 '''
 
@@ -4944,8 +5038,8 @@ Effects: :: Destroys `*this`, then re-initializes it as if using the appropriate
 
 '''
 
-[[result::has_value]]
-==== `has_value`
+[[result::operator_ptr]]
+==== `operatorpass:[->]`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
@@ -4953,48 +5047,15 @@ Effects: :: Destroys `*this`, then re-initializes it as if using the appropriate
 namespace boost { namespace leaf {
 
   template <class T>
-  bool result<T>::has_value() const noexcept;
-
-} }
-----
-
-Returns: :: If `*this` is in <<result,value state>>, returns `true`, otherwise returns `false`.
-
-'''
-
-[[result::has_error]]
-==== `has_error`
-
-.#include <boost/leaf/result.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
+  T const * result<T>::operator->() const noexcept;
 
   template <class T>
-  bool result<T>::has_error() const noexcept;
+  T * result<T>::operator->() noexcept;
 
 } }
 ----
 
-Returns: :: If `*this` is in <<result,value state>>, returns `false`, otherwise returns `true`.
-
-'''
-
-[[result::operator_bool]]
-==== `operator bool`
-
-.#include <boost/leaf/result.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class T>
-  result<T>::operator bool() const noexcept;
-
-} }
-----
-
-Returns: :: If `*this` is in <<result,value state>>, returns `true`, otherwise returns `false`.
+Returns :: If `*this` is in <<result,value state>>, returns a pointer to the stored value; otherwise returns `nullptr`.
 
 '''
 
@@ -5036,13 +5097,8 @@ A member type of `result<T>`, defined as a synonym for `T`.
 
 '''
 
-[[result::bad_result]]
-Effects: :: If `*this` is in <<result,value state>>, returns a reference to the stored value, otherwise throws `bad_result`.
-
-'''
-
-[[result::operator_ptr]]
-==== `operatorpass:[->]`
+[[result::write_to]]
+==== `write_to`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
@@ -5050,38 +5106,17 @@ Effects: :: If `*this` is in <<result,value state>>, returns a reference to the 
 namespace boost { namespace leaf {
 
   template <class T>
-  T const * result<T>::operator->() const noexcept;
-
-  template <class T>
-  T * result<T>::operator->() noexcept;
+  template <class Writer>
+  void result<T>::write_to( Writer & w ) const;
 
 } }
 ----
 
-Returns :: If `*this` is in <<result,value state>>, returns a pointer to the stored value; otherwise returns 0.
+The `write_to` member function is used with the serialization system; see <<tutorial-serialization>>.
 
-'''
+If the result is in <<result,value state>>, outputs the value. If it is in <<result,error state>>, outputs the <<error_id>>. If the result holds <<try_capture_all,captured error objects>>, outputs them as well.
 
-[[result::operator_deref]]
-==== `operator*`
-
-.#include <boost/leaf/result.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class T>
-  T const & result<T>::operator*() const noexcept;
-
-  template <class T>
-  T & result<T>::operator*() noexcept;
-
-} }
-----
-
-Requires: :: `*this` must be in <<result,value state>>.
-
-Returns :: a reference to the stored value.
+NOTE: Result objects carry error objects only when in <<try_capture_all,capture state>>. Otherwise, to output error objects, use `write_to` on <<diagnostic_details>> in an error handling scope.
 
 '''
 
