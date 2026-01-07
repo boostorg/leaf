@@ -150,7 +150,9 @@ namespace serialization
             }
             else
 #endif
+            {
                 prefix_ = "\nCaught:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
+            }
             (void) ex;
         }
 
