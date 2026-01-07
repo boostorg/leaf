@@ -115,27 +115,13 @@ namespace detail
 
     ////////////////////////////////////////
 
-    // FNV-1a hash computed via template metaprogramming
-    template <int Begin, int End, int S>
-    struct cpp11_hash
+    template <std::size_t S>
+    BOOST_LEAF_ALWAYS_INLINE unsigned compute_hash(char const (&str)[S], std::size_t begin, std::size_t end) noexcept
     {
-        BOOST_LEAF_ALWAYS_INLINE constexpr static unsigned compute(char const (&str)[S], unsigned h) noexcept
-        {
-            return cpp11_hash<Begin + 1, End, S>::compute(str, (h ^ static_cast<unsigned char>(str[Begin])) * 16777619u);
-        }
-    };
-    template <int End, int S>
-    struct cpp11_hash<End, End, S>
-    {
-        BOOST_LEAF_ALWAYS_INLINE constexpr static unsigned compute(char const (&)[S], unsigned h) noexcept
-        {
-            return h;
-        }
-    };
-    template <int Begin, int End, int S>
-    BOOST_LEAF_ALWAYS_INLINE constexpr unsigned compute_hash(char const(&)[Begin], char const (&)[End], char const (&str)[S]) noexcept
-    {
-        return cpp11_hash<Begin-1, End-1, S>::compute(str, 2166136261u);
+        unsigned h = 2166136261u;
+        for( std::size_t i = begin; i != end; ++i )
+            h = (h ^ static_cast<unsigned>(str[i])) * 16777619u;
+        return h;
     }
 } // namespace detail
 
@@ -169,8 +155,16 @@ namespace n
         }
     };
 
+#ifdef _WIN32
+#   define BOOST_LEAF_CDECL __cdecl
+#   define BOOST_LEAF_CDECL_S "__cdecl "
+#else
+#   define BOOST_LEAF_CDECL
+#   define BOOST_LEAF_CDECL_S
+#endif
+
     template <class T>
-    BOOST_LEAF_ALWAYS_INLINE r p()
+    BOOST_LEAF_ALWAYS_INLINE r BOOST_LEAF_CDECL p(int)
     {
         // C++11 compile-time parsing of __PRETTY_FUNCTION__/__FUNCSIG__. The sizeof hacks are a
         // workaround for older GCC versions, where __PRETTY_FUNCTION__ is not constexpr, which triggers
@@ -184,73 +178,49 @@ namespace n
 
 #define BOOST_LEAF_P(P) (sizeof(char[1 + detail::check_prefix(BOOST_LEAF_PRETTY_FUNCTION, P)]) - 1)
         // clang style:
-        std::size_t const p01 = BOOST_LEAF_P("r boost::leaf::n::p() [T = ");
-        std::size_t const p02 = BOOST_LEAF_P("r __cdecl boost::leaf::n::p(void) [T = ");
-        std::size_t const p03 = BOOST_LEAF_P("r __stdcall boost::leaf::n::p(void) [T = ");
-        std::size_t const p04 = BOOST_LEAF_P("r __fastcall boost::leaf::n::p(void) [T = ");
+        std::size_t const p01 = BOOST_LEAF_P("r " BOOST_LEAF_CDECL_S "boost::leaf::n::p(int) [T = ");
         // old clang style:
-        std::size_t const p05 = BOOST_LEAF_P("boost::leaf::n::r boost::leaf::n::p() [T = ");
-        std::size_t const p06 = BOOST_LEAF_P("boost::leaf::n::r __cdecl boost::leaf::n::p(void) [T = ");
-        std::size_t const p07 = BOOST_LEAF_P("boost::leaf::n::r __stdcall boost::leaf::n::p(void) [T = ");
-        std::size_t const p08 = BOOST_LEAF_P("boost::leaf::n::r __fastcall boost::leaf::n::p(void) [T = ");
+        std::size_t const p02 = BOOST_LEAF_P("boost::leaf::n::r " BOOST_LEAF_CDECL_S "boost::leaf::n::p(int) [T = ");
         // gcc style:
-        std::size_t const p09 = BOOST_LEAF_P("boost::leaf::n::r boost::leaf::n::p() [with T = ");
-        std::size_t const p10 = BOOST_LEAF_P("boost::leaf::n::r __cdecl boost::leaf::n::p() [with T = ");
-        std::size_t const p11 = BOOST_LEAF_P("boost::leaf::n::r __stdcall boost::leaf::n::p() [with T = ");
-        std::size_t const p12 = BOOST_LEAF_P("boost::leaf::n::r __fastcall boost::leaf::n::p() [with T = ");
-        // msvc style, struct:
-        std::size_t const p13 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<struct ");
-        std::size_t const p14 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<struct ");
-        std::size_t const p15 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<struct ");
-        // msvc style, class:
-        std::size_t const p16 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<class ");
-        std::size_t const p17 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<class ");
-        std::size_t const p18 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<class ");
-        // msvc style, enum:
-        std::size_t const p19 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<enum ");
-        std::size_t const p20 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<enum ");
-        std::size_t const p21 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<enum ");
-        // msvc style, built-in type:
-        std::size_t const p22 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<");
-        std::size_t const p23 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<");
-        std::size_t const p24 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<");
+        std::size_t const p03 = BOOST_LEAF_P("boost::leaf::n::r " BOOST_LEAF_CDECL_S "boost::leaf::n::p(int) [with T = ");
+        // msvc style:
+        std::size_t const p04 = BOOST_LEAF_P("struct boost::leaf::n::r " BOOST_LEAF_CDECL_S "boost::leaf::n::p<struct ");
+        std::size_t const p05 = BOOST_LEAF_P("struct boost::leaf::n::r " BOOST_LEAF_CDECL_S "boost::leaf::n::p<class ");
+        std::size_t const p06 = BOOST_LEAF_P("struct boost::leaf::n::r " BOOST_LEAF_CDECL_S "boost::leaf::n::p<enum ");
+        std::size_t const p07 = BOOST_LEAF_P("struct boost::leaf::n::r " BOOST_LEAF_CDECL_S "boost::leaf::n::p<");
 #undef BOOST_LEAF_P
 
 #define BOOST_LEAF_S(S) (sizeof(char[1 + detail::check_suffix(BOOST_LEAF_PRETTY_FUNCTION, S)]) - 1)
         // clang/gcc style:
         std::size_t const s01 = BOOST_LEAF_S("]");
         // msvc style:
-        std::size_t const s02 = BOOST_LEAF_S(">(void)");
+        std::size_t const s02 = BOOST_LEAF_S(">(int)");
 #undef BOOST_LEAF_S
 
         char static_assert_unrecognized_pretty_function_format_please_file_github_issue[sizeof(
             char[
-                (s01 && (1 == (!!p01 + !!p02 + !!p03 + !!p04 + !!p05 + !!p06 + !!p07 + !!p08 + !!p09 + !!p10 + !!p11 + !!p12)))
+                (s01 && (1 == (!!p01 + !!p02 + !!p03)))
                 ||
-                (s02 && (1 == (!!p13 + !!p14 + !!p15 + !!p16 + !!p17 + !!p18 + !!p19 + !!p20 + !!p21)))
+                (s02 && (1 == (!!p04 + !!p05 + !!p06)))
                 ||
-                (s02 && (1 == (!!p22 + !!p23 + !!p24)))
+                (s02 && !!p07)
             ]
         ) * 2 - 1];
         (void) static_assert_unrecognized_pretty_function_format_please_file_github_issue;
-        {
-            std::size_t const p = sizeof(char[1 + !!s01 * (p01 + p02 + p03 + p04 + p05 + p06 + p07 + p08 + p09 + p10 + p11 + p12)]) - 1;
-            char begin[1 + p], end[1 + s01];
-            if( p )
-                return { BOOST_LEAF_PRETTY_FUNCTION + p, s01 - p, detail::compute_hash(begin, end, BOOST_LEAF_PRETTY_FUNCTION) };
-        }
-        {
-            std::size_t const p = sizeof(char[1 + !!s02 * (p13 + p14 + p15 + p16 + p17 + p18 + p19 + p20 + p21)]) - 1;
-            char begin[1 + p], end[1 + s02];
-            if( p )
-                return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p, detail::compute_hash(begin, end, BOOST_LEAF_PRETTY_FUNCTION) };
-        }
-        {
-            std::size_t const p = sizeof(char[1 + !!s02 * (p22 + p23 + p24)]) - 1;
-            char begin[1 + p], end[1 + s02];
-            return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p, detail::compute_hash(begin, end, BOOST_LEAF_PRETTY_FUNCTION) };
-        }
+
+        if( std::size_t const p = sizeof(char[1 + !!s01 * (p01 + p02 + p03)]) - 1 )
+            return { BOOST_LEAF_PRETTY_FUNCTION + p, s01 - p, detail::compute_hash(BOOST_LEAF_PRETTY_FUNCTION, p, s01) };
+
+        if( std::size_t const p = sizeof(char[1 + !!s02 * (p04 + p05 + p06)]) - 1 )
+            return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p, detail::compute_hash(BOOST_LEAF_PRETTY_FUNCTION, p, s02) };
+
+        std::size_t const p = sizeof(char[1 + !!s02 * p07]) - 1;
+        return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p, detail::compute_hash(BOOST_LEAF_PRETTY_FUNCTION, p, s02) };
     }
+
+#undef BOOST_LEAF_CDECL_S
+#undef BOOST_LEAF_CDECL
+
 } // namespace n
 
 using parsed = n::r;
@@ -258,7 +228,7 @@ using parsed = n::r;
 template <class T>
 parsed parse()
 {
-    return n::p<T>();
+    return n::p<T>(42);
 }
 
 } } // namespace boost::leaf
