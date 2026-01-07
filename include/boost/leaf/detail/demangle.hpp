@@ -1,7 +1,7 @@
 #ifndef BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
 
-// Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2026 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -18,10 +18,6 @@
 #include <iosfwd>
 #include <cstdlib>
 #include <cstring>
-
-#if BOOST_LEAF_CFG_STD_STRING
-#   include <string>
-#endif
 
 // __has_include is currently supported by GCC and Clang. However GCC 4.9 may have issues and
 // returns 1 for 'defined( __has_include )', while '__has_include' is actually not supported:
@@ -116,11 +112,11 @@ namespace detail
     ////////////////////////////////////////
 
     template <std::size_t S>
-    BOOST_LEAF_ALWAYS_INLINE unsigned compute_hash(char const (&str)[S], std::size_t begin, std::size_t end) noexcept
+    BOOST_LEAF_ALWAYS_INLINE std::size_t compute_hash(char const (&str)[S], std::size_t begin, std::size_t end) noexcept
     {
-        unsigned h = 2166136261u;
+        std::size_t h = 2166136261u;
         for( std::size_t i = begin; i != end; ++i )
-            h = (h ^ static_cast<unsigned>(str[i])) * 16777619u;
+            h = (h ^ static_cast<std::size_t>(str[i])) * 16777619u;
         return h;
     }
 } // namespace detail
@@ -129,30 +125,9 @@ namespace n
 {
     struct r
     {
-        char const * name;
-        std::size_t len;
-        unsigned hash;
-
-        friend bool operator==(r const & a, r const & b) noexcept
-        {
-            BOOST_LEAF_ASSERT((a.hash == b.hash) == (a.len == b.len && std::memcmp(a.name, b.name, a.len) == 0));
-            return a.hash == b.hash;
-        }
-
-        template <class CharT, class Traits>
-        friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, r const & pn)
-        {
-            return os.write(pn.name, pn.len);
-        }
-
-        template <std::size_t S>
-        friend char * to_zstr(char (&zstr)[S], r const & pn) noexcept
-        {
-            std::size_t n = pn.len < S - 1 ? pn.len : S - 1;
-            std::memcpy(zstr, pn.name, n);
-            zstr[n] = 0;
-            return zstr;
-        }
+        char const * name_not_zero_terminated_at_length;
+        std::size_t length;
+        std::size_t hash;
     };
 
 #ifdef _MSC_VER
@@ -225,14 +200,6 @@ namespace n
 #undef BOOST_LEAF_CDECL
 
 } // namespace n
-
-using parsed = n::r;
-
-template <class T>
-parsed parse()
-{
-    return n::p<T>();
-}
 
 } } // namespace boost::leaf
 

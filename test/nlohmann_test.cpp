@@ -1,4 +1,4 @@
-// Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2026 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -73,6 +73,7 @@ leaf::result<void> fail()
     return BOOST_LEAF_NEW_ERROR(
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
         std::make_error_code(std::errc::invalid_argument),
+        std::make_error_condition(std::errc::io_error),
 #endif
         42,
         my_error<1>{1, "error one"},
@@ -87,6 +88,7 @@ void leaf_throw()
     BOOST_LEAF_THROW_EXCEPTION(
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
         std::make_error_code(std::errc::invalid_argument),
+        std::make_error_condition(std::errc::io_error),
 #endif
         42,
         my_error<1>{1, "error one"},
@@ -100,6 +102,7 @@ void throw_()
     auto load = leaf::on_error(
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
         std::make_error_code(std::errc::invalid_argument),
+        std::make_error_condition(std::errc::io_error),
 #endif
         42,
         my_error<1>{1, "error one"},
@@ -165,6 +168,11 @@ void check_diagnostic_details(nlohmann::ordered_json const & j, bool has_source_
             BOOST_TEST_EQ(ecj["value"].get<int>(), static_cast<int>(std::errc::invalid_argument));
             BOOST_TEST(!ecj["category"].get<std::string>().empty());
             BOOST_TEST(!ecj["message"].get<std::string>().empty());
+
+            auto const & econdj = j["std::error_condition"];
+            BOOST_TEST_EQ(econdj["value"].get<int>(), static_cast<int>(std::errc::io_error));
+            BOOST_TEST(!econdj["category"].get<std::string>().empty());
+            BOOST_TEST(!econdj["message"].get<std::string>().empty());
         }
     }
     else
@@ -174,6 +182,7 @@ void check_diagnostic_details(nlohmann::ordered_json const & j, bool has_source_
         BOOST_TEST(!j.contains("boost::leaf::e_errno"));
         BOOST_TEST(!j.contains("boost::leaf::e_api_function"));
         BOOST_TEST(!j.contains("std::error_code"));
+        BOOST_TEST(!j.contains("std::error_condition"));
     }
 }
 

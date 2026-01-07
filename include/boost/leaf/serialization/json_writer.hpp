@@ -1,7 +1,7 @@
 #ifndef BOOST_LEAF_SERIALIZATION_JSON_WRITER_HPP_INCLUDED
 #define BOOST_LEAF_SERIALIZATION_JSON_WRITER_HPP_INCLUDED
 
-// Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2026 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -26,31 +26,39 @@ namespace serialization
     template <class Json>
     void to_json(Json & j, error_id x)
     {
-        j = x.value() / 4;
+        to_json(j, x.value() / 4);
     }
 
     template <class Json>
     void to_json(Json & j, e_source_location const & x)
     {
-        j["file"] = x.file;
-        j["line"] = x.line;
-        j["function"] = x.function;
+        to_json(j["file"], x.file);
+        to_json(j["line"], x.line);
+        to_json(j["function"], x.function);
     }
 
     template <class Json>
     void to_json(Json & j, e_errno const & e)
     {
-        j["value"] = e.value;
-        j["message"] = std::strerror(e.value);
+        to_json(j["value"], e.value);
+        to_json(j["message"], std::strerror(e.value));
     }
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
     template <class Json>
     void to_json(Json & j, std::error_code const & ec)
     {
-        j["category"] = ec.category().name();
-        j["value"] = ec.value();
-        j["message"] = ec.message();
+        to_json(j["category"], ec.category().name());
+        to_json(j["value"], ec.value());
+        to_json(j["message"], ec.message());
+    }
+
+    template <class Json>
+    void to_json(Json & j, std::error_condition const & ec)
+    {
+        to_json(j["category"], ec.category().name());
+        to_json(j["value"], ec.value());
+        to_json(j["message"], ec.message());
     }
 #endif
 
@@ -58,13 +66,13 @@ namespace serialization
     void to_json(Json & j, detail::exception_base const & eb)
     {
         char zstr[1024];
-        j["type"] = to_zstr(zstr, eb.type_name());
+        to_json(j["type"], to_zstr(zstr, eb.get_type_name()));
         char const * what = "N/A";
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
         if( std::exception const * ex = dynamic_cast<std::exception const *>(&eb) )
             what = ex->what();
 #endif
-        j["what"] = what ? what : "<<nullptr>>";
+        to_json(j["what"], what ? what : "<<nullptr>>");
     }
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
@@ -74,14 +82,14 @@ namespace serialization
         if( detail::exception_base const * eb = dynamic_cast<detail::exception_base const *>(&ex) )
         {
             char zstr[1024];
-            j["type"] = to_zstr(zstr, eb->type_name());
+            to_json(j["type"], to_zstr(zstr, eb->get_type_name()));
         }
         else
-            j["type"] = detail::demangler(typeid(ex).name()).get();
+            to_json(j["type"], detail::demangler(typeid(ex).name()).get());
         if( char const * w = ex.what() )
-            j["what"] = w;
+            to_json(j["what"], w);
         else
-            j["what"] = "<<nullptr>>";
+            to_json(j["what"], "<<nullptr>>");
     }
 #endif
 
@@ -109,11 +117,11 @@ namespace serialization
             {
             }
 #endif
-            j["type"] = "<<unknown>>";
+            to_json(j["type"], "<<unknown>>");
         }
         else
-            j["type"] = "<<empty>>";
-        j["what"] = "N/A";
+            to_json(j["type"], "<<empty>>");
+        to_json(j["what"], "N/A");
     }
 
     template <class Json, class E>
@@ -141,7 +149,7 @@ namespace serialization
         void write(E const & e)
         {
             char zstr[1024];
-            to_json(j_[to_zstr(zstr, parse<E>())], e);
+            to_json(j_[to_zstr(zstr, get_type_name<E>())], e);
         }
     };
 

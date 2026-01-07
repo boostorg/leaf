@@ -28,16 +28,16 @@ protected:
     {
     }
 
-    template <class W>
-    void write_to_(W & w) const
+    template <class Writer>
+    void write_to_(Writer & w) const
     {
         serialize_tuple_contents_(w, tup_, error());
     }
 
 public:
 
-    template <class W>
-    void write_to(W & w) const
+    template <class Writer>
+    void write_to(Writer & w) const
     {
         error_info::write_to(w);
         write_to_(w);
@@ -97,8 +97,8 @@ protected:
     {
     }
 
-    template <class W>
-    void write_to_(W & w) const
+    template <class Writer>
+    void write_to_(Writer & w) const
     {
         if( da_ )
             da_->write_to(w, error());
@@ -106,8 +106,8 @@ protected:
 
 public:
 
-    template <class W>
-    void write_to(W & w) const
+    template <class Writer>
+    void write_to(Writer & w) const
     {
         diagnostic_info::write_to(w);
         write_to_(w);
@@ -167,8 +167,8 @@ protected:
 
 public:
 
-    template <class W>
-    void write_to(W & w) const
+    template <class Writer>
+    void write_to(Writer & w) const
     {
         diagnostic_info::write_to(w);
     }

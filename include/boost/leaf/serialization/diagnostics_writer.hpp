@@ -1,7 +1,7 @@
 #ifndef BOOST_LEAF_SERIALIZATION_DIAGNOSTICS_WRITER_HPP_INCLUDED
 #define BOOST_LEAF_SERIALIZATION_DIAGNOSTICS_WRITER_HPP_INCLUDED
 
-// Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2026 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -79,7 +79,7 @@ namespace serialization
             BOOST_LEAF_ASSERT(delimiter);
             char const * p = prefix;
             prefix = nullptr;
-            os << (p ? p : delimiter) << parse<T>();
+            os << (p ? p : delimiter) << get_type_name<T>();
         }
 
         template <class T, class PrintableInfo, class CharT, class Traits>
@@ -143,7 +143,7 @@ namespace serialization
             {
                 os << "\nCaught:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
                 if( auto eb = dynamic_cast<detail::exception_base const *>(ex) )
-                    os << eb->type_name();
+                    os << eb->get_type_name();
                 else
                     os << detail::demangler(typeid(*ex).name()).get();
                 os << ": \"" << ex->what() << '"';

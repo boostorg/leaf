@@ -296,8 +296,8 @@ protected:
         what_ = move_from(std::move(x));
     }
 
-    template <class W>
-    error_id write_error_to(W & w) const
+    template <class Writer>
+    error_id write_error_to(Writer & w) const
     {
         result_discriminant const what = what_;
         BOOST_LEAF_ASSERT(what.kind() != result_discriminant::val);
@@ -306,8 +306,8 @@ protected:
         return err_id;
     }
 
-    template <class W>
-    void write_capture_to(W & w, error_id err_id) const
+    template <class Writer>
+    void write_capture_to(Writer & w, error_id err_id) const
     {
         if( what_.kind() == result_discriminant::err_id_capture_list )
         {
@@ -319,8 +319,8 @@ protected:
         }
     }
 
-    template <class W>
-    void print_error( W & w ) const
+    template <class Writer>
+    void print_error( Writer & w ) const
     {
         error_id err_id = write_error_to(w);
         w.set_prefix(", captured -> ");
@@ -573,8 +573,8 @@ public:
 #endif
     }
 
-    template <class W>
-    void write_to(W & w) const
+    template <class Writer>
+    void write_to(Writer & w) const
     {
         if( what_.kind() == result_discriminant::val )
             detail::serialize_(w, value());
@@ -691,8 +691,8 @@ public:
         BOOST_LEAF_ASSERT(has_value());
     }
 
-    template <class W>
-    void write_to(W & w) const
+    template <class Writer>
+    void write_to(Writer & w) const
     {
         if( !*this )
             write_error_to(w);

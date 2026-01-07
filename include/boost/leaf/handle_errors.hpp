@@ -76,8 +76,8 @@ public:
         return loc_;
     }
 
-    template <class W>
-    void write_to(W & w) const
+    template <class Writer>
+    void write_to(Writer & w) const
     {
         detail::serialize_(w, err_id_);
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
