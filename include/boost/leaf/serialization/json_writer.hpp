@@ -16,7 +16,6 @@
 #endif
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
-#   include <exception>
 #   include <typeinfo>
 #endif
 

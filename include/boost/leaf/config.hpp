@@ -161,7 +161,6 @@
 #           define BOOST_LEAF_NO_EXCEPTIONS
 #       endif
 #   endif
-
 #endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
 ////////////////////////////////////////
@@ -248,22 +247,34 @@
 
 namespace boost
 {
-    [[noreturn]] void throw_exception( std::exception const & ); // user defined
-}
 
-namespace boost { namespace leaf {
-
-template <class T>
-[[noreturn]] void throw_exception_( T && e )
-{
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
-    ::boost::throw_exception(std::move(e));
-#else
-    throw std::move(e);
-#endif
+
+[[noreturn]] void throw_exception( std::exception const & ); // user defined
+
+namespace leaf
+{
+    template <class T>
+    [[noreturn]] void throw_exception_( T && e )
+    {
+        ::boost::throw_exception(std::move(e));
+    }
 }
 
-} }
+#else
+
+namespace leaf
+{
+    template <class T>
+    [[noreturn]] void throw_exception_( T && e )
+    {
+        throw std::move(e);
+    }
+}
+
+#endif
+
+} // namespace boost
 
 ////////////////////////////////////////
 
