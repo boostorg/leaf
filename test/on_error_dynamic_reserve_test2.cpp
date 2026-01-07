@@ -30,7 +30,7 @@ leaf::result<void> f()
     BOOST_TEST_EQ(leaf::tls::read_ptr<leaf::detail::slot<info<42>>>(), nullptr);
     auto e = leaf::new_error(info<43>{});
     BOOST_TEST(
-        (BOOST_LEAF_CFG_CAPTURE == 0 || BOOST_LEAF_CFG_DIAGNOSTICS == 0)
+        (BOOST_LEAF_CFG_CAPTURE == 0)
         ==
         (leaf::tls::read_ptr<leaf::detail::slot<info<42>>>() == nullptr));
     return e;

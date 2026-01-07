@@ -22,13 +22,10 @@ struct non_printable_value
 {
 };
 
+template <int N>
 struct e_err
 {
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, e_err const & )
-    {
-        return os << "e_err";
-    }
+    int value;
 };
 
 int main()
@@ -42,7 +39,9 @@ int main()
         std::string s = ss.str();
         std::cout << s << std::endl;
         if( BOOST_LEAF_CFG_DIAGNOSTICS )
-            BOOST_TEST_EQ(s, "42");
+            BOOST_TEST_EQ(s, "Success: int: 42");
+        else
+            BOOST_TEST_EQ(s, "Success");
 #endif
     }
 
@@ -55,7 +54,9 @@ int main()
         std::string s = ss.str();
         std::cout << s << std::endl;
         if( BOOST_LEAF_CFG_DIAGNOSTICS )
-            BOOST_TEST_EQ(s, "{not printable}");
+            BOOST_TEST_EQ(s, "Success: non_printable_value");
+        else
+            BOOST_TEST_EQ(s, "Success");
 #endif
     }
 
@@ -67,22 +68,25 @@ int main()
         ss << r;
         std::string s = ss.str();
         std::cout << s << std::endl;
-        if( BOOST_LEAF_CFG_DIAGNOSTICS )
-            BOOST_TEST_EQ(s, "No error");
+        BOOST_TEST_EQ(s, "Success");
 #endif
     }
 
     {
-        leaf::result<int> r = leaf::new_error(e_err{ });
+        leaf::result<int> r = leaf::new_error();
         BOOST_TEST(!r);
 #if BOOST_LEAF_CFG_STD_STRING
         std::ostringstream ss;
         ss << r;
         std::string s = ss.str();
         std::cout << s << std::endl;
-        leaf::error_id err = r.error();
         if( BOOST_LEAF_CFG_DIAGNOSTICS )
-            BOOST_TEST_EQ(s, "Error serial #" + std::to_string(err.value()/4));
+        {
+            leaf::error_id err = r.error();
+            BOOST_TEST_EQ(s, "Failure: boost::leaf::error_id: " + std::to_string(err.value()/4));
+        }
+        else
+            BOOST_TEST_EQ(s, "Failure");
 #endif
     }
 
@@ -91,20 +95,23 @@ int main()
         leaf::result<int> r = leaf::try_capture_all(
             []() -> leaf::result<int>
             {
-                return leaf::new_error(e_err{ });
+                return leaf::new_error(e_err<1>{1}, e_err<2>{2});
             } );
 #if BOOST_LEAF_CFG_STD_STRING
         std::ostringstream ss;
         ss << r;
         std::string s = ss.str();
         std::cout << s << std::endl;
-        leaf::error_id err = r.error();
-        BOOST_TEST_NE(s.find("Error serial #" + std::to_string(err.value()/4)), s.npos);
         if( BOOST_LEAF_CFG_DIAGNOSTICS )
         {
-            BOOST_TEST_NE(s.find("Captured:"), s.npos);
-            BOOST_TEST_NE(s.find("e_err: e_err"), s.npos);
+            leaf::error_id err = r.error();
+            BOOST_TEST_NE(s.find("Failure: boost::leaf::error_id: " + std::to_string(err.value()/4)), s.npos);
+            BOOST_TEST_NE(s.find(", captured -> "), s.npos);
+            BOOST_TEST_NE(s.find("e_err<1>: 1"), s.npos);
+            BOOST_TEST_NE(s.find("e_err<2>: 2"), s.npos);
         }
+        else
+            BOOST_TEST_EQ(s, "Failure");
 #endif
     }
 #endif

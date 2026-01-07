@@ -15,4 +15,5 @@ subprojects/*/
 .vscode/settings.json
 .vscode/c_cpp_properties.json
 test/leaf.hpp
+test/nlohmann/*
 doc/leaf.html

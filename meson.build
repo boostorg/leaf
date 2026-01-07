@@ -141,6 +141,7 @@ if option_enable_unit_tests
         'handle_basic_test',
         'handle_some_other_result_test',
         'handle_some_test',
+        'nlohmann_test',
         'match_member_test',
         'match_test',
         'match_value_test',
@@ -172,7 +173,7 @@ if option_enable_unit_tests
         'on_error_preload_nested_success_exception_test',
         'on_error_preload_nested_success_result_test',
         'optional_test',
-        'parse_name_test',
+        'type_name_test',
         'print_test',
         'result_bad_result_test',
         'result_implicit_conversion_test',
@@ -223,6 +224,10 @@ if option_enable_unit_tests
         '_hpp_on_error_test',
         '_hpp_pred_test',
         '_hpp_result_test',
+        '_hpp_serialization_diagnostics_writer_test',
+        '_hpp_serialization_json_writer_test',
+        '_hpp_serialization_writer_test',
+        '_hpp_serialization_type_name_test',
         '_hpp_to_variant_test',
     ]
     foreach t : header_tests

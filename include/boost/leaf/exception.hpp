@@ -1,13 +1,13 @@
 #ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
 #define BOOST_LEAF_EXCEPTION_HPP_INCLUDED
 
-// Copyright 2018-2025 Emil Dotchevski and Reverge Studios, Inc.
+// Copyright 2018-2026 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/error.hpp>
-#include <typeinfo>
+#include <boost/leaf/detail/exception_base.hpp>
 
 ////////////////////////////////////////
 
@@ -57,12 +57,10 @@ namespace detail
             return *this;
         }
 
-#if BOOST_LEAF_CFG_DIAGNOSTICS && !defined(BOOST_LEAF_NO_EXCEPTIONS)
-        void print_type_name(std::ostream & os) const override
+        serialization::type_name get_type_name() const override
         {
-            detail::demangle_and_print(os, typeid(Ex).name());
+            return serialization::get_type_name<Ex>();
         }
-#endif
 
     public:
 

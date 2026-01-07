@@ -2,7 +2,6 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/config.hpp>
 #include <boost/leaf/common.hpp>
 #include <boost/leaf/context.hpp>
 #include <boost/leaf/diagnostics.hpp>
@@ -12,4 +11,7 @@
 #include <boost/leaf/on_error.hpp>
 #include <boost/leaf/pred.hpp>
 #include <boost/leaf/result.hpp>
+#include <boost/leaf/serialization/diagnostics_writer.hpp>
+#include <boost/leaf/serialization/json_writer.hpp>
+#include <boost/leaf/serialization/writer.hpp>
 #include <boost/leaf/to_variant.hpp>

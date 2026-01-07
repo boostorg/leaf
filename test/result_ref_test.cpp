@@ -6,7 +6,6 @@
 #   include "leaf.hpp"
 #else
 #   include <boost/leaf/result.hpp>
-#   include <boost/leaf/handle_errors.hpp>
 #endif
 
 #include "lightweight_test.hpp"

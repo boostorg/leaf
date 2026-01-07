@@ -11,12 +11,10 @@
 
 namespace boost { namespace leaf {
 
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-
 class diagnostic_info: public error_info
 {
     void const * tup_;
-    void (*print_tuple_contents_)(std::ostream &, void const * tup, error_id to_print, char const * & prefix);
+    void (*serialize_tuple_contents_)(serialization::writer &, void const *, error_id);
 
 protected:
 
@@ -26,23 +24,35 @@ protected:
     BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei, Tup const & tup ) noexcept:
         error_info(ei),
         tup_(&tup),
-        print_tuple_contents_(&detail::print_tuple_contents<Tup>)
+        serialize_tuple_contents_(&detail::serialize_tuple_contents<Tup>)
     {
     }
 
-    template <class CharT, class Traits>
-    void print_diagnostic_info(std::basic_ostream<CharT, Traits> & os) const
+    template <class Writer>
+    void write_to_(Writer & w) const
     {
-        print_error_info(os);
-        char const * prefix = exception() ? nullptr : "\nCaught:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
-        print_tuple_contents_(os, tup_, error(), prefix);
+        serialize_tuple_contents_(w, tup_, error());
+    }
+
+public:
+
+    template <class Writer>
+    void write_to(Writer & w) const
+    {
+        error_info::write_to(w);
+        write_to_(w);
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
     {
-        x.print_diagnostic_info(os);
-        return os << '\n';
+        serialization::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+        x.write_to_(w);
+#else
+        os << "\nboost::leaf::diagnostic_info N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
+#endif
+        return os;
     }
 }; // class diagnostic_info
 
@@ -68,60 +78,7 @@ namespace detail
     };
 }
 
-#else // #if BOOST_LEAF_CFG_DIAGNOSTICS
-
-class diagnostic_info: public error_info
-{
-protected:
-
-    diagnostic_info( diagnostic_info const & ) noexcept = default;
-
-    BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei ) noexcept:
-        error_info(ei)
-    {
-    }
-
-    template <class CharT, class Traits>
-    void print_diagnostic_info( std::basic_ostream<CharT, Traits> & os ) const
-    {
-        print_error_info(os);
-        os << "\nboost::leaf::diagnostic_info N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
-    }
-
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
-    {
-        x.print_diagnostic_info(os);
-        return os << "\n";
-    }
-}; // class diagnostic_info
-
-namespace detail
-{
-    struct diagnostic_info_: diagnostic_info
-    {
-        BOOST_LEAF_CONSTEXPR diagnostic_info_( error_info const & ei ) noexcept:
-            diagnostic_info(ei)
-        {
-        }
-    };
-
-    template <>
-    struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<e_source_location>
-    {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static diagnostic_info_ get( Tup const &, error_info const & ei ) noexcept
-        {
-            return diagnostic_info_(ei);
-        }
-    };
-}
-
-#endif // #else (#if BOOST_LEAF_CFG_DIAGNOSTICS)
-
 ////////////////////////////////////////
-
-#if BOOST_LEAF_CFG_DIAGNOSTICS
 
 #if BOOST_LEAF_CFG_CAPTURE
 
@@ -140,22 +97,34 @@ protected:
     {
     }
 
-    template <class CharT, class Traits>
-    void print_diagnostic_details( std::basic_ostream<CharT, Traits> & os) const
+    template <class Writer>
+    void write_to_(Writer & w) const
     {
-        print_diagnostic_info(os);
         if( da_ )
-        {
-            char const * prefix = "\nDiagnostic details:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
-            da_->print(os, error(), prefix);
-        }
+            da_->write_to(w, error());
+    }
+
+public:
+
+    template <class Writer>
+    void write_to(Writer & w) const
+    {
+        diagnostic_info::write_to(w);
+        write_to_(w);
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_details const & x )
     {
-        x.print_diagnostic_details(os);
-        return os << '\n';
+        serialization::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+        x.diagnostic_info::write_to_(w);
+        w.set_prefix("\nDiagnostic details:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER);
+        x.write_to_(w);
+#else
+        os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
+#endif
+        return os;
     }
 }; // class diagnostic_details
 
@@ -196,18 +165,25 @@ protected:
     {
     }
 
-    template <class CharT, class Traits>
-    void print_diagnostic_details( std::basic_ostream<CharT, Traits> & os ) const
+public:
+
+    template <class Writer>
+    void write_to(Writer & w) const
     {
-        print_diagnostic_info(os);
-        os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_CAPTURE=0";
+        diagnostic_info::write_to(w);
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_details const & x )
     {
-        x.print_diagnostic_details(os);
-        return os << "\n";
+        serialization::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+        x.diagnostic_info::write_to_(w);
+        os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_CAPTURE=0";
+#else
+        os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
+#endif
+        return os;
     }
 }; // class diagnostic_details
 
@@ -234,57 +210,6 @@ namespace detail
 }
 
 #endif // #else (#if BOOST_LEAF_CFG_CAPTURE)
-
-#else // #if BOOST_LEAF_CFG_DIAGNOSTICS
-
-class diagnostic_details: public diagnostic_info
-{
-protected:
-
-    diagnostic_details( diagnostic_details const & ) noexcept = default;
-
-    BOOST_LEAF_CONSTEXPR diagnostic_details( error_info const & ei ) noexcept:
-        diagnostic_info(ei)
-    {
-    }
-
-    template <class CharT, class Traits>
-    void print_diagnostic_details( std::basic_ostream<CharT, Traits> & os ) const
-    {
-        print_error_info(os);
-        os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
-    }
-
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_details const & x )
-    {
-        x.print_diagnostic_details(os);
-        return os << "\n";
-    }
-};
-
-namespace detail
-{
-    struct diagnostic_details_: diagnostic_details
-    {
-        BOOST_LEAF_CONSTEXPR diagnostic_details_( error_info const & ei ) noexcept:
-            diagnostic_details(ei)
-        {
-        }
-    };
-
-    template <>
-    struct handler_argument_traits<diagnostic_details const &>: handler_argument_always_available<e_source_location>
-    {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static diagnostic_details_ get( Tup const &, error_info const & ei ) noexcept
-        {
-            return diagnostic_details_(ei);
-        }
-    };
-}
-
-#endif // #else (#if BOOST_LEAF_CFG_DIAGNOSTICS)
 
 using verbose_diagnostic_info = diagnostic_details;
 

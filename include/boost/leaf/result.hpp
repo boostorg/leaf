@@ -6,9 +6,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/detail/print.hpp>
-#include <boost/leaf/detail/capture_list.hpp>
 #include <boost/leaf/exception.hpp>
+#include <boost/leaf/serialization/diagnostics_writer.hpp>
+#include <boost/leaf/detail/capture_list.hpp>
 
 #include <functional>
 
@@ -24,40 +24,6 @@ class bad_result:
         return "boost::leaf::bad_result";
     }
 };
-
-////////////////////////////////////////
-
-namespace detail
-{
-    template <class T, bool Printable = is_printable<T>::value>
-    struct result_value_printer;
-
-    template <class T>
-    struct result_value_printer<T, true>
-    {
-        template <class CharT, class Traits>
-        static void print( std::basic_ostream<CharT, Traits> & s, T const & x )
-        {
-            (void) (s << x);
-        }
-    };
-
-    template <class T>
-    struct result_value_printer<T, false>
-    {
-        template <class CharT, class Traits>
-        static void print( std::basic_ostream<CharT, Traits> & s, T const & )
-        {
-            (void) (s << "{not printable}");
-        }
-    };
-
-    template <class CharT, class Traits, class T>
-    void print_result_value( std::basic_ostream<CharT, Traits> & s, T const & x )
-    {
-        result_value_printer<T>::print(s, x);
-    }
-} // namespace detail
 
 ////////////////////////////////////////
 
@@ -330,23 +296,36 @@ protected:
         what_ = move_from(std::move(x));
     }
 
-    template <class CharT, class Traits>
-    void print_error_result(std::basic_ostream<CharT, Traits> & os) const
+    template <class Writer>
+    error_id write_error_to(Writer & w) const
     {
         result_discriminant const what = what_;
         BOOST_LEAF_ASSERT(what.kind() != result_discriminant::val);
         error_id const err_id = what.get_error_id();
-        os << "Error serial #" << err_id;
-        if( what.kind() == result_discriminant::err_id_capture_list )
+        detail::serialize_(w, err_id);
+        return err_id;
+    }
+
+    template <class Writer>
+    void write_capture_to(Writer & w, error_id err_id) const
+    {
+        if( what_.kind() == result_discriminant::err_id_capture_list )
         {
 #if BOOST_LEAF_CFG_CAPTURE
-            char const * prefix = "\nCaptured:";
-            cap_.print(os, err_id, prefix);
-            os << "\n";
+            cap_.write_to(w, err_id);
 #else
             BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
         }
+    }
+
+    template <class Writer>
+    void print_error( Writer & w ) const
+    {
+        error_id err_id = write_error_to(w);
+        w.set_prefix(", captured -> ");
+        w.set_delimiter(", ");
+        write_capture_to(w, err_id);
     }
 
 public:
@@ -594,13 +573,30 @@ public:
 #endif
     }
 
+    template <class Writer>
+    void write_to(Writer & w) const
+    {
+        if( what_.kind() == result_discriminant::val )
+            detail::serialize_(w, value());
+        else
+            write_capture_to(w, write_error_to(w));
+    }
+
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, result const & r )
     {
-        if( r.what_.kind() == result_discriminant::val )
-            detail::print_result_value(os, r.value());
+        serialization::diagnostics_writer w(os);
+        w.set_prefix(": ");
+        if( r )
+        {
+            os << "Success";
+            detail::serialize_(w, r.value());
+        }
         else
-            r.print_error_result(os);
+        {
+            os << "Failure";
+            r.print_error(w);
+        }
         return os;
     }
 }; // template result
@@ -695,13 +691,25 @@ public:
         BOOST_LEAF_ASSERT(has_value());
     }
 
+    template <class Writer>
+    void write_to(Writer & w) const
+    {
+        if( !*this )
+            write_error_to(w);
+    }
+
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, result const & r )
     {
         if( r )
-            os << "No error";
+            os << "Success";
         else
-            r.print_error_result(os);
+        {
+            serialization::diagnostics_writer w(os);
+            w.set_prefix(": ");
+            os << "Failure";
+            r.print_error(w);
+        }
         return os;
     }
 

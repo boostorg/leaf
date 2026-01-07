@@ -9,10 +9,7 @@
 #include <boost/leaf/detail/optional.hpp>
 #include <boost/leaf/detail/function_traits.hpp>
 #include <boost/leaf/detail/capture_list.hpp>
-
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-#   include <ostream>
-#endif
+#include <boost/leaf/serialization/diagnostics_writer.hpp>
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 #   include <system_error>
@@ -84,17 +81,15 @@ struct show_in_diagnostics<e_source_location>: std::false_type
 
 namespace detail
 {
-    class exception_base
+    template <class Writer, class E>
+    void serialize_(Writer & w, E const & e)
     {
-    public:
-        virtual error_id get_error_id() const noexcept = 0;
-#if BOOST_LEAF_CFG_DIAGNOSTICS && !defined(BOOST_LEAF_NO_EXCEPTIONS)
-        virtual void print_type_name(std::ostream &) const = 0;
-#endif
-    protected:
-        exception_base() noexcept { }
-        ~exception_base() noexcept { }
-    };
+        using namespace serialization;
+        typename dependent_writer<Writer>::type & wr = w;
+        serialize(wr, e);
+        if( diagnostics_writer * dw = w.template get<diagnostics_writer>() )
+            dw->write(e);
+    }
 }
 
 ////////////////////////////////////////
@@ -153,15 +148,14 @@ namespace detail
 
         void unload( int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE);
 
-        template <class CharT, class Traits, class ErrorID>
-        void print(std::basic_ostream<CharT, Traits> & os, ErrorID to_print, char const * & prefix) const
+        template <class ErrorID>
+        void write_to(serialization::writer & w, ErrorID id) const
         {
             if( int k = this->key() )
             {
-                if( to_print && to_print.value() != k )
+                if( id && id.value() != k )
                     return;
-                if( diagnostic<E>::print(os, prefix, BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER, value(k)) && !to_print )
-                    os << '(' << k/4 << ')';
+                serialize_(w, value(k));
             }
         }
 
@@ -223,12 +217,10 @@ namespace detail
             {
                 impl::unload(err_id);
             }
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-            void print(std::ostream & os, error_id const & to_print, char const * & prefix) const override
+            void write_to(serialization::writer & w, error_id const & id) const override
             {
-                impl::print(os, to_print, prefix);
+                impl::write_to(w, id);
             }
-#endif
         public:
             BOOST_LEAF_CONSTEXPR explicit capturing_slot_node( capture_list::node * * & last ):
                 capturing_node(last)
@@ -260,11 +252,9 @@ namespace detail
             {
                 std::rethrow_exception(ex_);
             }
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-            void print(std::ostream &, error_id const &, char const * &) const override
+            void write_to(serialization::writer &, error_id const &) const override
             {
             }
-#endif
             std::exception_ptr const ex_;
         public:
             capturing_exception_node( capture_list::node * * & last, std::exception_ptr && ex ) noexcept:
@@ -362,7 +352,7 @@ namespace detail
         }
 
         using capture_list::unload;
-        using capture_list::print;
+        using capture_list::write_to;
     }; // class dynamic_allocator
 
     template <class E>
@@ -437,12 +427,10 @@ namespace detail
             da_.unload(err_id);
         }
 
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-        template <class CharT, class Traits, class ErrorID>
-        void print(std::basic_ostream<CharT, Traits> &, ErrorID, char const * &) const
+        template <class ErrorID>
+        void write_to(serialization::writer &, ErrorID) const
         {
         }
-#endif
     }; // slot specialization for dynamic_allocator
 } // namespace detail
 

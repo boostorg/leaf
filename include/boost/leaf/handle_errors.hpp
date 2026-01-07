@@ -7,7 +7,7 @@
 
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/context.hpp>
-#include <typeinfo>
+#include <boost/leaf/serialization/diagnostics_writer.hpp>
 
 namespace boost { namespace leaf {
 
@@ -76,32 +76,21 @@ public:
         return loc_;
     }
 
-    template <class CharT, class Traits>
-    void print_error_info(std::basic_ostream<CharT, Traits> & os) const
+    template <class Writer>
+    void write_to(Writer & w) const
     {
-        os << "Error with serial #" << err_id_;
-        if( loc_ )
-            os << " reported at " << *loc_;
+        detail::serialize_(w, err_id_);
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
         if( ex_ )
-        {
-            os << "\nCaught:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-            if( auto eb = dynamic_cast<detail::exception_base const *>(ex_) )
-                eb->print_type_name(os);
-            else
+            detail::serialize_(w, *ex_);
 #endif
-                detail::demangle_and_print(os, typeid(*ex_).name());
-            os << ": \"" << ex_->what() << '"';
-        }
-#endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, error_info const & x)
     {
-        x.print_error_info(os);
-        return os << '\n';
+        serialization::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
+        return os;
     }
 }; // class error_info
 
@@ -232,7 +221,7 @@ namespace detail
         {
             return nullptr;
         }
-        
+
         template <class SlotsTuple>
         BOOST_LEAF_CONSTEXPR static E * peek( SlotsTuple &, error_id const & ) noexcept
         {
