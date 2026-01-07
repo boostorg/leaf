@@ -7,6 +7,8 @@
 
 #include <boost/leaf/detail/demangle.hpp>
 
+#include <functional>
+
 #if BOOST_LEAF_CFG_STD_STRING
 #   include <string>
 #endif
