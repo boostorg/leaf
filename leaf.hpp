@@ -2,7 +2,7 @@
 #define BOOST_LEAF_HPP_INCLUDED
 
 // Boost LEAF single header distribution. Do not edit.
-// Generated on Jan 08, 2026 from https://github.com/boostorg/leaf/tree/ea2e690.
+// Generated on Jan 08, 2026 from https://github.com/boostorg/leaf/tree/5fde62d.
 
 // Latest published version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 

@@ -2604,7 +2604,9 @@ The automatically generated diagnostic messages are developer-friendly, but not 
   <span class="p">[]()</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span>
   <span class="p">{</span>
     <span class="p">....</span>
-    <span class="k">return</span> <span class="n">leaf</span><span class="o">::</span><span class="n">new_error</span><span class="p">(</span><span class="n">e_api_response</span><span class="p">{</span><span class="mi">403</span><span class="p">,</span> <span class="s">"Access denied"</span><span class="p">},</span> <span class="n">e_request_url</span><span class="p">{</span><span class="s">"/api/admin/settings"</span><span class="p">});</span>
+    <span class="k">return</span> <span class="n">leaf</span><span class="o">::</span><span class="n">new_error</span><span class="p">(</span>
+      <span class="n">e_api_response</span><span class="p">{</span><span class="mi">403</span><span class="p">,</span> <span class="s">"Access denied"</span><span class="p">},</span>
+      <span class="n">e_request_url</span><span class="p">{</span><span class="s">"/api/admin/settings"</span><span class="p">});</span>
   <span class="p">},</span>
   <span class="p">[](</span><span class="n">leaf</span><span class="o">::</span><span class="n">diagnostic_details</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">dd</span><span class="p">)</span>
   <span class="p">{</span>
