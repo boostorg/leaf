@@ -2,7 +2,7 @@
 #define BOOST_LEAF_HPP_INCLUDED
 
 // Boost LEAF single header distribution. Do not edit.
-// Generated on Jan 08, 2026 from https://github.com/boostorg/leaf/tree/5fde62d.
+// Generated on Jan 09, 2026 from https://github.com/boostorg/leaf/tree/1c5dfc1.
 
 // Latest published version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
@@ -10,11 +10,6 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// >>> #include <boost/leaf/common.hpp>
-#ifndef BOOST_LEAF_COMMON_HPP_INCLUDED
-#define BOOST_LEAF_COMMON_HPP_INCLUDED
-
-// #line 8 "boost/leaf/common.hpp"
 // >>> #include <boost/leaf/config.hpp>
 #ifndef BOOST_LEAF_CONFIG_HPP_INCLUDED
 #define BOOST_LEAF_CONFIG_HPP_INCLUDED
@@ -176,6 +171,7 @@
 #           define BOOST_LEAF_NO_EXCEPTIONS
 #       endif
 #   endif
+
 #endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
 
 ////////////////////////////////////////
@@ -284,7 +280,7 @@ namespace detail
 
 #endif // BOOST_LEAF_CONFIG_VISIBILITY_HPP_INCLUDED
 // <<< #include <boost/leaf/config/visibility.hpp>
-// #line 229 "boost/leaf/config.hpp"
+// #line 230 "boost/leaf/config.hpp"
 
 ////////////////////////////////////////
 
@@ -306,34 +302,22 @@ namespace detail
 
 namespace boost
 {
+    [[noreturn]] void throw_exception( std::exception const & ); // user defined
+}
 
+namespace boost { namespace leaf {
+
+template <class T>
+[[noreturn]] void throw_exception_( T && e )
+{
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
-
-[[noreturn]] void throw_exception( std::exception const & ); // user defined
-
-namespace leaf
-{
-    template <class T>
-    [[noreturn]] void throw_exception_( T && e )
-    {
-        ::boost::throw_exception(std::move(e));
-    }
-}
-
+    ::boost::throw_exception(std::move(e));
 #else
-
-namespace leaf
-{
-    template <class T>
-    [[noreturn]] void throw_exception_( T && e )
-    {
-        throw std::move(e);
-    }
+    throw std::move(e);
+#endif
 }
 
-#endif
-
-} // namespace boost
+} }
 
 ////////////////////////////////////////
 
@@ -822,11 +806,11 @@ namespace detail
         public:
 
             BOOST_LEAF_ALWAYS_INLINE tls_slot_index():
-                idx_(TlsAlloc())
+                idx_(TlsAlloc())    
             {
                 if (idx_ == TLS_OUT_OF_INDEXES)
                     throw_exception_(win32_tls_error("TLS_OUT_OF_INDEXES"));
-            }
+            }   
 
             BOOST_LEAF_ALWAYS_INLINE ~tls_slot_index() noexcept
             {
@@ -1313,13 +1297,269 @@ namespace tls
 // #line 88 "boost/leaf/config/tls.hpp"
 #endif
 
-#endif // #ifndef BOOST_LEAF_CONFIG_TLS_HPP_INCLUDED
-// <<< #include <boost/leaf/config/tls.hpp>
-// #line 283 "boost/leaf/config.hpp"
+#endif // #ifndef BOOST_LEAF_CONFIG_TLS_HPP_INCLUDED// <<< #include <boost/leaf/config/tls.hpp>
+// #line 272 "boost/leaf/config.hpp"
 
 #endif // #ifndef BOOST_LEAF_CONFIG_HPP_INCLUDED
-// <<< #include <boost/leaf/config.hpp>
-// #line 9 "boost/leaf/common.hpp"
+// >>> #include <boost/leaf/common.hpp>
+#ifndef BOOST_LEAF_COMMON_HPP_INCLUDED
+#define BOOST_LEAF_COMMON_HPP_INCLUDED
+
+// #line 8 "boost/leaf/common.hpp"
+// #include <boost/leaf/config.hpp> // Expanded at line 14
+// >>> #include <boost/leaf/detail/demangle.hpp>
+#ifndef BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
+#define BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
+
+// #line 8 "boost/leaf/detail/demangle.hpp"
+// This file is based on boost::core::demangle
+//
+// Copyright 2014 Peter Dimov
+// Copyright 2014 Andrey Semashev
+//
+// Distributed under the Boost Software License, Version 1.0.
+// See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt
+
+// #include <boost/leaf/config.hpp> // Expanded at line 14
+#include <iosfwd>
+#include <cstdlib>
+
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+
+// __has_include is currently supported by GCC and Clang. However GCC 4.9 may have issues and
+// returns 1 for 'defined( __has_include )', while '__has_include' is actually not supported:
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63662
+#if defined(__has_include) && (!defined(__GNUC__) || defined(__clang__) || (__GNUC__ + 0) >= 5)
+#   if __has_include(<cxxabi.h>)
+#       define BOOST_LEAF_HAS_CXXABI_H
+#   endif
+#elif defined(__GLIBCXX__) || defined(__GLIBCPP__)
+#   define BOOST_LEAF_HAS_CXXABI_H
+#endif
+
+#if defined(BOOST_LEAF_HAS_CXXABI_H)
+#   include <cxxabi.h>
+//  For some architectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
+//  (https://android.googlesource.com/platform/ndk/+/master/sources/cxx-stl/gabi++/), which does not implement
+//  abi::__cxa_demangle(). We detect this implementation by checking the include guard here.
+#   if defined(__GABIXX_CXXABI_H__)
+#       undef BOOST_LEAF_HAS_CXXABI_H
+#   endif
+#endif
+
+#endif // #if BOOST_LEAF_CFG_DIAGNOSTICS
+
+namespace boost { namespace leaf {
+
+namespace detail
+{
+    // The functions below are C++11 constexpr, but we use BOOST_LEAF_ALWAYS_INLINE to control object file
+    // section count / template bloat.
+
+    template <int S1, int S2, int I, bool = S1 >= S2>
+    struct cpp11_prefix
+    {
+        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&)[S1], char const (&)[S2]) noexcept
+        {
+            return false;
+        }
+    };
+    template <int S1, int S2, int I>
+    struct cpp11_prefix<S1, S2, I, true>
+    {
+        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&str)[S1], char const (&prefix)[S2]) noexcept
+        {
+            return str[I] == prefix[I] && cpp11_prefix<S1, S2, I - 1>::check(str, prefix);
+        }
+    };
+    template <int S1, int S2>
+    struct cpp11_prefix<S1, S2, 0, true>
+    {
+        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&str)[S1], char const (&prefix)[S2]) noexcept
+        {
+            return str[0] == prefix[0];
+        }
+    };
+    template <int S1, int S2>
+    BOOST_LEAF_ALWAYS_INLINE constexpr int check_prefix(char const (&str)[S1], char const (&prefix)[S2]) noexcept
+    {
+        return cpp11_prefix<S1, S2, S2 - 2>::check(str, prefix) ? S2 - 1 : 0;
+    }
+
+    ////////////////////////////////////////
+
+    template <int S1, int S2, int I1, int I2, bool = S1 >= S2>
+    struct cpp11_suffix
+    {
+        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&)[S1], char const (&)[S2]) noexcept
+        {
+            return false;
+        }
+    };
+    template <int S1, int S2, int I1, int I2>
+    struct cpp11_suffix<S1, S2, I1, I2, true>
+    {
+        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&str)[S1], char const (&suffix)[S2]) noexcept
+        {
+            return str[I1] == suffix[I2] && cpp11_suffix<S1, S2, I1 - 1, I2 - 1>::check(str, suffix);
+        }
+    };
+    template <int S1, int S2, int I1>
+    struct cpp11_suffix<S1, S2, I1, 0, true>
+    {
+        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&str)[S1], char const (&suffix)[S2]) noexcept
+        {
+            return str[I1] == suffix[0];
+        }
+    };
+    template <int S1, int S2>
+    BOOST_LEAF_ALWAYS_INLINE constexpr int check_suffix(char const (&str)[S1], char const (&suffix)[S2]) noexcept
+    {
+        return cpp11_suffix<S1, S2, S1 - 2, S2 - 2>::check(str, suffix) ? S1 - S2 : 0;
+    }
+} // namespace detail
+
+namespace n
+{
+    struct r
+    {
+        char const * name;
+        int len;
+        r(char const * name, int len) noexcept:
+            name(name),
+            len(len)
+        {
+        }
+        template <class CharT, class Traits>
+        friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, r const & pn)
+        {
+            return os.write(pn.name, pn.len);
+        }
+    };
+
+    template <class T>
+    BOOST_LEAF_ALWAYS_INLINE r p()
+    {
+        // C++11 compile-time parsing of __PRETTY_FUNCTION__/__FUNCSIG__. The sizeof hacks are a
+        // workaround for older GCC versions, where __PRETTY_FUNCTION__ is not constexpr, which triggers
+        // compile errors when used in constexpr expressinos, yet evaluating a sizeof exrpession works.
+
+        // We don't try to recognize the compiler based on compiler-specific macros. Any compiler/version
+        // is supported as long as it uses one of the formats we recognize.
+
+        // Unrecognized __PRETTY_FUNCTION__/__FUNCSIG__ formats will result in compiler diagnostics.
+        // In that case, please file an issue on https://github.com/boostorg/leaf.
+
+#define BOOST_LEAF_P(P) (sizeof(char[1 + detail::check_prefix(BOOST_LEAF_PRETTY_FUNCTION, P)]) - 1)
+        // clang style:
+        int const p01 = BOOST_LEAF_P("r boost::leaf::n::p() [T = ");
+        int const p02 = BOOST_LEAF_P("r __cdecl boost::leaf::n::p(void) [T = ");
+        int const p03 = BOOST_LEAF_P("r __stdcall boost::leaf::n::p(void) [T = ");
+        int const p04 = BOOST_LEAF_P("r __fastcall boost::leaf::n::p(void) [T = ");
+        // old clang style:
+        int const p05 = BOOST_LEAF_P("boost::leaf::n::r boost::leaf::n::p() [T = ");
+        int const p06 = BOOST_LEAF_P("boost::leaf::n::r __cdecl boost::leaf::n::p(void) [T = ");
+        int const p07 = BOOST_LEAF_P("boost::leaf::n::r __stdcall boost::leaf::n::p(void) [T = ");
+        int const p08 = BOOST_LEAF_P("boost::leaf::n::r __fastcall boost::leaf::n::p(void) [T = ");
+        // gcc style:
+        int const p09 = BOOST_LEAF_P("boost::leaf::n::r boost::leaf::n::p() [with T = ");
+        int const p10 = BOOST_LEAF_P("boost::leaf::n::r __cdecl boost::leaf::n::p() [with T = ");
+        int const p11 = BOOST_LEAF_P("boost::leaf::n::r __stdcall boost::leaf::n::p() [with T = ");
+        int const p12 = BOOST_LEAF_P("boost::leaf::n::r __fastcall boost::leaf::n::p() [with T = ");
+        // msvc style, struct:
+        int const p13 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<struct ");
+        int const p14 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<struct ");
+        int const p15 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<struct ");
+        // msvc style, class:
+        int const p16 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<class ");
+        int const p17 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<class ");
+        int const p18 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<class ");
+        // msvc style, enum:
+        int const p19 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<enum ");
+        int const p20 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<enum ");
+        int const p21 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<enum ");
+        // msvc style, built-in type:
+        int const p22 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<");
+        int const p23 = BOOST_LEAF_P("struct boost::leaf::n::r __stdcall boost::leaf::n::p<");
+        int const p24 = BOOST_LEAF_P("struct boost::leaf::n::r __fastcall boost::leaf::n::p<");
+#undef BOOST_LEAF_P
+
+#define BOOST_LEAF_S(S) (sizeof(char[1 + detail::check_suffix(BOOST_LEAF_PRETTY_FUNCTION, S)]) - 1)
+        // clang/gcc style:
+        int const s01 = BOOST_LEAF_S("]");
+        // msvc style:
+        int const s02 = BOOST_LEAF_S(">(void)");
+#undef BOOST_LEAF_S
+
+        char static_assert_unrecognized_pretty_function_format_please_file_github_issue[sizeof(
+            char[
+                (s01 && (1 == (!!p01 + !!p02 + !!p03 + !!p04 + !!p05 + !!p06 + !!p07 + !!p08 + !!p09 + !!p10 + !!p11 + !!p12)))
+                ||
+                (s02 && (1 == (!!p13 + !!p14 + !!p15 + !!p16 + !!p17 + !!p18 + !!p19 + !!p20 + !!p21)))
+                ||
+                (s02 && (1 == (!!p22 + !!p23 + !!p24)))
+            ]
+        ) * 2 - 1];
+        (void) static_assert_unrecognized_pretty_function_format_please_file_github_issue;
+
+        if( int const p = sizeof(char[1 + !!s01 * (p01 + p02 + p03 + p04 + p05 + p06 + p07 + p08 + p09 + p10 + p11 + p12)]) - 1 )
+            return { BOOST_LEAF_PRETTY_FUNCTION + p, s01 - p };
+
+        if( int const p = sizeof(char[1 + !!s02 * (p13 + p14 + p15 + p16 + p17 + p18 + p19 + p20 + p21)]) - 1 )
+            return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p };
+
+        int const p = sizeof(char[1 + !!s02 * (p22 + p23 + p24)]) - 1; // p is not zero, we've static asserted the hell out of it
+        return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p };
+    }
+} // namespace n
+
+using parsed = n::r;
+
+template <class T>
+parsed parse()
+{
+    return n::p<T>();
+}
+
+} } // namespace boost::leaf
+
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
+
+namespace detail
+{
+    template <class CharT, class Traits>
+    std::ostream & demangle_and_print(std::basic_ostream<CharT, Traits> & os, char const * mangled_name)
+    {
+        BOOST_LEAF_ASSERT(mangled_name);
+#if defined(BOOST_LEAF_CFG_DIAGNOSTICS) && defined(BOOST_LEAF_HAS_CXXABI_H)
+        struct raii
+        {
+            char * demangled_name;
+            raii(char const * mangled_name) noexcept 
+            {
+                int status = 0;
+                demangled_name = abi::__cxa_demangle(mangled_name, nullptr, nullptr, &status);
+            }
+            ~raii() noexcept
+            {
+                std::free(demangled_name);
+            }
+        } d(mangled_name);
+        if( d.demangled_name )
+            return os << d.demangled_name;
+#endif // #if defined(BOOST_LEAF_CFG_DIAGNOSTICS) && defined(BOOST_LEAF_HAS_CXXABI_H)
+        return os << mangled_name;
+    }
+} // namespace detail
+
+} } // namespace boost::leaf
+
+#endif // #ifndef BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
+// <<< #include <boost/leaf/detail/demangle.hpp>
+// #line 10 "boost/leaf/common.hpp"
 
 #include <iosfwd>
 #include <cerrno>
@@ -1429,711 +1669,19 @@ namespace windows
 #define BOOST_LEAF_CONTEXT_HPP_INCLUDED
 
 // #line 8 "boost/leaf/context.hpp"
-// #include <boost/leaf/config.hpp> // Expanded at line 19
-// >>> #include <boost/leaf/serialization/diagnostics_writer.hpp>
-#ifndef BOOST_LEAF_SERIALIZATION_DIAGNOSTICS_WRITER_HPP_INCLUDED
-#define BOOST_LEAF_SERIALIZATION_DIAGNOSTICS_WRITER_HPP_INCLUDED
-
-// #line 8 "boost/leaf/serialization/diagnostics_writer.hpp"
-// #include <boost/leaf/config.hpp> // Expanded at line 19
-// >>> #include <boost/leaf/serialization/writer.hpp>
-#ifndef BOOST_LEAF_SERIALIZATION_WRITER_HPP_INCLUDED
-#define BOOST_LEAF_SERIALIZATION_WRITER_HPP_INCLUDED
-
-// #line 8 "boost/leaf/serialization/writer.hpp"
-// #include <boost/leaf/config.hpp> // Expanded at line 19
-// >>> #include <boost/leaf/serialization/type_name.hpp>
-#ifndef BOOST_LEAF_SERIALIZATION_TYPE_NAME_HPP_INCLUDED
-#define BOOST_LEAF_SERIALIZATION_TYPE_NAME_HPP_INCLUDED
-
-// #line 8 "boost/leaf/serialization/type_name.hpp"
-// >>> #include <boost/leaf/detail/demangle.hpp>
-#ifndef BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
-#define BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
-
-// #line 8 "boost/leaf/detail/demangle.hpp"
-// This file is based on boost::core::demangle
-//
-// Copyright 2014 Peter Dimov
-// Copyright 2014 Andrey Semashev
-//
-// Distributed under the Boost Software License, Version 1.0.
-// See accompanying file LICENSE_1_0.txt or copy at
-// http://www.boost.org/LICENSE_1_0.txt
-
-// #include <boost/leaf/config.hpp> // Expanded at line 19
-#include <iosfwd>
-#include <cstdlib>
-#include <cstring>
-
-// __has_include is currently supported by GCC and Clang. However GCC 4.9 may have issues and
-// returns 1 for 'defined( __has_include )', while '__has_include' is actually not supported:
-// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63662
-#if defined(__has_include) && (!defined(__GNUC__) || defined(__clang__) || (__GNUC__ + 0) >= 5)
-#   if __has_include(<cxxabi.h>)
-#       define BOOST_LEAF_HAS_CXXABI_H
-#   endif
-#elif defined(__GLIBCXX__) || defined(__GLIBCPP__)
-#   define BOOST_LEAF_HAS_CXXABI_H
-#endif
-
-#if defined(BOOST_LEAF_HAS_CXXABI_H)
-#   include <cxxabi.h>
-//  For some architectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
-//  (https://android.googlesource.com/platform/ndk/+/master/sources/cxx-stl/gabi++/), which does not implement
-//  abi::__cxa_demangle(). We detect this implementation by checking the include guard here.
-#   if defined(__GABIXX_CXXABI_H__)
-#       undef BOOST_LEAF_HAS_CXXABI_H
-#   endif
-#endif
-
-namespace boost { namespace leaf {
-
-namespace detail
-{
-    // The functions below are C++11 constexpr, but we use BOOST_LEAF_ALWAYS_INLINE to control object file
-    // section count / template bloat.
-
-    template <int S1, int S2, int I, bool = S1 >= S2>
-    struct cpp11_prefix
-    {
-        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&)[S1], char const (&)[S2]) noexcept
-        {
-            return false;
-        }
-    };
-    template <int S1, int S2, int I>
-    struct cpp11_prefix<S1, S2, I, true>
-    {
-        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&str)[S1], char const (&prefix)[S2]) noexcept
-        {
-            return str[I] == prefix[I] && cpp11_prefix<S1, S2, I - 1>::check(str, prefix);
-        }
-    };
-    template <int S1, int S2>
-    struct cpp11_prefix<S1, S2, 0, true>
-    {
-        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&str)[S1], char const (&prefix)[S2]) noexcept
-        {
-            return str[0] == prefix[0];
-        }
-    };
-    template <int S1, int S2>
-    BOOST_LEAF_ALWAYS_INLINE constexpr int check_prefix(char const (&str)[S1], char const (&prefix)[S2]) noexcept
-    {
-        return cpp11_prefix<S1, S2, S2 - 2>::check(str, prefix) ? S2 - 1 : 0;
-    }
-
-    ////////////////////////////////////////
-
-    template <int S1, int S2, int I1, int I2, bool = S1 >= S2>
-    struct cpp11_suffix
-    {
-        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&)[S1], char const (&)[S2]) noexcept
-        {
-            return false;
-        }
-    };
-    template <int S1, int S2, int I1, int I2>
-    struct cpp11_suffix<S1, S2, I1, I2, true>
-    {
-        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&str)[S1], char const (&suffix)[S2]) noexcept
-        {
-            return str[I1] == suffix[I2] && cpp11_suffix<S1, S2, I1 - 1, I2 - 1>::check(str, suffix);
-        }
-    };
-    template <int S1, int S2, int I1>
-    struct cpp11_suffix<S1, S2, I1, 0, true>
-    {
-        BOOST_LEAF_ALWAYS_INLINE constexpr static bool check(char const (&str)[S1], char const (&suffix)[S2]) noexcept
-        {
-            return str[I1] == suffix[0];
-        }
-    };
-    template <int S1, int S2>
-    BOOST_LEAF_ALWAYS_INLINE constexpr int check_suffix(char const (&str)[S1], char const (&suffix)[S2]) noexcept
-    {
-        return cpp11_suffix<S1, S2, S1 - 2, S2 - 2>::check(str, suffix) ? S1 - S2 : 0;
-    }
-
-    ////////////////////////////////////////
-
-    template <std::size_t S>
-    BOOST_LEAF_ALWAYS_INLINE std::size_t compute_hash(char const (&str)[S], std::size_t begin, std::size_t end) noexcept
-    {
-        std::size_t h = 2166136261u;
-        for( std::size_t i = begin; i != end; ++i )
-            h = (h ^ static_cast<std::size_t>(str[i])) * 16777619u;
-        return h;
-    }
-} // namespace detail
-
-namespace n
-{
-    struct r
-    {
-        char const * name_not_zero_terminated_at_length;
-        std::size_t length;
-        std::size_t hash;
-    };
-
-#ifdef _MSC_VER
-#   define BOOST_LEAF_CDECL __cdecl
-#else
-#   define BOOST_LEAF_CDECL
-#endif
-
-    template <class T>
-    BOOST_LEAF_ALWAYS_INLINE r BOOST_LEAF_CDECL p()
-    {
-        // C++11 compile-time parsing of __PRETTY_FUNCTION__/__FUNCSIG__. The sizeof hacks are a
-        // workaround for older GCC versions, where __PRETTY_FUNCTION__ is not constexpr, which triggers
-        // compile errors when used in constexpr expressinos, yet evaluating a sizeof exrpession works.
-
-        // We don't try to recognize the compiler based on compiler-specific macros. Any compiler/version
-        // is supported as long as it uses one of the formats we recognize.
-
-        // Unrecognized __PRETTY_FUNCTION__/__FUNCSIG__ formats will result in compiler diagnostics.
-        // In that case, please file an issue on https://github.com/boostorg/leaf.
-
-#define BOOST_LEAF_P(P) (sizeof(char[1 + detail::check_prefix(BOOST_LEAF_PRETTY_FUNCTION, P)]) - 1)
-        // clang style:
-        std::size_t const p01 = BOOST_LEAF_P("r boost::leaf::n::p() [T = ");
-        std::size_t const p02 = BOOST_LEAF_P("r __cdecl boost::leaf::n::p(void) [T = ");
-        // old clang style:
-        std::size_t const p03 = BOOST_LEAF_P("boost::leaf::n::r boost::leaf::n::p() [T = ");
-        std::size_t const p04 = BOOST_LEAF_P("boost::leaf::n::r __cdecl boost::leaf::n::p(void) [T = ");
-        // gcc style:
-        std::size_t const p05 = BOOST_LEAF_P("boost::leaf::n::r boost::leaf::n::p() [with T = ");
-        std::size_t const p06 = BOOST_LEAF_P("boost::leaf::n::r __cdecl boost::leaf::n::p() [with T = ");
-        // msvc style, struct:
-        std::size_t const p07 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<struct ");
-        // msvc style, class:
-        std::size_t const p08 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<class ");
-        // msvc style, enum:
-        std::size_t const p09 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<enum ");
-        // msvc style, built-in type:
-        std::size_t const p10 = BOOST_LEAF_P("struct boost::leaf::n::r __cdecl boost::leaf::n::p<");
-#undef BOOST_LEAF_P
-
-#define BOOST_LEAF_S(S) (sizeof(char[1 + detail::check_suffix(BOOST_LEAF_PRETTY_FUNCTION, S)]) - 1)
-        // clang/gcc style:
-        std::size_t const s01 = BOOST_LEAF_S("]");
-        // msvc style:
-        std::size_t const s02 = BOOST_LEAF_S(">(void)");
-#undef BOOST_LEAF_S
-
-        char static_assert_unrecognized_pretty_function_format_please_file_github_issue[sizeof(
-            char[
-                (s01 && (1 == (!!p01 + !!p02 + !!p03 + !!p04 + !!p05 + !!p06)))
-                ||
-                (s02 && (1 == (!!p07 + !!p08 + !!p09)))
-                ||
-                (s02 && !!p10)
-            ]
-        ) * 2 - 1];
-        (void) static_assert_unrecognized_pretty_function_format_please_file_github_issue;
-
-        if( std::size_t const p = sizeof(char[1 + !!s01 * (p01 + p02 + p03 + p04 + p05 + p06)]) - 1 )
-            return { BOOST_LEAF_PRETTY_FUNCTION + p, s01 - p, detail::compute_hash(BOOST_LEAF_PRETTY_FUNCTION, p, s01) };
-
-        if( std::size_t const p = sizeof(char[1 + !!s02 * (p07 + p08 + p09)]) - 1 )
-            return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p, detail::compute_hash(BOOST_LEAF_PRETTY_FUNCTION, p, s02) };
-
-        std::size_t const p = sizeof(char[1 + !!s02 * p10]) - 1;
-        return { BOOST_LEAF_PRETTY_FUNCTION + p, s02 - p, detail::compute_hash(BOOST_LEAF_PRETTY_FUNCTION, p, s02) };
-    }
-
-#undef BOOST_LEAF_CDECL
-
-} // namespace n
-
-} } // namespace boost::leaf
-
-////////////////////////////////////////
-
-namespace boost { namespace leaf {
-
-namespace detail
-{
-    class demangler
-    {
-        char const * mangled_name_;
-#ifdef BOOST_LEAF_HAS_CXXABI_H
-        char * demangled_name_ = nullptr;
-#endif
-
-    public:
-
-        explicit demangler(char const * mangled_name) noexcept:
-            mangled_name_(mangled_name)
-        {
-            BOOST_LEAF_ASSERT(mangled_name_);
-#ifdef BOOST_LEAF_HAS_CXXABI_H
-            int status = 0;
-            demangled_name_ = abi::__cxa_demangle(mangled_name_, nullptr, nullptr, &status);
-#endif
-        }
-
-        ~demangler() noexcept
-        {
-#ifdef BOOST_LEAF_HAS_CXXABI_H
-            std::free(demangled_name_);
-#endif
-        }
-
-        char const * get() const noexcept
-        {
-#ifdef BOOST_LEAF_HAS_CXXABI_H
-            if( demangled_name_ )
-                return demangled_name_;
-#endif
-            return mangled_name_;
-        }
-    };
-} // namespace detail
-
-} } // namespace boost::leaf
-
-#endif // #ifndef BOOST_LEAF_DETAIL_DEMANGLE_HPP_INCLUDED
-// <<< #include <boost/leaf/detail/demangle.hpp>
-// #line 9 "boost/leaf/serialization/type_name.hpp"
-
-#include <functional>
-
-#if BOOST_LEAF_CFG_STD_STRING
-#   include <string>
-#endif
-
-#if __cplusplus >= 201703L
-#   include <string_view>
-#endif
-
-namespace boost { namespace leaf {
-
-namespace serialization
-{
-
-struct type_name
-{
-    char const * name_not_zero_terminated_at_length;
-    std::size_t length;
-    std::size_t hash;
-
-    friend bool operator==(type_name const & a, type_name const & b) noexcept
-    {
-        BOOST_LEAF_ASSERT((a.hash == b.hash) == (a.length == b.length && std::memcmp(a.name_not_zero_terminated_at_length, b.name_not_zero_terminated_at_length, a.length) == 0));
-        return a.hash == b.hash;
-    }
-
-    friend bool operator!=(type_name const & a, type_name const & b) noexcept
-    {
-        return !(a == b);
-    }
-
-    friend bool operator<(type_name const & a, type_name const & b) noexcept
-    {
-        if( int cmp = std::memcmp(a.name_not_zero_terminated_at_length, b.name_not_zero_terminated_at_length, a.length < b.length ? a.length : b.length) )
-            return cmp < 0;
-        return a.length < b.length;
-    }
-
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, type_name const & x)
-    {
-        return os.write(x.name_not_zero_terminated_at_length, x.length);
-    }
-
-#if __cplusplus >= 201703L
-    friend std::string_view to_string_view(type_name const & x) noexcept
-    {
-        return std::string_view(x.name_not_zero_terminated_at_length, x.length);
-    }
-#endif
-
-#if BOOST_LEAF_CFG_STD_STRING
-    friend std::string to_string(type_name const & x)
-    {
-        return std::string(x.name_not_zero_terminated_at_length, x.length);
-    }
-#endif
-
-    template <std::size_t S>
-    friend char * to_zstr(char (&zstr)[S], type_name const & x) noexcept
-    {
-        std::size_t n = x.length < S - 1 ? x.length : S - 1;
-        std::memcpy(zstr, x.name_not_zero_terminated_at_length, n);
-        zstr[n] = 0;
-        return zstr;
-    }
-};
-
-template <class T>
-type_name get_type_name()
-{
-    n::r parsed = n::p<T>();
-    return { parsed.name_not_zero_terminated_at_length, parsed.length, parsed.hash };
-}
-
-} // namespace serialization
-
-} } // namespace boost::leaf
-
-namespace std
-{
-    template <>
-    struct hash<boost::leaf::serialization::type_name>
-    {
-        std::size_t operator()(boost::leaf::serialization::type_name const & x) const noexcept
-        {
-            return x.hash;
-        }
-    };
-} // namespace std
-
-#endif // #ifndef BOOST_LEAF_SERIALIZATION_TYPE_NAME_HPP_INCLUDED
-// <<< #include <boost/leaf/serialization/type_name.hpp>
-// #line 10 "boost/leaf/serialization/writer.hpp"
-
-#include <type_traits>
-
-namespace boost { namespace leaf {
-
-namespace serialization
-{
-class writer
-{
-    type_name const type_;
-
-protected:
-
-    template <class Derived>
-    explicit writer(Derived * d) noexcept:
-        type_(get_type_name<Derived>())
-    {
-        BOOST_LEAF_ASSERT(d == this), (void) d;
-    }
-
-    ~writer() noexcept
-    {
-    }
-
-public:
-
-    template <class Derived>
-    Derived * get() noexcept
-    {
-        return type_ == get_type_name<typename std::decay<Derived>::type>() ? static_cast<Derived *>(this) : nullptr;
-    }
-};
-
-    template <class W, class E>
-    typename std::enable_if<std::is_base_of<writer, W>::value>::type
-    serialize(W &, E const &)
-    {
-    }
-}
-
-namespace detail
-{
-    template <class>
-    struct dependent_writer
-    {
-        using type = serialization::writer;
-    };
-}
-
-} } // namespace boost::leaf
-
-#endif // #ifndef BOOST_LEAF_SERIALIZATION_WRITER_HPP_INCLUDED
-// <<< #include <boost/leaf/serialization/writer.hpp>
-// #line 10 "boost/leaf/serialization/diagnostics_writer.hpp"
-// >>> #include <boost/leaf/detail/exception_base.hpp>
-#ifndef BOOST_LEAF_DETAIL_EXCEPTION_BASE_HPP_INCLUDED
-#define BOOST_LEAF_DETAIL_EXCEPTION_BASE_HPP_INCLUDED
-
-// #line 8 "boost/leaf/detail/exception_base.hpp"
-// #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/serialization/type_name.hpp> // Expanded at line 1446
-
-namespace boost { namespace leaf {
-
-class error_id;
-
-namespace detail
-{
-    class exception_base
-    {
-    public:
-        virtual error_id get_error_id() const noexcept = 0;
-        virtual serialization::type_name get_type_name() const = 0;
-    protected:
-        exception_base() noexcept { }
-        ~exception_base() noexcept { }
-    };
-}
-
-} }
-
-#endif // #ifndef BOOST_LEAF_DETAIL_EXCEPTION_BASE_HPP_INCLUDED
-// <<< #include <boost/leaf/detail/exception_base.hpp>
-// #line 11 "boost/leaf/serialization/diagnostics_writer.hpp"
-
-#include <type_traits>
-
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-#   include <iostream>
-#else
-#   include <iosfwd>
-#endif
-
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-#   include <typeinfo>
-#endif
-
-namespace boost { namespace leaf {
-
-template <class E>
-struct show_in_diagnostics: std::integral_constant<bool, BOOST_LEAF_CFG_DIAGNOSTICS>
-{
-};
-
-namespace serialization
-{
-    template <class T, class E = void>
-    struct is_printable: std::false_type
-    {
-    };
-
-    template <class T>
-    struct is_printable<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>(), void())>: std::true_type
-    {
-    };
-
-    template <class T, class E = void>
-    struct has_printable_member_value: std::false_type
-    {
-    };
-
-    template <class T>
-    struct has_printable_member_value<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>().value, void())>: std::true_type
-    {
-    };
-
-    template <class T, class E = void>
-    struct has_member_value: std::false_type
-    {
-    };
-
-    template <class T>
-    struct has_member_value<T, decltype((void)std::declval<T const &>().value)>: std::true_type
-    {
-    };
-
-    ////////////////////////////////////////
-
-    class diagnostics_writer: public writer
-    {
-        diagnostics_writer(diagnostics_writer const &) = delete;
-        diagnostics_writer & operator=(diagnostics_writer const &) = delete;
-
-        std::ostream & os_;
-        char const * prefix_;
-        char const * delimiter_;
-        void (* const print_suffix_)(std::ostream &);
-
-        template <class T, class CharT, class Traits>
-        static void print_name(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter)
-        {
-            static_assert(show_in_diagnostics<T>::value, "show_in_diagnostics violation");
-            BOOST_LEAF_ASSERT(delimiter);
-            char const * p = prefix;
-            prefix = nullptr;
-            os << (p ? p : delimiter) << get_type_name<T>();
-        }
-
-        template <class T, class PrintableInfo, class CharT, class Traits>
-        static bool print_impl(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, char const * mid, PrintableInfo const & x)
-        {
-            print_name<T>(os, prefix, delimiter);
-            if( mid )
-                os << mid << x;
-            return true;
-        }
-
-        template <class T, class PrintableInfo, class CharT, class Traits>
-        static bool print_impl(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, char const * mid, PrintableInfo const * x)
-        {
-            print_name<T>(os, prefix, delimiter);
-            if( mid )
-            {
-                os << mid;
-                if( x )
-                    os << x;
-                else
-                    os << "<nullptr>";
-            }
-            return true;
-        }
-
-        template <
-            class Wrapper,
-            bool ShowInDiagnostics = show_in_diagnostics<Wrapper>::value,
-            bool WrapperPrintable = is_printable<Wrapper>::value,
-            bool ValuePrintable = has_printable_member_value<Wrapper>::value,
-            bool IsException = std::is_base_of<std::exception,Wrapper>::value,
-            bool IsEnum = std::is_enum<Wrapper>::value>
-        struct diagnostic;
-
-    public:
-
-        template <class CharT, class Traits>
-        explicit diagnostics_writer(std::basic_ostream<CharT, Traits> & os) noexcept:
-            writer(this),
-            os_(os),
-            prefix_(BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER),
-            delimiter_(BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER),
-            print_suffix_([](std::basic_ostream<CharT, Traits> &) { })
-        {
-        }
-
-        template <class CharT, class Traits>
-        diagnostics_writer(std::basic_ostream<CharT, Traits> & os, error_id const & id, e_source_location const * loc, std::exception const * ex) noexcept:
-            writer(this),
-            os_(os),
-            prefix_(BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER),
-            delimiter_(BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER),
-            print_suffix_([](std::basic_ostream<CharT, Traits> & os) { os << '\n'; })
-        {
-            os << "Error with serial #" << id;
-            if( loc )
-                os << " reported at " << *loc;
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-            if( ex )
-            {
-                os << "\nCaught:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
-                if( auto eb = dynamic_cast<detail::exception_base const *>(ex) )
-                    os << eb->get_type_name();
-                else
-                    os << detail::demangler(typeid(*ex).name()).get();
-                os << ": \"" << ex->what() << '"';
-            }
-            else
-#endif
-            {
-                prefix_ = "\nCaught:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
-            }
-            (void) ex;
-        }
-
-        ~diagnostics_writer() noexcept
-        {
-            print_suffix_(os_);
-        }
-
-        void set_prefix(char const * prefix) noexcept
-        {
-            prefix_ = prefix;
-        }
-
-        void set_delimiter(char const * delimiter) noexcept
-        {
-            delimiter_ = delimiter;
-        }
-
-        template <class E>
-        void write(E const & e)
-        {
-            diagnostic<E>::print(os_, prefix_, delimiter_, e);
-        }
-    }; // class diagnostics_writer
-
-    ////////////////////////////////////////
-
-    template <class Wrapper, bool WrapperPrintable, bool ValuePrintable, bool IsException, bool IsEnum>
-    struct diagnostics_writer::diagnostic<Wrapper, false, WrapperPrintable, ValuePrintable, IsException, IsEnum>
-    {
-        template <class CharT, class Traits>
-        static bool print(std::basic_ostream<CharT, Traits> &, char const * &, char const *, Wrapper const &) noexcept
-        {
-            return false;
-        }
-    };
-
-    template <class Wrapper, bool ValuePrintable, bool IsEnum>
-    struct diagnostics_writer::diagnostic<Wrapper, true, true, ValuePrintable, false, IsEnum>
-    {
-        template <class CharT, class Traits>
-        static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Wrapper const & x)
-        {
-            return print_impl<Wrapper>(os, prefix, delimiter, ": ", x);
-        }
-    };
-
-    template <class Wrapper>
-    struct diagnostics_writer::diagnostic<Wrapper, true, false, true, false, false>
-    {
-        template <class CharT, class Traits>
-        static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Wrapper const & x)
-        {
-            return print_impl<Wrapper>(os, prefix, delimiter, ": ", x.value);
-        }
-    };
-
-    template <class Exception, bool WrapperPrintable, bool ValuePrintable>
-    struct diagnostics_writer::diagnostic<Exception, true, WrapperPrintable, ValuePrintable, true, false>
-    {
-        template <class CharT, class Traits>
-        static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Exception const & ex)
-        {
-            if( print_impl<Exception>(os, prefix, delimiter, ": \"", static_cast<std::exception const &>(ex).what()) )
-            {
-                os << '"';
-                return true;
-            }
-            return false;
-        }
-    };
-
-    template <class Wrapper>
-    struct diagnostics_writer::diagnostic<Wrapper, true, false, false, false, false>
-    {
-        template <class CharT, class Traits>
-        static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Wrapper const &)
-        {
-            return print_impl<Wrapper>(os, prefix, delimiter, nullptr, 0);
-        }
-    };
-
-    template <class Enum>
-    struct diagnostics_writer::diagnostic<Enum, true, false, false, false, true>
-    {
-        template <class CharT, class Traits>
-        static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Enum const & enum_)
-        {
-            return print_impl<Enum>(os, prefix, delimiter, ": ", static_cast<typename std::underlying_type<Enum>::type>(enum_));
-        }
-    };
-
-} // namespace serialization
-
-} } // namespace boost::leaf
-
-#endif // #ifndef BOOST_LEAF_SERIALIZATION_DIAGNOSTICS_WRITER_HPP_INCLUDED
-// <<< #include <boost/leaf/serialization/diagnostics_writer.hpp>
-// #line 10 "boost/leaf/context.hpp"
+// #include <boost/leaf/config.hpp> // Expanded at line 14
 // >>> #include <boost/leaf/error.hpp>
 #ifndef BOOST_LEAF_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ERROR_HPP_INCLUDED
 
 // #line 8 "boost/leaf/error.hpp"
-// #include <boost/leaf/config.hpp> // Expanded at line 19
+// #include <boost/leaf/config.hpp> // Expanded at line 14
 // >>> #include <boost/leaf/detail/optional.hpp>
 #ifndef BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
 
 // #line 8 "boost/leaf/detail/optional.hpp"
-// #include <boost/leaf/config.hpp> // Expanded at line 19
+// #include <boost/leaf/config.hpp> // Expanded at line 14
 #include <new>
 
 namespace boost { namespace leaf {
@@ -2314,7 +1862,6 @@ namespace detail
 #define BOOST_LEAF_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED
 
 // #line 8 "boost/leaf/detail/function_traits.hpp"
-// #include <boost/leaf/config.hpp> // Expanded at line 19
 // >>> #include <boost/leaf/detail/mp11.hpp>
 #ifndef BOOST_LEAF_DETAIL_MP11_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_MP11_HPP_INCLUDED
@@ -2614,7 +2161,7 @@ template<template<class...> class F, class... T> using mp_valid = typename detai
 
 #endif // #ifndef BOOST_LEAF_DETAIL_MP11_HPP_INCLUDED
 // <<< #include <boost/leaf/detail/mp11.hpp>
-// #line 10 "boost/leaf/detail/function_traits.hpp"
+// #line 9 "boost/leaf/detail/function_traits.hpp"
 
 #include <tuple>
 
@@ -2713,14 +2260,173 @@ namespace detail
 #define BOOST_LEAF_DETAIL_CAPTURE_LIST_HPP_INCLUDED
 
 // #line 8 "boost/leaf/detail/capture_list.hpp"
-// #include <boost/leaf/config.hpp> // Expanded at line 19
+// #include <boost/leaf/config.hpp> // Expanded at line 14
+// >>> #include <boost/leaf/detail/print.hpp>
+#ifndef BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
+#define BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
 
-#if BOOST_LEAF_CFG_CAPTURE
+// #line 8 "boost/leaf/detail/print.hpp"
+// #include <boost/leaf/config.hpp> // Expanded at line 14
+// #include <boost/leaf/detail/demangle.hpp> // Expanded at line 1312
+
+#include <type_traits>
+#include <iosfwd>
 
 namespace boost { namespace leaf {
 
-class error_id;
-namespace serialization { class writer; }
+template <class E>
+struct show_in_diagnostics: std::true_type
+{
+};
+
+namespace detail
+{
+    template <class T, class E = void>
+    struct is_printable: std::false_type
+    {
+    };
+
+    template <class T>
+    struct is_printable<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>(), void())>: show_in_diagnostics<T>
+    {
+    };
+
+    ////////////////////////////////////////
+
+    template <class T, class E = void>
+    struct has_printable_member_value: std::false_type
+    {
+    };
+
+    template <class T>
+    struct has_printable_member_value<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>().value, void())>: show_in_diagnostics<T>
+    {
+    };
+
+    ////////////////////////////////////////
+
+    template <class T, class CharT, class Traits>
+    void print_name(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter)
+    {
+        static_assert(show_in_diagnostics<T>::value, "show_in_diagnostics violation");
+        BOOST_LEAF_ASSERT(delimiter);
+        char const * p = prefix;
+        prefix = nullptr;
+        os << (p ? p : delimiter) << parse<T>();
+    }
+
+    template <class T, class PrintableInfo, class CharT, class Traits>
+    bool print_impl(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, char const * mid, PrintableInfo const & x)
+    {
+        print_name<T>(os, prefix, delimiter);
+        if( mid )
+            os << mid << x;
+        return true;
+    }
+
+    template <class T, class PrintableInfo, class CharT, class Traits>
+    bool print_impl(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, char const * mid, PrintableInfo const * x)
+    {
+        print_name<T>(os, prefix, delimiter);
+        if( mid )
+        {
+            os << mid;
+            if( x )
+                os << x;
+            else
+                os << "<nullptr>";
+        }
+        return true;
+    }
+
+    ////////////////////////////////////////
+
+    template <
+        class Wrapper,
+        bool ShowInDiagnostics = show_in_diagnostics<Wrapper>::value,
+        bool WrapperPrintable = is_printable<Wrapper>::value,
+        bool ValuePrintable = has_printable_member_value<Wrapper>::value,
+        bool IsException = std::is_base_of<std::exception,Wrapper>::value,
+        bool IsEnum = std::is_enum<Wrapper>::value>
+    struct diagnostic;
+
+    template <class Wrapper, bool WrapperPrintable, bool ValuePrintable, bool IsException, bool IsEnum>
+    struct diagnostic<Wrapper, false, WrapperPrintable, ValuePrintable, IsException, IsEnum>
+    {
+        template <class CharT, class Traits>
+        static bool print(std::basic_ostream<CharT, Traits> &, char const * &, char const *, Wrapper const & x) noexcept
+        {
+            return false;
+        }
+    };
+
+    template <class Wrapper, bool ValuePrintable, bool IsEnum>
+    struct diagnostic<Wrapper, true, true, ValuePrintable, false, IsEnum>
+    {
+        template <class CharT, class Traits>
+        static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Wrapper const & x)
+        {
+            return print_impl<Wrapper>(os, prefix, delimiter, ": ", x);
+        }
+    };
+
+    template <class Wrapper>
+    struct diagnostic<Wrapper, true, false, true, false, false>
+    {
+        template <class CharT, class Traits>
+        static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Wrapper const & x)
+        {
+            return print_impl<Wrapper>(os, prefix, delimiter, ": ", x.value);
+        }
+    };
+
+    template <class Exception, bool WrapperPrintable, bool ValuePrintable>
+    struct diagnostic<Exception, true, WrapperPrintable, ValuePrintable, true, false>
+    {
+        template <class CharT, class Traits>
+        static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Exception const & ex)
+        {
+            if( print_impl<Exception>(os, prefix, delimiter, ": \"", static_cast<std::exception const &>(ex).what()) )
+            {
+                os << '"';
+                return true;
+            }
+            return false;
+        }
+    };
+
+    template <class Wrapper>
+    struct diagnostic<Wrapper, true, false, false, false, false>
+    {
+        template <class CharT, class Traits>
+        static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Wrapper const &)
+        {
+            return print_impl<Wrapper>(os, prefix, delimiter, nullptr, 0);
+        }
+    };
+
+    template <class Enum>
+    struct diagnostic<Enum, true, false, false, false, true>
+    {
+        template <class CharT, class Traits>
+        static bool print(std::basic_ostream<CharT, Traits> & os, char const * & prefix, char const * delimiter, Enum const & enum_)
+        {
+            return print_impl<Enum>(os, prefix, delimiter, ": ", static_cast<typename std::underlying_type<Enum>::type>(enum_));
+        }
+    };
+} // namespace detail
+
+} } // namespace boost::leaf
+
+#endif // #ifndef BOOST_LEAF_DETAIL_PRINT_HPP_INCLUDED
+// <<< #include <boost/leaf/detail/print.hpp>
+// #line 10 "boost/leaf/detail/capture_list.hpp"
+
+#if BOOST_LEAF_CFG_CAPTURE
+
+#include <iosfwd>
+
+namespace boost { namespace leaf {
 
 namespace detail
 {
@@ -2737,7 +2443,9 @@ namespace detail
             friend class capture_list;
 
             virtual void unload( int err_id ) = 0;
-            virtual void write_to(serialization::writer &, error_id const &) const = 0;
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+            virtual void print(std::ostream &, error_id const & to_print, char const * & prefix) const = 0;
+#endif
 
         protected:
 
@@ -2798,16 +2506,23 @@ namespace detail
                 } );
         }
 
-        void write_to(serialization::writer & w, error_id const & id) const
+        template <class CharT, class Traits>
+        void print(std::basic_ostream<CharT, Traits> & os, error_id const & to_print, char const * & prefix) const
         {
+#if BOOST_LEAF_CFG_DIAGNOSTICS
             if( first_ )
             {
                 for_each(
-                    [&w, &id]( node const & n )
+                    [&os, &to_print, &prefix]( node const & n )
                     {
-                        n.write_to(w, id);
+                        n.print(os, to_print, prefix);
                     } );
             }
+#else
+            (void) os;
+            (void) prefix;
+            (void) to_print;
+#endif
         }
     }; // class capture_list
 
@@ -2820,7 +2535,10 @@ namespace detail
 #endif // #ifndef BOOST_LEAF_DETAIL_CAPTURE_LIST_HPP_INCLUDED
 // <<< #include <boost/leaf/detail/capture_list.hpp>
 // #line 12 "boost/leaf/error.hpp"
-// #include <boost/leaf/serialization/diagnostics_writer.hpp> // Expanded at line 1434
+
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+#   include <ostream>
+#endif
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 #   include <system_error>
@@ -2892,15 +2610,17 @@ struct show_in_diagnostics<e_source_location>: std::false_type
 
 namespace detail
 {
-    template <class Writer, class E>
-    void serialize_(Writer & w, E const & e)
+    class exception_base
     {
-        using namespace serialization;
-        typename dependent_writer<Writer>::type & wr = w;
-        serialize(wr, e);
-        if( diagnostics_writer * dw = w.template get<diagnostics_writer>() )
-            dw->write(e);
-    }
+    public:
+        virtual error_id get_error_id() const noexcept = 0;
+#if BOOST_LEAF_CFG_DIAGNOSTICS && !defined(BOOST_LEAF_NO_EXCEPTIONS)
+        virtual void print_type_name(std::ostream &) const = 0;
+#endif
+    protected:
+        exception_base() noexcept { }
+        ~exception_base() noexcept { }
+    };
 }
 
 ////////////////////////////////////////
@@ -2959,14 +2679,15 @@ namespace detail
 
         void unload( int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE);
 
-        template <class ErrorID>
-        void write_to(serialization::writer & w, ErrorID id) const
+        template <class CharT, class Traits, class ErrorID>
+        void print(std::basic_ostream<CharT, Traits> & os, ErrorID to_print, char const * & prefix) const
         {
             if( int k = this->key() )
             {
-                if( id && id.value() != k )
+                if( to_print && to_print.value() != k )
                     return;
-                serialize_(w, value(k));
+                if( diagnostic<E>::print(os, prefix, BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER, value(k)) && !to_print )
+                    os << '(' << k/4 << ')';
             }
         }
 
@@ -3028,10 +2749,12 @@ namespace detail
             {
                 impl::unload(err_id);
             }
-            void write_to(serialization::writer & w, error_id const & id) const override
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+            void print(std::ostream & os, error_id const & to_print, char const * & prefix) const override
             {
-                impl::write_to(w, id);
+                impl::print(os, to_print, prefix);
             }
+#endif
         public:
             BOOST_LEAF_CONSTEXPR explicit capturing_slot_node( capture_list::node * * & last ):
                 capturing_node(last)
@@ -3063,9 +2786,11 @@ namespace detail
             {
                 std::rethrow_exception(ex_);
             }
-            void write_to(serialization::writer &, error_id const &) const override
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+            void print(std::ostream &, error_id const &, char const * &) const override
             {
             }
+#endif
             std::exception_ptr const ex_;
         public:
             capturing_exception_node( capture_list::node * * & last, std::exception_ptr && ex ) noexcept:
@@ -3163,7 +2888,7 @@ namespace detail
         }
 
         using capture_list::unload;
-        using capture_list::write_to;
+        using capture_list::print;
     }; // class dynamic_allocator
 
     template <class E>
@@ -3238,10 +2963,12 @@ namespace detail
             da_.unload(err_id);
         }
 
-        template <class ErrorID>
-        void write_to(serialization::writer &, ErrorID) const
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+        template <class CharT, class Traits, class ErrorID>
+        void print(std::basic_ostream<CharT, Traits> &, ErrorID, char const * &) const
         {
         }
+#endif
     }; // slot specialization for dynamic_allocator
 } // namespace detail
 
@@ -3646,7 +3373,7 @@ struct is_result_type<R const>: is_result_type<R>
 
 #endif // #ifndef BOOST_LEAF_ERROR_HPP_INCLUDED
 // <<< #include <boost/leaf/error.hpp>
-// #line 11 "boost/leaf/context.hpp"
+// #line 10 "boost/leaf/context.hpp"
 
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
 #   include <thread>
@@ -3843,11 +3570,12 @@ namespace detail
             tuple_for_each<I-1,Tup>::unload(tup, err_id);
         }
 
-        static void write_to(serialization::writer & w, void const * tup, error_id id)
+        template <class CharT, class Traits>
+        static void print(std::basic_ostream<CharT, Traits> & os, void const * tup, error_id to_print, char const * & prefix)
         {
             BOOST_LEAF_ASSERT(tup != nullptr);
-            tuple_for_each<I-1,Tup>::write_to(w, tup, id);
-            std::get<I-1>(*static_cast<Tup const *>(tup)).write_to(w, id);
+            tuple_for_each<I-1,Tup>::print(os, tup, to_print, prefix);
+            std::get<I-1>(*static_cast<Tup const *>(tup)).print(os, to_print, prefix);
         }
     };
 
@@ -3857,13 +3585,14 @@ namespace detail
         BOOST_LEAF_CONSTEXPR static void activate( Tup & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void deactivate( Tup & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void unload( Tup &, int ) noexcept { }
-        BOOST_LEAF_CONSTEXPR static void write_to(serialization::writer &, void const *, error_id) { }
+        template <class CharT, class Traits>
+        BOOST_LEAF_CONSTEXPR static void print(std::basic_ostream<CharT, Traits> &, void const *, error_id, char const * &) { }
     };
 
-    template <class Tup>
-    BOOST_LEAF_CONSTEXPR void serialize_tuple_contents(serialization::writer & w, void const * tup, error_id id)
+    template <class Tup, class CharT, class Traits>
+    BOOST_LEAF_CONSTEXPR void print_tuple_contents(std::basic_ostream<CharT, Traits> & os, void const * tup, error_id to_print, char const * & prefix)
     {
-        tuple_for_each<std::tuple_size<Tup>::value, Tup>::write_to(w, tup, id);
+        tuple_for_each<std::tuple_size<Tup>::value, Tup>::print(os, tup, to_print, prefix);
     }
 } // namespace detail
 
@@ -4007,18 +3736,18 @@ public:
         return is_active_;
     }
 
-    void write_to( serialization::writer & w ) const
+    template <class CharT, class Traits>
+    void print( std::basic_ostream<CharT, Traits> & os ) const
     {
-        detail::serialize_tuple_contents<Tup>(w, &tup_, error_id());
+        char const * prefix = "Contents:";
+        detail::print_tuple_contents<Tup>(os, &tup_, error_id(), prefix);
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, context const & ctx )
     {
-        serialization::diagnostics_writer w(os);
-        w.set_prefix("Contents:");
-        ctx.write_to(w);
-        return os;
+        ctx.print(os);
+        return os << '\n';
     }
 
     template <class T>
@@ -4106,16 +3835,16 @@ BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && 
 #define BOOST_LEAF_DIAGNOSTICS_HPP_INCLUDED
 
 // #line 8 "boost/leaf/diagnostics.hpp"
-// #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/context.hpp> // Expanded at line 1428
+// #include <boost/leaf/config.hpp> // Expanded at line 14
+// #include <boost/leaf/context.hpp> // Expanded at line 1669
 // >>> #include <boost/leaf/handle_errors.hpp>
 #ifndef BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
 #define BOOST_LEAF_HANDLE_ERRORS_HPP_INCLUDED
 
 // #line 8 "boost/leaf/handle_errors.hpp"
-// #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/context.hpp> // Expanded at line 1428
-// #include <boost/leaf/serialization/diagnostics_writer.hpp> // Expanded at line 1434
+// #include <boost/leaf/config.hpp> // Expanded at line 14
+// #include <boost/leaf/context.hpp> // Expanded at line 1669
+#include <typeinfo>
 
 namespace boost { namespace leaf {
 
@@ -4184,21 +3913,32 @@ public:
         return loc_;
     }
 
-    template <class Writer>
-    void write_to(Writer & w) const
+    template <class CharT, class Traits>
+    void print_error_info(std::basic_ostream<CharT, Traits> & os) const
     {
-        detail::serialize_(w, err_id_);
+        os << "Error with serial #" << err_id_;
+        if( loc_ )
+            os << " reported at " << *loc_;
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
         if( ex_ )
-            detail::serialize_(w, *ex_);
+        {
+            os << "\nCaught:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+            if( auto eb = dynamic_cast<detail::exception_base const *>(ex_) )
+                eb->print_type_name(os);
+            else
 #endif
+                detail::demangle_and_print(os, typeid(*ex_).name());
+            os << ": \"" << ex_->what() << '"';
+        }
+#endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<(std::basic_ostream<CharT, Traits> & os, error_info const & x)
     {
-        serialization::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
-        return os;
+        x.print_error_info(os);
+        return os << '\n';
     }
 }; // class error_info
 
@@ -4329,7 +4069,7 @@ namespace detail
         {
             return nullptr;
         }
-
+        
         template <class SlotsTuple>
         BOOST_LEAF_CONSTEXPR static E * peek( SlotsTuple &, error_id const & ) noexcept
         {
@@ -4980,10 +4720,12 @@ namespace detail
 
 namespace boost { namespace leaf {
 
+#if BOOST_LEAF_CFG_DIAGNOSTICS
+
 class diagnostic_info: public error_info
 {
     void const * tup_;
-    void (*serialize_tuple_contents_)(serialization::writer &, void const *, error_id);
+    void (*print_tuple_contents_)(std::ostream &, void const * tup, error_id to_print, char const * & prefix);
 
 protected:
 
@@ -4993,35 +4735,23 @@ protected:
     BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei, Tup const & tup ) noexcept:
         error_info(ei),
         tup_(&tup),
-        serialize_tuple_contents_(&detail::serialize_tuple_contents<Tup>)
+        print_tuple_contents_(&detail::print_tuple_contents<Tup>)
     {
     }
 
-    template <class Writer>
-    void write_to_(Writer & w) const
+    template <class CharT, class Traits>
+    void print_diagnostic_info(std::basic_ostream<CharT, Traits> & os) const
     {
-        serialize_tuple_contents_(w, tup_, error());
-    }
-
-public:
-
-    template <class Writer>
-    void write_to(Writer & w) const
-    {
-        error_info::write_to(w);
-        write_to_(w);
+        print_error_info(os);
+        char const * prefix = exception() ? nullptr : "\nCaught:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
+        print_tuple_contents_(os, tup_, error(), prefix);
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
     {
-        serialization::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-        x.write_to_(w);
-#else
-        os << "\nboost::leaf::diagnostic_info N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
-#endif
-        return os;
+        x.print_diagnostic_info(os);
+        return os << '\n';
     }
 }; // class diagnostic_info
 
@@ -5047,7 +4777,60 @@ namespace detail
     };
 }
 
+#else // #if BOOST_LEAF_CFG_DIAGNOSTICS
+
+class diagnostic_info: public error_info
+{
+protected:
+
+    diagnostic_info( diagnostic_info const & ) noexcept = default;
+
+    BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei ) noexcept:
+        error_info(ei)
+    {
+    }
+
+    template <class CharT, class Traits>
+    void print_diagnostic_info( std::basic_ostream<CharT, Traits> & os ) const
+    {
+        print_error_info(os);
+        os << "\nboost::leaf::diagnostic_info N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
+    }
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
+    {
+        x.print_diagnostic_info(os);
+        return os << "\n";
+    }
+}; // class diagnostic_info
+
+namespace detail
+{
+    struct diagnostic_info_: diagnostic_info
+    {
+        BOOST_LEAF_CONSTEXPR diagnostic_info_( error_info const & ei ) noexcept:
+            diagnostic_info(ei)
+        {
+        }
+    };
+
+    template <>
+    struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<e_source_location>
+    {
+        template <class Tup>
+        BOOST_LEAF_CONSTEXPR static diagnostic_info_ get( Tup const &, error_info const & ei ) noexcept
+        {
+            return diagnostic_info_(ei);
+        }
+    };
+}
+
+#endif // #else (#if BOOST_LEAF_CFG_DIAGNOSTICS)
+
 ////////////////////////////////////////
+
+#if BOOST_LEAF_CFG_DIAGNOSTICS
 
 #if BOOST_LEAF_CFG_CAPTURE
 
@@ -5066,34 +4849,22 @@ protected:
     {
     }
 
-    template <class Writer>
-    void write_to_(Writer & w) const
+    template <class CharT, class Traits>
+    void print_diagnostic_details( std::basic_ostream<CharT, Traits> & os) const
     {
+        print_diagnostic_info(os);
         if( da_ )
-            da_->write_to(w, error());
-    }
-
-public:
-
-    template <class Writer>
-    void write_to(Writer & w) const
-    {
-        diagnostic_info::write_to(w);
-        write_to_(w);
+        {
+            char const * prefix = "\nDiagnostic details:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER;
+            da_->print(os, error(), prefix);
+        }
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_details const & x )
     {
-        serialization::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-        x.diagnostic_info::write_to_(w);
-        w.set_prefix("\nDiagnostic details:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER);
-        x.write_to_(w);
-#else
-        os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
-#endif
-        return os;
+        x.print_diagnostic_details(os);
+        return os << '\n';
     }
 }; // class diagnostic_details
 
@@ -5134,25 +4905,18 @@ protected:
     {
     }
 
-public:
-
-    template <class Writer>
-    void write_to(Writer & w) const
+    template <class CharT, class Traits>
+    void print_diagnostic_details( std::basic_ostream<CharT, Traits> & os ) const
     {
-        diagnostic_info::write_to(w);
+        print_diagnostic_info(os);
+        os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_CAPTURE=0";
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_details const & x )
     {
-        serialization::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
-#if BOOST_LEAF_CFG_DIAGNOSTICS
-        x.diagnostic_info::write_to_(w);
-        os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_CAPTURE=0";
-#else
-        os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
-#endif
-        return os;
+        x.print_diagnostic_details(os);
+        return os << "\n";
     }
 }; // class diagnostic_details
 
@@ -5180,20 +4944,71 @@ namespace detail
 
 #endif // #else (#if BOOST_LEAF_CFG_CAPTURE)
 
+#else // #if BOOST_LEAF_CFG_DIAGNOSTICS
+
+class diagnostic_details: public diagnostic_info
+{
+protected:
+
+    diagnostic_details( diagnostic_details const & ) noexcept = default;
+
+    BOOST_LEAF_CONSTEXPR diagnostic_details( error_info const & ei ) noexcept:
+        diagnostic_info(ei)
+    {
+    }
+
+    template <class CharT, class Traits>
+    void print_diagnostic_details( std::basic_ostream<CharT, Traits> & os ) const
+    {
+        print_error_info(os);
+        os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
+    }
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_details const & x )
+    {
+        x.print_diagnostic_details(os);
+        return os << "\n";
+    }
+};
+
+namespace detail
+{
+    struct diagnostic_details_: diagnostic_details
+    {
+        BOOST_LEAF_CONSTEXPR diagnostic_details_( error_info const & ei ) noexcept:
+            diagnostic_details(ei)
+        {
+        }
+    };
+
+    template <>
+    struct handler_argument_traits<diagnostic_details const &>: handler_argument_always_available<e_source_location>
+    {
+        template <class Tup>
+        BOOST_LEAF_CONSTEXPR static diagnostic_details_ get( Tup const &, error_info const & ei ) noexcept
+        {
+            return diagnostic_details_(ei);
+        }
+    };
+}
+
+#endif // #else (#if BOOST_LEAF_CFG_DIAGNOSTICS)
+
 using verbose_diagnostic_info = diagnostic_details;
 
 } } // namespace boost::leaf
 
 #endif // #ifndef BOOST_LEAF_DIAGNOSTICS_HPP_INCLUDED
-// #include <boost/leaf/error.hpp> // Expanded at line 2126
+// #include <boost/leaf/error.hpp> // Expanded at line 1675
 // >>> #include <boost/leaf/exception.hpp>
 #ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
 #define BOOST_LEAF_EXCEPTION_HPP_INCLUDED
 
 // #line 8 "boost/leaf/exception.hpp"
-// #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/error.hpp> // Expanded at line 2126
-// #include <boost/leaf/detail/exception_base.hpp> // Expanded at line 1852
+// #include <boost/leaf/config.hpp> // Expanded at line 14
+// #include <boost/leaf/error.hpp> // Expanded at line 1675
+#include <typeinfo>
 
 ////////////////////////////////////////
 
@@ -5243,10 +5058,12 @@ namespace detail
             return *this;
         }
 
-        serialization::type_name get_type_name() const override
+#if BOOST_LEAF_CFG_DIAGNOSTICS && !defined(BOOST_LEAF_NO_EXCEPTIONS)
+        void print_type_name(std::ostream & os) const override
         {
-            return serialization::get_type_name<Ex>();
+            detail::demangle_and_print(os, typeid(Ex).name());
         }
+#endif
 
     public:
 
@@ -5427,14 +5244,14 @@ exception_to_result( F && f ) noexcept(!BOOST_LEAF_CFG_CAPTURE)
 } } // namespace boost::leaf
 
 #endif // #ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4112
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3842
 // >>> #include <boost/leaf/on_error.hpp>
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 
 // #line 8 "boost/leaf/on_error.hpp"
-// #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/error.hpp> // Expanded at line 2126
+// #include <boost/leaf/config.hpp> // Expanded at line 14
+// #include <boost/leaf/error.hpp> // Expanded at line 1675
 
 namespace boost { namespace leaf {
 
@@ -5773,8 +5590,8 @@ on_error( Item && ... i )
 #define BOOST_LEAF_PRED_HPP_INCLUDED
 
 // #line 8 "boost/leaf/pred.hpp"
-// #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4112
+// #include <boost/leaf/config.hpp> // Expanded at line 14
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3842
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -6067,10 +5884,10 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 #define BOOST_LEAF_RESULT_HPP_INCLUDED
 
 // #line 8 "boost/leaf/result.hpp"
-// #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/exception.hpp> // Expanded at line 5190
-// #include <boost/leaf/serialization/diagnostics_writer.hpp> // Expanded at line 1434
-// #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 2712
+// #include <boost/leaf/config.hpp> // Expanded at line 14
+// #include <boost/leaf/detail/print.hpp> // Expanded at line 2266
+// #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 2260
+// #include <boost/leaf/exception.hpp> // Expanded at line 5006
 
 #include <functional>
 
@@ -6086,6 +5903,40 @@ class bad_result:
         return "boost::leaf::bad_result";
     }
 };
+
+////////////////////////////////////////
+
+namespace detail
+{
+    template <class T, bool Printable = is_printable<T>::value>
+    struct result_value_printer;
+
+    template <class T>
+    struct result_value_printer<T, true>
+    {
+        template <class CharT, class Traits>
+        static void print( std::basic_ostream<CharT, Traits> & s, T const & x )
+        {
+            (void) (s << x);
+        }
+    };
+
+    template <class T>
+    struct result_value_printer<T, false>
+    {
+        template <class CharT, class Traits>
+        static void print( std::basic_ostream<CharT, Traits> & s, T const & )
+        {
+            (void) (s << "{not printable}");
+        }
+    };
+
+    template <class CharT, class Traits, class T>
+    void print_result_value( std::basic_ostream<CharT, Traits> & s, T const & x )
+    {
+        result_value_printer<T>::print(s, x);
+    }
+} // namespace detail
 
 ////////////////////////////////////////
 
@@ -6358,36 +6209,23 @@ protected:
         what_ = move_from(std::move(x));
     }
 
-    template <class Writer>
-    error_id write_error_to(Writer & w) const
+    template <class CharT, class Traits>
+    void print_error_result(std::basic_ostream<CharT, Traits> & os) const
     {
         result_discriminant const what = what_;
         BOOST_LEAF_ASSERT(what.kind() != result_discriminant::val);
         error_id const err_id = what.get_error_id();
-        detail::serialize_(w, err_id);
-        return err_id;
-    }
-
-    template <class Writer>
-    void write_capture_to(Writer & w, error_id err_id) const
-    {
-        if( what_.kind() == result_discriminant::err_id_capture_list )
+        os << "Error serial #" << err_id;
+        if( what.kind() == result_discriminant::err_id_capture_list )
         {
 #if BOOST_LEAF_CFG_CAPTURE
-            cap_.write_to(w, err_id);
+            char const * prefix = "\nCaptured:";
+            cap_.print(os, err_id, prefix);
+            os << "\n";
 #else
             BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
         }
-    }
-
-    template <class Writer>
-    void print_error( Writer & w ) const
-    {
-        error_id err_id = write_error_to(w);
-        w.set_prefix(", captured -> ");
-        w.set_delimiter(", ");
-        write_capture_to(w, err_id);
     }
 
 public:
@@ -6635,30 +6473,13 @@ public:
 #endif
     }
 
-    template <class Writer>
-    void write_to(Writer & w) const
-    {
-        if( what_.kind() == result_discriminant::val )
-            detail::serialize_(w, value());
-        else
-            write_capture_to(w, write_error_to(w));
-    }
-
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, result const & r )
     {
-        serialization::diagnostics_writer w(os);
-        w.set_prefix(": ");
-        if( r )
-        {
-            os << "Success";
-            detail::serialize_(w, r.value());
-        }
+        if( r.what_.kind() == result_discriminant::val )
+            detail::print_result_value(os, r.value());
         else
-        {
-            os << "Failure";
-            r.print_error(w);
-        }
+            r.print_error_result(os);
         return os;
     }
 }; // template result
@@ -6753,25 +6574,13 @@ public:
         BOOST_LEAF_ASSERT(has_value());
     }
 
-    template <class Writer>
-    void write_to(Writer & w) const
-    {
-        if( !*this )
-            write_error_to(w);
-    }
-
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, result const & r )
     {
         if( r )
-            os << "Success";
+            os << "No error";
         else
-        {
-            serialization::diagnostics_writer w(os);
-            w.set_prefix(": ");
-            os << "Failure";
-            r.print_error(w);
-        }
+            r.print_error_result(os);
         return os;
     }
 
@@ -6796,166 +6605,6 @@ struct is_result_type<result<T>>: std::true_type
 } } // namespace boost::leaf
 
 #endif // #ifndef BOOST_LEAF_RESULT_HPP_INCLUDED
-// #include <boost/leaf/serialization/diagnostics_writer.hpp> // Expanded at line 1434
-// >>> #include <boost/leaf/serialization/json_writer.hpp>
-#ifndef BOOST_LEAF_SERIALIZATION_JSON_WRITER_HPP_INCLUDED
-#define BOOST_LEAF_SERIALIZATION_JSON_WRITER_HPP_INCLUDED
-
-// #line 8 "boost/leaf/serialization/json_writer.hpp"
-// #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/serialization/writer.hpp> // Expanded at line 1440
-// #include <boost/leaf/detail/exception_base.hpp> // Expanded at line 1852
-// #include <boost/leaf/error.hpp> // Expanded at line 2126
-// #include <boost/leaf/common.hpp> // Expanded at line 14
-
-#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-#   include <system_error>
-#endif
-
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-#   include <typeinfo>
-#endif
-
-namespace boost { namespace leaf {
-
-namespace serialization
-{
-    template <class Json>
-    void to_json(Json & j, error_id x)
-    {
-        to_json(j, x.value() / 4);
-    }
-
-    template <class Json>
-    void to_json(Json & j, e_source_location const & x)
-    {
-        to_json(j["file"], x.file);
-        to_json(j["line"], x.line);
-        to_json(j["function"], x.function);
-    }
-
-    template <class Json>
-    void to_json(Json & j, e_errno const & e)
-    {
-        to_json(j["value"], e.value);
-        to_json(j["message"], std::strerror(e.value));
-    }
-
-#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-    template <class Json>
-    void to_json(Json & j, std::error_code const & ec)
-    {
-        to_json(j["category"], ec.category().name());
-        to_json(j["value"], ec.value());
-        to_json(j["message"], ec.message());
-    }
-
-    template <class Json>
-    void to_json(Json & j, std::error_condition const & ec)
-    {
-        to_json(j["category"], ec.category().name());
-        to_json(j["value"], ec.value());
-        to_json(j["message"], ec.message());
-    }
-#endif
-
-    template <class Json>
-    void to_json(Json & j, detail::exception_base const & eb)
-    {
-        char zstr[1024];
-        to_json(j["type"], to_zstr(zstr, eb.get_type_name()));
-        char const * what = "N/A";
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-        if( std::exception const * ex = dynamic_cast<std::exception const *>(&eb) )
-            what = ex->what();
-#endif
-        to_json(j["what"], what ? what : "<<nullptr>>");
-    }
-
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-    template <class Json>
-    void to_json(Json & j, std::exception const & ex)
-    {
-        if( detail::exception_base const * eb = dynamic_cast<detail::exception_base const *>(&ex) )
-        {
-            char zstr[1024];
-            to_json(j["type"], to_zstr(zstr, eb->get_type_name()));
-        }
-        else
-            to_json(j["type"], detail::demangler(typeid(ex).name()).get());
-        if( char const * w = ex.what() )
-            to_json(j["what"], w);
-        else
-            to_json(j["what"], "<<nullptr>>");
-    }
-#endif
-
-    template <class Json>
-    void to_json(Json & j, std::exception_ptr const & ep)
-    {
-        if( ep )
-        {
-#ifndef BOOST_LEAF_NO_EXCEPTIONS
-            try
-            {
-                std::rethrow_exception(ep);
-            }
-            catch( detail::exception_base const & eb )
-            {
-                to_json(j, eb);
-                return;
-            }
-            catch( std::exception const & ex )
-            {
-                to_json(j, ex);
-                return;
-            }
-            catch( ... )
-            {
-            }
-#endif
-            to_json(j["type"], "<<unknown>>");
-        }
-        else
-            to_json(j["type"], "<<empty>>");
-        to_json(j["what"], "N/A");
-    }
-
-    template <class Json, class E>
-    auto to_json(Json & j, E const & e) -> decltype(to_json(j, e.value), void())
-    {
-        to_json(j["value"], e.value);
-    }
-
-    ////////////////////////////////////////
-
-    template <class Json>
-    class json_writer: public writer
-    {
-        Json & j_;
-
-    public:
-
-        explicit json_writer(Json & j) noexcept:
-            writer(this),
-            j_(j)
-        {
-        }
-
-        template <class E>
-        void write(E const & e)
-        {
-            char zstr[1024];
-            to_json(j_[to_zstr(zstr, get_type_name<E>())], e);
-        }
-    };
-
-} // namespace serialization
-
-} } // namespace boost::leaf
-
-#endif // #ifndef BOOST_LEAF_SERIALIZATION_JSON_WRITER_HPP_INCLUDED
-// #include <boost/leaf/serialization/writer.hpp> // Expanded at line 1440
 // >>> #include <boost/leaf/to_variant.hpp>
 #ifndef BOOST_LEAF_TO_VARIANT_HPP_INCLUDED
 #define BOOST_LEAF_TO_VARIANT_HPP_INCLUDED
@@ -6963,9 +6612,9 @@ namespace serialization
 // #line 8 "boost/leaf/to_variant.hpp"
 #if __cplusplus >= 201703L
 
-// #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4112
-// #include <boost/leaf/result.hpp> // Expanded at line 6066
+// #include <boost/leaf/config.hpp> // Expanded at line 14
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 3842
+// #include <boost/leaf/result.hpp> // Expanded at line 5884
 #include <variant>
 #include <optional>
 #include <tuple>
