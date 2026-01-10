@@ -5,7 +5,7 @@
 #ifdef BOOST_LEAF_TEST_SINGLE_HEADER
 #   include "leaf.hpp"
 #else
-#   include <boost/leaf/serialization/type_name.hpp>
+#   include <boost/leaf/detail/type_name.hpp>
 #endif
 
 #include <cstring>
@@ -17,7 +17,7 @@
 #endif
 
 namespace leaf = boost::leaf;
-namespace serialization = boost::leaf::serialization;
+namespace detail = boost::leaf::detail;
 
 #include "lightweight_test.hpp"
 
@@ -44,7 +44,7 @@ template <int> struct struct_template1 { };
 template <class> class class_template2 { };
 template <class> struct struct_template2 { };
 
-bool test(serialization::type_name const & tn, char const * correct)
+bool test(detail::type_name const & tn, char const * correct)
 {
     return
         std::strlen(correct) == tn.length &&
@@ -53,7 +53,7 @@ bool test(serialization::type_name const & tn, char const * correct)
 
 int main()
 {
-    using serialization::get_type_name;
+    using leaf::detail::get_type_name;
 
     BOOST_TEST(test(get_type_name<leaf::in_namespace_boost_leaf>(), "boost::leaf::in_namespace_boost_leaf"));
 
@@ -104,10 +104,10 @@ int main()
     }
 #endif
 
-    BOOST_TEST(std::hash<serialization::type_name>()(get_type_name<int>()) == get_type_name<int>().hash);
-    BOOST_TEST(std::hash<serialization::type_name>()(get_type_name<int>()) == std::hash<serialization::type_name>()(get_type_name<int>()));
+    BOOST_TEST(std::hash<detail::type_name>()(get_type_name<int>()) == get_type_name<int>().hash);
+    BOOST_TEST(std::hash<detail::type_name>()(get_type_name<int>()) == std::hash<detail::type_name>()(get_type_name<int>()));
     {
-        std::unordered_set<serialization::type_name> s;
+        std::unordered_set<detail::type_name> s;
         s.insert(get_type_name<int>());
         s.insert(get_type_name<float>());
         s.insert(get_type_name<int>()); // duplicate

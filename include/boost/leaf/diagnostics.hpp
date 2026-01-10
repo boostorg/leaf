@@ -46,7 +46,7 @@ public:
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
     {
-        serialization::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
+        detail::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         x.write_to_(w);
 #else
@@ -116,7 +116,7 @@ public:
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_details const & x )
     {
-        serialization::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
+        detail::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         x.diagnostic_info::write_to_(w);
         w.set_prefix("\nDiagnostic details:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER);
@@ -176,7 +176,7 @@ public:
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_details const & x )
     {
-        serialization::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
+        detail::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         x.diagnostic_info::write_to_(w);
         os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_CAPTURE=0";

@@ -9,11 +9,40 @@
 #include <boost/leaf/detail/optional.hpp>
 #include <boost/leaf/detail/function_traits.hpp>
 #include <boost/leaf/detail/capture_list.hpp>
-#include <boost/leaf/serialization/diagnostics_writer.hpp>
+#include <boost/leaf/detail/diagnostics_writer.hpp>
+
+////////////////////////////////////////
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-#   include <system_error>
+
+#include <system_error>
+
+namespace boost { namespace leaf {
+
+namespace serialization
+{
+    template <class Writer>
+    void write(Writer & w, std::error_code const & ec)
+    {
+        write_nested(w, ec.category().name(), "category");
+        write_nested(w, ec.value(), "value");
+        write_nested(w, ec.message(), "message");
+    }
+
+    template <class Writer>
+    void write(Writer & w, std::error_condition const & ec)
+    {
+        write_nested(w, ec.category().name(), "category");
+        write_nested(w, ec.value(), "value");
+        write_nested(w, ec.message(), "message");
+    }
+}
+
+} }
+
 #endif
+
+////////////////////////////////////////
 
 #define BOOST_LEAF_TOKEN_PASTE(x, y) x ## y
 #define BOOST_LEAF_TOKEN_PASTE2(x, y) BOOST_LEAF_TOKEN_PASTE(x, y)
@@ -32,26 +61,26 @@
 
 #if BOOST_LEAF_CFG_GNUC_STMTEXPR
 
-#define BOOST_LEAF_CHECK(r)\
-    ({\
-        auto && BOOST_LEAF_TMP = (r);\
-        static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
-            "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
-        if( !BOOST_LEAF_TMP )\
-            return BOOST_LEAF_TMP.error();\
-        std::move(BOOST_LEAF_TMP);\
-    }).value()
+#   define BOOST_LEAF_CHECK(r)\
+        ({\
+            auto && BOOST_LEAF_TMP = (r);\
+            static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
+                "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
+            if( !BOOST_LEAF_TMP )\
+                return BOOST_LEAF_TMP.error();\
+            std::move(BOOST_LEAF_TMP);\
+        }).value()
 
 #else // #if BOOST_LEAF_CFG_GNUC_STMTEXPR
 
-#define BOOST_LEAF_CHECK(r)\
-    {\
-        auto && BOOST_LEAF_TMP = (r);\
-        static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
-            "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
-        if( !BOOST_LEAF_TMP )\
-            return BOOST_LEAF_TMP.error();\
-    }
+#   define BOOST_LEAF_CHECK(r)\
+        {\
+            auto && BOOST_LEAF_TMP = (r);\
+            static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
+                "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
+            if( !BOOST_LEAF_TMP )\
+                return BOOST_LEAF_TMP.error();\
+        }
 
 #endif // #else (#if BOOST_LEAF_CFG_GNUC_STMTEXPR)
 
@@ -70,6 +99,14 @@ struct e_source_location
     {
         return os << x.file << '(' << x.line << ") in function " << x.function;
     }
+
+    template <class Writer>
+    friend void write( Writer & w, e_source_location const & x )
+    {
+        write_nested(w, x.file, "file");
+        write_nested(w, x.line, "line");
+        write_nested(w, x.function, "function");
+    }
 };
 
 template <>
@@ -79,15 +116,31 @@ struct show_in_diagnostics<e_source_location>: std::false_type
 
 ////////////////////////////////////////
 
+namespace serialization
+{
+
+    template <class W, class E>
+    typename std::enable_if<std::is_base_of<writer, W>::value>::type
+    serialize(W &, E const &, char const *)
+    {
+    }
+}
+
 namespace detail
 {
-    template <class Writer, class E>
-    void serialize_(Writer & w, E const & e)
+    template <class E>
+    void serialize_(diagnostics_writer & w, E const & e)
+    {
+        w.write(e);
+    }
+
+    template <class E>
+    void serialize_(serialization::writer & w, E const & e)
     {
         using namespace serialization;
-        typename dependent_writer<Writer>::type & wr = w;
-        serialize(wr, e);
-        if( diagnostics_writer * dw = w.template get<diagnostics_writer>() )
+        char zstr[1024];
+        serialize(w, e, to_zstr(zstr, get_type_name<E>()));
+        if( detail::diagnostics_writer * dw = w.get<detail::diagnostics_writer>() )
             dw->write(e);
     }
 }
@@ -148,8 +201,8 @@ namespace detail
 
         void unload( int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE);
 
-        template <class ErrorID>
-        void write_to(serialization::writer & w, ErrorID id) const
+        template <class Writer,class ErrorID>
+        void write_to(Writer & w, ErrorID id) const
         {
             if( int k = this->key() )
             {
@@ -782,6 +835,12 @@ public:
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, error_id x )
     {
         return os << (x.value_ / 4);
+    }
+
+    template <class Writer>
+    friend void write( Writer & w, error_id x )
+    {
+        write(w, x.value_ / 4);
     }
 
     BOOST_LEAF_CONSTEXPR void load_source_location_( char const * file, int line, char const * function ) const noexcept(!BOOST_LEAF_CFG_CAPTURE)

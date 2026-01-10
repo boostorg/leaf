@@ -23,6 +23,8 @@
 
 #include "lightweight_test.hpp"
 
+#if BOOST_LEAF_CFG_STD_STRING
+
 namespace leaf = boost::leaf;
 
 using nlohmann_writer = leaf::serialization::json_writer<nlohmann::ordered_json>;
@@ -32,10 +34,10 @@ namespace boost { namespace leaf {
 namespace serialization {
 
 template <class E>
-void serialize(writer & w, E const & e)
+void serialize(writer & w, E const & e, char const * name)
 {
     if( nlohmann_writer * nw = w.get<nlohmann_writer>() )
-        nw->write(e);
+        write_nested(*nw, e, name);
 }
 
 }
@@ -47,6 +49,11 @@ struct my_exception { };
 struct my_exception_ptr
 {
     std::exception_ptr value;
+};
+
+struct my_error_code
+{
+    std::error_code value;
 };
 
 template <int N>
@@ -74,6 +81,7 @@ leaf::result<void> fail()
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
         std::make_error_code(std::errc::invalid_argument),
         std::make_error_condition(std::errc::io_error),
+        my_error_code{std::make_error_code(std::errc::invalid_argument)},
 #endif
         42,
         my_error<1>{1, "error one"},
@@ -89,6 +97,7 @@ void leaf_throw()
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
         std::make_error_code(std::errc::invalid_argument),
         std::make_error_condition(std::errc::io_error),
+        my_error_code{std::make_error_code(std::errc::invalid_argument)},
 #endif
         42,
         my_error<1>{1, "error one"},
@@ -103,6 +112,7 @@ void throw_()
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
         std::make_error_code(std::errc::invalid_argument),
         std::make_error_condition(std::errc::io_error),
+        my_error_code{std::make_error_code(std::errc::invalid_argument)},
 #endif
         42,
         my_error<1>{1, "error one"},
@@ -157,10 +167,10 @@ void check_diagnostic_details(nlohmann::ordered_json const & j, bool has_source_
         BOOST_TEST_EQ(e2j["message"].get<std::string>(), "error two");
 
         auto const & ej = j["boost::leaf::e_errno"];
-        BOOST_TEST_EQ(ej["value"].get<int>(), ENOENT);
-        BOOST_TEST(!ej["message"].get<std::string>().empty());
+        BOOST_TEST_EQ(ej["errno"].get<int>(), ENOENT);
+        BOOST_TEST(!ej["strerror"].get<std::string>().empty());
 
-        BOOST_TEST_EQ(j["boost::leaf::e_api_function"]["value"].get<std::string>(), "my_api_function");
+        BOOST_TEST_EQ(j["boost::leaf::e_api_function"].get<std::string>(), "my_api_function");
 
         if( BOOST_LEAF_CFG_STD_SYSTEM_ERROR )
         {
@@ -173,6 +183,11 @@ void check_diagnostic_details(nlohmann::ordered_json const & j, bool has_source_
             BOOST_TEST_EQ(econdj["value"].get<int>(), static_cast<int>(std::errc::io_error));
             BOOST_TEST(!econdj["category"].get<std::string>().empty());
             BOOST_TEST(!econdj["message"].get<std::string>().empty());
+
+            auto const & mecj = j["my_error_code"];
+            BOOST_TEST_EQ(mecj["value"].get<int>(), static_cast<int>(std::errc::invalid_argument));
+            BOOST_TEST(!mecj["category"].get<std::string>().empty());
+            BOOST_TEST(!mecj["message"].get<std::string>().empty());
         }
     }
     else
@@ -190,7 +205,7 @@ void check_diagnostic_details(nlohmann::ordered_json const & j, bool has_source_
 void check_exception(nlohmann::ordered_json const & j)
 {
     auto const & exj = j["std::exception"];
-    BOOST_TEST(!exj["type"].get<std::string>().empty());
+    BOOST_TEST(!exj["dynamic_type"].get<std::string>().empty());
     BOOST_TEST(!exj["what"].get<std::string>().empty());
 }
 #endif
@@ -323,8 +338,8 @@ int main()
         );
         std::cout << __LINE__ << " std::exception_ptr JSON output:\n" << std::setw(2) << j << std::endl;
 
-        auto const & ep = j["my_exception_ptr"]["value"];
-        std::string type = ep["type"].get<std::string>();
+        auto const & ep = j["my_exception_ptr"];
+        std::string type = ep["dynamic_type"].get<std::string>();
         std::string what = ep["what"].get<std::string>();
         BOOST_TEST(type.find("std::runtime_error") != std::string::npos);
         BOOST_TEST_EQ(what, "test exception");
@@ -345,8 +360,8 @@ int main()
         );
         std::cout << __LINE__ << " non-std::exception_ptr JSON output:\n" << std::setw(2) << j << std::endl;
 
-        auto const & ep = j["my_exception_ptr"]["value"];
-        std::string type = ep["type"].get<std::string>();
+        auto const & ep = j["my_exception_ptr"];
+        std::string type = ep["dynamic_type"].get<std::string>();
         std::string what = ep["what"].get<std::string>();
         BOOST_TEST_EQ(type, "<<unknown>>");
         BOOST_TEST_EQ(what, "N/A");
@@ -397,3 +412,12 @@ int main()
 
     return boost::report_errors();
 }
+
+#else
+
+int main()
+{
+    return 0;
+}
+
+#endif

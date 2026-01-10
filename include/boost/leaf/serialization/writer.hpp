@@ -6,7 +6,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/serialization/type_name.hpp>
+#include <boost/leaf/detail/type_name.hpp>
 
 #include <type_traits>
 
@@ -14,46 +14,57 @@ namespace boost { namespace leaf {
 
 namespace serialization
 {
-class writer
-{
-    type_name const type_;
-
-protected:
-
-    template <class Derived>
-    explicit writer(Derived * d) noexcept:
-        type_(get_type_name<Derived>())
+    class writer
     {
-        BOOST_LEAF_ASSERT(d == this), (void) d;
-    }
+        detail::type_name const type_;
 
-    ~writer() noexcept
-    {
-    }
+    protected:
 
-public:
+        template <class Derived>
+        explicit writer(Derived * d) noexcept:
+            type_(detail::get_type_name<Derived>())
+        {
+            BOOST_LEAF_ASSERT(d == this), (void) d;
+        }
 
-    template <class Derived>
-    Derived * get() noexcept
-    {
-        return type_ == get_type_name<typename std::decay<Derived>::type>() ? static_cast<Derived *>(this) : nullptr;
-    }
-};
+        ~writer() noexcept
+        {
+        }
 
-    template <class W, class E>
-    typename std::enable_if<std::is_base_of<writer, W>::value>::type
-    serialize(W &, E const &)
-    {
-    }
+    public:
+
+        template <class Derived>
+        Derived * get() noexcept
+        {
+            return type_ == detail::get_type_name<typename std::decay<Derived>::type>() ? static_cast<Derived *>(this) : nullptr;
+        }
+    };
 }
 
-namespace detail
+} }
+
+////////////////////////////////////////
+
+namespace boost { namespace leaf {
+
+namespace serialization
 {
-    template <class>
-    struct dependent_writer
+    template <class T, class E = void>
+    struct has_member_value: std::false_type
     {
-        using type = serialization::writer;
     };
+
+    template <class T>
+    struct has_member_value<T, decltype((void)std::declval<T const &>().value)>: std::true_type
+    {
+    };
+
+    template <class W, class E>
+    typename std::enable_if<has_member_value<E>::value>::type
+    write(W & w, E const & e)
+    {
+        write(w, e.value);
+    }
 }
 
 } } // namespace boost::leaf

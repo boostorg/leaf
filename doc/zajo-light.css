@@ -446,11 +446,11 @@ code{font-family:"Anonymous Pro","DejaVu Sans Mono",monospace;font-weight:400;co
 pre,pre>code{line-height:1.45;color:rgba(0,0,0,.9);font-family:"Anonymous Pro","DejaVu Sans Mono",monospace;font-weight:400;text-rendering:optimizeLegibility;font-size:1.05em;background-color:#f7f8f7}
 a:not(pre)>code:hover {color:#4101a7}
 kbd{font-family:"Anonymous Pro","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background-color:#f7f7f7;border:1px solid #ccc;-webkit-border-radius:3px;border-radius:3px;-webkit-box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em white inset;box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em #fff inset;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
-h1 code{color:#4101a7; font-size:113%}
-h2 code{color:#4101a7; font-size:113%}
-h3 code{color:#4101a7; font-size:113%}
-h4 code{color:#4101a7; font-size:113%}
-h5 code{color:#4101a7; font-size:113%}
+h1 code{color:#4101a7; font-size:104%}
+h2 code{color:#4101a7; font-size:104%}
+h3 code{color:#4101a7; font-size:104%}
+h4 code{color:#4101a7; font-size:104%}
+h5 code{color:#4101a7; font-size:104%}
 #header>h1:first-child{font-family:"Poiret One";color:#ff5100;margin-top:2.25rem;margin-bottom:0;letter-spacing:-.07em}
 #author{color: #4101a7;}
 #toc ul{font-family:"Quicksand","DejaVu Sans",sans-serif;list-style-type:none}

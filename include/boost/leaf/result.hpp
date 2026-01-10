@@ -7,7 +7,7 @@
 
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/exception.hpp>
-#include <boost/leaf/serialization/diagnostics_writer.hpp>
+#include <boost/leaf/detail/diagnostics_writer.hpp>
 #include <boost/leaf/detail/capture_list.hpp>
 
 #include <functional>
@@ -585,7 +585,7 @@ public:
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, result const & r )
     {
-        serialization::diagnostics_writer w(os);
+        detail::diagnostics_writer w(os);
         w.set_prefix(": ");
         if( r )
         {
@@ -705,7 +705,7 @@ public:
             os << "Success";
         else
         {
-            serialization::diagnostics_writer w(os);
+            detail::diagnostics_writer w(os);
             w.set_prefix(": ");
             os << "Failure";
             r.print_error(w);

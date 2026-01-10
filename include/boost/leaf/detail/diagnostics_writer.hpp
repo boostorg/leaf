@@ -1,5 +1,5 @@
-#ifndef BOOST_LEAF_SERIALIZATION_DIAGNOSTICS_WRITER_HPP_INCLUDED
-#define BOOST_LEAF_SERIALIZATION_DIAGNOSTICS_WRITER_HPP_INCLUDED
+#ifndef BOOST_LEAF_DETAIL_DIAGNOSTICS_WRITER_HPP_INCLUDED
+#define BOOST_LEAF_DETAIL_DIAGNOSTICS_WRITER_HPP_INCLUDED
 
 // Copyright 2018-2026 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -28,7 +28,7 @@ struct show_in_diagnostics: std::integral_constant<bool, BOOST_LEAF_CFG_DIAGNOST
 {
 };
 
-namespace serialization
+namespace detail
 {
     template <class T, class E = void>
     struct is_printable: std::false_type
@@ -50,19 +50,9 @@ namespace serialization
     {
     };
 
-    template <class T, class E = void>
-    struct has_member_value: std::false_type
-    {
-    };
-
-    template <class T>
-    struct has_member_value<T, decltype((void)std::declval<T const &>().value)>: std::true_type
-    {
-    };
-
     ////////////////////////////////////////
 
-    class diagnostics_writer: public writer
+    class diagnostics_writer: public serialization::writer
     {
         diagnostics_writer(diagnostics_writer const &) = delete;
         diagnostics_writer & operator=(diagnostics_writer const &) = delete;
@@ -79,7 +69,7 @@ namespace serialization
             BOOST_LEAF_ASSERT(delimiter);
             char const * p = prefix;
             prefix = nullptr;
-            os << (p ? p : delimiter) << get_type_name<T>();
+            os << (p ? p : delimiter) << detail::get_type_name<T>();
         }
 
         template <class T, class PrintableInfo, class CharT, class Traits>
@@ -245,8 +235,8 @@ namespace serialization
         }
     };
 
-} // namespace serialization
+} // namespace detail
 
 } } // namespace boost::leaf
 
-#endif // #ifndef BOOST_LEAF_SERIALIZATION_DIAGNOSTICS_WRITER_HPP_INCLUDED
+#endif // #ifndef BOOST_LEAF_DETAIL_DIAGNOSTICS_WRITER_HPP_INCLUDED

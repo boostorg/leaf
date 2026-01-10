@@ -1,5 +1,5 @@
-#ifndef BOOST_LEAF_SERIALIZATION_TYPE_NAME_HPP_INCLUDED
-#define BOOST_LEAF_SERIALIZATION_TYPE_NAME_HPP_INCLUDED
+#ifndef BOOST_LEAF_DETAIL_TYPE_NAME_HPP_INCLUDED
+#define BOOST_LEAF_DETAIL_TYPE_NAME_HPP_INCLUDED
 
 // Copyright 2018-2026 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -19,7 +19,7 @@
 
 namespace boost { namespace leaf {
 
-namespace serialization
+namespace detail
 {
 
 struct type_name
@@ -83,20 +83,20 @@ type_name get_type_name()
     return { parsed.name_not_zero_terminated_at_length, parsed.length, parsed.hash };
 }
 
-} // namespace serialization
+} // namespace detail
 
 } } // namespace boost::leaf
 
 namespace std
 {
     template <>
-    struct hash<boost::leaf::serialization::type_name>
+    struct hash<boost::leaf::detail::type_name>
     {
-        std::size_t operator()(boost::leaf::serialization::type_name const & x) const noexcept
+        std::size_t operator()(boost::leaf::detail::type_name const & x) const noexcept
         {
             return x.hash;
         }
     };
 } // namespace std
 
-#endif // #ifndef BOOST_LEAF_SERIALIZATION_TYPE_NAME_HPP_INCLUDED
+#endif // #ifndef BOOST_LEAF_DETAIL_TYPE_NAME_HPP_INCLUDED

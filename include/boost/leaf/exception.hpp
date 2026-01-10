@@ -9,6 +9,59 @@
 #include <boost/leaf/error.hpp>
 #include <boost/leaf/detail/exception_base.hpp>
 
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+#   include <typeinfo>
+#endif
+
+namespace boost { namespace leaf {
+
+namespace serialization
+{
+    template <class Writer>
+    void write(Writer & w, std::exception const & ex)
+    {
+        char const dynamic_type[] = "dynamic_type";
+        char const what[] = "what";
+#ifdef BOOST_LEAF_NO_EXCEPTIONS
+        write_nested(w, "<<unknown>>", dynamic_type);
+#else
+        write_nested(w, detail::demangler(typeid(ex).name()).get(), dynamic_type);
+#endif
+        if( char const * wh = ex.what() )
+            write_nested(w, wh, what);
+        else
+            write_nested(w, "<<nullptr>>", what);
+    }
+
+    template <class Writer>
+    void write(Writer & w, std::exception_ptr const & ep)
+    {
+        if( ep )
+        {
+#ifndef BOOST_LEAF_NO_EXCEPTIONS
+            try
+            {
+                std::rethrow_exception(ep);
+            }
+            catch( std::exception const & ex )
+            {
+                write(w, ex);
+                return;
+            }
+            catch( ... )
+            {
+            }
+#endif
+            write_nested(w, "<<unknown>>", "dynamic_type");
+        }
+        else
+            write_nested(w, "<<empty>>", "dynamic_type");
+        write_nested(w, "N/A", "what");
+    }
+}
+
+} }
+
 ////////////////////////////////////////
 
 #define BOOST_LEAF_THROW_EXCEPTION ::boost::leaf::detail::throw_with_loc{__FILE__,__LINE__,__FUNCTION__}+::boost::leaf::detail::make_exception
@@ -57,9 +110,9 @@ namespace detail
             return *this;
         }
 
-        serialization::type_name get_type_name() const override
+        detail::type_name get_type_name() const override
         {
-            return serialization::get_type_name<Ex>();
+            return detail::get_type_name<Ex>();
         }
 
     public:
