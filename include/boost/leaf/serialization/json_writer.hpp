@@ -8,10 +8,19 @@
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/serialization/writer.hpp>
 
+#include <type_traits>
+#include <utility>
+
 namespace boost { namespace leaf {
 
 namespace serialization
 {
+    template <class Json, class E, class = void>
+    struct has_to_json : std::false_type {};
+
+    template <class Json, class E>
+    struct has_to_json<Json, E, decltype(to_json(std::declval<Json &>(), std::declval<E const &>()), void())> : std::true_type {};
+
     template <class Json>
     class json_writer: public writer
     {
@@ -33,8 +42,7 @@ namespace serialization
         }
 
         template <class E>
-        friend auto write(json_writer & w, E const & e)
-            -> decltype(to_json(w.j_, e), void())
+        friend typename std::enable_if<has_to_json<Json, E>::value>::type write(json_writer & w, E const & e)
         {
             to_json(w.j_, e);
         }
