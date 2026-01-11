@@ -12,10 +12,10 @@
 namespace boost { namespace leaf {
 
 class error_id;
-namespace serialization { class writer; }
 
 namespace detail
 {
+    class writer;
 
     class capture_list
     {
@@ -29,7 +29,7 @@ namespace detail
             friend class capture_list;
 
             virtual void unload( int err_id ) = 0;
-            virtual void write_to(serialization::writer &, error_id const &) const = 0;
+            virtual void write_to(writer &, error_id const &) const = 0;
 
         protected:
 
@@ -90,7 +90,7 @@ namespace detail
                 } );
         }
 
-        void write_to(serialization::writer & w, error_id const & id) const
+        void write_to(writer & w, error_id const & id) const
         {
             if( first_ )
             {

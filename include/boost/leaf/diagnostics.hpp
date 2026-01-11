@@ -6,7 +6,6 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/context.hpp>
 #include <boost/leaf/handle_errors.hpp>
 
 namespace boost { namespace leaf {
@@ -14,7 +13,7 @@ namespace boost { namespace leaf {
 class diagnostic_info: public error_info
 {
     void const * tup_;
-    void (*serialize_tuple_contents_)(serialization::writer &, void const *, error_id);
+    void (*serialize_tuple_contents_)(detail::writer &, void const *, error_id);
 
 protected:
 
@@ -31,6 +30,7 @@ protected:
     template <class Writer>
     void write_to_(Writer & w) const
     {
+        static_assert(std::is_base_of<detail::writer, Writer>::value, "Writer must derive from detail::writer");
         serialize_tuple_contents_(w, tup_, error());
     }
 
@@ -39,8 +39,9 @@ public:
     template <class Writer>
     void write_to(Writer & w) const
     {
-        error_info::write_to(w);
-        write_to_(w);
+        detail::writer_adaptor<Writer> wa(w);
+        error_info::write_to_(wa);
+        write_to_(wa);
     }
 
     template <class CharT, class Traits>
@@ -100,6 +101,7 @@ protected:
     template <class Writer>
     void write_to_(Writer & w) const
     {
+        static_assert(std::is_base_of<detail::writer, Writer>::value, "Writer must derive from detail::writer");
         if( da_ )
             da_->write_to(w, error());
     }
@@ -109,8 +111,10 @@ public:
     template <class Writer>
     void write_to(Writer & w) const
     {
-        diagnostic_info::write_to(w);
-        write_to_(w);
+        detail::writer_adaptor<Writer> wa(w);
+        error_info::write_to_(wa);
+        diagnostic_info::write_to_(wa);
+        write_to_(wa);
     }
 
     template <class CharT, class Traits>
@@ -170,7 +174,9 @@ public:
     template <class Writer>
     void write_to(Writer & w) const
     {
-        diagnostic_info::write_to(w);
+        detail::writer_adaptor<Writer> wa(w);
+        error_info::write_to_(wa);
+        diagnostic_info::write_to_(wa);
     }
 
     template <class CharT, class Traits>

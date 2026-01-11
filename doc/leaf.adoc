@@ -1740,40 +1740,12 @@ LEAF provides a serialization API that enables exporting error information into 
 * <<diagnostic_details>>
 * <<result>>
 
-==== Custom Writers
+LEAF serialization is defined in terms of `write` and `write_nested` function calls, found via ADL:
 
-To support different serialization formats, users can define custom writer types that derive from `leaf::serialization::writer`. Writers should provide `write` and `write_nested` friend functions:
+* `write(w, x)` serializes `x` directly to writer `w`.
+* `write_nested(w, x, name)` serializes `x` to writer `w` as a named field.
 
-[source,c++]
-----
-#include <boost/leaf/serialization/writer.hpp>
-
-class my_writer: public leaf::serialization::writer
-{
-public:
-
-  my_writer() noexcept:
-    writer(this)
-  {
-  }
-
-  template <class E>
-  friend void write_nested(my_writer & w, E const & e, char const * name)
-  {
-    .... // Serialize e as a named field
-  }
-
-  template <class E>
-  friend void write(my_writer & w, E const & e)
-  {
-    .... // Serialize e
-  }
-};
-----
-
-The `write` function serializes an error object directly to the writer. The `write_nested` function serializes an error object as a named field, typically calling `write` internally. LEAF finds these friend functions via ADL using the writer type.
-
-LEAF provides suitable `write` overloads for the following types:
+LEAF provides generic `write` overloads for the following types:
 
 * `error_id`
 * `e_source_location`
@@ -1784,9 +1756,36 @@ LEAF provides suitable `write` overloads for the following types:
 * `std::exception_ptr`
 * any type with a `.value` member for which a suitable `write` can be found via ADL
 
-Custom writers must also handle types that do not provide ADL `write` overloads, including built-in types like `int` and `std::string` as needed. See <<json_writer>> for an example.
+[[custom-writers]]
+==== Custom Writers
 
-To enable serialization of error objects to custom writer types, define a `serialize` function template in the `boost::leaf::serialization` namespace:
+To support exporting to a specific format, users define a writer class with associated `write` and `write_nested` function templates specific to that writer:
+
+[source,c++]
+----
+struct my_writer
+{
+  std::ostream & os;
+
+  template <class T>
+  friend void write(my_writer & w, T const & x)
+  {
+    // write x to w
+  }
+
+  template <class T>
+  friend void write_nested(my_writer & w, T const & x, char const * name)
+  {
+    // write x to w as a named field
+  }
+};
+----
+
+The `write` function outputs a value. The `write_nested` function typically creates a nested scope (e.g. a JSON object or XML element) and then makes an unqualified call to `write` to output the value. This will call any compatible overload found via ADL.
+
+TIP: The `write` function may need to use SFINAE to avoid ambiguities with the generic `write` overloads provided by LEAF. Custom writers must also handle types that do not provide ADL `write` overloads, including built-in types like `int` and `std::string`.
+
+To enable serialization to a custom writer type, define a `serialize` function template in the `boost::leaf::serialization` namespace:
 
 [source,c++]
 ----
@@ -1794,54 +1793,70 @@ namespace boost { namespace leaf {
 
 namespace serialization {
 
-template <class E>
-void serialize(writer & w, E const & e, char const * name)
-{
-  if( my_writer * mw = w.get<my_writer>() )
-    write_nested(*mw, e, name);
-}
+  template <class Handle, class E>
+  void serialize(Handle & h, E const & e, char const * name)
+  {
+    h.dispatch([&](my_writer & mw) {
+      write_nested(mw, e, name);
+    });
+  }
 
 }
 
 } }
 ----
 
-The `serialize` function receives a polymorphic `writer &` reference, the object being serialized, and its name. Use the `get<Derived>()` member function to check for a specific writer type. If the cast succeeds (returns non-null), call `write_nested` to serialize the error object with its type name. To support multiple output formats, this user-defined `serialize` function should check for each writer type accordingly.
+The `serialize` function template takes a handle reference `h` (of unspecified type) that holds a writer, the error object to be serialized, and its type name. Call `h.dispatch` with a single-argument function F to detect the writer type based on F's argument type; F is called only if the handle contains a writer of that type.
 
-==== JSON Serialization
-
-LEAF provides `json_writer`, a writer class template for JSON serialization. The `json_writer` class provides `write` and `write_nested` friend functions that work with:
-
-* LEAF types that provide their own `write` overloads (e.g. `error_id`, `e_source_location`, `e_errno`, `std::error_code`, `std::error_condition`, `std::exception`, `std::exception_ptr`)
-* Types for which `to_json` overloads can be found via ADL
-
-This interface is compatible with https://github.com/nlohmann/json[nlohmann/json]:
+To support multiple output formats, pass multiple functions to `h.dispatch`:
 
 [source,c++]
 ----
-#include <boost/leaf/diagnostics.hpp>
-#include <boost/leaf/serialization/json_writer.hpp>
+h.dispatch(
+  [&](nlohmann_writer & nw) { write_nested(nw, e, name); },
+  [&](xml_writer & xw) { write_nested(xw, e, name); }
+);
+----
+
+==== JSON Serialization
+
+LEAF provides `nlohmann_writer`, a class template for JSON serialization. The `nlohmann_writer` class defines `write` and `write_nested` friend functions (see <<tutorial-serialization>>) that work with:
+
+* Types for which `to_json` overloads can be found via ADL
+* Types for which a `write` overload can be found via ADL (e.g. LEAF types)
+
+This interface is compatible with https://github.com/nlohmann/json[nlohmann/json], we just need to define the required `serialize` function template (see <<custom-writers>>):
+
+[source,c++]
+----
+#include <boost/leaf/serialization/nlohmann_writer.hpp>
 #include "nlohmann/json.hpp"
 
 namespace leaf = boost::leaf;
 
-using nlohmann_writer = leaf::serialization::json_writer<nlohmann::json>;
+using nlohmann_writer = leaf::serialization::nlohmann_writer<nlohmann::json>;
 
 namespace boost { namespace leaf {
 
 namespace serialization {
 
-template <class E>
-void serialize(writer & w, E const & e, char const * name)
-{
-  if( nlohmann_writer * nw = w.get<nlohmann_writer>() )
-    write_nested(*nw, e, name);
-}
+  template <class Handle, class E>
+  void serialize(Handle & h, E const & e, char const * name)
+  {
+    h.dispatch([&](nlohmann_writer & nw) {
+      write_nested(nw, e, name);
+    });
+  }
 
 }
 
 } }
+----
 
+With this in place, we can easily (for example) serialize <<diagnostic_details>> to JSON:
+
+[source,c++]
+----
 struct e_api_response
 {
   int status;
@@ -2852,82 +2867,36 @@ Reference: <<to_variant>>
 
 === Serialization
 
-[[writer.hpp]]
-==== `writer.hpp`
+[[nlohmann_writer.hpp]]
+==== `nlohmann_writer.hpp`
 
 ====
-.#include <boost/leaf/serialization/writer.hpp>
+.#include <boost/leaf/serialization/nlohmann_writer.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
 
 namespace serialization
 {
-
-  class writer
-  {
-  protected:
-
-    template <class Derived>
-    explicit writer( Derived * ) noexcept;
-
-    ~writer() noexcept;
-
-  public:
-
-    template <class Derived>
-    Derived * get() noexcept;
-  };
-
-  // Enabled for types with a .value member for which
-  // a suitable write can be found via ADL.
-  template <class W, class E>
-  void write( W &, E const & );
-
-} // namespace serialization
-
-} }
-----
-
-[.text-right]
-Reference: <<writer>> | <<serialize>>
-====
-
-[[json_writer.hpp]]
-==== `json_writer.hpp`
-
-====
-.#include <boost/leaf/serialization/json_writer.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-namespace serialization
-{
-
   template <class Json>
-  class json_writer: public writer
+  struct nlohmann_writer
   {
-  public:
+    Json & j_;
 
-    explicit json_writer( Json & ) noexcept;
+    template <class T>
+    friend auto write( nlohmann_writer &, T const & x )
+      -> decltype(to_json(std::declval<Json &>(), x));
 
-    template <class E>
-    friend void write_nested( json_writer &, E const &, char const * name );
-
-    // Enabled for types for which a suitable to_json overload
-    // can be found via ADL.
-    template <class E>
-    friend void write( json_writer &, E const & );
+    template <class T>
+    friend void write_nested( nlohmann_writer &, T const &, char const * name );
   };
-
 }
 
 } }
 ----
 
 [.text-right]
-Reference: <<json_writer>>
+Reference: <<nlohmann_writer>>
 ====
 
 [[functions]]
@@ -3227,21 +3196,20 @@ TIP: See <<tutorial-on_error>> from the Tutorial.
 [[serialize]]
 === `serialize`
 
-.#include <boost/leaf/serialization/writer.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
 
 namespace serialization
 {
-  template <class E>
-  void serialize( writer &, E const &, char const * name );
+  template <class Handle, class E>
+  void serialize( Handle &, E const &, char const * name );
 }
 
 } }
 ----
 
-The `serialize` function template is a user-defined customization point. If defined, it is called by the serialization system to serialize error objects to a writer. See <<tutorial-serialization>>.
+The `serialize` function template is a user-defined customization point. If provided, it is called by the serialization system to output error objects; see <<custom-writers>>.
 
 '''
 
@@ -4474,10 +4442,10 @@ The `write_to` member function is used with the serialization system; see <<tuto
 
 '''
 
-[[json_writer]]
-=== `json_writer`
+[[nlohmann_writer]]
+=== `nlohmann_writer`
 
-.#include <boost/leaf/serialization/json_writer.hpp>
+.#include <boost/leaf/serialization/nlohmann_writer.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
@@ -4485,32 +4453,25 @@ namespace boost { namespace leaf {
 namespace serialization
 {
   template <class Json>
-  class json_writer: public writer
+  struct nlohmann_writer
   {
-  public:
-
-    explicit json_writer( Json & ) noexcept;
-
-    template <class E>
-    friend void write_nested( json_writer &, E const &, char const * name );
+    Json & j_;
 
     // Enabled for types for which a suitable to_json overload
-    // can be found via ADL.
-    template <class E>
-    friend void write( json_writer &, E const & );
+    // can be found via ADL, but a suitable write overload cannot.
+    template <class T>
+    friend auto write( nlohmann_writer &, T const & x )
+      -> decltype(to_json(std::declval<Json &>(), x));
+
+    template <class T>
+    friend void write_nested( nlohmann_writer &, T const &, char const * name );
   };
 }
 
 } }
 ----
 
-The `json_writer` class template is used to serialize error objects to a JSON object. The `Json` template parameter is the type of the JSON object, for example https://github.com/nlohmann/json[nlohmann/json].
-
-The constructor takes a reference to a JSON object, which will be populated with serialized error data.
-
-The `write_nested` friend function creates a named field in the JSON object and calls `write` to serialize the error object into it.
-
-The `write` friend function serializes an error object by calling `to_json(json, e)`, found via ADL. LEAF types provide their own `write` overloads instead of `to_json`. See <<tutorial-serialization>>.
+The `nlohmann_writer` class template serializes error objects to JSON format using unqualified calls to `to_json`. This is compatible with https://github.com/nlohmann/json[nlohmann/json]; See <<tutorial-serialization>>.
 
 '''
 
@@ -5012,48 +4973,6 @@ namespace boost { namespace leaf {
 
 } }
 ----
-
-'''
-
-[[writer]]
-=== `writer`
-
-.#include <boost/leaf/serialization/writer.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-namespace serialization
-{
-  class writer
-  {
-  protected:
-
-    template <class Derived>
-    explicit writer( Derived * ) noexcept;
-
-    ~writer() noexcept;
-
-  public:
-
-    template <class Derived>
-    Derived * get() noexcept;
-  };
-
-  // Enabled for types with a .value member for which
-  // a suitable write overload can be found via ADL.
-  template <class W, class E>
-  void write( W &, E const & );
-}
-
-} }
-----
-
-The `writer` class is the base class for custom serialization writers. The constructor takes a pointer to the derived class, which is used by the `get` member function to recognize writer types at runtime.
-
-The `get` member function returns a pointer to the derived class if the type matches, or `nullptr` otherwise. This allows the <<serialize>> function to dispatch to the correct writer type.
-
-Derived writer types typically provide `write` and `write_nested` friend functions for serializing error objects. The `write` function serializes an error object directly, while `write_nested` serializes it as a named field. See <<tutorial-serialization>>.
 
 [[predicates]]
 == Reference: Predicates

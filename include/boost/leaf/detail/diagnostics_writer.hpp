@@ -6,7 +6,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/serialization/writer.hpp>
+#include <boost/leaf/detail/writer.hpp>
 #include <boost/leaf/detail/exception_base.hpp>
 
 #include <type_traits>
@@ -52,7 +52,7 @@ namespace detail
 
     ////////////////////////////////////////
 
-    class diagnostics_writer: public serialization::writer
+    class diagnostics_writer: public writer
     {
         diagnostics_writer(diagnostics_writer const &) = delete;
         diagnostics_writer & operator=(diagnostics_writer const &) = delete;
@@ -161,10 +161,10 @@ namespace detail
             delimiter_ = delimiter;
         }
 
-        template <class E>
-        void write(E const & e)
+        template <class T>
+        void write(T const & x)
         {
-            diagnostic<E>::print(os_, prefix_, delimiter_, e);
+            diagnostic<T>::print(os_, prefix_, delimiter_, x);
         }
     }; // class diagnostics_writer
 

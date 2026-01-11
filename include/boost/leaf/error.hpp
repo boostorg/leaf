@@ -119,29 +119,29 @@ struct show_in_diagnostics<e_source_location>: std::false_type
 namespace serialization
 {
 
-    template <class W, class E>
-    typename std::enable_if<std::is_base_of<writer, W>::value>::type
-    serialize(W &, E const &, char const *)
+    template <class Writer, class T, class... Unused>
+    typename std::enable_if<std::is_base_of<detail::writer, Writer>::value>::type
+    serialize(Writer &, T const &, char const *, Unused && ...)
     {
     }
 }
 
 namespace detail
 {
-    template <class E>
-    void serialize_(diagnostics_writer & w, E const & e)
+    template <class T>
+    void serialize_(diagnostics_writer & w, T const & x)
     {
-        w.write(e);
+        w.write(x);
     }
 
-    template <class E>
-    void serialize_(serialization::writer & w, E const & e)
+    template <class T>
+    void serialize_(writer & w, T const & x)
     {
         using namespace serialization;
         char zstr[1024];
-        serialize(w, e, to_zstr(zstr, get_type_name<E>()));
-        if( detail::diagnostics_writer * dw = w.get<detail::diagnostics_writer>() )
-            dw->write(e);
+        serialize(w, x, to_zstr(zstr, get_type_name<T>()));
+        if( diagnostics_writer * dw = w.get<diagnostics_writer>() )
+            dw->write(x);
     }
 }
 
@@ -204,6 +204,7 @@ namespace detail
         template <class Writer,class ErrorID>
         void write_to(Writer & w, ErrorID id) const
         {
+            static_assert(std::is_base_of<writer, Writer>::value, "Writer must derive from detail::writer");
             if( int k = this->key() )
             {
                 if( id && id.value() != k )
@@ -270,7 +271,7 @@ namespace detail
             {
                 impl::unload(err_id);
             }
-            void write_to(serialization::writer & w, error_id const & id) const override
+            void write_to(writer & w, error_id const & id) const override
             {
                 impl::write_to(w, id);
             }
@@ -305,7 +306,7 @@ namespace detail
             {
                 std::rethrow_exception(ex_);
             }
-            void write_to(serialization::writer &, error_id const &) const override
+            void write_to(writer &, error_id const &) const override
             {
             }
             std::exception_ptr const ex_;
@@ -481,7 +482,7 @@ namespace detail
         }
 
         template <class ErrorID>
-        void write_to(serialization::writer &, ErrorID) const
+        void write_to(writer &, ErrorID) const
         {
         }
     }; // slot specialization for dynamic_allocator

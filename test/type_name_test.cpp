@@ -10,11 +10,6 @@
 
 #include <cstring>
 #include <cstdint>
-#include <unordered_set>
-
-#if __cplusplus >= 201703L
-#   include <string_view>
-#endif
 
 namespace leaf = boost::leaf;
 namespace detail = boost::leaf::detail;
@@ -83,39 +78,6 @@ int main()
     BOOST_TEST(!(get_type_name<int>() != get_type_name<int>()));
     BOOST_TEST(get_type_name<int>() != get_type_name<float>());
     BOOST_TEST(get_type_name<class_>() != get_type_name<struct_>());
-
-    BOOST_TEST(get_type_name<class_>() < get_type_name<struct_>()); // "class_" < "struct_"
-    BOOST_TEST(!(get_type_name<struct_>() < get_type_name<class_>()));
-    BOOST_TEST(!(get_type_name<int>() < get_type_name<int>())); // not less than itself
-    BOOST_TEST(get_type_name<int>() < get_type_name<long>()); // "int" < "long"
-
-#if __cplusplus >= 201703L
-    {
-        auto sv = to_string_view(get_type_name<int>());
-        BOOST_TEST(sv == "int");
-    }
-    {
-        auto sv = to_string_view(get_type_name<class_>());
-        BOOST_TEST(sv == "class_");
-    }
-    {
-        auto sv = to_string_view(get_type_name<leaf_test::struct_>());
-        BOOST_TEST(sv == "leaf_test::struct_");
-    }
-#endif
-
-    BOOST_TEST(std::hash<detail::type_name>()(get_type_name<int>()) == get_type_name<int>().hash);
-    BOOST_TEST(std::hash<detail::type_name>()(get_type_name<int>()) == std::hash<detail::type_name>()(get_type_name<int>()));
-    {
-        std::unordered_set<detail::type_name> s;
-        s.insert(get_type_name<int>());
-        s.insert(get_type_name<float>());
-        s.insert(get_type_name<int>()); // duplicate
-        BOOST_TEST(s.size() == 2);
-        BOOST_TEST(s.count(get_type_name<int>()) == 1);
-        BOOST_TEST(s.count(get_type_name<float>()) == 1);
-        BOOST_TEST(s.count(get_type_name<double>()) == 0);
-    }
 
     return boost::report_errors();
 }

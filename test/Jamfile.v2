@@ -44,8 +44,7 @@ compile _hpp_leaf_test.cpp ;
 compile _hpp_on_error_test.cpp ;
 compile _hpp_pred_test.cpp ;
 compile _hpp_result_test.cpp ;
-compile _hpp_serialization_json_writer_test.cpp ;
-compile _hpp_serialization_writer_test.cpp ;
+compile _hpp_serialization_nlohmann_writer_test.cpp ;
 compile _hpp_to_variant_test.cpp ;
 
 run boost_exception_test.cpp ;
@@ -160,11 +159,11 @@ compile-fail _compile-fail-error_obj_ptr.cpp ;
 compile-fail _compile-fail-exception_1.cpp ;
 compile-fail _compile-fail-exception_2.cpp ;
 compile-fail _compile-fail-new_error.cpp ;
+compile-fail _compile-fail-nlohmann.cpp ;
 compile-fail _compile-fail-result_1.cpp ;
 compile-fail _compile-fail-result_2.cpp ;
 compile-fail _compile-fail-result_3.cpp ;
 compile-fail _compile-fail-result_4.cpp ;
-compile-fail _compile-fail-to_json.cpp ;
 
 exe try_capture_all_exceptions : ../example/try_capture_all_exceptions.cpp : <threading>single:<build>no <exception-handling>off:<build>no <variant>leaf_debug_capture0:<build>no <variant>leaf_release_capture0:<build>no ;
 exe try_capture_all_result : ../example/try_capture_all_result.cpp : <threading>single:<build>no <variant>leaf_debug_capture0:<build>no <variant>leaf_release_capture0:<build>no <variant>leaf_debug_embedded:<build>no <variant>leaf_release_embedded:<build>no ;

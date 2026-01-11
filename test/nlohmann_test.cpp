@@ -10,7 +10,7 @@
 #   include <boost/leaf/diagnostics.hpp>
 #   include <boost/leaf/common.hpp>
 #   include <boost/leaf/on_error.hpp>
-#   include <boost/leaf/serialization/json_writer.hpp>
+#   include <boost/leaf/serialization/nlohmann_writer.hpp>
 #endif
 
 #include "nlohmann/json.hpp"
@@ -27,17 +27,19 @@
 
 namespace leaf = boost::leaf;
 
-using nlohmann_writer = leaf::serialization::json_writer<nlohmann::ordered_json>;
+using output_writer = leaf::serialization::nlohmann_writer<nlohmann::ordered_json>;
 
 namespace boost { namespace leaf {
 
 namespace serialization {
 
-template <class E>
-void serialize(writer & w, E const & e, char const * name)
+template <class Handle, class E>
+void serialize(Handle & h, E const & e, char const * name)
 {
-    if( nlohmann_writer * nw = w.get<nlohmann_writer>() )
-        write_nested(*nw, e, name);
+    h.dispatch(
+        [&](nlohmann_writer<nlohmann::json> & w) { write_nested(w, e, name); },
+        [&](nlohmann_writer<nlohmann::ordered_json> & w) { write_nested(w, e, name); }
+    );
 }
 
 }
@@ -222,7 +224,7 @@ int main()
             [&j](leaf::diagnostic_info const & di, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                nlohmann_writer w(j);
+                output_writer w{j};
                 di.write_to(w);
             }
         );
@@ -240,7 +242,7 @@ int main()
             [&j](leaf::diagnostic_details const & dd, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                nlohmann_writer w(j);
+                output_writer w{j};
                 dd.write_to(w);
             }
         );
@@ -259,7 +261,7 @@ int main()
             [&j](leaf::diagnostic_info const & di, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                nlohmann_writer w(j);
+                output_writer w{j};
                 di.write_to(w);
             }
         );
@@ -278,7 +280,7 @@ int main()
             [&j](leaf::diagnostic_details const & dd, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                nlohmann_writer w(j);
+                output_writer w{j};
                 dd.write_to(w);
             }
         );
@@ -297,7 +299,7 @@ int main()
             [&j](leaf::diagnostic_info const & di, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                nlohmann_writer w(j);
+                output_writer w{j};
                 di.write_to(w);
             }
         );
@@ -315,7 +317,7 @@ int main()
             [&j](leaf::diagnostic_details const & dd, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                nlohmann_writer w(j);
+                output_writer w{j};
                 dd.write_to(w);
             }
         );
@@ -332,7 +334,7 @@ int main()
             },
             [&j](leaf::diagnostic_details const & dd, my_exception_ptr *)
             {
-                nlohmann_writer w(j);
+                output_writer w{j};
                 dd.write_to(w);
             }
         );
@@ -354,7 +356,7 @@ int main()
             },
             [&j](leaf::diagnostic_details const & dd, my_exception_ptr *)
             {
-                nlohmann_writer w(j);
+                output_writer w{j};
                 dd.write_to(w);
             }
         );
@@ -372,7 +374,7 @@ int main()
         nlohmann::ordered_json j;
         leaf::result<int> r = 42;
         BOOST_TEST(r);
-        nlohmann_writer w(j);
+        output_writer w{j};
         r.write_to(w);
         std::cout << __LINE__ << " result<int> success JSON output:\n" << std::setw(2) << j << std::endl;
         BOOST_TEST_EQ(j["int"].get<int>(), 42);
@@ -382,7 +384,7 @@ int main()
         nlohmann::ordered_json j;
         leaf::result<int> r = leaf::new_error();
         BOOST_TEST(!r);
-        nlohmann_writer w(j);
+        output_writer w{j};
         r.write_to(w);
         std::cout << __LINE__ << " result<int> error JSON output:\n" << std::setw(2) << j << std::endl;
         BOOST_TEST(j["boost::leaf::error_id"].get<int>() > 0);
@@ -397,7 +399,7 @@ int main()
                 return leaf::new_error(my_error<1>{1, "error one"}, my_error<2>{2, "error two"});
             } );
         BOOST_TEST(!r);
-        nlohmann_writer w(j);
+        output_writer w{j};
         r.write_to(w);
         std::cout << __LINE__ << " result<int> captured error JSON output:\n" << std::setw(2) << j << std::endl;
         BOOST_TEST(j["boost::leaf::error_id"].get<int>() > 0);
