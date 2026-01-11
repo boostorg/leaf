@@ -224,10 +224,7 @@ if option_enable_unit_tests
         '_hpp_on_error_test',
         '_hpp_pred_test',
         '_hpp_result_test',
-        '_hpp_serialization_diagnostics_writer_test',
-        '_hpp_serialization_json_writer_test',
-        '_hpp_serialization_writer_test',
-        '_hpp_serialization_type_name_test',
+        '_hpp_serialization_nlohmann_writer_test',
         '_hpp_to_variant_test',
     ]
     foreach t : header_tests

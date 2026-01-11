@@ -1,12 +1,12 @@
-#ifndef BOOST_LEAF_SERIALIZATION_DIAGNOSTICS_WRITER_HPP_INCLUDED
-#define BOOST_LEAF_SERIALIZATION_DIAGNOSTICS_WRITER_HPP_INCLUDED
+#ifndef BOOST_LEAF_DETAIL_DIAGNOSTICS_WRITER_HPP_INCLUDED
+#define BOOST_LEAF_DETAIL_DIAGNOSTICS_WRITER_HPP_INCLUDED
 
 // Copyright 2018-2026 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/serialization/writer.hpp>
+#include <boost/leaf/detail/writer.hpp>
 #include <boost/leaf/detail/exception_base.hpp>
 
 #include <type_traits>
@@ -28,7 +28,7 @@ struct show_in_diagnostics: std::integral_constant<bool, BOOST_LEAF_CFG_DIAGNOST
 {
 };
 
-namespace serialization
+namespace detail
 {
     template <class T, class E = void>
     struct is_printable: std::false_type
@@ -47,16 +47,6 @@ namespace serialization
 
     template <class T>
     struct has_printable_member_value<T, decltype(std::declval<std::ostream&>()<<std::declval<T const &>().value, void())>: std::true_type
-    {
-    };
-
-    template <class T, class E = void>
-    struct has_member_value: std::false_type
-    {
-    };
-
-    template <class T>
-    struct has_member_value<T, decltype((void)std::declval<T const &>().value)>: std::true_type
     {
     };
 
@@ -79,7 +69,7 @@ namespace serialization
             BOOST_LEAF_ASSERT(delimiter);
             char const * p = prefix;
             prefix = nullptr;
-            os << (p ? p : delimiter) << get_type_name<T>();
+            os << (p ? p : delimiter) << detail::get_type_name<T>();
         }
 
         template <class T, class PrintableInfo, class CharT, class Traits>
@@ -171,10 +161,10 @@ namespace serialization
             delimiter_ = delimiter;
         }
 
-        template <class E>
-        void write(E const & e)
+        template <class T>
+        void write(T const & x)
         {
-            diagnostic<E>::print(os_, prefix_, delimiter_, e);
+            diagnostic<T>::print(os_, prefix_, delimiter_, x);
         }
     }; // class diagnostics_writer
 
@@ -245,8 +235,8 @@ namespace serialization
         }
     };
 
-} // namespace serialization
+} // namespace detail
 
 } } // namespace boost::leaf
 
-#endif // #ifndef BOOST_LEAF_SERIALIZATION_DIAGNOSTICS_WRITER_HPP_INCLUDED
+#endif // #ifndef BOOST_LEAF_DETAIL_DIAGNOSTICS_WRITER_HPP_INCLUDED

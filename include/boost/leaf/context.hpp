@@ -6,7 +6,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/serialization/diagnostics_writer.hpp>
+#include <boost/leaf/detail/diagnostics_writer.hpp>
 #include <boost/leaf/error.hpp>
 
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
@@ -204,7 +204,7 @@ namespace detail
             tuple_for_each<I-1,Tup>::unload(tup, err_id);
         }
 
-        static void write_to(serialization::writer & w, void const * tup, error_id id)
+        static void write_to(writer & w, void const * tup, error_id id)
         {
             BOOST_LEAF_ASSERT(tup != nullptr);
             tuple_for_each<I-1,Tup>::write_to(w, tup, id);
@@ -218,11 +218,11 @@ namespace detail
         BOOST_LEAF_CONSTEXPR static void activate( Tup & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void deactivate( Tup & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void unload( Tup &, int ) noexcept { }
-        BOOST_LEAF_CONSTEXPR static void write_to(serialization::writer &, void const *, error_id) { }
+        BOOST_LEAF_CONSTEXPR static void write_to(writer &, void const *, error_id) { }
     };
 
     template <class Tup>
-    BOOST_LEAF_CONSTEXPR void serialize_tuple_contents(serialization::writer & w, void const * tup, error_id id)
+    void serialize_tuple_contents(writer & w, void const * tup, error_id id)
     {
         tuple_for_each<std::tuple_size<Tup>::value, Tup>::write_to(w, tup, id);
     }
@@ -368,7 +368,7 @@ public:
         return is_active_;
     }
 
-    void write_to( serialization::writer & w ) const
+    void write_to( detail::diagnostics_writer & w ) const
     {
         detail::serialize_tuple_contents<Tup>(w, &tup_, error_id());
     }
@@ -376,7 +376,7 @@ public:
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, context const & ctx )
     {
-        serialization::diagnostics_writer w(os);
+        detail::diagnostics_writer w(os);
         w.set_prefix("Contents:");
         ctx.write_to(w);
         return os;

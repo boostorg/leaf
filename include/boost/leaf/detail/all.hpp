@@ -11,7 +11,5 @@
 #include <boost/leaf/on_error.hpp>
 #include <boost/leaf/pred.hpp>
 #include <boost/leaf/result.hpp>
-#include <boost/leaf/serialization/diagnostics_writer.hpp>
-#include <boost/leaf/serialization/json_writer.hpp>
-#include <boost/leaf/serialization/writer.hpp>
+#include <boost/leaf/serialization/nlohmann_writer.hpp>
 #include <boost/leaf/to_variant.hpp>

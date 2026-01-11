@@ -57,6 +57,13 @@ struct e_errno
     {
         return os << err.value << ", \"" << std::strerror(err.value) << '"';
     }
+
+    template <class Writer>
+    friend void write( Writer & w, e_errno const & e )
+    {
+        write_nested(w, e.value, "errno");
+        write_nested(w, std::strerror(e.value), "strerror");
+    }
 };
 
 struct e_type_info_name { char const * value; };

@@ -7,7 +7,7 @@
 
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/exception.hpp>
-#include <boost/leaf/serialization/diagnostics_writer.hpp>
+#include <boost/leaf/detail/diagnostics_writer.hpp>
 #include <boost/leaf/detail/capture_list.hpp>
 
 #include <functional>
@@ -299,6 +299,7 @@ protected:
     template <class Writer>
     error_id write_error_to(Writer & w) const
     {
+        static_assert(std::is_base_of<detail::writer, Writer>::value, "Writer must derive from detail::writer");
         result_discriminant const what = what_;
         BOOST_LEAF_ASSERT(what.kind() != result_discriminant::val);
         error_id const err_id = what.get_error_id();
@@ -309,6 +310,7 @@ protected:
     template <class Writer>
     void write_capture_to(Writer & w, error_id err_id) const
     {
+        static_assert(std::is_base_of<detail::writer, Writer>::value, "Writer must derive from detail::writer");
         if( what_.kind() == result_discriminant::err_id_capture_list )
         {
 #if BOOST_LEAF_CFG_CAPTURE
@@ -322,6 +324,7 @@ protected:
     template <class Writer>
     void print_error( Writer & w ) const
     {
+        static_assert(std::is_base_of<detail::writer, Writer>::value, "Writer must derive from detail::writer");
         error_id err_id = write_error_to(w);
         w.set_prefix(", captured -> ");
         w.set_delimiter(", ");
@@ -576,16 +579,17 @@ public:
     template <class Writer>
     void write_to(Writer & w) const
     {
+        detail::writer_adaptor<Writer> wa(w);
         if( what_.kind() == result_discriminant::val )
-            detail::serialize_(w, value());
+            detail::serialize_(wa, value());
         else
-            write_capture_to(w, write_error_to(w));
+            write_capture_to(wa, write_error_to(wa));
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, result const & r )
     {
-        serialization::diagnostics_writer w(os);
+        detail::diagnostics_writer w(os);
         w.set_prefix(": ");
         if( r )
         {
@@ -695,7 +699,10 @@ public:
     void write_to(Writer & w) const
     {
         if( !*this )
-            write_error_to(w);
+        {
+            detail::writer_adaptor<Writer> wa(w);
+            write_error_to(wa);
+        }
     }
 
     template <class CharT, class Traits>
@@ -705,7 +712,7 @@ public:
             os << "Success";
         else
         {
-            serialization::diagnostics_writer w(os);
+            detail::diagnostics_writer w(os);
             w.set_prefix(": ");
             os << "Failure";
             r.print_error(w);

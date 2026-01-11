@@ -6,7 +6,6 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/context.hpp>
 #include <boost/leaf/handle_errors.hpp>
 
 namespace boost { namespace leaf {
@@ -14,7 +13,7 @@ namespace boost { namespace leaf {
 class diagnostic_info: public error_info
 {
     void const * tup_;
-    void (*serialize_tuple_contents_)(serialization::writer &, void const *, error_id);
+    void (*serialize_tuple_contents_)(detail::writer &, void const *, error_id);
 
 protected:
 
@@ -31,6 +30,7 @@ protected:
     template <class Writer>
     void write_to_(Writer & w) const
     {
+        static_assert(std::is_base_of<detail::writer, Writer>::value, "Writer must derive from detail::writer");
         serialize_tuple_contents_(w, tup_, error());
     }
 
@@ -39,14 +39,15 @@ public:
     template <class Writer>
     void write_to(Writer & w) const
     {
-        error_info::write_to(w);
-        write_to_(w);
+        detail::writer_adaptor<Writer> wa(w);
+        error_info::write_to_(wa);
+        write_to_(wa);
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_info const & x )
     {
-        serialization::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
+        detail::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         x.write_to_(w);
 #else
@@ -100,6 +101,7 @@ protected:
     template <class Writer>
     void write_to_(Writer & w) const
     {
+        static_assert(std::is_base_of<detail::writer, Writer>::value, "Writer must derive from detail::writer");
         if( da_ )
             da_->write_to(w, error());
     }
@@ -109,14 +111,16 @@ public:
     template <class Writer>
     void write_to(Writer & w) const
     {
-        diagnostic_info::write_to(w);
-        write_to_(w);
+        detail::writer_adaptor<Writer> wa(w);
+        error_info::write_to_(wa);
+        diagnostic_info::write_to_(wa);
+        write_to_(wa);
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_details const & x )
     {
-        serialization::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
+        detail::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         x.diagnostic_info::write_to_(w);
         w.set_prefix("\nDiagnostic details:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER);
@@ -170,13 +174,15 @@ public:
     template <class Writer>
     void write_to(Writer & w) const
     {
-        diagnostic_info::write_to(w);
+        detail::writer_adaptor<Writer> wa(w);
+        error_info::write_to_(wa);
+        diagnostic_info::write_to_(wa);
     }
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, diagnostic_details const & x )
     {
-        serialization::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
+        detail::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
 #if BOOST_LEAF_CFG_DIAGNOSTICS
         x.diagnostic_info::write_to_(w);
         os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_CAPTURE=0";
