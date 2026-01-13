@@ -6,7 +6,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/detail/writer.hpp>
+#include <boost/leaf/detail/encoder.hpp>
 #include <boost/leaf/detail/exception_base.hpp>
 
 #include <type_traits>
@@ -52,7 +52,7 @@ namespace detail
 
     ////////////////////////////////////////
 
-    class diagnostics_writer: public writer
+    class diagnostics_writer: public encoder
     {
         diagnostics_writer(diagnostics_writer const &) = delete;
         diagnostics_writer & operator=(diagnostics_writer const &) = delete;
@@ -109,7 +109,7 @@ namespace detail
 
         template <class CharT, class Traits>
         explicit diagnostics_writer(std::basic_ostream<CharT, Traits> & os) noexcept:
-            writer(this),
+            encoder(this),
             os_(os),
             prefix_(BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER),
             delimiter_(BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER),
@@ -119,7 +119,7 @@ namespace detail
 
         template <class CharT, class Traits>
         diagnostics_writer(std::basic_ostream<CharT, Traits> & os, error_id const & id, e_source_location const * loc, std::exception const * ex) noexcept:
-            writer(this),
+            encoder(this),
             os_(os),
             prefix_(BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER),
             delimiter_(BOOST_LEAF_CFG_DIAGNOSTICS_DELIMITER),

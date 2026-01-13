@@ -141,7 +141,7 @@ if option_enable_unit_tests
         'handle_basic_test',
         'handle_some_other_result_test',
         'handle_some_test',
-        'nlohmann_test',
+        'json_encoder_nlohmann_test',
         'match_member_test',
         'match_test',
         'match_value_test',
@@ -224,7 +224,7 @@ if option_enable_unit_tests
         '_hpp_on_error_test',
         '_hpp_pred_test',
         '_hpp_result_test',
-        '_hpp_serialization_nlohmann_writer_test',
+        '_hpp_serialization_json_encoder_nlohmann_test',
         '_hpp_to_variant_test',
     ]
     foreach t : header_tests

@@ -13,7 +13,7 @@ namespace boost { namespace leaf {
 class diagnostic_info: public error_info
 {
     void const * tup_;
-    void (*serialize_tuple_contents_)(detail::writer &, void const *, error_id);
+    void (*output_tuple_contents_)(detail::encoder &, void const *, error_id);
 
 protected:
 
@@ -23,25 +23,25 @@ protected:
     BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei, Tup const & tup ) noexcept:
         error_info(ei),
         tup_(&tup),
-        serialize_tuple_contents_(&detail::serialize_tuple_contents<Tup>)
+        output_tuple_contents_(&detail::output_tuple_contents<Tup>)
     {
     }
 
-    template <class Writer>
-    void write_to_(Writer & w) const
+    template <class Encoder>
+    void output_to_(Encoder & e) const
     {
-        static_assert(std::is_base_of<detail::writer, Writer>::value, "Writer must derive from detail::writer");
-        serialize_tuple_contents_(w, tup_, error());
+        static_assert(std::is_base_of<detail::encoder, Encoder>::value, "Encoder must derive from detail::encoder");
+        output_tuple_contents_(e, tup_, error());
     }
 
 public:
 
-    template <class Writer>
-    void write_to(Writer & w) const
+    template <class Encoder>
+    void output_to(Encoder & e) const
     {
-        detail::writer_adaptor<Writer> wa(w);
-        error_info::write_to_(wa);
-        write_to_(wa);
+        detail::encoder_adaptor<Encoder> ea(e);
+        error_info::output_to_(ea);
+        output_to_(ea);
     }
 
     template <class CharT, class Traits>
@@ -49,7 +49,7 @@ public:
     {
         detail::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
 #if BOOST_LEAF_CFG_DIAGNOSTICS
-        x.write_to_(w);
+        x.output_to_(w);
 #else
         os << "\nboost::leaf::diagnostic_info N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
 #endif
@@ -98,23 +98,23 @@ protected:
     {
     }
 
-    template <class Writer>
-    void write_to_(Writer & w) const
+    template <class Encoder>
+    void output_to_(Encoder & e) const
     {
-        static_assert(std::is_base_of<detail::writer, Writer>::value, "Writer must derive from detail::writer");
+        static_assert(std::is_base_of<detail::encoder, Encoder>::value, "Encoder must derive from detail::encoder");
         if( da_ )
-            da_->write_to(w, error());
+            da_->output_to(e, error());
     }
 
 public:
 
-    template <class Writer>
-    void write_to(Writer & w) const
+    template <class Encoder>
+    void output_to(Encoder & e) const
     {
-        detail::writer_adaptor<Writer> wa(w);
-        error_info::write_to_(wa);
-        diagnostic_info::write_to_(wa);
-        write_to_(wa);
+        detail::encoder_adaptor<Encoder> ea(e);
+        error_info::output_to_(ea);
+        diagnostic_info::output_to_(ea);
+        output_to_(ea);
     }
 
     template <class CharT, class Traits>
@@ -122,9 +122,9 @@ public:
     {
         detail::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
 #if BOOST_LEAF_CFG_DIAGNOSTICS
-        x.diagnostic_info::write_to_(w);
+        x.diagnostic_info::output_to_(w);
         w.set_prefix("\nDiagnostic details:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER);
-        x.write_to_(w);
+        x.output_to_(w);
 #else
         os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
 #endif
@@ -171,12 +171,12 @@ protected:
 
 public:
 
-    template <class Writer>
-    void write_to(Writer & w) const
+    template <class Encoder>
+    void output_to(Encoder & e) const
     {
-        detail::writer_adaptor<Writer> wa(w);
-        error_info::write_to_(wa);
-        diagnostic_info::write_to_(wa);
+        detail::encoder_adaptor<Encoder> ea(e);
+        error_info::output_to_(ea);
+        diagnostic_info::output_to_(ea);
     }
 
     template <class CharT, class Traits>
@@ -184,7 +184,7 @@ public:
     {
         detail::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
 #if BOOST_LEAF_CFG_DIAGNOSTICS
-        x.diagnostic_info::write_to_(w);
+        x.diagnostic_info::output_to_(w);
         os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_CAPTURE=0";
 #else
         os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";

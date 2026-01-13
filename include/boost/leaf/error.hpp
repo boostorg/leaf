@@ -21,20 +21,20 @@ namespace boost { namespace leaf {
 
 namespace serialization
 {
-    template <class Writer>
-    void write(Writer & w, std::error_code const & ec)
+    template <class Encoder>
+    void output(Encoder & e, std::error_code const & x)
     {
-        write_nested(w, ec.category().name(), "category");
-        write_nested(w, ec.value(), "value");
-        write_nested(w, ec.message(), "message");
+        output_at(e, x.category().name(), "category");
+        output_at(e, x.value(), "value");
+        output_at(e, x.message(), "message");
     }
 
-    template <class Writer>
-    void write(Writer & w, std::error_condition const & ec)
+    template <class Encoder>
+    void output(Encoder & e, std::error_condition const & x)
     {
-        write_nested(w, ec.category().name(), "category");
-        write_nested(w, ec.value(), "value");
-        write_nested(w, ec.message(), "message");
+        output_at(e, x.category().name(), "category");
+        output_at(e, x.value(), "value");
+        output_at(e, x.message(), "message");
     }
 }
 
@@ -100,12 +100,12 @@ struct e_source_location
         return os << x.file << '(' << x.line << ") in function " << x.function;
     }
 
-    template <class Writer>
-    friend void write( Writer & w, e_source_location const & x )
+    template <class Encoder>
+    friend void output( Encoder & e, e_source_location const & x )
     {
-        write_nested(w, x.file, "file");
-        write_nested(w, x.line, "line");
-        write_nested(w, x.function, "function");
+        output_at(e, x.file, "file");
+        output_at(e, x.line, "line");
+        output_at(e, x.function, "function");
     }
 };
 
@@ -119,9 +119,9 @@ struct show_in_diagnostics<e_source_location>: std::false_type
 namespace serialization
 {
 
-    template <class Writer, class T, class... Unused>
-    typename std::enable_if<std::is_base_of<detail::writer, Writer>::value>::type
-    serialize(Writer &, T const &, char const *, Unused && ...)
+    template <class Encoder, class T, class... Unused>
+    typename std::enable_if<std::is_base_of<detail::encoder, Encoder>::value>::type
+    serialize(Encoder &, T const &, char const *, Unused && ...)
     {
     }
 }
@@ -129,18 +129,18 @@ namespace serialization
 namespace detail
 {
     template <class T>
-    void serialize_(diagnostics_writer & w, T const & x)
+    void serialize_(diagnostics_writer & e, T const & x)
     {
-        w.write(x);
+        e.write(x);
     }
 
     template <class T>
-    void serialize_(writer & w, T const & x)
+    void serialize_(encoder & e, T const & x)
     {
         using namespace serialization;
         char zstr[1024];
-        serialize(w, x, to_zstr(zstr, get_type_name<T>()));
-        if( diagnostics_writer * dw = w.get<diagnostics_writer>() )
+        serialize(e, x, to_zstr(zstr, get_type_name<T>()));
+        if( diagnostics_writer * dw = e.get<diagnostics_writer>() )
             dw->write(x);
     }
 }
@@ -201,15 +201,15 @@ namespace detail
 
         void unload( int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE);
 
-        template <class Writer,class ErrorID>
-        void write_to(Writer & w, ErrorID id) const
+        template <class Encoder,class ErrorID>
+        void output_to(Encoder & e, ErrorID id) const
         {
-            static_assert(std::is_base_of<writer, Writer>::value, "Writer must derive from detail::writer");
+            static_assert(std::is_base_of<encoder, Encoder>::value, "Encoder must derive from detail::encoder");
             if( int k = this->key() )
             {
                 if( id && id.value() != k )
                     return;
-                serialize_(w, value(k));
+                serialize_(e, value(k));
             }
         }
 
@@ -271,9 +271,9 @@ namespace detail
             {
                 impl::unload(err_id);
             }
-            void write_to(writer & w, error_id const & id) const override
+            void output_to(encoder & e, error_id const & id) const override
             {
-                impl::write_to(w, id);
+                impl::output_to(e, id);
             }
         public:
             BOOST_LEAF_CONSTEXPR explicit capturing_slot_node( capture_list::node * * & last ):
@@ -306,7 +306,7 @@ namespace detail
             {
                 std::rethrow_exception(ex_);
             }
-            void write_to(writer &, error_id const &) const override
+            void output_to(encoder &, error_id const &) const override
             {
             }
             std::exception_ptr const ex_;
@@ -406,7 +406,7 @@ namespace detail
         }
 
         using capture_list::unload;
-        using capture_list::write_to;
+        using capture_list::output_to;
     }; // class dynamic_allocator
 
     template <class E>
@@ -482,7 +482,7 @@ namespace detail
         }
 
         template <class ErrorID>
-        void write_to(writer &, ErrorID) const
+        void output_to(encoder &, ErrorID) const
         {
         }
     }; // slot specialization for dynamic_allocator
@@ -838,10 +838,10 @@ public:
         return os << (x.value_ / 4);
     }
 
-    template <class Writer>
-    friend void write( Writer & w, error_id x )
+    template <class Encoder>
+    friend void output( Encoder & e, error_id x )
     {
-        write(w, x.value_ / 4);
+        output(e, x.value_ / 4);
     }
 
     BOOST_LEAF_CONSTEXPR void load_source_location_( char const * file, int line, char const * function ) const noexcept(!BOOST_LEAF_CFG_CAPTURE)

@@ -17,46 +17,46 @@ namespace boost { namespace leaf {
 
 namespace serialization
 {
-    template <class Writer>
-    void write(Writer & w, std::exception const & ex)
+    template <class Encoder>
+    void output(Encoder & e, std::exception const & x)
     {
         char const dynamic_type[] = "dynamic_type";
         char const what[] = "what";
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
-        write_nested(w, "<<unknown>>", dynamic_type);
+        output_at(e, "<<unknown>>", dynamic_type);
 #else
-        write_nested(w, detail::demangler(typeid(ex).name()).get(), dynamic_type);
+        output_at(e, detail::demangler(typeid(x).name()).get(), dynamic_type);
 #endif
-        if( char const * wh = ex.what() )
-            write_nested(w, wh, what);
+        if( char const * wh = x.what() )
+            output_at(e, wh, what);
         else
-            write_nested(w, "<<nullptr>>", what);
+            output_at(e, "<<nullptr>>", what);
     }
 
-    template <class Writer>
-    void write(Writer & w, std::exception_ptr const & ep)
+    template <class Encoder>
+    void output(Encoder & e, std::exception_ptr const & x)
     {
-        if( ep )
+        if( x )
         {
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
             try
             {
-                std::rethrow_exception(ep);
+                std::rethrow_exception(x);
             }
             catch( std::exception const & ex )
             {
-                write(w, ex);
+                output(e, ex);
                 return;
             }
             catch( ... )
             {
             }
 #endif
-            write_nested(w, "<<unknown>>", "dynamic_type");
+            output_at(e, "<<unknown>>", "dynamic_type");
         }
         else
-            write_nested(w, "<<empty>>", "dynamic_type");
-        write_nested(w, "N/A", "what");
+            output_at(e, "<<empty>>", "dynamic_type");
+        output_at(e, "N/A", "what");
     }
 }
 

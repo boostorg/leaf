@@ -15,7 +15,7 @@ class error_id;
 
 namespace detail
 {
-    class writer;
+    class encoder;
 
     class capture_list
     {
@@ -29,7 +29,7 @@ namespace detail
             friend class capture_list;
 
             virtual void unload( int err_id ) = 0;
-            virtual void write_to(writer &, error_id const &) const = 0;
+            virtual void output_to(encoder &, error_id const &) const = 0;
 
         protected:
 
@@ -90,14 +90,14 @@ namespace detail
                 } );
         }
 
-        void write_to(writer & w, error_id const & id) const
+        void output_to(encoder & e, error_id const & id) const
         {
             if( first_ )
             {
                 for_each(
-                    [&w, &id]( node const & n )
+                    [&e, &id]( node const & n )
                     {
-                        n.write_to(w, id);
+                        n.output_to(e, id);
                     } );
             }
         }

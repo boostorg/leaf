@@ -2,7 +2,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/serialization/nlohmann_writer.hpp>
+#include <boost/leaf/serialization/json_encoder_nlohmann.hpp>
 #include "nlohmann/json.hpp"
 
 struct no_to_json {};
@@ -13,6 +13,6 @@ struct e_no_to_json
 };
 
 nlohmann::json j;
-boost::leaf::serialization::nlohmann_writer<nlohmann::json> w{j};
+boost::leaf::serialization::json_encoder_nlohmann<nlohmann::json> w{j};
 e_no_to_json e;
 auto x = (write(w, e), 0);

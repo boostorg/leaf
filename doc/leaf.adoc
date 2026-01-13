@@ -1733,19 +1733,19 @@ TIP: The automatically generated diagnostic messages are developer-friendly, but
 [[tutorial-serialization]]
 === Serialization
 
-LEAF provides a serialization API that enables exporting error information into different formats, such as JSON. This is useful for structured logging, remote debugging, or integrating with monitoring systems. To serialize error information, use the `write_to` member function available on the following types:
+LEAF provides a serialization API that enables exporting error information into different formats, such as JSON. This is useful for structured logging, remote debugging, or integrating with monitoring systems. To serialize error information, use the `output_to` member function available on the following types:
 
 * <<error_info>>
 * <<diagnostic_info>>
 * <<diagnostic_details>>
 * <<result>>
 
-LEAF serialization is defined in terms of `write` and `write_nested` function calls, found via ADL:
+LEAF serialization is defined in terms of `output` and `output_at` function calls, found via ADL:
 
-* `write(w, x)` serializes `x` directly to writer `w`.
-* `write_nested(w, x, name)` serializes `x` to writer `w` as a named field.
+* `output(e, x)` serializes `x` directly to encoder `e` as a value.
+* `output_at(e, x, name)` serializes `x` to encoder `e` as a named field.
 
-LEAF provides generic `write` overloads for the following types:
+LEAF provides generic `output` overloads for the following types:
 
 * `error_id`
 * `e_source_location`
@@ -1754,38 +1754,36 @@ LEAF provides generic `write` overloads for the following types:
 * `std::error_condition`
 * `std::exception`
 * `std::exception_ptr`
-* any type with a `.value` member for which a suitable `write` can be found via ADL
+* any type with a `.value` member for which a suitable `output` can be found via ADL
 
-[[custom-writers]]
-==== Custom Writers
+[[custom-encoders]]
+==== Custom Encoders
 
-To support exporting to a specific format, users define a writer class with associated `write` and `write_nested` function templates specific to that writer:
+To support exporting to a specific format, users define an encoder class with associated `output` and `output_at` function templates specific to that encoder:
 
 [source,c++]
 ----
-struct my_writer
+struct my_encoder
 {
-  std::ostream & os;
-
   template <class T>
-  friend void write(my_writer & w, T const & x)
+  friend void output(my_encoder & e, T const & x)
   {
-    // write x to w
+    // output value x to e
   }
 
   template <class T>
-  friend void write_nested(my_writer & w, T const & x, char const * name)
+  friend void output_at(my_encoder & e, T const & x, char const * name)
   {
-    // write x to w as a named field
+    // output x to e as a named field
   }
 };
 ----
 
-The `write` function outputs a value. The `write_nested` function typically creates a nested scope (e.g. a JSON object or XML element) and then makes an unqualified call to `write` to output the value. This will call any compatible overload found via ADL.
+The `output_at` function typically creates a nested scope (e.g. a JSON object or XML element) and then makes an unqualified call to `output` to output the value. This will call any compatible overload found via ADL.
 
-TIP: The `write` function may need to use SFINAE to avoid ambiguities with the generic `write` overloads provided by LEAF. Custom writers must also handle types that do not provide ADL `write` overloads, including built-in types like `int` and `std::string`.
+TIP: The `output` function may need to be defined using SFINAE to avoid ambiguities with the generic `output` overloads provided by LEAF. Custom encoders must also handle types that do not provide ADL `output` overloads, including built-in types like `int` and `std::string`.
 
-To enable serialization to a custom writer type, define a `serialize` function template in the `boost::leaf::serialization` namespace:
+To enable serialization to a custom encoder type, define a `serialize` function template in the `boost::leaf::serialization` namespace:
 
 [source,c++]
 ----
@@ -1793,11 +1791,11 @@ namespace boost { namespace leaf {
 
 namespace serialization {
 
-  template <class Handle, class E>
-  void serialize(Handle & h, E const & e, char const * name)
+  template <class Handle, class T>
+  void serialize(Handle & h, T const & x, char const * name)
   {
-    h.dispatch([&](my_writer & mw) {
-      write_nested(mw, e, name);
+    h.dispatch([&](my_encoder & e) {
+      output_at(e, x, name);
     });
   }
 
@@ -1806,45 +1804,45 @@ namespace serialization {
 } }
 ----
 
-The `serialize` function template takes a handle reference `h` (of unspecified type) that holds a writer, the error object to be serialized, and its type name. Call `h.dispatch` with a single-argument function F to detect the writer type based on F's argument type; F is called only if the handle contains a writer of that type.
+The `serialize` function template takes a handle reference `h` (of unspecified type) that holds an encoder, the error object to be serialized, and its type name. Call `h.dispatch` with a single-argument function F to detect the encoder type based on F's argument type; F is called only if the handle contains an encoder of that type.
 
 To support multiple output formats, pass multiple functions to `h.dispatch`:
 
 [source,c++]
 ----
 h.dispatch(
-  [&](nlohmann_writer & nw) { write_nested(nw, e, name); },
-  [&](xml_writer & xw) { write_nested(xw, e, name); }
+  [&](json_encoder_nlohmann & e) { output_at(e, x, name); },
+  [&](xml_encoder & xe) { output_at(xe, x, name); }
 );
 ----
 
 ==== JSON Serialization
 
-LEAF provides `nlohmann_writer`, a class template for JSON serialization. The `nlohmann_writer` class defines `write` and `write_nested` friend functions (see <<tutorial-serialization>>) that work with:
+LEAF provides encoders for JSON serialization with two popular JSON libraries:
 
-* Types for which `to_json` overloads can be found via ADL
-* Types for which a `write` overload can be found via ADL (e.g. LEAF types)
+* <<json_encoder_nlohmann>> for https://github.com/nlohmann/json[nlohmann/json]
+* <<json_encoder_boost>> for https://www.boost.org/doc/libs/release/libs/json/[Boost.JSON]
 
-This interface is compatible with https://github.com/nlohmann/json[nlohmann/json], we just need to define the required `serialize` function template (see <<custom-writers>>):
+Below is an example using `json_encoder_nlohmann`. We just need to define the required `serialize` function template (see <<custom-encoders>>):
 
 [source,c++]
 ----
-#include <boost/leaf/serialization/nlohmann_writer.hpp>
+#include <boost/leaf/serialization/json_encoder_nlohmann.hpp>
 #include "nlohmann/json.hpp"
 
 namespace leaf = boost::leaf;
 
-using nlohmann_writer = leaf::serialization::nlohmann_writer<nlohmann::json>;
+using json_encoder_nlohmann = leaf::serialization::json_encoder_nlohmann<nlohmann::json>;
 
 namespace boost { namespace leaf {
 
 namespace serialization {
 
-  template <class Handle, class E>
-  void serialize(Handle & h, E const & e, char const * name)
+  template <class Handle, class T>
+  void serialize(Handle & h, T const & x, char const * name)
   {
-    h.dispatch([&](nlohmann_writer & nw) {
-      write_nested(nw, e, name);
+    h.dispatch([&](json_encoder_nlohmann & e) {
+      output_at(e, x, name);
     });
   }
 
@@ -1853,7 +1851,7 @@ namespace serialization {
 } }
 ----
 
-With this in place, we can easily (for example) serialize <<diagnostic_details>> to JSON:
+With this in place, we can easily (for example) output <<diagnostic_details>> to JSON:
 
 [source,c++]
 ----
@@ -1886,8 +1884,8 @@ leaf::try_handle_all(
   [](leaf::diagnostic_details const & dd)
   {
     nlohmann::json j;
-    nlohmann_writer w(j);
-    dd.write_to(w);
+    json_encoder_nlohmann e(j);
+    dd.output_to(e);
     std::cout << j.dump(2) << std::endl;
   }
 );
@@ -1907,6 +1905,8 @@ leaf::try_handle_all(
 
 [.text-right]
 <<diagnostic_details>> | <<diagnostic_info>> | <<error_info>>
+
+NOTE: In the example above, `e_api_response` uses an unqualified call to `to_json` for serialization. This is to demonstrate that `json_encoder_nlohmann` handles third party type with suitable `to_json` overloads automatically. If instead we defined a function `output` compatible with the LEAF serialization API, it would make `e_api_response` compatible with any LEAF encoder.
 
 '''
 
@@ -2525,8 +2525,8 @@ namespace boost { namespace leaf {
     
     void unload();
 
-    template <class Writer>
-    void write_to( Writer & w ) const;
+    template <class Encoder>
+    void output_to( Encoder & e ) const;
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const & );
@@ -2574,8 +2574,8 @@ namespace boost { namespace leaf {
     
     void unload();
 
-    template <class Writer>
-    void write_to( Writer & w ) const;
+    template <class Encoder>
+    void output_to( Encoder & e ) const;
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const &);
@@ -2867,28 +2867,28 @@ Reference: <<to_variant>>
 
 === Serialization
 
-[[nlohmann_writer.hpp]]
-==== `nlohmann_writer.hpp`
+[[json_encoder_boost.hpp]]
+==== `json_encoder_boost.hpp`
 
 ====
-.#include <boost/leaf/serialization/nlohmann_writer.hpp>
+.#include <boost/leaf/serialization/json_encoder_boost.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
 
 namespace serialization
 {
-  template <class Json>
-  struct nlohmann_writer
+  struct json_encoder_boost
   {
-    Json & j_;
+    boost::json::value & v_;
+
+    // Enabled if x is assignable to boost::json::value, or
+    // if tag_invoke is defined for boost::json::value_from_tag.
+    template <class T>
+    friend void output( json_encoder_boost &, T const & x );
 
     template <class T>
-    friend auto write( nlohmann_writer &, T const & x )
-      -> decltype(to_json(std::declval<Json &>(), x));
-
-    template <class T>
-    friend void write_nested( nlohmann_writer &, T const &, char const * name );
+    friend void output_at( json_encoder_boost &, T const &, char const * name );
   };
 }
 
@@ -2896,7 +2896,39 @@ namespace serialization
 ----
 
 [.text-right]
-Reference: <<nlohmann_writer>>
+Reference: <<json_encoder_boost>>
+====
+
+[[json_encoder_nlohmann.hpp]]
+==== `json_encoder_nlohmann.hpp`
+
+====
+.#include <boost/leaf/serialization/json_encoder_nlohmann.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+namespace serialization
+{
+  template <class Json>
+  struct json_encoder_nlohmann
+  {
+    Json & j_;
+
+    // Enabled if to_json is available for Json and T.
+    template <class T>
+    friend void output( json_encoder_nlohmann &, T const & x );
+
+    template <class T>
+    friend void output_at( json_encoder_nlohmann &, T const &, char const * name );
+  };
+}
+
+} }
+----
+
+[.text-right]
+Reference: <<json_encoder_nlohmann>>
 ====
 
 [[functions]]
@@ -3903,8 +3935,8 @@ namespace boost { namespace leaf {
 
   public:
 
-    template <class Writer>
-    void write_to( Writer & w ) const;
+    template <class Encoder>
+    void output_to( Encoder & e ) const;
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, diagnostic_details const & );
@@ -3919,7 +3951,7 @@ The message printed by `operator<<` includes the message printed by `error_info`
 
 The additional information includes the types and the values of all such error objects (but see  <<show_in_diagnostics>>).
 
-The `write_to` member function is used with the serialization system; see <<tutorial-serialization>>.
+The `output_to` member function is used with the serialization system; see <<tutorial-serialization>>.
 
 [NOTE]
 --
@@ -3947,8 +3979,8 @@ namespace boost { namespace leaf {
 
   public:
 
-    template <class Writer>
-    void write_to( Writer & w ) const;
+    template <class Encoder>
+    void output_to( Encoder & e ) const;
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, diagnostic_info const & );
@@ -3963,7 +3995,7 @@ The message printed by `operator<<` includes the message printed by `error_info`
 
 The additional information is limited to the type name of the first such error object, as well as their total count.
 
-The `write_to` member function is used with the serialization system; see <<tutorial-serialization>>.
+The `output_to` member function is used with the serialization system; see <<tutorial-serialization>>.
 
 [NOTE]
 --
@@ -4416,8 +4448,8 @@ namespace boost { namespace leaf {
     bool exception_caught() const noexcept;
     std::exception const * exception() const noexcept;
 
-    template <class Writer>
-    void write_to( Writer & w ) const;
+    template <class Encoder>
+    void output_to( Encoder & e ) const;
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, error_info const & );
@@ -4438,14 +4470,50 @@ WARNING: It is illegal to call the `exception` member function unless `exception
 
 The `operator<<` overload prints diagnostic information about each error object currently stored in the <<context>> local to the <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> scope that invoked the handler, but only if it is associated with the <<error_id>> returned by `error()`.
 
-The `write_to` member function is used with the serialization system; see <<tutorial-serialization>>.
+The `output_to` member function is used with the serialization system; see <<tutorial-serialization>>.
 
 '''
 
-[[nlohmann_writer]]
-=== `nlohmann_writer`
+[[json_encoder_boost]]
+=== `json_encoder_boost`
 
-.#include <boost/leaf/serialization/nlohmann_writer.hpp>
+.#include <boost/leaf/serialization/json_encoder_boost.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+namespace serialization
+{
+  struct json_encoder_boost
+  {
+    boost::json::value & v_;
+
+    // Enabled if x is assignable to boost::json::value, or
+    // if tag_invoke is defined for boost::json::value_from_tag.
+    template <class T>
+    friend void output( json_encoder_boost &, T const & x );
+
+    template <class T>
+    friend void output_at( json_encoder_boost &, T const &, char const * name );
+  };
+}
+
+} }
+----
+
+The `json_encoder_boost` type serializes error objects to JSON format using https://www.boost.org/doc/libs/release/libs/json/[Boost.JSON]. The `output` function is enabled for:
+
+* Types directly assignable to `boost::json::value`
+* Types for which a `tag_invoke` overload for `value_from_tag` can be found via ADL
+
+See <<tutorial-serialization>>.
+
+'''
+
+[[json_encoder_nlohmann]]
+=== `json_encoder_nlohmann`
+
+.#include <boost/leaf/serialization/json_encoder_nlohmann.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
@@ -4453,25 +4521,23 @@ namespace boost { namespace leaf {
 namespace serialization
 {
   template <class Json>
-  struct nlohmann_writer
+  struct json_encoder_nlohmann
   {
     Json & j_;
 
-    // Enabled for types for which a suitable to_json overload
-    // can be found via ADL, but a suitable write overload cannot.
+    // Enabled if to_json is available for Json and T.
     template <class T>
-    friend auto write( nlohmann_writer &, T const & x )
-      -> decltype(to_json(std::declval<Json &>(), x));
+    friend void output( json_encoder_nlohmann &, T const & x );
 
     template <class T>
-    friend void write_nested( nlohmann_writer &, T const &, char const * name );
+    friend void output_at( json_encoder_nlohmann &, T const &, char const * name );
   };
 }
 
 } }
 ----
 
-The `nlohmann_writer` class template serializes error objects to JSON format using unqualified calls to `to_json`. This is compatible with https://github.com/nlohmann/json[nlohmann/json]; See <<tutorial-serialization>>.
+The `json_encoder_nlohmann` type serializes error objects to JSON format using unqualified calls to `to_json`. This is compatible with https://github.com/nlohmann/json[nlohmann/json]; See <<tutorial-serialization>>.
 
 '''
 
@@ -4546,8 +4612,8 @@ namespace boost { namespace leaf {
     
     void unload();
 
-    template <class Writer>
-    void write_to( Writer & w ) const;
+    template <class Encoder>
+    void output_to( Encoder & e ) const;
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const & );
@@ -4595,8 +4661,8 @@ namespace boost { namespace leaf {
     
     void unload();
 
-    template <class Writer>
-    void write_to( Writer & w ) const;
+    template <class Encoder>
+    void output_to( Encoder & e ) const;
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const &);
@@ -4612,7 +4678,7 @@ namespace boost { namespace leaf {
 } }
 ----
 [.text-right]
-<<result::result>> | <<result::operator_eq>> | <<result::has_value>> | <<result::has_error>> | <<result::operator_bool>> | <<result::value>> | <<result::operator_ptr>> | <<result::operator_deref>> | <<result::error>> | <<result::load>> | <<result::write_to>>
+<<result::result>> | <<result::operator_eq>> | <<result::has_value>> | <<result::has_error>> | <<result::operator_bool>> | <<result::value>> | <<result::operator_ptr>> | <<result::operator_deref>> | <<result::error>> | <<result::load>> | <<result::output_to>>
 
 The `result<T>` type can be returned by functions which produce a value of type `T` but may fail doing so.
 
@@ -4916,8 +4982,8 @@ A member type of `result<T>`, defined as a synonym for `T`.
 
 '''
 
-[[result::write_to]]
-==== `write_to`
+[[result::output_to]]
+==== `output_to`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
@@ -4925,17 +4991,17 @@ A member type of `result<T>`, defined as a synonym for `T`.
 namespace boost { namespace leaf {
 
   template <class T>
-  template <class Writer>
-  void result<T>::write_to( Writer & w ) const;
+  template <class Encoder>
+  void result<T>::output_to( Encoder & e ) const;
 
 } }
 ----
 
-The `write_to` member function is used with the serialization system; see <<tutorial-serialization>>.
+The `output_to` member function is used with the serialization system; see <<tutorial-serialization>>.
 
 If the result is in <<result,value state>>, outputs the value. If it is in <<result,error state>>, outputs the <<error_id>>. If the result holds <<try_capture_all,captured error objects>>, outputs them as well.
 
-NOTE: Result objects carry error objects only when in <<try_capture_all,capture state>>. Otherwise, to output error objects, use `write_to` on <<diagnostic_details>> in an error handling scope.
+NOTE: Result objects carry error objects only when in <<try_capture_all,capture state>>. Otherwise, to output error objects, use `output_to` on <<diagnostic_details>> in an error handling scope.
 
 '''
 
