@@ -10,7 +10,7 @@
 #   include <boost/leaf/diagnostics.hpp>
 #   include <boost/leaf/common.hpp>
 #   include <boost/leaf/on_error.hpp>
-#   include <boost/leaf/serialization/nlohmann_writer.hpp>
+#   include <boost/leaf/serialization/json_writer_nlohmann.hpp>
 #endif
 
 #include "nlohmann/json.hpp"
@@ -27,7 +27,7 @@
 
 namespace leaf = boost::leaf;
 
-using output_writer = leaf::serialization::nlohmann_writer<nlohmann::ordered_json>;
+using output_writer = leaf::serialization::json_writer_nlohmann<nlohmann::ordered_json>;
 
 namespace boost { namespace leaf {
 
@@ -37,8 +37,8 @@ template <class Handle, class E>
 void serialize(Handle & h, E const & e, char const * name)
 {
     h.dispatch(
-        [&](nlohmann_writer<nlohmann::json> & w) { write_nested(w, e, name); },
-        [&](nlohmann_writer<nlohmann::ordered_json> & w) { write_nested(w, e, name); }
+        [&](json_writer_nlohmann<nlohmann::json> & w) { write_nested(w, e, name); },
+        [&](json_writer_nlohmann<nlohmann::ordered_json> & w) { write_nested(w, e, name); }
     );
 }
 

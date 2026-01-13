@@ -1813,28 +1813,28 @@ To support multiple output formats, pass multiple functions to `h.dispatch`:
 [source,c++]
 ----
 h.dispatch(
-  [&](nlohmann_writer & nw) { write_nested(nw, e, name); },
+  [&](json_writer_nlohmann & w) { write_nested(w, e, name); },
   [&](xml_writer & xw) { write_nested(xw, e, name); }
 );
 ----
 
 ==== JSON Serialization
 
-LEAF provides `nlohmann_writer`, a class template for JSON serialization. The `nlohmann_writer` class defines `write` and `write_nested` friend functions (see <<tutorial-serialization>>) that work with:
+LEAF provides writers for JSON serialization with two popular JSON libraries:
 
-* Types for which `to_json` overloads can be found via ADL
-* Types for which a `write` overload can be found via ADL (e.g. LEAF types)
+* <<json_writer_nlohmann>> for https://github.com/nlohmann/json[nlohmann/json]
+* <<json_writer_boost>> for https://www.boost.org/doc/libs/release/libs/json/[Boost.JSON]
 
-This interface is compatible with https://github.com/nlohmann/json[nlohmann/json], we just need to define the required `serialize` function template (see <<custom-writers>>):
+Below is an example using `json_writer_nlohmann`. We just need to define the required `serialize` function template (see <<custom-writers>>):
 
 [source,c++]
 ----
-#include <boost/leaf/serialization/nlohmann_writer.hpp>
+#include <boost/leaf/serialization/json_writer_nlohmann.hpp>
 #include "nlohmann/json.hpp"
 
 namespace leaf = boost::leaf;
 
-using nlohmann_writer = leaf::serialization::nlohmann_writer<nlohmann::json>;
+using json_writer_nlohmann = leaf::serialization::json_writer_nlohmann<nlohmann::json>;
 
 namespace boost { namespace leaf {
 
@@ -1843,8 +1843,8 @@ namespace serialization {
   template <class Handle, class E>
   void serialize(Handle & h, E const & e, char const * name)
   {
-    h.dispatch([&](nlohmann_writer & nw) {
-      write_nested(nw, e, name);
+    h.dispatch([&](json_writer_nlohmann & w) {
+      write_nested(w, e, name);
     });
   }
 
@@ -1886,7 +1886,7 @@ leaf::try_handle_all(
   [](leaf::diagnostic_details const & dd)
   {
     nlohmann::json j;
-    nlohmann_writer w(j);
+    json_writer_nlohmann w(j);
     dd.write_to(w);
     std::cout << j.dump(2) << std::endl;
   }
@@ -2867,28 +2867,28 @@ Reference: <<to_variant>>
 
 === Serialization
 
-[[nlohmann_writer.hpp]]
-==== `nlohmann_writer.hpp`
+[[json_writer_boost.hpp]]
+==== `json_writer_boost.hpp`
 
 ====
-.#include <boost/leaf/serialization/nlohmann_writer.hpp>
+.#include <boost/leaf/serialization/json_writer_boost.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
 
 namespace serialization
 {
-  template <class Json>
-  struct nlohmann_writer
+  struct json_writer_boost
   {
-    Json & j_;
+    boost::json::value & v_;
+
+    // Enabled if x is assignable to boost::json::value, or
+    // if tag_invoke is defined for boost::json::value_from_tag.
+    template <class T>
+    friend void write( json_writer_boost &, T const & x );
 
     template <class T>
-    friend auto write( nlohmann_writer &, T const & x )
-      -> decltype(to_json(std::declval<Json &>(), x));
-
-    template <class T>
-    friend void write_nested( nlohmann_writer &, T const &, char const * name );
+    friend void write_nested( json_writer_boost &, T const &, char const * name );
   };
 }
 
@@ -2896,7 +2896,39 @@ namespace serialization
 ----
 
 [.text-right]
-Reference: <<nlohmann_writer>>
+Reference: <<json_writer_boost>>
+====
+
+[[json_writer_nlohmann.hpp]]
+==== `json_writer_nlohmann.hpp`
+
+====
+.#include <boost/leaf/serialization/json_writer_nlohmann.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+namespace serialization
+{
+  template <class Json>
+  struct json_writer_nlohmann
+  {
+    Json & j_;
+
+    // Enabled if to_json is defined for Json and T.
+    template <class T>
+    friend void write( json_writer_nlohmann &, T const & x );
+
+    template <class T>
+    friend void write_nested( json_writer_nlohmann &, T const &, char const * name );
+  };
+}
+
+} }
+----
+
+[.text-right]
+Reference: <<json_writer_nlohmann>>
 ====
 
 [[functions]]
@@ -4442,10 +4474,46 @@ The `write_to` member function is used with the serialization system; see <<tuto
 
 '''
 
-[[nlohmann_writer]]
-=== `nlohmann_writer`
+[[json_writer_boost]]
+=== `json_writer_boost`
 
-.#include <boost/leaf/serialization/nlohmann_writer.hpp>
+.#include <boost/leaf/serialization/json_writer_boost.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+namespace serialization
+{
+  struct json_writer_boost
+  {
+    boost::json::value & v_;
+
+    // Enabled if x is assignable to boost::json::value, or
+    // if tag_invoke is defined for boost::json::value_from_tag.
+    template <class T>
+    friend void write( json_writer_boost &, T const & x );
+
+    template <class T>
+    friend void write_nested( json_writer_boost &, T const &, char const * name );
+  };
+}
+
+} }
+----
+
+The `json_writer_boost` type serializes error objects to JSON format using https://www.boost.org/doc/libs/release/libs/json/[Boost.JSON]. The `write` function is enabled for:
+
+* Types directly assignable to `boost::json::value`
+* Types for which a `tag_invoke` overload for `value_from_tag` can be found via ADL
+
+See <<tutorial-serialization>>.
+
+'''
+
+[[json_writer_nlohmann]]
+=== `json_writer_nlohmann`
+
+.#include <boost/leaf/serialization/json_writer_nlohmann.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
@@ -4453,25 +4521,23 @@ namespace boost { namespace leaf {
 namespace serialization
 {
   template <class Json>
-  struct nlohmann_writer
+  struct json_writer_nlohmann
   {
     Json & j_;
 
-    // Enabled for types for which a suitable to_json overload
-    // can be found via ADL, but a suitable write overload cannot.
+    // Enabled if to_json is defined for Json and T.
     template <class T>
-    friend auto write( nlohmann_writer &, T const & x )
-      -> decltype(to_json(std::declval<Json &>(), x));
+    friend void write( json_writer_nlohmann &, T const & x );
 
     template <class T>
-    friend void write_nested( nlohmann_writer &, T const &, char const * name );
+    friend void write_nested( json_writer_nlohmann &, T const &, char const * name );
   };
 }
 
 } }
 ----
 
-The `nlohmann_writer` class template serializes error objects to JSON format using unqualified calls to `to_json`. This is compatible with https://github.com/nlohmann/json[nlohmann/json]; See <<tutorial-serialization>>.
+The `json_writer_nlohmann` serializes error objects to JSON format using unqualified calls to `to_json`. This is compatible with https://github.com/nlohmann/json[nlohmann/json]; See <<tutorial-serialization>>.
 
 '''
 
