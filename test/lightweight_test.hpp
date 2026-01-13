@@ -8,14 +8,14 @@
 #ifdef BOOST_LEAF_NO_EXCEPTIONS
 namespace boost
 {
-    [[noreturn]] inline void throw_exception( std::exception const & e )
+    inline void throw_exception( std::exception const & e )
     {
         std::cerr << "Terminating due to a C++ exception under BOOST_LEAF_NO_EXCEPTIONS: " << e.what();
         std::terminate();
     }
 
     struct source_location;
-    [[noreturn]] inline void throw_exception( std::exception const & e, boost::source_location const & )
+    inline void throw_exception( std::exception const & e, boost::source_location const & )
     {
         throw_exception(e);
     }
