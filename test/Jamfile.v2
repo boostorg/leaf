@@ -86,7 +86,7 @@ run handle_basic_test.cpp ;
 run handle_some_other_result_test.cpp ;
 run handle_some_test.cpp ;
 run json_writer_nlohmann_test.cpp : : : <toolset>clang,<target-os>linux,<cxxstd>2b:<build>no <toolset>clang,<target-os>linux,<cxxstd>23:<build>no ;
-run json_writer_boost_test.cpp /boost/json//boost_json ;
+run json_writer_boost_test.cpp /boost/json//boost_json : : : <exception-handling>off:<build>no <rtti>off:<build>no ;
 run match_member_test.cpp ;
 run match_test.cpp ;
 run match_value_test.cpp ;
