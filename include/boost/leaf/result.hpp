@@ -296,39 +296,39 @@ protected:
         what_ = move_from(std::move(x));
     }
 
-    template <class Writer>
-    error_id write_error_to(Writer & w) const
+    template <class Encoder>
+    error_id output_error_to(Encoder & e) const
     {
-        static_assert(std::is_base_of<detail::writer, Writer>::value, "Writer must derive from detail::writer");
+        static_assert(std::is_base_of<detail::encoder, Encoder>::value, "Encoder must derive from detail::encoder");
         result_discriminant const what = what_;
         BOOST_LEAF_ASSERT(what.kind() != result_discriminant::val);
         error_id const err_id = what.get_error_id();
-        detail::serialize_(w, err_id);
+        detail::serialize_(e, err_id);
         return err_id;
     }
 
-    template <class Writer>
-    void write_capture_to(Writer & w, error_id err_id) const
+    template <class Encoder>
+    void output_capture_to(Encoder & e, error_id err_id) const
     {
-        static_assert(std::is_base_of<detail::writer, Writer>::value, "Writer must derive from detail::writer");
+        static_assert(std::is_base_of<detail::encoder, Encoder>::value, "Encoder must derive from detail::encoder");
         if( what_.kind() == result_discriminant::err_id_capture_list )
         {
 #if BOOST_LEAF_CFG_CAPTURE
-            cap_.write_to(w, err_id);
+            cap_.output_to(e, err_id);
 #else
             BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
         }
     }
 
-    template <class Writer>
-    void print_error( Writer & w ) const
+    template <class DiagnosticsWriter>
+    void print_error( DiagnosticsWriter & dw ) const
     {
-        static_assert(std::is_base_of<detail::writer, Writer>::value, "Writer must derive from detail::writer");
-        error_id err_id = write_error_to(w);
-        w.set_prefix(", captured -> ");
-        w.set_delimiter(", ");
-        write_capture_to(w, err_id);
+        static_assert(std::is_base_of<detail::encoder, DiagnosticsWriter>::value, "DiagnosticsWriter must derive from detail::encoder");
+        error_id err_id = output_error_to(dw);
+        dw.set_prefix(", captured -> ");
+        dw.set_delimiter(", ");
+        output_capture_to(dw, err_id);
     }
 
 public:
@@ -576,14 +576,14 @@ public:
 #endif
     }
 
-    template <class Writer>
-    void write_to(Writer & w) const
+    template <class Encoder>
+    void output_to(Encoder & e) const
     {
-        detail::writer_adaptor<Writer> wa(w);
+        detail::encoder_adaptor<Encoder> ea(e);
         if( what_.kind() == result_discriminant::val )
-            detail::serialize_(wa, value());
+            detail::serialize_(ea, value());
         else
-            write_capture_to(wa, write_error_to(wa));
+            output_capture_to(ea, output_error_to(ea));
     }
 
     template <class CharT, class Traits>
@@ -695,13 +695,13 @@ public:
         BOOST_LEAF_ASSERT(has_value());
     }
 
-    template <class Writer>
-    void write_to(Writer & w) const
+    template <class Encoder>
+    void output_to(Encoder & e) const
     {
         if( !*this )
         {
-            detail::writer_adaptor<Writer> wa(w);
-            write_error_to(wa);
+            detail::encoder_adaptor<Encoder> ea(e);
+            output_error_to(ea);
         }
     }
 

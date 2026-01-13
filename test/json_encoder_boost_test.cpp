@@ -10,7 +10,7 @@
 #   include <boost/leaf/diagnostics.hpp>
 #   include <boost/leaf/common.hpp>
 #   include <boost/leaf/on_error.hpp>
-#   include <boost/leaf/serialization/json_writer_boost.hpp>
+#   include <boost/leaf/serialization/json_encoder_boost.hpp>
 #endif
 
 #include <boost/json.hpp>
@@ -27,17 +27,17 @@
 
 namespace leaf = boost::leaf;
 
-using output_writer = leaf::serialization::json_writer_boost;
+using output_encoder = leaf::serialization::json_encoder_boost;
 
 namespace boost { namespace leaf {
 
 namespace serialization {
 
-template <class Handle, class E>
-void serialize(Handle & h, E const & e, char const * name)
+template <class Handle, class T>
+void serialize(Handle & h, T const & x, char const * name)
 {
     h.dispatch(
-        [&](json_writer_boost & w) { write_nested(w, e, name); }
+        [&](json_encoder_boost & e) { output_at(e, x, name); }
     );
 }
 
@@ -223,8 +223,8 @@ int main()
             [&j](leaf::diagnostic_info const & di, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                output_writer w{j};
-                di.write_to(w);
+                output_encoder e{j};
+                di.output_to(e);
             }
         );
         std::cout << __LINE__ << " diagnostic_info JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -241,8 +241,8 @@ int main()
             [&j](leaf::diagnostic_details const & dd, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                output_writer w{j};
-                dd.write_to(w);
+                output_encoder e{j};
+                dd.output_to(e);
             }
         );
         std::cout << __LINE__ << " diagnostic_details JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -260,8 +260,8 @@ int main()
             [&j](leaf::diagnostic_info const & di, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                output_writer w{j};
-                di.write_to(w);
+                output_encoder e{j};
+                di.output_to(e);
             }
         );
         std::cout << __LINE__ << " leaf_throw diagnostic_info JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -279,8 +279,8 @@ int main()
             [&j](leaf::diagnostic_details const & dd, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                output_writer w{j};
-                dd.write_to(w);
+                output_encoder e{j};
+                dd.output_to(e);
             }
         );
         std::cout << __LINE__ << " leaf_throw diagnostic_details JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -298,8 +298,8 @@ int main()
             [&j](leaf::diagnostic_info const & di, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                output_writer w{j};
-                di.write_to(w);
+                output_encoder e{j};
+                di.output_to(e);
             }
         );
         std::cout << __LINE__ << " throw_ diagnostic_info JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -316,8 +316,8 @@ int main()
             [&j](leaf::diagnostic_details const & dd, my_error<1> const * e1)
             {
                 BOOST_TEST(e1 != nullptr);
-                output_writer w{j};
-                dd.write_to(w);
+                output_encoder e{j};
+                dd.output_to(e);
             }
         );
         std::cout << __LINE__ << " throw_ diagnostic_details JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -333,8 +333,8 @@ int main()
             },
             [&j](leaf::diagnostic_details const & dd, my_exception_ptr *)
             {
-                output_writer w{j};
-                dd.write_to(w);
+                output_encoder e{j};
+                dd.output_to(e);
             }
         );
         std::cout << __LINE__ << " std::exception_ptr JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -355,8 +355,8 @@ int main()
             },
             [&j](leaf::diagnostic_details const & dd, my_exception_ptr *)
             {
-                output_writer w{j};
-                dd.write_to(w);
+                output_encoder e{j};
+                dd.output_to(e);
             }
         );
         std::cout << __LINE__ << " non-std::exception_ptr JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -373,8 +373,8 @@ int main()
         boost::json::value j;
         leaf::result<int> r = 42;
         BOOST_TEST(r);
-        output_writer w{j};
-        r.write_to(w);
+        output_encoder e{j};
+        r.output_to(e);
         std::cout << __LINE__ << " result<int> success JSON output:\n" << boost::json::serialize(j) << std::endl;
         BOOST_TEST_EQ(boost::json::value_to<int>(j.at("int")), 42);
     }
@@ -383,8 +383,8 @@ int main()
         boost::json::value j;
         leaf::result<int> r = leaf::new_error();
         BOOST_TEST(!r);
-        output_writer w{j};
-        r.write_to(w);
+        output_encoder e{j};
+        r.output_to(e);
         std::cout << __LINE__ << " result<int> error JSON output:\n" << boost::json::serialize(j) << std::endl;
         BOOST_TEST(boost::json::value_to<int>(j.at("boost::leaf::error_id")) > 0);
     }
@@ -398,8 +398,8 @@ int main()
                 return leaf::new_error(my_error<1>{1, "error one"}, my_error<2>{2, "error two"});
             } );
         BOOST_TEST(!r);
-        output_writer w{j};
-        r.write_to(w);
+        output_encoder e{j};
+        r.output_to(e);
         std::cout << __LINE__ << " result<int> captured error JSON output:\n" << boost::json::serialize(j) << std::endl;
         BOOST_TEST(boost::json::value_to<int>(j.at("boost::leaf::error_id")) > 0);
         auto const & e1j = j.at("my_error<1>");

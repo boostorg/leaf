@@ -204,11 +204,11 @@ namespace detail
             tuple_for_each<I-1,Tup>::unload(tup, err_id);
         }
 
-        static void write_to(writer & w, void const * tup, error_id id)
+        static void output_to(encoder & e, void const * tup, error_id id)
         {
             BOOST_LEAF_ASSERT(tup != nullptr);
-            tuple_for_each<I-1,Tup>::write_to(w, tup, id);
-            std::get<I-1>(*static_cast<Tup const *>(tup)).write_to(w, id);
+            tuple_for_each<I-1,Tup>::output_to(e, tup, id);
+            std::get<I-1>(*static_cast<Tup const *>(tup)).output_to(e, id);
         }
     };
 
@@ -218,13 +218,13 @@ namespace detail
         BOOST_LEAF_CONSTEXPR static void activate( Tup & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void deactivate( Tup & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void unload( Tup &, int ) noexcept { }
-        BOOST_LEAF_CONSTEXPR static void write_to(writer &, void const *, error_id) { }
+        BOOST_LEAF_CONSTEXPR static void output_to(encoder &, void const *, error_id) { }
     };
 
     template <class Tup>
-    void serialize_tuple_contents(writer & w, void const * tup, error_id id)
+    void output_tuple_contents(encoder & e, void const * tup, error_id id)
     {
-        tuple_for_each<std::tuple_size<Tup>::value, Tup>::write_to(w, tup, id);
+        tuple_for_each<std::tuple_size<Tup>::value, Tup>::output_to(e, tup, id);
     }
 } // namespace detail
 
@@ -368,9 +368,9 @@ public:
         return is_active_;
     }
 
-    void write_to( detail::diagnostics_writer & w ) const
+    void output_to( detail::diagnostics_writer & e ) const
     {
-        detail::serialize_tuple_contents<Tup>(w, &tup_, error_id());
+        detail::output_tuple_contents<Tup>(e, &tup_, error_id());
     }
 
     template <class CharT, class Traits>
@@ -378,7 +378,7 @@ public:
     {
         detail::diagnostics_writer w(os);
         w.set_prefix("Contents:");
-        ctx.write_to(w);
+        ctx.output_to(w);
         return os;
     }
 

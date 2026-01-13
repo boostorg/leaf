@@ -58,11 +58,11 @@ struct e_errno
         return os << err.value << ", \"" << std::strerror(err.value) << '"';
     }
 
-    template <class Writer>
-    friend void write( Writer & w, e_errno const & e )
+    template <class Encoder>
+    friend void output( Encoder & e, e_errno const & x )
     {
-        write_nested(w, e.value, "errno");
-        write_nested(w, std::strerror(e.value), "strerror");
+        output_at(e, x.value, "errno");
+        output_at(e, std::strerror(x.value), "strerror");
     }
 };
 

@@ -45,14 +45,14 @@ protected:
 
     error_info( error_info const & ) noexcept = default;
 
-    template <class Writer>
-    void write_to_(Writer & w) const
+    template <class Encoder>
+    void output_to_(Encoder & e) const
     {
-        static_assert(std::is_base_of<detail::writer, Writer>::value, "Writer must derive from detail::writer");
-        detail::serialize_(w, err_id_);
+        static_assert(std::is_base_of<detail::encoder, Encoder>::value, "Encoder must derive from detail::encoder");
+        detail::serialize_(e, err_id_);
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
         if( ex_ )
-            detail::serialize_(w, *ex_);
+            detail::serialize_(e, *ex_);
 #endif
     }
 
@@ -87,11 +87,11 @@ public:
         return loc_;
     }
 
-    template <class Writer>
-    void write_to(Writer & w) const
+    template <class Encoder>
+    void output_to(Encoder & e) const
     {
-        detail::writer_adaptor<Writer> wa(w);
-        write_to_(wa);
+        detail::encoder_adaptor<Encoder> ea(e);
+        output_to_(ea);
     }
 
     template <class CharT, class Traits>
