@@ -162,7 +162,7 @@ compile-fail _compile-fail-exception_1.cpp ;
 compile-fail _compile-fail-exception_2.cpp ;
 compile-fail _compile-fail-new_error.cpp ;
 compile-fail _compile-fail-serialization_json_encoder_boost.cpp ;
-compile-fail _compile-fail-json_encoder_nlohmann.cpp ;
+compile-fail _compile-fail-serialization_json_encoder_nlohmann.cpp ;
 compile-fail _compile-fail-result_1.cpp ;
 compile-fail _compile-fail-result_2.cpp ;
 compile-fail _compile-fail-result_3.cpp ;
