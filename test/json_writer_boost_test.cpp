@@ -23,7 +23,7 @@
 
 #include "lightweight_test.hpp"
 
-#if BOOST_LEAF_CFG_STD_STRING
+#if BOOST_LEAF_CFG_STD_STRING && !defined(BOOST_LEAF_NO_EXCEPTIONS
 
 namespace leaf = boost::leaf;
 
