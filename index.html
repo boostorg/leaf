@@ -60,7 +60,13 @@ function switch_style()
 <li><a href="#tutorial-exception_to_result">Converting Exceptions to <code>result&lt;T&gt;</code></a></li>
 <li><a href="#tutorial-on_error_in_c_callbacks">Using <code>error_monitor</code> to Report Errors from C Callbacks</a></li>
 <li><a href="#tutorial-diagnostic_information">Diagnostic Information</a></li>
-<li><a href="#tutorial-std_error_code">Working with <code>std::error_code</code>, <code>std::error_condition</code></a>
+<li><a href="#tutorial-serialization">Serialization</a>
+<ul class="sectlevel3">
+<li><a href="#custom-encoders">Custom Encoders</a></li>
+<li><a href="#_json_serialization">JSON Serialization</a></li>
+</ul>
+</li>
+<li><a href="#tutorial-std_error_code">Working with <code>std::error_code</code> and <code>std::error_condition</code></a>
 <ul class="sectlevel3">
 <li><a href="#_introduction">Introduction</a></li>
 <li><a href="#_support_in_leaf">Support in LEAF</a></li>
@@ -90,6 +96,12 @@ function switch_style()
 <li><a href="#to_variant.hpp"><code>to_variant.hpp</code></a></li>
 </ul>
 </li>
+<li><a href="#synopsis-serialization">Serialization</a>
+<ul class="sectlevel3">
+<li><a href="#json_encoder_boost.hpp"><code>json_encoder_boost.hpp</code></a></li>
+<li><a href="#json_encoder_nlohmann.hpp"><code>json_encoder_nlohmann.hpp</code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#functions">Reference: Functions</a>
@@ -101,6 +113,7 @@ function switch_style()
 <li><a href="#make_context"><code>make_context</code></a></li>
 <li><a href="#new_error"><code>new_error</code></a></li>
 <li><a href="#on_error"><code>on_error</code></a></li>
+<li><a href="#serialize"><code>serialize</code></a></li>
 <li><a href="#throw_exception"><code>throw_exception</code></a></li>
 <li><a href="#to_variant"><code>to_variant</code></a></li>
 <li><a href="#try_capture_all"><code>try_capture_all</code></a></li>
@@ -145,19 +158,22 @@ function switch_style()
 <li><a href="#e_source_location"><code>e_source_location</code></a></li>
 <li><a href="#e_type_info_name"><code>e_type_info_name</code></a></li>
 <li><a href="#error_info"><code>error_info</code></a></li>
+<li><a href="#json_encoder_boost"><code>json_encoder_boost</code></a></li>
+<li><a href="#json_encoder_nlohmann"><code>json_encoder_nlohmann</code></a></li>
 <li><a href="#result"><code>result</code></a>
 <ul class="sectlevel3">
 <li><a href="#result::result">Constructors</a></li>
 <li><a href="#result::error"><code>error</code></a></li>
-<li><a href="#result::load"><code>load</code></a></li>
-<li><a href="#result::operator_eq"><code>operator=</code></a></li>
-<li><a href="#result::has_value"><code>has_value</code></a></li>
 <li><a href="#result::has_error"><code>has_error</code></a></li>
+<li><a href="#result::has_value"><code>has_value</code></a></li>
+<li><a href="#result::load"><code>load</code></a></li>
 <li><a href="#result::operator_bool"><code>operator bool</code></a></li>
+<li><a href="#result::operator_deref"><code>operator*</code></a></li>
+<li><a href="#result::operator_eq"><code>operator=</code></a></li>
+<li><a href="#result::operator_ptr"><code>operator-></code></a></li>
 <li><a href="#result::value"><code>value</code></a></li>
 <li><a href="#result::value_type"><code>value_type</code></a></li>
-<li><a href="#result::operator_ptr"><code>operator-></code></a></li>
-<li><a href="#result::operator_deref"><code>operator*</code></a></li>
+<li><a href="#result::output_to"><code>output_to</code></a></li>
 </ul>
 </li>
 <li><a href="#show_in_diagnostics"><code>show_in_diagnostics</code></a></li>
@@ -1613,7 +1629,7 @@ See <a href="#match"><code>match</code></a> for more examples.
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-See also <a href="#tutorial-std_error_code">Working with <code>std::error_code</code>, <code>std::error_condition</code></a>.
+See also <a href="#tutorial-std_error_code">Working with <code>std::error_code</code> and <code>std::error_condition</code></a>.
 </td>
 </tr>
 </table>
@@ -2396,7 +2412,262 @@ The automatically generated diagnostic messages are developer-friendly, but not 
 <hr>
 </div>
 <div class="sect2">
-<h3 id="tutorial-std_error_code">Working with <code>std::error_code</code>, <code>std::error_condition</code></h3>
+<h3 id="tutorial-serialization">Serialization</h3>
+<div class="paragraph">
+<p>LEAF provides a serialization API that enables exporting error information into different formats, such as JSON. This is useful for structured logging, remote debugging, or integrating with monitoring systems. To serialize error information, use the <code>output_to</code> member function available on the following types:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#error_info"><code>error_info</code></a></p>
+</li>
+<li>
+<p><a href="#diagnostic_info"><code>diagnostic_info</code></a></p>
+</li>
+<li>
+<p><a href="#diagnostic_details"><code>diagnostic_details</code></a></p>
+</li>
+<li>
+<p><a href="#result"><code>result</code></a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>LEAF serialization is defined in terms of <code>output</code> and <code>output_at</code> function calls, found via ADL:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>output(e, x)</code> serializes <code>x</code> directly to encoder <code>e</code> as a value.</p>
+</li>
+<li>
+<p><code>output_at(e, x, name)</code> serializes <code>x</code> to encoder <code>e</code> as a named field.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>LEAF provides generic <code>output</code> overloads for the following types:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>error_id</code></p>
+</li>
+<li>
+<p><code>e_source_location</code></p>
+</li>
+<li>
+<p><code>e_errno</code></p>
+</li>
+<li>
+<p><code>std::error_code</code></p>
+</li>
+<li>
+<p><code>std::error_condition</code></p>
+</li>
+<li>
+<p><code>std::exception</code></p>
+</li>
+<li>
+<p><code>std::exception_ptr</code></p>
+</li>
+<li>
+<p>any type with a <code>.value</code> member for which a suitable <code>output</code> can be found via ADL</p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="custom-encoders">Custom Encoders</h4>
+<div class="paragraph">
+<p>To support exporting to a specific format, users define an encoder class with associated <code>output</code> and <code>output_at</code> function templates specific to that encoder:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">struct</span> <span class="nc">my_encoder</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="k">friend</span> <span class="kt">void</span> <span class="n">output</span><span class="p">(</span><span class="n">my_encoder</span> <span class="o">&amp;</span> <span class="n">e</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="c1">// output value x to e</span>
+  <span class="p">}</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="k">friend</span> <span class="kt">void</span> <span class="nf">output_at</span><span class="p">(</span><span class="n">my_encoder</span> <span class="o">&amp;</span> <span class="n">e</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">x</span><span class="p">,</span> <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span> <span class="n">name</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="c1">// output x to e as a named field</span>
+  <span class="p">}</span>
+<span class="p">};</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>output_at</code> function typically creates a nested scope (e.g. a JSON object or XML element) and then makes an unqualified call to <code>output</code> to output the value. This will call any compatible overload found via ADL.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The <code>output</code> function may need to be defined using SFINAE to avoid ambiguities with the generic <code>output</code> overloads provided by LEAF. Custom encoders must also handle types that do not provide ADL <code>output</code> overloads, including built-in types like <code>int</code> and <code>std::string</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>To enable serialization to a custom encoder type, define a <code>serialize</code> function template in the <code>boost::leaf::serialization</code> namespace:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+<span class="k">namespace</span> <span class="n">serialization</span> <span class="p">{</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Handle</span><span class="p">,</span> <span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="kt">void</span> <span class="n">serialize</span><span class="p">(</span><span class="n">Handle</span> <span class="o">&amp;</span> <span class="n">h</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">x</span><span class="p">,</span> <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span> <span class="n">name</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">h</span><span class="p">.</span><span class="n">dispatch</span><span class="p">([</span><span class="o">&amp;</span><span class="p">](</span><span class="n">my_encoder</span> <span class="o">&amp;</span> <span class="n">e</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">output_at</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+
+<span class="p">}</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>serialize</code> function template takes a handle reference <code>h</code> (of unspecified type) that holds an encoder, the error object to be serialized, and its type name. Call <code>h.dispatch</code> with a single-argument function F to detect the encoder type based on F&#8217;s argument type; F is called only if the handle contains an encoder of that type.</p>
+</div>
+<div class="paragraph">
+<p>To support multiple output formats, pass multiple functions to <code>h.dispatch</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">h</span><span class="p">.</span><span class="n">dispatch</span><span class="p">(</span>
+  <span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="n">json_encoder_nlohmann</span> <span class="o">&amp;</span> <span class="n">e</span><span class="p">)</span> <span class="p">{</span> <span class="n">output_at</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span> <span class="p">},</span>
+  <span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="n">xml_encoder</span> <span class="o">&amp;</span> <span class="n">xe</span><span class="p">)</span> <span class="p">{</span> <span class="n">output_at</span><span class="p">(</span><span class="n">xe</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span> <span class="p">}</span>
+<span class="p">);</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_json_serialization">JSON Serialization</h4>
+<div class="paragraph">
+<p>LEAF provides encoders for JSON serialization with two popular JSON libraries:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#json_encoder_nlohmann"><code>json_encoder_nlohmann</code></a> for <a href="https://github.com/nlohmann/json">nlohmann/json</a></p>
+</li>
+<li>
+<p><a href="#json_encoder_boost"><code>json_encoder_boost</code></a> for <a href="https://www.boost.org/doc/libs/release/libs/json/">Boost.JSON</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Below is an example using <code>json_encoder_nlohmann</code>. We just need to define the required <code>serialize</code> function template (see <a href="#custom-encoders">Custom Encoders</a>):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#include</span> <span class="cpf">&lt;boost/leaf/serialization/json_encoder_nlohmann.hpp&gt;</span><span class="cp">
+#include</span> <span class="cpf">"nlohmann/json.hpp"</span><span class="cp">
+</span>
+<span class="k">namespace</span> <span class="n">leaf</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">leaf</span><span class="p">;</span>
+
+<span class="k">using</span> <span class="n">json_encoder_nlohmann</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">::</span><span class="n">serialization</span><span class="o">::</span><span class="n">json_encoder_nlohmann</span><span class="o">&lt;</span><span class="n">nlohmann</span><span class="o">::</span><span class="n">json</span><span class="o">&gt;</span><span class="p">;</span>
+
+<span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+<span class="k">namespace</span> <span class="n">serialization</span> <span class="p">{</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Handle</span><span class="p">,</span> <span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="kt">void</span> <span class="n">serialize</span><span class="p">(</span><span class="n">Handle</span> <span class="o">&amp;</span> <span class="n">h</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">x</span><span class="p">,</span> <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span> <span class="n">name</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">h</span><span class="p">.</span><span class="n">dispatch</span><span class="p">([</span><span class="o">&amp;</span><span class="p">](</span><span class="n">json_encoder_nlohmann</span> <span class="o">&amp;</span> <span class="n">e</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">output_at</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+
+<span class="p">}</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>With this in place, we can easily (for example) output <a href="#diagnostic_details"><code>diagnostic_details</code></a> to JSON:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">struct</span> <span class="nc">e_api_response</span>
+<span class="p">{</span>
+  <span class="kt">int</span> <span class="n">status</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">message</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Json</span><span class="p">&gt;</span>
+  <span class="k">friend</span> <span class="kt">void</span> <span class="n">to_json</span><span class="p">(</span><span class="n">Json</span> <span class="o">&amp;</span> <span class="n">j</span><span class="p">,</span> <span class="n">e_api_response</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">e</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">j</span><span class="p">[</span><span class="s">"status"</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span><span class="p">.</span><span class="n">status</span><span class="p">;</span>
+    <span class="n">j</span><span class="p">[</span><span class="s">"message"</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span><span class="p">.</span><span class="n">message</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="nc">e_request_url</span>
+<span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">value</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="p">....</span>
+
+<span class="n">leaf</span><span class="o">::</span><span class="n">try_handle_all</span><span class="p">(</span>
+  <span class="p">[]()</span> <span class="o">-&gt;</span> <span class="n">leaf</span><span class="o">::</span><span class="n">result</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span>
+  <span class="p">{</span>
+    <span class="p">....</span>
+    <span class="k">return</span> <span class="n">leaf</span><span class="o">::</span><span class="n">new_error</span><span class="p">(</span><span class="n">e_api_response</span><span class="p">{</span><span class="mi">403</span><span class="p">,</span> <span class="s">"Access denied"</span><span class="p">},</span> <span class="n">e_request_url</span><span class="p">{</span><span class="s">"/api/admin/settings"</span><span class="p">});</span>
+  <span class="p">},</span>
+  <span class="p">[](</span><span class="n">leaf</span><span class="o">::</span><span class="n">diagnostic_details</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">dd</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">nlohmann</span><span class="o">::</span><span class="n">json</span> <span class="n">j</span><span class="p">;</span>
+    <span class="n">json_encoder_nlohmann</span> <span class="n">e</span><span class="p">(</span><span class="n">j</span><span class="p">);</span>
+    <span class="n">dd</span><span class="p">.</span><span class="n">output_to</span><span class="p">(</span><span class="n">e</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">j</span><span class="p">.</span><span class="n">dump</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Output:</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="json"><span class="p">{</span><span class="w">
+  </span><span class="nl">"e_api_response"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="mi">403</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Access denied"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"e_request_url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/api/admin/settings"</span><span class="w">
+</span><span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#diagnostic_details"><code>diagnostic_details</code></a> | <a href="#diagnostic_info"><code>diagnostic_info</code></a> | <a href="#error_info"><code>error_info</code></a></p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+In the example above, <code>e_api_response</code> uses an unqualified call to <code>to_json</code> for serialization. This is to demonstrate that <code>json_encoder_nlohmann</code> handles third party type with suitable <code>to_json</code> overloads automatically. If instead we defined a function <code>output</code> compatible with the LEAF serialization API, it would make <code>e_api_response</code> compatible with any LEAF encoder.
+</td>
+</tr>
+</table>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="tutorial-std_error_code">Working with <code>std::error_code</code> and <code>std::error_condition</code></h3>
 <div class="sect3">
 <h4 id="_introduction">Introduction</h4>
 <div class="paragraph">
@@ -3086,6 +3357,9 @@ The automatically generated diagnostic messages are developer-friendly, but not 
 
     <span class="kt">void</span> <span class="n">unload</span><span class="p">();</span>
 
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Encoder</span><span class="p">&gt;</span>
+    <span class="kt">void</span> <span class="n">output_to</span><span class="p">(</span> <span class="n">Encoder</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
+
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">CharT</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Traits</span><span class="p">&gt;</span>
     <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">basic_ostream</span><span class="o">&lt;</span><span class="n">CharT</span><span class="p">,</span> <span class="n">Traits</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">result</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="p">);</span>
   <span class="p">};</span>
@@ -3131,6 +3405,9 @@ The automatically generated diagnostic messages are developer-friendly, but not 
     <span class="n">error_id</span> <span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="kt">void</span> <span class="n">unload</span><span class="p">();</span>
+
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Encoder</span><span class="p">&gt;</span>
+    <span class="kt">void</span> <span class="n">output_to</span><span class="p">(</span> <span class="n">Encoder</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">CharT</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Traits</span><span class="p">&gt;</span>
     <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">basic_ostream</span><span class="o">&lt;</span><span class="n">CharT</span><span class="p">,</span> <span class="n">Traits</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">result</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">);</span>
@@ -3422,6 +3699,78 @@ The automatically generated diagnostic messages are developer-friendly, but not 
 </div>
 <div class="paragraph text-right">
 <p>Reference: <a href="#to_variant"><code>to_variant</code></a></p>
+</div>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="synopsis-serialization">Serialization</h3>
+<div class="sect3">
+<h4 id="json_encoder_boost.hpp"><code>json_encoder_boost.hpp</code></h4>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="title">#include &lt;boost/leaf/serialization/json_encoder_boost.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+<span class="k">namespace</span> <span class="n">serialization</span>
+<span class="p">{</span>
+  <span class="k">struct</span> <span class="nc">json_encoder_boost</span>
+  <span class="p">{</span>
+    <span class="n">boost</span><span class="o">::</span><span class="n">json</span><span class="o">::</span><span class="n">value</span> <span class="o">&amp;</span> <span class="n">v_</span><span class="p">;</span>
+
+    <span class="c1">// Enabled if x is assignable to boost::json::value, or</span>
+    <span class="c1">// if tag_invoke is defined for boost::json::value_from_tag.</span>
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+    <span class="k">friend</span> <span class="kt">void</span> <span class="n">output</span><span class="p">(</span> <span class="n">json_encoder_boost</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">x</span> <span class="p">);</span>
+
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+    <span class="k">friend</span> <span class="kt">void</span> <span class="n">output_at</span><span class="p">(</span> <span class="n">json_encoder_boost</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">,</span> <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span> <span class="n">name</span> <span class="p">);</span>
+  <span class="p">};</span>
+<span class="p">}</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p>Reference: <a href="#json_encoder_boost"><code>json_encoder_boost</code></a></p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="json_encoder_nlohmann.hpp"><code>json_encoder_nlohmann.hpp</code></h4>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="title">#include &lt;boost/leaf/serialization/json_encoder_nlohmann.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+<span class="k">namespace</span> <span class="n">serialization</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Json</span><span class="p">&gt;</span>
+  <span class="k">struct</span> <span class="nc">json_encoder_nlohmann</span>
+  <span class="p">{</span>
+    <span class="n">Json</span> <span class="o">&amp;</span> <span class="n">j_</span><span class="p">;</span>
+
+    <span class="c1">// Enabled if to_json is available for Json and T.</span>
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+    <span class="k">friend</span> <span class="kt">void</span> <span class="n">output</span><span class="p">(</span> <span class="n">json_encoder_nlohmann</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">x</span> <span class="p">);</span>
+
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+    <span class="k">friend</span> <span class="kt">void</span> <span class="n">output_at</span><span class="p">(</span> <span class="n">json_encoder_nlohmann</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">,</span> <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span> <span class="n">name</span> <span class="p">);</span>
+  <span class="p">};</span>
+<span class="p">}</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p>Reference: <a href="#json_encoder_nlohmann"><code>json_encoder_nlohmann</code></a></p>
 </div>
 </div>
 </div>
@@ -3882,6 +4231,26 @@ See <a href="#tutorial-on_error">Using <code>on_error</code></a> from the Tutori
 </td>
 </tr>
 </table>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="serialize"><code>serialize</code></h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+<span class="k">namespace</span> <span class="n">serialization</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Handle</span><span class="p">,</span> <span class="k">class</span> <span class="nc">E</span><span class="p">&gt;</span>
+  <span class="kt">void</span> <span class="n">serialize</span><span class="p">(</span> <span class="n">Handle</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">E</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">,</span> <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span> <span class="n">name</span> <span class="p">);</span>
+<span class="p">}</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>serialize</code> function template is a user-defined customization point. If provided, it is called by the serialization system to output error objects; see <a href="#custom-writers">[custom-writers]</a>.</p>
 </div>
 <hr>
 </div>
@@ -5050,9 +5419,14 @@ The caller is required to specify the return type <code>R</code>. This is becaus
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
-  <span class="k">class</span> <span class="nc">diagnostic_details</span><span class="o">:</span> <span class="k">public</span> <span class="n">error_info</span>
+  <span class="k">class</span> <span class="nc">diagnostic_details</span><span class="o">:</span> <span class="k">public</span> <span class="n">diagnostic_info</span>
   <span class="p">{</span>
     <span class="c1">//Constructors unspecified</span>
+
+  <span class="nl">public:</span>
+
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Encoder</span><span class="p">&gt;</span>
+    <span class="kt">void</span> <span class="n">output_to</span><span class="p">(</span> <span class="n">Encoder</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">CharT</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Traits</span><span class="p">&gt;</span>
     <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">basic_ostream</span><span class="o">&lt;</span><span class="n">CharT</span><span class="p">,</span> <span class="n">Traits</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">diagnostic_details</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="p">);</span>
@@ -5069,6 +5443,9 @@ The caller is required to specify the return type <code>R</code>. This is becaus
 </div>
 <div class="paragraph">
 <p>The additional information includes the types and the values of all such error objects (but see  <a href="#show_in_diagnostics"><code>show_in_diagnostics</code></a>).</p>
+</div>
+<div class="paragraph">
+<p>The <code>output_to</code> member function is used with the serialization system; see <a href="#tutorial-serialization">Serialization</a>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -5119,6 +5496,11 @@ Using <code>diagnostic_details</code> may allocate memory dynamically, but only 
   <span class="p">{</span>
     <span class="c1">//Constructors unspecified</span>
 
+  <span class="nl">public:</span>
+
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Encoder</span><span class="p">&gt;</span>
+    <span class="kt">void</span> <span class="n">output_to</span><span class="p">(</span> <span class="n">Encoder</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
+
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">CharT</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Traits</span><span class="p">&gt;</span>
     <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">basic_ostream</span><span class="o">&lt;</span><span class="n">CharT</span><span class="p">,</span> <span class="n">Traits</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">diagnostic_info</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="p">);</span>
   <span class="p">};</span>
@@ -5134,6 +5516,9 @@ Using <code>diagnostic_details</code> may allocate memory dynamically, but only 
 </div>
 <div class="paragraph">
 <p>The additional information is limited to the type name of the first such error object, as well as their total count.</p>
+</div>
+<div class="paragraph">
+<p>The <code>output_to</code> member function is used with the serialization system; see <a href="#tutorial-serialization">Serialization</a>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -5797,6 +6182,9 @@ It is probably better to define your own file name wrappers to avoid clashes if 
     <span class="kt">bool</span> <span class="n">exception_caught</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="k">const</span> <span class="o">*</span> <span class="n">exception</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
 
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Encoder</span><span class="p">&gt;</span>
+    <span class="kt">void</span> <span class="n">output_to</span><span class="p">(</span> <span class="n">Encoder</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
+
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">CharT</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Traits</span><span class="p">&gt;</span>
     <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">basic_ostream</span><span class="o">&lt;</span><span class="n">CharT</span><span class="p">,</span> <span class="n">Traits</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">error_info</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="p">);</span>
   <span class="p">};</span>
@@ -5830,6 +6218,84 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
 </div>
 <div class="paragraph">
 <p>The <code>operator&lt;&lt;</code> overload prints diagnostic information about each error object currently stored in the <a href="#context"><code>context</code></a> local to the <a href="#try_handle_some"><code>try_handle_some</code></a>, <a href="#try_handle_all"><code>try_handle_all</code></a> or <a href="#try_catch"><code>try_catch</code></a> scope that invoked the handler, but only if it is associated with the <a href="#error_id"><code>error_id</code></a> returned by <code>error()</code>.</p>
+</div>
+<div class="paragraph">
+<p>The <code>output_to</code> member function is used with the serialization system; see <a href="#tutorial-serialization">Serialization</a>.</p>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="json_encoder_boost"><code>json_encoder_boost</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/leaf/serialization/json_encoder_boost.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+<span class="k">namespace</span> <span class="n">serialization</span>
+<span class="p">{</span>
+  <span class="k">struct</span> <span class="nc">json_encoder_boost</span>
+  <span class="p">{</span>
+    <span class="n">boost</span><span class="o">::</span><span class="n">json</span><span class="o">::</span><span class="n">value</span> <span class="o">&amp;</span> <span class="n">v_</span><span class="p">;</span>
+
+    <span class="c1">// Enabled if x is assignable to boost::json::value, or</span>
+    <span class="c1">// if tag_invoke is defined for boost::json::value_from_tag.</span>
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+    <span class="k">friend</span> <span class="kt">void</span> <span class="n">output</span><span class="p">(</span> <span class="n">json_encoder_boost</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">x</span> <span class="p">);</span>
+
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+    <span class="k">friend</span> <span class="kt">void</span> <span class="n">output_at</span><span class="p">(</span> <span class="n">json_encoder_boost</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">,</span> <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span> <span class="n">name</span> <span class="p">);</span>
+  <span class="p">};</span>
+<span class="p">}</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>json_encoder_boost</code> type serializes error objects to JSON format using <a href="https://www.boost.org/doc/libs/release/libs/json/">Boost.JSON</a>. The <code>output</code> function is enabled for:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Types directly assignable to <code>boost::json::value</code></p>
+</li>
+<li>
+<p>Types for which a <code>tag_invoke</code> overload for <code>value_from_tag</code> can be found via ADL</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>See <a href="#tutorial-serialization">Serialization</a>.</p>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="json_encoder_nlohmann"><code>json_encoder_nlohmann</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/leaf/serialization/json_encoder_nlohmann.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+<span class="k">namespace</span> <span class="n">serialization</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Json</span><span class="p">&gt;</span>
+  <span class="k">struct</span> <span class="nc">json_encoder_nlohmann</span>
+  <span class="p">{</span>
+    <span class="n">Json</span> <span class="o">&amp;</span> <span class="n">j_</span><span class="p">;</span>
+
+    <span class="c1">// Enabled if to_json is available for Json and T.</span>
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+    <span class="k">friend</span> <span class="kt">void</span> <span class="n">output</span><span class="p">(</span> <span class="n">json_encoder_nlohmann</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">x</span> <span class="p">);</span>
+
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+    <span class="k">friend</span> <span class="kt">void</span> <span class="n">output_at</span><span class="p">(</span> <span class="n">json_encoder_nlohmann</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">,</span> <span class="kt">char</span> <span class="k">const</span> <span class="o">*</span> <span class="n">name</span> <span class="p">);</span>
+  <span class="p">};</span>
+<span class="p">}</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>json_encoder_nlohmann</code> type serializes error objects to JSON format using unqualified calls to <code>to_json</code>. This is compatible with <a href="https://github.com/nlohmann/json">nlohmann/json</a>; See <a href="#tutorial-serialization">Serialization</a>.</p>
 </div>
 <hr>
 </div>
@@ -5903,6 +6369,9 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
 
     <span class="kt">void</span> <span class="n">unload</span><span class="p">();</span>
 
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Encoder</span><span class="p">&gt;</span>
+    <span class="kt">void</span> <span class="n">output_to</span><span class="p">(</span> <span class="n">Encoder</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
+
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">CharT</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Traits</span><span class="p">&gt;</span>
     <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">basic_ostream</span><span class="o">&lt;</span><span class="n">CharT</span><span class="p">,</span> <span class="n">Traits</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">result</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="p">);</span>
   <span class="p">};</span>
@@ -5949,6 +6418,9 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
 
     <span class="kt">void</span> <span class="n">unload</span><span class="p">();</span>
 
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Encoder</span><span class="p">&gt;</span>
+    <span class="kt">void</span> <span class="n">output_to</span><span class="p">(</span> <span class="n">Encoder</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
+
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">CharT</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Traits</span><span class="p">&gt;</span>
     <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">basic_ostream</span><span class="o">&lt;</span><span class="n">CharT</span><span class="p">,</span> <span class="n">Traits</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">result</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">);</span>
   <span class="p">};</span>
@@ -5964,7 +6436,7 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
 </div>
 </div>
 <div class="paragraph text-right">
-<p><a href="#result::result">Constructors</a> | <a href="#result::operator_eq"><code>operator=</code></a> | <a href="#result::has_value"><code>has_value</code></a> | <a href="#result::has_error"><code>has_error</code></a> | <a href="#result::operator_bool"><code>operator bool</code></a> | <a href="#result::value"><code>value</code></a> | <a href="#result::operator_ptr"><code>operator-></code></a> | <a href="#result::operator_deref"><code>operator*</code></a> | <a href="#result::error"><code>error</code></a> | <a href="#result::load"><code>load</code></a></p>
+<p><a href="#result::result">Constructors</a> | <a href="#result::operator_eq"><code>operator=</code></a> | <a href="#result::has_value"><code>has_value</code></a> | <a href="#result::has_error"><code>has_error</code></a> | <a href="#result::operator_bool"><code>operator bool</code></a> | <a href="#result::value"><code>value</code></a> | <a href="#result::operator_ptr"><code>operator-></code></a> | <a href="#result::operator_deref"><code>operator*</code></a> | <a href="#result::error"><code>error</code></a> | <a href="#result::load"><code>load</code></a> | <a href="#result::output_to"><code>output_to</code></a></p>
 </div>
 <div class="paragraph">
 <p>The <code>result&lt;T&gt;</code> type can be returned by functions which produce a value of type <code>T</code> but may fail doing so.</p>
@@ -6211,6 +6683,52 @@ The returned proxy object refers to <code>*this</code>; avoid holding on to it.
 <hr>
 </div>
 <div class="sect3">
+<h4 id="result::has_error"><code>has_error</code></h4>
+<div class="listingblock">
+<div class="title">#include &lt;boost/leaf/result.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="kt">bool</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">has_error</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Returns: </dt>
+<dd>
+<p>If <code>*this</code> is in <a href="#result">value state</a>, returns <code>false</code>, otherwise returns <code>true</code>.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="result::has_value"><code>has_value</code></h4>
+<div class="listingblock">
+<div class="title">#include &lt;boost/leaf/result.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="kt">bool</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">has_value</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Returns: </dt>
+<dd>
+<p>If <code>*this</code> is in <a href="#result">value state</a>, returns <code>true</code>, otherwise returns <code>false</code>.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
 <h4 id="result::load"><code>load</code></h4>
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/result.hpp&gt;</div>
@@ -6236,6 +6754,59 @@ The returned proxy object refers to <code>*this</code>; avoid holding on to it.
 <dt class="hdlist1">Returns: </dt>
 <dd>
 <p><code>*this</code>.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="result::operator_bool"><code>operator bool</code></h4>
+<div class="listingblock">
+<div class="title">#include &lt;boost/leaf/result.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="k">operator</span> <span class="kt">bool</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Returns: </dt>
+<dd>
+<p>If <code>*this</code> is in <a href="#result">value state</a>, returns <code>true</code>, otherwise returns <code>false</code>.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="result::operator_deref"><code>operator*</code></h4>
+<div class="listingblock">
+<div class="title">#include &lt;boost/leaf/result.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">*</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="n">T</span> <span class="o">&amp;</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">*</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+
+<span class="p">}</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Requires: </dt>
+<dd>
+<p><code>*this</code> must be in <a href="#result">value state</a>.</p>
+</dd>
+<dt class="hdlist1">Returns </dt>
+<dd>
+<p>a reference to the stored value.</p>
 </dd>
 </dl>
 </div>
@@ -6269,69 +6840,26 @@ The returned proxy object refers to <code>*this</code>; avoid holding on to it.
 <hr>
 </div>
 <div class="sect3">
-<h4 id="result::has_value"><code>has_value</code></h4>
+<h4 id="result::operator_ptr"><code>operator-></code></h4>
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/result.hpp&gt;</div>
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
-  <span class="kt">bool</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">has_value</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-
-<span class="p">}</span> <span class="p">}</span></code></pre>
-</div>
-</div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">Returns: </dt>
-<dd>
-<p>If <code>*this</code> is in <a href="#result">value state</a>, returns <code>true</code>, otherwise returns <code>false</code>.</p>
-</dd>
-</dl>
-</div>
-<hr>
-</div>
-<div class="sect3">
-<h4 id="result::has_error"><code>has_error</code></h4>
-<div class="listingblock">
-<div class="title">#include &lt;boost/leaf/result.hpp&gt;</div>
-<div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="k">const</span> <span class="o">*</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">-&gt;</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
-  <span class="kt">bool</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">has_error</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="n">T</span> <span class="o">*</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">-&gt;</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
 </div>
 <div class="dlist">
 <dl>
-<dt class="hdlist1">Returns: </dt>
+<dt class="hdlist1">Returns </dt>
 <dd>
-<p>If <code>*this</code> is in <a href="#result">value state</a>, returns <code>false</code>, otherwise returns <code>true</code>.</p>
-</dd>
-</dl>
-</div>
-<hr>
-</div>
-<div class="sect3">
-<h4 id="result::operator_bool"><code>operator bool</code></h4>
-<div class="listingblock">
-<div class="title">#include &lt;boost/leaf/result.hpp&gt;</div>
-<div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
-
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
-  <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="k">operator</span> <span class="kt">bool</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-
-<span class="p">}</span> <span class="p">}</span></code></pre>
-</div>
-</div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">Returns: </dt>
-<dd>
-<p>If <code>*this</code> is in <a href="#result">value state</a>, returns <code>true</code>, otherwise returns <code>false</code>.</p>
+<p>If <code>*this</code> is in <a href="#result">value state</a>, returns a pointer to the stored value; otherwise returns <code>nullptr</code>.</p>
 </dd>
 </dl>
 </div>
@@ -6391,69 +6919,38 @@ The returned proxy object refers to <code>*this</code>; avoid holding on to it.
 <p>A member type of <code>result&lt;T&gt;</code>, defined as a synonym for <code>T</code>.</p>
 </div>
 <hr>
-<div id="result::bad_result" class="dlist">
-<dl>
-<dt class="hdlist1">Effects: </dt>
-<dd>
-<p>If <code>*this</code> is in <a href="#result">value state</a>, returns a reference to the stored value, otherwise throws <code>bad_result</code>.</p>
-</dd>
-</dl>
-</div>
-<hr>
 </div>
 <div class="sect3">
-<h4 id="result::operator_ptr"><code>operator-></code></h4>
+<h4 id="result::output_to"><code>output_to</code></h4>
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/result.hpp&gt;</div>
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
-  <span class="n">T</span> <span class="k">const</span> <span class="o">*</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">-&gt;</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
-  <span class="n">T</span> <span class="o">*</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">-&gt;</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Encoder</span><span class="p">&gt;</span>
+  <span class="kt">void</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">output_to</span><span class="p">(</span> <span class="n">Encoder</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
 </div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">Returns </dt>
-<dd>
-<p>If <code>*this</code> is in <a href="#result">value state</a>, returns a pointer to the stored value; otherwise returns 0.</p>
-</dd>
-</dl>
+<div class="paragraph">
+<p>The <code>output_to</code> member function is used with the serialization system; see <a href="#tutorial-serialization">Serialization</a>.</p>
 </div>
-<hr>
+<div class="paragraph">
+<p>If the result is in <a href="#result">value state</a>, outputs the value. If it is in <a href="#result">error state</a>, outputs the <a href="#error_id"><code>error_id</code></a>. If the result holds <a href="#try_capture_all">captured error objects</a>, outputs them as well.</p>
 </div>
-<div class="sect3">
-<h4 id="result::operator_deref"><code>operator*</code></h4>
-<div class="listingblock">
-<div class="title">#include &lt;boost/leaf/result.hpp&gt;</div>
-<div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
-
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
-  <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">*</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
-  <span class="n">T</span> <span class="o">&amp;</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">*</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
-
-<span class="p">}</span> <span class="p">}</span></code></pre>
-</div>
-</div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">Requires: </dt>
-<dd>
-<p><code>*this</code> must be in <a href="#result">value state</a>.</p>
-</dd>
-<dt class="hdlist1">Returns </dt>
-<dd>
-<p>a reference to the stored value.</p>
-</dd>
-</dl>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Result objects carry error objects only when in <a href="#try_capture_all">capture state</a>. Otherwise, to output error objects, use <code>output_to</code> on <a href="#diagnostic_details"><code>diagnostic_details</code></a> in an error handling scope.
+</td>
+</tr>
+</table>
 </div>
 <hr>
 </div>
