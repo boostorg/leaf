@@ -15,4 +15,4 @@ struct e_no_to_json
 nlohmann::json j;
 boost::leaf::serialization::json_encoder_nlohmann<nlohmann::json> w{j};
 e_no_to_json e;
-auto x = (write(w, e), 0);
+auto x = (output(w, e), 0);

@@ -202,7 +202,7 @@ namespace detail
         void unload( int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE);
 
         template <class Encoder,class ErrorID>
-        void output_to(Encoder & e, ErrorID id) const
+        void serialize_to(Encoder & e, ErrorID id) const
         {
             static_assert(std::is_base_of<encoder, Encoder>::value, "Encoder must derive from detail::encoder");
             if( int k = this->key() )
@@ -271,9 +271,9 @@ namespace detail
             {
                 impl::unload(err_id);
             }
-            void output_to(encoder & e, error_id const & id) const override
+            void serialize_to(encoder & e, error_id const & id) const override
             {
-                impl::output_to(e, id);
+                impl::serialize_to(e, id);
             }
         public:
             BOOST_LEAF_CONSTEXPR explicit capturing_slot_node( capture_list::node * * & last ):
@@ -306,7 +306,7 @@ namespace detail
             {
                 std::rethrow_exception(ex_);
             }
-            void output_to(encoder &, error_id const &) const override
+            void serialize_to(encoder &, error_id const &) const override
             {
             }
             std::exception_ptr const ex_;
@@ -406,7 +406,7 @@ namespace detail
         }
 
         using capture_list::unload;
-        using capture_list::output_to;
+        using capture_list::serialize_to;
     }; // class dynamic_allocator
 
     template <class E>
@@ -482,7 +482,7 @@ namespace detail
         }
 
         template <class ErrorID>
-        void output_to(encoder &, ErrorID) const
+        void serialize_to(encoder &, ErrorID) const
         {
         }
     }; // slot specialization for dynamic_allocator

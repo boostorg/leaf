@@ -314,7 +314,7 @@ protected:
         if( what_.kind() == result_discriminant::err_id_capture_list )
         {
 #if BOOST_LEAF_CFG_CAPTURE
-            cap_.output_to(e, err_id);
+            cap_.serialize_to(e, err_id);
 #else
             BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
@@ -577,7 +577,7 @@ public:
     }
 
     template <class Encoder>
-    void output_to(Encoder & e) const
+    void serialize_to(Encoder & e) const
     {
         detail::encoder_adaptor<Encoder> ea(e);
         if( what_.kind() == result_discriminant::val )
@@ -696,7 +696,7 @@ public:
     }
 
     template <class Encoder>
-    void output_to(Encoder & e) const
+    void serialize_to(Encoder & e) const
     {
         if( !*this )
         {

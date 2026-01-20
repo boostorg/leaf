@@ -17,6 +17,7 @@
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 #   include <system_error>
 #endif
@@ -76,6 +77,11 @@ struct my_error
     }
 };
 
+struct my_error_with_vector
+{
+    std::vector<int> value;
+};
+
 leaf::result<void> fail()
 {
     return BOOST_LEAF_NEW_ERROR(
@@ -87,6 +93,7 @@ leaf::result<void> fail()
         42,
         my_error<1>{1, "error one"},
         my_error<2>{2, "error two"},
+        my_error_with_vector{{10, 20, 30}},
         leaf::e_errno{ENOENT},
         leaf::e_api_function{"my_api_function"} );
 }
@@ -103,6 +110,7 @@ void leaf_throw()
         42,
         my_error<1>{1, "error one"},
         my_error<2>{2, "error two"},
+        my_error_with_vector{{10, 20, 30}},
         leaf::e_errno{ENOENT},
         leaf::e_api_function{"my_api_function"} );
 }
@@ -118,6 +126,7 @@ void throw_()
         42,
         my_error<1>{1, "error one"},
         my_error<2>{2, "error two"},
+        my_error_with_vector{{10, 20, 30}},
         leaf::e_errno{ENOENT},
         leaf::e_api_function{"my_api_function"} );
     throw my_exception{};
@@ -167,6 +176,13 @@ void check_diagnostic_details(boost::json::value const & j, bool has_source_loca
         BOOST_TEST_EQ(boost::json::value_to<int>(e2j.at("code")), 2);
         BOOST_TEST_EQ(boost::json::value_to<std::string>(e2j.at("message")), "error two");
 
+        auto const & vj = j.at("my_error_with_vector");
+        BOOST_TEST(vj.is_array());
+        BOOST_TEST_EQ(vj.as_array().size(), 3);
+        BOOST_TEST_EQ(boost::json::value_to<int>(vj.as_array()[0]), 10);
+        BOOST_TEST_EQ(boost::json::value_to<int>(vj.as_array()[1]), 20);
+        BOOST_TEST_EQ(boost::json::value_to<int>(vj.as_array()[2]), 30);
+
         auto const & ej = j.at("boost::leaf::e_errno");
         BOOST_TEST_EQ(boost::json::value_to<int>(ej.at("errno")), ENOENT);
         BOOST_TEST(!boost::json::value_to<std::string>(ej.at("strerror")).empty());
@@ -194,7 +210,7 @@ void check_diagnostic_details(boost::json::value const & j, bool has_source_loca
     else
     {
         BOOST_TEST(j.as_object().find("int") == j.as_object().end());
-        BOOST_TEST(j.as_object().find("my_error<2>") == j.as_object().end());
+        BOOST_TEST(j.as_object().find("my_error2") == j.as_object().end());
         BOOST_TEST(j.as_object().find("boost::leaf::e_errno") == j.as_object().end());
         BOOST_TEST(j.as_object().find("boost::leaf::e_api_function") == j.as_object().end());
         BOOST_TEST(j.as_object().find("std::error_code") == j.as_object().end());
@@ -224,7 +240,7 @@ int main()
             {
                 BOOST_TEST(e1 != nullptr);
                 output_encoder e{j};
-                di.output_to(e);
+                di.serialize_to(e);
             }
         );
         std::cout << __LINE__ << " diagnostic_info JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -242,7 +258,7 @@ int main()
             {
                 BOOST_TEST(e1 != nullptr);
                 output_encoder e{j};
-                dd.output_to(e);
+                dd.serialize_to(e);
             }
         );
         std::cout << __LINE__ << " diagnostic_details JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -261,7 +277,7 @@ int main()
             {
                 BOOST_TEST(e1 != nullptr);
                 output_encoder e{j};
-                di.output_to(e);
+                di.serialize_to(e);
             }
         );
         std::cout << __LINE__ << " leaf_throw diagnostic_info JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -280,7 +296,7 @@ int main()
             {
                 BOOST_TEST(e1 != nullptr);
                 output_encoder e{j};
-                dd.output_to(e);
+                dd.serialize_to(e);
             }
         );
         std::cout << __LINE__ << " leaf_throw diagnostic_details JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -299,7 +315,7 @@ int main()
             {
                 BOOST_TEST(e1 != nullptr);
                 output_encoder e{j};
-                di.output_to(e);
+                di.serialize_to(e);
             }
         );
         std::cout << __LINE__ << " throw_ diagnostic_info JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -317,7 +333,7 @@ int main()
             {
                 BOOST_TEST(e1 != nullptr);
                 output_encoder e{j};
-                dd.output_to(e);
+                dd.serialize_to(e);
             }
         );
         std::cout << __LINE__ << " throw_ diagnostic_details JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -334,7 +350,7 @@ int main()
             [&j](leaf::diagnostic_details const & dd, my_exception_ptr *)
             {
                 output_encoder e{j};
-                dd.output_to(e);
+                dd.serialize_to(e);
             }
         );
         std::cout << __LINE__ << " std::exception_ptr JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -356,7 +372,7 @@ int main()
             [&j](leaf::diagnostic_details const & dd, my_exception_ptr *)
             {
                 output_encoder e{j};
-                dd.output_to(e);
+                dd.serialize_to(e);
             }
         );
         std::cout << __LINE__ << " non-std::exception_ptr JSON output:\n" << boost::json::serialize(j) << std::endl;
@@ -374,7 +390,7 @@ int main()
         leaf::result<int> r = 42;
         BOOST_TEST(r);
         output_encoder e{j};
-        r.output_to(e);
+        r.serialize_to(e);
         std::cout << __LINE__ << " result<int> success JSON output:\n" << boost::json::serialize(j) << std::endl;
         BOOST_TEST_EQ(boost::json::value_to<int>(j.at("int")), 42);
     }
@@ -384,7 +400,7 @@ int main()
         leaf::result<int> r = leaf::new_error();
         BOOST_TEST(!r);
         output_encoder e{j};
-        r.output_to(e);
+        r.serialize_to(e);
         std::cout << __LINE__ << " result<int> error JSON output:\n" << boost::json::serialize(j) << std::endl;
         BOOST_TEST(boost::json::value_to<int>(j.at("boost::leaf::error_id")) > 0);
     }
@@ -399,7 +415,7 @@ int main()
             } );
         BOOST_TEST(!r);
         output_encoder e{j};
-        r.output_to(e);
+        r.serialize_to(e);
         std::cout << __LINE__ << " result<int> captured error JSON output:\n" << boost::json::serialize(j) << std::endl;
         BOOST_TEST(boost::json::value_to<int>(j.at("boost::leaf::error_id")) > 0);
         auto const & e1j = j.at("my_error<1>");

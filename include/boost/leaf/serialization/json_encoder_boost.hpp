@@ -5,12 +5,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <utility>
+#include <type_traits>
 
 namespace boost { namespace json {
 
 class value;
-struct value_from_tag;
+
+template <class T>
+void value_from(T &&, value &);
 
 } }
 
@@ -18,21 +20,15 @@ namespace boost { namespace leaf {
 
 namespace serialization
 {
-    template <class Value = boost::json::value, class ValueFromTag = boost::json::value_from_tag>
+    template <class Value = boost::json::value>
     struct json_encoder_boost_
     {
         Value & v_;
 
-        template <class T>
-        friend auto output(json_encoder_boost_ & e, T const & x) -> decltype(std::declval<Value &>() = x, void())
+        template <class Encoder, class T, class... Deprioritize, class = typename std::enable_if<std::is_same<Encoder, json_encoder_boost_>::value>::type>
+        friend void output(Encoder & e, T const & x, Deprioritize...)
         {
-            e.v_ = x;
-        }
-
-        template <class T>
-        friend auto output(json_encoder_boost_ & e, T const & x) -> decltype(tag_invoke(std::declval<ValueFromTag>(), std::declval<Value &>(), x), void())
-        {
-            tag_invoke(ValueFromTag{}, e.v_, x);
+            boost::json::value_from(x, e.v_);
         }
 
         template <class T>
