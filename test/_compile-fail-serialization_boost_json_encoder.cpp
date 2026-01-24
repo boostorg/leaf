@@ -2,7 +2,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/leaf/serialization/json_encoder_boost.hpp>
+#include <boost/leaf/serialization/boost_json_encoder.hpp>
 #include <boost/json.hpp>
 
 struct no_tag_invoke {};
@@ -13,6 +13,6 @@ struct e_no_tag_invoke
 };
 
 boost::json::value v;
-boost::leaf::serialization::json_encoder_boost e{v};
+boost::leaf::serialization::boost_json_encoder e{v};
 e_no_tag_invoke x;
 auto y = (output(e, x), 0);

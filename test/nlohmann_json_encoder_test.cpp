@@ -10,7 +10,7 @@
 #   include <boost/leaf/diagnostics.hpp>
 #   include <boost/leaf/common.hpp>
 #   include <boost/leaf/on_error.hpp>
-#   include <boost/leaf/serialization/json_encoder_nlohmann.hpp>
+#   include <boost/leaf/serialization/nlohmann_json_encoder.hpp>
 #endif
 
 #include "nlohmann/json.hpp"
@@ -28,7 +28,7 @@
 
 namespace leaf = boost::leaf;
 
-using output_encoder = leaf::serialization::json_encoder_nlohmann<nlohmann::ordered_json>;
+using output_encoder = leaf::serialization::nlohmann_json_encoder<nlohmann::ordered_json>;
 
 namespace boost { namespace leaf {
 
@@ -38,8 +38,8 @@ template <class Handle, class T>
 void serialize(Handle & h, T const & x, char const * name)
 {
     h.dispatch(
-        [&](json_encoder_nlohmann<nlohmann::json> & e) { output_at(e, x, name); },
-        [&](json_encoder_nlohmann<nlohmann::ordered_json> & e) { output_at(e, x, name); }
+        [&](nlohmann_json_encoder<nlohmann::json> & e) { output_at(e, x, name); },
+        [&](nlohmann_json_encoder<nlohmann::ordered_json> & e) { output_at(e, x, name); }
     );
 }
 

@@ -141,11 +141,11 @@ if option_enable_unit_tests
         'handle_basic_test',
         'handle_some_other_result_test',
         'handle_some_test',
-        'json_encoder_nlohmann_test',
         'match_member_test',
         'match_test',
         'match_value_test',
         'multiple_errors_test',
+        'nlohmann_json_encoder_test',
         'on_error_accumulate_basic_test',
         'on_error_accumulate_nested_error_exception_test',
         'on_error_accumulate_nested_error_result_test',
@@ -173,7 +173,6 @@ if option_enable_unit_tests
         'on_error_preload_nested_success_exception_test',
         'on_error_preload_nested_success_result_test',
         'optional_test',
-        'type_name_test',
         'print_test',
         'result_bad_result_test',
         'result_implicit_conversion_test',
@@ -191,6 +190,7 @@ if option_enable_unit_tests
         'try_catch_system_error_test',
         'try_catch_test',
         'try_exception_and_result_test',
+        'type_name_test',
     ]
     if option_boost_available and option_exceptions
         tests += [
@@ -224,7 +224,7 @@ if option_enable_unit_tests
         '_hpp_on_error_test',
         '_hpp_pred_test',
         '_hpp_result_test',
-        '_hpp_serialization_json_encoder_nlohmann_test',
+        '_hpp_serialization_nlohmann_json_encoder_test',
         '_hpp_to_variant_test',
     ]
     foreach t : header_tests

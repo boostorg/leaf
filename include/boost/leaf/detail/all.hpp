@@ -11,6 +11,6 @@
 #include <boost/leaf/on_error.hpp>
 #include <boost/leaf/pred.hpp>
 #include <boost/leaf/result.hpp>
-#include <boost/leaf/serialization/json_encoder_boost.hpp>
-#include <boost/leaf/serialization/json_encoder_nlohmann.hpp>
+#include <boost/leaf/serialization/boost_json_encoder.hpp>
+#include <boost/leaf/serialization/nlohmann_json_encoder.hpp>
 #include <boost/leaf/to_variant.hpp>
