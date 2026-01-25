@@ -1,5 +1,5 @@
-#ifndef BOOST_LEAF_SERIALIZATION_JSON_ENCODER_BOOST_HPP_INCLUDED
-#define BOOST_LEAF_SERIALIZATION_JSON_ENCODER_BOOST_HPP_INCLUDED
+#ifndef BOOST_LEAF_SERIALIZATION_BOOST_JSON_ENCODER_HPP_INCLUDED
+#define BOOST_LEAF_SERIALIZATION_BOOST_JSON_ENCODER_HPP_INCLUDED
 
 // Copyright 2018-2026 Emil Dotchevski and Reverge Studios, Inc.
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -19,33 +19,33 @@ namespace boost { namespace leaf {
 namespace serialization
 {
     template <class Value = boost::json::value, class ValueFromTag = boost::json::value_from_tag>
-    struct json_encoder_boost_
+    struct boost_json_encoder_
     {
         Value & v_;
 
         template <class T>
-        friend auto output(json_encoder_boost_ & e, T const & x) -> decltype(std::declval<Value &>() = x, void())
+        friend auto output(boost_json_encoder_ & e, T const & x) -> decltype(std::declval<Value &>() = x, void())
         {
             e.v_ = x;
         }
 
         template <class T>
-        friend auto output(json_encoder_boost_ & e, T const & x) -> decltype(tag_invoke(std::declval<ValueFromTag>(), std::declval<Value &>(), x), void())
+        friend auto output(boost_json_encoder_ & e, T const & x) -> decltype(tag_invoke(std::declval<ValueFromTag>(), std::declval<Value &>(), x), void())
         {
             tag_invoke(ValueFromTag{}, e.v_, x);
         }
 
         template <class T>
-        friend void output_at(json_encoder_boost_ & e, T const & x, char const * name)
+        friend void output_at(boost_json_encoder_ & e, T const & x, char const * name)
         {
             if( e.v_.is_null() )
                 e.v_.emplace_object();
-            json_encoder_boost_ nested{e.v_.as_object()[name]};
+            boost_json_encoder_ nested{e.v_.as_object()[name]};
             output(nested, x);
         }
     };
 
-    using json_encoder_boost = json_encoder_boost_<>;
+    using boost_json_encoder = boost_json_encoder_<>;
 }
 
 } }

@@ -314,7 +314,7 @@ protected:
         if( what_.kind() == result_discriminant::err_id_capture_list )
         {
 #if BOOST_LEAF_CFG_CAPTURE
-            cap_.output_to(e, err_id);
+            cap_.serialize_to(e, err_id);
 #else
             BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
@@ -410,13 +410,13 @@ public:
 #endif // #else (#if defined(BOOST_STRICT_CONFIG) || !defined(__clang__))
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-    result( std::error_code const & ec ) noexcept:
+    result( std::error_code const & ec ) noexcept(!BOOST_LEAF_CFG_CAPTURE):
         what_(error_id(ec))
     {
     }
 
     template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
-    result( Enum e ) noexcept:
+    result( Enum e ) noexcept(!BOOST_LEAF_CFG_CAPTURE):
         what_(error_id(e))
     {
     }
@@ -577,7 +577,7 @@ public:
     }
 
     template <class Encoder>
-    void output_to(Encoder & e) const
+    void serialize_to(Encoder & e) const
     {
         detail::encoder_adaptor<Encoder> ea(e);
         if( what_.kind() == result_discriminant::val )
@@ -652,13 +652,13 @@ public:
     }
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-    result( std::error_code const & ec ) noexcept:
+    result( std::error_code const & ec ) noexcept(!BOOST_LEAF_CFG_CAPTURE):
         base(ec)
     {
     }
 
     template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
-    result( Enum e ) noexcept:
+    result( Enum e ) noexcept(!BOOST_LEAF_CFG_CAPTURE):
         base(e)
     {
     }
@@ -696,7 +696,7 @@ public:
     }
 
     template <class Encoder>
-    void output_to(Encoder & e) const
+    void serialize_to(Encoder & e) const
     {
         if( !*this )
         {

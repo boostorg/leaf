@@ -1733,7 +1733,7 @@ TIP: The automatically generated diagnostic messages are developer-friendly, but
 [[tutorial-serialization]]
 === Serialization
 
-LEAF provides a serialization API that enables exporting error information into different formats, such as JSON. This is useful for structured logging, remote debugging, or integrating with monitoring systems. To serialize error information, use the `output_to` member function available on the following types:
+LEAF provides a serialization API that enables exporting error information into different formats, such as JSON. This is useful for structured logging, remote debugging, or integrating with monitoring systems. To serialize error information, use the `serialize_to` member function available on the following types:
 
 * <<error_info>>
 * <<diagnostic_info>>
@@ -1811,7 +1811,7 @@ To support multiple output formats, pass multiple functions to `h.dispatch`:
 [source,c++]
 ----
 h.dispatch(
-  [&](json_encoder_nlohmann & e) { output_at(e, x, name); },
+  [&](nlohmann_json_encoder & e) { output_at(e, x, name); },
   [&](xml_encoder & xe) { output_at(xe, x, name); }
 );
 ----
@@ -1820,19 +1820,19 @@ h.dispatch(
 
 LEAF provides encoders for JSON serialization with two popular JSON libraries:
 
-* <<json_encoder_nlohmann>> for https://github.com/nlohmann/json[nlohmann/json]
-* <<json_encoder_boost>> for https://www.boost.org/doc/libs/release/libs/json/[Boost.JSON]
+* <<nlohmann_json_encoder>> for https://github.com/nlohmann/json[nlohmann/json]
+* <<boost_json_encoder>> for https://www.boost.org/doc/libs/release/libs/json/[Boost.JSON]
 
-Below is an example using `json_encoder_nlohmann`. We just need to define the required `serialize` function template (see <<custom-encoders>>):
+Below is an example using `nlohmann_json_encoder`. We just need to define the required `serialize` function template (see <<custom-encoders>>):
 
 [source,c++]
 ----
-#include <boost/leaf/serialization/json_encoder_nlohmann.hpp>
+#include <boost/leaf/serialization/nlohmann_json_encoder.hpp>
 #include "nlohmann/json.hpp"
 
 namespace leaf = boost::leaf;
 
-using json_encoder_nlohmann = leaf::serialization::json_encoder_nlohmann<nlohmann::json>;
+using nlohmann_json_encoder = leaf::serialization::nlohmann_json_encoder<nlohmann::json>;
 
 namespace boost { namespace leaf {
 
@@ -1841,7 +1841,7 @@ namespace serialization {
   template <class Handle, class T>
   void serialize(Handle & h, T const & x, char const * name)
   {
-    h.dispatch([&](json_encoder_nlohmann & e) {
+    h.dispatch([&](nlohmann_json_encoder & e) {
       output_at(e, x, name);
     });
   }
@@ -1884,8 +1884,8 @@ leaf::try_handle_all(
   [](leaf::diagnostic_details const & dd)
   {
     nlohmann::json j;
-    json_encoder_nlohmann e(j);
-    dd.output_to(e);
+    nlohmann_json_encoder e(j);
+    dd.serialize_to(e);
     std::cout << j.dump(2) << std::endl;
   }
 );
@@ -1906,7 +1906,7 @@ leaf::try_handle_all(
 [.text-right]
 <<diagnostic_details>> | <<diagnostic_info>> | <<error_info>>
 
-NOTE: In the example above, `e_api_response` uses an unqualified call to `to_json` for serialization. This is to demonstrate that `json_encoder_nlohmann` handles third party type with suitable `to_json` overloads automatically. If instead we defined a function `output` compatible with the LEAF serialization API, it would make `e_api_response` compatible with any LEAF encoder.
+NOTE: In the example above, `e_api_response` uses an unqualified call to `to_json` for serialization. This is to demonstrate that `nlohmann_json_encoder` handles third party type with suitable `to_json` overloads automatically. If instead we defined a function `output` compatible with the LEAF serialization API, it would make `e_api_response` compatible with any LEAF encoder.
 
 '''
 
@@ -2074,7 +2074,7 @@ std::error_category const & resource_condition_category() <2>
 namespace std
 {
   template <> <5>
-  class is_error_condition_enum<resource_condition>: std::true_type
+  struct is_error_condition_enum<resource_condition>: std::true_type
   {
   };
 }
@@ -2522,11 +2522,9 @@ namespace boost { namespace leaf {
 
     template <class... Item>
     error_id load( Item && ... item ) noexcept;
-    
-    void unload();
 
     template <class Encoder>
-    void output_to( Encoder & e ) const;
+    void serialize_to( Encoder & e ) const;
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const & );
@@ -2571,17 +2569,15 @@ namespace boost { namespace leaf {
 
     template <class... Item>
     error_id load( Item && ... item ) noexcept;
-    
-    void unload();
 
     template <class Encoder>
-    void output_to( Encoder & e ) const;
+    void serialize_to( Encoder & e ) const;
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const &);
   };
 
-  struct bad_result: std::exception { };
+  class bad_result: std::exception { };
 
   template <class T>
   struct is_result_type<result<T>>: std::true_type
@@ -2627,11 +2623,6 @@ namespace boost { namespace leaf {
     bool is_active() const noexcept;
 
     void unload( error_id ) noexcept;
-
-    void print( std::ostream & os ) const;
-
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, context const & );
 
     template <class R, class... H>
     R handle_error( R &, H && ... ) const;
@@ -2867,28 +2858,28 @@ Reference: <<to_variant>>
 
 === Serialization
 
-[[json_encoder_boost.hpp]]
-==== `json_encoder_boost.hpp`
+[[boost_json_encoder.hpp]]
+==== `boost_json_encoder.hpp`
 
 ====
-.#include <boost/leaf/serialization/json_encoder_boost.hpp>
+.#include <boost/leaf/serialization/boost_json_encoder.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
 
 namespace serialization
 {
-  struct json_encoder_boost
+  struct boost_json_encoder
   {
     boost::json::value & v_;
 
     // Enabled if x is assignable to boost::json::value, or
     // if tag_invoke is defined for boost::json::value_from_tag.
     template <class T>
-    friend void output( json_encoder_boost &, T const & x );
+    friend void output( boost_json_encoder &, T const & x );
 
     template <class T>
-    friend void output_at( json_encoder_boost &, T const &, char const * name );
+    friend void output_at( boost_json_encoder &, T const &, char const * name );
   };
 }
 
@@ -2896,14 +2887,14 @@ namespace serialization
 ----
 
 [.text-right]
-Reference: <<json_encoder_boost>>
+Reference: <<boost_json_encoder>>
 ====
 
-[[json_encoder_nlohmann.hpp]]
-==== `json_encoder_nlohmann.hpp`
+[[nlohmann_json_encoder.hpp]]
+==== `nlohmann_json_encoder.hpp`
 
 ====
-.#include <boost/leaf/serialization/json_encoder_nlohmann.hpp>
+.#include <boost/leaf/serialization/nlohmann_json_encoder.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
@@ -2911,16 +2902,16 @@ namespace boost { namespace leaf {
 namespace serialization
 {
   template <class Json>
-  struct json_encoder_nlohmann
+  struct nlohmann_json_encoder
   {
     Json & j_;
 
     // Enabled if to_json is available for Json and T.
     template <class T>
-    friend void output( json_encoder_nlohmann &, T const & x );
+    friend void output( nlohmann_json_encoder &, T const & x );
 
     template <class T>
-    friend void output_at( json_encoder_nlohmann &, T const &, char const * name );
+    friend void output_at( nlohmann_json_encoder &, T const &, char const * name );
   };
 }
 
@@ -2928,7 +2919,7 @@ namespace serialization
 ----
 
 [.text-right]
-Reference: <<json_encoder_nlohmann>>
+Reference: <<nlohmann_json_encoder>>
 ====
 
 [[functions]]
@@ -3662,6 +3653,42 @@ TIP: The contents of each Reference section are organized alphabetically.
 
 '''
 
+[[boost_json_encoder]]
+=== `boost_json_encoder`
+
+.#include <boost/leaf/serialization/boost_json_encoder.hpp>
+[source,c++]
+----
+namespace boost { namespace leaf {
+
+namespace serialization
+{
+  struct boost_json_encoder
+  {
+    boost::json::value & v_;
+
+    // Enabled if x is assignable to boost::json::value, or
+    // if tag_invoke is defined for boost::json::value_from_tag.
+    template <class T>
+    friend void output( boost_json_encoder &, T const & x );
+
+    template <class T>
+    friend void output_at( boost_json_encoder &, T const &, char const * name );
+  };
+}
+
+} }
+----
+
+The `boost_json_encoder` type serializes error objects to JSON format using https://www.boost.org/doc/libs/release/libs/json/[Boost.JSON]. The `output` function is enabled for:
+
+* Types directly assignable to `boost::json::value`
+* Types for which a `tag_invoke` overload for `value_from_tag` can be found via ADL
+
+See <<tutorial-serialization>>.
+
+'''
+
 [[context]]
 === `context`
 
@@ -3688,8 +3715,6 @@ namespace boost { namespace leaf {
 
     void unload( error_id ) noexcept;
 
-    void print( std::ostream & os ) const;
-
     template <class R, class... H>
     R handle_error( error_id, H && ... ) const;
 
@@ -3701,7 +3726,7 @@ namespace boost { namespace leaf {
 } }
 ----
 [.text-right]
-<<context::context>> | <<context::activate>> | <<context::deactivate>> | <<context::is_active>> | <<context::unload>> | <<context::print>> | <<context::handle_error>> | <<context_type_from_handlers>>
+<<context::context>> | <<context::activate>> | <<context::deactivate>> | <<context::is_active>> | <<context::unload>> | <<context::handle_error>> | <<context_type_from_handlers>>
 
 The `context` class template provides storage for each of the specified `E...` types. Typically, `context` objects are not used directly; they're created internally when the <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> functions are invoked, instantiated with types that are automatically deduced from the types of the arguments of the passed handlers.
 
@@ -3837,31 +3862,6 @@ Returns: :: `true` if the `*this` is active in any thread, `false` otherwise.
 
 '''
 
-[[context::print]]
-==== `print`
-
-.#include <boost/leaf/context.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-  template <class... E>
-  void context<E...>::print( std::ostream & os ) const;
-
-  template <class CharT, class Traits>
-  friend std::ostream & context<E...>::operator<<( std::basic_ostream<CharT, Traits> &, context const & )
-  {
-      ctx.print(os);
-      return os;
-  }
-
-} }
-----
-
-Effects: :: Prints all error objects currently stored in `*this`, together with the unique error ID each individual error object is associated with.
-
-'''
-
 [[context::unload]]
 ==== `unload`
 
@@ -3936,7 +3936,7 @@ namespace boost { namespace leaf {
   public:
 
     template <class Encoder>
-    void output_to( Encoder & e ) const;
+    void serialize_to( Encoder & e ) const;
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, diagnostic_details const & );
@@ -3951,7 +3951,7 @@ The message printed by `operator<<` includes the message printed by `error_info`
 
 The additional information includes the types and the values of all such error objects (but see  <<show_in_diagnostics>>).
 
-The `output_to` member function is used with the serialization system; see <<tutorial-serialization>>.
+The `serialize_to` member function is used with the serialization system; see <<tutorial-serialization>>.
 
 [NOTE]
 --
@@ -3980,7 +3980,7 @@ namespace boost { namespace leaf {
   public:
 
     template <class Encoder>
-    void output_to( Encoder & e ) const;
+    void serialize_to( Encoder & e ) const;
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, diagnostic_info const & );
@@ -3995,7 +3995,7 @@ The message printed by `operator<<` includes the message printed by `error_info`
 
 The additional information is limited to the type name of the first such error object, as well as their total count.
 
-The `output_to` member function is used with the serialization system; see <<tutorial-serialization>>.
+The `serialize_to` member function is used with the serialization system; see <<tutorial-serialization>>.
 
 [NOTE]
 --
@@ -4449,7 +4449,7 @@ namespace boost { namespace leaf {
     std::exception const * exception() const noexcept;
 
     template <class Encoder>
-    void output_to( Encoder & e ) const;
+    void serialize_to( Encoder & e ) const;
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, error_info const & );
@@ -4470,50 +4470,14 @@ WARNING: It is illegal to call the `exception` member function unless `exception
 
 The `operator<<` overload prints diagnostic information about each error object currently stored in the <<context>> local to the <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> scope that invoked the handler, but only if it is associated with the <<error_id>> returned by `error()`.
 
-The `output_to` member function is used with the serialization system; see <<tutorial-serialization>>.
+The `serialize_to` member function is used with the serialization system; see <<tutorial-serialization>>.
 
 '''
 
-[[json_encoder_boost]]
-=== `json_encoder_boost`
+[[nlohmann_json_encoder]]
+=== `nlohmann_json_encoder`
 
-.#include <boost/leaf/serialization/json_encoder_boost.hpp>
-[source,c++]
-----
-namespace boost { namespace leaf {
-
-namespace serialization
-{
-  struct json_encoder_boost
-  {
-    boost::json::value & v_;
-
-    // Enabled if x is assignable to boost::json::value, or
-    // if tag_invoke is defined for boost::json::value_from_tag.
-    template <class T>
-    friend void output( json_encoder_boost &, T const & x );
-
-    template <class T>
-    friend void output_at( json_encoder_boost &, T const &, char const * name );
-  };
-}
-
-} }
-----
-
-The `json_encoder_boost` type serializes error objects to JSON format using https://www.boost.org/doc/libs/release/libs/json/[Boost.JSON]. The `output` function is enabled for:
-
-* Types directly assignable to `boost::json::value`
-* Types for which a `tag_invoke` overload for `value_from_tag` can be found via ADL
-
-See <<tutorial-serialization>>.
-
-'''
-
-[[json_encoder_nlohmann]]
-=== `json_encoder_nlohmann`
-
-.#include <boost/leaf/serialization/json_encoder_nlohmann.hpp>
+.#include <boost/leaf/serialization/nlohmann_json_encoder.hpp>
 [source,c++]
 ----
 namespace boost { namespace leaf {
@@ -4521,23 +4485,23 @@ namespace boost { namespace leaf {
 namespace serialization
 {
   template <class Json>
-  struct json_encoder_nlohmann
+  struct nlohmann_json_encoder
   {
     Json & j_;
 
     // Enabled if to_json is available for Json and T.
     template <class T>
-    friend void output( json_encoder_nlohmann &, T const & x );
+    friend void output( nlohmann_json_encoder &, T const & x );
 
     template <class T>
-    friend void output_at( json_encoder_nlohmann &, T const &, char const * name );
+    friend void output_at( nlohmann_json_encoder &, T const &, char const * name );
   };
 }
 
 } }
 ----
 
-The `json_encoder_nlohmann` type serializes error objects to JSON format using unqualified calls to `to_json`. This is compatible with https://github.com/nlohmann/json[nlohmann/json]; See <<tutorial-serialization>>.
+The `nlohmann_json_encoder` type serializes error objects to JSON format using unqualified calls to `to_json`. This is compatible with https://github.com/nlohmann/json[nlohmann/json]; See <<tutorial-serialization>>.
 
 '''
 
@@ -4609,11 +4573,9 @@ namespace boost { namespace leaf {
 
     template <class... Item>
     error_id load( Item && ... item ) noexcept;
-    
-    void unload();
 
     template <class Encoder>
-    void output_to( Encoder & e ) const;
+    void serialize_to( Encoder & e ) const;
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const & );
@@ -4658,17 +4620,15 @@ namespace boost { namespace leaf {
 
     template <class... Item>
     error_id load( Item && ... item ) noexcept;
-    
-    void unload();
 
     template <class Encoder>
-    void output_to( Encoder & e ) const;
+    void serialize_to( Encoder & e ) const;
 
     template <class CharT, class Traits>
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const &);
   };
 
-  struct bad_result: std::exception { };
+  class bad_result: std::exception { };
 
   template <class T>
   struct is_result_type<result<T>>: std::true_type
@@ -4678,7 +4638,7 @@ namespace boost { namespace leaf {
 } }
 ----
 [.text-right]
-<<result::result>> | <<result::operator_eq>> | <<result::has_value>> | <<result::has_error>> | <<result::operator_bool>> | <<result::value>> | <<result::operator_ptr>> | <<result::operator_deref>> | <<result::error>> | <<result::load>> | <<result::output_to>>
+<<result::result>> | <<result::operator_eq>> | <<result::has_value>> | <<result::has_error>> | <<result::operator_bool>> | <<result::value>> | <<result::operator_ptr>> | <<result::operator_deref>> | <<result::error>> | <<result::load>> | <<result::serialize_to>>
 
 The `result<T>` type can be returned by functions which produce a value of type `T` but may fail doing so.
 
@@ -4960,7 +4920,7 @@ namespace boost { namespace leaf {
   template <class T>
   T & result<T>::value();
 
-  struct bad_result: std::exception { };
+  class bad_result: std::exception { };
 
 } }
 ----
@@ -4982,8 +4942,8 @@ A member type of `result<T>`, defined as a synonym for `T`.
 
 '''
 
-[[result::output_to]]
-==== `output_to`
+[[result::serialize_to]]
+==== `serialize_to`
 
 .#include <boost/leaf/result.hpp>
 [source,c++]
@@ -4992,16 +4952,16 @@ namespace boost { namespace leaf {
 
   template <class T>
   template <class Encoder>
-  void result<T>::output_to( Encoder & e ) const;
+  void result<T>::serialize_to( Encoder & e ) const;
 
 } }
 ----
 
-The `output_to` member function is used with the serialization system; see <<tutorial-serialization>>.
+The `serialize_to` member function is used with the serialization system; see <<tutorial-serialization>>.
 
 If the result is in <<result,value state>>, outputs the value. If it is in <<result,error state>>, outputs the <<error_id>>. If the result holds <<try_capture_all,captured error objects>>, outputs them as well.
 
-NOTE: Result objects carry error objects only when in <<try_capture_all,capture state>>. Otherwise, to output error objects, use `output_to` on <<diagnostic_details>> in an error handling scope.
+NOTE: Result objects carry error objects only when in <<try_capture_all,capture state>>. Otherwise, to output error objects, use `serialize_to` on <<diagnostic_details>> in an error handling scope.
 
 '''
 
@@ -5270,7 +5230,7 @@ leaf::try_handle_some(
 namespace boost { namespace leaf {
 
   template <class E, auto... V>
-  class match
+  struct match
   {
     <<deduced>> matched;
 

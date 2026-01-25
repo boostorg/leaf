@@ -46,7 +46,7 @@ protected:
     error_info( error_info const & ) noexcept = default;
 
     template <class Encoder>
-    void output_to_(Encoder & e) const
+    void serialize_to_(Encoder & e) const
     {
         static_assert(std::is_base_of<detail::encoder, Encoder>::value, "Encoder must derive from detail::encoder");
         detail::serialize_(e, err_id_);
@@ -88,10 +88,10 @@ public:
     }
 
     template <class Encoder>
-    void output_to(Encoder & e) const
+    void serialize_to(Encoder & e) const
     {
         detail::encoder_adaptor<Encoder> ea(e);
-        output_to_(ea);
+        serialize_to_(ea);
     }
 
     template <class CharT, class Traits>

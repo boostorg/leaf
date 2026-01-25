@@ -48,8 +48,6 @@ int main()
         leaf::result<int> r1 = f(ctx);
         BOOST_TEST(!r1);
 
-        std::cout << "ctx contents:" << std::endl << ctx;
-
         int r2 = ctx.handle_error<int>(
             r1.error(),
             std::move(handlers));

@@ -29,7 +29,7 @@ namespace detail
             friend class capture_list;
 
             virtual void unload( int err_id ) = 0;
-            virtual void output_to(encoder &, error_id const &) const = 0;
+            virtual void serialize_to(encoder &, error_id const &) const = 0;
 
         protected:
 
@@ -90,14 +90,14 @@ namespace detail
                 } );
         }
 
-        void output_to(encoder & e, error_id const & id) const
+        void serialize_to(encoder & e, error_id const & id) const
         {
             if( first_ )
             {
                 for_each(
                     [&e, &id]( node const & n )
                     {
-                        n.output_to(e, id);
+                        n.serialize_to(e, id);
                     } );
             }
         }

@@ -195,7 +195,7 @@ namespace detail
             tuple_for_each<I-1,Tup>::deactivate(tup);
         }
 
-        BOOST_LEAF_CONSTEXPR static void unload( Tup & tup, int err_id ) noexcept
+        BOOST_LEAF_CONSTEXPR static void unload( Tup & tup, int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE)
         {
             static_assert(!std::is_same<error_info, typename std::decay<decltype(std::get<I-1>(tup))>::type>::value, "Bug in LEAF: context type deduction");
             BOOST_LEAF_ASSERT(err_id != 0);
@@ -204,11 +204,11 @@ namespace detail
             tuple_for_each<I-1,Tup>::unload(tup, err_id);
         }
 
-        static void output_to(encoder & e, void const * tup, error_id id)
+        static void serialize_to(encoder & e, void const * tup, error_id id)
         {
             BOOST_LEAF_ASSERT(tup != nullptr);
-            tuple_for_each<I-1,Tup>::output_to(e, tup, id);
-            std::get<I-1>(*static_cast<Tup const *>(tup)).output_to(e, id);
+            tuple_for_each<I-1,Tup>::serialize_to(e, tup, id);
+            std::get<I-1>(*static_cast<Tup const *>(tup)).serialize_to(e, id);
         }
     };
 
@@ -218,13 +218,13 @@ namespace detail
         BOOST_LEAF_CONSTEXPR static void activate( Tup & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void deactivate( Tup & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void unload( Tup &, int ) noexcept { }
-        BOOST_LEAF_CONSTEXPR static void output_to(encoder &, void const *, error_id) { }
+        BOOST_LEAF_CONSTEXPR static void serialize_to(encoder &, void const *, error_id) { }
     };
 
     template <class Tup>
-    void output_tuple_contents(encoder & e, void const * tup, error_id id)
+    void serialize_tuple_contents_to(encoder & e, void const * tup, error_id id)
     {
-        tuple_for_each<std::tuple_size<Tup>::value, Tup>::output_to(e, tup, id);
+        tuple_for_each<std::tuple_size<Tup>::value, Tup>::serialize_to(e, tup, id);
     }
 } // namespace detail
 
@@ -357,7 +357,7 @@ public:
         tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_);
     }
 
-    BOOST_LEAF_CONSTEXPR void unload(error_id id) noexcept
+    BOOST_LEAF_CONSTEXPR void unload(error_id id) noexcept(!BOOST_LEAF_CFG_CAPTURE)
     {
         BOOST_LEAF_ASSERT(!is_active());
         detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::unload(tup_, id.value());
@@ -366,20 +366,6 @@ public:
     BOOST_LEAF_CONSTEXPR bool is_active() const noexcept
     {
         return is_active_;
-    }
-
-    void output_to( detail::diagnostics_writer & e ) const
-    {
-        detail::output_tuple_contents<Tup>(e, &tup_, error_id());
-    }
-
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, context const & ctx )
-    {
-        detail::diagnostics_writer w(os);
-        w.set_prefix("Contents:");
-        ctx.output_to(w);
-        return os;
     }
 
     template <class T>
