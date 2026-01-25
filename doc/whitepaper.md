@@ -28,7 +28,7 @@ What makes the above function interesting is that syntactically, it returns an `
 variant<int, float, error_code> compute_value(); // (B)
 ```
 
-Are the two functions (A) and (B) semantically equivalent? It appears that any algorithm working with the result from (A) can be transformed to handle a call to (B) without any loss of functionality. This follows directly form the fact that either way there are three distinct outcomes, so the differences should be purely mechanical rather than in logic.
+Are the two functions (A) and (B) semantically equivalent? It appears that any algorithm working with the result from (A) can be transformed to handle a call to (B) without any loss of functionality. This follows directly from the fact that either way there are three distinct outcomes, so the differences should be purely mechanical rather than in logic.
 
 In fact there is one subtle but critical difference: (A) encodes explicitly in the return object an additional bit of information -- "success-or-error" -- while in (B) that knowledge is implicit: we have to keep it in mind as we write the caller function, but it is not reflected in the program state.
 
@@ -67,7 +67,7 @@ Consider a function which opens a file using [`open()`](http://man7.org/linux/ma
 * Was the file opened successfully but the attempt to read it failed?
 * Was there a parsing error after the file was successfully read?
 
-Such simple booleans may be sufficient sometimes, but usually they are not. Reasonably, we need to respond differently depending on whether the call to `open()` resulted in `ENOENT` vs. `EACCESS` -- and if we got `EEXIST`, that would be a logic error. Therefore we need to know the relevant `errno` also.
+Such simple booleans may be sufficient sometimes, but usually they are not. Reasonably, we need to respond differently depending on whether the call to `open()` resulted in `ENOENT` vs. `EACCES` -- and if we got `EEXIST`, that would be a logic error. Therefore we need to know the relevant `errno` also.
 
 Secondly, if the file failed to open, we need to know the `pathname` passed to `open()`, in case it happens to be incorrect. But what if it is correct and yet `open()` failed? Right, we probably need to know the `flags` argument passed to `open()` as well.
 
@@ -257,7 +257,7 @@ Contemporary C++ exception handling is notorious for overhead<sup>[3](#reference
 
 * **Table-based** implementations (e.g. Itanium, x64) add to the cost of stack frames but only on the sad path. In fact, the performance of the happy path is often improved. However, if an exception is thrown and stack unwinding must commence, the table-based approach leads to a reduction in speed, compared to frame-based implementations.
 
-Table-based exception handling has been designed based on the questionable assumption that it is critical to eliminate speed overhead in programs that don't `throw`. I'm saying questionable, because in practice such programs are compiled with `-fno-exceptions`.
+Table-based exception handling has been designed based on the assumption that it is critical to eliminate speed overhead in programs that don't `throw`. This assumption merits scrutiny, because in practice such programs are compiled with `-fno-exceptions`.
 
 Ironically, the (older and less sophisticated) frame-based approach is preferable when we need to better control the cost of exception handling. The reason is that the overhead added to the happy path can be easily eliminated by inlining -- which is what we do anyway to deal with all other function-call overhead. This leaves only the cost of the sad path, which is also much more predictable, compared to the table-based approach.
 
@@ -338,7 +338,7 @@ main:
         ret
 ```
 
-Bluntly, this is not acceptable, since it is trivial to determine at compile time that the `throw`/`catch` pair is noop. What if the generated code is improved _only_ in this simple use case, where the `throw` and the matching `catch` are in the same stack frame? Under this condition, there is no need to invoke the ABI machinery to allocate an exception object or navigate the unwind tables; the analysis of the control flow can and should happen at compile time. We'd end up with simply
+This represents a missed optimization opportunity, since it is trivial to determine at compile time that the `throw`/`catch` pair is noop. What if the generated code is improved _only_ in this simple use case, where the `throw` and the matching `catch` are in the same stack frame? Under this condition, there is no need to invoke the ABI machinery to allocate an exception object or navigate the unwind tables; the analysis of the control flow can and should happen at compile time. We'd end up with simply
 
 ```x86asm
 main:
@@ -360,9 +360,9 @@ Using LEAF, *error handling* functions match error objects similarly to the way 
 Without exception handling, this is achieved using the following syntax:
 
 ```c++
-leaf::handle_all(
+leaf::try_handle_all(
 
-  // The first function passed to handle_all is akin to a try-block.
+  // The first function passed to try_handle_all is akin to a try-block.
   []() -> leaf::result<T>
   {
     // Operations which may fail, returning a T in case of success.
@@ -399,7 +399,7 @@ With exception handling:
 ```c++
 leaf::try_catch(
 
-  // The first function passed to handle_all is akin to a try-block.
+  // The first function passed to try_catch is akin to a try-block.
   []() -> T
   {
     // Operations which may fail, returning a T in case of success.
@@ -431,9 +431,9 @@ leaf::try_catch(
 );
 ```
 
-In LEAF, error objects are allocated using automatic duration, stored in a `std::tuple` in the scope of `leaf::handle_all` (or `leaf::try_catch`). The type arguments of the `std::tuple` template are automatically deduced from the types of the arguments of the error handling lambdas. If the try-block attempts to communicate error objects of any other type, these objects are discarded, since no error handler can make any use of them.
+In LEAF, error objects are allocated using automatic duration, stored in a `std::tuple` in the scope of `leaf::try_handle_all` (or `leaf::try_catch`). The type arguments of the `std::tuple` template are automatically deduced from the types of the arguments of the error handling lambdas. If the try-block attempts to communicate error objects of any other type, these objects are discarded, since no error handler can make any use of them.
 
-The `leaf::result<T>` template can be used as a return value for functions that may fail to produce a `T`. It carries the [*failure flag*](#1-the-semantics-of-a-failure) and, in case it is set, an integer serial number of the failure, while actual error objects are immediately moved into the matching storage reserved in the scope of an error handling function (e.g. `handle_all`) found in the call stack.
+The `leaf::result<T>` template can be used as a return value for functions that may fail to produce a `T`. It carries the [*failure flag*](#1-the-semantics-of-a-failure) and, in case it is set, an integer serial number of the failure, while actual error objects are immediately moved into the matching storage reserved in the scope of an error handling function (e.g. `try_handle_all`) found in the call stack.
 
 ## 7. Exception-safety vs. failure-safety
 

@@ -2074,7 +2074,7 @@ std::error_category const & resource_condition_category() <2>
 namespace std
 {
   template <> <5>
-  class is_error_condition_enum<resource_condition>: std::true_type
+  struct is_error_condition_enum<resource_condition>: std::true_type
   {
   };
 }
@@ -2522,8 +2522,6 @@ namespace boost { namespace leaf {
 
     template <class... Item>
     error_id load( Item && ... item ) noexcept;
-    
-    void unload();
 
     template <class Encoder>
     void serialize_to( Encoder & e ) const;
@@ -2571,8 +2569,6 @@ namespace boost { namespace leaf {
 
     template <class... Item>
     error_id load( Item && ... item ) noexcept;
-    
-    void unload();
 
     template <class Encoder>
     void serialize_to( Encoder & e ) const;
@@ -2581,7 +2577,7 @@ namespace boost { namespace leaf {
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const &);
   };
 
-  struct bad_result: std::exception { };
+  class bad_result: std::exception { };
 
   template <class T>
   struct is_result_type<result<T>>: std::true_type
@@ -4577,8 +4573,6 @@ namespace boost { namespace leaf {
 
     template <class... Item>
     error_id load( Item && ... item ) noexcept;
-    
-    void unload();
 
     template <class Encoder>
     void serialize_to( Encoder & e ) const;
@@ -4626,8 +4620,6 @@ namespace boost { namespace leaf {
 
     template <class... Item>
     error_id load( Item && ... item ) noexcept;
-    
-    void unload();
 
     template <class Encoder>
     void serialize_to( Encoder & e ) const;
@@ -4636,7 +4628,7 @@ namespace boost { namespace leaf {
     friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const &);
   };
 
-  struct bad_result: std::exception { };
+  class bad_result: std::exception { };
 
   template <class T>
   struct is_result_type<result<T>>: std::true_type
@@ -4928,7 +4920,7 @@ namespace boost { namespace leaf {
   template <class T>
   T & result<T>::value();
 
-  struct bad_result: std::exception { };
+  class bad_result: std::exception { };
 
 } }
 ----
@@ -5238,7 +5230,7 @@ leaf::try_handle_some(
 namespace boost { namespace leaf {
 
   template <class E, auto... V>
-  class match
+  struct match
   {
     <<deduced>> matched;
 
