@@ -118,7 +118,6 @@ struct show_in_diagnostics<e_source_location>: std::false_type
 
 namespace serialization
 {
-
     template <class Encoder, class T, class... Unused>
     typename std::enable_if<std::is_base_of<detail::encoder, Encoder>::value>::type
     serialize(Encoder &, T const &, char const *, Unused && ...)
@@ -863,13 +862,13 @@ namespace detail
     }
 }
 
-inline error_id new_error()
+BOOST_LEAF_ATTRIBUTE_NODISCARD inline error_id new_error()
 {
     return detail::make_error_id(detail::start_new_error());
 }
 
 template <class... Item>
-inline error_id new_error( Item && ... item )
+BOOST_LEAF_ATTRIBUTE_NODISCARD inline error_id new_error( Item && ... item )
 {
     return detail::make_error_id(detail::start_new_error()).load(std::forward<Item>(item)...);
 }

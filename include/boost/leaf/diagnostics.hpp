@@ -217,8 +217,6 @@ namespace detail
 
 #endif // #else (#if BOOST_LEAF_CFG_CAPTURE)
 
-using verbose_diagnostic_info = diagnostic_details;
-
 } } // namespace boost::leaf
 
 #endif // #ifndef BOOST_LEAF_DIAGNOSTICS_HPP_INCLUDED

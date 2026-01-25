@@ -410,13 +410,13 @@ public:
 #endif // #else (#if defined(BOOST_STRICT_CONFIG) || !defined(__clang__))
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-    result( std::error_code const & ec ) noexcept:
+    result( std::error_code const & ec ) noexcept(!BOOST_LEAF_CFG_CAPTURE):
         what_(error_id(ec))
     {
     }
 
     template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
-    result( Enum e ) noexcept:
+    result( Enum e ) noexcept(!BOOST_LEAF_CFG_CAPTURE):
         what_(error_id(e))
     {
     }
@@ -652,13 +652,13 @@ public:
     }
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-    result( std::error_code const & ec ) noexcept:
+    result( std::error_code const & ec ) noexcept(!BOOST_LEAF_CFG_CAPTURE):
         base(ec)
     {
     }
 
     template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
-    result( Enum e ) noexcept:
+    result( Enum e ) noexcept(!BOOST_LEAF_CFG_CAPTURE):
         base(e)
     {
     }

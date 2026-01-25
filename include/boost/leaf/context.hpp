@@ -195,7 +195,7 @@ namespace detail
             tuple_for_each<I-1,Tup>::deactivate(tup);
         }
 
-        BOOST_LEAF_CONSTEXPR static void unload( Tup & tup, int err_id ) noexcept
+        BOOST_LEAF_CONSTEXPR static void unload( Tup & tup, int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE)
         {
             static_assert(!std::is_same<error_info, typename std::decay<decltype(std::get<I-1>(tup))>::type>::value, "Bug in LEAF: context type deduction");
             BOOST_LEAF_ASSERT(err_id != 0);
@@ -357,7 +357,7 @@ public:
         tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_);
     }
 
-    BOOST_LEAF_CONSTEXPR void unload(error_id id) noexcept
+    BOOST_LEAF_CONSTEXPR void unload(error_id id) noexcept(!BOOST_LEAF_CFG_CAPTURE)
     {
         BOOST_LEAF_ASSERT(!is_active());
         detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::unload(tup_, id.value());
