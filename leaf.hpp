@@ -2,7 +2,7 @@
 #define BOOST_LEAF_HPP_INCLUDED
 
 // Boost LEAF single header distribution. Do not edit.
-// Generated on Jan 14, 2026 from https://github.com/boostorg/leaf/tree/fd0f976.
+// Generated on Jan 26, 2026 from https://github.com/boostorg/leaf/tree/0f20ce0.
 
 // Latest published version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
@@ -2721,7 +2721,7 @@ namespace detail
             friend class capture_list;
 
             virtual void unload( int err_id ) = 0;
-            virtual void output_to(encoder &, error_id const &) const = 0;
+            virtual void serialize_to(encoder &, error_id const &) const = 0;
 
         protected:
 
@@ -2782,14 +2782,14 @@ namespace detail
                 } );
         }
 
-        void output_to(encoder & e, error_id const & id) const
+        void serialize_to(encoder & e, error_id const & id) const
         {
             if( first_ )
             {
                 for_each(
                     [&e, &id]( node const & n )
                     {
-                        n.output_to(e, id);
+                        n.serialize_to(e, id);
                     } );
             }
         }
@@ -2913,7 +2913,6 @@ struct show_in_diagnostics<e_source_location>: std::false_type
 
 namespace serialization
 {
-
     template <class Encoder, class T, class... Unused>
     typename std::enable_if<std::is_base_of<detail::encoder, Encoder>::value>::type
     serialize(Encoder &, T const &, char const *, Unused && ...)
@@ -2997,7 +2996,7 @@ namespace detail
         void unload( int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE);
 
         template <class Encoder,class ErrorID>
-        void output_to(Encoder & e, ErrorID id) const
+        void serialize_to(Encoder & e, ErrorID id) const
         {
             static_assert(std::is_base_of<encoder, Encoder>::value, "Encoder must derive from detail::encoder");
             if( int k = this->key() )
@@ -3066,9 +3065,9 @@ namespace detail
             {
                 impl::unload(err_id);
             }
-            void output_to(encoder & e, error_id const & id) const override
+            void serialize_to(encoder & e, error_id const & id) const override
             {
-                impl::output_to(e, id);
+                impl::serialize_to(e, id);
             }
         public:
             BOOST_LEAF_CONSTEXPR explicit capturing_slot_node( capture_list::node * * & last ):
@@ -3101,7 +3100,7 @@ namespace detail
             {
                 std::rethrow_exception(ex_);
             }
-            void output_to(encoder &, error_id const &) const override
+            void serialize_to(encoder &, error_id const &) const override
             {
             }
             std::exception_ptr const ex_;
@@ -3201,7 +3200,7 @@ namespace detail
         }
 
         using capture_list::unload;
-        using capture_list::output_to;
+        using capture_list::serialize_to;
     }; // class dynamic_allocator
 
     template <class E>
@@ -3277,7 +3276,7 @@ namespace detail
         }
 
         template <class ErrorID>
-        void output_to(encoder &, ErrorID) const
+        void serialize_to(encoder &, ErrorID) const
         {
         }
     }; // slot specialization for dynamic_allocator
@@ -3658,13 +3657,13 @@ namespace detail
     }
 }
 
-inline error_id new_error()
+BOOST_LEAF_ATTRIBUTE_NODISCARD inline error_id new_error()
 {
     return detail::make_error_id(detail::start_new_error());
 }
 
 template <class... Item>
-inline error_id new_error( Item && ... item )
+BOOST_LEAF_ATTRIBUTE_NODISCARD inline error_id new_error( Item && ... item )
 {
     return detail::make_error_id(detail::start_new_error()).load(std::forward<Item>(item)...);
 }
@@ -3878,7 +3877,7 @@ namespace detail
             tuple_for_each<I-1,Tup>::deactivate(tup);
         }
 
-        BOOST_LEAF_CONSTEXPR static void unload( Tup & tup, int err_id ) noexcept
+        BOOST_LEAF_CONSTEXPR static void unload( Tup & tup, int err_id ) noexcept(!BOOST_LEAF_CFG_CAPTURE)
         {
             static_assert(!std::is_same<error_info, typename std::decay<decltype(std::get<I-1>(tup))>::type>::value, "Bug in LEAF: context type deduction");
             BOOST_LEAF_ASSERT(err_id != 0);
@@ -3887,11 +3886,11 @@ namespace detail
             tuple_for_each<I-1,Tup>::unload(tup, err_id);
         }
 
-        static void output_to(encoder & e, void const * tup, error_id id)
+        static void serialize_to(encoder & e, void const * tup, error_id id)
         {
             BOOST_LEAF_ASSERT(tup != nullptr);
-            tuple_for_each<I-1,Tup>::output_to(e, tup, id);
-            std::get<I-1>(*static_cast<Tup const *>(tup)).output_to(e, id);
+            tuple_for_each<I-1,Tup>::serialize_to(e, tup, id);
+            std::get<I-1>(*static_cast<Tup const *>(tup)).serialize_to(e, id);
         }
     };
 
@@ -3901,13 +3900,13 @@ namespace detail
         BOOST_LEAF_CONSTEXPR static void activate( Tup & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void deactivate( Tup & ) noexcept { }
         BOOST_LEAF_CONSTEXPR static void unload( Tup &, int ) noexcept { }
-        BOOST_LEAF_CONSTEXPR static void output_to(encoder &, void const *, error_id) { }
+        BOOST_LEAF_CONSTEXPR static void serialize_to(encoder &, void const *, error_id) { }
     };
 
     template <class Tup>
-    void output_tuple_contents(encoder & e, void const * tup, error_id id)
+    void serialize_tuple_contents_to(encoder & e, void const * tup, error_id id)
     {
-        tuple_for_each<std::tuple_size<Tup>::value, Tup>::output_to(e, tup, id);
+        tuple_for_each<std::tuple_size<Tup>::value, Tup>::serialize_to(e, tup, id);
     }
 } // namespace detail
 
@@ -4040,7 +4039,7 @@ public:
         tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_);
     }
 
-    BOOST_LEAF_CONSTEXPR void unload(error_id id) noexcept
+    BOOST_LEAF_CONSTEXPR void unload(error_id id) noexcept(!BOOST_LEAF_CFG_CAPTURE)
     {
         BOOST_LEAF_ASSERT(!is_active());
         detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::unload(tup_, id.value());
@@ -4049,20 +4048,6 @@ public:
     BOOST_LEAF_CONSTEXPR bool is_active() const noexcept
     {
         return is_active_;
-    }
-
-    void output_to( detail::diagnostics_writer & e ) const
-    {
-        detail::output_tuple_contents<Tup>(e, &tup_, error_id());
-    }
-
-    template <class CharT, class Traits>
-    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> & os, context const & ctx )
-    {
-        detail::diagnostics_writer w(os);
-        w.set_prefix("Contents:");
-        ctx.output_to(w);
-        return os;
     }
 
     template <class T>
@@ -4197,7 +4182,7 @@ protected:
     error_info( error_info const & ) noexcept = default;
 
     template <class Encoder>
-    void output_to_(Encoder & e) const
+    void serialize_to_(Encoder & e) const
     {
         static_assert(std::is_base_of<detail::encoder, Encoder>::value, "Encoder must derive from detail::encoder");
         detail::serialize_(e, err_id_);
@@ -4239,10 +4224,10 @@ public:
     }
 
     template <class Encoder>
-    void output_to(Encoder & e) const
+    void serialize_to(Encoder & e) const
     {
         detail::encoder_adaptor<Encoder> ea(e);
-        output_to_(ea);
+        serialize_to_(ea);
     }
 
     template <class CharT, class Traits>
@@ -5040,7 +5025,7 @@ namespace boost { namespace leaf {
 class diagnostic_info: public error_info
 {
     void const * tup_;
-    void (*output_tuple_contents_)(detail::encoder &, void const *, error_id);
+    void (*serialize_tuple_contents_to_)(detail::encoder &, void const *, error_id);
 
 protected:
 
@@ -5050,25 +5035,25 @@ protected:
     BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei, Tup const & tup ) noexcept:
         error_info(ei),
         tup_(&tup),
-        output_tuple_contents_(&detail::output_tuple_contents<Tup>)
+        serialize_tuple_contents_to_(&detail::serialize_tuple_contents_to<Tup>)
     {
     }
 
     template <class Encoder>
-    void output_to_(Encoder & e) const
+    void serialize_to_(Encoder & e) const
     {
         static_assert(std::is_base_of<detail::encoder, Encoder>::value, "Encoder must derive from detail::encoder");
-        output_tuple_contents_(e, tup_, error());
+        serialize_tuple_contents_to_(e, tup_, error());
     }
 
 public:
 
     template <class Encoder>
-    void output_to(Encoder & e) const
+    void serialize_to(Encoder & e) const
     {
         detail::encoder_adaptor<Encoder> ea(e);
-        error_info::output_to_(ea);
-        output_to_(ea);
+        error_info::serialize_to_(ea);
+        serialize_to_(ea);
     }
 
     template <class CharT, class Traits>
@@ -5076,7 +5061,7 @@ public:
     {
         detail::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
 #if BOOST_LEAF_CFG_DIAGNOSTICS
-        x.output_to_(w);
+        x.serialize_to_(w);
 #else
         os << "\nboost::leaf::diagnostic_info N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
 #endif
@@ -5126,22 +5111,22 @@ protected:
     }
 
     template <class Encoder>
-    void output_to_(Encoder & e) const
+    void serialize_to_(Encoder & e) const
     {
         static_assert(std::is_base_of<detail::encoder, Encoder>::value, "Encoder must derive from detail::encoder");
         if( da_ )
-            da_->output_to(e, error());
+            da_->serialize_to(e, error());
     }
 
 public:
 
     template <class Encoder>
-    void output_to(Encoder & e) const
+    void serialize_to(Encoder & e) const
     {
         detail::encoder_adaptor<Encoder> ea(e);
-        error_info::output_to_(ea);
-        diagnostic_info::output_to_(ea);
-        output_to_(ea);
+        error_info::serialize_to_(ea);
+        diagnostic_info::serialize_to_(ea);
+        serialize_to_(ea);
     }
 
     template <class CharT, class Traits>
@@ -5149,9 +5134,9 @@ public:
     {
         detail::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
 #if BOOST_LEAF_CFG_DIAGNOSTICS
-        x.diagnostic_info::output_to_(w);
+        x.diagnostic_info::serialize_to_(w);
         w.set_prefix("\nDiagnostic details:" BOOST_LEAF_CFG_DIAGNOSTICS_FIRST_DELIMITER);
-        x.output_to_(w);
+        x.serialize_to_(w);
 #else
         os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
 #endif
@@ -5199,11 +5184,11 @@ protected:
 public:
 
     template <class Encoder>
-    void output_to(Encoder & e) const
+    void serialize_to(Encoder & e) const
     {
         detail::encoder_adaptor<Encoder> ea(e);
-        error_info::output_to_(ea);
-        diagnostic_info::output_to_(ea);
+        error_info::serialize_to_(ea);
+        diagnostic_info::serialize_to_(ea);
     }
 
     template <class CharT, class Traits>
@@ -5211,7 +5196,7 @@ public:
     {
         detail::diagnostics_writer w(os, x.error(), x.source_location(), x.exception());
 #if BOOST_LEAF_CFG_DIAGNOSTICS
-        x.diagnostic_info::output_to_(w);
+        x.diagnostic_info::serialize_to_(w);
         os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_CAPTURE=0";
 #else
         os << "\nboost::leaf::diagnostic_details N/A due to BOOST_LEAF_CFG_DIAGNOSTICS=0";
@@ -5243,8 +5228,6 @@ namespace detail
 }
 
 #endif // #else (#if BOOST_LEAF_CFG_CAPTURE)
-
-using verbose_diagnostic_info = diagnostic_details;
 
 } } // namespace boost::leaf
 
@@ -5544,7 +5527,7 @@ exception_to_result( F && f ) noexcept(!BOOST_LEAF_CFG_CAPTURE)
 } } // namespace boost::leaf
 
 #endif // #ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4155
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4140
 // >>> #include <boost/leaf/on_error.hpp>
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
@@ -5891,7 +5874,7 @@ on_error( Item && ... i )
 
 // #line 8 "boost/leaf/pred.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4155
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4140
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -6185,7 +6168,7 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 
 // #line 8 "boost/leaf/result.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/exception.hpp> // Expanded at line 5254
+// #include <boost/leaf/exception.hpp> // Expanded at line 5237
 // #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1441
 // #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 2696
 
@@ -6493,7 +6476,7 @@ protected:
         if( what_.kind() == result_discriminant::err_id_capture_list )
         {
 #if BOOST_LEAF_CFG_CAPTURE
-            cap_.output_to(e, err_id);
+            cap_.serialize_to(e, err_id);
 #else
             BOOST_LEAF_ASSERT(0); // Possible ODR violation.
 #endif
@@ -6589,13 +6572,13 @@ public:
 #endif // #else (#if defined(BOOST_STRICT_CONFIG) || !defined(__clang__))
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-    result( std::error_code const & ec ) noexcept:
+    result( std::error_code const & ec ) noexcept(!BOOST_LEAF_CFG_CAPTURE):
         what_(error_id(ec))
     {
     }
 
     template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
-    result( Enum e ) noexcept:
+    result( Enum e ) noexcept(!BOOST_LEAF_CFG_CAPTURE):
         what_(error_id(e))
     {
     }
@@ -6756,7 +6739,7 @@ public:
     }
 
     template <class Encoder>
-    void output_to(Encoder & e) const
+    void serialize_to(Encoder & e) const
     {
         detail::encoder_adaptor<Encoder> ea(e);
         if( what_.kind() == result_discriminant::val )
@@ -6831,13 +6814,13 @@ public:
     }
 
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
-    result( std::error_code const & ec ) noexcept:
+    result( std::error_code const & ec ) noexcept(!BOOST_LEAF_CFG_CAPTURE):
         base(ec)
     {
     }
 
     template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
-    result( Enum e ) noexcept:
+    result( Enum e ) noexcept(!BOOST_LEAF_CFG_CAPTURE):
         base(e)
     {
     }
@@ -6875,7 +6858,7 @@ public:
     }
 
     template <class Encoder>
-    void output_to(Encoder & e) const
+    void serialize_to(Encoder & e) const
     {
         if( !*this )
         {
@@ -6920,11 +6903,11 @@ struct is_result_type<result<T>>: std::true_type
 } } // namespace boost::leaf
 
 #endif // #ifndef BOOST_LEAF_RESULT_HPP_INCLUDED
-// >>> #include <boost/leaf/serialization/json_encoder_boost.hpp>
-#ifndef BOOST_LEAF_SERIALIZATION_JSON_ENCODER_BOOST_HPP_INCLUDED
-#define BOOST_LEAF_SERIALIZATION_JSON_ENCODER_BOOST_HPP_INCLUDED
+// >>> #include <boost/leaf/serialization/boost_json_encoder.hpp>
+#ifndef BOOST_LEAF_SERIALIZATION_BOOST_JSON_ENCODER_HPP_INCLUDED
+#define BOOST_LEAF_SERIALIZATION_BOOST_JSON_ENCODER_HPP_INCLUDED
 
-// #line 8 "boost/leaf/serialization/json_encoder_boost.hpp"
+// #line 8 "boost/leaf/serialization/boost_json_encoder.hpp"
 #include <utility>
 
 namespace boost { namespace json {
@@ -6939,43 +6922,43 @@ namespace boost { namespace leaf {
 namespace serialization
 {
     template <class Value = boost::json::value, class ValueFromTag = boost::json::value_from_tag>
-    struct json_encoder_boost_
+    struct boost_json_encoder_
     {
         Value & v_;
 
         template <class T>
-        friend auto output(json_encoder_boost_ & e, T const & x) -> decltype(std::declval<Value &>() = x, void())
+        friend auto output(boost_json_encoder_ & e, T const & x) -> decltype(std::declval<Value &>() = x, void())
         {
             e.v_ = x;
         }
 
         template <class T>
-        friend auto output(json_encoder_boost_ & e, T const & x) -> decltype(tag_invoke(std::declval<ValueFromTag>(), std::declval<Value &>(), x), void())
+        friend auto output(boost_json_encoder_ & e, T const & x) -> decltype(tag_invoke(std::declval<ValueFromTag>(), std::declval<Value &>(), x), void())
         {
             tag_invoke(ValueFromTag{}, e.v_, x);
         }
 
         template <class T>
-        friend void output_at(json_encoder_boost_ & e, T const & x, char const * name)
+        friend void output_at(boost_json_encoder_ & e, T const & x, char const * name)
         {
             if( e.v_.is_null() )
                 e.v_.emplace_object();
-            json_encoder_boost_ nested{e.v_.as_object()[name]};
+            boost_json_encoder_ nested{e.v_.as_object()[name]};
             output(nested, x);
         }
     };
 
-    using json_encoder_boost = json_encoder_boost_<>;
+    using boost_json_encoder = boost_json_encoder_<>;
 }
 
 } }
 
 #endif
-// >>> #include <boost/leaf/serialization/json_encoder_nlohmann.hpp>
-#ifndef BOOST_LEAF_SERIALIZATION_JSON_ENCODER_NLOHMANN_HPP_INCLUDED
-#define BOOST_LEAF_SERIALIZATION_JSON_ENCODER_NLOHMANN_HPP_INCLUDED
+// >>> #include <boost/leaf/serialization/nlohmann_json_encoder.hpp>
+#ifndef BOOST_LEAF_SERIALIZATION_NLOHMANN_JSON_ENCODER_HPP_INCLUDED
+#define BOOST_LEAF_SERIALIZATION_NLOHMANN_JSON_ENCODER_HPP_INCLUDED
 
-// #line 8 "boost/leaf/serialization/json_encoder_nlohmann.hpp"
+// #line 8 "boost/leaf/serialization/nlohmann_json_encoder.hpp"
 #include <utility>
 
 namespace boost { namespace leaf {
@@ -6983,20 +6966,20 @@ namespace boost { namespace leaf {
 namespace serialization
 {
     template <class Json>
-    struct json_encoder_nlohmann
+    struct nlohmann_json_encoder
     {
         Json & j_;
 
         template <class T>
-        friend auto output(json_encoder_nlohmann & e, T const & x) -> decltype(to_json(std::declval<Json &>(), x), void())
+        friend auto output(nlohmann_json_encoder & e, T const & x) -> decltype(to_json(std::declval<Json &>(), x), void())
         {
             to_json(e.j_, x);
         }
 
         template <class T>
-        friend void output_at(json_encoder_nlohmann & e, T const & x, char const * name)
+        friend void output_at(nlohmann_json_encoder & e, T const & x, char const * name)
         {
-            json_encoder_nlohmann nested{e.j_[name]};
+            nlohmann_json_encoder nested{e.j_[name]};
             output(nested, x);
         }
     };
@@ -7013,8 +6996,8 @@ namespace serialization
 #if __cplusplus >= 201703L
 
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4155
-// #include <boost/leaf/result.hpp> // Expanded at line 6183
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4140
+// #include <boost/leaf/result.hpp> // Expanded at line 6166
 #include <variant>
 #include <optional>
 #include <tuple>
