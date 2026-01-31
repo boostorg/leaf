@@ -16,7 +16,7 @@ namespace serialization
     struct encoder_adl {};
 
     template <class Encoder, class T>
-    auto output(Encoder & e, T const & x) -> decltype(output(e, x.value))
+    auto output(Encoder & e, T const & x) -> decltype(output(e, x.value), void())
     {
         output(e, x.value);
     }

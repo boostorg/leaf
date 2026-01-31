@@ -2873,8 +2873,9 @@ namespace serialization
   {
     boost::json::value & v_;
 
-    // Enabled if x is assignable to boost::json::value, or
-    // if tag_invoke is defined for boost::json::value_from_tag.
+    // Uses unspecified SFINAE expression designed to select this overload
+    // only if no other compatible overload is found.
+    // Implemented in terms of boost::json::value_from.
     template <class T>
     friend void output( boost_json_encoder &, T const & x );
 
@@ -2906,7 +2907,9 @@ namespace serialization
   {
     Json & j_;
 
-    // Enabled if to_json is available for Json and T.
+    // Uses unspecified SFINAE expression designed to select this overload
+    // only if no other compatible overload is found.
+    // Implemented in terms of to_json.
     template <class T>
     friend void output( nlohmann_json_encoder &, T const & x );
 
@@ -3667,8 +3670,9 @@ namespace serialization
   {
     boost::json::value & v_;
 
-    // Enabled if x is assignable to boost::json::value, or
-    // if tag_invoke is defined for boost::json::value_from_tag.
+    // Uses unspecified SFINAE expression designed to select this overload
+    // only if no other compatible overload is found.
+    // Implemented in terms of boost::json::value_from.
     template <class T>
     friend void output( boost_json_encoder &, T const & x );
 
@@ -3680,10 +3684,7 @@ namespace serialization
 } }
 ----
 
-The `boost_json_encoder` type serializes error objects to JSON format using https://www.boost.org/doc/libs/release/libs/json/[Boost.JSON]. The `output` function is enabled for:
-
-* Types directly assignable to `boost::json::value`
-* Types for which a `tag_invoke` overload for `value_from_tag` can be found via ADL
+The `boost_json_encoder` type serializes error objects to JSON format using https://www.boost.org/doc/libs/release/libs/json/[Boost.JSON]. The `output` function is implemented in terms of `boost::json::value_from`.
 
 See <<tutorial-serialization>>.
 
@@ -4489,7 +4490,9 @@ namespace serialization
   {
     Json & j_;
 
-    // Enabled if to_json is available for Json and T.
+    // Uses unspecified SFINAE expression designed to select this overload
+    // only if no other compatible overload is found.
+    // Implemented in terms of to_json.
     template <class T>
     friend void output( nlohmann_json_encoder &, T const & x );
 

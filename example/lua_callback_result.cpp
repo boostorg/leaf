@@ -57,7 +57,8 @@ int do_work( lua_State * L )
     }
     else
     {
-        return leaf::new_error(ec1), luaL_error(L,"do_work_error"); // luaL_error does not return (longjmp).
+        (void) leaf::new_error(ec1);
+        return luaL_error(L,"do_work_error"); // luaL_error does not return (longjmp).
     }
 }
 

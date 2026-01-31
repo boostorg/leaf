@@ -18,10 +18,11 @@ namespace serialization
         Json & j_;
 
         template <class Encoder, class T, class... Deprioritize>
-        friend typename std::enable_if<std::is_same<Encoder, nlohmann_json_encoder>::value>::type
-        output(Encoder & e, T const & x, Json * = 0, Deprioritize...)
+        friend typename std::enable_if<std::is_same<Encoder, nlohmann_json_encoder>::value, Json *>::type
+        output(Encoder & e, T const & x, Deprioritize...)
         {
             to_json(e.j_, x);
+            return 0;
         }
 
         template <class T>
