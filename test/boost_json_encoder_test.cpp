@@ -17,6 +17,7 @@
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 #if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 #   include <system_error>
 #endif
@@ -76,6 +77,11 @@ struct my_error
     }
 };
 
+struct my_error_with_vector
+{
+    std::vector<int> value;
+};
+
 leaf::result<void> fail()
 {
     return BOOST_LEAF_NEW_ERROR(
@@ -87,6 +93,7 @@ leaf::result<void> fail()
         42,
         my_error<1>{1, "error one"},
         my_error<2>{2, "error two"},
+        my_error_with_vector{{10, 20, 30}},
         leaf::e_errno{ENOENT},
         leaf::e_api_function{"my_api_function"} );
 }
@@ -103,6 +110,7 @@ void leaf_throw()
         42,
         my_error<1>{1, "error one"},
         my_error<2>{2, "error two"},
+        my_error_with_vector{{10, 20, 30}},
         leaf::e_errno{ENOENT},
         leaf::e_api_function{"my_api_function"} );
 }
@@ -118,6 +126,7 @@ void throw_()
         42,
         my_error<1>{1, "error one"},
         my_error<2>{2, "error two"},
+        my_error_with_vector{{10, 20, 30}},
         leaf::e_errno{ENOENT},
         leaf::e_api_function{"my_api_function"} );
     throw my_exception{};
@@ -166,6 +175,13 @@ void check_diagnostic_details(boost::json::value const & j, bool has_source_loca
         auto const & e2j = j.at("my_error<2>");
         BOOST_TEST_EQ(boost::json::value_to<int>(e2j.at("code")), 2);
         BOOST_TEST_EQ(boost::json::value_to<std::string>(e2j.at("message")), "error two");
+
+        auto const & vj = j.at("my_error_with_vector");
+        BOOST_TEST(vj.is_array());
+        BOOST_TEST_EQ(vj.as_array().size(), 3);
+        BOOST_TEST_EQ(boost::json::value_to<int>(vj.as_array()[0]), 10);
+        BOOST_TEST_EQ(boost::json::value_to<int>(vj.as_array()[1]), 20);
+        BOOST_TEST_EQ(boost::json::value_to<int>(vj.as_array()[2]), 30);
 
         auto const & ej = j.at("boost::leaf::e_errno");
         BOOST_TEST_EQ(boost::json::value_to<int>(ej.at("errno")), ENOENT);
