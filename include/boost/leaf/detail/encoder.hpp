@@ -8,6 +8,8 @@
 #include <boost/leaf/config.hpp>
 #include <boost/leaf/detail/type_name.hpp>
 #include <boost/leaf/detail/function_traits.hpp>
+#include <type_traits>
+#include <utility>
 
 namespace boost { namespace leaf {
 
@@ -16,7 +18,10 @@ namespace serialization
     struct encoder_adl {};
 
     template <class Encoder, class T>
-    auto output(Encoder & e, T const & x) -> decltype(output(e, x.value))
+    typename std::enable_if<
+        sizeof(T) == sizeof(decltype(std::declval<T const &>().value)),
+        decltype(output(std::declval<Encoder &>(), std::declval<T const &>().value), void())>::type
+    output(Encoder & e, T const & x)
     {
         output(e, x.value);
     }
