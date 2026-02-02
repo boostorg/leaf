@@ -3712,8 +3712,9 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
   <span class="p">{</span>
     <span class="n">boost</span><span class="o">::</span><span class="n">json</span><span class="o">::</span><span class="n">value</span> <span class="o">&amp;</span> <span class="n">v_</span><span class="p">;</span>
 
-    <span class="c1">// Enabled if x is assignable to boost::json::value, or</span>
-    <span class="c1">// if tag_invoke is defined for boost::json::value_from_tag.</span>
+    <span class="c1">// Uses unspecified SFINAE expression designed to select this overload</span>
+    <span class="c1">// only if no other compatible overload is found.</span>
+    <span class="c1">// Implemented in terms of boost::json::value_from.</span>
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
     <span class="k">friend</span> <span class="kt">void</span> <span class="n">output</span><span class="p">(</span> <span class="n">boost_json_encoder</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">x</span> <span class="p">);</span>
 
@@ -3747,7 +3748,9 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
   <span class="p">{</span>
     <span class="n">Json</span> <span class="o">&amp;</span> <span class="n">j_</span><span class="p">;</span>
 
-    <span class="c1">// Enabled if to_json is available for Json and T.</span>
+    <span class="c1">// Uses unspecified SFINAE expression designed to select this overload</span>
+    <span class="c1">// only if no other compatible overload is found.</span>
+    <span class="c1">// Implemented in terms of to_json.</span>
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
     <span class="k">friend</span> <span class="kt">void</span> <span class="n">output</span><span class="p">(</span> <span class="n">nlohmann_json_encoder</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">x</span> <span class="p">);</span>
 
@@ -5049,8 +5052,9 @@ The contents of each Reference section are organized alphabetically.
   <span class="p">{</span>
     <span class="n">boost</span><span class="o">::</span><span class="n">json</span><span class="o">::</span><span class="n">value</span> <span class="o">&amp;</span> <span class="n">v_</span><span class="p">;</span>
 
-    <span class="c1">// Enabled if x is assignable to boost::json::value, or</span>
-    <span class="c1">// if tag_invoke is defined for boost::json::value_from_tag.</span>
+    <span class="c1">// Uses unspecified SFINAE expression designed to select this overload</span>
+    <span class="c1">// only if no other compatible overload is found.</span>
+    <span class="c1">// Implemented in terms of boost::json::value_from.</span>
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
     <span class="k">friend</span> <span class="kt">void</span> <span class="n">output</span><span class="p">(</span> <span class="n">boost_json_encoder</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">x</span> <span class="p">);</span>
 
@@ -5063,17 +5067,7 @@ The contents of each Reference section are organized alphabetically.
 </div>
 </div>
 <div class="paragraph">
-<p>The <code>boost_json_encoder</code> type serializes error objects to JSON format using <a href="https://www.boost.org/doc/libs/release/libs/json/">Boost.JSON</a>. The <code>output</code> function is enabled for:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Types directly assignable to <code>boost::json::value</code></p>
-</li>
-<li>
-<p>Types for which a <code>tag_invoke</code> overload for <code>value_from_tag</code> can be found via ADL</p>
-</li>
-</ul>
+<p>The <code>boost_json_encoder</code> type serializes error objects to JSON format using <a href="https://www.boost.org/doc/libs/release/libs/json/">Boost.JSON</a>. The <code>output</code> function is implemented in terms of <code>boost::json::value_from</code>.</p>
 </div>
 <div class="paragraph">
 <p>See <a href="#tutorial-serialization">Serialization</a>.</p>
@@ -6240,7 +6234,9 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
   <span class="p">{</span>
     <span class="n">Json</span> <span class="o">&amp;</span> <span class="n">j_</span><span class="p">;</span>
 
-    <span class="c1">// Enabled if to_json is available for Json and T.</span>
+    <span class="c1">// Uses unspecified SFINAE expression designed to select this overload</span>
+    <span class="c1">// only if no other compatible overload is found.</span>
+    <span class="c1">// Implemented in terms of to_json.</span>
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
     <span class="k">friend</span> <span class="kt">void</span> <span class="n">output</span><span class="p">(</span> <span class="n">nlohmann_json_encoder</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">T</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">x</span> <span class="p">);</span>
 

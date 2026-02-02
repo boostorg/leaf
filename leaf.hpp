@@ -2,7 +2,7 @@
 #define BOOST_LEAF_HPP_INCLUDED
 
 // Boost LEAF single header distribution. Do not edit.
-// Generated on Jan 26, 2026 from https://github.com/boostorg/leaf/tree/0f20ce0.
+// Generated on Feb 02, 2026 from https://github.com/boostorg/leaf/tree/710797a.
 
 // Latest published version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
@@ -2155,6 +2155,8 @@ namespace detail
 #endif // #ifndef BOOST_LEAF_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED
 // <<< #include <boost/leaf/detail/function_traits.hpp>
 // #line 11 "boost/leaf/detail/encoder.hpp"
+#include <type_traits>
+#include <utility>
 
 namespace boost { namespace leaf {
 
@@ -2163,7 +2165,10 @@ namespace serialization
     struct encoder_adl {};
 
     template <class Encoder, class T>
-    auto output(Encoder & e, T const & x) -> decltype(output(e, x.value))
+    typename std::enable_if<
+        sizeof(T) == sizeof(decltype(std::declval<T const &>().value)),
+        decltype(output(std::declval<Encoder &>(), std::declval<T const &>().value), void())>::type
+    output(Encoder & e, T const & x)
     {
         output(e, x.value);
     }
@@ -5232,15 +5237,15 @@ namespace detail
 } } // namespace boost::leaf
 
 #endif // #ifndef BOOST_LEAF_DIAGNOSTICS_HPP_INCLUDED
-// #include <boost/leaf/error.hpp> // Expanded at line 2508
+// #include <boost/leaf/error.hpp> // Expanded at line 2513
 // >>> #include <boost/leaf/exception.hpp>
 #ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
 #define BOOST_LEAF_EXCEPTION_HPP_INCLUDED
 
 // #line 8 "boost/leaf/exception.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/error.hpp> // Expanded at line 2508
-// #include <boost/leaf/detail/exception_base.hpp> // Expanded at line 2243
+// #include <boost/leaf/error.hpp> // Expanded at line 2513
+// #include <boost/leaf/detail/exception_base.hpp> // Expanded at line 2248
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 #   include <typeinfo>
@@ -5527,14 +5532,14 @@ exception_to_result( F && f ) noexcept(!BOOST_LEAF_CFG_CAPTURE)
 } } // namespace boost::leaf
 
 #endif // #ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4140
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4145
 // >>> #include <boost/leaf/on_error.hpp>
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 
 // #line 8 "boost/leaf/on_error.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/error.hpp> // Expanded at line 2508
+// #include <boost/leaf/error.hpp> // Expanded at line 2513
 
 namespace boost { namespace leaf {
 
@@ -5874,7 +5879,7 @@ on_error( Item && ... i )
 
 // #line 8 "boost/leaf/pred.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4140
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4145
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -6168,9 +6173,9 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 
 // #line 8 "boost/leaf/result.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/exception.hpp> // Expanded at line 5237
+// #include <boost/leaf/exception.hpp> // Expanded at line 5242
 // #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1441
-// #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 2696
+// #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 2701
 
 #include <functional>
 
@@ -6908,12 +6913,15 @@ struct is_result_type<result<T>>: std::true_type
 #define BOOST_LEAF_SERIALIZATION_BOOST_JSON_ENCODER_HPP_INCLUDED
 
 // #line 8 "boost/leaf/serialization/boost_json_encoder.hpp"
+#include <type_traits>
 #include <utility>
 
 namespace boost { namespace json {
 
 class value;
-struct value_from_tag;
+
+template <class T>
+void value_from(T &&, value &);
 
 } }
 
@@ -6921,21 +6929,16 @@ namespace boost { namespace leaf {
 
 namespace serialization
 {
-    template <class Value = boost::json::value, class ValueFromTag = boost::json::value_from_tag>
+    template <class Value = boost::json::value>
     struct boost_json_encoder_
     {
         Value & v_;
 
-        template <class T>
-        friend auto output(boost_json_encoder_ & e, T const & x) -> decltype(std::declval<Value &>() = x, void())
+        template <class Encoder, class T, class... Deprioritize>
+        friend typename std::enable_if<std::is_same<Encoder, boost_json_encoder_>::value>::type
+        output(Encoder & e, T const & x, Deprioritize...)
         {
-            e.v_ = x;
-        }
-
-        template <class T>
-        friend auto output(boost_json_encoder_ & e, T const & x) -> decltype(tag_invoke(std::declval<ValueFromTag>(), std::declval<Value &>(), x), void())
-        {
-            tag_invoke(ValueFromTag{}, e.v_, x);
+            boost::json::value_from(x, e.v_);
         }
 
         template <class T>
@@ -6959,6 +6962,7 @@ namespace serialization
 #define BOOST_LEAF_SERIALIZATION_NLOHMANN_JSON_ENCODER_HPP_INCLUDED
 
 // #line 8 "boost/leaf/serialization/nlohmann_json_encoder.hpp"
+#include <type_traits>
 #include <utility>
 
 namespace boost { namespace leaf {
@@ -6970,10 +6974,12 @@ namespace serialization
     {
         Json & j_;
 
-        template <class T>
-        friend auto output(nlohmann_json_encoder & e, T const & x) -> decltype(to_json(std::declval<Json &>(), x), void())
+        template <class Encoder, class T, class... Deprioritize>
+        friend typename std::enable_if<std::is_same<Encoder, nlohmann_json_encoder>::value, Json *>::type
+        output(Encoder & e, T const & x, Deprioritize...)
         {
             to_json(e.j_, x);
+            return 0;
         }
 
         template <class T>
@@ -6996,8 +7002,8 @@ namespace serialization
 #if __cplusplus >= 201703L
 
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4140
-// #include <boost/leaf/result.hpp> // Expanded at line 6166
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4145
+// #include <boost/leaf/result.hpp> // Expanded at line 6171
 #include <variant>
 #include <optional>
 #include <tuple>
