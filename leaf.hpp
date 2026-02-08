@@ -2,7 +2,7 @@
 #define BOOST_LEAF_HPP_INCLUDED
 
 // Boost LEAF single header distribution. Do not edit.
-// Generated on Feb 02, 2026 from https://github.com/boostorg/leaf/tree/710797a.
+// Generated on Feb 08, 2026 from https://github.com/boostorg/leaf/tree/f3ac550.
 
 // Latest published version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
@@ -641,10 +641,10 @@ namespace tls
 #endif
 
 #include <atomic>
-#include <unordered_map>
 #include <cstdint>
 #include <new>
 #include <stdexcept>
+#include <utility>
 #include <windows.h>
 #ifdef min
 #   undef min
@@ -653,18 +653,9 @@ namespace tls
 #   undef max
 #endif
 
-namespace boost { namespace leaf {
+#pragma pack(push, 8)
 
-// Thrown on TLS allocation failure.
-class win32_tls_error:
-    public std::runtime_error
-{
-public:
-    explicit win32_tls_error(char const * what) noexcept:
-        std::runtime_error(what)
-    {
-    }
-};
+namespace boost { namespace leaf {
 
 namespace detail
 {
@@ -700,56 +691,45 @@ namespace detail
         }
     }
 
-    template <class T>
-    class heap_allocator
+    class srwlock_shared
     {
+        srwlock_shared(srwlock_shared const &) = delete;
+        srwlock_shared & operator=(srwlock_shared const &) = delete;
+
+        SRWLOCK & lock_;
+
     public:
 
-        using value_type = T;
-
-        heap_allocator() noexcept = default;
-
-        template <class U>
-        heap_allocator(heap_allocator<U> const &) noexcept
+        explicit srwlock_shared(SRWLOCK & lock) noexcept:
+            lock_(lock)
         {
+            AcquireSRWLockShared(&lock_);
         }
 
-        T * allocate(std::size_t n) noexcept
+        ~srwlock_shared() noexcept
         {
-            if (void * p = HeapAlloc(GetProcessHeap(), 0, n * sizeof(T)))
-                return static_cast<T *>(p);
-            raise_fail_fast(STATUS_NO_MEMORY);
-            BOOST_LEAF_UNREACHABLE;
+            ReleaseSRWLockShared(&lock_);
         }
-
-        void deallocate(T * p, std::size_t) noexcept
-        {
-            BOOL r = HeapFree(GetProcessHeap(), 0, p);
-            BOOST_LEAF_ASSERT(r), (void) r;
-        }
-
-        friend bool operator==(heap_allocator const &, heap_allocator const &) noexcept { return true; }
-        friend bool operator!=(heap_allocator const &, heap_allocator const &) noexcept { return false; }
     };
 
-    class critical_section_lock
+    class srwlock_exclusive
     {
-        critical_section_lock(critical_section_lock const &) = delete;
-        critical_section_lock & operator=(critical_section_lock const &) = delete;
+        srwlock_exclusive(srwlock_exclusive const &) = delete;
+        srwlock_exclusive & operator=(srwlock_exclusive const &) = delete;
 
-        CRITICAL_SECTION & cs_;
+        SRWLOCK & lock_;
 
     public:
 
-        explicit critical_section_lock(CRITICAL_SECTION & cs) noexcept:
-            cs_(cs)
+        explicit srwlock_exclusive(SRWLOCK & lock) noexcept:
+            lock_(lock)
         {
-            EnterCriticalSection(&cs_);
+            AcquireSRWLockExclusive(&lock_);
         }
 
-        ~critical_section_lock() noexcept
+        ~srwlock_exclusive() noexcept
         {
-            LeaveCriticalSection(&cs_);
+            ReleaseSRWLockExclusive(&lock_);
         }
     };
 
@@ -798,83 +778,199 @@ namespace detail
     }
 }
 
-} } // namespace boost::leaf
+} }
 
 ////////////////////////////////////////
 
 namespace boost { namespace leaf {
 
+// Thrown on TLS allocation failure.
+class win32_tls_error:
+    public std::runtime_error
+{
+public:
+    explicit win32_tls_error(char const * what) noexcept:
+        std::runtime_error(what)
+    {
+    }
+};
+
 namespace detail
 {
+    class tls_slot_index
+    {
+        tls_slot_index(tls_slot_index const &) = delete;
+        tls_slot_index & operator=(tls_slot_index const &) = delete;
+        tls_slot_index & operator=(tls_slot_index &&) = delete;
+
+        DWORD idx_;
+
+    public:
+
+        BOOST_LEAF_ALWAYS_INLINE tls_slot_index():
+            idx_(TlsAlloc())
+        {
+            if (idx_ == TLS_OUT_OF_INDEXES)
+                throw_exception_(win32_tls_error("TLS_OUT_OF_INDEXES"));
+        }
+
+        BOOST_LEAF_ALWAYS_INLINE ~tls_slot_index() noexcept
+        {
+            if (idx_ == TLS_OUT_OF_INDEXES)
+                return;
+            BOOL r = TlsFree(idx_);
+            BOOST_LEAF_ASSERT(r), (void) r;
+        }
+
+        BOOST_LEAF_ALWAYS_INLINE tls_slot_index(tls_slot_index && other) noexcept:
+            idx_(other.idx_)
+        {
+            other.idx_ = TLS_OUT_OF_INDEXES;
+        }
+
+        BOOST_LEAF_ALWAYS_INLINE DWORD value() const noexcept
+        {
+            BOOST_LEAF_ASSERT(idx_ != TLS_OUT_OF_INDEXES);
+            return idx_;
+        }
+    }; // class tls_slot_index
+
+    template <int InitialCapacity>
+    class tls_bucket
+    {
+        tls_bucket(tls_bucket const &) = delete;
+        tls_bucket & operator=(tls_bucket const &) = delete;
+
+        struct tls_entry
+        {
+            std::uint32_t type_hash;
+            tls_slot_index idx;
+        };
+
+        tls_entry * data_;
+        int size_;
+        int capacity_;
+
+        void grow()
+        {
+            int new_capacity = capacity_ ? capacity_ * 2 : InitialCapacity;
+            void * mem = HeapAlloc(GetProcessHeap(), 0, new_capacity * sizeof(tls_entry));
+            if (!mem)
+                throw_exception_(std::bad_alloc());
+            tls_entry * new_data = static_cast<tls_entry *>(mem);
+            if (data_)
+            {
+                for (int i = 0, size = size_; i != size; ++i)
+                {
+                    new (new_data + i) tls_entry(std::move(data_[i]));
+                    data_[i].~tls_entry();
+                }
+                BOOL r = HeapFree(GetProcessHeap(), 0, data_);
+                BOOST_LEAF_ASSERT(r), (void) r;
+            }
+            data_ = new_data;
+            capacity_ = new_capacity;
+        }
+
+    public:
+
+        tls_bucket() noexcept:
+            data_(nullptr),
+            size_(0),
+            capacity_(0)
+        {
+        }
+
+        ~tls_bucket() noexcept
+        {
+            for (int i = 0, size = size_; i != size; ++i)
+                data_[i].~tls_entry();
+            if (data_)
+            {
+                BOOL r = HeapFree(GetProcessHeap(), 0, data_);
+                BOOST_LEAF_ASSERT(r), (void) r;
+            }
+        }
+
+        tls_slot_index const * check(std::uint32_t type_hash) const noexcept
+        {
+            for (int i = 0, size = size_; i != size; ++i)
+                if (data_[i].type_hash == type_hash)
+                    return &data_[i].idx;
+            return nullptr;
+        }
+
+        tls_slot_index const & get(std::uint32_t type_hash)
+        {
+            if (tls_slot_index const * p = check(type_hash))
+                return *p;
+            if (size_ == capacity_)
+                grow();
+            tls_entry * e = new (data_ + size_) tls_entry{type_hash};
+            ++size_;
+            return e->idx;
+        }
+    }; // class tls_bucket
+
+    template <int BucketCount, int InitialBucketCapacity>
+    class tls_hash_map
+    {
+        static_assert((BucketCount & (BucketCount - 1)) == 0, "BucketCount must be a power of 2");
+
+        tls_hash_map(tls_hash_map const &) = delete;
+        tls_hash_map & operator=(tls_hash_map const &) = delete;
+
+        tls_bucket<InitialBucketCapacity> buckets_[BucketCount];
+
+        static int bucket_index(std::uint32_t type_hash) noexcept
+        {
+            return static_cast<int>(type_hash & (BucketCount - 1));
+        }
+
+    public:
+
+        tls_hash_map() noexcept
+        {
+        }
+
+        tls_slot_index const * check(std::uint32_t type_hash) const noexcept
+        {
+            return buckets_[bucket_index(type_hash)].check(type_hash);
+        }
+
+        tls_slot_index const & get(std::uint32_t type_hash)
+        {
+            return buckets_[bucket_index(type_hash)].get(type_hash);
+        }
+    };
+
     class slot_map
     {
         slot_map(slot_map const &) = delete;
         slot_map & operator=(slot_map const &) = delete;
 
-        class tls_slot_index
-        {
-            tls_slot_index(tls_slot_index const &) = delete;
-            tls_slot_index & operator=(tls_slot_index const &) = delete;
-            tls_slot_index & operator=(tls_slot_index &&) = delete;
-
-            DWORD idx_;
-
-        public:
-
-            BOOST_LEAF_ALWAYS_INLINE tls_slot_index():
-                idx_(TlsAlloc())
-            {
-                if (idx_ == TLS_OUT_OF_INDEXES)
-                    throw_exception_(win32_tls_error("TLS_OUT_OF_INDEXES"));
-            }
-
-            BOOST_LEAF_ALWAYS_INLINE ~tls_slot_index() noexcept
-            {
-                if (idx_ == TLS_OUT_OF_INDEXES)
-                    return;
-                BOOL r = TlsFree(idx_);
-                BOOST_LEAF_ASSERT(r), (void) r;
-            }
-
-            BOOST_LEAF_ALWAYS_INLINE tls_slot_index(tls_slot_index && other) noexcept:
-                idx_(other.idx_)
-            {
-                other.idx_ = TLS_OUT_OF_INDEXES;
-            }
-
-            BOOST_LEAF_ALWAYS_INLINE DWORD get() const noexcept
-            {
-                BOOST_LEAF_ASSERT(idx_ != TLS_OUT_OF_INDEXES);
-                return idx_;
-            }
-        };
-
         int refcount_;
         HANDLE const mapping_;
         tls_slot_index const error_id_slot_;
-        mutable CRITICAL_SECTION cs_;
-        std::unordered_map<
-            std::uint32_t,
-            tls_slot_index,
-            std::hash<std::uint32_t>,
-            std::equal_to<std::uint32_t>,
-            heap_allocator<std::pair<std::uint32_t const, tls_slot_index>>> map_;
+        mutable SRWLOCK lock_ = SRWLOCK_INIT;
         atomic_unsigned_int error_id_storage_;
+        tls_hash_map<256, 4> hm_;
 
     public:
 
+        // The constructor for error_id_slot_ may throw, but this constructor is intentionally noexcept.
+        // While running out of TLS slots is not a reason to terminate the process, it is required that
+        // there is a TLS slot available at least to store the error_id.
         explicit slot_map(HANDLE mapping) noexcept:
             refcount_(1),
             mapping_(mapping),
             error_id_storage_(1)
         {
             BOOST_LEAF_ASSERT(mapping != INVALID_HANDLE_VALUE);
-            InitializeCriticalSection(&cs_);
         }
 
         ~slot_map() noexcept
         {
-            DeleteCriticalSection(&cs_);
             BOOL r = CloseHandle(mapping_);
             BOOST_LEAF_ASSERT(r), (void) r;
         }
@@ -893,29 +989,30 @@ namespace detail
                 heap_delete(this);
         }
 
-        DWORD check(std::uint32_t type_hash) const noexcept
-        {
-            critical_section_lock lock(cs_);
-            auto it = map_.find(type_hash);
-            return (it != map_.end()) ? it->second.get() : TLS_OUT_OF_INDEXES;
-        }
-
-        DWORD get(std::uint32_t type_hash)
-        {
-            critical_section_lock lock(cs_);
-            DWORD idx = map_[type_hash].get();
-            BOOST_LEAF_ASSERT(idx != TLS_OUT_OF_INDEXES);
-            return idx;
-        }
-
         BOOST_LEAF_ALWAYS_INLINE DWORD error_id_slot() const noexcept
         {
-            return error_id_slot_.get();
+            return error_id_slot_.value();
         }
 
         BOOST_LEAF_ALWAYS_INLINE atomic_unsigned_int & error_id_storage() noexcept
         {
             return error_id_storage_;
+        }
+
+        DWORD check(std::uint32_t type_hash) const noexcept
+        {
+            srwlock_shared lock(lock_);
+            if (tls_slot_index const * p = hm_.check(type_hash))
+                return p->value();
+            return TLS_OUT_OF_INDEXES;
+        }
+
+        DWORD get(std::uint32_t type_hash)
+        {
+            srwlock_exclusive lock(lock_);
+            DWORD idx = hm_.get(type_hash).value();
+            BOOST_LEAF_ASSERT(idx != TLS_OUT_OF_INDEXES);
+            return idx;
         }
     }; // class slot_map
 
@@ -1117,6 +1214,8 @@ namespace tls
 } // namespace tls
 
 } } // namespace boost::leaf
+
+#pragma pack(pop)
 
 #endif // #ifndef BOOST_LEAF_CONFIG_TLS_WIN32_HPP_INCLUDED
 // <<< #   include <boost/leaf/config/tls_win32.hpp>
@@ -2696,7 +2795,7 @@ namespace detail
 #endif // #ifndef BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
 // <<< #include <boost/leaf/detail/optional.hpp>
 // #line 10 "boost/leaf/error.hpp"
-// #include <boost/leaf/detail/function_traits.hpp> // Expanded at line 1760
+// #include <boost/leaf/detail/function_traits.hpp> // Expanded at line 1859
 // >>> #include <boost/leaf/detail/capture_list.hpp>
 #ifndef BOOST_LEAF_DETAIL_CAPTURE_LIST_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_CAPTURE_LIST_HPP_INCLUDED
@@ -2809,7 +2908,7 @@ namespace detail
 #endif // #ifndef BOOST_LEAF_DETAIL_CAPTURE_LIST_HPP_INCLUDED
 // <<< #include <boost/leaf/detail/capture_list.hpp>
 // #line 12 "boost/leaf/error.hpp"
-// #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1441
+// #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1540
 
 ////////////////////////////////////////
 
@@ -4147,8 +4246,8 @@ BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && 
 
 // #line 8 "boost/leaf/handle_errors.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/context.hpp> // Expanded at line 1435
-// #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1441
+// #include <boost/leaf/context.hpp> // Expanded at line 1534
+// #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1540
 
 namespace boost { namespace leaf {
 
@@ -5237,15 +5336,15 @@ namespace detail
 } } // namespace boost::leaf
 
 #endif // #ifndef BOOST_LEAF_DIAGNOSTICS_HPP_INCLUDED
-// #include <boost/leaf/error.hpp> // Expanded at line 2513
+// #include <boost/leaf/error.hpp> // Expanded at line 2612
 // >>> #include <boost/leaf/exception.hpp>
 #ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
 #define BOOST_LEAF_EXCEPTION_HPP_INCLUDED
 
 // #line 8 "boost/leaf/exception.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/error.hpp> // Expanded at line 2513
-// #include <boost/leaf/detail/exception_base.hpp> // Expanded at line 2248
+// #include <boost/leaf/error.hpp> // Expanded at line 2612
+// #include <boost/leaf/detail/exception_base.hpp> // Expanded at line 2347
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 #   include <typeinfo>
@@ -5532,14 +5631,14 @@ exception_to_result( F && f ) noexcept(!BOOST_LEAF_CFG_CAPTURE)
 } } // namespace boost::leaf
 
 #endif // #ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4145
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4244
 // >>> #include <boost/leaf/on_error.hpp>
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 
 // #line 8 "boost/leaf/on_error.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/error.hpp> // Expanded at line 2513
+// #include <boost/leaf/error.hpp> // Expanded at line 2612
 
 namespace boost { namespace leaf {
 
@@ -5879,7 +5978,7 @@ on_error( Item && ... i )
 
 // #line 8 "boost/leaf/pred.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4145
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4244
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -6173,9 +6272,9 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 
 // #line 8 "boost/leaf/result.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/exception.hpp> // Expanded at line 5242
-// #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1441
-// #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 2701
+// #include <boost/leaf/exception.hpp> // Expanded at line 5341
+// #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1540
+// #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 2800
 
 #include <functional>
 
@@ -7002,8 +7101,8 @@ namespace serialization
 #if __cplusplus >= 201703L
 
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4145
-// #include <boost/leaf/result.hpp> // Expanded at line 6171
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4244
+// #include <boost/leaf/result.hpp> // Expanded at line 6270
 #include <variant>
 #include <optional>
 #include <tuple>
