@@ -52,6 +52,24 @@ enum class my_error_code
     error3
 };
 
+class my_error_code_category: public std::error_category
+{
+public:
+    char const * name() const noexcept override { return "my_error_code"; }
+    std::string message(int) const override { return "my_error_code"; }
+};
+
+my_error_code_category const & get_my_error_code_category()
+{
+    static my_error_code_category cat;
+    return cat;
+}
+
+std::error_code make_error_code(my_error_code e)
+{
+    return std::error_code(static_cast<int>(e), get_my_error_code_category());
+}
+
 namespace std
 {
     template <> struct is_error_code_enum<my_error_code>: std::true_type { };

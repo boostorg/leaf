@@ -428,6 +428,47 @@ int main()
     }
 #endif
 
+    {
+        int r = leaf::try_handle_all(
+            []() -> leaf::result<int>
+            {
+                return leaf::try_handle_some(
+                    []() -> leaf::result<int>
+                    {
+                        return leaf::new_error(my_error<1>{1, "error one"});
+                    },
+                    [](leaf::diagnostic_details const & dd) -> leaf::result<int>
+                    {
+                        nlohmann::ordered_json j;
+                        output_encoder e{j};
+                        dd.serialize_to(e);
+                        std::cout << __LINE__ << " nested diagnostic_details JSON output:\n" << std::setw(2) << j << std::endl;
+                        if( BOOST_LEAF_CFG_CAPTURE )
+                        {
+                            BOOST_TEST(j.contains("my_error<1>"));
+                            if( j.contains("my_error<1>") )
+                            {
+                                auto const & e1j = j["my_error<1>"];
+                                BOOST_TEST_EQ(e1j["code"].get<int>(), 1);
+                                BOOST_TEST_EQ(e1j["message"].get<std::string>(), "error one");
+                            }
+                        }
+                        else
+                            BOOST_TEST(!j.contains("my_error<1>"));
+                        return dd.error();
+                    } );
+            },
+            [](my_error<1> const &)
+            {
+                return 1;
+            },
+            []
+            {
+                return 2;
+            } );
+        BOOST_TEST_EQ(r, 1);
+    }
+
     return boost::report_errors();
 }
 

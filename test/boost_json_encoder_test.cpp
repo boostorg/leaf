@@ -427,6 +427,47 @@ int main()
     }
 #endif
 
+    {
+        int r = leaf::try_handle_all(
+            []() -> leaf::result<int>
+            {
+                return leaf::try_handle_some(
+                    []() -> leaf::result<int>
+                    {
+                        return leaf::new_error(my_error<1>{1, "error one"});
+                    },
+                    [](leaf::diagnostic_details const & dd) -> leaf::result<int>
+                    {
+                        boost::json::value j;
+                        output_encoder e{j};
+                        dd.serialize_to(e);
+                        std::cout << __LINE__ << " nested diagnostic_details JSON output:\n" << boost::json::serialize(j) << std::endl;
+                        if( BOOST_LEAF_CFG_CAPTURE )
+                        {
+                            BOOST_TEST(j.as_object().contains("my_error<1>"));
+                            if( j.as_object().contains("my_error<1>") )
+                            {
+                                auto const & e1j = j.at("my_error<1>");
+                                BOOST_TEST_EQ(boost::json::value_to<int>(e1j.at("code")), 1);
+                                BOOST_TEST_EQ(boost::json::value_to<std::string>(e1j.at("message")), "error one");
+                            }
+                        }
+                        else
+                            BOOST_TEST(j.as_object().find("my_error<1>") == j.as_object().end());
+                        return dd.error();
+                    } );
+            },
+            [](my_error<1> const &)
+            {
+                return 1;
+            },
+            []
+            {
+                return 2;
+            } );
+        BOOST_TEST_EQ(r, 1);
+    }
+
     return boost::report_errors();
 }
 

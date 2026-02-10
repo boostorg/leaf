@@ -12,18 +12,18 @@ namespace boost { namespace leaf {
 
 class diagnostic_info: public error_info
 {
-    void const * tup_;
-    void (*serialize_tuple_contents_to_)(detail::encoder &, void const *, error_id);
+    detail::context_base const & ctx_;
+    void (*serialize_ctx_to_)(detail::encoder &, detail::context_base const &, error_id);
 
 protected:
 
     diagnostic_info( diagnostic_info const & ) noexcept = default;
 
-    template <class Tup>
-    BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei, Tup const & tup ) noexcept:
+    template <class Context>
+    BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei, Context const & ctx ) noexcept:
         error_info(ei),
-        tup_(&tup),
-        serialize_tuple_contents_to_(&detail::serialize_tuple_contents_to<Tup>)
+        ctx_(ctx),
+        serialize_ctx_to_(&detail::serialize_context_to<Context>)
     {
     }
 
@@ -31,7 +31,7 @@ protected:
     void serialize_to_(Encoder & e) const
     {
         static_assert(std::is_base_of<detail::encoder, Encoder>::value, "Encoder must derive from detail::encoder");
-        serialize_tuple_contents_to_(e, tup_, error());
+        serialize_ctx_to_(e, ctx_, error());
     }
 
 public:
@@ -61,9 +61,9 @@ namespace detail
 {
     struct diagnostic_info_: diagnostic_info
     {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR diagnostic_info_( error_info const & ei, Tup const & tup ) noexcept:
-            diagnostic_info(ei, tup)
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR diagnostic_info_( error_info const & ei, Context const & ctx ) noexcept:
+            diagnostic_info(ei, ctx)
         {
         }
     };
@@ -71,10 +71,10 @@ namespace detail
     template <>
     struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<e_source_location>
     {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR static diagnostic_info_ get( Context const & ctx, error_info const & ei ) noexcept
         {
-            return diagnostic_info_(ei, tup);
+            return diagnostic_info_(ei, ctx);
         }
     };
 }
@@ -91,9 +91,9 @@ protected:
 
     diagnostic_details( diagnostic_details const & ) noexcept = default;
 
-    template <class Tup>
-    BOOST_LEAF_CONSTEXPR diagnostic_details( error_info const & ei, Tup const & tup, detail::dynamic_allocator const * da ) noexcept:
-        diagnostic_info(ei, tup),
+    template <class Context>
+    BOOST_LEAF_CONSTEXPR diagnostic_details( error_info const & ei, Context const & ctx, detail::dynamic_allocator const * da ) noexcept:
+        diagnostic_info(ei, ctx),
         da_(da)
     {
     }
@@ -136,9 +136,9 @@ namespace detail
 {
     struct diagnostic_details_: diagnostic_details
     {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR diagnostic_details_( error_info const & ei, Tup const & tup, dynamic_allocator const * da ) noexcept:
-            diagnostic_details(ei, tup, da)
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR diagnostic_details_( error_info const & ei, Context const & ctx, dynamic_allocator const * da ) noexcept:
+            diagnostic_details(ei, ctx, da)
         {
         }
     };
@@ -146,11 +146,11 @@ namespace detail
     template <>
     struct handler_argument_traits<diagnostic_details const &>: handler_argument_always_available<e_source_location, dynamic_allocator>
     {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static diagnostic_details_ get( Tup const & tup, error_info const & ei ) noexcept
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR static diagnostic_details_ get( Context const & ctx, error_info const & ei ) noexcept
         {
-            slot<dynamic_allocator> const * da = find_in_tuple<slot<dynamic_allocator>>(tup);
-            return diagnostic_details_(ei, tup, da ? &da->get() : nullptr );
+            slot<dynamic_allocator> const * da = find_in_tuple<slot<dynamic_allocator>>(ctx.tup());
+            return diagnostic_details_(ei, ctx, da ? &da->get() : nullptr );
         }
     };
 }
@@ -163,9 +163,9 @@ protected:
 
     diagnostic_details( diagnostic_details const & ) noexcept = default;
 
-    template <class Tup>
-    BOOST_LEAF_CONSTEXPR diagnostic_details( error_info const & ei, Tup const & tup ) noexcept:
-        diagnostic_info(ei, tup)
+    template <class Context>
+    BOOST_LEAF_CONSTEXPR diagnostic_details( error_info const & ei, Context const & ctx ) noexcept:
+        diagnostic_info(ei, ctx)
     {
     }
 
@@ -197,9 +197,9 @@ namespace detail
 {
     struct diagnostic_details_: diagnostic_details
     {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR diagnostic_details_( error_info const & ei, Tup const & tup ) noexcept:
-            diagnostic_details(ei, tup)
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR diagnostic_details_( error_info const & ei, Context const & ctx ) noexcept:
+            diagnostic_details(ei, ctx)
         {
         }
     };
@@ -207,10 +207,10 @@ namespace detail
     template <>
     struct handler_argument_traits<diagnostic_details const &>: handler_argument_always_available<e_source_location>
     {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static diagnostic_details_ get( Tup const & tup, error_info const & ei ) noexcept
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR static diagnostic_details_ get( Context const & ctx, error_info const & ei ) noexcept
         {
-            return diagnostic_details_(ei, tup);
+            return diagnostic_details_(ei, ctx);
         }
     };
 }

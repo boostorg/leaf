@@ -270,7 +270,7 @@ namespace detail
             {
                 impl::unload(err_id);
             }
-            void serialize_to(encoder & e, error_id const & id) const override
+            void serialize_to_(encoder & e, error_id const & id) const override
             {
                 impl::serialize_to(e, id);
             }
@@ -305,7 +305,7 @@ namespace detail
             {
                 std::rethrow_exception(ex_);
             }
-            void serialize_to(encoder &, error_id const &) const override
+            void serialize_to_(encoder &, error_id const &) const override
             {
             }
             std::exception_ptr const ex_;

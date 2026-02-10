@@ -50,10 +50,10 @@ namespace detail
         template <class Tup>
         BOOST_LEAF_CONSTEXPR static error_type * check( Tup &, error_info const & ) noexcept;
 
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static E get( Tup & tup, error_info const & ei ) noexcept
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR static E get( Context & ctx, error_info const & ei ) noexcept
         {
-            return *check(tup, ei);
+            return *check(ctx.tup(), ei);
         }
 
         static_assert(!is_predicate<error_type>::value, "Handlers must take predicate arguments by value");
@@ -75,10 +75,10 @@ namespace detail
             return e && Pred::evaluate(*e);
         }
 
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static Pred get( Tup const & tup, error_info const & ei ) noexcept
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR static Pred get( Context const & ctx, error_info const & ei ) noexcept
         {
-            return Pred{*base::check(tup, ei)};
+            return Pred{*base::check(ctx.tup(), ei)};
         }
     };
 
@@ -119,10 +119,10 @@ namespace detail
     template <class E>
     struct handler_argument_traits<E *>: handler_argument_always_available<typename std::remove_const<E>::type>
     {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static E * get( Tup & tup, error_info const & ei) noexcept
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR static E * get( Context & ctx, error_info const & ei) noexcept
         {
-            return handler_argument_traits_defaults<E>::check(tup, ei);
+            return handler_argument_traits_defaults<E>::check(ctx.tup(), ei);
         }
     };
 
@@ -204,7 +204,8 @@ namespace detail
             tuple_for_each<I-1,Tup>::unload(tup, err_id);
         }
 
-        static void serialize_to(encoder & e, void const * tup, error_id id)
+        template <class Encoder>
+        static void serialize_to(Encoder & e, void const * tup, error_id id)
         {
             BOOST_LEAF_ASSERT(tup != nullptr);
             tuple_for_each<I-1,Tup>::serialize_to(e, tup, id);
@@ -221,10 +222,12 @@ namespace detail
         BOOST_LEAF_CONSTEXPR static void serialize_to(encoder &, void const *, error_id) { }
     };
 
-    template <class Tup>
-    void serialize_tuple_contents_to(encoder & e, void const * tup, error_id id)
+    class context_base;
+
+    template <class Context>
+    void serialize_context_to(encoder & e, context_base const & ctx, error_id id)
     {
-        tuple_for_each<std::tuple_size<Tup>::value, Tup>::serialize_to(e, tup, id);
+        static_cast<Context const &>(ctx).serialize_to(e, id);
     }
 } // namespace detail
 
@@ -265,8 +268,57 @@ namespace detail
 
 ////////////////////////////////////////
 
+namespace detail
+{
+    // The context_base type is able to walk up the parent error handling
+    // scopes to collect relevant error objects, so they can be serialized or
+    // printed by diagnostic_details.
+    //
+    // This introduces a bit of overhead which is semantically similar to the
+    // rest of the overhead introduced by BOOST_LEAF_CFG_CAPTURE=1, namely
+    // allocating unhandled error objects dynamically if diagnostic_details is
+    // handled.
+    class context_base
+    {
+#if BOOST_LEAF_CFG_CAPTURE
+        context_base( context_base const & ) = delete;
+        context_base & operator=( context_base const & ) = delete;
+
+    protected:
+
+        context_base * parent_ = nullptr;
+
+        context_base()
+        {
+            tls::reserve_ptr<context_base>();
+        }
+
+        context_base( context_base && ) noexcept = default;
+        ~context_base() noexcept = default;
+
+        void link() noexcept
+        {
+            parent_ = tls::read_ptr<context_base>();
+            tls::write_ptr<context_base>(this);
+        }
+
+        void unlink() noexcept
+        {
+            BOOST_LEAF_ASSERT(tls::read_ptr<context_base>() == this);
+            tls::write_ptr<context_base>(parent_);
+        }
+
+    public:
+
+        virtual void serialize_to_( encoder &, error_id ) const = 0;
+#endif
+    }; // class context_base
+} // namespace detail
+
+
 template <class... E>
-class context
+class context final:
+    public detail::context_base
 {
     context( context const & ) = delete;
     context & operator=( context const & ) = delete;
@@ -305,9 +357,29 @@ class context
         }
     };
 
+#if BOOST_LEAF_CFG_CAPTURE
+    void serialize_to_( detail::encoder & e, error_id id ) const override
+    {
+        detail::tuple_for_each<std::tuple_size<Tup>::value, Tup>::serialize_to(e, &tup_, id);
+        if( parent_ )
+            parent_->serialize_to_(e, id);
+    }
+#endif
+
 public:
 
+    template <class Encoder>
+    void serialize_to( Encoder & e, error_id id ) const
+    {
+        detail::tuple_for_each<std::tuple_size<Tup>::value, Tup>::serialize_to(e, &tup_, id);
+#if BOOST_LEAF_CFG_CAPTURE
+        if( parent_ )
+            parent_->serialize_to_(e, id);
+#endif
+    }
+
     BOOST_LEAF_CONSTEXPR context( context && x ) noexcept:
+        context_base(std::move(x)),
         tup_(std::move(x.tup_)),
         is_active_(false)
     {
@@ -338,10 +410,13 @@ public:
     {
         using namespace detail;
         BOOST_LEAF_ASSERT(!is_active());
-        tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
         thread_id_ = std::this_thread::get_id();
 #endif
+#if BOOST_LEAF_CFG_CAPTURE
+        context_base::link();
+#endif
+        tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
         is_active_ = true;
     }
 
@@ -349,12 +424,15 @@ public:
     {
         using namespace detail;
         BOOST_LEAF_ASSERT(is_active());
-        is_active_ = false;
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
         BOOST_LEAF_ASSERT(std::this_thread::get_id() == thread_id_);
         thread_id_ = std::thread::id();
 #endif
+        is_active_ = false;
         tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_);
+#if BOOST_LEAF_CFG_CAPTURE
+        context_base::unlink();
+#endif
     }
 
     BOOST_LEAF_CONSTEXPR void unload(error_id id) noexcept(!BOOST_LEAF_CFG_CAPTURE)

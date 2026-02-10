@@ -377,10 +377,10 @@ namespace detail
     template <class R, class F, bool IsResult = is_result_type<R>::value, class FReturnType = fn_return_type<F>>
     struct handler_caller
     {
-        template <class Tup, class... A>
-        BOOST_LEAF_CONSTEXPR static R call( Tup & tup, error_info const & ei, F && f, leaf_detail_mp11::mp_list<A...> )
+        template <class Context, class... A>
+        BOOST_LEAF_CONSTEXPR static R call( Context & ctx, error_info const & ei, F && f, leaf_detail_mp11::mp_list<A...> )
         {
-            return std::forward<F>(f)( handler_argument_traits<A>::get(tup, ei)... );
+            return std::forward<F>(f)( handler_argument_traits<A>::get(ctx, ei)... );
         }
     };
 
@@ -389,10 +389,10 @@ namespace detail
     {
         using R = Result<void, E...>;
 
-        template <class Tup, class... A>
-        BOOST_LEAF_CONSTEXPR static R call( Tup & tup, error_info const & ei, F && f, leaf_detail_mp11::mp_list<A...> )
+        template <class Context, class... A>
+        BOOST_LEAF_CONSTEXPR static R call( Context & ctx, error_info const & ei, F && f, leaf_detail_mp11::mp_list<A...> )
         {
-            std::forward<F>(f)( handler_argument_traits<A>::get(tup, ei)... );
+            std::forward<F>(f)( handler_argument_traits<A>::get(ctx, ei)... );
             return { };
         }
     };
@@ -406,61 +406,61 @@ namespace detail
     template <class... T>
     struct is_tuple<std::tuple<T...> &>: std::true_type { };
 
-    template <class R, class Tup, class H>
+    template <class R, class Context, class H>
     BOOST_LEAF_CONSTEXPR inline
     typename std::enable_if<!is_tuple<typename std::decay<H>::type>::value, R>::type
-    handle_error_( Tup & tup, error_info const & ei, H && h )
+    handle_error_( Context & ctx, error_info const & ei, H && h )
     {
         static_assert( handler_matches_any_error<fn_mp_args<H>>::value, "The last handler passed to handle_all must match any error." );
-        return handler_caller<R, H>::call( tup, ei, std::forward<H>(h), fn_mp_args<H>{ } );
+        return handler_caller<R, H>::call( ctx, ei, std::forward<H>(h), fn_mp_args<H>{ } );
     }
 
-    template <class R, class Tup, class Car, class... Cdr>
+    template <class R, class Context, class Car, class... Cdr>
     BOOST_LEAF_CONSTEXPR inline
     typename std::enable_if<!is_tuple<typename std::decay<Car>::type>::value, R>::type
-    handle_error_( Tup & tup, error_info const & ei, Car && car, Cdr && ... cdr )
+    handle_error_( Context & ctx, error_info const & ei, Car && car, Cdr && ... cdr )
     {
-        if( handler_matches_any_error<fn_mp_args<Car>>::value || check_handler_( tup, ei, fn_mp_args<Car>{ } ) )
-            return handler_caller<R, Car>::call( tup, ei, std::forward<Car>(car), fn_mp_args<Car>{ } );
+        if( handler_matches_any_error<fn_mp_args<Car>>::value || check_handler_( ctx.tup(), ei, fn_mp_args<Car>{ } ) )
+            return handler_caller<R, Car>::call( ctx, ei, std::forward<Car>(car), fn_mp_args<Car>{ } );
         else
-            return handle_error_<R>( tup, ei, std::forward<Cdr>(cdr)...);
+            return handle_error_<R>( ctx, ei, std::forward<Cdr>(cdr)...);
     }
 
-    template <class R, class Tup, class HTup, size_t ... I>
+    template <class R, class Context, class HTup, size_t ... I>
     BOOST_LEAF_CONSTEXPR inline
     R
-    handle_error_tuple_( Tup & tup, error_info const & ei, leaf_detail_mp11::index_sequence<I...>, HTup && htup )
+    handle_error_tuple_( Context & ctx, error_info const & ei, leaf_detail_mp11::index_sequence<I...>, HTup && htup )
     {
-        return handle_error_<R>(tup, ei, std::get<I>(std::forward<HTup>(htup))...);
+        return handle_error_<R>(ctx, ei, std::get<I>(std::forward<HTup>(htup))...);
     }
 
-    template <class R, class Tup, class HTup, class... Cdr, size_t ... I>
+    template <class R, class Context, class HTup, class... Cdr, size_t ... I>
     BOOST_LEAF_CONSTEXPR inline
     R
-    handle_error_tuple_( Tup & tup, error_info const & ei, leaf_detail_mp11::index_sequence<I...>, HTup && htup, Cdr && ... cdr )
+    handle_error_tuple_( Context & ctx, error_info const & ei, leaf_detail_mp11::index_sequence<I...>, HTup && htup, Cdr && ... cdr )
     {
-        return handle_error_<R>(tup, ei, std::get<I>(std::forward<HTup>(htup))..., std::forward<Cdr>(cdr)...);
+        return handle_error_<R>(ctx, ei, std::get<I>(std::forward<HTup>(htup))..., std::forward<Cdr>(cdr)...);
     }
 
-    template <class R, class Tup, class H>
+    template <class R, class Context, class H>
     BOOST_LEAF_CONSTEXPR inline
     typename std::enable_if<is_tuple<typename std::decay<H>::type>::value, R>::type
-    handle_error_( Tup & tup, error_info const & ei, H && h )
+    handle_error_( Context & ctx, error_info const & ei, H && h )
     {
         return handle_error_tuple_<R>(
-            tup,
+            ctx,
             ei,
             leaf_detail_mp11::make_index_sequence<std::tuple_size<typename std::decay<H>::type>::value>(),
             std::forward<H>(h));
     }
 
-    template <class R, class Tup, class Car, class... Cdr>
+    template <class R, class Context, class Car, class... Cdr>
     BOOST_LEAF_CONSTEXPR inline
     typename std::enable_if<is_tuple<typename std::decay<Car>::type>::value, R>::type
-    handle_error_( Tup & tup, error_info const & ei, Car && car, Cdr && ... cdr )
+    handle_error_( Context & ctx, error_info const & ei, Car && car, Cdr && ... cdr )
     {
         return handle_error_tuple_<R>(
-            tup,
+            ctx,
             ei,
             leaf_detail_mp11::make_index_sequence<std::tuple_size<typename std::decay<Car>::type>::value>(),
             std::forward<Car>(car),
@@ -478,7 +478,7 @@ context<E...>::
 handle_error( error_id id, H && ... h ) const
 {
     BOOST_LEAF_ASSERT(!is_active());
-    return detail::handle_error_<R>(tup(), error_info(id, nullptr, this->get<e_source_location>(id)), std::forward<H>(h)...);
+    return detail::handle_error_<R>(*this, error_info(id, nullptr, this->get<e_source_location>(id)), std::forward<H>(h)...);
 }
 
 template <class... E>
@@ -489,7 +489,7 @@ context<E...>::
 handle_error( error_id id, H && ... h )
 {
     BOOST_LEAF_ASSERT(!is_active());
-    return detail::handle_error_<R>(tup(), error_info(id, nullptr, this->get<e_source_location>(id)), std::forward<H>(h)...);
+    return detail::handle_error_<R>(*this, error_info(id, nullptr, this->get<e_source_location>(id)), std::forward<H>(h)...);
 }
 
 ////////////////////////////////////////
@@ -585,7 +585,7 @@ namespace detail
         {
             ctx.deactivate();
             error_id id = detail::unpack_error_id(ex);
-            return handle_error_<R>(ctx.tup(), error_info(id, &ex, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
+            return handle_error_<R>(ctx, error_info(id, &ex, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
                 [&]() -> R
                 {
                     ctx.unload(id);
@@ -596,7 +596,7 @@ namespace detail
         {
             ctx.deactivate();
             error_id id = current_error();
-            return handle_error_<R>(ctx.tup(), error_info(id, nullptr, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
+            return handle_error_<R>(ctx, error_info(id, nullptr, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
                 [&]() -> R
                 {
                     ctx.unload(id);
@@ -675,7 +675,7 @@ try_catch( TryBlock && try_block, H && ... h )
     {
         ctx.deactivate();
         error_id id = detail::unpack_error_id(ex);
-        return detail::handle_error_<R>(ctx.tup(), error_info(id, &ex, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
+        return detail::handle_error_<R>(ctx, error_info(id, &ex, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
             [&]() -> R
             {
                 ctx.unload(id);
@@ -686,7 +686,7 @@ try_catch( TryBlock && try_block, H && ... h )
     {
         ctx.deactivate();
         error_id id = current_error();
-        return detail::handle_error_<R>(ctx.tup(), error_info(id, nullptr, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
+        return detail::handle_error_<R>(ctx, error_info(id, nullptr, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
             [&]() -> R
             {
                 ctx.unload(id);
@@ -863,10 +863,10 @@ namespace detail
                 return nullptr;
         }
 
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static boost::error_info<Tag, T> get( Tup const & tup, error_info const & ei ) noexcept
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR static boost::error_info<Tag, T> get( Context const & ctx, error_info const & ei ) noexcept
         {
-            return boost::error_info<Tag, T>(*check(tup, ei));
+            return boost::error_info<Tag, T>(*check(ctx.tup(), ei));
         }
     };
 
