@@ -435,9 +435,10 @@ public:
 #endif
     }
 
-    BOOST_LEAF_CONSTEXPR void unload(error_id id) noexcept(!BOOST_LEAF_CFG_CAPTURE)
+    void unload(error_id id) noexcept(!BOOST_LEAF_CFG_CAPTURE)
     {
         BOOST_LEAF_ASSERT(!is_active());
+        tls::write_current_error_id(static_cast<unsigned>(id.value()));
         detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::unload(tup_, id.value());
     }
 
