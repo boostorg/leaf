@@ -224,8 +224,6 @@ namespace detail
 
 namespace detail
 {
-    class preloaded_base;
-
     template <class E>
     struct capturing_slot_node_allocator;
 
@@ -237,8 +235,6 @@ namespace detail
 
         template <class>
         friend struct capturing_slot_node_allocator;
-
-        preloaded_base * preloaded_list_;
 
         class capturing_node:
             public capture_list::node
@@ -326,7 +322,6 @@ namespace detail
 
         dynamic_allocator() noexcept:
             capture_list(nullptr),
-            preloaded_list_(nullptr),
             last_(&first_)
         {
             BOOST_LEAF_ASSERT(first_ == nullptr);
@@ -334,32 +329,12 @@ namespace detail
 
         dynamic_allocator( dynamic_allocator && other ) noexcept:
             capture_list(std::move(other)),
-            preloaded_list_(nullptr),
             last_(other.last_ == &other.first_? &first_ : other.last_)
         {
             BOOST_LEAF_ASSERT(last_ != nullptr);
             BOOST_LEAF_ASSERT(*last_ == nullptr);
             BOOST_LEAF_ASSERT(other.first_ == nullptr);
-            BOOST_LEAF_ASSERT(other.preloaded_list_ == nullptr);
             other.last_ = &other.first_;
-        }
-
-        preloaded_base * preloaded_list() const noexcept
-        {
-            return preloaded_list_;
-        }
-
-        preloaded_base * link_preloaded_item(preloaded_base * pb) noexcept
-        {
-            BOOST_LEAF_ASSERT(pb != nullptr);
-            preloaded_base * next = preloaded_list_;
-            preloaded_list_ = pb;
-            return next;
-        }
-
-        void unlink_preloaded_item(preloaded_base * next) noexcept
-        {
-            preloaded_list_ = next;
         }
 
         template <class E>
@@ -606,38 +581,6 @@ namespace detail
 
 namespace detail
 {
-#if BOOST_LEAF_CFG_CAPTURE
-    class preloaded_base
-    {
-    protected:
-
-        preloaded_base() noexcept:
-            next_(
-                []( preloaded_base * this_ ) -> preloaded_base *
-                {
-                    if( dynamic_allocator * da = get_dynamic_allocator() )
-                        return da->link_preloaded_item(this_);
-                    return nullptr;
-                }(this))
-        {
-        }
-
-        ~preloaded_base() noexcept
-        {
-            if( dynamic_allocator * da = get_dynamic_allocator() )
-                da->unlink_preloaded_item(next_);
-            else
-                BOOST_LEAF_ASSERT(next_ == nullptr);
-        }
-
-    public:
-
-        preloaded_base * const next_;
-
-        virtual void reserve( dynamic_allocator & ) const = 0;
-    };
-#endif // #if BOOST_LEAF_CFG_CAPTURE
-
     inline int current_id() noexcept
     {
         unsigned id = tls::read_current_error_id();
@@ -652,13 +595,8 @@ namespace detail
         return int(id);
     }
 
-    inline int start_new_error() noexcept(!BOOST_LEAF_CFG_CAPTURE)
+    inline int start_new_error() noexcept
     {
-#if BOOST_LEAF_CFG_CAPTURE
-        if( dynamic_allocator * da = get_dynamic_allocator() )
-            for( preloaded_base const * e = da->preloaded_list(); e; e = e->next_ )
-                e->reserve(*da);
-#endif
         return new_id();
     }
 

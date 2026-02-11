@@ -40,19 +40,7 @@ public:
 #   else
             if( std::uncaught_exception() )
 #   endif
-#   if BOOST_LEAF_CFG_CAPTURE
-                try
-                {
-                    return detail::start_new_error();
-                }
-                catch(...)
-                {
-                    BOOST_LEAF_ASSERT(detail::current_id() == err_id_);
-                    return detail::new_id();
-                }
-#   else
-                return detail::start_new_error();
-#   endif
+                return detail::new_id();
 #endif
             return 0;
         }
@@ -260,9 +248,6 @@ namespace detail
 
     template <class... Item>
     class preloaded
-#if BOOST_LEAF_CFG_CAPTURE
-        : preloaded_base
-#endif
     {
         preloaded( preloaded const & ) = delete;
         preloaded & operator=( preloaded const & ) = delete;
@@ -271,13 +256,6 @@ namespace detail
         error_monitor id_;
 #if __cplusplus < 201703L
         bool moved_ = false;
-#endif
-
-#if BOOST_LEAF_CFG_CAPTURE
-        void reserve( dynamic_allocator & da ) const override
-        {
-            tuple_for_each_preload<sizeof...(Item),decltype(p_)>::reserve(p_,da);
-        }
 #endif
 
     public:
@@ -302,8 +280,24 @@ namespace detail
             if( moved_ )
                 return;
 #endif
-            if( auto id = id_.check_id() )
-                tuple_for_each_preload<sizeof...(Item),decltype(p_)>::trigger(p_,id);
+            if( int const err_id = id_.check_id() )
+            {
+#if BOOST_LEAF_CFG_CAPTURE
+                if( dynamic_allocator * da = get_dynamic_allocator() )
+#   ifndef BOOST_LEAF_NO_EXCEPTIONS
+                    try
+                    {
+#   endif
+                        tuple_for_each_preload<sizeof...(Item),decltype(p_)>::reserve(p_, *da);
+#   ifndef BOOST_LEAF_NO_EXCEPTIONS
+                    }
+                    catch(...)
+                    {
+                    }
+#   endif
+#endif
+                tuple_for_each_preload<sizeof...(Item),decltype(p_)>::trigger(p_, err_id);
+            }
         }
     };
 
