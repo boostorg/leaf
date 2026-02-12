@@ -2,7 +2,7 @@
 #define BOOST_LEAF_HPP_INCLUDED
 
 // Boost LEAF single header distribution. Do not edit.
-// Generated on Feb 08, 2026 from https://github.com/boostorg/leaf/tree/f3ac550.
+// Generated on Feb 12, 2026 from https://github.com/boostorg/leaf/tree/bd58aa2.
 
 // Latest published version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
@@ -2825,7 +2825,7 @@ namespace detail
             friend class capture_list;
 
             virtual void unload( int err_id ) = 0;
-            virtual void serialize_to(encoder &, error_id const &) const = 0;
+            virtual void serialize_to_(encoder &, error_id const &) const = 0;
 
         protected:
 
@@ -2893,7 +2893,7 @@ namespace detail
                 for_each(
                     [&e, &id]( node const & n )
                     {
-                        n.serialize_to(e, id);
+                        n.serialize_to_(e, id);
                     } );
             }
         }
@@ -3123,8 +3123,6 @@ namespace detail
 
 namespace detail
 {
-    class preloaded_base;
-
     template <class E>
     struct capturing_slot_node_allocator;
 
@@ -3136,8 +3134,6 @@ namespace detail
 
         template <class>
         friend struct capturing_slot_node_allocator;
-
-        preloaded_base * preloaded_list_;
 
         class capturing_node:
             public capture_list::node
@@ -3169,7 +3165,7 @@ namespace detail
             {
                 impl::unload(err_id);
             }
-            void serialize_to(encoder & e, error_id const & id) const override
+            void serialize_to_(encoder & e, error_id const & id) const override
             {
                 impl::serialize_to(e, id);
             }
@@ -3204,7 +3200,7 @@ namespace detail
             {
                 std::rethrow_exception(ex_);
             }
-            void serialize_to(encoder &, error_id const &) const override
+            void serialize_to_(encoder &, error_id const &) const override
             {
             }
             std::exception_ptr const ex_;
@@ -3225,7 +3221,6 @@ namespace detail
 
         dynamic_allocator() noexcept:
             capture_list(nullptr),
-            preloaded_list_(nullptr),
             last_(&first_)
         {
             BOOST_LEAF_ASSERT(first_ == nullptr);
@@ -3233,32 +3228,12 @@ namespace detail
 
         dynamic_allocator( dynamic_allocator && other ) noexcept:
             capture_list(std::move(other)),
-            preloaded_list_(nullptr),
             last_(other.last_ == &other.first_? &first_ : other.last_)
         {
             BOOST_LEAF_ASSERT(last_ != nullptr);
             BOOST_LEAF_ASSERT(*last_ == nullptr);
             BOOST_LEAF_ASSERT(other.first_ == nullptr);
-            BOOST_LEAF_ASSERT(other.preloaded_list_ == nullptr);
             other.last_ = &other.first_;
-        }
-
-        preloaded_base * preloaded_list() const noexcept
-        {
-            return preloaded_list_;
-        }
-
-        preloaded_base * link_preloaded_item(preloaded_base * pb) noexcept
-        {
-            BOOST_LEAF_ASSERT(pb != nullptr);
-            preloaded_base * next = preloaded_list_;
-            preloaded_list_ = pb;
-            return next;
-        }
-
-        void unlink_preloaded_item(preloaded_base * next) noexcept
-        {
-            preloaded_list_ = next;
         }
 
         template <class E>
@@ -3505,38 +3480,6 @@ namespace detail
 
 namespace detail
 {
-#if BOOST_LEAF_CFG_CAPTURE
-    class preloaded_base
-    {
-    protected:
-
-        preloaded_base() noexcept:
-            next_(
-                []( preloaded_base * this_ ) -> preloaded_base *
-                {
-                    if( dynamic_allocator * da = get_dynamic_allocator() )
-                        return da->link_preloaded_item(this_);
-                    return nullptr;
-                }(this))
-        {
-        }
-
-        ~preloaded_base() noexcept
-        {
-            if( dynamic_allocator * da = get_dynamic_allocator() )
-                da->unlink_preloaded_item(next_);
-            else
-                BOOST_LEAF_ASSERT(next_ == nullptr);
-        }
-
-    public:
-
-        preloaded_base * const next_;
-
-        virtual void reserve( dynamic_allocator & ) const = 0;
-    };
-#endif // #if BOOST_LEAF_CFG_CAPTURE
-
     inline int current_id() noexcept
     {
         unsigned id = tls::read_current_error_id();
@@ -3551,13 +3494,8 @@ namespace detail
         return int(id);
     }
 
-    inline int start_new_error() noexcept(!BOOST_LEAF_CFG_CAPTURE)
+    inline int start_new_error() noexcept
     {
-#if BOOST_LEAF_CFG_CAPTURE
-        if( dynamic_allocator * da = get_dynamic_allocator() )
-            for( preloaded_base const * e = da->preloaded_list(); e; e = e->next_ )
-                e->reserve(*da);
-#endif
         return new_id();
     }
 
@@ -3836,10 +3774,10 @@ namespace detail
         template <class Tup>
         BOOST_LEAF_CONSTEXPR static error_type * check( Tup &, error_info const & ) noexcept;
 
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static E get( Tup & tup, error_info const & ei ) noexcept
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR static E get( Context & ctx, error_info const & ei ) noexcept
         {
-            return *check(tup, ei);
+            return *check(ctx.tup(), ei);
         }
 
         static_assert(!is_predicate<error_type>::value, "Handlers must take predicate arguments by value");
@@ -3861,10 +3799,10 @@ namespace detail
             return e && Pred::evaluate(*e);
         }
 
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static Pred get( Tup const & tup, error_info const & ei ) noexcept
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR static Pred get( Context const & ctx, error_info const & ei ) noexcept
         {
-            return Pred{*base::check(tup, ei)};
+            return Pred{*base::check(ctx.tup(), ei)};
         }
     };
 
@@ -3905,10 +3843,10 @@ namespace detail
     template <class E>
     struct handler_argument_traits<E *>: handler_argument_always_available<typename std::remove_const<E>::type>
     {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static E * get( Tup & tup, error_info const & ei) noexcept
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR static E * get( Context & ctx, error_info const & ei) noexcept
         {
-            return handler_argument_traits_defaults<E>::check(tup, ei);
+            return handler_argument_traits_defaults<E>::check(ctx.tup(), ei);
         }
     };
 
@@ -3990,7 +3928,8 @@ namespace detail
             tuple_for_each<I-1,Tup>::unload(tup, err_id);
         }
 
-        static void serialize_to(encoder & e, void const * tup, error_id id)
+        template <class Encoder>
+        static void serialize_to(Encoder & e, void const * tup, error_id id)
         {
             BOOST_LEAF_ASSERT(tup != nullptr);
             tuple_for_each<I-1,Tup>::serialize_to(e, tup, id);
@@ -4007,10 +3946,12 @@ namespace detail
         BOOST_LEAF_CONSTEXPR static void serialize_to(encoder &, void const *, error_id) { }
     };
 
-    template <class Tup>
-    void serialize_tuple_contents_to(encoder & e, void const * tup, error_id id)
+    class context_base;
+
+    template <class Context>
+    void serialize_context_to(encoder & e, context_base const & ctx, error_id id)
     {
-        tuple_for_each<std::tuple_size<Tup>::value, Tup>::serialize_to(e, tup, id);
+        static_cast<Context const &>(ctx).serialize_to(e, id);
     }
 } // namespace detail
 
@@ -4051,8 +3992,57 @@ namespace detail
 
 ////////////////////////////////////////
 
+namespace detail
+{
+    // The context_base type is able to walk up the parent error handling
+    // scopes to collect relevant error objects, so they can be serialized or
+    // printed by diagnostic_details.
+    //
+    // This introduces a bit of overhead which is semantically similar to the
+    // rest of the overhead introduced by BOOST_LEAF_CFG_CAPTURE=1, namely
+    // allocating unhandled error objects dynamically if diagnostic_details is
+    // handled.
+    class context_base
+    {
+#if BOOST_LEAF_CFG_CAPTURE
+        context_base( context_base const & ) = delete;
+        context_base & operator=( context_base const & ) = delete;
+
+    protected:
+
+        context_base * parent_ = nullptr;
+
+        context_base()
+        {
+            tls::reserve_ptr<context_base>();
+        }
+
+        context_base( context_base && ) noexcept = default;
+        ~context_base() noexcept = default;
+
+        void link() noexcept
+        {
+            parent_ = tls::read_ptr<context_base>();
+            tls::write_ptr<context_base>(this);
+        }
+
+        void unlink() noexcept
+        {
+            BOOST_LEAF_ASSERT(tls::read_ptr<context_base>() == this);
+            tls::write_ptr<context_base>(parent_);
+        }
+
+    public:
+
+        virtual void serialize_to_( encoder &, error_id ) const = 0;
+#endif
+    }; // class context_base
+} // namespace detail
+
+
 template <class... E>
-class context
+class context final:
+    public detail::context_base
 {
     context( context const & ) = delete;
     context & operator=( context const & ) = delete;
@@ -4091,9 +4081,29 @@ class context
         }
     };
 
+#if BOOST_LEAF_CFG_CAPTURE
+    void serialize_to_( detail::encoder & e, error_id id ) const override
+    {
+        detail::tuple_for_each<std::tuple_size<Tup>::value, Tup>::serialize_to(e, &tup_, id);
+        if( parent_ )
+            parent_->serialize_to_(e, id);
+    }
+#endif
+
 public:
 
+    template <class Encoder>
+    void serialize_to( Encoder & e, error_id id ) const
+    {
+        detail::tuple_for_each<std::tuple_size<Tup>::value, Tup>::serialize_to(e, &tup_, id);
+#if BOOST_LEAF_CFG_CAPTURE
+        if( parent_ )
+            parent_->serialize_to_(e, id);
+#endif
+    }
+
     BOOST_LEAF_CONSTEXPR context( context && x ) noexcept:
+        context_base(std::move(x)),
         tup_(std::move(x.tup_)),
         is_active_(false)
     {
@@ -4124,10 +4134,13 @@ public:
     {
         using namespace detail;
         BOOST_LEAF_ASSERT(!is_active());
-        tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
         thread_id_ = std::this_thread::get_id();
 #endif
+#if BOOST_LEAF_CFG_CAPTURE
+        context_base::link();
+#endif
+        tuple_for_each<std::tuple_size<Tup>::value,Tup>::activate(tup_);
         is_active_ = true;
     }
 
@@ -4135,17 +4148,21 @@ public:
     {
         using namespace detail;
         BOOST_LEAF_ASSERT(is_active());
-        is_active_ = false;
 #if !defined(BOOST_LEAF_NO_THREADS) && !defined(NDEBUG)
         BOOST_LEAF_ASSERT(std::this_thread::get_id() == thread_id_);
         thread_id_ = std::thread::id();
 #endif
+        is_active_ = false;
         tuple_for_each<std::tuple_size<Tup>::value,Tup>::deactivate(tup_);
+#if BOOST_LEAF_CFG_CAPTURE
+        context_base::unlink();
+#endif
     }
 
-    BOOST_LEAF_CONSTEXPR void unload(error_id id) noexcept(!BOOST_LEAF_CFG_CAPTURE)
+    void unload(error_id id) noexcept(!BOOST_LEAF_CFG_CAPTURE)
     {
         BOOST_LEAF_ASSERT(!is_active());
+        tls::write_current_error_id(static_cast<unsigned>(id.value()));
         detail::tuple_for_each<std::tuple_size<Tup>::value,Tup>::unload(tup_, id.value());
     }
 
@@ -4617,10 +4634,10 @@ namespace detail
     template <class R, class F, bool IsResult = is_result_type<R>::value, class FReturnType = fn_return_type<F>>
     struct handler_caller
     {
-        template <class Tup, class... A>
-        BOOST_LEAF_CONSTEXPR static R call( Tup & tup, error_info const & ei, F && f, leaf_detail_mp11::mp_list<A...> )
+        template <class Context, class... A>
+        BOOST_LEAF_CONSTEXPR static R call( Context & ctx, error_info const & ei, F && f, leaf_detail_mp11::mp_list<A...> )
         {
-            return std::forward<F>(f)( handler_argument_traits<A>::get(tup, ei)... );
+            return std::forward<F>(f)( handler_argument_traits<A>::get(ctx, ei)... );
         }
     };
 
@@ -4629,10 +4646,10 @@ namespace detail
     {
         using R = Result<void, E...>;
 
-        template <class Tup, class... A>
-        BOOST_LEAF_CONSTEXPR static R call( Tup & tup, error_info const & ei, F && f, leaf_detail_mp11::mp_list<A...> )
+        template <class Context, class... A>
+        BOOST_LEAF_CONSTEXPR static R call( Context & ctx, error_info const & ei, F && f, leaf_detail_mp11::mp_list<A...> )
         {
-            std::forward<F>(f)( handler_argument_traits<A>::get(tup, ei)... );
+            std::forward<F>(f)( handler_argument_traits<A>::get(ctx, ei)... );
             return { };
         }
     };
@@ -4646,61 +4663,61 @@ namespace detail
     template <class... T>
     struct is_tuple<std::tuple<T...> &>: std::true_type { };
 
-    template <class R, class Tup, class H>
+    template <class R, class Context, class H>
     BOOST_LEAF_CONSTEXPR inline
     typename std::enable_if<!is_tuple<typename std::decay<H>::type>::value, R>::type
-    handle_error_( Tup & tup, error_info const & ei, H && h )
+    handle_error_( Context & ctx, error_info const & ei, H && h )
     {
         static_assert( handler_matches_any_error<fn_mp_args<H>>::value, "The last handler passed to handle_all must match any error." );
-        return handler_caller<R, H>::call( tup, ei, std::forward<H>(h), fn_mp_args<H>{ } );
+        return handler_caller<R, H>::call( ctx, ei, std::forward<H>(h), fn_mp_args<H>{ } );
     }
 
-    template <class R, class Tup, class Car, class... Cdr>
+    template <class R, class Context, class Car, class... Cdr>
     BOOST_LEAF_CONSTEXPR inline
     typename std::enable_if<!is_tuple<typename std::decay<Car>::type>::value, R>::type
-    handle_error_( Tup & tup, error_info const & ei, Car && car, Cdr && ... cdr )
+    handle_error_( Context & ctx, error_info const & ei, Car && car, Cdr && ... cdr )
     {
-        if( handler_matches_any_error<fn_mp_args<Car>>::value || check_handler_( tup, ei, fn_mp_args<Car>{ } ) )
-            return handler_caller<R, Car>::call( tup, ei, std::forward<Car>(car), fn_mp_args<Car>{ } );
+        if( handler_matches_any_error<fn_mp_args<Car>>::value || check_handler_( ctx.tup(), ei, fn_mp_args<Car>{ } ) )
+            return handler_caller<R, Car>::call( ctx, ei, std::forward<Car>(car), fn_mp_args<Car>{ } );
         else
-            return handle_error_<R>( tup, ei, std::forward<Cdr>(cdr)...);
+            return handle_error_<R>( ctx, ei, std::forward<Cdr>(cdr)...);
     }
 
-    template <class R, class Tup, class HTup, size_t ... I>
+    template <class R, class Context, class HTup, size_t ... I>
     BOOST_LEAF_CONSTEXPR inline
     R
-    handle_error_tuple_( Tup & tup, error_info const & ei, leaf_detail_mp11::index_sequence<I...>, HTup && htup )
+    handle_error_tuple_( Context & ctx, error_info const & ei, leaf_detail_mp11::index_sequence<I...>, HTup && htup )
     {
-        return handle_error_<R>(tup, ei, std::get<I>(std::forward<HTup>(htup))...);
+        return handle_error_<R>(ctx, ei, std::get<I>(std::forward<HTup>(htup))...);
     }
 
-    template <class R, class Tup, class HTup, class... Cdr, size_t ... I>
+    template <class R, class Context, class HTup, class... Cdr, size_t ... I>
     BOOST_LEAF_CONSTEXPR inline
     R
-    handle_error_tuple_( Tup & tup, error_info const & ei, leaf_detail_mp11::index_sequence<I...>, HTup && htup, Cdr && ... cdr )
+    handle_error_tuple_( Context & ctx, error_info const & ei, leaf_detail_mp11::index_sequence<I...>, HTup && htup, Cdr && ... cdr )
     {
-        return handle_error_<R>(tup, ei, std::get<I>(std::forward<HTup>(htup))..., std::forward<Cdr>(cdr)...);
+        return handle_error_<R>(ctx, ei, std::get<I>(std::forward<HTup>(htup))..., std::forward<Cdr>(cdr)...);
     }
 
-    template <class R, class Tup, class H>
+    template <class R, class Context, class H>
     BOOST_LEAF_CONSTEXPR inline
     typename std::enable_if<is_tuple<typename std::decay<H>::type>::value, R>::type
-    handle_error_( Tup & tup, error_info const & ei, H && h )
+    handle_error_( Context & ctx, error_info const & ei, H && h )
     {
         return handle_error_tuple_<R>(
-            tup,
+            ctx,
             ei,
             leaf_detail_mp11::make_index_sequence<std::tuple_size<typename std::decay<H>::type>::value>(),
             std::forward<H>(h));
     }
 
-    template <class R, class Tup, class Car, class... Cdr>
+    template <class R, class Context, class Car, class... Cdr>
     BOOST_LEAF_CONSTEXPR inline
     typename std::enable_if<is_tuple<typename std::decay<Car>::type>::value, R>::type
-    handle_error_( Tup & tup, error_info const & ei, Car && car, Cdr && ... cdr )
+    handle_error_( Context & ctx, error_info const & ei, Car && car, Cdr && ... cdr )
     {
         return handle_error_tuple_<R>(
-            tup,
+            ctx,
             ei,
             leaf_detail_mp11::make_index_sequence<std::tuple_size<typename std::decay<Car>::type>::value>(),
             std::forward<Car>(car),
@@ -4718,7 +4735,7 @@ context<E...>::
 handle_error( error_id id, H && ... h ) const
 {
     BOOST_LEAF_ASSERT(!is_active());
-    return detail::handle_error_<R>(tup(), error_info(id, nullptr, this->get<e_source_location>(id)), std::forward<H>(h)...);
+    return detail::handle_error_<R>(*this, error_info(id, nullptr, this->get<e_source_location>(id)), std::forward<H>(h)...);
 }
 
 template <class... E>
@@ -4729,7 +4746,7 @@ context<E...>::
 handle_error( error_id id, H && ... h )
 {
     BOOST_LEAF_ASSERT(!is_active());
-    return detail::handle_error_<R>(tup(), error_info(id, nullptr, this->get<e_source_location>(id)), std::forward<H>(h)...);
+    return detail::handle_error_<R>(*this, error_info(id, nullptr, this->get<e_source_location>(id)), std::forward<H>(h)...);
 }
 
 ////////////////////////////////////////
@@ -4825,7 +4842,7 @@ namespace detail
         {
             ctx.deactivate();
             error_id id = detail::unpack_error_id(ex);
-            return handle_error_<R>(ctx.tup(), error_info(id, &ex, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
+            return handle_error_<R>(ctx, error_info(id, &ex, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
                 [&]() -> R
                 {
                     ctx.unload(id);
@@ -4836,7 +4853,7 @@ namespace detail
         {
             ctx.deactivate();
             error_id id = current_error();
-            return handle_error_<R>(ctx.tup(), error_info(id, nullptr, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
+            return handle_error_<R>(ctx, error_info(id, nullptr, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
                 [&]() -> R
                 {
                     ctx.unload(id);
@@ -4915,7 +4932,7 @@ try_catch( TryBlock && try_block, H && ... h )
     {
         ctx.deactivate();
         error_id id = detail::unpack_error_id(ex);
-        return detail::handle_error_<R>(ctx.tup(), error_info(id, &ex, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
+        return detail::handle_error_<R>(ctx, error_info(id, &ex, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
             [&]() -> R
             {
                 ctx.unload(id);
@@ -4926,7 +4943,7 @@ try_catch( TryBlock && try_block, H && ... h )
     {
         ctx.deactivate();
         error_id id = current_error();
-        return detail::handle_error_<R>(ctx.tup(), error_info(id, nullptr, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
+        return detail::handle_error_<R>(ctx, error_info(id, nullptr, ctx.template get<e_source_location>(id)), std::forward<H>(h)...,
             [&]() -> R
             {
                 ctx.unload(id);
@@ -5103,10 +5120,10 @@ namespace detail
                 return nullptr;
         }
 
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static boost::error_info<Tag, T> get( Tup const & tup, error_info const & ei ) noexcept
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR static boost::error_info<Tag, T> get( Context const & ctx, error_info const & ei ) noexcept
         {
-            return boost::error_info<Tag, T>(*check(tup, ei));
+            return boost::error_info<Tag, T>(*check(ctx.tup(), ei));
         }
     };
 
@@ -5128,18 +5145,18 @@ namespace boost { namespace leaf {
 
 class diagnostic_info: public error_info
 {
-    void const * tup_;
-    void (*serialize_tuple_contents_to_)(detail::encoder &, void const *, error_id);
+    detail::context_base const & ctx_;
+    void (*serialize_ctx_to_)(detail::encoder &, detail::context_base const &, error_id);
 
 protected:
 
     diagnostic_info( diagnostic_info const & ) noexcept = default;
 
-    template <class Tup>
-    BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei, Tup const & tup ) noexcept:
+    template <class Context>
+    BOOST_LEAF_CONSTEXPR diagnostic_info( error_info const & ei, Context const & ctx ) noexcept:
         error_info(ei),
-        tup_(&tup),
-        serialize_tuple_contents_to_(&detail::serialize_tuple_contents_to<Tup>)
+        ctx_(ctx),
+        serialize_ctx_to_(&detail::serialize_context_to<Context>)
     {
     }
 
@@ -5147,7 +5164,7 @@ protected:
     void serialize_to_(Encoder & e) const
     {
         static_assert(std::is_base_of<detail::encoder, Encoder>::value, "Encoder must derive from detail::encoder");
-        serialize_tuple_contents_to_(e, tup_, error());
+        serialize_ctx_to_(e, ctx_, error());
     }
 
 public:
@@ -5177,9 +5194,9 @@ namespace detail
 {
     struct diagnostic_info_: diagnostic_info
     {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR diagnostic_info_( error_info const & ei, Tup const & tup ) noexcept:
-            diagnostic_info(ei, tup)
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR diagnostic_info_( error_info const & ei, Context const & ctx ) noexcept:
+            diagnostic_info(ei, ctx)
         {
         }
     };
@@ -5187,10 +5204,10 @@ namespace detail
     template <>
     struct handler_argument_traits<diagnostic_info const &>: handler_argument_always_available<e_source_location>
     {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static diagnostic_info_ get( Tup const & tup, error_info const & ei ) noexcept
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR static diagnostic_info_ get( Context const & ctx, error_info const & ei ) noexcept
         {
-            return diagnostic_info_(ei, tup);
+            return diagnostic_info_(ei, ctx);
         }
     };
 }
@@ -5207,9 +5224,9 @@ protected:
 
     diagnostic_details( diagnostic_details const & ) noexcept = default;
 
-    template <class Tup>
-    BOOST_LEAF_CONSTEXPR diagnostic_details( error_info const & ei, Tup const & tup, detail::dynamic_allocator const * da ) noexcept:
-        diagnostic_info(ei, tup),
+    template <class Context>
+    BOOST_LEAF_CONSTEXPR diagnostic_details( error_info const & ei, Context const & ctx, detail::dynamic_allocator const * da ) noexcept:
+        diagnostic_info(ei, ctx),
         da_(da)
     {
     }
@@ -5252,9 +5269,9 @@ namespace detail
 {
     struct diagnostic_details_: diagnostic_details
     {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR diagnostic_details_( error_info const & ei, Tup const & tup, dynamic_allocator const * da ) noexcept:
-            diagnostic_details(ei, tup, da)
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR diagnostic_details_( error_info const & ei, Context const & ctx, dynamic_allocator const * da ) noexcept:
+            diagnostic_details(ei, ctx, da)
         {
         }
     };
@@ -5262,11 +5279,11 @@ namespace detail
     template <>
     struct handler_argument_traits<diagnostic_details const &>: handler_argument_always_available<e_source_location, dynamic_allocator>
     {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static diagnostic_details_ get( Tup const & tup, error_info const & ei ) noexcept
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR static diagnostic_details_ get( Context const & ctx, error_info const & ei ) noexcept
         {
-            slot<dynamic_allocator> const * da = find_in_tuple<slot<dynamic_allocator>>(tup);
-            return diagnostic_details_(ei, tup, da ? &da->get() : nullptr );
+            slot<dynamic_allocator> const * da = find_in_tuple<slot<dynamic_allocator>>(ctx.tup());
+            return diagnostic_details_(ei, ctx, da ? &da->get() : nullptr );
         }
     };
 }
@@ -5279,9 +5296,9 @@ protected:
 
     diagnostic_details( diagnostic_details const & ) noexcept = default;
 
-    template <class Tup>
-    BOOST_LEAF_CONSTEXPR diagnostic_details( error_info const & ei, Tup const & tup ) noexcept:
-        diagnostic_info(ei, tup)
+    template <class Context>
+    BOOST_LEAF_CONSTEXPR diagnostic_details( error_info const & ei, Context const & ctx ) noexcept:
+        diagnostic_info(ei, ctx)
     {
     }
 
@@ -5313,9 +5330,9 @@ namespace detail
 {
     struct diagnostic_details_: diagnostic_details
     {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR diagnostic_details_( error_info const & ei, Tup const & tup ) noexcept:
-            diagnostic_details(ei, tup)
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR diagnostic_details_( error_info const & ei, Context const & ctx ) noexcept:
+            diagnostic_details(ei, ctx)
         {
         }
     };
@@ -5323,10 +5340,10 @@ namespace detail
     template <>
     struct handler_argument_traits<diagnostic_details const &>: handler_argument_always_available<e_source_location>
     {
-        template <class Tup>
-        BOOST_LEAF_CONSTEXPR static diagnostic_details_ get( Tup const & tup, error_info const & ei ) noexcept
+        template <class Context>
+        BOOST_LEAF_CONSTEXPR static diagnostic_details_ get( Context const & ctx, error_info const & ei ) noexcept
         {
-            return diagnostic_details_(ei, tup);
+            return diagnostic_details_(ei, ctx);
         }
     };
 }
@@ -5631,7 +5648,7 @@ exception_to_result( F && f ) noexcept(!BOOST_LEAF_CFG_CAPTURE)
 } } // namespace boost::leaf
 
 #endif // #ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4244
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4261
 // >>> #include <boost/leaf/on_error.hpp>
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
@@ -5672,19 +5689,7 @@ public:
 #   else
             if( std::uncaught_exception() )
 #   endif
-#   if BOOST_LEAF_CFG_CAPTURE
-                try
-                {
-                    return detail::start_new_error();
-                }
-                catch(...)
-                {
-                    BOOST_LEAF_ASSERT(detail::current_id() == err_id_);
-                    return detail::new_id();
-                }
-#   else
-                return detail::start_new_error();
-#   endif
+                return detail::new_id();
 #endif
             return 0;
         }
@@ -5892,9 +5897,6 @@ namespace detail
 
     template <class... Item>
     class preloaded
-#if BOOST_LEAF_CFG_CAPTURE
-        : preloaded_base
-#endif
     {
         preloaded( preloaded const & ) = delete;
         preloaded & operator=( preloaded const & ) = delete;
@@ -5903,13 +5905,6 @@ namespace detail
         error_monitor id_;
 #if __cplusplus < 201703L
         bool moved_ = false;
-#endif
-
-#if BOOST_LEAF_CFG_CAPTURE
-        void reserve( dynamic_allocator & da ) const override
-        {
-            tuple_for_each_preload<sizeof...(Item),decltype(p_)>::reserve(p_,da);
-        }
 #endif
 
     public:
@@ -5934,8 +5929,24 @@ namespace detail
             if( moved_ )
                 return;
 #endif
-            if( auto id = id_.check_id() )
-                tuple_for_each_preload<sizeof...(Item),decltype(p_)>::trigger(p_,id);
+            if( int const err_id = id_.check_id() )
+            {
+#if BOOST_LEAF_CFG_CAPTURE
+                if( dynamic_allocator * da = get_dynamic_allocator() )
+#   ifndef BOOST_LEAF_NO_EXCEPTIONS
+                    try
+                    {
+#   endif
+                        tuple_for_each_preload<sizeof...(Item),decltype(p_)>::reserve(p_, *da);
+#   ifndef BOOST_LEAF_NO_EXCEPTIONS
+                    }
+                    catch(...)
+                    {
+                    }
+#   endif
+#endif
+                tuple_for_each_preload<sizeof...(Item),decltype(p_)>::trigger(p_, err_id);
+            }
         }
     };
 
@@ -5978,7 +5989,7 @@ on_error( Item && ... i )
 
 // #line 8 "boost/leaf/pred.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4244
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4261
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -6272,7 +6283,7 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 
 // #line 8 "boost/leaf/result.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/exception.hpp> // Expanded at line 5341
+// #include <boost/leaf/exception.hpp> // Expanded at line 5358
 // #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1540
 // #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 2800
 
@@ -7101,8 +7112,8 @@ namespace serialization
 #if __cplusplus >= 201703L
 
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4244
-// #include <boost/leaf/result.hpp> // Expanded at line 6270
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4261
+// #include <boost/leaf/result.hpp> // Expanded at line 6281
 #include <variant>
 #include <optional>
 #include <tuple>
