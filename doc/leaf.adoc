@@ -2350,7 +2350,7 @@ namespace boost { namespace leaf {
 #define BOOST_LEAF_ASSIGN(v, r)\
   auto && <<temp>> = r;\
   if( !<<temp>> )\
-    return <<temp>>.error();\
+    return std::forward<decltype(<<newp>>)>(<<temp>>).error();\
   v = std::forward<decltype(<<temp>>)>(<<temp>>).value()
 
 #define BOOST_LEAF_AUTO(v, r)\
@@ -2362,7 +2362,7 @@ namespace boost { namespace leaf {
   ({\
     auto && <<temp>> = (r);\
     if( !<<temp>> )\
-        return <<temp>>.error();\
+      return std::forward<decltype(<<newp>>)>(<<temp>>).error();\
     std::move(<<temp>>);\
   }).value()
 
@@ -5571,7 +5571,7 @@ TIP: The contents of each Reference section are organized alphabetically.
 #define BOOST_LEAF_ASSIGN(v, r)\
   auto && <<temp>> = r;\
   if( !<<temp>> )\
-    return <<temp>>.error();\
+    return std::forward<decltype(<<newp>>)>(<<temp>>).error();\
   v = std::forward<decltype(<<temp>>)>(<<temp>>).value()
 ----
 
@@ -5645,7 +5645,7 @@ NOTE: See also <<BOOST_LEAF_ASSIGN>>.
   ({\
     auto && <<temp>> = (r);\
     if( !<<temp>> )\
-      return <<temp>>.error();\
+      return std::forward<decltype(<<newp>>)>(<<temp>>).error();\
     std::move(<<temp>>);\
   }).value()
 
@@ -5655,7 +5655,7 @@ NOTE: See also <<BOOST_LEAF_ASSIGN>>.
   {\
     auto && <<temp>> = (r);\
     if( !<<temp>> )\
-      return <<temp>>.error();\
+      return std::forward<decltype(<<newp>>)>(<<temp>>).error();\
   }
 
 #endif
