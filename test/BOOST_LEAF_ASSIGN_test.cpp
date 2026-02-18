@@ -9,6 +9,7 @@
 #   include <boost/leaf/handle_errors.hpp>
 #endif
 
+#include "_test_res.hpp"
 #include "lightweight_test.hpp"
 #ifdef BOOST_LEAF_BOOST_AVAILABLE
 #   include <boost/config/workaround.hpp>
@@ -82,6 +83,20 @@ int main()
             } );
         BOOST_TEST_EQ(r, 0);
     }
+
+#ifndef BOOST_LEAF_NO_CXX11_REF_QUALIFIERS
+    {
+        auto r = []() -> test_res<int, test_error>
+        {
+            int v = 0;
+            BOOST_LEAF_ASSIGN(v, ([]() -> test_res<int, test_error> { return test_error(42); }()));
+            return v;
+        }();
+        BOOST_TEST(!r);
+        BOOST_TEST(r.error().moved);
+        BOOST_TEST_EQ(r.error().value, 42);
+    }
+#endif
 
     return boost::report_errors();
 }
