@@ -3166,7 +3166,7 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
 <span class="cp">#define BOOST_LEAF_ASSIGN(v, r)\
   auto &amp;&amp; &lt;&lt;temp&gt;&gt; = r;\
   if( !&lt;&lt;temp&gt;&gt; )\
-    return &lt;&lt;temp&gt;&gt;.error();\
+    return std::forward&lt;decltype(&lt;&lt;newp&gt;&gt;)&gt;(&lt;&lt;temp&gt;&gt;).error();\
   v = std::forward&lt;decltype(&lt;&lt;temp&gt;&gt;)&gt;(&lt;&lt;temp&gt;&gt;).value()
 </span>
 <span class="cp">#define BOOST_LEAF_AUTO(v, r)\
@@ -3178,7 +3178,7 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
   ({\
     auto &amp;&amp; &lt;&lt;temp&gt;&gt; = (r);\
     if( !&lt;&lt;temp&gt;&gt; )\
-        return &lt;&lt;temp&gt;&gt;.error();\
+      return std::forward&lt;decltype(&lt;&lt;newp&gt;&gt;)&gt;(&lt;&lt;temp&gt;&gt;).error();\
     std::move(&lt;&lt;temp&gt;&gt;);\
   }).value()
 </span>
@@ -7740,7 +7740,7 @@ The contents of each Reference section are organized alphabetically.
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#define BOOST_LEAF_ASSIGN(v, r)\
   auto &amp;&amp; &lt;&lt;temp&gt;&gt; = r;\
   if( !&lt;&lt;temp&gt;&gt; )\
-    return &lt;&lt;temp&gt;&gt;.error();\
+    return std::forward&lt;decltype(&lt;&lt;newp&gt;&gt;)&gt;(&lt;&lt;temp&gt;&gt;).error();\
   v = std::forward&lt;decltype(&lt;&lt;temp&gt;&gt;)&gt;(&lt;&lt;temp&gt;&gt;).value()</span></code></pre>
 </div>
 </div>
@@ -7848,7 +7848,7 @@ See also <a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a>.
   ({\
     auto &amp;&amp; &lt;&lt;temp&gt;&gt; = (r);\
     if( !&lt;&lt;temp&gt;&gt; )\
-      return &lt;&lt;temp&gt;&gt;.error();\
+      return std::forward&lt;decltype(&lt;&lt;newp&gt;&gt;)&gt;(&lt;&lt;temp&gt;&gt;).error();\
     std::move(&lt;&lt;temp&gt;&gt;);\
   }).value()
 </span>
@@ -7858,7 +7858,7 @@ See also <a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a>.
   {\
     auto &amp;&amp; &lt;&lt;temp&gt;&gt; = (r);\
     if( !&lt;&lt;temp&gt;&gt; )\
-      return &lt;&lt;temp&gt;&gt;.error();\
+      return std::forward&lt;decltype(&lt;&lt;newp&gt;&gt;)&gt;(&lt;&lt;temp&gt;&gt;).error();\
   }
 </span>
 <span class="cp">#endif</span></code></pre>

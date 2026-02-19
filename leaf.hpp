@@ -2,7 +2,7 @@
 #define BOOST_LEAF_HPP_INCLUDED
 
 // Boost LEAF single header distribution. Do not edit.
-// Generated on Feb 12, 2026 from https://github.com/boostorg/leaf/tree/bd58aa2.
+// Generated on Feb 19, 2026 from https://github.com/boostorg/leaf/tree/e8fe60e.
 
 // Latest published version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
@@ -2952,7 +2952,7 @@ namespace serialization
     static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
         "BOOST_LEAF_ASSIGN/BOOST_LEAF_AUTO requires a result object as the second argument (see is_result_type)");\
     if( !BOOST_LEAF_TMP )\
-        return BOOST_LEAF_TMP.error();\
+        return std::forward<decltype(BOOST_LEAF_TMP)>(BOOST_LEAF_TMP).error();\
     v = std::forward<decltype(BOOST_LEAF_TMP)>(BOOST_LEAF_TMP).value()
 
 #define BOOST_LEAF_AUTO(v, r)\
@@ -2966,7 +2966,7 @@ namespace serialization
             static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
                 "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
             if( !BOOST_LEAF_TMP )\
-                return BOOST_LEAF_TMP.error();\
+                return std::forward<decltype(BOOST_LEAF_TMP)>(BOOST_LEAF_TMP).error();\
             std::move(BOOST_LEAF_TMP);\
         }).value()
 
@@ -2978,7 +2978,7 @@ namespace serialization
             static_assert(::boost::leaf::is_result_type<typename std::decay<decltype(BOOST_LEAF_TMP)>::type>::value,\
                 "BOOST_LEAF_CHECK requires a result object (see is_result_type)");\
             if( !BOOST_LEAF_TMP )\
-                return BOOST_LEAF_TMP.error();\
+                return std::forward<decltype(BOOST_LEAF_TMP)>(BOOST_LEAF_TMP).error();\
         }
 
 #endif // #else (#if BOOST_LEAF_CFG_GNUC_STMTEXPR)
