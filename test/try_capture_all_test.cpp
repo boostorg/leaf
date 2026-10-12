@@ -89,6 +89,20 @@ int main()
     }
 #endif // #ifndef BOOST_LEAF_NO_EXCEPTIONS
     {
+        leaf::result<void> r = leaf::try_capture_all( []() { } );
+        BOOST_TEST(r);
+    }
+    {
+        leaf::result<void> r = leaf::try_capture_all(
+            []()
+            {
+                (void) leaf::new_error(err<1>{}, err<2>{});
+            });
+        BOOST_TEST(r);
+    }
+    BOOST_TEST_EQ(err<1>::count, 0);
+    BOOST_TEST_EQ(err<2>::count, 0);
+    {
         leaf::result<void> r = leaf::try_capture_all(
             []() -> leaf::result<void>
             {

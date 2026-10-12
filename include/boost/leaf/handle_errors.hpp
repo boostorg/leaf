@@ -780,6 +780,7 @@ namespace detail
 #endif
             {
                 std::forward<TryBlock>(try_block)();
+                sl.deactivate();
                 return {};
             }
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
