@@ -292,8 +292,9 @@ protected:
     template <class U>
     void move_assign( result<U> && x ) noexcept
     {
+        result tmp(std::move(x));
         destroy();
-        what_ = move_from(std::move(x));
+        what_ = move_from(std::move(tmp));
     }
 
     template <class Encoder>
