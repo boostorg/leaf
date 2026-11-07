@@ -10,6 +10,7 @@ on:
 
 env:
   UBSAN_OPTIONS: print_stacktrace=1
+  NET_RETRY_COUNT: 5
 
 jobs:
   posix:
@@ -187,9 +188,6 @@ jobs:
             install: clang-20
           - toolset: clang
             cxxstd: "11,14,17,20,2b"
-            os: macos-14
-          - toolset: clang
-            cxxstd: "11,14,17,20,2b"
             os: macos-15
           - toolset: clang
             cxxstd: "11,14,17,20,2b"
@@ -199,11 +197,7 @@ jobs:
 
     runs-on: ${{matrix.platform.os}}
 
-    container:
-      image: ${{matrix.platform.container}}
-      volumes:
-        - /node24217:/node24217:rw,rshared
-        - ${{ startsWith(matrix.platform.container, 'ubuntu:1') && '/node24217:/__e/node24:ro,rshared' || ' ' }}
+    container: ${{matrix.platform.container}}
 
     defaults:
       run:
@@ -214,15 +208,7 @@ jobs:
         if: matrix.platform.container
         run: |
           apt-get update
-          apt-get -y install sudo python3 git g++ curl xz-utils
-
-      - name: Install nodejs24glibc2.17
-        if: ${{ startsWith( matrix.platform.container, 'ubuntu:1' ) }}
-        run: |
-          curl -LO https://archives.boost.io/misc/node/node-v24.15.0-linux-x64-glibc-217.tar.xz
-          tar -xf node-v24.15.0-linux-x64-glibc-217.tar.xz --strip-components 1 -C /node24217
-
-      - uses: actions/checkout@v4
+          apt-get -y install sudo python3 git g++ curl ca-certificates
 
       - name: Install packages
         if: matrix.platform.install
@@ -243,10 +229,25 @@ jobs:
           echo REF: $REF
           BOOST_BRANCH=develop && [ "$REF" == "master" ] && BOOST_BRANCH=master || true
           echo BOOST_BRANCH: $BOOST_BRANCH
+          mkdir -p snapshot
+          cd snapshot
+          echo "Downloading library snapshot: https://github.com/${GITHUB_REPOSITORY}/archive/${GITHUB_SHA}.tar.gz"
+          curl -L --retry "$NET_RETRY_COUNT" -o "${LIBRARY}-${GITHUB_SHA}.tar.gz" "https://github.com/${GITHUB_REPOSITORY}/archive/${GITHUB_SHA}.tar.gz"
+          tar -xf "${LIBRARY}-${GITHUB_SHA}.tar.gz"
+          if [ ! -d "${LIBRARY}-${GITHUB_SHA}" ]
+          then
+              echo "Library snapshot does not contain the library directory ${LIBRARY}-${GITHUB_SHA}:"
+              ls -la
+              exit 1
+          fi
+          rm -f "${LIBRARY}-${GITHUB_SHA}.tar.gz"
           cd ..
           git clone -b $BOOST_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
           cd boost-root
-          cp -r $GITHUB_WORKSPACE/* libs/$LIBRARY
+          mkdir -p libs
+          rm -rf "libs/$LIBRARY"
+          mv -f "../snapshot/${LIBRARY}-${GITHUB_SHA}" "libs/$LIBRARY"
+          rm -rf ../snapshot
           git submodule update --init tools/boostdep
           python3 tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
           ./bootstrap.sh
@@ -259,13 +260,13 @@ jobs:
 
       - name: Generate headers
         run: |
-          cd ../boost-root/libs/leaf
+          cd boost-root/libs/leaf
           python3 scripts/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o test/leaf.hpp boost/leaf
           python3 scripts/download_nlohmann_json.py
 
       - name: Run tests
         run: |
-          cd ../boost-root
+          cd boost-root
           ./b2 -j3 libs/$LIBRARY/test toolset=${{matrix.platform.toolset}} cxxstd=${{matrix.platform.cxxstd}} ${ADDRMD:+address-model=$ADDRMD} link=shared,static variant=${{matrix.config.variant}}
           ./b2 -j3 libs/$LIBRARY/test toolset=${{matrix.platform.toolset}} cxxstd=${{matrix.platform.cxxstd}} ${ADDRMD:+address-model=$ADDRMD} link=shared,static variant=${{matrix.config.variant}} exception-handling=off rtti=off
 
@@ -302,8 +303,6 @@ jobs:
     runs-on: ${{matrix.platform.os}}
 
     steps:
-      - uses: actions/checkout@v4
-
       - name: Setup Boost
         shell: cmd
         run: |
@@ -317,10 +316,24 @@ jobs:
           set BOOST_BRANCH=develop
           for /f %%i in ("%GITHUB_BASE_REF%") do if "%%~nxi" == "master" set BOOST_BRANCH=master
           echo BOOST_BRANCH: %BOOST_BRANCH%
+          mkdir snapshot
+          cd snapshot
+          echo Downloading library snapshot: https://github.com/%GITHUB_REPOSITORY%/archive/%GITHUB_SHA%.zip
+          curl -L --retry %NET_RETRY_COUNT% -o "%LIBRARY%-%GITHUB_SHA%.zip" "https://github.com/%GITHUB_REPOSITORY%/archive/%GITHUB_SHA%.zip"
+          tar -xf "%LIBRARY%-%GITHUB_SHA%.zip"
+          if not exist "%LIBRARY%-%GITHUB_SHA%\" (
+              echo Library snapshot does not contain the library directory %LIBRARY%-%GITHUB_SHA%:
+              dir
+              exit /b 1
+          )
+          del /f "%LIBRARY%-%GITHUB_SHA%.zip"
           cd ..
           git clone -b %BOOST_BRANCH% --depth 1 https://github.com/boostorg/boost.git boost-root
           cd boost-root
-          xcopy /s /e /q %GITHUB_WORKSPACE% libs\%LIBRARY%\
+          if not exist "libs\" mkdir libs
+          if exist "libs\%LIBRARY%\" rmdir /s /q "libs\%LIBRARY%"
+          move /Y "..\snapshot\%LIBRARY%-%GITHUB_SHA%" "libs\%LIBRARY%"
+          rmdir /s /q "..\snapshot"
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" %LIBRARY%
           cmd /c bootstrap
@@ -328,13 +341,13 @@ jobs:
 
       - name: Generate headers
         run: |
-          cd ../boost-root/libs/leaf
+          cd boost-root/libs/leaf
           python3 scripts/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o test/leaf.hpp boost/leaf
           python3 scripts/download_nlohmann_json.py
 
       - name: Run tests
         shell: cmd
         run: |
-          cd ../boost-root
+          cd boost-root
           b2 -j3 --abbreviate-paths libs/%LIBRARY%/test toolset=${{matrix.platform.toolset}} cxxstd=${{matrix.platform.cxxstd}} address-model=${{matrix.platform.addrmd}} link=shared,static variant=${{matrix.config.variant}}
           b2 -j3 --abbreviate-paths libs/%LIBRARY%/test toolset=${{matrix.platform.toolset}} cxxstd=${{matrix.platform.cxxstd}} address-model=${{matrix.platform.addrmd}} link=shared,static variant=${{matrix.config.variant}} exception-handling=off rtti=off
