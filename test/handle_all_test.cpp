@@ -699,5 +699,32 @@ int main()
         BOOST_TEST_EQ(r.value, 2);
     }
 
+    {
+        int c=0;
+        leaf::try_handle_all(
+            [&c]() -> leaf::result<void>
+            {
+                BOOST_LEAF_AUTO(answer, f<int>(my_error_code::error1));
+                c = answer;
+                return { };
+            },
+            [&c]( info<4> )
+            {
+                BOOST_TEST_EQ(c, 0);
+                c = 1;
+            },
+            [&c]
+            {
+                BOOST_TEST_EQ(c, 0);
+                c = 2;
+            },
+            [&c]( my_error_code )
+            {
+                BOOST_TEST_EQ(c, 0);
+                c = 3;
+            } );
+        BOOST_TEST_EQ(c, 2);
+    }
+
     return boost::report_errors();
 }

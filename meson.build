@@ -105,6 +105,7 @@ leaf = declare_dependency( include_directories: 'include', compile_args: defines
 if option_enable_unit_tests
 
     tests = [
+        'activate_context_test',
         'BOOST_LEAF_ASSIGN_test',
         'BOOST_LEAF_AUTO_test',
         'BOOST_LEAF_CHECK_test',
@@ -116,7 +117,6 @@ if option_enable_unit_tests
         'capture_result_async_test',
         'capture_result_state_test',
         'capture_result_unload_test',
-        'context_activator_test',
         'context_deduction_test',
         'ctx_handle_all_test',
         'ctx_handle_some_test',

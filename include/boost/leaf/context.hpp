@@ -513,13 +513,13 @@ using context_type_from_handlers = typename detail::context_type_from_handlers_i
 ////////////////////////////////////////
 
 template <class...  H>
-BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context() noexcept
+BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context()
 {
     return { };
 }
 
 template <class...  H>
-BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && ... ) noexcept
+BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && ... )
 {
     return { };
 }

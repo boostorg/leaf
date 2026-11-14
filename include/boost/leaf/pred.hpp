@@ -65,9 +65,9 @@ struct condition<Enum, Enum>
 
 #if __cplusplus >= 201703L
 template <class ErrorCodeEnum>
-BOOST_LEAF_CONSTEXPR inline bool category( std::error_code const & ec )
+BOOST_LEAF_CONSTEXPR inline bool category( std::error_code const & ec ) noexcept
 {
-    static_assert(std::is_error_code_enum<ErrorCodeEnum>::value, "leaf::category requires an error code enum");
+    static_assert(std::is_error_code_enum<ErrorCodeEnum>::value, "leaf::category<Enum> requires Enum to be registered with std::is_error_code_enum.");
     return &ec.category() == &std::error_code(ErrorCodeEnum{}).category();
 }
 #endif
@@ -116,7 +116,7 @@ template <class Enum, BOOST_LEAF_MATCH_ARGS(BOOST_LEAF_ESC(match_enum_type<condi
 struct match<condition<Enum, Enum>, V1, V...>
 {
     using error_type = std::error_code;
-    std::error_code const & matched;
+    std::error_code matched;
 
     BOOST_LEAF_CONSTEXPR static bool evaluate(std::error_code const & e) noexcept
     {

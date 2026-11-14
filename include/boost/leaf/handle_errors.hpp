@@ -409,9 +409,55 @@ namespace detail
     template <class R, class Context, class H>
     BOOST_LEAF_CONSTEXPR inline
     typename std::enable_if<!is_tuple<typename std::decay<H>::type>::value, R>::type
+    handle_error_( Context & ctx, error_info const & ei, H && h );
+
+    template <class R, class Context, class Car, class... Cdr>
+    BOOST_LEAF_CONSTEXPR inline
+    typename std::enable_if<!is_tuple<typename std::decay<Car>::type>::value, R>::type
+    handle_error_( Context & ctx, error_info const & ei, Car && car, Cdr && ... cdr );
+
+    template <class R, class Context, class H>
+    BOOST_LEAF_CONSTEXPR inline
+    typename std::enable_if<is_tuple<typename std::decay<H>::type>::value, R>::type
+    handle_error_( Context & ctx, error_info const & ei, H && h );
+
+    template <class R, class Context, class Car, class... Cdr>
+    BOOST_LEAF_CONSTEXPR inline
+    typename std::enable_if<is_tuple<typename std::decay<Car>::type>::value, R>::type
+    handle_error_( Context & ctx, error_info const & ei, Car && car, Cdr && ... cdr );
+
+    template <class R, bool CarMatchesAnyError>
+    struct prune_unreachable_handlers;
+
+    template <class R>
+    struct prune_unreachable_handlers<R, true>
+    {
+        template <class Context, class Car, class... Cdr>
+        BOOST_LEAF_CONSTEXPR static R call( Context & ctx, error_info const & ei, Car && car, Cdr && ... )
+        {
+            return handler_caller<R, Car>::call( ctx, ei, std::forward<Car>(car), fn_mp_args<Car>{ } );
+        }
+    };
+
+    template <class R>
+    struct prune_unreachable_handlers<R, false>
+    {
+        template <class Context, class Car, class... Cdr>
+        BOOST_LEAF_CONSTEXPR static R call( Context & ctx, error_info const & ei, Car && car, Cdr && ... cdr )
+        {
+            if( check_handler_( ctx.tup(), ei, fn_mp_args<Car>{ } ) )
+                return handler_caller<R, Car>::call( ctx, ei, std::forward<Car>(car), fn_mp_args<Car>{ } );
+            else
+                return handle_error_<R>( ctx, ei, std::forward<Cdr>(cdr)... );
+        }
+    };
+
+    template <class R, class Context, class H>
+    BOOST_LEAF_CONSTEXPR inline
+    typename std::enable_if<!is_tuple<typename std::decay<H>::type>::value, R>::type
     handle_error_( Context & ctx, error_info const & ei, H && h )
     {
-        static_assert( handler_matches_any_error<fn_mp_args<H>>::value, "The last handler passed to handle_all must match any error." );
+        static_assert( handler_matches_any_error<fn_mp_args<H>>::value, "At least one of the handlers passed to handle_all must match any error." );
         return handler_caller<R, H>::call( ctx, ei, std::forward<H>(h), fn_mp_args<H>{ } );
     }
 
@@ -420,10 +466,8 @@ namespace detail
     typename std::enable_if<!is_tuple<typename std::decay<Car>::type>::value, R>::type
     handle_error_( Context & ctx, error_info const & ei, Car && car, Cdr && ... cdr )
     {
-        if( handler_matches_any_error<fn_mp_args<Car>>::value || check_handler_( ctx.tup(), ei, fn_mp_args<Car>{ } ) )
-            return handler_caller<R, Car>::call( ctx, ei, std::forward<Car>(car), fn_mp_args<Car>{ } );
-        else
-            return handle_error_<R>( ctx, ei, std::forward<Cdr>(cdr)...);
+        return prune_unreachable_handlers<R, handler_matches_any_error<fn_mp_args<Car>>::value>::call(
+            ctx, ei, std::forward<Car>(car), std::forward<Cdr>(cdr)... );
     }
 
     template <class R, class Context, class HTup, size_t ... I>
