@@ -9,6 +9,8 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -18,7 +20,7 @@ jobs:
 
       - name: Setup Boost
         run: |
-          REF=${GITHUB_BASE_REF:-$GITHUB_REF}
+          REF=${GITHUB_BASE_REF:-$GITHUB_REF_NAME}
           BOOST_BRANCH=develop && [ "$REF" == "master" ] && BOOST_BRANCH=master || true
           cd ..
           git clone -b $BOOST_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
@@ -45,7 +47,7 @@ jobs:
           python scripts/generate_single_header.py -i include/boost/leaf/detail/all.hpp -p include -o doc/html/leaf.hpp boost/leaf --hash "$REF"
 
       - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@4.0.0
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages
