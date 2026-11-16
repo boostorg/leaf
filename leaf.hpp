@@ -2,7 +2,7 @@
 #define BOOST_LEAF_HPP_INCLUDED
 
 // Boost LEAF single header distribution. Do not edit.
-// Generated on Feb 19, 2026 from https://github.com/boostorg/leaf/tree/e8fe60e.
+// Generated on Nov 16, 2026 from https://github.com/boostorg/leaf/tree/cf62df2.
 
 // Latest published version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
@@ -4237,13 +4237,13 @@ using context_type_from_handlers = typename detail::context_type_from_handlers_i
 ////////////////////////////////////////
 
 template <class...  H>
-BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context() noexcept
+BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context()
 {
     return { };
 }
 
 template <class...  H>
-BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && ... ) noexcept
+BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && ... )
 {
     return { };
 }
@@ -4666,9 +4666,55 @@ namespace detail
     template <class R, class Context, class H>
     BOOST_LEAF_CONSTEXPR inline
     typename std::enable_if<!is_tuple<typename std::decay<H>::type>::value, R>::type
+    handle_error_( Context & ctx, error_info const & ei, H && h );
+
+    template <class R, class Context, class Car, class... Cdr>
+    BOOST_LEAF_CONSTEXPR inline
+    typename std::enable_if<!is_tuple<typename std::decay<Car>::type>::value, R>::type
+    handle_error_( Context & ctx, error_info const & ei, Car && car, Cdr && ... cdr );
+
+    template <class R, class Context, class H>
+    BOOST_LEAF_CONSTEXPR inline
+    typename std::enable_if<is_tuple<typename std::decay<H>::type>::value, R>::type
+    handle_error_( Context & ctx, error_info const & ei, H && h );
+
+    template <class R, class Context, class Car, class... Cdr>
+    BOOST_LEAF_CONSTEXPR inline
+    typename std::enable_if<is_tuple<typename std::decay<Car>::type>::value, R>::type
+    handle_error_( Context & ctx, error_info const & ei, Car && car, Cdr && ... cdr );
+
+    template <class R, bool CarMatchesAnyError>
+    struct prune_unreachable_handlers;
+
+    template <class R>
+    struct prune_unreachable_handlers<R, true>
+    {
+        template <class Context, class Car, class... Cdr>
+        BOOST_LEAF_CONSTEXPR static R call( Context & ctx, error_info const & ei, Car && car, Cdr && ... )
+        {
+            return handler_caller<R, Car>::call( ctx, ei, std::forward<Car>(car), fn_mp_args<Car>{ } );
+        }
+    };
+
+    template <class R>
+    struct prune_unreachable_handlers<R, false>
+    {
+        template <class Context, class Car, class... Cdr>
+        BOOST_LEAF_CONSTEXPR static R call( Context & ctx, error_info const & ei, Car && car, Cdr && ... cdr )
+        {
+            if( check_handler_( ctx.tup(), ei, fn_mp_args<Car>{ } ) )
+                return handler_caller<R, Car>::call( ctx, ei, std::forward<Car>(car), fn_mp_args<Car>{ } );
+            else
+                return handle_error_<R>( ctx, ei, std::forward<Cdr>(cdr)... );
+        }
+    };
+
+    template <class R, class Context, class H>
+    BOOST_LEAF_CONSTEXPR inline
+    typename std::enable_if<!is_tuple<typename std::decay<H>::type>::value, R>::type
     handle_error_( Context & ctx, error_info const & ei, H && h )
     {
-        static_assert( handler_matches_any_error<fn_mp_args<H>>::value, "The last handler passed to handle_all must match any error." );
+        static_assert( handler_matches_any_error<fn_mp_args<H>>::value, "At least one of the handlers passed to handle_all must match any error." );
         return handler_caller<R, H>::call( ctx, ei, std::forward<H>(h), fn_mp_args<H>{ } );
     }
 
@@ -4677,10 +4723,8 @@ namespace detail
     typename std::enable_if<!is_tuple<typename std::decay<Car>::type>::value, R>::type
     handle_error_( Context & ctx, error_info const & ei, Car && car, Cdr && ... cdr )
     {
-        if( handler_matches_any_error<fn_mp_args<Car>>::value || check_handler_( ctx.tup(), ei, fn_mp_args<Car>{ } ) )
-            return handler_caller<R, Car>::call( ctx, ei, std::forward<Car>(car), fn_mp_args<Car>{ } );
-        else
-            return handle_error_<R>( ctx, ei, std::forward<Cdr>(cdr)...);
+        return prune_unreachable_handlers<R, handler_matches_any_error<fn_mp_args<Car>>::value>::call(
+            ctx, ei, std::forward<Car>(car), std::forward<Cdr>(cdr)... );
     }
 
     template <class R, class Context, class HTup, size_t ... I>
@@ -5037,6 +5081,7 @@ namespace detail
 #endif
             {
                 std::forward<TryBlock>(try_block)();
+                sl.deactivate();
                 return {};
             }
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
@@ -6048,9 +6093,9 @@ struct condition<Enum, Enum>
 
 #if __cplusplus >= 201703L
 template <class ErrorCodeEnum>
-BOOST_LEAF_CONSTEXPR inline bool category( std::error_code const & ec )
+BOOST_LEAF_CONSTEXPR inline bool category( std::error_code const & ec ) noexcept
 {
-    static_assert(std::is_error_code_enum<ErrorCodeEnum>::value, "leaf::category requires an error code enum");
+    static_assert(std::is_error_code_enum<ErrorCodeEnum>::value, "leaf::category<Enum> requires Enum to be registered with std::is_error_code_enum.");
     return &ec.category() == &std::error_code(ErrorCodeEnum{}).category();
 }
 #endif
@@ -6099,7 +6144,7 @@ template <class Enum, BOOST_LEAF_MATCH_ARGS(BOOST_LEAF_ESC(match_enum_type<condi
 struct match<condition<Enum, Enum>, V1, V...>
 {
     using error_type = std::error_code;
-    std::error_code const & matched;
+    std::error_code matched;
 
     BOOST_LEAF_CONSTEXPR static bool evaluate(std::error_code const & e) noexcept
     {
@@ -6283,7 +6328,7 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 
 // #line 8 "boost/leaf/result.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/exception.hpp> // Expanded at line 5358
+// #include <boost/leaf/exception.hpp> // Expanded at line 5403
 // #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1540
 // #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 2800
 
@@ -6569,8 +6614,9 @@ protected:
     template <class U>
     void move_assign( result<U> && x ) noexcept
     {
+        result tmp(std::move(x));
         destroy();
-        what_ = move_from(std::move(x));
+        what_ = move_from(std::move(tmp));
     }
 
     template <class Encoder>
@@ -7113,7 +7159,7 @@ namespace serialization
 
 // #include <boost/leaf/config.hpp> // Expanded at line 19
 // #include <boost/leaf/handle_errors.hpp> // Expanded at line 4261
-// #include <boost/leaf/result.hpp> // Expanded at line 6281
+// #include <boost/leaf/result.hpp> // Expanded at line 6326
 #include <variant>
 #include <optional>
 #include <tuple>

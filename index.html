@@ -135,7 +135,6 @@ function switch_style()
 <li><a href="#context::unload"><code>unload</code></a></li>
 </ul>
 </li>
-<li><a href="#context_activator"><code>context_activator</code></a></li>
 <li><a href="#diagnostic_details"><code>diagnostic_details</code></a></li>
 <li><a href="#diagnostic_info"><code>diagnostic_info</code></a></li>
 <li><a href="#error_id"><code>error_id</code></a>
@@ -145,7 +144,6 @@ function switch_style()
 <li><a href="#error_id::load"><code>load</code></a></li>
 <li><a href="#error_id::comparison_operators"><code>operator==</code>, <code>!=</code>, <code>&lt;</code></a></li>
 <li><a href="#error_id::operator_bool"><code>operator bool</code></a></li>
-<li><a href="#error_id::to_error_code"><code>to_error_code</code></a></li>
 <li><a href="#error_id::value"><code>value</code></a></li>
 </ul>
 </li>
@@ -1575,11 +1573,11 @@ When an error handler takes arguments by mutable reference or pointer, changes t
 </div>
 </div>
 <div class="paragraph">
-<p>It is also possible to select a handler based on <code>std::error_category</code>. The following handler will match any <code>std::error_code</code> of the <code>std::generic_category</code> (requires C&#43;&#43;17 or newer):</p>
+<p>It is also possible to select a handler based on <code>std::error_category</code>. Given an error code enum <code>my_errc</code>, the following handler will match any <code>std::error_code</code> of the <code>std::error_category</code> associated with <code>my_errc</code>, regardless of its value (requires C&#43;&#43;17 or newer):</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="p">[](</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">category</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">errc</span><span class="o">&gt;</span> <span class="p">)</span>
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">match</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">error_code</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">category</span><span class="o">&lt;</span><span class="n">my_errc</span><span class="o">&gt;&gt;</span> <span class="p">)</span>
 <span class="p">{</span>
 <span class="p">}</span></code></pre>
 </div>
@@ -2388,7 +2386,7 @@ In the <code>diagnostic_details</code> output, the section under <code>Caught:</
 <div class="listingblock">
 <div class="content">
 <pre class="nowrap">Unrecognized error detected
-Error serial #1
+Error with serial #1
 Caught:
   error_code: 1</pre>
 </div>
@@ -3106,21 +3104,19 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
     <span class="n">error_id</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
-    <span class="n">error_id</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span><span class="p">,</span> <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">is_error_code_enum</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">,</span> <span class="n">Enum</span><span class="o">&gt;::</span><span class="n">type</span> <span class="o">*</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">error_id</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span><span class="p">,</span> <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">is_error_code_enum</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;::</span><span class="n">type</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">);</span>
 
-    <span class="n">error_id</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="k">explicit</span> <span class="n">error_id</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">);</span>
 
     <span class="kt">int</span> <span class="n">value</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="k">explicit</span> <span class="k">operator</span> <span class="kt">bool</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-
-    <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="n">to_error_code</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="k">friend</span> <span class="kt">bool</span> <span class="k">operator</span><span class="o">==</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">a</span><span class="p">,</span> <span class="n">error_id</span> <span class="n">b</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="k">friend</span> <span class="kt">bool</span> <span class="k">operator</span><span class="o">!=</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">a</span><span class="p">,</span> <span class="n">error_id</span> <span class="n">b</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="k">friend</span> <span class="kt">bool</span> <span class="k">operator</span><span class="o">&lt;</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">a</span><span class="p">,</span> <span class="n">error_id</span> <span class="n">b</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Item</span><span class="p">&gt;</span>
-    <span class="n">error_id</span> <span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">)</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">error_id</span> <span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">CharT</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Traits</span><span class="p">&gt;</span>
     <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">basic_ostream</span><span class="o">&lt;</span><span class="n">CharT</span><span class="p">,</span> <span class="n">Traits</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">error_id</span> <span class="p">);</span>
@@ -3129,27 +3125,14 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
   <span class="kt">bool</span> <span class="n">is_error_id</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Item</span><span class="p">&gt;</span>
-  <span class="n">error_id</span> <span class="n">new_error</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="n">error_id</span> <span class="nf">new_error</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">);</span>
 
   <span class="n">error_id</span> <span class="n">current_error</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
 
   <span class="c1">////////////////////////////////////////</span>
 
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Ctx</span><span class="p">&gt;</span>
-  <span class="k">class</span> <span class="nc">context_activator</span>
-  <span class="p">{</span>
-    <span class="n">context_activator</span><span class="p">(</span> <span class="n">context_activator</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
-    <span class="n">context_activator</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span> <span class="n">context_activator</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
-
-  <span class="nl">public:</span>
-
-    <span class="k">explicit</span> <span class="n">context_activator</span><span class="p">(</span> <span class="n">Ctx</span> <span class="o">&amp;</span> <span class="n">ctx</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
-    <span class="n">context_activator</span><span class="p">(</span> <span class="n">context_activator</span> <span class="o">&amp;&amp;</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
-    <span class="o">~</span><span class="n">context_activator</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
-  <span class="p">};</span>
-
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Ctx</span><span class="p">&gt;</span>
-  <span class="n">context_activator</span><span class="o">&lt;</span><span class="n">Ctx</span><span class="o">&gt;</span> <span class="n">activate_context</span><span class="p">(</span> <span class="n">Ctx</span> <span class="o">&amp;</span> <span class="n">ctx</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span>
+  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;</span> <span class="n">activate_context</span><span class="p">(</span> <span class="n">context</span><span class="o">&lt;</span><span class="n">E</span><span class="p">...</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="n">ctx</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">R</span><span class="p">&gt;</span>
   <span class="k">struct</span> <span class="nc">is_result_type</span><span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">false_type</span>
@@ -3197,7 +3180,7 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
 </div>
 </div>
 <div class="paragraph text-right">
-<p>Reference: <a href="#error_id"><code>error_id</code></a> | <a href="#is_error_id"><code>is_error_id</code></a> | <a href="#new_error"><code>new_error</code></a> | <a href="#current_error"><code>current_error</code></a> | <a href="#context_activator"><code>context_activator</code></a> | <a href="#activate_context"><code>activate_context</code></a> | <a href="#is_result_type"><code>is_result_type</code></a> | <a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a> | <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a> | <a href="#BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></a> | <a href="#BOOST_LEAF_NEW_ERROR"><code>BOOST_LEAF_NEW_ERROR</code></a></p>
+<p>Reference: <a href="#error_id"><code>error_id</code></a> | <a href="#is_error_id"><code>is_error_id</code></a> | <a href="#new_error"><code>new_error</code></a> | <a href="#current_error"><code>current_error</code></a> | <a href="#activate_context"><code>activate_context</code></a> | <a href="#is_result_type"><code>is_result_type</code></a> | <a href="#BOOST_LEAF_ASSIGN"><code>BOOST_LEAF_ASSIGN</code></a> | <a href="#BOOST_LEAF_AUTO"><code>BOOST_LEAF_AUTO</code></a> | <a href="#BOOST_LEAF_CHECK"><code>BOOST_LEAF_CHECK</code></a> | <a href="#BOOST_LEAF_NEW_ERROR"><code>BOOST_LEAF_NEW_ERROR</code></a></p>
 </div>
 </div>
 </div>
@@ -3228,7 +3211,7 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
   <span class="p">[[</span><span class="n">noreturn</span><span class="p">]]</span> <span class="kt">void</span> <span class="n">throw_exception</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span> <span class="p">);</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Ex</span><span class="p">,</span> <span class="k">class</span> <span class="nc">F</span><span class="p">&gt;</span>
-  <span class="o">&lt;&lt;</span><span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;-</span><span class="n">deduced</span><span class="o">&gt;&gt;</span> <span class="n">exception_to_result</span><span class="p">(</span> <span class="n">F</span> <span class="o">&amp;&amp;</span> <span class="n">f</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="o">&lt;&lt;</span><span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;-</span><span class="n">deduced</span><span class="o">&gt;&gt;</span> <span class="n">exception_to_result</span><span class="p">(</span> <span class="n">F</span> <span class="o">&amp;&amp;</span> <span class="n">f</span> <span class="p">);</span>
 
 <span class="p">}</span> <span class="p">}</span>
 
@@ -3263,7 +3246,7 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Item</span><span class="p">&gt;</span>
-  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">-</span><span class="n">type</span><span class="o">&gt;&gt;</span> <span class="n">on_error</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">e</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">-</span><span class="n">type</span><span class="o">&gt;&gt;</span> <span class="n">on_error</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">e</span> <span class="p">);</span>
 
   <span class="k">class</span> <span class="nc">error_monitor</span>
   <span class="p">{</span>
@@ -3306,7 +3289,7 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">U</span><span class="p">,</span> <span class="k">class</span> <span class="o">=</span> <span class="k">typename</span> <span class="nc">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">is_convertible</span><span class="o">&lt;</span><span class="n">U</span><span class="p">,</span> <span class="n">T</span><span class="p">&gt;</span><span class="o">::</span><span class="n">value</span><span class="o">&gt;::</span><span class="n">type</span><span class="o">&gt;</span>
     <span class="n">result</span><span class="p">(</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span> <span class="o">&amp;&amp;</span> <span class="n">r</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
-    <span class="n">result</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">result</span><span class="p">();</span>
 
     <span class="n">result</span><span class="p">(</span> <span class="n">T</span> <span class="o">&amp;&amp;</span> <span class="n">v</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
@@ -3319,10 +3302,10 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
 
 <span class="cp">#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 </span>
-    <span class="n">result</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">result</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">);</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">,</span> <span class="k">class</span> <span class="o">=</span> <span class="k">typename</span> <span class="nc">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">is_error_code_enum</span><span class="o">&lt;</span><span class="n">Enum</span><span class="p">&gt;</span><span class="o">::</span><span class="n">value</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;::</span><span class="n">type</span><span class="o">&gt;</span>
-    <span class="n">result</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">result</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span> <span class="p">);</span>
 
 <span class="cp">#endif
 </span>
@@ -3352,7 +3335,7 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
     <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">-</span><span class="n">type</span><span class="o">&gt;&gt;</span> <span class="n">error</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Item</span><span class="p">&gt;</span>
-    <span class="n">error_id</span> <span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">error_id</span> <span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">);</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Encoder</span><span class="p">&gt;</span>
     <span class="kt">void</span> <span class="n">serialize_to</span><span class="p">(</span> <span class="n">Encoder</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
@@ -3377,10 +3360,10 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
 
 <span class="cp">#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 </span>
-    <span class="n">result</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">result</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">);</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">is_error_code_enum</span><span class="o">&lt;</span><span class="n">Enum</span><span class="p">&gt;</span><span class="o">::</span><span class="n">value</span><span class="p">,</span> <span class="n">Enum</span><span class="o">&gt;::</span><span class="n">type</span><span class="o">&gt;</span>
-    <span class="n">result</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">result</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span> <span class="p">);</span>
 
 <span class="cp">#endif
 </span>
@@ -3399,7 +3382,7 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
     <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">-</span><span class="n">type</span><span class="o">&gt;&gt;</span> <span class="n">error</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Item</span><span class="p">&gt;</span>
-    <span class="n">error_id</span> <span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">error_id</span> <span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">);</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Encoder</span><span class="p">&gt;</span>
     <span class="kt">void</span> <span class="n">serialize_to</span><span class="p">(</span> <span class="n">Encoder</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
@@ -3408,7 +3391,7 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
     <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">basic_ostream</span><span class="o">&lt;</span><span class="n">CharT</span><span class="p">,</span> <span class="n">Traits</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">result</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">);</span>
   <span class="p">};</span>
 
-  <span class="k">class</span> <span class="nc">bad_result</span><span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="p">{</span> <span class="p">};</span>
+  <span class="k">class</span> <span class="nc">bad_result</span><span class="o">:</span> <span class="k">public</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="p">{</span> <span class="p">};</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
   <span class="k">struct</span> <span class="nc">is_result_type</span><span class="o">&lt;</span><span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span>
@@ -3445,7 +3428,7 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
 
   <span class="nl">public:</span>
 
-    <span class="n">context</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">context</span><span class="p">();</span>
     <span class="n">context</span><span class="p">(</span> <span class="n">context</span> <span class="o">&amp;&amp;</span> <span class="n">x</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="o">~</span><span class="n">context</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
 
@@ -3453,20 +3436,23 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
     <span class="kt">void</span> <span class="n">deactivate</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="kt">bool</span> <span class="n">is_active</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
 
-    <span class="kt">void</span> <span class="n">unload</span><span class="p">(</span> <span class="n">error_id</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="kt">void</span> <span class="n">unload</span><span class="p">(</span> <span class="n">error_id</span> <span class="p">);</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">R</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">H</span><span class="p">&gt;</span>
-    <span class="n">R</span> <span class="n">handle_error</span><span class="p">(</span> <span class="n">R</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">H</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
+    <span class="n">R</span> <span class="n">handle_error</span><span class="p">(</span> <span class="n">error_id</span><span class="p">,</span> <span class="n">H</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
+
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">R</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">H</span><span class="p">&gt;</span>
+    <span class="n">R</span> <span class="n">handle_error</span><span class="p">(</span> <span class="n">error_id</span><span class="p">,</span> <span class="n">H</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">);</span>
   <span class="p">};</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">H</span><span class="p">&gt;</span>
   <span class="k">using</span> <span class="n">context_type_from_handlers</span> <span class="o">=</span> <span class="k">typename</span> <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;::</span><span class="n">type</span><span class="p">;</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span>  <span class="nc">H</span><span class="p">&gt;</span>
-  <span class="n">BOOST_LEAF_CONSTEXPR</span> <span class="n">context_type_from_handlers</span><span class="o">&lt;</span><span class="n">H</span><span class="p">...</span><span class="o">&gt;</span> <span class="n">make_context</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="n">BOOST_LEAF_CONSTEXPR</span> <span class="n">context_type_from_handlers</span><span class="o">&lt;</span><span class="n">H</span><span class="p">...</span><span class="o">&gt;</span> <span class="n">make_context</span><span class="p">();</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span>  <span class="nc">H</span><span class="p">&gt;</span>
-  <span class="n">BOOST_LEAF_CONSTEXPR</span> <span class="n">context_type_from_handlers</span><span class="o">&lt;</span><span class="n">H</span><span class="p">...</span><span class="o">&gt;</span> <span class="n">make_context</span><span class="p">(</span> <span class="n">H</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="n">BOOST_LEAF_CONSTEXPR</span> <span class="n">context_type_from_handlers</span><span class="o">&lt;</span><span class="n">H</span><span class="p">...</span><span class="o">&gt;</span> <span class="n">make_context</span><span class="p">(</span> <span class="n">H</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">);</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
@@ -3494,12 +3480,12 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
     <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">basic_ostream</span><span class="o">&lt;</span><span class="n">CharT</span><span class="p">,</span> <span class="n">Traits</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">diagnostic_info</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="p">);</span>
   <span class="p">};</span>
 
-  <span class="k">class</span> <span class="nc">diagnostic_details</span><span class="o">:</span> <span class="k">public</span> <span class="n">error_info</span>
+  <span class="k">class</span> <span class="nc">diagnostic_details</span><span class="o">:</span> <span class="k">public</span> <span class="n">diagnostic_info</span>
   <span class="p">{</span>
     <span class="c1">//No public constructors</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">CharT</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Traits</span><span class="p">&gt;</span>
-    <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">basic_ostream</span><span class="o">&lt;</span><span class="n">CharT</span><span class="p">,</span> <span class="n">Traits</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">diagnostic_info</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="p">);</span>
+    <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">basic_ostream</span><span class="o">&lt;</span><span class="n">CharT</span><span class="p">,</span> <span class="n">Traits</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">diagnostic_details</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="p">);</span>
   <span class="p">};</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
@@ -3546,7 +3532,6 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
 
     <span class="n">error_id</span> <span class="n">error</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
 
-    <span class="kt">bool</span> <span class="n">exception_caught</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="k">const</span> <span class="o">*</span> <span class="n">exception</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">CharT</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Traits</span><span class="p">&gt;</span>
@@ -3592,7 +3577,7 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">E</span><span class="p">,</span> <span class="k">auto</span><span class="p">...</span> <span class="n">V</span><span class="p">&gt;</span>
   <span class="k">struct</span> <span class="nc">match_value</span>
   <span class="p">{</span>
-    <span class="n">E</span> <span class="n">matched</span><span class="p">;</span>
+    <span class="n">E</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">matched</span><span class="p">;</span>
 
     <span class="c1">// Other members not specified</span>
   <span class="p">};</span>
@@ -3608,7 +3593,7 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">E</span><span class="p">,</span> <span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="n">T</span> <span class="n">E</span><span class="o">::*</span> <span class="n">P</span><span class="p">,</span> <span class="k">auto</span><span class="p">...</span> <span class="n">V</span><span class="p">&gt;</span>
   <span class="k">struct</span> <span class="nc">match_member</span><span class="o">&lt;</span><span class="n">P</span><span class="p">,</span> <span class="n">V</span><span class="p">...</span><span class="o">&gt;</span>
   <span class="p">{</span>
-    <span class="n">E</span> <span class="n">matched</span><span class="p">;</span>
+    <span class="n">E</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">matched</span><span class="p">;</span>
 
     <span class="c1">// Other members not specified</span>
   <span class="p">};</span>
@@ -3642,7 +3627,7 @@ In the example above, <code>e_api_response</code> uses an unqualified call to <c
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Pred</span><span class="p">&gt;</span>
   <span class="k">struct</span> <span class="nc">if_not</span>
   <span class="p">{</span>
-    <span class="n">E</span> <span class="n">matched</span><span class="p">;</span>
+    <span class="o">&lt;&lt;</span><span class="n">deduced</span><span class="o">&gt;&gt;</span> <span class="n">matched</span><span class="p">;</span>
 
     <span class="c1">// Other members not specified</span>
   <span class="p">};</span>
@@ -3790,21 +3775,43 @@ The contents of each Reference section are organized alphabetically.
 <div class="sect2">
 <h3 id="activate_context"><code>activate_context</code></h3>
 <div class="listingblock">
-<div class="title">#include &lt;boost/leaf/error.hpp&gt;</div>
+<div class="title">#include &lt;boost/leaf/context.hpp&gt;</div>
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Ctx</span><span class="p">&gt;</span>
-  <span class="n">context_activator</span><span class="o">&lt;</span><span class="n">Ctx</span><span class="o">&gt;</span> <span class="n">activate_context</span><span class="p">(</span> <span class="n">Ctx</span> <span class="o">&amp;</span> <span class="n">ctx</span> <span class="p">)</span> <span class="k">noexcept</span>
-  <span class="p">{</span>
-    <span class="k">return</span> <span class="n">context_activator</span><span class="o">&lt;</span><span class="n">Ctx</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
-  <span class="p">}</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span>
+  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;</span> <span class="n">activate_context</span><span class="p">(</span> <span class="n">context</span><span class="o">&lt;</span><span class="n">E</span><span class="p">...</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="n">ctx</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
 </div>
-<div class="paragraph text-right">
-<p><a href="#context_activator"><code>context_activator</code></a></p>
+<div class="paragraph">
+<p>Returns an object of an unspecified type, which activates and deactivates <code>ctx</code> using RAII.</p>
+</div>
+<div class="paragraph">
+<p>If <code>ctx.<a href="#context::is_active"><code>is_active</code></a>()</code> is <code>true</code> at the time <code>activate_context</code> is called, the returned object has no effects. Otherwise:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>activate_context</code> calls <code>ctx.<a href="#context::activate"><code>activate</code></a>()</code>;</p>
+</li>
+<li>
+<p>When the returned object expires, it calls <code>ctx.<a href="#context::deactivate"><code>deactivate</code></a>()</code>, unless <code>ctx.is_active()</code> is <code>false</code> (that is, it is valid to call <a href="#context::deactivate"><code>deactivate</code></a> manually beforehand).</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>activate_context</code> is only found by argument-dependent lookup; it must be called unqualified.
+</td>
+</tr>
+</table>
 </div>
 <div class="listingblock">
 <div class="title">Example:</div>
@@ -3812,7 +3819,7 @@ The contents of each Reference section are organized alphabetically.
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">leaf</span><span class="o">::</span><span class="n">context</span><span class="o">&lt;</span><span class="n">E1</span><span class="p">,</span> <span class="n">E2</span><span class="p">,</span> <span class="n">E3</span><span class="o">&gt;</span> <span class="n">ctx</span><span class="p">;</span>
 
 <span class="p">{</span>
-  <span class="k">auto</span> <span class="n">active_context</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">.</span><span class="n">raii_activate</span><span class="p">();</span> <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="k">auto</span> <span class="n">active_context</span> <span class="o">=</span> <span class="n">activate_context</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span> <i class="conum" data-value="1"></i><b>(1)</b>
 <span class="p">}</span> <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
 </div>
@@ -3900,7 +3907,7 @@ Alternatively, a suitable context may be created by calling <a href="#make_conte
 <dl>
 <dt class="hdlist1">Returns: </dt>
 <dd>
-<p>The <code>error_id</code> value returned the last time <a href="#new_error"><code>new_error</code></a> was invoked from the calling thread.</p>
+<p>The current <code>error_id</code> for the calling thread, which is usually the value returned the last time <a href="#new_error"><code>new_error</code></a> was invoked from the calling thread.</p>
 </dd>
 </dl>
 </div>
@@ -3926,7 +3933,7 @@ See also <a href="#on_error"><code>on_error</code></a>.
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Ex</span><span class="p">,</span> <span class="k">class</span> <span class="nc">F</span><span class="p">&gt;</span>
-  <span class="o">&lt;&lt;</span><span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;-</span><span class="n">deduced</span><span class="o">&gt;&gt;</span> <span class="n">exception_to_result</span><span class="p">(</span> <span class="n">F</span> <span class="o">&amp;&amp;</span> <span class="n">f</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="o">&lt;&lt;</span><span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;-</span><span class="n">deduced</span><span class="o">&gt;&gt;</span> <span class="n">exception_to_result</span><span class="p">(</span> <span class="n">F</span> <span class="o">&amp;&amp;</span> <span class="n">f</span> <span class="p">);</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
@@ -4057,13 +4064,13 @@ See also <a href="#tutorial-exception_to_result">Converting Exceptions to <code>
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span>  <span class="nc">H</span><span class="p">&gt;</span>
-  <span class="n">context_type_from_handlers</span><span class="o">&lt;</span><span class="n">H</span><span class="p">...</span><span class="o">&gt;</span> <span class="n">make_context</span><span class="p">()</span> <span class="k">noexcept</span>
+  <span class="n">context_type_from_handlers</span><span class="o">&lt;</span><span class="n">H</span><span class="p">...</span><span class="o">&gt;</span> <span class="n">make_context</span><span class="p">()</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span> <span class="p">};</span>
   <span class="p">}</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span>  <span class="nc">H</span><span class="p">&gt;</span>
-  <span class="n">context_type_from_handlers</span><span class="o">&lt;</span><span class="n">H</span><span class="p">...</span><span class="o">&gt;</span> <span class="n">make_context</span><span class="p">(</span> <span class="n">H</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">)</span> <span class="k">noexcept</span>
+  <span class="n">context_type_from_handlers</span><span class="o">&lt;</span><span class="n">H</span><span class="p">...</span><span class="o">&gt;</span> <span class="n">make_context</span><span class="p">(</span> <span class="n">H</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">)</span>
   <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span> <span class="p">};</span>
   <span class="p">}</span>
@@ -4100,7 +4107,7 @@ See also <a href="#tutorial-exception_to_result">Converting Exceptions to <code>
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Item</span><span class="p">&gt;</span>
-  <span class="n">error_id</span> <span class="n">new_error</span><span class="p">(</span><span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span><span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="n">error_id</span> <span class="n">new_error</span><span class="p">(</span><span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span><span class="p">);</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
@@ -4165,7 +4172,7 @@ When loaded into a <code>context</code>, an error object of a type <code>E</code
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Item</span><span class="p">&gt;</span>
-  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">-</span><span class="n">type</span><span class="o">&gt;&gt;</span> <span class="n">on_error</span><span class="p">(</span><span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span><span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">-</span><span class="n">type</span><span class="o">&gt;&gt;</span> <span class="n">on_error</span><span class="p">(</span><span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span><span class="p">);</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
@@ -5089,7 +5096,7 @@ The contents of each Reference section are organized alphabetically.
 
   <span class="nl">public:</span>
 
-    <span class="n">context</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">context</span><span class="p">();</span>
     <span class="n">context</span><span class="p">(</span> <span class="n">context</span> <span class="o">&amp;&amp;</span> <span class="n">x</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="o">~</span><span class="n">context</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
 
@@ -5097,10 +5104,13 @@ The contents of each Reference section are organized alphabetically.
     <span class="kt">void</span> <span class="n">deactivate</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="kt">bool</span> <span class="n">is_active</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
 
-    <span class="kt">void</span> <span class="n">unload</span><span class="p">(</span> <span class="n">error_id</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="kt">void</span> <span class="n">unload</span><span class="p">(</span> <span class="n">error_id</span> <span class="p">);</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">R</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">H</span><span class="p">&gt;</span>
     <span class="n">R</span> <span class="n">handle_error</span><span class="p">(</span> <span class="n">error_id</span><span class="p">,</span> <span class="n">H</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
+
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">R</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">H</span><span class="p">&gt;</span>
+    <span class="n">R</span> <span class="n">handle_error</span><span class="p">(</span> <span class="n">error_id</span><span class="p">,</span> <span class="n">H</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="p">);</span>
 
   <span class="p">};</span>
 
@@ -5123,7 +5133,7 @@ The contents of each Reference section are organized alphabetically.
 <p>Even in that case it is recommended that users do not instantiate the <code>context</code> template by explicitly listing the <code>E&#8230;&#8203;</code> types they want it to be able to store. Instead, use <a href="#context_type_from_handlers"><code>context_type_from_handlers</code></a> or call the <a href="#make_context"><code>make_context</code></a> function template, which deduce the correct <code>E&#8230;&#8203;</code> types from a captured list of handler function objects.</p>
 </div>
 <div class="paragraph">
-<p>To be able to load up error objects in a <code>context</code> object, it must be activated. Activating a <code>context</code> object <code>ctx</code> binds it to the calling thread, setting thread-local pointers of the stored <code>E&#8230;&#8203;</code> types to point to the corresponding storage within <code>ctx</code>. It is possible, even likely, to have more than one active <code>context</code> in any given thread. In this case, activation/deactivation must happen in a LIFO manner. For this reason, it is best to use a <a href="#context_activator"><code>context_activator</code></a>, which relies on RAII to activate and deactivate a <code>context</code>.</p>
+<p>To be able to load up error objects in a <code>context</code> object, it must be activated. Activating a <code>context</code> object <code>ctx</code> binds it to the calling thread, setting thread-local pointers of the stored <code>E&#8230;&#8203;</code> types to point to the corresponding storage within <code>ctx</code>. It is possible, even likely, to have more than one active <code>context</code> in any given thread. In this case, activation/deactivation must happen in a LIFO manner. For this reason, it is best to use <a href="#activate_context"><code>activate_context</code></a>, which relies on RAII to activate and deactivate a <code>context</code>.</p>
 </div>
 <div class="paragraph">
 <p>When a <code>context</code> is deactivated, it detaches from the calling thread, restoring the thread-local pointers to their pre-<code>activate</code> values. Typically, at this point the stored error objects, if any, are either discarded (by default) or moved to corresponding storage in other <code>context</code> objects active in the calling thread (if available), by calling <a href="#context::unload"><code>unload</code></a>.</p>
@@ -5164,7 +5174,7 @@ Moving an active <code>context</code> results in undefined behavior.
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span>
-  <span class="n">context</span><span class="o">&lt;</span><span class="n">E</span><span class="p">...</span><span class="o">&gt;::</span><span class="n">context</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="n">context</span><span class="o">&lt;</span><span class="n">E</span><span class="p">...</span><span class="o">&gt;::</span><span class="n">context</span><span class="p">();</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span>
   <span class="n">context</span><span class="o">&lt;</span><span class="n">E</span><span class="p">...</span><span class="o">&gt;::</span><span class="n">context</span><span class="p">(</span> <span class="n">context</span> <span class="o">&amp;&amp;</span> <span class="n">x</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
@@ -5283,6 +5293,10 @@ Moving an active <code>context</code> object results in undefined behavior.
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">R</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">H</span><span class="p">&gt;</span>
   <span class="n">R</span> <span class="n">context</span><span class="o">&lt;</span><span class="n">E</span><span class="p">...</span><span class="o">&gt;::</span><span class="n">handle_error</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">err</span><span class="p">,</span> <span class="n">H</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">h</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
 
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">R</span><span class="p">,</span> <span class="k">class</span><span class="o">...</span> <span class="nc">H</span><span class="p">&gt;</span>
+  <span class="n">R</span> <span class="n">context</span><span class="o">&lt;</span><span class="n">E</span><span class="p">...</span><span class="o">&gt;::</span><span class="n">handle_error</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">err</span><span class="p">,</span> <span class="n">H</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">h</span> <span class="p">);</span>
+
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
 </div>
@@ -5334,7 +5348,7 @@ The caller is required to specify the return type <code>R</code>. This is becaus
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span>
-  <span class="kt">void</span> <span class="n">context</span><span class="o">&lt;</span><span class="n">E</span><span class="p">...</span><span class="o">&gt;::</span><span class="n">unload</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="kt">void</span> <span class="n">context</span><span class="o">&lt;</span><span class="n">E</span><span class="p">...</span><span class="o">&gt;::</span><span class="n">unload</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">id</span> <span class="p">);</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
@@ -5343,70 +5357,19 @@ The caller is required to specify the return type <code>R</code>. This is becaus
 <dl>
 <dt class="hdlist1">Requires: </dt>
 <dd>
-<p><code>!<a href="#context::is_active"><code>is_active</code></a>()</code>.</p>
+<p><code>!<a href="#context::is_active"><code>is_active</code></a>()</code> and <code>id.<a href="#error_id::value">value</a>() != 0</code>.</p>
 </dd>
 <dt class="hdlist1">Effects: </dt>
 <dd>
-<p>Each stored error object of some type <code>E</code> is moved into another <code>context</code> object active in the call stack that provides storage for objects of type <code>E</code>, if any, or discarded. Target objects are not overwritten if they are associated with the specified <code>id</code>, except if <code>id.value() == 0</code>.</p>
+<p>Each stored error object of some type <code>E</code> is moved into another <code>context</code> object active in the call stack that provides storage for objects of type <code>E</code>, if any, or discarded. Target objects are not overwritten if they are associated with the specified <code>id</code>.</p>
+<div class="paragraph">
+<p>In addition, <code>id</code> becomes the current <code>error_id</code> for the calling thread.</p>
+</div>
 </dd>
 </dl>
 </div>
 <hr>
 </div>
-</div>
-<div class="sect2">
-<h3 id="context_activator"><code>context_activator</code></h3>
-<div class="listingblock">
-<div class="title">#include &lt;boost/leaf/error.hpp&gt;</div>
-<div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
-
-  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Ctx</span><span class="p">&gt;</span>
-  <span class="k">class</span> <span class="nc">context_activator</span>
-  <span class="p">{</span>
-    <span class="n">context_activator</span><span class="p">(</span> <span class="n">context_activator</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
-    <span class="n">context_activator</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span> <span class="n">context_activator</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
-
-  <span class="nl">public:</span>
-
-    <span class="k">explicit</span> <span class="n">context_activator</span><span class="p">(</span> <span class="n">Ctx</span> <span class="o">&amp;</span> <span class="n">ctx</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
-    <span class="n">context_activator</span><span class="p">(</span> <span class="n">context_activator</span> <span class="o">&amp;&amp;</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
-    <span class="o">~</span><span class="n">context_activator</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
-  <span class="p">};</span>
-
-<span class="p">}</span> <span class="p">}</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p><code>context_activator</code> is a simple class that activates and deactivates a <a href="#context"><code>context</code></a> using RAII:</p>
-</div>
-<div class="paragraph">
-<p>If <code>ctx.<a href="#context::is_active"><code>is_active</code></a>()</code> is <code>true</code> at the time the <code>context_activator</code> is initialized, the constructor and the destructor have no effects. Otherwise:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>The constructor stores a reference to <code>ctx</code> in <code>*this</code> and calls <code>ctx.<a href="#context::activate"><code>activate</code></a>()</code>.</p>
-</li>
-<li>
-<p>The destructor:</p>
-<div class="ulist">
-<ul>
-<li>
-<p>Has no effects if <code>ctx.is_active()</code> is <code>false</code> (that is, it is valid to call <a href="#context::deactivate"><code>deactivate</code></a> manually, before the <code>context_activator</code> object expires);</p>
-</li>
-<li>
-<p>Otherwise, calls <code>ctx.<a href="#context::deactivate"><code>deactivate</code></a>()</code>.</p>
-</li>
-</ul>
-</div>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>For automatic deduction of <code>Ctx</code>, use <a href="#activate_context"><code>activate_context</code></a>.</p>
-</div>
-<hr>
 </div>
 <div class="sect2">
 <h3 id="diagnostic_details"><code>diagnostic_details</code></h3>
@@ -5508,10 +5471,10 @@ Using <code>diagnostic_details</code> may allocate memory dynamically, but only 
 <p>Handlers passed to <a href="#try_handle_some"><code>try_handle_some</code></a>, <a href="#try_handle_all"><code>try_handle_all</code></a> or <a href="#try_catch"><code>try_catch</code></a> may take an argument of type <code>diagnostic_info const &amp;</code> if they need to print diagnostic information about the error.</p>
 </div>
 <div class="paragraph">
-<p>The message printed by <code>operator&lt;&lt;</code> includes the message printed by <code>error_info</code>, followed by basic information about error objects that were communicated to LEAF (to be associated with the error) for which there was no storage available in any active <a href="#context"><code>context</code></a> (these error objects were discarded by LEAF, because no handler needed them).</p>
+<p>This <code>operator&lt;&lt;</code> overload prints the same basic diagnostic information as the <a href="#error_info"><code>error_info</code></a> overload, followed by the type and the value of each available error object associated with the error (but see <a href="#show_in_diagnostics"><code>show_in_diagnostics</code></a>).</p>
 </div>
 <div class="paragraph">
-<p>The additional information is limited to the type name of the first such error object, as well as their total count.</p>
+<p>To also print info about error objects LEAF would have discarded (of types for which no active <code>context</code> provides storage), use <a href="#diagnostic_details"><code>diagnostic_details</code></a> instead.</p>
 </div>
 <div class="paragraph">
 <p>The <code>serialize_to</code> member function is used with the serialization system; see <a href="#tutorial-serialization">Serialization</a>.</p>
@@ -5555,21 +5518,19 @@ Using <code>diagnostic_details</code> may allocate memory dynamically, but only 
     <span class="n">error_id</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
-    <span class="n">error_id</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span><span class="p">,</span> <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">is_error_code_enum</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">,</span> <span class="n">Enum</span><span class="o">&gt;::</span><span class="n">type</span> <span class="o">*</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">error_id</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span><span class="p">,</span> <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">is_error_code_enum</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;::</span><span class="n">type</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">);</span>
 
-    <span class="n">error_id</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="k">explicit</span> <span class="n">error_id</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">);</span>
 
     <span class="kt">int</span> <span class="n">value</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="k">explicit</span> <span class="k">operator</span> <span class="kt">bool</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-
-    <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="n">to_error_code</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="k">friend</span> <span class="kt">bool</span> <span class="k">operator</span><span class="o">==</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">a</span><span class="p">,</span> <span class="n">error_id</span> <span class="n">b</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="k">friend</span> <span class="kt">bool</span> <span class="k">operator</span><span class="o">!=</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">a</span><span class="p">,</span> <span class="n">error_id</span> <span class="n">b</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="k">friend</span> <span class="kt">bool</span> <span class="k">operator</span><span class="o">&lt;</span><span class="p">(</span> <span class="n">error_id</span> <span class="n">a</span><span class="p">,</span> <span class="n">error_id</span> <span class="n">b</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Item</span><span class="p">&gt;</span>
-    <span class="n">error_id</span> <span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">)</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">error_id</span> <span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">CharT</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Traits</span><span class="p">&gt;</span>
     <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">basic_ostream</span><span class="o">&lt;</span><span class="n">CharT</span><span class="p">,</span> <span class="n">Traits</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">error_id</span> <span class="p">);</span>
@@ -5578,7 +5539,7 @@ Using <code>diagnostic_details</code> may allocate memory dynamically, but only 
   <span class="kt">bool</span> <span class="n">is_error_id</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">E</span><span class="p">&gt;</span>
-  <span class="n">error_id</span> <span class="n">new_error</span><span class="p">(</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">e</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="n">error_id</span> <span class="nf">new_error</span><span class="p">(</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">e</span> <span class="p">);</span>
 
   <span class="n">error_id</span> <span class="n">current_error</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
 
@@ -5586,7 +5547,7 @@ Using <code>diagnostic_details</code> may allocate memory dynamically, but only 
 </div>
 </div>
 <div class="paragraph text-right">
-<p><a href="#error_id::error_id">Constructors</a> | <a href="#error_id::value"><code>value</code></a> | <a href="#error_id::operator_bool"><code>operator bool</code></a> | <a href="#error_id::to_error_code"><code>to_error_code</code></a> | <a href="#error_id::comparison_operators"><code>operator==</code>, <code>!=</code>, <code>&lt;</code></a> | <a href="#error_id::load"><code>load</code></a> | <a href="#is_error_id"><code>is_error_id</code></a> | <a href="#new_error"><code>new_error</code></a> | <a href="#current_error"><code>current_error</code></a></p>
+<p><a href="#error_id::error_id">Constructors</a> | <a href="#error_id::value"><code>value</code></a> | <a href="#error_id::operator_bool"><code>operator bool</code></a> | <a href="#error_id::comparison_operators"><code>operator==</code>, <code>!=</code>, <code>&lt;</code></a> | <a href="#error_id::load"><code>load</code></a> | <a href="#is_error_id"><code>is_error_id</code></a> | <a href="#new_error"><code>new_error</code></a> | <a href="#current_error"><code>current_error</code></a></p>
 </div>
 <div class="paragraph">
 <p>Values of type <code>error_id</code> identify a specific occurrence of a failure across the entire program. They can be copied, moved, assigned to, and compared to other <code>error_id</code> objects. They&#8217;re as efficient as an <code>int</code>.</p>
@@ -5599,12 +5560,12 @@ Using <code>diagnostic_details</code> may allocate memory dynamically, but only 
 <div class="content">
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
-  <span class="n">error_id</span><span class="o">::</span><span class="n">error_id</span><span class="p">()</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+  <span class="n">error_id</span><span class="o">::</span><span class="n">error_id</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
-  <span class="n">error_id</span><span class="o">::</span><span class="n">error_id</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span><span class="p">,</span> <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">is_error_code_enum</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">,</span> <span class="n">Enum</span><span class="o">&gt;::</span><span class="n">type</span> <span class="o">*</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="n">error_id</span><span class="o">::</span><span class="n">error_id</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span><span class="p">,</span> <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">is_error_code_enum</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;::</span><span class="n">type</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">);</span>
 
-  <span class="n">error_id</span><span class="o">::</span><span class="n">error_id</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="k">explicit</span> <span class="n">error_id</span><span class="o">::</span><span class="n">error_id</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">);</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
@@ -5687,7 +5648,7 @@ To check if a given <code>std::error_code</code> is actually carrying an <code>e
 <pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Item</span><span class="p">&gt;</span>
-  <span class="n">error_id</span> <span class="n">error_id</span><span class="o">::</span><span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">)</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="n">error_id</span> <span class="n">error_id</span><span class="o">::</span><span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
@@ -5818,52 +5779,6 @@ The exact strict weak ordering implemented by <code>operator&lt;</code> is not s
 <hr>
 </div>
 <div class="sect3">
-<h4 id="error_id::to_error_code"><code>to_error_code</code></h4>
-<div class="listingblock">
-<div class="title">#include &lt;boost/leaf/error.hpp&gt;</div>
-<div class="content">
-<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">leaf</span> <span class="p">{</span>
-
-    <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="n">error_id</span><span class="o">::</span><span class="n">to_error_code</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-
-<span class="p">}</span> <span class="p">}</span></code></pre>
-</div>
-</div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">Effects: </dt>
-<dd>
-<p>Returns a <code>std::error_code</code> with the same <code>value()</code> as <code>*this</code>, using an unspecified <code>std::error_category</code>.</p>
-</dd>
-</dl>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-The returned object can be used to initialize an <code>error_id</code>, in which case the original <code>error_id</code> value will be restored.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-Use <a href="#is_error_id"><code>is_error_id</code></a> to check if a given <code>std::error_code</code> carries an <code>error_id</code>.
-</td>
-</tr>
-</table>
-</div>
-<hr>
-</div>
-<div class="sect3">
 <h4 id="error_id::value"><code>value</code></h4>
 <div class="listingblock">
 <div class="title">#include &lt;boost/leaf/error.hpp&gt;</div>
@@ -5910,7 +5825,7 @@ Use <a href="#is_error_id"><code>is_error_id</code></a> to check if a given <cod
 
     <span class="n">error_id</span> <span class="n">check</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
 
-    <span class="n">error_id</span> <span class="n">assigned_error_id</span><span class="p">(</span> <span class="n">E</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">e</span> <span class="p">)</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">error_id</span> <span class="n">assigned_error_id</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
   <span class="p">};</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
@@ -5956,7 +5871,7 @@ Use <a href="#is_error_id"><code>is_error_id</code></a> to check if a given <cod
 <div class="ulist">
 <ul>
 <li>
-<p>If <a href="#new_error"><code>new_error</code></a> was invoked (by the calling thread) after the <code>augment</code> object was initialized, <code>assigned_error_id</code> returns the last <code>error_id</code> returned by <code>new_error</code>. This would be the case if the failure originates in our callback (invoked internally by <code>compute_value</code>).</p>
+<p>If <a href="#new_error"><code>new_error</code></a> was invoked (by the calling thread) after the <code>cur_err</code> object was initialized, <code>assigned_error_id</code> returns the last <code>error_id</code> returned by <code>new_error</code>. This would be the case if the failure originates in our callback (invoked internally by <code>compute_value</code>).</p>
 </li>
 <li>
 <p>Else, <code>assigned_error_id</code> invokes <code>new_error</code> and returns that <code>error_id</code>.</p>
@@ -5971,7 +5886,7 @@ Use <a href="#is_error_id"><code>is_error_id</code></a> to check if a given <cod
 </table>
 </div>
 <div class="paragraph">
-<p>The <code>check</code> function works similarly, but instead of invoking <code>new_error</code> it returns a default-initialized <code>error_id</code>.</p>
+<p>The <code>check</code> function works similarly, except that it invokes <code>new_error</code> only if an exception is propagating; otherwise it returns a default-initialized <code>error_id</code>.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -6175,7 +6090,6 @@ It is probably better to define your own file name wrappers to avoid clashes if 
 
     <span class="n">error_id</span> <span class="n">error</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
 
-    <span class="kt">bool</span> <span class="n">exception_caught</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
     <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="k">const</span> <span class="o">*</span> <span class="n">exception</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Encoder</span><span class="p">&gt;</span>
@@ -6195,25 +6109,10 @@ It is probably better to define your own file name wrappers to avoid clashes if 
 <p>The <code>error</code> member function returns the program-wide unique <a href="#error_id"><code>error_id</code></a> of the error.</p>
 </div>
 <div class="paragraph">
-<p>The <code>exception_caught</code> member function returns <code>true</code> if the handler that received <code>*this</code> is being invoked to handle an exception, <code>false</code> otherwise.</p>
+<p>The <code>exception</code> member function returns a pointer to the <code>std::exception</code> subobject of the caught exception, or <code>nullptr</code> if the handler is not being invoked to handle an exception, or if the caught exception could not be converted to <code>std::exception</code>.</p>
 </div>
 <div class="paragraph">
-<p>If handling an exception, the <code>exception</code> member function returns a pointer to the <code>std::exception</code> subobject of the caught exception, or <code>0</code> if that exception could not be converted to <code>std::exception</code>.</p>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-It is illegal to call the <code>exception</code> member function unless <code>exception_caught()</code> is <code>true</code>.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>The <code>operator&lt;&lt;</code> overload prints diagnostic information about each error object currently stored in the <a href="#context"><code>context</code></a> local to the <a href="#try_handle_some"><code>try_handle_some</code></a>, <a href="#try_handle_all"><code>try_handle_all</code></a> or <a href="#try_catch"><code>try_catch</code></a> scope that invoked the handler, but only if it is associated with the <a href="#error_id"><code>error_id</code></a> returned by <code>error()</code>.</p>
+<p>The <code>operator&lt;&lt;</code> overload prints basic diagnostic information about the error being handled: the source location where the error was reported (if available), as well as the type and the <code>what()</code> message of the caught exception (if available). Use <a href="#diagnostic_info"><code>diagnostic_info</code></a> or <a href="#diagnostic_details"><code>diagnostic_details</code></a> if more detailed information is needed.</p>
 </div>
 <div class="paragraph">
 <p>The <code>serialize_to</code> member function is used with the serialization system; see <a href="#tutorial-serialization">Serialization</a>.</p>
@@ -6273,7 +6172,7 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">U</span><span class="p">,</span> <span class="k">class</span> <span class="o">=</span> <span class="k">typename</span> <span class="nc">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">is_convertible</span><span class="o">&lt;</span><span class="n">U</span><span class="p">,</span> <span class="n">T</span><span class="p">&gt;</span><span class="o">::</span><span class="n">value</span><span class="o">&gt;::</span><span class="n">type</span><span class="o">&gt;</span>
     <span class="n">result</span><span class="p">(</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span> <span class="o">&amp;&amp;</span> <span class="n">r</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
-    <span class="n">result</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">result</span><span class="p">();</span>
 
     <span class="n">result</span><span class="p">(</span> <span class="n">T</span> <span class="o">&amp;&amp;</span> <span class="n">v</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
@@ -6286,10 +6185,10 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
 
 <span class="cp">#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 </span>
-    <span class="n">result</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">result</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">);</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">,</span> <span class="k">class</span> <span class="o">=</span> <span class="k">typename</span> <span class="nc">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">is_error_code_enum</span><span class="o">&lt;</span><span class="n">Enum</span><span class="p">&gt;</span><span class="o">::</span><span class="n">value</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;::</span><span class="n">type</span><span class="o">&gt;</span>
-    <span class="n">result</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">result</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span> <span class="p">);</span>
 
 <span class="cp">#endif
 </span>
@@ -6319,7 +6218,7 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
     <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">-</span><span class="n">type</span><span class="o">&gt;&gt;</span> <span class="n">error</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Item</span><span class="p">&gt;</span>
-    <span class="n">error_id</span> <span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">error_id</span> <span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">);</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Encoder</span><span class="p">&gt;</span>
     <span class="kt">void</span> <span class="n">serialize_to</span><span class="p">(</span> <span class="n">Encoder</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
@@ -6344,10 +6243,10 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
 
 <span class="cp">#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 </span>
-    <span class="n">result</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">result</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">);</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">is_error_code_enum</span><span class="o">&lt;</span><span class="n">Enum</span><span class="p">&gt;</span><span class="o">::</span><span class="n">value</span><span class="p">,</span> <span class="n">Enum</span><span class="o">&gt;::</span><span class="n">type</span><span class="o">&gt;</span>
-    <span class="n">result</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">result</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span> <span class="p">);</span>
 
 <span class="cp">#endif
 </span>
@@ -6366,7 +6265,7 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
     <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">-</span><span class="n">type</span><span class="o">&gt;&gt;</span> <span class="n">error</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Item</span><span class="p">&gt;</span>
-    <span class="n">error_id</span> <span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">error_id</span> <span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">);</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Encoder</span><span class="p">&gt;</span>
     <span class="kt">void</span> <span class="n">serialize_to</span><span class="p">(</span> <span class="n">Encoder</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="p">)</span> <span class="k">const</span><span class="p">;</span>
@@ -6375,7 +6274,7 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
     <span class="k">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">basic_ostream</span><span class="o">&lt;</span><span class="n">CharT</span><span class="p">,</span> <span class="n">Traits</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">result</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">);</span>
   <span class="p">};</span>
 
-  <span class="k">class</span> <span class="nc">bad_result</span><span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="p">{</span> <span class="p">};</span>
+  <span class="k">class</span> <span class="nc">bad_result</span><span class="o">:</span> <span class="k">public</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="p">{</span> <span class="p">};</span>
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
   <span class="k">struct</span> <span class="nc">is_result_type</span><span class="o">&lt;</span><span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span>
@@ -6439,7 +6338,7 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
     <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">result</span><span class="p">(</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span> <span class="o">&amp;&amp;</span> <span class="n">r</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
-    <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">result</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">result</span><span class="p">();</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
     <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">result</span><span class="p">(</span> <span class="n">T</span> <span class="o">&amp;&amp;</span> <span class="n">v</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
@@ -6457,11 +6356,11 @@ It is illegal to call the <code>exception</code> member function unless <code>ex
 <span class="cp">#if BOOST_LEAF_CFG_STD_SYSTEM_ERROR
 </span>
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
-    <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">result</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">result</span><span class="p">(</span> <span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">ec</span> <span class="p">);</span>
 
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
     <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">,</span> <span class="k">class</span> <span class="o">=</span> <span class="k">typename</span> <span class="nc">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">is_error_code_enum</span><span class="o">&lt;</span><span class="n">Enum</span><span class="p">&gt;</span><span class="o">::</span><span class="n">value</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;::</span><span class="n">type</span><span class="o">&gt;</span>
-    <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">result</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+    <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">result</span><span class="p">(</span> <span class="n">Enum</span> <span class="n">e</span> <span class="p">);</span>
 
 <span class="cp">#endif
 </span>
@@ -6605,7 +6504,7 @@ A <code>result</code> that is in value state converts to <code>true</code> in bo
 <p>If <code>*this</code> is in <a href="#result">Value state</a>, returns a default-initialized <a href="#error_id"><code>error_id</code></a> object.</p>
 </li>
 <li>
-<p>If <code>*this</code> is in <a href="#result">Error capture state</a>, all captured error objects are <a href="#tutorial-loading">loaded</a> in the calling thread, and the captured <code>error_id</code> value is returned.</p>
+<p>If <code>*this</code> is in <a href="#result">Error capture state</a>, the captured <code>error_id</code> value is returned. The captured error objects are not <a href="#tutorial-loading">loaded</a> in the calling thread; they remain in <code>*this</code>.</p>
 </li>
 <li>
 <p>If <code>*this</code> is in <a href="#result">Error state</a>, returns the stored <code>error_id</code>.</p>
@@ -6687,7 +6586,7 @@ The returned proxy object refers to <code>*this</code>; avoid holding on to it.
 
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="o">...</span> <span class="nc">Item</span><span class="p">&gt;</span>
-  <span class="n">error_id</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="n">error_id</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">load</span><span class="p">(</span> <span class="n">Item</span> <span class="o">&amp;&amp;</span> <span class="p">...</span> <span class="n">item</span> <span class="p">);</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
@@ -6703,7 +6602,7 @@ The returned proxy object refers to <code>*this</code>; avoid holding on to it.
 </dd>
 <dt class="hdlist1">Returns: </dt>
 <dd>
-<p><code>*this</code>.</p>
+<p>The <code>error_id</code> <code>*this</code> is associated with.</p>
 </dd>
 </dl>
 </div>
@@ -6830,7 +6729,7 @@ The returned proxy object refers to <code>*this</code>; avoid holding on to it.
   <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
   <span class="n">T</span> <span class="o">&amp;</span> <span class="n">result</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">();</span>
 
-  <span class="k">class</span> <span class="nc">bad_result</span><span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="p">{</span> <span class="p">};</span>
+  <span class="k">class</span> <span class="nc">bad_result</span><span class="o">:</span> <span class="k">public</span> <span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="p">{</span> <span class="p">};</span>
 
 <span class="p">}</span> <span class="p">}</span></code></pre>
 </div>
@@ -7336,7 +7235,7 @@ See also <a href="#tutorial-predicates">Using Predicates to Handle Errors</a>.
 <p>In particular, it is valid to pass pointer to the function <code>leaf::category&lt;Enum&gt;</code> for any <code>V<sub>i</sub></code>, where:</p>
 </div>
 <div class="paragraph text-center">
-<p><code>std::is_error_code_enum&lt;Enum&gt;::value || std::is_error_condition_enum&lt;Enum&gt;::value</code>.</p>
+<p><code>std::is_error_code_enum&lt;Enum&gt;::value</code>.</p>
 </div>
 <div class="paragraph">
 <p>In this case, <code>p<sub>i</sub></code> is equivalent to:</p>
@@ -7406,7 +7305,7 @@ See also <a href="#tutorial-predicates">Using Predicates to Handle Errors</a>.
 
   <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">match</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">error_code</span><span class="p">,</span> <span class="n">my_enum</span><span class="o">::</span><span class="n">e1</span><span class="p">,</span> <span class="n">my_enum</span><span class="o">::</span><span class="n">e2</span><span class="o">&gt;</span> <span class="n">m</span> <span class="p">)</span>
   <span class="p">{</span> <i class="conum" data-value="1"></i><b>(1)</b>
-    <span class="k">static_assert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">,</span> <span class="k">decltype</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">matched</span><span class="p">)</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">);</span>
+    <span class="k">static_assert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">error_code</span><span class="p">,</span> <span class="k">decltype</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">matched</span><span class="p">)</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">);</span>
     <span class="n">assert</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">matched</span> <span class="o">==</span> <span class="n">my_enum</span><span class="o">::</span><span class="n">e1</span> <span class="o">||</span> <span class="n">m</span><span class="p">.</span><span class="n">matched</span> <span class="o">==</span> <span class="n">my_enum</span><span class="o">::</span><span class="n">e2</span><span class="p">);</span>
     <span class="p">....</span>
   <span class="p">}</span> <span class="p">);</span></code></pre>
@@ -7441,7 +7340,7 @@ See also <a href="#tutorial-predicates">Using Predicates to Handle Errors</a>.
 
   <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">match</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">error_code</span><span class="p">,</span> <span class="n">leaf</span><span class="o">::</span><span class="n">category</span><span class="o">&lt;</span><span class="n">enum_a</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">enum_b</span><span class="o">::</span><span class="n">b2</span><span class="o">&gt;</span> <span class="n">m</span> <span class="p">)</span>
   <span class="p">{</span> <i class="conum" data-value="1"></i><b>(1)</b>
-    <span class="k">static_assert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">,</span> <span class="k">decltype</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">matched</span><span class="p">)</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">);</span>
+    <span class="k">static_assert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">error_code</span><span class="p">,</span> <span class="k">decltype</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">matched</span><span class="p">)</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">);</span>
     <span class="n">assert</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">.</span><span class="n">matched</span><span class="p">.</span><span class="n">category</span><span class="p">()</span> <span class="o">==</span> <span class="o">&amp;</span><span class="n">std</span><span class="o">::</span><span class="n">error_code</span><span class="p">(</span><span class="n">enum_a</span><span class="p">{}).</span><span class="n">category</span><span class="p">()</span> <span class="o">||</span> <span class="n">m</span><span class="p">.</span><span class="n">matched</span> <span class="o">==</span> <span class="n">enum_b</span><span class="o">::</span><span class="n">b2</span><span class="p">);</span>
     <span class="p">....</span>
   <span class="p">}</span> <span class="p">);</span></code></pre>
@@ -7477,7 +7376,7 @@ See also <a href="#tutorial-predicates">Using Predicates to Handle Errors</a>.
 
   <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">match</span><span class="o">&lt;</span><span class="n">leaf</span><span class="o">::</span><span class="n">condition</span><span class="o">&lt;</span><span class="n">my_enum</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">my_enum</span><span class="o">::</span><span class="n">e1</span><span class="p">,</span> <span class="n">my_enum</span><span class="o">::</span><span class="n">e2</span><span class="o">&gt;</span> <span class="n">m</span> <span class="p">)</span>
   <span class="p">{</span>
-    <span class="k">static_assert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">error_code</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">,</span> <span class="k">decltype</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">matched</span><span class="p">)</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">);</span>
+    <span class="k">static_assert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">error_code</span><span class="p">,</span> <span class="k">decltype</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">matched</span><span class="p">)</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">);</span>
     <span class="n">assert</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">matched</span> <span class="o">==</span> <span class="n">my_enum</span><span class="o">::</span><span class="n">e1</span> <span class="o">||</span> <span class="n">m</span><span class="p">.</span><span class="n">matched</span> <span class="o">==</span> <span class="n">my_enum</span><span class="o">::</span><span class="n">e2</span><span class="p">);</span>
     <span class="p">....</span>
   <span class="p">}</span> <span class="p">);</span></code></pre>
@@ -7506,7 +7405,7 @@ See also <a href="#tutorial-predicates">Using Predicates to Handle Errors</a>.
 
   <span class="p">[](</span> <span class="n">leaf</span><span class="o">::</span><span class="n">match</span><span class="o">&lt;</span><span class="n">severity</span><span class="p">,</span> <span class="n">severity_greater_than</span><span class="o">&lt;</span><span class="mi">4</span><span class="o">&gt;&gt;</span> <span class="n">m</span> <span class="p">)</span>
   <span class="p">{</span>
-    <span class="k">static_assert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same</span><span class="o">&lt;</span><span class="n">severity</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">,</span> <span class="k">decltype</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">matched</span><span class="p">)</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">);</span>
+    <span class="k">static_assert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same</span><span class="o">&lt;</span><span class="n">severity</span><span class="p">,</span> <span class="k">decltype</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">matched</span><span class="p">)</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">);</span>
     <span class="n">assert</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">matched</span><span class="p">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">);</span>
     <span class="p">....</span>
   <span class="p">}</span> <span class="p">);</span></code></pre>
