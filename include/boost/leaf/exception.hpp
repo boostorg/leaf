@@ -258,12 +258,37 @@ namespace detail
     struct deduce_exception_to_result_return_type_impl
     {
         using type = result<T>;
+
+        template <class F>
+        static type call( F && f )
+        {
+            return std::forward<F>(f)();
+        }
     };
 
     template <class T>
     struct deduce_exception_to_result_return_type_impl<result<T>>
     {
         using type = result<T>;
+
+        template <class F>
+        static type call( F && f )
+        {
+            return std::forward<F>(f)();
+        }
+    };
+
+    template <>
+    struct deduce_exception_to_result_return_type_impl<void>
+    {
+        using type = result<void>;
+
+        template <class F, class R = result<fn_return_type<F>>>
+        static R call( F && f )
+        {
+            std::forward<F>(f)();
+            return { };
+        }
     };
 
     template <class T>
@@ -277,7 +302,7 @@ exception_to_result( F && f ) noexcept(!BOOST_LEAF_CFG_CAPTURE)
 {
     try
     {
-        return std::forward<F>(f)();
+        return detail::deduce_exception_to_result_return_type_impl<detail::fn_return_type<F>>::call(std::forward<F>(f));
     }
     catch( std::exception const & ex )
     {

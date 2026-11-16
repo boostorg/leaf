@@ -368,7 +368,7 @@ public:
     }
 
     template<class... A, class = typename std::enable_if<std::is_constructible<T, A...>::value && sizeof...(A) >= 2>::type>
-    result( A && ... a ) noexcept:
+    result( A && ... a ) noexcept(std::is_nothrow_constructible<T, A...>::value):
         stored_(std::forward<A>(a)...),
         what_(result_discriminant::kind_val{})
     {
@@ -388,7 +388,7 @@ public:
 
     // SFINAE: T can be initialized with an A, e.g. result<std::string>("literal").
     template<class A, class = typename std::enable_if<std::is_constructible<T, A>::value && std::is_convertible<A, T>::value>::type>
-    result( A && a ) noexcept:
+    result( A && a ) noexcept(std::is_nothrow_constructible<T, A>::value):
         stored_(std::forward<A>(a)),
         what_(result_discriminant::kind_val{})
     {

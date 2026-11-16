@@ -96,6 +96,7 @@
 
 #if BOOST_LEAF_CFG_WIN32 && !defined(_WIN32)
 #   warning "Ignoring BOOST_LEAF_CFG_WIN32 because _WIN32 is not defined"
+#   undef BOOST_LEAF_CFG_WIN32
 #   define BOOST_LEAF_CFG_WIN32 0
 #endif
 

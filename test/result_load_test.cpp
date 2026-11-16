@@ -16,12 +16,14 @@ namespace leaf = boost::leaf;
 
 template <int> struct info { int value; };
 
+int void_count;
+
 template <class T>
 leaf::result<T> test()
 {
-    leaf::result<T> r1 = leaf::new_error(info<42>{40});
+    leaf::result<T> r1 = leaf::new_error(info<42>{40}, []{ ++void_count; });
     leaf::result<T> r2 = r1.load(info<1>{});
-    leaf::result<T> r3 = r2.load(info<2>{2}, []{ return info<3>{3}; });
+    leaf::result<T> r3 = r2.load(info<2>{2}, []{ return info<3>{3}; }, []{ ++void_count; });
     leaf::result<T> r4 = r3.load([](info<42> & x){ ++x.value; });
     leaf::result<T> r5 = r4.load([](info<42> & x){ ++x.value; }, [](info<1> & x){ ++x.value; });
     return r5;
@@ -30,6 +32,7 @@ leaf::result<T> test()
 int main()
 {
     {
+        void_count = 0;
         int r = leaf::try_handle_all(
             []
             {
@@ -44,8 +47,10 @@ int main()
                 return 2;
             } );
         BOOST_TEST_EQ(r, 1);
+        BOOST_TEST_EQ(void_count, 2);
     }
     {
+        void_count = 0;
         int r = leaf::try_handle_all(
             []() -> leaf::result<int>
             {
@@ -61,6 +66,7 @@ int main()
                 return 2;
             } );
         BOOST_TEST_EQ(r, 1);
+        BOOST_TEST_EQ(void_count, 2);
     }
     return boost::report_errors();
 }

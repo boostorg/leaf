@@ -76,6 +76,7 @@ run e_errno_test.cpp ;
 run e_LastError_test.cpp : : : <target-os>windows:<define>BOOST_LEAF_CFG_WIN32=1 ;
 run error_code_test.cpp : : : <toolset>clang-darwin,<exception-handling>off,<rtti>off:<linkflags>"-Wl,-ld_classic" ; # workaround for macos-14 linker bug
 run error_id_test.cpp ;
+run error_monitor_test.cpp ;
 run exception_test.cpp ;
 run exception_to_result_test.cpp ;
 run function_traits_test.cpp ;
@@ -125,6 +126,7 @@ run result_state_test.cpp ;
 run tls_array_alloc_test1.cpp ;
 run tls_array_alloc_test2.cpp ;
 run tls_array_alloc_test3.cpp ;
+run tls_array_size_test.cpp ;
 run tls_array_test.cpp ;
 run to_variant_test.cpp ;
 run try_capture_all_test.cpp ;

@@ -44,7 +44,7 @@ static_assert((BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX) >= 0,
 #ifdef BOOST_LEAF_CFG_TLS_ARRAY_SIZE
     static_assert((BOOST_LEAF_CFG_TLS_ARRAY_SIZE) > (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX),
         "Bad BOOST_LEAF_CFG_TLS_ARRAY_SIZE");
-    static_assert((BOOST_LEAF_CFG_TLS_ARRAY_SIZE) - 1 <= std::numeric_limits<BOOST_LEAF_CFG_TLS_INDEX_TYPE>::max(),
+    static_assert((BOOST_LEAF_CFG_TLS_ARRAY_SIZE) <= std::numeric_limits<BOOST_LEAF_CFG_TLS_INDEX_TYPE>::max(),
         "Bad BOOST_LEAF_CFG_TLS_ARRAY_SIZE");
 #endif
 
@@ -74,7 +74,9 @@ namespace detail
         {
             int idx = ++c_;
             BOOST_LEAF_ASSERT(idx > (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX + 1));
-            BOOST_LEAF_ASSERT(idx < (BOOST_LEAF_CFG_TLS_ARRAY_SIZE));
+#ifdef BOOST_LEAF_CFG_TLS_ARRAY_SIZE
+            BOOST_LEAF_ASSERT(idx <= (BOOST_LEAF_CFG_TLS_ARRAY_SIZE));
+#endif
             return idx;
         }
 

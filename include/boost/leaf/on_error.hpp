@@ -57,7 +57,9 @@ public:
 
     error_id check() const noexcept
     {
-        return detail::make_error_id(check_id());
+        if( int err_id = check_id() )
+            return detail::make_error_id(err_id);
+        return error_id();
     }
 
     error_id assigned_error_id() const noexcept

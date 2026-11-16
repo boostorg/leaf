@@ -558,13 +558,28 @@ namespace detail
         }
     };
 
-    template <class F>
-    struct load_item<F, 0>
+    template <class F, class ReturnType = typename function_traits<F>::return_type>
+    struct load_item_deferred
     {
         BOOST_LEAF_CONSTEXPR static int load_( int err_id, F && f )
         {
             return load_slot_deferred(err_id, std::forward<F>(f));
         }
+    };
+
+    template <class F>
+    struct load_item_deferred<F, void>
+    {
+        BOOST_LEAF_CONSTEXPR static int load_( int, F && f )
+        {
+            std::forward<F>(f)();
+            return 0;
+        }
+    };
+
+    template <class F>
+    struct load_item<F, 0>: load_item_deferred<F>
+    {
     };
 
     template <class F>

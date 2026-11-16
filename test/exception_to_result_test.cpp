@@ -125,6 +125,34 @@ int main()
             } );
         BOOST_TEST_EQ(r, 1);
     }
+    {
+        leaf::result<void> r = leaf::exception_to_result<my_exception<1>>(
+            []
+            {
+            } );
+        BOOST_TEST(r);
+    }
+    {
+        int r = leaf::try_handle_all(
+            []() -> leaf::result<int>
+            {
+                BOOST_LEAF_CHECK(leaf::exception_to_result<my_exception<1>>(
+                    []
+                    {
+                        throw my_exception<1>();
+                    } ));
+                return 0;
+            },
+            []( my_exception<1> const & )
+            {
+                return 1;
+            },
+            []
+            {
+                return 2;
+            } );
+        BOOST_TEST_EQ(r, 1);
+    }
     return boost::report_errors();
 }
 
