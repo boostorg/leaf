@@ -2,7 +2,7 @@
 #define BOOST_LEAF_HPP_INCLUDED
 
 // Boost LEAF single header distribution. Do not edit.
-// Generated on Nov 16, 2026 from https://github.com/boostorg/leaf/tree/cf62df2.
+// Generated on Nov 17, 2026 from https://github.com/boostorg/leaf/tree/ee8126a.
 
 // Latest published version of this file: https://raw.githubusercontent.com/boostorg/leaf/gh-pages/leaf.hpp.
 
@@ -111,6 +111,7 @@
 
 #if BOOST_LEAF_CFG_WIN32 && !defined(_WIN32)
 #   warning "Ignoring BOOST_LEAF_CFG_WIN32 because _WIN32 is not defined"
+#   undef BOOST_LEAF_CFG_WIN32
 #   define BOOST_LEAF_CFG_WIN32 0
 #endif
 
@@ -284,7 +285,7 @@ namespace detail
 
 #endif // BOOST_LEAF_CONFIG_VISIBILITY_HPP_INCLUDED
 // <<< #include <boost/leaf/config/visibility.hpp>
-// #line 229 "boost/leaf/config.hpp"
+// #line 230 "boost/leaf/config.hpp"
 
 ////////////////////////////////////////
 
@@ -501,7 +502,7 @@ static_assert((BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX) >= 0,
 #ifdef BOOST_LEAF_CFG_TLS_ARRAY_SIZE
     static_assert((BOOST_LEAF_CFG_TLS_ARRAY_SIZE) > (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX),
         "Bad BOOST_LEAF_CFG_TLS_ARRAY_SIZE");
-    static_assert((BOOST_LEAF_CFG_TLS_ARRAY_SIZE) - 1 <= std::numeric_limits<BOOST_LEAF_CFG_TLS_INDEX_TYPE>::max(),
+    static_assert((BOOST_LEAF_CFG_TLS_ARRAY_SIZE) <= std::numeric_limits<BOOST_LEAF_CFG_TLS_INDEX_TYPE>::max(),
         "Bad BOOST_LEAF_CFG_TLS_ARRAY_SIZE");
 #endif
 
@@ -531,7 +532,9 @@ namespace detail
         {
             int idx = ++c_;
             BOOST_LEAF_ASSERT(idx > (BOOST_LEAF_CFG_TLS_ARRAY_START_INDEX + 1));
-            BOOST_LEAF_ASSERT(idx < (BOOST_LEAF_CFG_TLS_ARRAY_SIZE));
+#ifdef BOOST_LEAF_CFG_TLS_ARRAY_SIZE
+            BOOST_LEAF_ASSERT(idx <= (BOOST_LEAF_CFG_TLS_ARRAY_SIZE));
+#endif
             return idx;
         }
 
@@ -1414,7 +1417,7 @@ namespace tls
 
 #endif // #ifndef BOOST_LEAF_CONFIG_TLS_HPP_INCLUDED
 // <<< #include <boost/leaf/config/tls.hpp>
-// #line 283 "boost/leaf/config.hpp"
+// #line 284 "boost/leaf/config.hpp"
 
 #endif // #ifndef BOOST_LEAF_CONFIG_HPP_INCLUDED
 // <<< #include <boost/leaf/config.hpp>
@@ -2795,7 +2798,7 @@ namespace detail
 #endif // #ifndef BOOST_LEAF_DETAIL_OPTIONAL_HPP_INCLUDED
 // <<< #include <boost/leaf/detail/optional.hpp>
 // #line 10 "boost/leaf/error.hpp"
-// #include <boost/leaf/detail/function_traits.hpp> // Expanded at line 1859
+// #include <boost/leaf/detail/function_traits.hpp> // Expanded at line 1862
 // >>> #include <boost/leaf/detail/capture_list.hpp>
 #ifndef BOOST_LEAF_DETAIL_CAPTURE_LIST_HPP_INCLUDED
 #define BOOST_LEAF_DETAIL_CAPTURE_LIST_HPP_INCLUDED
@@ -2908,7 +2911,7 @@ namespace detail
 #endif // #ifndef BOOST_LEAF_DETAIL_CAPTURE_LIST_HPP_INCLUDED
 // <<< #include <boost/leaf/detail/capture_list.hpp>
 // #line 12 "boost/leaf/error.hpp"
-// #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1540
+// #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1543
 
 ////////////////////////////////////////
 
@@ -3457,13 +3460,28 @@ namespace detail
         }
     };
 
-    template <class F>
-    struct load_item<F, 0>
+    template <class F, class ReturnType = typename function_traits<F>::return_type>
+    struct load_item_deferred
     {
         BOOST_LEAF_CONSTEXPR static int load_( int err_id, F && f )
         {
             return load_slot_deferred(err_id, std::forward<F>(f));
         }
+    };
+
+    template <class F>
+    struct load_item_deferred<F, void>
+    {
+        BOOST_LEAF_CONSTEXPR static int load_( int, F && f )
+        {
+            std::forward<F>(f)();
+            return 0;
+        }
+    };
+
+    template <class F>
+    struct load_item<F, 0>: load_item_deferred<F>
+    {
     };
 
     template <class F>
@@ -4263,8 +4281,8 @@ BOOST_LEAF_CONSTEXPR inline context_type_from_handlers<H...> make_context( H && 
 
 // #line 8 "boost/leaf/handle_errors.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/context.hpp> // Expanded at line 1534
-// #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1540
+// #include <boost/leaf/context.hpp> // Expanded at line 1537
+// #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1543
 
 namespace boost { namespace leaf {
 
@@ -5398,15 +5416,15 @@ namespace detail
 } } // namespace boost::leaf
 
 #endif // #ifndef BOOST_LEAF_DIAGNOSTICS_HPP_INCLUDED
-// #include <boost/leaf/error.hpp> // Expanded at line 2612
+// #include <boost/leaf/error.hpp> // Expanded at line 2615
 // >>> #include <boost/leaf/exception.hpp>
 #ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
 #define BOOST_LEAF_EXCEPTION_HPP_INCLUDED
 
 // #line 8 "boost/leaf/exception.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/error.hpp> // Expanded at line 2612
-// #include <boost/leaf/detail/exception_base.hpp> // Expanded at line 2347
+// #include <boost/leaf/error.hpp> // Expanded at line 2615
+// #include <boost/leaf/detail/exception_base.hpp> // Expanded at line 2350
 
 #ifndef BOOST_LEAF_NO_EXCEPTIONS
 #   include <typeinfo>
@@ -5657,12 +5675,37 @@ namespace detail
     struct deduce_exception_to_result_return_type_impl
     {
         using type = result<T>;
+
+        template <class F>
+        static type call( F && f )
+        {
+            return std::forward<F>(f)();
+        }
     };
 
     template <class T>
     struct deduce_exception_to_result_return_type_impl<result<T>>
     {
         using type = result<T>;
+
+        template <class F>
+        static type call( F && f )
+        {
+            return std::forward<F>(f)();
+        }
+    };
+
+    template <>
+    struct deduce_exception_to_result_return_type_impl<void>
+    {
+        using type = result<void>;
+
+        template <class F, class R = result<fn_return_type<F>>>
+        static R call( F && f )
+        {
+            std::forward<F>(f)();
+            return { };
+        }
     };
 
     template <class T>
@@ -5676,7 +5719,7 @@ exception_to_result( F && f ) noexcept(!BOOST_LEAF_CFG_CAPTURE)
 {
     try
     {
-        return std::forward<F>(f)();
+        return detail::deduce_exception_to_result_return_type_impl<detail::fn_return_type<F>>::call(std::forward<F>(f));
     }
     catch( std::exception const & ex )
     {
@@ -5693,14 +5736,14 @@ exception_to_result( F && f ) noexcept(!BOOST_LEAF_CFG_CAPTURE)
 } } // namespace boost::leaf
 
 #endif // #ifndef BOOST_LEAF_EXCEPTION_HPP_INCLUDED
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4261
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4279
 // >>> #include <boost/leaf/on_error.hpp>
 #ifndef BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 #define BOOST_LEAF_ON_ERROR_HPP_INCLUDED
 
 // #line 8 "boost/leaf/on_error.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/error.hpp> // Expanded at line 2612
+// #include <boost/leaf/error.hpp> // Expanded at line 2615
 
 namespace boost { namespace leaf {
 
@@ -5751,7 +5794,9 @@ public:
 
     error_id check() const noexcept
     {
-        return detail::make_error_id(check_id());
+        if( int err_id = check_id() )
+            return detail::make_error_id(err_id);
+        return error_id();
     }
 
     error_id assigned_error_id() const noexcept
@@ -6034,7 +6079,7 @@ on_error( Item && ... i )
 
 // #line 8 "boost/leaf/pred.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4261
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4279
 
 #if __cplusplus >= 201703L
 #   define BOOST_LEAF_MATCH_ARGS(et,v1,v) auto v1, auto... v
@@ -6328,9 +6373,9 @@ struct is_predicate<catch_<Ex...>>: std::true_type
 
 // #line 8 "boost/leaf/result.hpp"
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/exception.hpp> // Expanded at line 5403
-// #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1540
-// #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 2800
+// #include <boost/leaf/exception.hpp> // Expanded at line 5421
+// #include <boost/leaf/detail/diagnostics_writer.hpp> // Expanded at line 1543
+// #include <boost/leaf/detail/capture_list.hpp> // Expanded at line 2803
 
 #include <functional>
 
@@ -6690,7 +6735,7 @@ public:
     }
 
     template<class... A, class = typename std::enable_if<std::is_constructible<T, A...>::value && sizeof...(A) >= 2>::type>
-    result( A && ... a ) noexcept:
+    result( A && ... a ) noexcept(std::is_nothrow_constructible<T, A...>::value):
         stored_(std::forward<A>(a)...),
         what_(result_discriminant::kind_val{})
     {
@@ -6710,7 +6755,7 @@ public:
 
     // SFINAE: T can be initialized with an A, e.g. result<std::string>("literal").
     template<class A, class = typename std::enable_if<std::is_constructible<T, A>::value && std::is_convertible<A, T>::value>::type>
-    result( A && a ) noexcept:
+    result( A && a ) noexcept(std::is_nothrow_constructible<T, A>::value):
         stored_(std::forward<A>(a)),
         what_(result_discriminant::kind_val{})
     {
@@ -7158,8 +7203,8 @@ namespace serialization
 #if __cplusplus >= 201703L
 
 // #include <boost/leaf/config.hpp> // Expanded at line 19
-// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4261
-// #include <boost/leaf/result.hpp> // Expanded at line 6326
+// #include <boost/leaf/handle_errors.hpp> // Expanded at line 4279
+// #include <boost/leaf/result.hpp> // Expanded at line 6371
 #include <variant>
 #include <optional>
 #include <tuple>
