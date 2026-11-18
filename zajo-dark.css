@@ -461,7 +461,7 @@ h5 code{color:#00cc99; font-size:104%}
 #author{color:#a366ff}
 #toc ul{font-family:"Quicksand","DejaVu Sans",sans-serif;list-style-type:none}
 #toc a:hover{color:#00cc99}
-#toc.toc2{background-color:#404040}
+#toc.toc2{background-color:#404040;scrollbar-color:#404040 #202020}
 .admonitionblock td.icon .icon-note::before{content:"\f05a";color:#00cc99}
 .admonitionblock td.icon .icon-tip::before{content:"\f0eb";color:#00cc99;text-shadow:none}
 .admonitionblock td.icon .icon-warning::before{content:"\f071";color:#a366ff}
